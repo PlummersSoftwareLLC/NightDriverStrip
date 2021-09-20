@@ -26,7 +26,6 @@
 //
 //---------------------------------------------------------------------------
 
-#include "spiffs.h"
 #include "remotecontrol.h"
 #include "socketserver.h"
 #include "ntptimeclient.h"

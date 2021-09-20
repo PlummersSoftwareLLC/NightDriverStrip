@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        LEDMatrixGFX.h
+// File:        ledmatrixgfx.h
 //
 // File:        NTPTimeClient.h
 //
@@ -35,8 +35,8 @@
 #pragma once
 #define fastled_internal 1
 #include "globals.h"
-#include "fastled.h"
-#include "adafruit_gfx.h"
+#include "FastLED.h"
+#include "Adafruit_GFX.h"
 #include "pixeltypes.h"
 #include <string>
 

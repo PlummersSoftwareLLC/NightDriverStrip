@@ -39,7 +39,7 @@
 #include "FastLED.h"
 #include "colorutils.h"
 #include "globals.h"
-#include "LEDStripEffect.h"
+#include "ledstripeffect.h"
 
 extern AppTime g_AppTime;
 using namespace std;

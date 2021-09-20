@@ -31,7 +31,7 @@
 #include "globals.h"                            // CONFIG and global headers
 #include "ledmatrixgfx.h"                       // Req'd for drawing types
 #include "ledbuffer.h"                          // For g_apBufferManager type
-#include "Effects/effectmanager.h"              // So we can display cur effect
+#include "effects/effectmanager.h"              // So we can display cur effect
 #include "Bounce2.h"
 #if USE_TFT
     #define TFT_ROTATION U8G2_R2

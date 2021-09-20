@@ -30,7 +30,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "LEDMatrixGFX.h"                   // For LED drawing and color code
+#include "ledmatrixgfx.h"                   // For LED drawing and color code
 
 DEFINE_GRADIENT_PALETTE( vu_gpGreen ) 
 {
