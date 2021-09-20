@@ -76,6 +76,9 @@ Time To Build This Project
 --------------------------
 Time to build the SPECTRUM config.  Assumes a clean build after everything has been installed and downloaded.
 
+AMD 3970 32-cores, 128TB, RAID SSD 
+-> [davepl 09/19/2021] 12.93 seconds (Running Under WSL)
+
 AMD 5950X 16-cores, 64GB, SSD
 -> [davepl 09/19/2021] 16.90 seconds
 
@@ -84,9 +87,6 @@ MacBook Pro 2020, 8 Cores 2.4GHz i9, 64TB, 4TB SSD
 
 Mac Mini, 4 Perf cores, 16GB
 -> [davepl 09/19/2021] 39.06 seconds
-
-AMD 3970 32-cores, 128TB, RAID SSD
--> [davepl 09/19/2021] 43.65 seconds
 
 Mac Pro, 6 cores, 3.5 GHz, 64G RM, 1TB SSD
 -> [davepl 09/19/2021] 48.42 seconds
