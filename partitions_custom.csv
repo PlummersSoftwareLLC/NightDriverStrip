@@ -1,0 +1,12 @@
+# If you link in enough functionality that you exceed the default flash size,
+# this partition table can be enabled.  Assumes only 4M of flash available.
+#
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,  Size, Flags
+
+nvs,      data, nvs,     0x9000,  0x4000,
+otadata,  data, ota,     0xd000,  0x2000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory,       ,   1500K,
+ota_0,    app,  ota_0,         ,   1500K,
+ota_1,    app,  ota_1,         ,   1500K,

@@ -1,0 +1,292 @@
+﻿<!doctype html>
+<html lang="us">
+<head>
+    <meta charset="utf-8">
+    <title>Dave's NightDriverStrip</title>
+    <link href="jquery/jquery-ui.css" rel="stylesheet">
+
+    <style type="text/css">
+        body 
+        {
+            font-family: "Trebuchet MS", sans-serif;
+            margin: 10px;
+            background-color: darkgrey;
+            display:none;
+        }
+
+        .demoHeaders 
+        {
+            margin: 10px 10px 10px 10px;
+        }
+
+        .statusBox 
+        {
+            float: left; 
+            margin: 8px;
+        }
+
+        .centered
+        {
+            text-align: center;
+        }
+
+        #effectList { border: 1px lightgrey solid; margin-bottom: 10px; margin-top: 0px; }
+        #effectList .ui-selecting { background: rgb(63, 31, 207); }
+        #effectList .ui-selected { background: rgb(63, 31, 207); color: white; }
+        #effectList .ui-selected a { background: rgb(63, 31, 207); color: white; }
+        #effectList { list-style-type: none; padding: 0; width: 450px; }
+        #effectList li { margin: 3px; padding: 0.1em; font-size: 0.8em; height: 18px; text-align: left; }
+
+        .ui-slider-horizontal
+        {
+            height: 3px;
+            top:    .3em;
+        }
+        .ui-slider-horizontal .ui-slider-handle
+        {
+            top: -.6em;
+        }
+
+        #btnPrev, #btnNext 
+        {
+            margin-bottom: 8px;
+        }
+
+        .AdjustmentRow
+        {
+            clear: both;
+            width: 450px;
+            font-size: 10pt; 
+            height: 20px;
+        }
+
+        .AdjustmentLabel
+        {
+            clear: both; 
+            width: 145px; 
+            float: left; 
+            text-align: left;
+        }
+
+        .AdjustmentSlider
+        {
+            width: 300px; 
+            float: left;
+        }
+
+    </style>
+</head>
+<body>
+    <center>
+        <h2 class="demoHeaders">Dave's Fire NightDriverStrip</h2>
+        <div id="tabs" style="width:550px;">
+            <ul>
+                <li><a href="#tabs-1">NightDriverStrip</a></li>
+                <li><a href="#tabs-2">Help</a></li>
+            </ul>
+            <div id="tabs-1" style="overflow: hidden;">
+                <!--
+                <div style="clear: both;">
+                    <button id="btnPrev" class="ui-button ui-width ui-corner-all">Prev</button>
+                    <button id="btnNext" class="ui-button ui-width ui-corner-all">Next</button>
+                </div>
+                -->
+                <ol id="effectList" class="effectList">
+                </ol>
+                <div id="Adjustments">
+                </div>
+            <div id="tabs-2" style="text-align:left;">
+                If you can see this page, you're reading it live on the NightDriverStrip.  Not on a page written -about- the NightDriverStrip
+                hosted at Rackspace, but on the ESP32 chip, where the WebResponses are composed and returned.
+            </div>
+        </div>
+    </center>
+
+    <script src="jquery/jquery.min.js"></script>
+    <script src="jquery/jquery-ui.min.js"></script>
+    <script>
+
+        // OnSliderMoved
+        //
+        // Track the sliders live 
+
+        function OnSliderMoved(val, ui)
+        {
+            // $("#SpeedState").text(ui.value);
+        }
+
+        // OnSliderChanged
+        //
+        // When the slider value changes we send an AJAX request off to the server telling it the new value
+        // and then we request current stats over again to update the status box
+
+        var bNoUpdates = false;
+        function OnSliderChanged(val, ui)
+        {
+            jQuery.support.cors = true;
+            $.ajax({
+                crossDomain: true,
+                url: BasePageForRequests() + "/setAdjustment",
+                type: "POST",
+                dataType: "text",
+                data:  { adjustmentIndex: ui.handle.parentElement.id, adjustmentValue: ui.value },
+                error: function (responseData, textStatus, errorThrown) 
+                {
+                    alert("Unable to set adjustment in sliderChanged callback.");
+                },
+            });
+            
+        }
+
+        function BasePageForRequests()
+        {
+            // REVIEW(davepl) - Found this here, not entirely sure why or what it does
+            //
+            //if (window.location.protocol == "file:")
+            //    return "http://192.168.0.238";
+
+            return window.location.origin;
+        }
+
+        // RequestEffectList
+        //
+        // Get the current state of the variables on the server
+
+        function RequestEffectList() 
+        {
+            jQuery.support.cors = true;
+            $.ajax({
+                crossDomain: true,
+                url: BasePageForRequests() + "/getEffectList",
+                type: "GET",
+                dataType: "text",
+                success: function (responseData, textStatus, jqXHR) {
+                    var obj = JSON.parse(responseData);
+                    UpdateEffectList(obj);
+                },
+                error: function (responseData, textStatus, errorThrown) {
+                    UpdateEffectList(null);
+                    setTimeout(RequestEffectList, 2000);
+                }
+            });
+        }
+    </script>
+
+    <script>
+
+        // EnableEffect
+
+        function EnableEffect(i) 
+        {
+            jQuery.support.cors = true;
+            $.post(BasePageForRequests() + "/enableEffect",
+            {
+                effectIndex: i,
+            });
+        }
+   
+        function EnableEffect(i) 
+        {
+            jQuery.support.cors = true;
+            $.post(BasePageForRequests() +  "/disableEffect",
+            {
+                effectIndex: i,
+            });
+        }
+
+        function NextStep()
+        {
+            // Add here when needed
+        }
+
+        // UpdateEffectList
+        //
+        // Takes an effectList, which comes back from the server via Ajax, and builds a selectable list from it
+
+        function UpdateEffectList(effectData)
+        {
+            if (null == effectData)
+                return;
+
+            var cList = $('ol.effectList');
+            
+            $.each(effectData.Effects, function(i)
+            {
+                var li = $('<li/>')
+                    .addClass('ui-menu-item')
+                    .attr('role', 'menuitem')
+                    .attr('id', i)
+                    .appendTo(cList);
+
+                var inp = $('<input type="checkbox"/> ')
+                    .addClass('single-checkbox')
+                    .appendTo(li);
+
+                inp.prop('checked', effectData.Effects[i].enabled);
+
+                var aaa = $('<a/>')
+                    .addClass('ui-all')
+                    .text(effectData.Effects[i].name)
+                    .appendTo(li);
+
+                if (effectData.currentEffect == i)
+                    aaa.addClass("ui-selected");
+            });
+
+            $( "#effectList" ).selectable(
+            {
+                start: function(event, ui)
+                {
+                    $('#Adjustments').empty();
+                },
+                selected: function(event, ui) 
+                { 
+                    jQuery.support.cors = true;
+                    $.ajax({
+                        crossDomain: true,
+                        url: BasePageForRequests() + "/setCurrentEffectIndex",
+                        type: "POST",
+                        dataType: "text",
+                        data:  { 'currentEffectIndex': ui.selected.id },
+                        error: function (responseData, textStatus, errorThrown) 
+                        {
+                            alert("Unable to change effect index.");
+                        },
+                        success:setTimeout(NextStep, 50)
+                    });
+
+                }
+            });
+        }
+
+        $("#tabs").tabs();
+        /*
+        $("#btnPrev").button( 
+        { 
+            icon: "ui-icon-circle-arrow-w" 
+        } );
+
+        $("#btnNext").button(
+        {
+            icon: "ui-icon-circle-arrow-e",
+            iconPosition: "end"
+        } );
+        */
+       
+        $( function() 
+        {
+            $( "button, input, a" ).click( function( event ) 
+            {
+                event.preventDefault();
+            } );
+        } );
+
+        UpdateEffectList(null);
+        RequestEffectList();
+
+        $("body").fadeIn(1000);
+
+    </script>
+
+</body>
+</html>
