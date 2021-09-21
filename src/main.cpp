@@ -165,7 +165,9 @@
 
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "socketserver.h"                       // our socket server for incoming
-#include "soundanalyzer.h"                      // for audio sound processing
+#if ENABLE_AUDIO
+    #include "soundanalyzer.h"                  // for audio sound processing
+#endif
 #include "network.h"                            // For WiFi credentials
 #include "ledbuffer.h"
 #include "Bounce2.h"                            // For Bounce button class
@@ -340,9 +342,10 @@ void IRAM_ATTR SocketServerTaskEntry(void *)
 {
     for (;;)
     {
-        g_SocketServer.ProcessIncomingConnectionsLoop();
-        debugI("Socket connection closed.  Retrying...\n");
-        delay(1000);
+        if (WiFi.isConnected())
+            g_SocketServer.ProcessIncomingConnectionsLoop();
+        debugV("Socket connection closed.  Retrying...\n");
+        delay(500);
     }
 }
 #endif

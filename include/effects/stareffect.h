@@ -40,9 +40,10 @@
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
+#if ENABLE_AUDIO
 #include "soundanalyzer.h"
+#endif
 #include "particles.h"
-
 extern AppTime g_AppTime;
 
 const int cMaxNewStarsPerFrame = 144;

@@ -52,6 +52,8 @@ using namespace std;
 #define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header 
 bool ProcessIncomingData(uint8_t * payloadData, size_t payloadLength);              // In main file
 
+#if INCOMING_WIFI_ENABLED
+
 typedef struct
 {
     uint32_t Size;
@@ -59,6 +61,7 @@ typedef struct
     int64_t  ClockSeconds;
     int64_t  ClockMicros;
 } SocketStatsResponse;
+
 
 // SocketServer
 //
@@ -439,3 +442,4 @@ public:
     }
 };
 
+#endif

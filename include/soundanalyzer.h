@@ -47,6 +47,10 @@
 #include "driver/i2s.h"
 #include "driver/adc.h"
 
+#if !ENABLE_AUDIO
+#error You must have ENABLE_AUDIO set true to include this header file, as it relies on audio hardware
+#endif
+
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 
 extern float gScaler;					  // Instanteous read of LED display vertical scaling

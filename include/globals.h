@@ -133,7 +133,7 @@
 
 #define DRAWING_CORE            1
 #define INCOMING_CORE           1
-#define NET_CORE                0
+#define NET_CORE                1
 #define AUDIO_CORE              0
 #define TFT_CORE                1
 #define DEBUG_CORE              1
@@ -191,7 +191,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
     #define LED_PIN0                5
-    
+    #define NUM_RINGS               5
+    #define RING_SIZE_0             24
+
     #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
 
     // Once you have a working project, selectively enable various additional features by setting
@@ -209,6 +211,41 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
 
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+
+#elif TREESET
+
+    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_NTP              0   // Set the clock from the web
+    #define ENABLE_OTA              1   // Accept over the air flash updates
+    #define ENABLE_REMOTE           1   // IR Remote Control
+    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    
+    #define LED_PIN0          26
+    #define NUM_CHANNELS      1
+    #define RING_SIZE_0       24
+    #define BONUS_PIXELS      0
+    #define MATRIX_WIDTH      5
+    #define MATRIX_HEIGHT     RING_SIZE_0
+    #define NUM_FANS          MATRIX_WIDTH
+    #define FAN_SIZE          MATRIX_HEIGHT
+    #define NUM_BANDS         16
+    #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define RESERVE_MEMORY    150000
+    #define ENABLE_REMOTE     1                     // IR Remote Control
+    #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
+    #define IR_REMOTE_PIN     25                   
+    #define LED_FAN_OFFSET_BU 12
+    #define POWER_LIMIT_MW    20000
+
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON  37
+    #define NUM_INFO_PAGES 2
 
 #elif SPECTRUM
 

@@ -33,7 +33,9 @@
 extern byte g_Brightness;
 extern bool g_bUpdateStarted;
 extern WiFiUDP g_Udp;
-extern SocketServer g_SocketServer;
+#if INCOMING_WIFI_ENABLED
+    extern SocketServer g_SocketServer;
+#endif
 void processRemoteDebugCmd();
 
 #if ENABLE_REMOTE

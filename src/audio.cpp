@@ -29,9 +29,8 @@
 //              
 //---------------------------------------------------------------------------
 
-#include "globals.h"                      // CONFIG and global headers
 #include "soundanalyzer.h"
-
+#include "globals.h"                      // CONFIG and global headers
 #if ENABLE_AUDIO
 
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate

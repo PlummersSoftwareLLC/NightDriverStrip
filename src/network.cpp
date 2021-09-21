@@ -28,12 +28,15 @@
 //
 //---------------------------------------------------------------------------
 
+#include <ESP_WiFiManager.h>
 #include "globals.h"
 #include "network.h"
 #include "ledbuffer.h"
 #include "spiffswebserver.h"
 #include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
+
+DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 
 extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
@@ -93,10 +96,11 @@ void processRemoteDebugCmd()
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
         debugI("%s", szBuffer);
 
-#if ENABLE_AUDIO
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
-        debugI("%s", szBuffer);
-#endif
+        #if ENABLE_AUDIO
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
+            debugI("%s", szBuffer);
+        #endif
+
         #if INCOMING_WIFI_ENABLED
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
         debugI("%s", szBuffer);
@@ -142,14 +146,18 @@ bool ConnectToWiFi(uint cRetries)
 
     debugI("Setting host name to %s...", cszHostname);
 
+    g_WifiManager.setDebugOutput(true);
+    g_WifiManager.autoConnect("NightDriverWiFi");
+
+    /*
     for (uint iPass = 0; iPass < cRetries; iPass++)
     {
-        Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n", 
+        Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
             iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
         //WiFi.disconnect();
         WiFi.begin(cszSSID, cszPassword);
-        
+
         for (uint i = 0; i < 10; i++)
         {
             if (WiFi.isConnected())
@@ -166,6 +174,7 @@ bool ConnectToWiFi(uint cRetries)
         if (WiFi.isConnected())
             break;
     }
+    */
 
     // Let's wait it out to ensure we're really connected before returning
 
@@ -173,7 +182,7 @@ bool ConnectToWiFi(uint cRetries)
 
     if (false == WiFi.isConnected())
     {
-        debugI("Exceeded retry count so givoing up on WiFi\n");
+        debugI("Giving up on WiFi\n");
         return false;
     }
 
@@ -300,6 +309,10 @@ void SetupOTA(const char *pszHostname)
 
 bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 {
+    #if !INCOMING_WIFI_ENABLED
+        return false;
+    #else
+
     uint16_t command16 = payloadData[1] << 8 | payloadData[0];
 
     debugV("payloadLength: %u, command16: %d", payloadLength, command16);
@@ -431,5 +444,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             return false;
         }
     }
+    #endif
 }
 

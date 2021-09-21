@@ -36,9 +36,13 @@
 #include "effects/stareffect.h"                 // star effects
 #include "effects/bouncingballeffect.h"         // bouincing ball effectsenable+
 #include "effects/vueffect.h"                   // vu (sound) based effects
-#include "effects/musiceffect.h"                // Music based effects
-#include "effects/spectrumeffects.h"            // Musis spectrum effects
 #include "effects/tempeffect.h"
+
+
+#if ENABLE_AUDIO
+#include "effects/spectrumeffects.h"            // Musis spectrum effects
+#include "effects/musiceffect.h"                // Music based effects
+#endif
 
 #ifdef FAN_SIZE
     #include "effects/faneffects.h"             // Fan-based effects
@@ -249,12 +253,20 @@ unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 }
 #endif
 
+// AllEffects
+// 
+// A list of internal effects, if any.  
 DRAM_ATTR LEDStripEffect * AllEffects[] =
 {
   #if DEMO
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-    new PaletteEffect(Rainbow_gp)
+    new PaletteEffect(rainbowPalette, 256/16, .2, 0)
+
+  #elif TREESET
+
+  // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new PaletteEffect(rainbowPalette, 256/16, .2, 0)
 
   #elif INSULATORS
 

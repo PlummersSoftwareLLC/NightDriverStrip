@@ -41,10 +41,10 @@
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
-#include "soundanalyzer.h"
 #include "colordata.h"
 
 #if ENABLE_AUDIO
+#include "soundanalyzer.h"
 
 extern AppTime g_AppTime;
 

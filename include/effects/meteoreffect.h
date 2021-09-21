@@ -39,7 +39,9 @@
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
+#if ENABLE_AUDIO
 #include "soundanalyzer.h"
+#endif
 
 using namespace std;
 
