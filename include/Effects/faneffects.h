@@ -83,6 +83,11 @@ static const int FanPixelsVertical[FAN_SIZE] =
 {
   0, 15, 1, 14, 2, 13, 3, 12, 4, 11, 5, 10, 6, 9, 7, 8
 };
+#elif FAN_SIZE == 1
+static const int FanPixelsVertical[FAN_SIZE] =
+{
+  0
+};
 #endif
 // GetFanPixelOrder
 // 
@@ -579,7 +584,7 @@ class PaletteSpinEffect : public LEDStripEffect
                 CRGB c = ColorFromPalette(_Palette, 255.0 * q / FAN_SIZE, 255, NOBLEND);
                 if (_bReplaceMagenta && c == CRGB(CRGB::Magenta))
                     c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
-                if (randomDouble() < _sparkleChance)
+                if (randomDouble(0, 1) < _sparkleChance)
                   c = CRGB::White;
                 DrawFanPixels(x, 1, c, Sequential, i);
             }
