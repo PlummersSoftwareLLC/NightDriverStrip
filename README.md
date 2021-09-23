@@ -100,4 +100,4 @@ Time to build the SPECTRUM config.  Assumes a clean build after everything has b
 -> [davepl 09/19/2021] 48.42 seconds
 
 - Raspberry Pi 4, 64-bit Ubuntu LTS, 4 core, 4GB
--> [davepl 9/23/2021] 6 min 25 seconds
+-> [davepl 09/23/2021] 6 min 25 seconds
