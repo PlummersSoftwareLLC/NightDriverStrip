@@ -210,6 +210,40 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
+#elif TREESET
+
+    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_NTP              0   // Set the clock from the web
+    #define ENABLE_OTA              1   // Accept over the air flash updates
+    #define ENABLE_REMOTE           1   // IR Remote Control
+    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    #define LED_PIN0          26
+    #define NUM_CHANNELS      1
+    #define RING_SIZE_0       24
+    #define BONUS_PIXELS      0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+    #define MATRIX_WIDTH      5
+    #define MATRIX_HEIGHT     RING_SIZE_0
+    #define NUM_FANS          MATRIX_WIDTH
+    #define FAN_SIZE          MATRIX_HEIGHT
+    #define NUM_BANDS         16
+    #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define RESERVE_MEMORY    150000
+    #define ENABLE_REMOTE     1                     // IR Remote Control
+    #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
+    #define IR_REMOTE_PIN     25                   
+    #define LED_FAN_OFFSET_BU 12
+    #define POWER_LIMIT_MW    20000
+
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON  37
+    #define NUM_INFO_PAGES 2
+
 #elif SPECTRUM
 
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
@@ -589,8 +623,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef FAN_SIZE                // How man LEDs around the circumference
-#define FAN_SIZE NUM_LEDS
-#define NUM_FANS 1
+#define FAN_SIZE 1
+#define NUM_FANS NUM_LEDS
 #endif
 
 #ifdef ENABLE_AUDIO

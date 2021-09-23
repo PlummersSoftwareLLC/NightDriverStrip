@@ -35,6 +35,10 @@
 #include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 
+#if USE_WIFI_MANAGER
+DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
+#endif
+
 extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
 
@@ -142,6 +146,10 @@ bool ConnectToWiFi(uint cRetries)
 
     debugI("Setting host name to %s...", cszHostname);
 
+#if USE_WIFI_MANAGER
+    g_WifiManager.setDebugOutput(true);
+    g_WifiManager.autoConnect("NightDriverWiFi");
+#else
     for (uint iPass = 0; iPass < cRetries; iPass++)
     {
         Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n", 
@@ -166,10 +174,6 @@ bool ConnectToWiFi(uint cRetries)
         if (WiFi.isConnected())
             break;
     }
-
-    // Let's wait it out to ensure we're really connected before returning
-
-    sleep(1);
 
     if (false == WiFi.isConnected())
     {
@@ -204,6 +208,7 @@ bool ConnectToWiFi(uint cRetries)
     #endif
 
     debugI("Received IP: %s", WiFi.localIP().toString().c_str());
+#endif
 
     return true;
 }

@@ -287,9 +287,7 @@ template <typename Type = DrawableParticle> class ParticleSystemEffect : public 
 
   public:
     
-    using LEDStripEffect::LEDStripEffect;
-
-    ParticleSystemEffect<Type>()
+    ParticleSystemEffect<Type>(const char * pszName) : LEDStripEffect(pszName)
     {
     }
 
@@ -370,6 +368,11 @@ class ColorBeatWithFlash : public virtual BeatEffectBase, public virtual Particl
 
   public:
 
+    ColorBeatWithFlash(const char * pszName)
+      : LEDStripEffect(pszName), BeatEffectBase(), ParticleSystemEffect<RingParticle>(pszName)
+    {
+    }
+
     virtual void LightInsulator(int iInsulator, int iRing, CRGB color, bool bMajor)
     {
       debugV("MusicalInsulatorEffect2 LightInsulator for Insulator %d", iInsulator);
@@ -421,6 +424,12 @@ class ColorBeatOverRedBkgnd : public virtual BeatEffectBase, public virtual Part
 
   public:
 
+    ColorBeatOverRedBkgnd(const char * pszName)
+      : LEDStripEffect(pszName),
+        BeatEffectBase(),
+        ParticleSystemEffect<RingParticle>(pszName)
+    {
+    }
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
         BeatEffectBase::HandleBeat(bMajor, elapsed, span);
@@ -598,8 +607,10 @@ class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual P
 
   public:
 
-    MoltenGlassOnVioletBkgnd(const CRGBPalette256 & Palette)
-      : BeatEffectBase(0.5, 1.5, 0.020),
+    MoltenGlassOnVioletBkgnd(const char * pszName, const CRGBPalette256 & Palette)
+      : LEDStripEffect(pszName),
+        BeatEffectBase(0.5, 1.5, 0.020),
+        ParticleSystemEffect<SpinningPaletteRingParticle>(pszName),
         _Palette(Palette)
     {
     }
@@ -643,8 +654,8 @@ class SparklySpinningMusicEffect : public virtual BeatEffectBase, public virtual
 
   public:
 
-    SparklySpinningMusicEffect(const CRGBPalette256 & Palette)
-      : _Palette(Palette)
+    SparklySpinningMusicEffect(const char * pszName, const CRGBPalette256 & Palette)
+      : LEDStripEffect(pszName), BeatEffectBase(), ParticleSystemEffect<SpinningPaletteRingParticle>(pszName), _Palette(Palette)
     {
 
     }
@@ -760,8 +771,8 @@ class MusicalHotWhiteInsulatorEffect : public virtual BeatEffectBase, public vir
 
   public:
 
-    MusicalHotWhiteInsulatorEffect()
-      : BeatEffectBase()
+    MusicalHotWhiteInsulatorEffect(const char * pszName)
+      : LEDStripEffect(pszName), BeatEffectBase(), ParticleSystemEffect<HotWhiteRingParticle>(pszName)
     {
       
     }

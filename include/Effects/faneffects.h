@@ -73,7 +73,12 @@ static const int FanPixelsVertical[FAN_SIZE] =
 {
   0, 11, 1, 10, 2, 9, 3, 8, 4, 7, 5, 6
 };
-#else
+#elif TREESET
+static const int FanPixelsVertical[FAN_SIZE] =
+{
+  0, 23, 1, 22, 2, 21, 3, 20, 4, 19, 5, 18, 6, 17, 7, 16, 8, 15, 9, 14, 10, 13, 11, 12
+};
+#elif FAN_SIZE == 16
 static const int FanPixelsVertical[FAN_SIZE] =
 {
   0, 15, 1, 14, 2, 13, 3, 12, 4, 11, 5, 10, 6, 9, 7, 8
@@ -525,6 +530,62 @@ class PaletteReelEffect : public LEDStripEffect
 
 };
 
+class PaletteSpinEffect : public LEDStripEffect
+{
+    const CRGBPalette256 _Palette;
+    bool  _bReplaceMagenta;
+    double _sparkleChance;
+
+  private:
+    float ReelPos[NUM_FANS] = { 0 };
+    int   ColorOffset[NUM_FANS] = { 0 };
+  public:
+
+    PaletteSpinEffect(const char * pszName, const CRGBPalette256 & palette, bool bReplace, double sparkleChance) 
+      : LEDStripEffect(pszName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
+    {
+
+    }
+
+    virtual void Draw()
+    {
+      EVERY_N_MILLISECONDS(20)                  // Update the reels based on the direction
+      {
+        for (int i = 0; i < NUM_FANS; i++)
+        {
+          ReelPos[i] = (ReelPos[i] + 0.25f);
+          if (ReelPos[i] < 0)
+            ReelPos[i] += FAN_SIZE;
+          if (ReelPos[i] >= FAN_SIZE)
+            ReelPos[i] -= FAN_SIZE;
+        }
+      }
+
+      EVERY_N_MILLISECONDS(20)                  // Draw the Effect
+      {
+        fadeAllChannelsToBlackBy(20);
+        DrawEffect();
+      }
+    }
+
+    void DrawEffect()
+    {
+        for (int i = 0; i < NUM_FANS; i++)
+        {
+            ClearFanPixels(0, FAN_SIZE, Sequential, i);
+            for (int x = 0; x < FAN_SIZE; x++)
+            {
+                float q = fmod(ReelPos[i] + x, FAN_SIZE);
+                CRGB c = ColorFromPalette(_Palette, 255.0 * q / FAN_SIZE, 255, NOBLEND);
+                if (_bReplaceMagenta && c == CRGB(CRGB::Magenta))
+                    c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
+                if (randomDouble() < _sparkleChance)
+                  c = CRGB::White;
+                DrawFanPixels(x, 1, c, Sequential, i);
+            }
+        }
+    }
+};
 class ColorCycleEffect : public LEDStripEffect
 {
     PixelOrder _order;

@@ -45,8 +45,7 @@
 
 extern DRAM_ATTR AppTime g_AppTime;
 
-
-class SimpleInsulatorBeatEffect : public BeatEffectBase
+class SimpleInsulatorBeatEffect : public BeatEffectBase, protected virtual LEDStripEffect
 {
   protected:
 
@@ -55,7 +54,7 @@ class SimpleInsulatorBeatEffect : public BeatEffectBase
     virtual void Draw()
     {
         BeatEffectBase::Draw();
-        fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
+        LEDStripEffect::fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
@@ -79,8 +78,8 @@ class SimpleInsulatorBeatEffect : public BeatEffectBase
 
     using BeatEffectBase::BeatEffectBase;
  
-    SimpleInsulatorBeatEffect() 
-      : BeatEffectBase(1.0, 1.0, 0.01)
+    SimpleInsulatorBeatEffect(const char * pszName) 
+      : LEDStripEffect(pszName), BeatEffectBase(1.0, 1.0, 0.01)
     {
     }
 };
@@ -115,18 +114,18 @@ class SimpleInsulatorBeatEffect2 : public BeatEffectBase
     }
 
   public:
-
-    using BeatEffectBase::BeatEffectBase;
  
-    SimpleInsulatorBeatEffect2() 
-      : BeatEffectBase()
+    SimpleInsulatorBeatEffect2(const char * pszName) 
+      : LEDStripEffect(pszName), BeatEffectBase()
     {
     }
 };
 
 class VUInsulatorsEffect : public LEDStripEffect
 {
-  int _last = 1;
+    int _last = 1;
+
+    using LEDStripEffect::LEDStripEffect;
 
     void DrawVUPixels(int i, int fadeBy, const CRGBPalette256 & palette)
     {

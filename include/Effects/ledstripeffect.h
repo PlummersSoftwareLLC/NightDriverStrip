@@ -71,9 +71,10 @@ class LEDStripEffect
 
   public:
 
-	LEDStripEffect(const char * pszName = nullptr)
+	LEDStripEffect(const char * pszName)
 	{
-		_friendlyName = pszName;
+		if (pszName)
+			_friendlyName = pszName;
 	}
 
 	virtual ~LEDStripEffect()
