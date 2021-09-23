@@ -19,7 +19,7 @@ The simplest configuation, `DEMO`, assumes you have a single meter strip of 144 
 
 ## Getting Started
 I recommend you do the following:
-- Build the source code.  In particular, build the `DEMO` configuration.
+- Build the source code.  In particular, build the `DEMO` configuration. Some pointers on what's needed to do this can be found [below](#build-pointers).
 - Upload the resultant binary to the ESP32
 - Connect PIN5 and GND and 5V of a WS2812B strip to the ESP32
 - Provide an adequate power source for the LEDs and ESP32
@@ -66,7 +66,22 @@ A lifetime of coding has taught me to err on the side of simplicity, so please d
 
 Add whatever you want and/or need to make your LED dreams come true.  Fix my blunders.  Fill in the obvious gaps in my knowledge.  Whatever has the most blinken for the fewest bits get my vote.  You only get so much additional cool blinken for every byte of code and program.  That return is measured in BlinkenPerBit, the amount of blinking awesomeness the code adds divided by the impact on the source (and binary).
 
-## Time To Build This Project
+## Build Pointers
+The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
+
+When either the IDE or Core are installed, NightDriverStrip can be built from a command shell by entering the project/repository directory and issuing the following command:
+```
+pio run
+```
+
+This will build the DEMO config.
+
+Note that the repository CI builds both the DEMO and SPECTRUM configurations. This can be done locally using this command:
+```
+pio run -e demo -e spectrum
+```
+
+## Time It Takes To Build This Project
 Time to build the SPECTRUM config.  Assumes a clean build after everything has been installed and downloaded.
 
 - AMD 3970 32-cores, 128TB, RAID SSD 
