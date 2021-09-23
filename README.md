@@ -1,4 +1,5 @@
 # NightDriverStrip
+![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
 
 _Davepl, 9/19/2021_
 
