@@ -217,7 +217,7 @@ public:
 
 	const char * GetCurrentEffectName() const
 	{
-		return "LEDEffect"; // typeid(*GetCurrentEffect()).name();
+		return _ppEffects[_iCurrentEffect]->FriendlyName();
 	}
 
 	// Change the current effect; marks the state as needing attention so this get noticed next frame

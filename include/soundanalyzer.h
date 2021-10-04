@@ -88,8 +88,14 @@ using namespace std;
 #define MAX_VU MAX_ANALOG_IN
 #define MIN_VU 8
 
+#ifndef GAINDAMPEN
 #define GAINDAMPEN  25									  // How slowly brackets narrow in for spectrum bands
-#define VUDAMPEN    2 									  // How slowly VU reacts
+#endif
+
+#ifndef VUDAMPEN
+#define VUDAMPEN    20 									  // How slowly VU reacts
+#endif
+
 #define VUDAMPENMIN 100  								  // How slowly VU min creeps up to test noise floor
 #define VUDAMPENMAX 25								      // How slowly VU max drops down to test noise ceiling
 

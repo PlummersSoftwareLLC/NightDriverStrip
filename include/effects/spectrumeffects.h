@@ -57,6 +57,8 @@ class InsulatorSpectrumEffect : public LEDStripEffect
 {
   public:
 
+    using LEDStripEffect::LEDStripEffect;
+    
     virtual void Draw()
     {
         //fillSolidOnAllChannels(CRGB::Black);

@@ -237,6 +237,12 @@ CRGBPalette256 USAColors_p  =
 CRGBPalette256 rainbowPalette(RainbowColors_p);
 CRGBPalette256 blueSweep(CRGB::Blue, CRGB::Green);
 
+CRGBPalette256 BlueStripes(CRGB::White, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::White, CRGB::Black, CRGB::Black, 
+                           CRGB::White, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::White, CRGB::Black, CRGB::Black);
+
+CRGBPalette256 MagentaStripes(CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::White, CRGB::Black, CRGB::Black, 
+                           CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::White, CRGB::Black, CRGB::Black);
+
 #if ENABLE_AUDIO
 // GetSpectrumAnalyzer
 //
@@ -266,6 +272,28 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
   #elif TREESET
 
   // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+  
+    new ColorCycleEffect(BottomUp),
+    new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Blue),        // Blue Sparkle
+
+    //new PaletteSpinEffect("BlueStripeSpin", CRGBPalette256(blueSweep), false, 0, 0.1)
+
+    //new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", BlueColors_p, 10.0, 1, LINEARBLEND, 2.0, 0.0, 0.0),        // Blue Sparkle
+
+    
+    //new PaletteSpinEffect("CycleStripeSpin", CRGBPalette256(MagentaStripes), true),
+    
+    //new StarryNightEffect<Star>()
+    /*
+    new SparklySpinningMusicEffect("SparklySpinningMusical", RainbowColors_p), 
+    new ColorBeatOverRedBkgnd("ColorBeatOnRedBkgnd"),
+    new MoltenGlassOnVioletBkgnd("MoltenGlassOnViolet", RainbowColors_p),
+    new ColorBeatWithFlash("ColorBeatWithFlash"),
+    new MusicalHotWhiteInsulatorEffect("MusicalHotWhite"),
+
+    new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
+    new InsulatorSpectrumEffect("InsulatorSpectrumEffect"),
+    */
     new PaletteEffect(rainbowPalette, 256/16, .2, 0)
 
   #elif INSULATORS

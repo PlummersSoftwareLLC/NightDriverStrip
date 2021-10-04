@@ -139,10 +139,12 @@ class FadingObject : public Lifespan
         if (age < PreignitionTime() && PreignitionTime() != 0.0f)
             return 1.0 - (age / PreignitionTime());
         age -= PreignitionTime();
-
-        if (age < HoldTime() + IgnitionTime())
+        if (age < IgnitionTime() && IgnitionTime() != 0.0f)
+            return (age / IgnitionTime());
+        age -= IgnitionTime();
+        if (age < HoldTime())
             return 0.0f;                                                // Just born
-        if (age > HoldTime() + IgnitionTime() + FadeTime())
+        if (age > HoldTime() + FadeTime())
             return 1.0f;                                                // Black hole, all faded out
         age -= (HoldTime() + IgnitionTime());
             return (age / FadeTime());                                  // Fading star
@@ -172,7 +174,7 @@ class FadingColoredObject : public FadingObject
         {
             CRGB c = CRGB::White;
             c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
-            return c;
+            return c + _baseColor;
         }
 
         CRGB c = _baseColor;
@@ -204,10 +206,17 @@ class FadingPaletteObject : public FadingObject
 
     virtual CRGB ObjectColor() const
     {
-        if (Age() >= PreignitionTime() && Age() < IgnitionTime() + PreignitionTime())
+        if (Age() < PreignitionTime())
         {
             CRGB c = CRGB::White;
-            c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
+            fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
+            return c;
+        }
+        else if (Age() >= PreignitionTime() && Age() < IgnitionTime() + PreignitionTime())
+        {
+            CRGB c = CRGB::White;
+            //c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
+            fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
             return c;
         }
 
@@ -291,9 +300,7 @@ template <typename Type = DrawableParticle> class ParticleSystemEffect : public 
 
   public:
     
-    using LEDStripEffect::LEDStripEffect;
-
-    ParticleSystemEffect<Type>()
+    ParticleSystemEffect<Type>(const char * pszName) : LEDStripEffect(pszName)
     {
     }
 
@@ -374,6 +381,11 @@ class ColorBeatWithFlash : public virtual BeatEffectBase, public virtual Particl
 
   public:
 
+    ColorBeatWithFlash(const char * pszName)
+      : LEDStripEffect(pszName), BeatEffectBase(), ParticleSystemEffect<RingParticle>(pszName)
+    {
+    }
+
     virtual void LightInsulator(int iInsulator, int iRing, CRGB color, bool bMajor)
     {
       debugV("MusicalInsulatorEffect2 LightInsulator for Insulator %d", iInsulator);
@@ -424,6 +436,12 @@ class ColorBeatOverRedBkgnd : public virtual BeatEffectBase, public virtual Part
 
   public:
 
+    ColorBeatOverRedBkgnd(const char * pszName)
+      : LEDStripEffect(pszName),
+        BeatEffectBase(),
+        ParticleSystemEffect<RingParticle>(pszName)
+    {
+    }
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
         BeatEffectBase::HandleBeat(bMajor, elapsed, span);
@@ -677,8 +695,10 @@ class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual P
 
   public:
 
-    MoltenGlassOnVioletBkgnd(const CRGBPalette256 & Palette)
-      : BeatEffectBase(0.5, 1.5, 0.020),
+    MoltenGlassOnVioletBkgnd(const char * pszName, const CRGBPalette256 & Palette)
+      : LEDStripEffect(pszName),
+        BeatEffectBase(0.5, 1.5, 0.020),
+        ParticleSystemEffect<SpinningPaletteRingParticle>(pszName),
         _Palette(Palette)
     {
     }
@@ -722,8 +742,8 @@ class SparklySpinningMusicEffect : public virtual BeatEffectBase, public virtual
 
   public:
 
-    SparklySpinningMusicEffect(const CRGBPalette256 & Palette)
-      : _Palette(Palette)
+    SparklySpinningMusicEffect(const char * pszName, const CRGBPalette256 & Palette)
+      : LEDStripEffect(pszName), BeatEffectBase(), ParticleSystemEffect<SpinningPaletteRingParticle>(pszName), _Palette(Palette)
     {
 
     }
@@ -765,8 +785,8 @@ class MusicalHotWhiteInsulatorEffect : public virtual BeatEffectBase, public vir
 
   public:
 
-    MusicalHotWhiteInsulatorEffect()
-      : BeatEffectBase()
+    MusicalHotWhiteInsulatorEffect(const char * pszName)
+      : LEDStripEffect(pszName), BeatEffectBase(), ParticleSystemEffect<HotWhiteRingParticle>(pszName)
     {
       
     }

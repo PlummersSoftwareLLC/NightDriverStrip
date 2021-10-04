@@ -70,11 +70,9 @@ class BeatEffectBase : public virtual LEDStripEffect
     }
 
   public:
-
-    using LEDStripEffect::LEDStripEffect;
-    
+   
     BeatEffectBase(double lowLatch = 1.0, double highLatch = 1.25, double minElapsed = 0.00)      // Eighth note at 120BPM is .125
-     : LEDStripEffect("BeatEffectBase"),
+     : LEDStripEffect(nullptr),
        _lowLatch(lowLatch),
        _highLatch(highLatch),
        _minElapsed(minElapsed),
@@ -126,103 +124,6 @@ class BeatEffectBase : public virtual LEDStripEffect
 //
 // MusicalInsulatorEffect
 //
-
-class DoesntWorkMusicalEffect : public BeatEffectBase
-{
-  protected:
-
-    size_t iLastInsulator = -1;
-    CRGB   lastColor;
-    deque<int> litInsulators;
-
-  public:
-   
-    DoesntWorkMusicalEffect()
-      : BeatEffectBase("MusicalInsulatorEffect")
-    {
-
-    }
-
-
-    virtual void LightInsulator(int iInsulator, int iRing, CRGB color)
-    {
-      debugV("Base effect LightInsulator for ring %d of insulator %i", iInsulator, iRing);
-
-      if (iInsulator == -1)
-        DrawFanPixels(0, NUM_LEDS, color, Sequential, 0);
-      else
-        DrawFanPixels(0, FAN_SIZE, color, Sequential, iInsulator);        // Fill one insulator for minor beat
-    }
-
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
-    {
-      BeatEffectBase::HandleBeat(bMajor, elapsed, span);
-
-      size_t iNewInsulator = -1;
-
-      // First, no matter the beat, we add color to the entire things.  We only add N vibrance so it can add up over time.
-      // Multiplying the vibrance by gVURatio ties it directly to the sound
-
-      CRGB b = CHSV(beatsin8(4), 255, 64*gVURatio);
-      setPixels(0, NUM_LEDS, b, true);
-
-      // Color is additive, so we start with 200 V so that if the same beat in the same color iis replayed in the same insulator, it gets brighter
-
-      // CRGB c = CHSV(random(0, 255), 255, 200);
-      CRGB c = CHSV(beatsin8(2), 255, 200);
-      if (!bMajor && iLastInsulator != -1)
-      {
-          // Repeat the last beat by adding to it
-          //iNewInsulator = iLastInsulator;
-          c = lastColor;
-      }
-
-      if (litInsulators.size() >= NUM_FANS)
-      {
-          iNewInsulator = litInsulators.back();
-          litInsulators.pop_back();
-      }
-      else
-      {
-          // Search for a new insulator that's not in the MRU.
-
-          for (int iPass = 0; iPass < NUM_FANS * 10; iPass++)
-          {
-              size_t i = random(0, NUM_FANS);
-              if (litInsulators.end() != std::find(litInsulators.begin(), litInsulators.end(), i))
-                  continue;
-              iNewInsulator = i;
-              litInsulators.push_front(iNewInsulator);
-              if (randomDouble(0.0, 1.0) < 0.25)       // Sometimes we put this one on twice just to switch up the order 
-                  litInsulators.push_front(iNewInsulator);
-              break;
-          }
-      }
-      
-      if (iNewInsulator == -1)				// No empty slot could be found!
-      {	
-        litInsulators.clear();
-        setAllOnAllChannels(0,0,0);
-        return;
-      }
-      
-      lastColor = c;
-      iLastInsulator = iNewInsulator;
-
-      LightInsulator(SecondsSinceLastBeat() > 0.8 ? -1 : iNewInsulator, 0, bMajor ?  RandomSaturatedColor() : c);
-    }
-
-    virtual void Draw()
-    {
-      debugV("BeatEffect2::Draw");
-      BeatEffectBase::Draw();
-
-      double elapsed = min(1.0, (g_AppTime.CurrentTime() - _lastBeat));     // Elapsed since last beat, 0.0 ... 1.0
-      const int fadeRate = 18;
-      fadeAllChannelsToBlackBy(max(1.0, fadeRate - (fadeRate * elapsed)));
-      delay(20);
-    }    
-};
 
 class BeatEffect : public LEDStripEffect
 {
@@ -363,7 +264,7 @@ class ChannelBeatEffect : public BeatEffect
 // Uses a very sensitive beat detection.  Fills all pixels blue based on VU, and on beats, fills a random insulator
 // with a random color.  Longer beats get more insulators.  Very long beats get everything filled with purple.
 
-class SimpleColorBeat : public BeatEffectBase
+class SimpleColorBeat : public BeatEffectBase, protected virtual LEDStripEffect
 {
   protected:
 
@@ -376,7 +277,7 @@ class SimpleColorBeat : public BeatEffectBase
         CRGB c = CRGB::Blue * gVURatio * g_AppTime.DeltaTime() * 0.75;
         setPixels(0, NUM_LEDS, c, true);
 
-        fadeAllChannelsToBlackBy(min(255.0,1000 * g_AppTime.DeltaTime()));
+        LEDStripEffect::fadeAllChannelsToBlackBy(min(255.0,1000 * g_AppTime.DeltaTime()));
         delay(1);
     }
 
@@ -429,8 +330,8 @@ class SimpleColorBeat : public BeatEffectBase
   
     using BeatEffectBase::BeatEffectBase;
   
-    SimpleColorBeat()
-      : BeatEffectBase(1.0, 1.0, 0.25)
+    SimpleColorBeat(const char * pszName)
+      : LEDStripEffect(pszName), BeatEffectBase(1.0, 1.0, 0.25)
     {
     }
 

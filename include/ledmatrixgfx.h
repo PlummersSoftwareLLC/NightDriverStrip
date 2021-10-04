@@ -39,6 +39,7 @@
 #include "Adafruit_GFX.h"
 #include "pixeltypes.h"
 #include <string>
+#include <stdexcept>
 
 // 5:6:5 Color definitions
 #define BLACK16 0x0000

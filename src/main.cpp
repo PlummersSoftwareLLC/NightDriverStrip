@@ -203,7 +203,7 @@ TaskHandle_t g_taskSocket = nullptr;
 //
 
 DRAM_ATTR uint8_t giInfoPage = 1;                   // Which page of the display is being shown
-DRAM_ATTR bool    gbInfoPageDirty = false;          // Does the display need to be erased?
+DRAM_ATTR bool    gbInfoPageDirty = true;           // Does the display need to be erased?
 DRAM_ATTR WiFiUDP g_Udp;                            // UDP object used for NNTP, etc
 DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
 DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started?
