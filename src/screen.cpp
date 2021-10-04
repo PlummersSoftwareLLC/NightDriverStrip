@@ -33,6 +33,9 @@
 #include "ledbuffer.h"                          // For g_apBufferManager type
 #include "Effects/effectmanager.h"              // So we can display cur effect
 #include "Bounce2.h"
+#include "freefonts.h"
+
+
 #if USE_TFT
     #define TFT_ROTATION U8G2_R2
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_TFT(TFT_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
@@ -54,6 +57,8 @@ extern volatile float DRAM_ATTR gVURatio;           // Current VU as a ratio to 
 extern volatile float gVU;
 extern DRAM_ATTR uint8_t giInfoPage;                // What page of screen we are showing
 extern DRAM_ATTR bool gbInfoPageDirty;              // Does display need to be erased?
+
+bool g_ShowFPS = false;                             // Indicates whether little lcd should show FPS
 
 // TFTStatus
 // 
@@ -120,14 +125,71 @@ void IRAM_ATTR UpdateScreen()
 
 #elif USE_OLED
 
-        if (giInfoPage == 0)
+        if (giInfoPage == 1)
         {
-            if (gbInfoPageDirty)
+            // We only draw after a page flip or if anything has changed about the information that will be
+            // shown in the page. This avoids flicker, but at the cost that we have to remember what we dispalyed
+            // last time and check each time to see if its any different before drawing.
+
+            static auto lasteffect = g_pEffectManager->GetCurrentEffectIndex();
+            static auto sip        = WiFi.localIP().toString();
+            static auto lastFPS    = g_FPS;
+
+            if (gbInfoPageDirty == true                                      || 
+                lasteffect      != g_pEffectManager->GetCurrentEffectIndex() || 
+                sip             != WiFi.localIP().toString()                 || 
+                (g_ShowFPS && (lastFPS != g_FPS))
+            )
             {
                 gbInfoPageDirty = false;
-                M5.Lcd.fillScreen(BLACK16);
-            }
+                lasteffect      = g_pEffectManager->GetCurrentEffectIndex();
+                sip             = WiFi.localIP().toString();
+                lastFPS         = g_FPS;
 
+                M5.Lcd.fillScreen(BLACK16);
+
+                M5.Lcd.setFreeFont(FF17);
+                M5.Lcd.setTextColor(0xFBE0);
+                auto xh = M5.Lcd.width() / 2;
+                auto yh = M5.Lcd.fontHeight();
+
+                M5.Lcd.setTextDatum(C_BASELINE);
+                string sEffect = to_string("Current Effect: ") + 
+                                 to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
+                                 to_string(" / ") + 
+                                 to_string(g_pEffectManager->EffectCount());
+
+                M5.Lcd.drawString(sEffect.c_str(), xh, yh += M5.Lcd.fontHeight());      // -4 is purely aesthetic alignment
+                
+                M5.Lcd.setFreeFont(FF18);
+                M5.Lcd.setTextColor(WHITE16);
+                M5.Lcd.drawString(g_pEffectManager->GetCurrentEffectName(), xh, yh += M5.Lcd.fontHeight() - 4);   // -4 is just aesthetic alignment
+
+                if (WiFi.isConnected())
+                {
+                    String sIP = WiFi.localIP().toString().c_str();
+                    M5.Lcd.setFreeFont(FF17);
+                    M5.Lcd.setTextColor(YELLOW16);
+                    M5.Lcd.drawString(sIP.c_str(), xh, yh += M5.Lcd.fontHeight());
+                }
+                if (g_ShowFPS)
+                {
+                    string sFPS = "FPS: " + to_string(g_FPS);
+                    M5.Lcd.setFreeFont(FF1);
+                    M5.Lcd.drawString(sFPS.c_str(), xh, yh += M5.Lcd.fontHeight());
+                }
+
+                M5.Lcd.setFreeFont(FF9);
+                M5.Lcd.setTextColor(GREEN16);
+                M5.Lcd.drawString("NightDriverLED.com", xh, M5.Lcd.height() - M5.Lcd.fontHeight());
+
+                // Reset text color to white (no way to fetch original and save it that I could see)
+                M5.Lcd.setTextColor(WHITE16);
+                
+            }
+        }
+        else if (giInfoPage == 0)
+        {
             static uint lastFullDraw = 0;
             char szBuffer[256];
             if (millis() - lastFullDraw > 100)

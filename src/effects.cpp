@@ -265,10 +265,18 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
   #elif TREESET
 
   // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+  
+    new ColorCycleEffect(BottomUp),
+    new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Blue),        // Blue Sparkle
 
-    //new ColorCycleEffect(BottomUp),
-    new PaletteSpinEffect("CycleStripeSpin", CRGBPalette256(MagentaStripes), true),
-    new PaletteSpinEffect("BlueStripeSpin", CRGBPalette256(BlueStripes), false, 0.01),
+    //new PaletteSpinEffect("BlueStripeSpin", CRGBPalette256(blueSweep), false, 0, 0.1)
+
+    //new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", BlueColors_p, 10.0, 1, LINEARBLEND, 2.0, 0.0, 0.0),        // Blue Sparkle
+
+    
+    //new PaletteSpinEffect("CycleStripeSpin", CRGBPalette256(MagentaStripes), true),
+    
+    //new StarryNightEffect<Star>()
     /*
     new SparklySpinningMusicEffect("SparklySpinningMusical", RainbowColors_p), 
     new ColorBeatOverRedBkgnd("ColorBeatOnRedBkgnd"),

@@ -135,10 +135,12 @@ class FadingObject : public Lifespan
         if (age < PreignitionTime() && PreignitionTime() != 0.0f)
             return 1.0 - (age / PreignitionTime());
         age -= PreignitionTime();
-
-        if (age < HoldTime() + IgnitionTime())
+        if (age < IgnitionTime() && IgnitionTime() != 0.0f)
+            return (age / IgnitionTime());
+        age -= IgnitionTime();
+        if (age < HoldTime())
             return 0.0f;                                                // Just born
-        if (age > HoldTime() + IgnitionTime() + FadeTime())
+        if (age > HoldTime() + FadeTime())
             return 1.0f;                                                // Black hole, all faded out
         age -= (HoldTime() + IgnitionTime());
             return (age / FadeTime());                                  // Fading star
@@ -168,7 +170,7 @@ class FadingColoredObject : public FadingObject
         {
             CRGB c = CRGB::White;
             c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
-            return c;
+            return c + _baseColor;
         }
 
         CRGB c = _baseColor;
@@ -200,10 +202,17 @@ class FadingPaletteObject : public FadingObject
 
     virtual CRGB ObjectColor() const
     {
-        if (Age() >= PreignitionTime() && Age() < IgnitionTime() + PreignitionTime())
+        if (Age() < PreignitionTime())
         {
             CRGB c = CRGB::White;
-            c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
+            fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
+            return c;
+        }
+        else if (Age() >= PreignitionTime() && Age() < IgnitionTime() + PreignitionTime())
+        {
+            CRGB c = CRGB::White;
+            //c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
+            fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
             return c;
         }
 

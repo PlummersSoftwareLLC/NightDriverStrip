@@ -95,6 +95,7 @@
 // with one (but it doesn't have to be used!).
 
 #if M5STICKC
+#define LED_BUILTIN 10                          // Not defined by the M5 headers, but it seems to be PIN 10
 #include "M5StickC.h"
 #undef min                                      // They define a min() on us
 #endif
@@ -155,6 +156,7 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include <FastLED.h>                // FastLED for the LED panels
 #include <pixeltypes.h>             // Handy color and hue stuff
@@ -165,6 +167,27 @@
 #include "RemoteDebug.h"
 
 using namespace std;
+
+#include<sstream>
+
+// I don't know why to_string is missing, but it seems to be a compiler/cygwin
+// issue. If this turns into a redefinition at some point because the real one
+// comes online in the future, this to_string can be removed.
+
+template <typename T>
+std::string to_string(T value)
+{
+    //create an output string stream
+    std::ostringstream os ;
+
+    //throw the value into the string stream
+    os << value ;
+
+      //convert the string stream into a string and return
+    return os.str();
+}
+
+#define STRING(num) STR(num)
 
 extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this
 
@@ -252,7 +275,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              0   // Set the clock from the web
@@ -276,7 +299,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RESERVE_MEMORY  150000
     #define IR_REMOTE_PIN   25                    
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW 10000
+    #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
 
     #define NOISE_CUTOFF   75
     #define NOISE_FLOOR    200.0f
@@ -698,7 +721,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // for safety, obviously, design your hardware to protect against it with a fuse, etc.
 
 #ifndef POWER_LIMIT_MW
-#define POWER_LIMIT_MW 1000*5*2
+#define POWER_LIMIT_MW 500*5                // Define for your power supply, default is a low 2500mA for USB
 #endif
 
 #ifndef USE_TFT

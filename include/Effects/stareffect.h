@@ -66,6 +66,27 @@ class Star : public MovingFadingPaletteObject, public ObjectSize
     }
 };
 
+class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
+{
+    virtual float PreignitionTime() const         { return .25f;  }
+    virtual float IgnitionTime()    const         { return 5.0f;  }
+    virtual float HoldTime()        const         { return 0.00f; }
+    virtual float FadeTime()        const         { return 0.0f;  }
+
+  public:
+
+    virtual double GetStarSize()
+    {
+        return _objectSize;
+    }
+
+    LongLifeSparkleStar(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, double starSize = 1.0)
+        : MovingFadingPaletteObject(palette, blendType, maxSpeed),
+          ObjectSize(starSize)
+    {
+    }
+};
+
 class ColorStar : public MovingFadingColoredObject, public ObjectSize
 {
   public:
@@ -335,6 +356,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     double                       _maxSpeed;
     double                       _blurFactor;
     double                       _musicFactor;
+    CRGB                         _skyColor;
 
   public:
 
@@ -346,7 +368,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                                 TBlendType blendType = LINEARBLEND, 
                                 double maxSpeed = 20.0,
                                 double blurFactor = 0.0,
-                                double musicFactor = 0.0)
+                                double musicFactor = 0.0,
+                                CRGB skyColor = CRGB::Black)
       : LEDStripEffect(pszName),
         _palette(palette),
         _newStarProbability(probability),
@@ -354,7 +377,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         _blendType(blendType),
         _maxSpeed(maxSpeed),
         _blurFactor(blurFactor),
-        _musicFactor(musicFactor)
+        _musicFactor(musicFactor),
+        _skyColor(skyColor)
     {
     }
 
@@ -365,7 +389,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
     virtual void Clear()
     {
-        setAllOnAllChannels(0,0,0);
+        LEDStripEffect::setAllOnAllChannels(_skyColor.r, _skyColor.g, _skyColor.b);
     }
 
 	virtual void Draw()

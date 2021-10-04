@@ -91,3 +91,8 @@ AMD 3970 32-cores, 128TB, RAID SSD
 Mac Pro, 6 cores, 3.5 GHz, 64G RM, 1TB SSD
 -> [davepl 09/19/2021] 48.42 seconds
 
+Intel Core 2 Duo
+-> [davepl 9/22/2021]  4 min 6 seconds
+
+Raspberry Pi 4, 64-bit Ubuntu LTS, 4 core, 4G
+-> [davepl 9/.23/2021] 6 min 25 seconds
