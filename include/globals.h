@@ -256,7 +256,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              1   // Accept over the air flash updates
