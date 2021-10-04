@@ -36,7 +36,7 @@
 #include <vector>
 #include <math.h>
 #define  FASTLED_INTERNAL 1           // Suppress the FASTLED compilation banner
-#include "fastled.h"                 
+#include "FastLED.h"                 
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"

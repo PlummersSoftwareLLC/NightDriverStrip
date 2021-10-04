@@ -41,8 +41,12 @@
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
+#include "faneffects.h"
+
+#if ENABLE_AUDIO
 #include "soundanalyzer.h"
 #include "musiceffect.h"
+#endif
 
 extern AppTime g_AppTime;
 
@@ -369,7 +373,7 @@ class RingParticle : public FadingColoredObject
 };
 
 
-
+#if ENABLE_AUDIO
 class ColorBeatWithFlash : public virtual BeatEffectBase, public virtual ParticleSystemEffect<RingParticle>
 {
     int _iLastInsulator = 0;
@@ -425,7 +429,6 @@ class ColorBeatWithFlash : public virtual BeatEffectBase, public virtual Particl
     }
 };
 
-#if ENABLE_AUDIO
 class ColorBeatOverRedBkgnd : public virtual BeatEffectBase, public virtual ParticleSystemEffect<RingParticle>
 {
     int  _iLastInsulator = 0;
@@ -606,8 +609,84 @@ class SpinningPaletteRingParticle : public FadingObject
     virtual float FadeTime() const                { return 1.00;          }
 };
 
-CRGBPalette256 golden(CRGB::Gold);
 
+class HotWhiteRingParticle : public FadingObject
+{ 
+  protected:
+
+    shared_ptr<LEDMatrixGFX> * _pGFX;
+    int             _iInsulator;
+    int             _iRing;
+    float           _ignitionTime;
+    float           _fadeTime;
+
+  public:
+
+    HotWhiteRingParticle(shared_ptr<LEDMatrixGFX> * pGFX, int iInsulator, int iRing, float ignitionTime = 0.25f, float fadeTime = 1.0f)
+      :  _pGFX(pGFX),
+         _iInsulator(iInsulator),
+         _iRing(iRing),
+         _ignitionTime(ignitionTime),
+         _fadeTime(fadeTime)
+    {
+        assert(iRing <= NUM_RINGS);
+        assert(iInsulator < NUM_FANS);
+        debugV("Creating particle at insultator %d", iInsulator);
+    }
+
+    virtual void Render()
+    {
+        debugV("Particle Render at insulator %d", _iInsulator);
+
+        CRGB c = CRGB::White;
+
+        if (Age() >= PreignitionTime() && Age() < IgnitionTime() + PreignitionTime())
+        {
+            c = CRGB::White;
+            //c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
+        }
+        else
+        {
+          double age = Age() - PreignitionTime() - IgnitionTime();
+
+          byte temperature = 255 * (1.0 - (age/FadeTime()));
+          byte t192 = round((temperature/255.0)*191);
+
+          // calculate ramp up from
+          byte heatramp = t192 & 0x3F; // 0..63
+          heatramp <<= 2; // scale up to 0..252
+
+          if( t192 > 0x80)                      // hottest
+              c = CRGB(255, 255, heatramp);
+          else if( t192 > 0x40 )                // middle
+              c = CRGB( 255, heatramp, 0);
+          else                                  // coolest
+              c = CRGB( heatramp, 0, 0);     
+          fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
+        }
+
+        if (_iInsulator < 0)    // -1 is a major beat, all insulators
+        {
+            for (int i = 0; i < NUM_FANS; i++)
+            {              
+              FillRingPixels(c, i, _iRing);
+            }
+        }
+        else    // Individual ring for a minor beat
+        {
+          FillRingPixels(c, _iInsulator, _iRing);
+        }
+    }
+
+    virtual float PreignitionTime() const         { return 0.0f;          }
+    virtual float IgnitionTime()    const         { return _ignitionTime; }
+    virtual float HoldTime()        const         { return 0.0f;          }
+    virtual float FadeTime()        const         { return _fadeTime;     }
+};
+
+#if ENABLE_AUDIO
+
+CRGBPalette256 golden(CRGB::Gold);
 class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual ParticleSystemEffect<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
@@ -699,80 +778,6 @@ class SparklySpinningMusicEffect : public virtual BeatEffectBase, public virtual
     }
 };
 
-class HotWhiteRingParticle : public FadingObject
-{ 
-  protected:
-
-    shared_ptr<LEDMatrixGFX> * _pGFX;
-    int             _iInsulator;
-    int             _iRing;
-    float           _ignitionTime;
-    float           _fadeTime;
-
-  public:
-
-    HotWhiteRingParticle(shared_ptr<LEDMatrixGFX> * pGFX, int iInsulator, int iRing, float ignitionTime = 0.25f, float fadeTime = 1.0f)
-      :  _pGFX(pGFX),
-         _iInsulator(iInsulator),
-         _iRing(iRing),
-         _ignitionTime(ignitionTime),
-         _fadeTime(fadeTime)
-    {
-        assert(iRing <= NUM_RINGS);
-        assert(iInsulator < NUM_FANS);
-        debugV("Creating particle at insultator %d", iInsulator);
-    }
-
-    virtual void Render()
-    {
-        debugV("Particle Render at insulator %d", _iInsulator);
-
-        CRGB c = CRGB::White;
-
-        if (Age() >= PreignitionTime() && Age() < IgnitionTime() + PreignitionTime())
-        {
-            c = CRGB::White;
-            //c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
-        }
-        else
-        {
-          double age = Age() - PreignitionTime() - IgnitionTime();
-
-          byte temperature = 255 * (1.0 - (age/FadeTime()));
-          byte t192 = round((temperature/255.0)*191);
-
-          // calculate ramp up from
-          byte heatramp = t192 & 0x3F; // 0..63
-          heatramp <<= 2; // scale up to 0..252
-
-          if( t192 > 0x80)                      // hottest
-              c = CRGB(255, 255, heatramp);
-          else if( t192 > 0x40 )                // middle
-              c = CRGB( 255, heatramp, 0);
-          else                                  // coolest
-              c = CRGB( heatramp, 0, 0);     
-          fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
-        }
-
-        if (_iInsulator < 0)    // -1 is a major beat, all insulators
-        {
-            for (int i = 0; i < NUM_FANS; i++)
-            {              
-              FillRingPixels(c, i, _iRing);
-            }
-        }
-        else    // Individual ring for a minor beat
-        {
-          FillRingPixels(c, _iInsulator, _iRing);
-        }
-    }
-
-    virtual float PreignitionTime() const         { return 0.0f;          }
-    virtual float IgnitionTime()    const         { return _ignitionTime; }
-    virtual float HoldTime()        const         { return 0.0f;          }
-    virtual float FadeTime()        const         { return _fadeTime;     }
-};
-
 class MusicalHotWhiteInsulatorEffect : public virtual BeatEffectBase, public virtual ParticleSystemEffect<HotWhiteRingParticle>
 {
     int  _iLastInsulator = 0;
@@ -816,3 +821,5 @@ class MusicalHotWhiteInsulatorEffect : public virtual BeatEffectBase, public vir
       delay(20);
     }
 };
+#endif
+

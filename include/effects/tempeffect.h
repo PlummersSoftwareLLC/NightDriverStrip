@@ -31,6 +31,8 @@
 
 #pragma once
 
+#if ENABLE_AUDIO
+
 #include <sys/types.h>
 #include <errno.h>
 #include <iostream>
@@ -41,11 +43,12 @@
 #include "ledstripeffect.h" 
 #include "faneffects.h"
 #include "musiceffect.h"
+#if ENABLE_AUDIO
 #include "soundanalyzer.h"
-
+#endif
 extern DRAM_ATTR AppTime g_AppTime;
 
-class SimpleInsulatorBeatEffect : public BeatEffectBase, protected virtual LEDStripEffect
+class SimpleInsulatorBeatEffect : public BeatEffectBase
 {
   protected:
 
@@ -170,3 +173,4 @@ class VUInsulatorsEffect : public LEDStripEffect
     }  
 };
 
+#endif

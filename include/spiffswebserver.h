@@ -43,7 +43,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
-#include <Effects/EffectManager.h>
+#include <effects/effectmanager.h>
 #include <Arduino.h>
 #include <vector>
 

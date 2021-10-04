@@ -37,14 +37,14 @@
 #include <vector>
 #include <math.h>
 #define fastled_internal 1
-#include "fastled.h"
+#include "FastLED.h"
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
-#include "soundanalyzer.h"
 #include "colordata.h"
 
 #if ENABLE_AUDIO
+#include "soundanalyzer.h"
 
 extern AppTime g_AppTime;
 

@@ -31,7 +31,7 @@
 #include "globals.h"                            // CONFIG and global headers
 #include "ledmatrixgfx.h"                       // Req'd for drawing types
 #include "ledbuffer.h"                          // For g_apBufferManager type
-#include "Effects/effectmanager.h"              // So we can display cur effect
+#include "effects/effectmanager.h"              // So we can display cur effect
 #include "Bounce2.h"
 #include "freefonts.h"
 
@@ -53,12 +53,14 @@ extern byte g_Brightness;                           // Global brightness from dr
 extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern DRAM_ATTR AppTime g_AppTime;                 // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;                    // Our global framerate
-extern volatile float DRAM_ATTR gVURatio;           // Current VU as a ratio to its recent min and max
 extern volatile float gVU;
 extern DRAM_ATTR uint8_t giInfoPage;                // What page of screen we are showing
 extern DRAM_ATTR bool gbInfoPageDirty;              // Does display need to be erased?
 
 bool g_ShowFPS = false;                             // Indicates whether little lcd should show FPS
+#if ENABLE_AUDIO
+extern volatile float DRAM_ATTR gVURatio;           // Current VU as a ratio to its recent min and max
+#endif
 
 // TFTStatus
 // 
@@ -217,8 +219,10 @@ void IRAM_ATTR UpdateScreen()
                 }
                 M5.Lcd.drawString(szBuffer, 0, 25); // write something to the internal memory
 
+                #if ENABLE_AUDIO
                 snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%d/%d [%dfps]  %.2lf", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS, gVURatio);
                 M5.Lcd.drawString(szBuffer, 0, 61); // write something to the internal memory
+                #endif
             }
 
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", g_BufferAgeOldest, g_BufferAgeNewest);
@@ -227,15 +231,17 @@ void IRAM_ATTR UpdateScreen()
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf", g_AppTime.CurrentTime());
             M5.Lcd.drawString(szBuffer, 0, 49); // write something to the internal memory
 
-            const int barHeight = 10;
-            int barPos = M5.Lcd.width() * (gVURatio - 1.0);
-            int barY = M5.Lcd.height() - barHeight;
+            #if ENABLE_AUDIO
+                const int barHeight = 10;
+                int barPos = M5.Lcd.width() * (gVURatio - 1.0);
+                int barY = M5.Lcd.height() - barHeight;
 
-            if (barPos < 6)
-                barPos = 6;
+                if (barPos < 6)
+                    barPos = 6;
 
-            M5.Lcd.fillRect(barPos, barY, M5.Lcd.width()-barPos, barHeight, BLACK16);
-            M5.Lcd.fillRect(0, barY, barPos, barHeight, WHITE16);
+                M5.Lcd.fillRect(barPos, barY, M5.Lcd.width()-barPos, barHeight, BLACK16);
+                M5.Lcd.fillRect(0, barY, barPos, barHeight, WHITE16);
+            #endif
         }
         else 
         {

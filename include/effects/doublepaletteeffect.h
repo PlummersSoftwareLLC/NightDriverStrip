@@ -37,8 +37,8 @@
 #include <math.h>
 #include "colorutils.h"
 #include "globals.h"
-#include "LEDStripEffect.h"
-#include "PaletteEffect.h"
+#include "ledstripeffect.h"
+#include "paletteeffect.h"
 
 extern AppTime g_AppTime;
 

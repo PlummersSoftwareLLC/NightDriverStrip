@@ -29,8 +29,6 @@
 //
 //---------------------------------------------------------------------------
 
-#if ENABLE_AUDIO
-
 #pragma once
 
 #include <sys/types.h>
@@ -45,6 +43,8 @@
 #include "soundanalyzer.h"
 #include "musiceffect.h"
 #include "particles.h"
+
+#if ENABLE_AUDIO
 
 #define MS_PER_SECOND 1000
 

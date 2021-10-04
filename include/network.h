@@ -26,7 +26,6 @@
 //
 //---------------------------------------------------------------------------
 
-#include "spiffs.h"
 #include "remotecontrol.h"
 #include "socketserver.h"
 #include "ntptimeclient.h"
@@ -34,7 +33,9 @@
 extern byte g_Brightness;
 extern bool g_bUpdateStarted;
 extern WiFiUDP g_Udp;
-extern SocketServer g_SocketServer;
+#if INCOMING_WIFI_ENABLED
+    extern SocketServer g_SocketServer;
+#endif
 void processRemoteDebugCmd();
 
 #if ENABLE_REMOTE
