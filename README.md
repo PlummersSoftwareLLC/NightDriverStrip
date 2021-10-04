@@ -103,3 +103,6 @@ Time to build the SPECTRUM config.  Assumes a clean build after everything has b
 
 - Raspberry Pi 4, 64-bit Ubuntu LTS, 4 core, 4GB
 -> [davepl 09/23/2021] 6 min 25 seconds
+
+- Jetson Nano 2G, 4 Core ARM A57
+-> [davepl 10/04/2021] 2 min 56 seconds
