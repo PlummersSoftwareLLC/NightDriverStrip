@@ -583,7 +583,9 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_TFT;
     pinMode(BUILTIN_LED_PIN, OUTPUT);
     
     // Microphone stuff
+#if ENABLE_AUDIO    
     pinMode(INPUT_PIN, INPUT);
+#endif
     
     //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
     //digitalWrite(35, 0);

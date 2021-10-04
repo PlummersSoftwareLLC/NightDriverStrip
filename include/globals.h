@@ -756,12 +756,13 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // Microphone
 //
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
-
+#if ENABLE_AUDIO
 #if M5STICKC || M5STICKCPLUS
 #define INPUT_PIN (34)	 
 #define IO_PIN (0)
 #else
 #define INPUT_PIN (ADC1_CHANNEL_0_GPIO_NUM)	  // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+#endif
 #endif
 
 // Custom WiFi Commands
