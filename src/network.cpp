@@ -28,7 +28,7 @@
 //
 //---------------------------------------------------------------------------
 
-#include <ESP_WiFiManager.h>
+
 #include "globals.h"
 #include "network.h"
 #include "ledbuffer.h"
@@ -37,6 +37,7 @@
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 
 #if USE_WIFI_MANAGER
+#include <ESP_WiFiManager.h>
 DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 #endif
 
