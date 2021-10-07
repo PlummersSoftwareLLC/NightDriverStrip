@@ -221,7 +221,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              1   // Accept over the air flash updates
 
-    #define USE_TFT                 1   // Set to 1 if you have the Heltec module w/TFT 
+    #define USE_TFT                 0   // Set to 1 if you have the Heltec module w/TFT 
 
     // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
     // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
