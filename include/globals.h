@@ -133,7 +133,7 @@
 // #define REMOTE_CORE             1
 
 #define DRAWING_CORE            1
-#define INCOMING_CORE           1
+#define INCOMING_CORE           0
 #define NET_CORE                1
 #define AUDIO_CORE              0
 #define TFT_CORE                1
@@ -146,13 +146,6 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <Arduino.h>
-
-#if USE_TFT
-#include <U8g2lib.h>                // So we can talk to the CUU text
-#include <gfxfont.h>                // Adafruit GFX for the panels
-#include <Fonts/FreeSans9pt7b.h>    // A nice font for the VFD
-#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on matrix
-#endif
 
 #include <iostream>
 #include <memory>
@@ -228,6 +221,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              1   // Accept over the air flash updates
 
+    #define USE_TFT                 0   // Set to 1 if you have the Heltec module w/TFT 
+
     // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
     // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
     // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
@@ -277,18 +272,18 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It displays a spectrum analyzer and music visualizer
     
     #define ENABLE_WIFI             1  // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
-    #define ENABLE_NTP              0   // Set the clock from the web
-    #define ENABLE_OTA              1   // Accept over the air flash updates
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              0  // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
 
-    #define MAX_BUFFERS     3
+    #define MAX_BUFFERS     20
 
     #define LED_PIN0        26
     #define NUM_CHANNELS    1
@@ -612,6 +607,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_INFO_PAGES 1
 #endif
 
+
 #ifndef BUILTIN_LED_PIN
 #define BUILTIN_LED_PIN 25          // Pin for the built in LED on the Heltec board
 #endif
@@ -756,6 +752,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // Microphone
 //
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
+
 #if ENABLE_AUDIO
 #if M5STICKC || M5STICKCPLUS
 #define INPUT_PIN (34)	 
@@ -779,6 +776,17 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #define WIFI_COMMAND_REBOOT      5             // Wifi command to reboot the client chip (that's us!)
 #define WIFI_COMMAND_VU_SIZE     16
 #define WIFI_COMMAND_CLOCK_SIZE  20
+
+// Final headers
+// 
+// Headers that are only included when certain features are enabled
+
+#if USE_TFT
+#include <U8g2lib.h>                // So we can talk to the CUU text
+#include <gfxfont.h>                // Adafruit GFX for the panels
+#include <Fonts/FreeSans9pt7b.h>    // A nice font for the VFD
+#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on matrix
+#endif
 
 // FPS
 // 
