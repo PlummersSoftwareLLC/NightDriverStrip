@@ -38,6 +38,8 @@ I recommend you do the following:
 - Infinity Mirror for use with the MAGICMIRROR config: https://amzn.to/3lEZo2D
 - Super-handy breakout board for ESP32-DevKitC: https://amzn.to/3nKX7Wt
 
+Full Disclosure: As an Amazon Associate, PlummersSoftwareLLC earns commission from qualifying purchases.  It's not added to the purcahse price, and does not increase your cost at all.  Plus, all 2021 profits from the Dave's Garage Channel, which includes these sales, will go to the UW Autism Center.
+
 ## Bonus Exercise
 Write something simple to send color data to the socket.  The format is very basic: which channel, how many LEDs you're drawing, when to draw it, and the color data itself.  You can send uncompressed data with a zero timestamp as long as you send the correct header before your data, which is very simple.  Data with a zero timestamp will just be drawn immediately with no buffering.
 
