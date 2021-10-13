@@ -1,3 +1,10 @@
+# To Fork or Not To Fork?
+My hope when I realeased this work as open source was that people would (a) add cool features that I never thought of, and (b) improve the implementation of things I did think of.  My hope all along is that important and useful features get added to the MAIN branch as soon as possible rather than having 10 forks with support for 10 different LED types.
+
+I realize it's easier to fork a project than it is to properly extend the classes or even the #defines.  But by doing the work in the main tree, everyone reaps the benefits of every other fix and improvement.  I invite you to do your important work in the MAIN tree where everyone can benefit from it!
+
+If you're doing something truly obscure, like adding suport for an LED type that almost no one else would need, I can see a fork being reasonable.  But if others could in general benefit from what you're doing, please do it in such a way that it goes back into the main tree for everyone's beenfit!
+
 _(This is an exact copy of the equally-named section of [README.md](README.md))_
 
 # Contributing, and the BlinkenPerBit Metric
