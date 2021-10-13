@@ -207,7 +207,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
     {
         auto pGFXChannel = _GFX[0];
 
-        // Draw a miniature spectrum analyzer on the OLED screen of the M5
+        // Draw a miniature spectrum analyzer on the LCD screen of the M5
 
 /*
         if (giInfoPage == 1)

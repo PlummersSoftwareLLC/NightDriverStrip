@@ -188,7 +188,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 // Task Handles to our running threads
 //
 
-TaskHandle_t g_taskTFT    = nullptr;
+TaskHandle_t g_taskScreen = nullptr;
 TaskHandle_t g_taskSync   = nullptr;
 TaskHandle_t g_taskWeb    = nullptr;
 TaskHandle_t g_taskDraw   = nullptr;
@@ -371,7 +371,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_OLED: %d, USE_TFT: %d", M5STICKC, USE_OLED, USE_TFT);
+    debugI("M5STICKC: %d, USE_M5_LCD: %d, USE_U8G2: %d", M5STICKC, USE_M5_LCD, USE_U8G2);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -460,17 +460,17 @@ void setup()
         sideButton.setPressedState(LOW);
     #endif
 
-    // Init the TFT display on the chip
+    // Init the U8G2 compatible SSD1306, 128X64 OLED display on the Heltec board
 
-#if USE_TFT
-extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_TFT;
-    debugI("Intializizing TFT display\n");
-    g_TFT.begin();
+#if USE_U8G2
+extern U8G2_DISP g_u8g2;
+    debugI("Intializizing OLED display\n");
+    g_u8g2.begin();
 #endif
 
 #if M5STICKC || M5STICKCPLUS
-    #if USE_OLED
-        debugI("Intializizing OLED display\n");
+    #if USE_M5_LCD
+        debugI("Intializizing LCD display\n");
         M5.begin();
         M5.Lcd.setRotation(1);
         M5.Lcd.printf("NightDriver: " FLASH_VERSION_NAME);
@@ -610,8 +610,8 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_TFT;
     debugI("Initializing effects manager...");
     InitEffectsManager();
 
-#if USE_TFT || USE_OLED
-    xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "TFT Loop", STACK_SIZE, nullptr, TFT_PRIORITY, &g_taskTFT, TFT_CORE);
+#if USE_SCREEN
+    xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", STACK_SIZE, nullptr, SCREEN_PRIORITY, &g_taskScreen, SCREEN_CORE);
 #endif
 
     debugI("Launching Drawing:");
