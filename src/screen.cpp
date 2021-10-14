@@ -153,7 +153,7 @@ void IRAM_ATTR UpdateScreen()
                 M5.Lcd.setFreeFont(FF17);
                 M5.Lcd.setTextColor(0xFBE0);
                 auto xh = M5.Lcd.width() / 2;
-                auto yh = M5.Lcd.fontHeight();
+                auto yh = 0;                        // Start at top of screen
 
                 M5.Lcd.setTextDatum(C_BASELINE);
                 string sEffect = to_string("Current Effect: ") + 
@@ -181,7 +181,7 @@ void IRAM_ATTR UpdateScreen()
                     M5.Lcd.drawString(sFPS.c_str(), xh, yh += M5.Lcd.fontHeight());
                 }
 
-                M5.Lcd.setFreeFont(FF9);
+                M5.Lcd.setFreeFont(TT1);
                 M5.Lcd.setTextColor(GREEN16);
                 M5.Lcd.drawString("NightDriverLED.com", xh, M5.Lcd.height() - M5.Lcd.fontHeight());
 
