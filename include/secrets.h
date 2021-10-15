@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        network.h
+// File:        secrets.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -22,13 +22,11 @@
 //
 // Description:
 //
-//    secret definations 
+//    secret definitions, at the moment this is just network secrets, 
+//    but could be expanded in the future
 //
 //---------------------------------------------------------------------------
 
-#define cszSSID      "Your SSID"
-#define cszPassword  "Your PASS"
-#define cszHostname  "NightDriverStrip"
-#define cszNTPServer 192, 168, 1, 2    // 0.pool.ntp.org
-//#define cszNTPServer 192, 168, 1, 2    // 0.pool.ntp.org
-//#define cszNTPServer 192, 168, 1, 2    // 0.pool.ntp.org
+#define cszSSID       "Your SSID"
+#define cszPassword   "Your PASS"
+#define cszHostname   "NightDriverStrip"
