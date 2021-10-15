@@ -29,6 +29,7 @@
 #include "remotecontrol.h"
 #include "socketserver.h"
 #include "ntptimeclient.h"
+#include "secrets.h"
 
 extern byte g_Brightness;
 extern bool g_bUpdateStarted;
@@ -41,10 +42,6 @@ void processRemoteDebugCmd();
 #if ENABLE_REMOTE
 extern RemoteControl g_RemoteControl;
 #endif
-
-#define cszSSID      "Your SSID"
-#define cszPassword  "Your PASS"
-#define cszHostname  "NightDriverStrip"
 
 bool ConnectToWiFi(uint cRetries);
 void SetupOTA(const char *pszHostname);

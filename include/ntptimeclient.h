@@ -31,6 +31,7 @@
 #pragma once
 
 #include "globals.h"
+#include "secrets.h"
 #include <sys/cdefs.h>
 #include <sys/time.h>
 #include <time.h>
@@ -43,6 +44,8 @@
 // Basically, I took some really ancient NTP code that I had on hand that I knew
 // worked and wrapped it in a class.  As expected, it works, but it could likely
 // benefit from cleanup or even wholesale replacement.
+
+
 
 class NTPTimeClient
 {
@@ -93,7 +96,7 @@ class NTPTimeClient
 
 		// Send the ntp packet.
 
-		IPAddress ipNtpServer(192, 168, 1, 2); 								// My Synology NAS
+		IPAddress ipNtpServer(cszNTPServer); 								// cszNTPServer defined in secrets.h
 		//IPAddress ipNtpServer(216, 239, 35, 12); 							// 216.239.35.12 Google Time
 		//IPAddress ipNtpServer(17, 253, 16, 253);							// Apple time
 
