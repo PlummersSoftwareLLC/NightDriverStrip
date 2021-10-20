@@ -315,7 +315,19 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     new SparklySpinningMusicEffect(RainbowColors_p), 
     new MoltenGlassOnVioletBkgnd(RainbowColors_p),
 */
-          
+
+  #elif CUBE
+    // Simple rainbow pallette
+    new PaletteEffect(rainbowPalette, 256/16, .2, 0),
+
+    new SparklySpinningMusicEffect("SparklySpinningMusical", RainbowColors_p), 
+    new ColorBeatOverRedBkgnd("ColorBeatOnRedBkgnd"),
+    new ColorBeatWithFlash("ColorBeatWithFlash"),
+    new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
+    new InsulatorSpectrumEffect("InsulatorSpectrumEffect"),
+    new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
+
+    new FireFanEffect(NUM_LEDS,      1, 15, 80, 2, 7, Sequential, true, false),
 
   #elif BELT
 

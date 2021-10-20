@@ -608,6 +608,43 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 1
+
+#elif CUBE
+
+    // A cube of 5 x 5 x 5 LEDs
+
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       5   // How many seconds before the cube times out and shows local content
+    #define ENABLE_WEBSERVER        1   // Enable the webserver to control the effects
+
+    #define DEFAULT_EFFECT_INTERVAL     (1000 * 60 * 10)    // 10 min
+
+    #define LED_PIN0          26
+    #define NUM_CHANNELS      1
+    #define RING_SIZE_0       25                    // Treat each layer as one ring
+    #define BONUS_PIXELS      0
+    #define MATRIX_WIDTH      5                     // 5 layers
+    #define MATRIX_HEIGHT     RING_SIZE_0
+    #define NUM_FANS          MATRIX_WIDTH
+    #define FAN_SIZE          MATRIX_HEIGHT
+    #define NUM_BANDS         16
+    #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define RESERVE_MEMORY    150000
+    #define ENABLE_REMOTE     0                     // IR Remote Control
+    #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
+    #define IR_REMOTE_PIN     26                    
+    #define LED_FAN_OFFSET_BU 6
+    #define POWER_LIMIT_MW    5000
+
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON  37
+    #define NUM_INFO_PAGES 1
+
+    #define COLOR_ORDER EOrder::RGB
 #endif
 
 
