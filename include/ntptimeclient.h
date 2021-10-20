@@ -38,6 +38,12 @@
 #include <WiFiUdp.h>
 #include <mutex>
 
+// define the NTP server to connect too (replace . [dots] in IP addresses with , [commas])
+#define cszNTPServer  94, 199, 173, 123     // 0.pool.ntp.org
+//#define cszNTPServer 216, 239, 35, 12     // google time
+//#define cszNTPServer 17, 253, 16, 253     // apple time
+
+
 // NTPTimeClient
 //
 // Basically, I took some really ancient NTP code that I had on hand that I knew
@@ -92,10 +98,7 @@ class NTPTimeClient
 		chNtpPacket[0] = 0b00011011;
 
 		// Send the ntp packet.
-
-		IPAddress ipNtpServer(192, 168, 1, 2); 								// My Synology NAS
-		//IPAddress ipNtpServer(216, 239, 35, 12); 							// 216.239.35.12 Google Time
-		//IPAddress ipNtpServer(17, 253, 16, 253);							// Apple time
+		IPAddress ipNtpServer(cszNTPServer); 								
 
 		pUDP->beginPacket(ipNtpServer, 123);
 		pUDP->write((const uint8_t *)chNtpPacket, NTP_PACKET_LENGTH);
