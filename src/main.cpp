@@ -532,51 +532,51 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_TFT;
 #endif
 
 #if STRAND
-    FastLED.addLeds<WS2812B, LED_PIN0, RGB>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount()); // Neopixel strand uses RGB color order, others are all GRB
-    //FastLED.addLeds<AtomiController, LED_PIN0, RGB>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount()); // Neopixel strand uses RGB color order, others are all GRB
+    //FastLED.addLeds<AtomiController, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
 #elif NUM_CHANNELS == 1
     debugI("Adding %d LEDs to FastLED.", g_pStrands[0]->GetLEDCount());
-    FastLED.addLeds<WS2812B, LED_PIN0, GRB>(g_pStrands[0]->GetLEDBuffer(), 3*144);
+    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), 3*144);
     FastLED[0].setLeds(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
     FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
     pinMode(LED_PIN0, OUTPUT);
 #endif
 
 #if NUM_CHANNELS >= 2
-    FastLED.addLeds<WS2812B, LED_PIN0, GRB>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
     pinMode(LED_PIN0, OUTPUT);
 
-    FastLED.addLeds<WS2812B, LED_PIN1, GRB>(g_pStrands[1]->GetLEDBuffer(), g_pStrands[1]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN1, COLOR_ORDER>(g_pStrands[1]->GetLEDBuffer(), g_pStrands[1]->GetLEDCount());
     pinMode(LED_PIN1, OUTPUT);
 #endif
 
 #if NUM_CHANNELS >= 3
-    FastLED.addLeds<WS2812B, LED_PIN2, GRB>(g_pStrands[2]->GetLEDBuffer(), g_pStrands[2]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN2, COLOR_ORDER>(g_pStrands[2]->GetLEDBuffer(), g_pStrands[2]->GetLEDCount());
     pinMode(LED_PIN2, OUTPUT);
 #endif
 
 #if NUM_CHANNELS >= 4
-    FastLED.addLeds<WS2812B, LED_PIN3, GRB>(g_pStrands[3]->GetLEDBuffer(), g_pStrands[3]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN3, COLOR_ORDER>(g_pStrands[3]->GetLEDBuffer(), g_pStrands[3]->GetLEDCount());
     pinMode(LED_PIN3, OUTPUT);
 #endif
 
 #if NUM_CHANNELS >= 5
-    FastLED.addLeds<WS2812B, LED_PIN4, GRB>(g_pStrands[4]->GetLEDBuffer(), g_pStrands[4]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN4, COLOR_ORDER>(g_pStrands[4]->GetLEDBuffer(), g_pStrands[4]->GetLEDCount());
     pinMode(LED_PIN4, OUTPUT);
 #endif
 
 #if NUM_CHANNELS >= 6
-    FastLED.addLeds<WS2812B, LED_PIN5, GRB>(g_pStrands[5]->GetLEDBuffer(), g_pStrands[5]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN5, COLOR_ORDER>(g_pStrands[5]->GetLEDBuffer(), g_pStrands[5]->GetLEDCount());
     pinMode(LED_PIN5, OUTPUT);
 #endif
 
 #if NUM_CHANNELS >= 7
-    FastLED.addLeds<WS2812B, LED_PIN6, GRB>(g_pStrands[6]->GetLEDBuffer(), g_pStrands[6]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN6, COLOR_ORDER>(g_pStrands[6]->GetLEDBuffer(), g_pStrands[6]->GetLEDCount());
     pinMode(LED_PIN6, OUTPUT);
 #endif
 
 #if NUM_CHANNELS >= 8
-    FastLED.addLeds<WS2812B, LED_PIN7, GRB>(g_pStrands[7]->GetLEDBuffer(), g_pStrands[7]->GetLEDCount());
+    FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_pStrands[7]->GetLEDBuffer(), g_pStrands[7]->GetLEDCount());
     pinMode(LED_PIN7, OUTPUT);
 #endif
 
