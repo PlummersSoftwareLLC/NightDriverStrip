@@ -1,7 +1,7 @@
 # NightDriverStrip
 ![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
 
-<img src="nightdriver.png" width="400" />
+<img src="assets/NightDriverLogo-small.png" width="400" />
 
 _Davepl, 9/19/2021_
 
