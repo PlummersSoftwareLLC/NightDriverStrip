@@ -1,12 +1,13 @@
 # ESP-IDF Partition Table
 # This gives us some additional space for code. 
 # It should also fix the OTA regression.  
+# The default storage config assumes 4M flash
 # Name,   Type, SubType,     Offset,      Size, Flags
 
 nvs,        data,   nvs,     0x9000,    0x5000,
 otadata,    data,   ota,     0xe000,    0x2000,
-app0,       app,    ota_0,   0x10000,   0x150000,
-app1,       app,    ota_1,   0x160000,  0x150000,
-# storage,    data,   spiffs,  0x330000,  0xF0000,  # If  4M Flash
-# storage,    data,   spiffs,  0x330000,  0x4F0000, # If  8M Flash  
-# storage,    data,   spiffs,  0x330000,  0x8F0000, # If 16M Flash   
+app0,       app,    ota_0,   0x10000,   0x190000,
+app1,       app,    ota_1,   0x1a0000,  0x190000,
+storage,    data,   spiffs,  0x330000,  0xD0000, 
+# storage,    data,   spiffs,  0x330000,  0x4D0000, # If  8M Flash  
+# storage,    data,   spiffs,  0x330000,  0xCD0000, # If 16M Flash  
