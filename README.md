@@ -85,6 +85,29 @@ Note that the repository CI builds both the DEMO and SPECTRUM configurations. Th
 pio run -e demo -e spectrum
 ```
 
+## Feature Defines
+These defines can be set to 1 in projects, either set in platformio.ini build flags or in globals.h, to enable features of NightDriverStrip
+| Define | Description | 
+| - | - |
+| USE_SCREEN             | Enable the LCD on M5Stick or monochrome OLED on Heltec Wifi Kit 32 |
+| ENABLE_WIFI            | Connect to WiFi |
+| INCOMING_WIFI_ENABLED  | Accepting incoming color data and commands |
+| ENABLE_WEBSERVER       | Turn on the internal webserver |
+| TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local contexnt |
+| ENABLE_NTP             | Set the clock from the web |
+| ENABLE_OTA             | Accept over the air flash updates |
+| ENABLE_REMOTE          | IR Remote Control | 
+| ENABLE_AUDIO           | Listen for audio from the microphone and process it |
+
+example in platformio.ini
+```
+build_flags   = -DUSE_SCREEN=1
+```
+example in globals.h:
+```C++
+#define USE_SCREEN 1
+```
+
 ## Time It Takes To Build This Project
 Time to build the SPECTRUM config.  Assumes a clean build after everything has been installed and downloaded.
 
