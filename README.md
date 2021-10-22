@@ -26,8 +26,22 @@ I recommend you do the following:
 - Connect PIN5 and GND and 5V of a WS2812B strip to the ESP32
 - Provide an adequate power source for the LEDs and ESP32
 - Enjoy the pretty lights
-- Start enabling features in the `globals.h` file like WiFi and WebServer.  Set your WiFi SSID and password first.
+- Start enabling features in the `globals.h` file like WiFi and WebServer.  Set your WiFi SSID and password in secrets.h.
 - Connect to the ESP32's web user interface with a browser to its IP address
+
+## Wifi Setup
+Set your WiFi SSID and password in include/secrets.h.
+ - You can prevent git from tracking changes in this file by telling it to assume the file is unchanged. <br/>
+   `git update-index --assume-unchanged include/secrets.h`
+
+## Webserver Setup
+To use the built-in webserver, you will need to build and upload the SPIFFS image to your board's flash using platformio. <br/>
+You can do this using the platformio user interface, or using the pio command line tool 
+
+```
+pio run --target buildfs --environment <project name>
+pio run --target uploadfs --environment <project name>
+```
 
 ## Sample Parts (Plummer's Software LLC Amazon Affiliate Links)
 - BTF-Lighting WS2812B Strip, 144 pixels per meter, white: https://amzn.to/3CtZW2g
@@ -86,18 +100,24 @@ pio run -e demo -e spectrum
 ```
 
 ## Feature Defines
-These defines can be set to 1 in projects, either set in platformio.ini build flags or in globals.h, to enable features of NightDriverStrip
-| Define | Description | 
+These defines enable the major features of NightDriverStrip. Define them in platformio.ini's build_flags or in globals.h.
+Note: Some defines are board specific, this is noted below. 
+
+| Feature Define | Description | 
 | - | - |
-| USE_SCREEN             | Enable the LCD on M5Stick or monochrome OLED on Heltec Wifi Kit 32 |
 | ENABLE_WIFI            | Connect to WiFi |
 | INCOMING_WIFI_ENABLED  | Accepting incoming color data and commands |
 | ENABLE_WEBSERVER       | Turn on the internal webserver |
 | TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local contexnt |
 | ENABLE_NTP             | Set the clock from the web |
 | ENABLE_OTA             | Accept over the air flash updates |
-| ENABLE_REMOTE          | IR Remote Control | 
-| ENABLE_AUDIO           | Listen for audio from the microphone and process it |
+
+| Harware Specific | Description | Supported Boards |
+| - | - | - |
+| USE_OLED               | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
+| USE_TFT                | Enable stats display on built in OLED | Heltec Wifi Kit 32 |
+| ENABLE_AUDIO           | Listen for audio from the microphone and process it | M5Stick-C and M5Stick-C Plus |
+| ENABLE_REMOTE          | IR Remote Control | Requires IR Harware |
 
 example in platformio.ini
 ```
@@ -105,7 +125,7 @@ build_flags   = -DUSE_SCREEN=1
 ```
 example in globals.h:
 ```C++
-#define USE_SCREEN 1
+#define ENABLE_WIFI 1
 ```
 
 ## Time It Takes To Build This Project
