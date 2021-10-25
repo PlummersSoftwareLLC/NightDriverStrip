@@ -32,8 +32,8 @@ I recommend you do the following:
 ## Sample Parts (Plummer's Software LLC Amazon Affiliate Links)
 - BTF-Lighting WS2812B Strip, 144 pixels per meter, white: https://amzn.to/3CtZW2g
 - BTF-Lighting WS2812B Strip, 144 pixels per meter, black: https://amzn.to/39ljqcO
-- MakerFocus ESP32 Module with 8M Flash (not PSRAM) and built-in blue TFT: https://amzn.to/3ApdF9H
-- M5StickCPlus ESP32 Module with built-in OLED, Mic, buttons, battery, PSRAM, and more:  https://amzn.to/3CrvCFh
+- MakerFocus ESP32 Module with 8M Flash (not PSRAM) and built-in blue OLED: https://amzn.to/3ApdF9H
+- M5StickCPlus ESP32 Module with built-in LCD, Mic, buttons, battery, PSRAM, and more:  https://amzn.to/3CrvCFh
 - 16x16 LED Matrix panels (3 per Spectrum Analyzer) https://amzn.to/3ABs5DK
 - Infinity Mirror for use with the MAGICMIRROR config: https://amzn.to/3lEZo2D
 - Super-handy breakout board for ESP32-DevKitC: https://amzn.to/3nKX7Wt

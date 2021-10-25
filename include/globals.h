@@ -728,35 +728,31 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 // Display
 // 
-// Enable USE_U8G2 or USE_M5_LCD based on selected board defination
+// Enable USE_OLED or USE_TFT based on selected board defination
 // These board definations are added by platformio
 
 #if USE_SCREEN
 
-#ifdef ARDUINO_HELTEC_WIFI_KIT_32                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
+    #ifdef ARDUINO_HELTEC_WIFI_KIT_32                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
-#define USE_U8G2 1                                        // Enable the Heltec's monochrome OLED
-#include <U8g2lib.h>                                      // So we can talk to the CUU text
-#include <gfxfont.h>                                      // Adafruit GFX for the panels
-#include <Fonts/FreeSans9pt7b.h>                          // A nice font for the VFD
-#include <Adafruit_GFX.h>                                 // GFX wrapper so we can draw on matrix
-typedef U8G2_SSD1306_128X64_NONAME_F_HW_I2C U8G2_DISP;    // define specific UG82 display to use, allows us to support other UG82 compatible displays
+        #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 
-#elif defined(ARDUINO_M5Stick_C)                          // screen definitions for m5stick-c (or m5stick-c plus)
-#define USE_M5_LCD 1                                      // enable the M5's LCD screen
+    #elif defined(ARDUINO_M5Stick_C)                          // screen definitions for m5stick-c (or m5stick-c plus)
 
-#else                                                     // unsupported board defined in platformio
-#error Unknown Display! Check platformio.ini board defination.
-#endif
+        #define USE_TFT 1                                     // enable the M5's LCD screen
+
+    #else                                                     // unsupported board defined in platformio
+        #error Unknown Display! Check platformio.ini board defination.
+    #endif
 
 #endif // end USE_SCREEN
 
-#ifndef USE_U8G2                            
-#define USE_U8G2 0
+#ifndef USE_OLED                            
+#define USE_OLED 0
 #endif
 
-#ifndef USE_M5_LCD                            
-#define USE_M5_LCD 0
+#ifndef USE_TFT                            
+#define USE_TFT 0
 #endif
 
 // gRingSizeTable
@@ -809,8 +805,11 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // 
 // Headers that are only included when certain features are enabled
 
-#if USE_U8G2
-
+#if USE_OLED
+#include <U8g2lib.h>                // Library for monochrome displays
+#include <gfxfont.h>                // Adafruit GFX font structs
+#include <Fonts/FreeSans9pt7b.h>    // A nice font
+#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
 #endif
 
 // FPS

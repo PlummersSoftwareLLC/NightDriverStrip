@@ -371,7 +371,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_M5_LCD: %d, USE_U8G2: %d", M5STICKC, USE_M5_LCD, USE_U8G2);
+    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d", M5STICKC, USE_TFT, USE_OLED);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -462,14 +462,14 @@ void setup()
 
     // Init the U8G2 compatible SSD1306, 128X64 OLED display on the Heltec board
 
-#if USE_U8G2
-extern U8G2_DISP g_u8g2;
+#if USE_OLED
+extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     debugI("Intializizing OLED display\n");
     g_u8g2.begin();
 #endif
 
 #if M5STICKC || M5STICKCPLUS
-    #if USE_M5_LCD
+    #if USE_TFT
         debugI("Intializizing LCD display\n");
         M5.begin();
         M5.Lcd.setRotation(1);

@@ -36,9 +36,9 @@
 #include "freefonts.h"
 
 
-#if USE_U8G2
+#if USE_OLED
     #define SCREEN_ROTATION U8G2_R2
-    U8G2_DISP g_u8g2(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
+    U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
 
 //
@@ -68,14 +68,14 @@ extern volatile float DRAM_ATTR gVURatio;           // Current VU as a ratio to 
 
 void IRAM_ATTR ScreenStatus(const char *pszStatus)
 {
-#if USE_U8G2 
+#if USE_OLED 
     g_u8g2.clear();
     g_u8g2.clearBuffer();                   // clear the internal memory
     g_u8g2.setFont(u8g2_font_profont15_tf); // choose a suitable font
     g_u8g2.setCursor(0, 10);
     g_u8g2.println(pszStatus);
     g_u8g2.sendBuffer();
-#elif USE_M5_LCD
+#elif USE_TFT
     M5.Lcd.fillScreen(BLACK16);
     M5.Lcd.setFreeFont(FF15);
     M5.Lcd.setTextColor(0xFBE0);
@@ -91,7 +91,7 @@ void IRAM_ATTR ScreenStatus(const char *pszStatus)
 
 void IRAM_ATTR UpdateScreen()
 {
-#if USE_U8G2
+#if USE_OLED
         char szBuffer[256];
         static const char szStatus[] = "|/-\\";
         static int cStatus = 0;
@@ -132,7 +132,7 @@ void IRAM_ATTR UpdateScreen()
             debugE("TFT Heap FAILED checks!");
         }
 
-#elif USE_M5_LCD
+#elif USE_TFT
 
         if (giInfoPage == 1)
         {
@@ -274,7 +274,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
     debugI(">> ScreenUpdateLoopEntry\n");
     debugI("ScreenUpdateLoop started\n");
 
-    #if USE_U8G2
+    #if USE_OLED
       g_u8g2.setDisplayRotation(SCREEN_ROTATION);
       g_u8g2.setFont(u8g2_font_profont15_tf); // choose a suitable font
       g_u8g2.clear();
