@@ -670,6 +670,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define NUM_INFO_PAGES 1
 #endif
 
+#ifndef COLOR_ORDER
+#define COLOR_ORDER EOrder::GRB
+#endif
+
 // Define fan ordering for drawing into the fan directionally
 
 #define LED_FAN_OFFSET_LR  (LED_FAN_OFFSET_BU + (FAN_SIZE * 1 / 4))         // High level stuff right here!
