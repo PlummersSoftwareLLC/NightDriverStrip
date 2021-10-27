@@ -90,8 +90,8 @@
 #define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)				// Calculate frequency in Hz given the priod in microseconds (us)
 
 // I've built and run this on the Heltec Wifi 32 module and the M5StickC.  The
-// main difference is pinout and the LCF/TFT screen.  The presense of absense
-// of the TFT/OLED is now controlled separately, but M5 is always equipped
+// main difference is pinout and the OLED/LCD screen.  The presense of absense
+// of the OLED/LCD is now controlled separately, but M5 is always equipped
 // with one (but it doesn't have to be used!).
 
 #if M5STICKC
@@ -116,7 +116,7 @@
 #define SOCKET_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
-#define TFT_PRIORITY            tskIDLE_PRIORITY+2
+#define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
 
@@ -127,7 +127,7 @@
 // #define INCOMING_CORE           1
 // #define NET_CORE                1
 // #define AUDIO_CORE              0
-// #define TFT_CORE                1
+// #define SCREEN_CORE             1
 // #define DEBUG_CORE              1
 // #define SOCKET_CORE             1
 // #define REMOTE_CORE             1
@@ -136,7 +136,7 @@
 #define INCOMING_CORE           0
 #define NET_CORE                1
 #define AUDIO_CORE              0
-#define TFT_CORE                1
+#define SCREEN_CORE             1
 #define DEBUG_CORE              1
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
@@ -196,7 +196,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #if DEMO 
 
     // This is a simple demo configuration.  To build, simply connect the data lead from a WS2812B
-    // strip to pin 5.  This does not use the TFT, OLED, or anything fancy, it simply drives the
+    // strip to pin 5.  This does not use the OLED, LCD, or anything fancy, it simply drives the
     // LEDs with a simple rainbow effect as specified in effects.cpp for DEMO.
     //
     // Please ensure you supply sufficent power to your strip, as even the DEMO of 144 LEDs, if set
@@ -271,7 +271,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #elif SPECTRUM
 
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
-    // It uses an M5StickCPlus which has a microphone and OLED built in:  https://amzn.to/3CrvCFh
+    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
     
     #define ENABLE_WIFI             1  // Connect to WiFi
@@ -326,7 +326,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RESERVE_MEMORY  120000                  // How much to leave free for system operation (it's not stable in low mem)
     #define ENABLE_REMOTE   0                       // IR Remote Control
     #define ENABLE_AUDIO    1                       // Listen for audio from the microphone and process it
-    #define USE_TFT         0                       // Normally we use a tiny board inside the lamp with no screen
+    #define USE_SCREEN      0                       // Normally we use a tiny board inside the lamp with no screen
     #define FAN_SIZE        NUM_LEDS                // Allows us to use fan effects on the spokes
     #define NUM_FANS        1                       // Our fans are on channels, not in sequential order, so only one "fan"
     #define NUM_RINGS       1   
@@ -730,12 +730,33 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define POWER_LIMIT_MW 500*5                // Define for your power supply, default is a low 2500mA for USB
 #endif
 
-#ifndef USE_TFT
-#define USE_TFT 0
+// Display
+// 
+// Enable USE_OLED or USE_TFT based on selected board defination
+// These board definations are added by platformio
+
+#if USE_SCREEN
+
+    #ifdef ARDUINO_HELTEC_WIFI_KIT_32                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
+
+        #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
+
+    #elif defined(ARDUINO_M5Stick_C)                          // screen definitions for m5stick-c (or m5stick-c plus)
+
+        #define USE_TFT 1                                     // enable the M5's LCD screen
+
+    #else                                                     // unsupported board defined in platformio
+        #error Unknown Display! Check platformio.ini board definition.
+    #endif
+
+#endif // end USE_SCREEN
+
+#ifndef USE_OLED                            
+#define USE_OLED 0
 #endif
 
-#ifndef USE_OLED
-#define USE_OLED 0
+#ifndef USE_TFT                            
+#define USE_TFT 0
 #endif
 
 // gRingSizeTable
@@ -788,11 +809,11 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // 
 // Headers that are only included when certain features are enabled
 
-#if USE_TFT
-#include <U8g2lib.h>                // So we can talk to the CUU text
-#include <gfxfont.h>                // Adafruit GFX for the panels
-#include <Fonts/FreeSans9pt7b.h>    // A nice font for the VFD
-#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on matrix
+#if USE_OLED
+#include <U8g2lib.h>                // Library for monochrome displays
+#include <gfxfont.h>                // Adafruit GFX font structs
+#include <Fonts/FreeSans9pt7b.h>    // A nice font
+#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
 #endif
 
 // FPS
