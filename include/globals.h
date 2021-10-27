@@ -742,7 +742,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define USE_TFT 1                                     // enable the M5's LCD screen
 
     #else                                                     // unsupported board defined in platformio
-        #error Unknown Display! Check platformio.ini board defination.
+        #error Unknown Display! Check platformio.ini board definition.
     #endif
 
 #endif // end USE_SCREEN
