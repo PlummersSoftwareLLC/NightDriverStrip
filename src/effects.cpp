@@ -259,6 +259,8 @@ unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 }
 #endif
 
+CRGB mult = CRGB::Black; float prob = 0.9; // These constants are referenced by several project's effects
+
 // AllEffects
 // 
 // A list of internal effects, if any.  
