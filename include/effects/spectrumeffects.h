@@ -118,8 +118,10 @@ class VUMeterEffect : public LEDStripEffect
 
         pGFXChannel->fillRect(0, yVU, MATRIX_WIDTH, 1, BLACK16);
 
+#if USE_TFT
         if (giInfoPage == 1)
             M5.Lcd.fillRect(0, 0, M5.Lcd.width(), 10, BLACK16);
+#endif
 
         if (iPeakVUy > 1)
         {
@@ -345,6 +347,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
         else
             fillSolidOnAllChannels(CRGB::Black);
 
+#if USE_TFT
         if (giInfoPage == 1)
         {
             if (gbInfoPageDirty)
@@ -353,7 +356,8 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
                 M5.Lcd.fillScreen(BLACK16);
             }
         }
-        
+#endif
+    
         DrawVUMeter(0);
         for (int i = 0; i < NUM_BANDS; i++)
         {

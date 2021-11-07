@@ -461,7 +461,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   1
     #define RESERVE_MEMORY  150000
     #define ENABLE_REMOTE   1                     // IR Remote Control
-    #define FAN_SIZE        NUM_LEDS
+    #define FAN_SIZE        1
     #define NUM_FANS        1
     #define ENABLE_AUDIO    1
     #define LED_FAN_OFFSET_BU  0                    
@@ -471,6 +471,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN 36
     #define POWER_LIMIT_MW (1000 * 12 * 8)
     #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
+    #define NUM_BANDS      16
 
     #if M5STICKC || M5STICKCPLUS
         #define LED_PIN0 26
@@ -479,6 +480,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (5*60*24)
+
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
 
 #elif FANSET
 
