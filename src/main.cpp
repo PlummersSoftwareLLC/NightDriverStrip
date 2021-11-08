@@ -2,7 +2,7 @@
 //
 // File:        main.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -27,7 +27,7 @@
 //    external dependencies.
 //
 //    NightDriver is an LED display project composed of a client app
-//    that runs on the ESP32 and an optional server that can run on 
+//    that runs on the ESP32 and an optional server that can run on
 //    a variety of platforms (anywhere .Net CORE works, like the Pi).
 //    The app controls WS2812B style LEDs.  The number of LEDs in a
 //    row is unbounded but realistically limited to about 1000 which
@@ -35,7 +35,7 @@
 //    can be 8 such channels connected to 8 different pins.
 //    By default NightDriver draws client effects, and there many
 //    built in, from marquees to fire.  But it can also receive color
-//    data from a server.  So it firsts checks to see if there is 
+//    data from a server.  So it firsts checks to see if there is
 //    data coming in, and if so, draws that.  If not it falls back
 //    to internal drawing.  The server sends a simple packet with
 //    an LED count, timestamp, and then the color data for the LEDs.
@@ -47,7 +47,7 @@
 //
 //    Both client and server require reliable access to an SNTP server
 //    to keep their clocks in sync.  The client sets its time every
-//    few hours to combat clock drifts on the ESP32.  Since all the 
+//    few hours to combat clock drifts on the ESP32.  Since all the
 //    clients (and the server) have the same clock, they can sync
 //    shows across multiple clients.  Imagine a setup where a dozen
 //    LED matrixes are arranged to form a small "jumbotron".  This
@@ -59,12 +59,12 @@
 //    of sound-reactive and beat-driven effects built in.
 //
 //    In addition to simple trips, the app handles matrixes as well.
-//    It also handles groups of rings.  In one incarnation, 10 RGB 
+//    It also handles groups of rings.  In one incarnation, 10 RGB
 //    LED PC fans are connected in a LianLi case plus the 32 or so
 //    on the front of the case.  The fans are grouped into NUM_FANS
 //    fans.  It also suports concentrically nested rings of varying
 //    size, which I use for a Christmas-tree project where each tree
-//    is made up of a "stack" of rings - 32 leds, 18, 10, 4, 1.  
+//    is made up of a "stack" of rings - 32 leds, 18, 10, 4, 1.
 //    It's up to individual effects to take advantage of them but
 //    the drawing code provides APIs for "draw to LED x of RING q on
 //    FAZN number z" and so on for convenience.
@@ -88,8 +88,8 @@
 //    code (optionally) receives color data over Wifi.  If it hasn't had
 //    any for a bit of time, it falls back to rotating through a table
 //    of internal effects.
-//    
-//    A number of worker threads are created which:  
+//
+//    A number of worker threads are created which:
 //
 //      1) Draw the TFT and display stats like framerate and IP addr
 //      2) Sync the clock periodically
@@ -105,42 +105,42 @@
 //
 // License:
 //
-// NightDriver is an open source embedded application governed by the terms 
-// of the General Public License (GPL). This requires that anyone modifying 
-// the NightDriver code (for anything other than personal use) or building 
-// applications based on NightDriver code must also make their derived 
-// product available under the same open source GPL terms. By purcahasing 
-// a license for NightDriver, you would not then be bound by the GPL and 
-// you would gain an extended feature set and various levels of support.  
-// Think commas, not zeros, when discussing product volumes and license 
-// pricing.  
+// NightDriver is an open source embedded application governed by the terms
+// of the General Public License (GPL). This requires that anyone modifying
+// the NightDriver code (for anything other than personal use) or building
+// applications based on NightDriver code must also make their derived
+// product available under the same open source GPL terms. By purcahasing
+// a license for NightDriver, you would not then be bound by the GPL and
+// you would gain an extended feature set and various levels of support.
+// Think commas, not zeros, when discussing product volumes and license
+// pricing.
 //
-// Without restricting the author protections found in the GPL, Plummer's 
+// Without restricting the author protections found in the GPL, Plummer's
 // Software LLC, its programmers, representatives and agents, etc.,
-// specifically disclaim any liability related to safety or suitability 
+// specifically disclaim any liability related to safety or suitability
 // for any purpose whatsoever.  Hypothetical example so we all know what
 // I mean:  If the code that limits LED power consumption has a horribly
 // negligent bug that burns down your village, you have my sympathy but
 // not my liability. It's not that I don't care, there's just no world
-// where I'd casually release code that I was responsible for in that 
+// where I'd casually release code that I was responsible for in that
 // manner without suitable engineering and testing, none of which this
 // code has had.  Not sure?  Turn and flee.  By proceeding, you agree.
 //
 // License Purchases
 //
-// NightDriver is an open source embedded application governed by the 
-// terms of the General Public License (GPL).  If you follow that license 
+// NightDriver is an open source embedded application governed by the
+// terms of the General Public License (GPL).  If you follow that license
 // it's yours at the amazing price of 'completely free'.
 //
-// If, on the other hand, you are building a commercial application for 
+// If, on the other hand, you are building a commercial application for
 // internal use or resale:
 //
-// Anyone building applications based on NightDriver code, or modifying 
-// the NightDriver code, must also make their derived product available 
-// under the same open source GPL terms. Commercial licenses may be 
-// purchased from Plummer's Software LLC if you do not wish to be bound 
+// Anyone building applications based on NightDriver code, or modifying
+// the NightDriver code, must also make their derived product available
+// under the same open source GPL terms. Commercial licenses may be
+// purchased from Plummer's Software LLC if you do not wish to be bound
 // by the GPL terms. These licenses are valid for a specified term.
-// 
+//
 // Contact Plummer's Software LLC for volume pricing and support questions.
 //
 // History:     Jul-12-2018         Davepl      Created
@@ -157,7 +157,7 @@
 #if ATOMISTRING
 #include <NeoPixelBus.h>
 #include <NeoPixelAnimator.h>
-#include <SPI.h> 
+#include <SPI.h>
 #include <SD.h>
 #endif
 
@@ -182,7 +182,7 @@
     #include "remotecontrol.h" // Allows us to use a IR remote with it
 #endif
 
-void IRAM_ATTR ScreenUpdateLoopEntry(void *);          
+void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 
 //
 // Task Handles to our running threads
@@ -218,17 +218,17 @@ DRAM_ATTR RemoteDebug Debug;                                                // I
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
-// 
+//
 // Imagine a setup of 5 christmas trees, where each tree was made up of 4 concentric rings of descreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
-DRAM_ATTR const int gRingSizeTable[MAX_RINGS] = 
-{ 
-    RING_SIZE_0, 
-    RING_SIZE_1, 
-    RING_SIZE_2, 
-    RING_SIZE_3, 
-    RING_SIZE_4 
+DRAM_ATTR const int gRingSizeTable[MAX_RINGS] =
+{
+    RING_SIZE_0,
+    RING_SIZE_1,
+    RING_SIZE_2,
+    RING_SIZE_3,
+    RING_SIZE_4
 };
 
 //
@@ -258,7 +258,7 @@ extern DRAM_ATTR LEDStripEffect * AllEffects[];      // Main table of internal e
 // Entry point for the Debug task, pumps the Debug handler
 
 void IRAM_ATTR DebugLoopTaskEntry(void *)
-{    
+{
     debugI(">> DebugLoopTaskEntry\n");
 
    // Initialize RemoteDebug
@@ -283,8 +283,8 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
                 Debug.handle();
             }
         #endif
-        delay(10);        
-    }    
+        delay(10);
+    }
 }
 
 // NetworkHandlingLoopEntry
@@ -293,7 +293,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
-{    
+{
     debugI(">> NetworkHandlingLoopEntry\n");
 
     for (;;)
@@ -328,7 +328,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     digitalWrite(BUILTIN_LED_PIN, 0);
                 }
             }
-        #endif            
+        #endif
         delay(10);
     }
 }
@@ -377,7 +377,7 @@ void PrintOutputHeader()
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
     #endif
 
-    debugI("Version %u: Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u", 
+    debugI("Version %u: Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u",
             FLASH_VERSION, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
     debugI("ESP32 Clock Freq : %d MHz", ESP.getCpuFreqMHz());
 }
@@ -412,7 +412,7 @@ Bounce2::Button sideButton;
 //
 // Invoked once at boot, does initial chip setup and application initial init, then spins off worker tasks and returns
 // control to the system so it can invoke the main loop() function.
-// 
+//
 // Threads (tasks) created here can include:
 //
 // DebugLoopTaskEntry           - Run a little debug console accessible via telnet and serial
@@ -424,13 +424,13 @@ Bounce2::Button sideButton;
 // AudioSamplerTaskEntry        - Listens to room audio, creates spectrum analysis, beat detection, etc.
 
 void setup()
-{   
+{
     // Initialize Serial output
-    Serial.begin(115200);      
+    Serial.begin(115200);
 
-    esp_log_level_set("*", ESP_LOG_WARN);        // set all components to ERROR level  
+    esp_log_level_set("*", ESP_LOG_WARN);        // set all components to ERROR level
 
-    // Set the unhandled exception handler to be our own special exit function                 
+    // Set the unhandled exception handler to be our own special exit function
     std::set_terminate(TerminateHandler);
 
     // Re-route debug output to the serial port
@@ -480,7 +480,7 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     #endif
 #endif
 
-#if ENABLE_WEBSERVER                                                    
+#if ENABLE_WEBSERVER
     debugI("Starting SPIFFS...");
     if (!SPIFFS.begin(true))
     {
@@ -581,12 +581,12 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 #endif
 
     pinMode(BUILTIN_LED_PIN, OUTPUT);
-    
+
     // Microphone stuff
-#if ENABLE_AUDIO    
+#if ENABLE_AUDIO
     pinMode(INPUT_PIN, INPUT);
 #endif
-    
+
     //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
     //digitalWrite(35, 0);
 
@@ -598,7 +598,7 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 #endif
 
     g_Brightness = 255;
-    
+
 #if ATOMLIGHT
     pinMode(4, INPUT);
     pinMode(12, INPUT);
@@ -670,11 +670,11 @@ void loop()
         #if ENABLE_OTA
             EVERY_N_MILLIS(10)
             {
-                if (WiFi.isConnected())         
+                if (WiFi.isConnected())
                     ArduinoOTA.handle();
             }
-        #endif 
+        #endif
 
-        delay(10);        
+        delay(10);
     }
 }
