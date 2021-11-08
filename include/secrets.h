@@ -27,6 +27,6 @@
 //
 //---------------------------------------------------------------------------
 
-#define cszSSID       "Your SSID"
-#define cszPassword   "Your PASS"
+#define cszSSID       "IoTWiFi"
+#define cszPassword   "Smone2326"
 #define cszHostname   "NightDriverStrip"
