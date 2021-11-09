@@ -801,12 +801,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define USE_TFT 0
 #endif
 
-#ifndef MULT
-#define MULT CRGB::Black
+#ifndef STARRYNIGHT_PROBABILITY
+#define STARRYNIGHT_PROBABILITY 0.9
 #endif
 
-#ifndef PROB
-#define PROB 0.9
+#ifndef STARRYNIGHT_MUSICFACTOR
+#define STARRYNIGHT_MUSICFACTOR 1.0
 #endif
 
 // gRingSizeTable

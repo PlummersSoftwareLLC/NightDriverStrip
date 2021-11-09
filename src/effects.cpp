@@ -360,7 +360,7 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR),
     new BouncingBallEffect(),
     new MeteorEffect(),                                                                                                     // Our overlapping color meteors
-    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, PROB, 4, LINEARBLEND, 2.0, 0.0, MULT), // Blooming Little Rainbow Stars
+    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
     new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),              // Blooming Rainbow Stars
     new StarryNightEffect<BubblyStar>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),                                   // Neon Bars
     new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
@@ -371,12 +371,12 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
     new SimpleRainbowTestEffect(8, 4),                                                                            // Rainbow palette simple test of walking pixels
     new PaletteEffect(RainbowColors_p),                                                                           // Rainbow palette
-    new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT), // Green Twinkle
-    new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),        // Blue Sparkle
+    new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
+    new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),        // Blue Sparkle
 
     new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                     // Red Twinkle
-    new StarryNightEffect<Star>("Lava Stars", LavaColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),                    // Lava Stars
-    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT), // Rainbow Twinkle
+    new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
+    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
     new DoublePaletteEffect(),
 #elif ATOMLIGHT
     new ColorFillEffect(CRGB::White, 1),
@@ -416,7 +416,7 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     new PaletteFlameEffect("Smooth Purple Fire", purpleflame_pal),
 
     new MeteorEffect(),                                                                                                     // Our overlapping color meteors
-    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, PROB, 4, LINEARBLEND, 2.0, 0.0, MULT), // Blooming Little Rainbow Stars
+    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
     new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),              // Blooming Rainbow Stars
     new StarryNightEffect<BubblyStar>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),                                   // Neon Bars
 
@@ -428,12 +428,12 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
     new SimpleRainbowTestEffect(8, 4),                                                                            // Rainbow palette simple test of walking pixels
     new PaletteEffect(RainbowColors_p),                                                                           // Rainbow palette
-    new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT), // Green Twinkle
-    new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),        // Blue Sparkle
+    new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
+    new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),        // Blue Sparkle
 
-    new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.0, MULT),          // Red Twinkle
-    new StarryNightEffect<Star>("Lava Stars", LavaColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),                    // Lava Stars
-    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT), // Rainbow Twinkle
+    new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),          // Red Twinkle
+    new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
+    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
     new DoublePaletteEffect(),
     new VUEffect()
 
@@ -446,11 +446,11 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     new RainbowFillEffect(),
 
     new StarryNightEffect<MusicStar>("RGB Music Bubbles", RGBColors_p, 0.25, 1, NOBLEND, 3.0, 0.0, 75.0),                   // RGB Music Bubbles
-    new StarryNightEffect<HotWhiteStar>("Lava Stars", HeatColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),                  // Lava Stars
-    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, PROB, 4, LINEARBLEND, 2.0, 0.0, MULT), // Blooming Little Rainbow Stars
-    new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),           // Green Twinkle
+    new StarryNightEffect<HotWhiteStar>("Lava Stars", HeatColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                  // Lava Stars
+    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
+    new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),           // Green Twinkle
     new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                           // Red Twinkle
-    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),       // Rainbow Twinkle
+    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),       // Rainbow Twinkle
     new BouncingBallEffect(),
     new VUEffect()
 
@@ -518,14 +518,14 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
     new MeteorEffect(),                                                                                                     // Our overlapping color meteors
 
-    new StarryNightEffect<QuietStar>("Magenta Twinkle Stars", GreenColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT), // Green Twinkle
-    new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),        // Blue Sparkle
+    new StarryNightEffect<QuietStar>("Magenta Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
+    new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),        // Blue Sparkle
 
     new StarryNightEffect<QuietStar>("Red Twinkle Stars", MagentaColors_p, 1.0, 1, LINEARBLEND, 2.0),                     // Red Twinkle
-    new StarryNightEffect<Star>("Lava Stars", MagentaColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT),                    // Lava Stars
-    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, PROB, 1, LINEARBLEND, 2.0, 0.0, MULT), // Rainbow Twinkle
+    new StarryNightEffect<Star>("Lava Stars", MagentaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
+    new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
 
-    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", MagentaColors_p, PROB, 4, LINEARBLEND, 2.0, 0.0, MULT), // Blooming Little Rainbow Stars
+    new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", MagentaColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
     new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", MagentaColors_p, 2, 12, LINEARBLEND, 1.0),              // Blooming Rainbow Stars
     new StarryNightEffect<BubblyStar>("Neon Bars", MagentaColors_p, 0.5, 64, NOBLEND, 0),                                   // Neon Bars
 /*
