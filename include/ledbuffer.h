@@ -177,7 +177,7 @@ class LEDBufferManager
        _cBuffers(cBuffers)
     {
         // The initializer creates a uniquely owned table of shared pointers.
-        // We exlcusively can see the table, but the buffer objects it contains
+        // We exclusively can see the table, but the buffer objects it contains
         // are returned back out to callers so they must be shared pointers.
 
         for (int i = 0; i < _cBuffers; i++)
@@ -205,7 +205,7 @@ class LEDBufferManager
             return _iNextBuffer - _iLastBuffer;
     }
 
-    bool IsEmpty() const
+    inline bool IsEmpty() const
     {
         return _iNextBuffer == _iLastBuffer;
     }
@@ -230,7 +230,7 @@ class LEDBufferManager
     {
         auto pResult = _ppBuffers[_iNextBuffer++];
         _iNextBuffer %= _cBuffers;
-        if (_iNextBuffer == _iLastBuffer)
+        if (IsEmpty())
             _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
         _pLastBufferAdded = pResult;
@@ -245,7 +245,8 @@ class LEDBufferManager
     {
         if (IsEmpty())
             return nullptr; 
-        auto pResult = _ppBuffers[_iLastBuffer++];
+        auto pResult = _ppBuffers[_iLastBuffer];
+        _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
         return pResult;
     }
@@ -256,7 +257,7 @@ class LEDBufferManager
 
     const shared_ptr<LEDBuffer> PeekOldestBuffer() const
     {
-        if (_iNextBuffer == _iLastBuffer)
+        if (IsEmpty())
             return nullptr; 
         return _ppBuffers[_iLastBuffer];
     }
