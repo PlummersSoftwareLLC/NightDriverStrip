@@ -58,9 +58,10 @@
 //              Apr-23-2021  v016       Davepl      Fix max power limit!
 //              Apr-24-2021  v017       Davepl      Fix compressed frames - stable!
 //              May-01-2021  v018       Davepl      Put recive timeout back in, cRec'd to 0
-//              Jun-17-2022  v019       Davepl      Atomlight2 + variable FPS
-//              Jul-08-2022  v020       Davepl      Particle System, Insulators, lib deps
-//              Sep-18-2022  v021       Davepl      Github Release
+//              Jun-17-2021  v019       Davepl      Atomlight2 + variable FPS
+//              Jul-08-2021  v020       Davepl      Particle System, Insulators, lib deps
+//              Sep-18-2021  v021       Davepl      Github Release
+//              Nov-07-2021  v022       Davepl      Rev'd with new Github PRs to date
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -71,7 +72,7 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          0211  // Upate ONLY this to increment the version number
+#define FLASH_VERSION          022  // Upate ONLY this to increment the version number
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
 #define STR(x) "v"#x
@@ -412,7 +413,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  200000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
 
