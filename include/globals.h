@@ -800,6 +800,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define USE_TFT 0
 #endif
 
+#ifndef MULT
+#define MULT CRGB::Black
+#endif
+
+#ifndef PROB
+#define PROB 0.9
+#endif
+
 // gRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
