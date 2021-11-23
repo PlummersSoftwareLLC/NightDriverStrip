@@ -158,13 +158,17 @@ public:
 			debugW("Invalid index for EnableEffect");
 			return;
 		}
-		_abEffectEnabled[i] = true;
-		
-		if (_cEnabled < 1)
+
+		if (!_abEffectEnabled[i])
 		{
-			ClearRemoteColor();
+			_abEffectEnabled[i] = true;
+
+			if (_cEnabled < 1)
+			{
+				ClearRemoteColor();
+			}
+			_cEnabled++;
 		}
-		_cEnabled++;
 	}
 
 	void DisableEffect(size_t i)
@@ -174,12 +178,16 @@ public:
 			debugW("Invalid index for DisableEffect");
 			return;
 		}
-		_abEffectEnabled[i] = false;
-		
-		_cEnabled--;
-		if (_cEnabled < 1)
+
+		if (_abEffectEnabled[i])
 		{
-			SetGlobalColor(CRGB::Black);
+			_abEffectEnabled[i] = false;
+
+			_cEnabled--;
+			if (_cEnabled < 1)
+			{
+				SetGlobalColor(CRGB::Black);
+			}
 		}
 	}
 
