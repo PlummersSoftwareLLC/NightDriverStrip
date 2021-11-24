@@ -67,7 +67,7 @@ class EffectManager
 {
 	LEDStripEffect ** _ppEffects;
 	size_t            _cEffects;
-	size_t			 _cEnabled;
+	size_t			  _cEnabled;
 
 	size_t			 _iCurrentEffect;
 	uint    		 _effectStartTime;
@@ -225,6 +225,11 @@ public:
 	const size_t EffectCount() const
 	{
 		return _cEffects;
+	}
+
+	const size_t EnabledCount() const
+	{
+		return _cEnabled;
 	}
 
 	const size_t GetCurrentEffectIndex() const
