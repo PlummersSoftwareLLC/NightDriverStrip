@@ -67,12 +67,13 @@ class EffectManager
 {
 	LEDStripEffect ** _ppEffects;
 	size_t            _cEffects;
+	size_t			  _cEnabled;
 
 	size_t			 _iCurrentEffect;
 	uint    		 _effectStartTime;
 	uint    		 _effectInterval;
 	bool             _bPlayAll;
-	
+
 	unique_ptr<bool []> _abEffectEnabled;
 	shared_ptr<LEDMatrixGFX> * _gfx;
 	unique_ptr<LEDStripEffect> _pRemoteEffect;
@@ -85,6 +86,7 @@ public:
 	EffectManager(LEDStripEffect ** pEffects, size_t cEffects, shared_ptr<LEDMatrixGFX> * gfx)
 		  : _ppEffects(pEffects),
 	  	    _cEffects(cEffects),
+			_cEnabled(0),
 		    _effectInterval(DEFAULT_EFFECT_INTERVAL),
 		    _bPlayAll(false),
 			_gfx(gfx)
@@ -156,7 +158,17 @@ public:
 			debugW("Invalid index for EnableEffect");
 			return;
 		}
-		_abEffectEnabled[i] = true;
+
+		if (!_abEffectEnabled[i])
+		{
+			_abEffectEnabled[i] = true;
+
+			if (_cEnabled < 1)
+			{
+				ClearRemoteColor();
+			}
+			_cEnabled++;
+		}
 	}
 
 	void DisableEffect(size_t i)
@@ -166,7 +178,17 @@ public:
 			debugW("Invalid index for DisableEffect");
 			return;
 		}
-		_abEffectEnabled[i] = false;
+
+		if (_abEffectEnabled[i])
+		{
+			_abEffectEnabled[i] = false;
+
+			_cEnabled--;
+			if (_cEnabled < 1)
+			{
+				SetGlobalColor(CRGB::Black);
+			}
+		}
 	}
 
 	bool IsEffectEnabled(size_t i) const
@@ -203,6 +225,11 @@ public:
 	const size_t EffectCount() const
 	{
 		return _cEffects;
+	}
+
+	const size_t EnabledCount() const
+	{
+		return _cEnabled;
 	}
 
 	const size_t GetCurrentEffectIndex() const
@@ -264,7 +291,7 @@ public:
 			_iCurrentEffect++;						//   ... if so advance to next effect
 			_iCurrentEffect %= EffectCount();
 			_effectStartTime = millis();
-		} while (false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+		} while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 	}
 
 	// Go back to the previous effect and abort the current one.  
@@ -278,7 +305,7 @@ public:
 
 			_iCurrentEffect--;
 			_effectStartTime = millis();
-		} while (false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+		} while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 	}
 
 	bool Init()
