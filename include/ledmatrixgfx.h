@@ -37,6 +37,8 @@
 #include "globals.h"
 #include "FastLED.h"
 #include "Adafruit_GFX.h"
+#include <SPI.h>
+#include "Adafruit_ILI9341.h"
 #include "pixeltypes.h"
 #include <string>
 #include <stdexcept>

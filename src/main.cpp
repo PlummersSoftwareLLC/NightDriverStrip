@@ -470,7 +470,7 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 
 #if M5STICKC || M5STICKCPLUS
     #if USE_TFT
-        debugI("Intializizing LCD display\n");
+        debugI("Intializizing TFT display\n");
         M5.begin();
         M5.Lcd.setRotation(1);
         M5.Lcd.printf("NightDriver: " FLASH_VERSION_NAME);
@@ -478,6 +478,33 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
         debugI("Intializizing M5 withOUT display\n");
         M5.begin(false);
     #endif
+#endif
+
+#if USE_LCD
+    extern Adafruit_ILI9341 * g_pLCD;
+    debugI("Initializing LCD display\n");
+
+    // We need-want hardware SPI, but the default construtor that lets us specify the pins we need
+    // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
+
+    SPIClass * hspi = new SPIClass(HSPI);
+    hspi->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
+    g_pLCD = new Adafruit_ILI9341(hspi, TFT_DC, TFT_CS, TFT_RST);
+    g_pLCD->begin();
+    g_pLCD->fillScreen(BLUE16);
+    g_pLCD->setRotation(1);
+
+    uint8_t x = g_pLCD->readcommand8(ILI9341_RDMODE);
+    debugI("Display Power Mode: %x", x); 
+    x = g_pLCD->readcommand8(ILI9341_RDMADCTL);
+    debugI("MADCTL Mode: %x", x); 
+    x = g_pLCD->readcommand8(ILI9341_RDPIXFMT);
+    debugI("Pixel Format: %x", x); 
+    x = g_pLCD->readcommand8(ILI9341_RDIMGFMT);
+    debugI("Image Format: %x", x); 
+    x = g_pLCD->readcommand8(ILI9341_RDSELFDIAG);
+    debugI("Self Diagnostic: %x", x); 
+
 #endif
 
 #if ENABLE_WEBSERVER                                                    
@@ -497,7 +524,12 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     for (int i = 0; i < NUM_CHANNELS; i++)
         g_pStrands[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
 
-    uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
+    #if USE_PSRAM
+        uint32_t memtouse = ESP.getFreePsram();
+    #else
+        uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
+    #endif
+
     uint32_t memtoalloc = (NUM_CHANNELS * ((sizeof(LEDBuffer) + STRAND_LEDS * sizeof(CRGB))));
     uint32_t cBuffers = memtouse / memtoalloc;
 

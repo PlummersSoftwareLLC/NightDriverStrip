@@ -41,6 +41,10 @@
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
 
+#if USE_LCD
+Adafruit_ILI9341 * g_pLCD;
+#endif
+
 //
 // Externals - Moslty things that the screen will report or display for us
 //
@@ -91,7 +95,53 @@ void IRAM_ATTR ScreenStatus(const char *pszStatus)
 
 void IRAM_ATTR UpdateScreen()
 {
-#if USE_OLED
+#if USE_LCD
+        char szBuffer[256];
+        static const char szStatus[] = "|/-\\";
+        static int cStatus = 0;
+        int c2 = cStatus % strlen(szStatus);
+        char chStatus = szStatus[ c2 ];
+        cStatus++;
+
+        g_pLCD->setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
+        g_pLCD->setTextSize(1);
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+        g_pLCD->setCursor(0, 13);
+        g_pLCD->println(szBuffer);
+
+        if (WiFi.isConnected() == false)
+        {
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "No Wifi Connection");
+        }
+        else
+        {
+            const IPAddress address = WiFi.localIP();
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%ddB:%d.%d.%d.%d", 
+                                                    (int)labs(WiFi.RSSI()),                            // skip sign in first character
+                                                    address[0], address[1], address[2], address[3]);
+        }
+        g_pLCD->setCursor(0, 25);
+        g_pLCD->println(szBuffer);
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
+        g_pLCD->setCursor(0, 61);
+        g_pLCD->println(szBuffer);
+
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", g_BufferAgeOldest, g_BufferAgeNewest);
+        g_pLCD->setCursor(0, 37);
+        g_pLCD->println(szBuffer);
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf", g_AppTime.CurrentTime());
+        g_pLCD->setCursor(0, 49);
+        g_pLCD->println(szBuffer);
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%d   ", ESP.getFreePsram());
+        g_pLCD->setCursor(0, 73);
+        g_pLCD->println(szBuffer);
+
+#elif USE_OLED
         char szBuffer[256];
         static const char szStatus[] = "|/-\\";
         static int cStatus = 0;
@@ -134,6 +184,12 @@ void IRAM_ATTR UpdateScreen()
 
 #elif USE_TFT
 
+        // We clear the screen but we don't reset it - we reset it after actually
+        // having replaced all the info on the screen (ie: drawing)
+
+        if (gbInfoPageDirty)
+            M5.Lcd.fillScreen(BLACK16);
+        
         if (giInfoPage == 1)
         {
             // We only draw after a page flip or if anything has changed about the information that will be
@@ -144,13 +200,12 @@ void IRAM_ATTR UpdateScreen()
             static auto sip        = WiFi.localIP().toString();
             static auto lastFPS    = g_FPS;
 
-            if (gbInfoPageDirty == true                                      || 
+            if (gbInfoPageDirty != false                                     ||
                 lasteffect      != g_pEffectManager->GetCurrentEffectIndex() || 
                 sip             != WiFi.localIP().toString()                 || 
                 (g_ShowFPS && (lastFPS != g_FPS))
             )
             {
-                gbInfoPageDirty = false;
                 lasteffect      = g_pEffectManager->GetCurrentEffectIndex();
                 sip             = WiFi.localIP().toString();
                 lastFPS         = g_FPS;
@@ -160,12 +215,12 @@ void IRAM_ATTR UpdateScreen()
                 M5.Lcd.setFreeFont(FF17);
                 M5.Lcd.setTextColor(0xFBE0);
                 auto xh = M5.Lcd.width() / 2;
-                auto yh = 0;                        // Start at top of screen
+                auto yh = 1;                        // Start at top of screen
 
                 M5.Lcd.setTextDatum(C_BASELINE);
                 string sEffect = to_string("Current Effect: ") + 
                                  to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
-                                 to_string(" / ") + 
+                                 to_string("/") + 
                                  to_string(g_pEffectManager->EffectCount());
 
                 M5.Lcd.drawString(sEffect.c_str(), xh, yh += M5.Lcd.fontHeight());      // -4 is purely aesthetic alignment
@@ -198,9 +253,15 @@ void IRAM_ATTR UpdateScreen()
             }
         }
         else if (giInfoPage == 0)
-        {
+        {   
+            // It always gets cleared, and that's all we need, so we just set the flag to clean again
+            M5.Lcd.setFreeFont(FF17);
+            M5.Lcd.setTextColor(WHITE16, BLACK16);
+
             static uint lastFullDraw = 0;
             char szBuffer[256];
+            const int lineHeight = 20;
+
             if (millis() - lastFullDraw > 100)
             {
                 lastFullDraw = millis();
@@ -212,7 +273,7 @@ void IRAM_ATTR UpdateScreen()
                 #endif
 
                 snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK  %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, brite);
-                M5.Lcd.drawString(szBuffer, 0, 13); // write something to the internal memory
+                M5.Lcd.drawString(szBuffer, 0, lineHeight); // write something to the internal memory
 
                 if (WiFi.isConnected() == false)
                 {
@@ -224,19 +285,19 @@ void IRAM_ATTR UpdateScreen()
                                                             String(WiFi.RSSI()).substring(1).c_str(), 
                                                             WiFi.localIP().toString().c_str());
                 }
-                M5.Lcd.drawString(szBuffer, 0, 25); // write something to the internal memory
+                M5.Lcd.drawString(szBuffer, 0, lineHeight * 2); // write something to the internal memory
 
                 #if ENABLE_AUDIO
                 snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%d/%d [%dfps]  %.2lf", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS, gVURatio);
-                M5.Lcd.drawString(szBuffer, 0, 61); // write something to the internal memory
+                M5.Lcd.drawString(szBuffer, 0, lineHeight * 5); // write something to the internal memory
                 #endif
             }
 
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", g_BufferAgeOldest, g_BufferAgeNewest);
-            M5.Lcd.drawString(szBuffer, 0, 37); // write something to the internal memory
+            M5.Lcd.drawString(szBuffer, 0, lineHeight * 3); // write something to the internal memory
 
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf", g_AppTime.CurrentTime());
-            M5.Lcd.drawString(szBuffer, 0, 49); // write something to the internal memory
+            M5.Lcd.drawString(szBuffer, 0, lineHeight * 4); // write something to the internal memory
 
             #if ENABLE_AUDIO
                 const int barHeight = 10;
@@ -250,10 +311,7 @@ void IRAM_ATTR UpdateScreen()
                 M5.Lcd.fillRect(0, barY, barPos, barHeight, WHITE16);
             #endif
         }
-        else 
-        {
-
-        }
+        gbInfoPageDirty = false;
 #endif
 }
 
@@ -293,6 +351,9 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 
             giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
             gbInfoPageDirty = true;
+            
+            if (giInfoPage == 0)            
+                g_pEffectManager->NextEffect();
         }        
 #endif        
     }

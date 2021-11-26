@@ -123,6 +123,9 @@ class VUMeterEffect : public LEDStripEffect
             M5.Lcd.fillRect(0, 0, M5.Lcd.width(), 10, BLACK16);
 #endif
 
+#if USE_LCD
+#endif
+
         if (iPeakVUy > 1)
         {
             int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
