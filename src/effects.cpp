@@ -266,17 +266,40 @@ CRGB mult = CRGB::Black; float prob = 0.9; // These constants are referenced by 
 // A list of internal effects, if any.  
 DRAM_ATTR LEDStripEffect * AllEffects[] =
 {
-  #if DEMO
+  #if DEMO 
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
     new PaletteEffect(rainbowPalette, 256/16, .2, 0)
 
-  #elif TREESET
+#elif WROVERKIT 
 
-  // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-  
-    new ColorCycleEffect(BottomUp),
+    // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new PaletteEffect(rainbowPalette, 256/16, .2, 0)
+
+  #elif XMASTREES
+
+    new ColorBeatOverRedBkgnd("ColorBeatOverRedBkgnd"),
+
+    new FireFanEffect(NUM_LEDS,      1, 12, 210, 2, NUM_LEDS / 2, Sequential, false, true),
+    new GreenFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true),
+    new BlueFireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true),
+
+    new ColorCycleEffect(BottomUp, 6),
+    new ColorCycleEffect(BottomUp, 2),
+
+    new RainbowFillEffect(48, 0),
+
+    new ColorCycleEffect(BottomUp, 3),
+    new ColorCycleEffect(BottomUp, 1),
+
+    new StarryNightEffect<LongLifeSparkleStar>("Green Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB(0, 128, 0)),        // Blue Sparkle
+    new StarryNightEffect<LongLifeSparkleStar>("Red Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Red),        // Blue Sparkle
     new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Blue),        // Blue Sparkle
+
+    new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::GREENX, 50, true),
+    new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::BLUEX, 50, true),
+    new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::REDX, 50, true),
+    new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR, 50, true),
 
     //new PaletteSpinEffect("BlueStripeSpin", CRGBPalette256(blueSweep), false, 0, 0.1)
 

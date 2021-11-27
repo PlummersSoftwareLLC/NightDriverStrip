@@ -28,4 +28,4 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade platformio
     - name: Run PlatformIO
-      run: pio run -e demo -e spectrum -e treeset -e m5plusdemo -e heltecdemo
+      run: pio run -e demo -e spectrum -e treeset -e m5plusdemo -e heltecdemo -e xmastrees

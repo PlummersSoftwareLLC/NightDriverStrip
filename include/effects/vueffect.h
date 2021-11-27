@@ -230,7 +230,9 @@ class VUFlameEffect : public LEDStripEffect
                 break;
             }
         }
-        if (!_Mirrored || Pixel < _cLEDs / 2)
+        if (!_Mirrored)
+            setPixel(Pixel, c);
+        else
             setPixelWithMirror(Pixel, c);
 	}    
 
@@ -287,11 +289,11 @@ class VUFlameEffect : public LEDStripEffect
         // Randomly ignite new 'sparks' near the bottom
         // We use the ratio of the VU to its peak, which tells us the absolute volume, so we don't display stuff when really quiet
 
-        float ratio = (gVU - gMinVU) / (MAX_VU - gMinVU);
+        float threshold = 20 * gVURatio;
 
         for (int frame = 0; frame < 6; frame++)
-            if (random(255) < (255 * ratio ) ) 
-                heat[random(24)] += random(160, 255);		// This randomly rolls over sometimes of course, which seems inadvertantly essential to the effect
+            if (random(255) < threshold ) 
+                heat[random(NUM_LEDS)] += random(160, 255);		// This randomly rolls over sometimes of course, which seems inadvertantly essential to the effect
 
         // Convert heat to LED colors and draws them
 
