@@ -244,6 +244,7 @@
             {
                 effectIndex: i,
             });
+            RequestEffectList();
         }
    
         function DisableEffect(i) 
@@ -253,6 +254,7 @@
             {
                 effectIndex: i,
             });
+            RequestEffectList();
         }
 
         function NextStep()
@@ -395,7 +397,7 @@
         } );
 
         UpdateEffectList(null);
-        RequestEffectList();
+        setInterval(RequestEffectList, 2000);
 
         $("body").fadeIn(1000);
 
