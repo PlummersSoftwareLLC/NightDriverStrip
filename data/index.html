@@ -266,7 +266,25 @@
 
         function UpdateEnabled(effectData)
         {
+            if (null == effectData)
+                return;
+            
+            $('#enabledCount').empty();
+            $('#enabledCount').append(text = "Effects Enabled: " + effectData.enabledCount + "/" + effectData.Effects.length);
 
+            if (effectData.enabledCount > 0)
+            {
+                $('#currentEffectProgress').css('background-color', 'green');
+            }
+            else
+            {
+                $('#currentEffectProgress').css('background-color', 'red');
+            }
+
+            $.each($('#effectList li input'), function(i, v)
+            {
+                v.checked = effectData.Effects[i].enabled;
+            });
         }
 
         // UpdateCurrentEffect
@@ -275,7 +293,16 @@
 
         function UpdateCurrentEffect(effectData)
         {
+            if (null == effectData)
+                return;
 
+            $('#currentEffect').empty();
+            $('#currentEffect').append(text = "Current Effect: " + effectData.Effects[effectData.currentEffect].name);
+            $('#currentEffectProgress').width(((1 - (effectData.millisecondsRemaining / effectData.effectInterval)) * $('#currentEffect').width()) + "px");
+
+            
+            $('.ui-selectee').removeClass('ui-selected');
+            $('#effectList li').eq(effectData.currentEffect).addClass('ui-selected');
         }
 
         // UpdateEffectList
