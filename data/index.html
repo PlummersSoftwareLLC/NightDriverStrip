@@ -74,6 +74,42 @@
             float: left;
         }
 
+        #statusBar
+        {
+            border: 1px lightgray solid;
+            height: 1em;
+            position: relative;
+            width: 450px;
+        }
+
+        .effectStatusItem
+        {
+            font-size: 0.8em;
+            height: 100%;
+            width: 50%;
+        }
+
+        #currentEffect
+        {
+            background-color: #DDD;
+            float: left;
+            z-index: 0;
+        }
+
+        #currentEffectProgress
+        {
+            float: left;
+            opacity: 0.4;
+            position: absolute;
+            z-index: 1;
+        }
+
+        #enabledCount
+        {
+            float: right;
+            text-align: right;
+        }
+
     </style>
 </head>
 <body>
@@ -94,6 +130,14 @@
                 <ol id="effectList" class="effectList">
                 </ol>
                 <div id="Adjustments">
+                </div>
+                <div id="statusBar">
+                    <div id="currentEffect" class="effectStatusItem">
+                    </div>
+                    <div id="currentEffectProgress" class="effectStatusItem">
+                    </div>
+                    <div id="enabledCount" class="effectStatusItem">
+                    </div>
                 </div>
             <div id="tabs-2" style="text-align:left;">
                 If you can see this page, you're reading it live on the NightDriverStrip.  Not on a page written -about- the NightDriverStrip
