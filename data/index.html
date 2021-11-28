@@ -206,13 +206,30 @@
                 dataType: "text",
                 success: function (responseData, textStatus, jqXHR) {
                     var obj = JSON.parse(responseData);
-                    UpdateEffectList(obj);
+                    UpdateAll(obj);
                 },
                 error: function (responseData, textStatus, errorThrown) {
-                    UpdateEffectList(null);
+                    UpdateAll(null);
                     setTimeout(RequestEffectList, 2000);
                 }
             });
+        }
+
+        // UpdateAll
+        //
+        // Update the status on the page based on the state received from the server
+
+        var initialized = false;
+        function UpdateAll(obj)
+        {
+            if (!initialized)
+            {
+                UpdateEffectList(obj);
+                initialized = true;
+            }
+
+            UpdateEnabled(obj);
+            UpdateCurrentEffect(obj);
         }
     </script>
 
@@ -241,6 +258,24 @@
         function NextStep()
         {
             // Add here when needed
+        }
+
+        // UpdateEnabled
+        //
+        // Update the status on the page to reflect the currently enabled effects
+
+        function UpdateEnabled(effectData)
+        {
+
+        }
+
+        // UpdateCurrentEffect
+        //
+        // Update the status on the page to reflect the currently running effect
+
+        function UpdateCurrentEffect(effectData)
+        {
+
         }
 
         // UpdateEffectList
