@@ -456,7 +456,7 @@ class ColorBeatOverRedBkgnd : public virtual BeatEffectBase, public virtual Part
         if (bMajor && span >= 1.999) 
           iInsulator = -1;
                 
-        float fadetime = elapsed * 1.5;
+        float fadetime = min(5.0, elapsed * 1.5);   // Cap it at 5 seconds so we don't get ultra-long beats resulting from delays
         float flashtime = 0;
 
         _allParticles.push_back(RingParticle(_GFX, iInsulator, 0, RandomSaturatedColor(), flashtime, fadetime));
@@ -471,7 +471,7 @@ class ColorBeatOverRedBkgnd : public virtual BeatEffectBase, public virtual Part
 
       float amount = gVU / MAX_VU;
 
-      _baseColor = CRGB(1000 * amount, 0, 0);
+      _baseColor = CRGB(500 * amount, 0, 0);
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
       BeatEffectBase::Draw();
       ParticleSystemEffect<RingParticle>::Draw();

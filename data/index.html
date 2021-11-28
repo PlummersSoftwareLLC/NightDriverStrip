@@ -185,7 +185,7 @@
             });
         }
    
-        function EnableEffect(i) 
+        function DisableEffect(i) 
         {
             jQuery.support.cors = true;
             $.post(BasePageForRequests() +  "/disableEffect",
@@ -220,7 +220,14 @@
 
                 var inp = $('<input type="checkbox"/> ')
                     .addClass('single-checkbox')
-                    .appendTo(li);
+                    .appendTo(li)
+                    .click(function() {
+                        if ($(this).is(':checked')) {
+                            EnableEffect($(this).parent().attr('id'));
+                        } else {
+                            DisableEffect($(this).parent().attr('id'));
+                        }
+                    });
 
                 inp.prop('checked', effectData.Effects[i].enabled);
 

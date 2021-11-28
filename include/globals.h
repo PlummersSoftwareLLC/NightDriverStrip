@@ -137,7 +137,7 @@
 #define INCOMING_CORE           0
 #define NET_CORE                1
 #define AUDIO_CORE              0
-#define SCREEN_CORE             1
+#define SCREEN_CORE             1       
 #define DEBUG_CORE              1
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
@@ -269,6 +269,37 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 2
 
+#elif WROVERKIT
+
+    #define MATRIX_WIDTH            144
+    #define MATRIX_HEIGHT           1
+    #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define NUM_CHANNELS            1
+    #define NUM_RINGS               5
+    #define RING_SIZE_0             24
+
+    #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
+    #define USE_LCD                 1
+
+    // Once you have a working project, selectively enable various additional features by setting
+    // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
+
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Doesn't work smoothly with the screen on for some reason!
+    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local contexnt
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              1   // Accept over the air flash updates
+    #define WAIT_FOR_WIFI           0   // Don't *need* it so don't wait for it
+
+    #define LED_PIN0 5
+
+    // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
+    // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
+    // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
+    // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
+
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+
 #elif SPECTRUM
 
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
@@ -291,6 +322,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define LED_PIN0        26
     #define NUM_CHANNELS    1
+    #define RING_SIZE_0     24    
     #define BONUS_PIXELS    0
     #define MATRIX_WIDTH    48
     #define MATRIX_HEIGHT   16
@@ -306,6 +338,50 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NOISE_CUTOFF   75
     #define NOISE_FLOOR    200.0f
 
+    #define TOGGLE_BUTTON  37
+    #define NUM_INFO_PAGES 2
+
+
+#elif XMASTREES
+
+    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
+    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
+    // It displays a spectrum analyzer and music visualizer
+    
+    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              0  // Accept over the air flash updates
+    #define ENABLE_REMOTE           1   // IR Remote Control
+    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
+
+    #define MAX_BUFFERS     20
+
+    #define LED_PIN0        26
+    #define NUM_CHANNELS    1
+    #define RING_SIZE_0     24    
+    #define BONUS_PIXELS    0
+    #define MATRIX_WIDTH    24
+    #define MATRIX_HEIGHT   5
+    #define FAN_SIZE        MATRIX_WIDTH
+    #define NUM_FANS        MATRIX_HEIGHT
+    #define NUM_BANDS       16
+    #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define RESERVE_MEMORY  150000
+    #define IR_REMOTE_PIN   25                    
+    #define LED_FAN_OFFSET_BU 6
+    #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
+
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON  37
+    #define NUM_INFO_PAGES 2
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 2
 
@@ -787,11 +863,26 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFT 1                                     // enable the M5's LCD screen
 
+    #elif defined(WROVERKIT)
+
+        #define USE_LCD 1                                      // Use the ILI9341 onboard
+
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
 
 #endif // end USE_SCREEN
+
+#if USE_LCD
+    // These pins are based on the Espressif WROVER-KIT, which uses an ILI9314 chipset for its display
+    // connected as follows:
+    #define TFT_CS   22
+    #define TFT_DC   21
+    #define TFT_MOSI 23
+    #define TFT_SCK  19
+    #define TFT_RST  18
+    #define TFT_MISO 25
+#endif
 
 #ifndef USE_OLED                            
 #define USE_OLED 0
@@ -799,6 +890,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef USE_TFT                            
 #define USE_TFT 0
+#endif
+
+#ifndef USE_LCD  
+#define USE_LCD 0
 #endif
 
 #ifndef STARRYNIGHT_PROBABILITY

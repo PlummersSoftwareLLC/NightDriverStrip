@@ -78,7 +78,7 @@ static const int FanPixelsVertical[FAN_SIZE] =
 {
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
 };
-#elif TREESET
+#elif FAN_SIZE == 24 
 static const int FanPixelsVertical[FAN_SIZE] =
 {
   0, 23, 1, 22, 2, 21, 3, 20, 4, 19, 5, 18, 6, 17, 7, 16, 8, 15, 9, 14, 10, 13, 11, 12
@@ -599,11 +599,12 @@ class PaletteSpinEffect : public LEDStripEffect
 class ColorCycleEffect : public LEDStripEffect
 {
     PixelOrder _order;
+    int        _step;
 
   public:
     using LEDStripEffect::LEDStripEffect;
     
-    ColorCycleEffect(PixelOrder order = Sequential) : LEDStripEffect("ColorCylceEffect"), _order(order) 
+    ColorCycleEffect(PixelOrder order = Sequential, int step = 8) : LEDStripEffect("ColorCylceEffect"), _order(order), _step(step)
     {
     }
 
@@ -622,7 +623,7 @@ class ColorCycleEffect : public LEDStripEffect
             basehue += 1;
         }
         for (int i = 0; i < NUM_LEDS; i++)
-          DrawFanPixels(i, 1, CHSV(hue+=8, 255, 255), _order);
+          DrawFanPixels(i, 1, CHSV(hue+=_step, 255, 255), _order);
     }
 };
 
@@ -911,10 +912,12 @@ class FireFanEffect : public LEDStripEffect
         {
           for (int i = 0 ; i < Sparks; i++)
           {
-              if (random(255) < Sparking / 4 + Sparking * gVURatio / 2.0)
+              if (random(255) < Sparking / 4 + Sparking * (gVURatio / 2.0) * 0.5)
+              // if (random(255) < Sparking / 4)
               {
                   int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
-                  abHeat[y] = random(200, 255);// heat[y] + random(50, 255);       // Can roll over which actually looks good!
+                  //abHeat[y] = random(200, 255);
+                  abHeat[y] = abHeat[y] + random(50, 255);       // Can roll over which actually looks good!
               }
           }
         }
