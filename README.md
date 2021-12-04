@@ -31,7 +31,9 @@ I recommend you do the following:
 - Connect to the ESP32's web user interface with a browser to its IP address
 
 ## Wifi Setup
-Ensure your WiFi SSID and password are set in include/secrets.h.
+Ensure your WiFi SSID and password are set in include/secrets.h.<br/>
+Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
+
  - enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
 ```C++
 #define ENABLE_WIFI 1
