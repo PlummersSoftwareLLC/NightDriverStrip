@@ -27,7 +27,20 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade platformio
+    - name: Install Dependencies
+      run: |
+        pio platform install espressif32 --with-package framework-arduinoespressif32 --with-package tool-esptoolpy
+        pio lib -e all-deps install --no-save
+        mv .pio/libdeps/all-deps/* lib/
     - name: Copy secrets
       run: cp include/secrets.example.h include/secrets.h
-    - name: Run PlatformIO
-      run: pio run -e demo -e spectrum -e treeset -e m5plusdemo -e heltecdemo -e xmastrees
+    - name: Build demo
+      run: pio run -e demo
+    - name: Build spectrum
+      run: pio run -e spectrum
+    - name: Build m5plusdemo
+      run: pio run -e m5plusdemo
+    - name: Build heltecdemo
+      run: pio run -e heltecdemo
+    - name: Build xmastrees
+      run: pio run -e xmastrees

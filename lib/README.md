@@ -1,0 +1,1 @@
+You can use this folder as an optional alternate path to store project dependencies. Placing common dependencies in this folder will prevent platformio from re-downloading them for every project. Files in this directory will not be tracked by git. 
