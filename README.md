@@ -21,18 +21,23 @@ The simplest configuation, `DEMO`, assumes you have a single meter strip of 144 
 
 ## Getting Started
 I recommend you do the following:
+- Copy include/secrets.example.h to include/secrets.h; Set your WiFi SSID and password in include/secrets.h.
 - Build the source code.  In particular, build the `DEMO` configuration. Some pointers on what's needed to do this can be found [below](#build-pointers).
 - Upload the resultant binary to the ESP32
 - Connect PIN5 and GND and 5V of a WS2812B strip to the ESP32
 - Provide an adequate power source for the LEDs and ESP32
 - Enjoy the pretty lights
-- Start enabling features in the `globals.h` file like WiFi and WebServer.  Set your WiFi SSID and password in secrets.h.
+- Start enabling features in the `globals.h` file like WiFi and WebServer.
 - Connect to the ESP32's web user interface with a browser to its IP address
 
 ## Wifi Setup
-Set your WiFi SSID and password in include/secrets.h.
- - You can prevent git from tracking changes in this file by telling it to assume the file is unchanged. <br/>
-   `git update-index --assume-unchanged include/secrets.h`
+Ensure your WiFi SSID and password are set in include/secrets.h.<br/>
+Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
+
+ - enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
+```C++
+#define ENABLE_WIFI 1
+```
 
 ## Webserver Setup
 To use the built-in webserver, you will need to build and upload the SPIFFS image to your board's flash using platformio. <br/>
@@ -114,8 +119,8 @@ Note: Some defines are board specific, this is noted below.
 
 | Harware Specific | Description | Supported Boards |
 | - | - | - |
-| USE_OLED               | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
-| USE_TFT                | Enable stats display on built in OLED | Heltec Wifi Kit 32 |
+| USE_TFT                | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
+| USE_OLED               | Enable stats display on built in OLED | Heltec Wifi Kit 32 |
 | USE_LCD                | Enable stats display on external ILI9341 LCD | Wrover32 |
 | ENABLE_AUDIO           | Listen for audio from the microphone and process it | M5Stick-C and M5Stick-C Plus |
 | ENABLE_REMOTE          | IR Remote Control | Requires IR Harware |
