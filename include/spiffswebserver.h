@@ -91,6 +91,7 @@ class CSPIFFSWebServer
 		j["currentEffect"] 		   = g_pEffectManager->GetCurrentEffectIndex();
 		j["millisecondsRemaining"] = g_pEffectManager->GetTimeRemainingForCurrentEffect();
 		j["effectInterval"] 	   = g_pEffectManager->GetInterval();
+		j["enabledCount"]		   = g_pEffectManager->EnabledCount();
 		
 		for (int i = 0; i < g_pEffectManager->EffectCount(); i++) {
 			j["Effects"][i]["name"]    = g_pEffectManager->EffectsList()[i]->FriendlyName();
