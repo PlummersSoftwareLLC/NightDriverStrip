@@ -1013,6 +1013,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define USE_TFTSPI 0
 #endif
 
+#ifndef STARRYNIGHT_PROBABILITY
+#define STARRYNIGHT_PROBABILITY 0.9
+#endif
+
+#ifndef STARRYNIGHT_MUSICFACTOR
+#define STARRYNIGHT_MUSICFACTOR 1.0
+#endif
+
 // gRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
