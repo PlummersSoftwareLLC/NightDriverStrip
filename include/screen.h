@@ -43,8 +43,14 @@ class Screen
 
     // Define the drawable area for the spectrum to render into the status area
 
+#if M5STICKCPLUS
     static const int TopMargin = 37;  
-    static const int BottomMargin = 25;
+#else
+    static const int TopMargin = 21;  
+#endif
+
+
+    static const int BottomMargin = 22;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {

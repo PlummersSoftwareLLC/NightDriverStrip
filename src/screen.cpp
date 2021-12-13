@@ -35,7 +35,9 @@
 #include "Bounce2.h"
 #include "freefonts.h"
 #include "colordata.h"
+#if ENABLE_AUDIO
 #include "soundanalyzer.h"
+#endif
 #include <mutex>
 
 #if USE_OLED
@@ -94,7 +96,7 @@ void IRAM_ATTR UpdateScreen()
     #if USE_OLED
         g_u8g2.clearBuffer(); 
     #endif
-    
+
     if (giInfoPage == 0)
     {
         if (gbInfoPageDirty)
@@ -110,7 +112,7 @@ void IRAM_ATTR UpdateScreen()
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
         Screen::setTextSize(Screen::SMALL);
 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
         Screen::setCursor(0, 0);
         Screen::println(szBuffer);
 
@@ -199,12 +201,12 @@ void IRAM_ATTR UpdateScreen()
             Screen::drawString(sEffect.c_str(),yh);     
             
             yh += Screen::fontHeight();
-            Screen::setTextSize(Screen::MEDIUM);
+            Screen::setTextSize(Screen::screenWidth() > 160 ? Screen::MEDIUM : Screen::SMALL);
             Screen::setTextColor(WHITE16, backColor);
             Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
 
             Screen::setTextSize(Screen::TINY);
-            yh = Screen::screenHeight() - Screen::fontHeight() * 3 + 2; 
+            yh = Screen::screenHeight() - Screen::fontHeight() * 3 + 4; 
                 
             String sIP = WiFi.isConnected() ? "No Wifi" : WiFi.localIP().toString().c_str();
             sIP += " - NightDriverLED.com";
@@ -212,6 +214,7 @@ void IRAM_ATTR UpdateScreen()
             Screen::drawString(sIP.c_str(), yh);
             yh += Screen::fontHeight();
 
+            #if ENABLE_AUDIO
             if (g_ShowFPS)
             {
                 char szBuffer[64];
@@ -219,6 +222,7 @@ void IRAM_ATTR UpdateScreen()
                 Screen::drawString(szBuffer, yh);
                 yh += Screen::fontHeight();
             }
+            #endif
 
             string s = "NightDriverLED.com";
             Screen::setTextColor(GREEN16, backColor);
@@ -229,43 +233,46 @@ void IRAM_ATTR UpdateScreen()
         }
         gbInfoPageDirty = false;
 
-        // Draw the VU Meter and Spectrum every time.  yScale is the number of vertical pixels that would represent
-        // a single LED on the LED matrix.  
+        #if ENABLE_AUDIO
+            
+            // Draw the VU Meter and Spectrum every time.  yScale is the number of vertical pixels that would represent
+            // a single LED on the LED matrix.  
 
-        float yScale = (Screen::screenHeight() - Screen::TopMargin - Screen::BottomMargin) / (float) MATRIX_HEIGHT;
+            float yScale = (Screen::screenHeight() - Screen::TopMargin - Screen::BottomMargin) / (float) MATRIX_HEIGHT;
 
-        int xHalf   = MATRIX_WIDTH/2-1;
-        int cPixels = gVURatio / 2.0 * xHalf; 
-        cPixels = min(cPixels, xHalf);
+            int xHalf   = MATRIX_WIDTH/2-1;
+            int cPixels = gVURatio / 2.0 * xHalf; 
+            cPixels = min(cPixels, xHalf);
 
-        for (int iPixel = 0; iPixel < xHalf; iPixel++)
-        {
-            for (int yVU = 0; yVU < 2; yVU++)
+            for (int iPixel = 0; iPixel < xHalf; iPixel++)
             {
-                int xHalfM5 = Screen::screenWidth() / 2;
-                float xScale = Screen::screenWidth()/ (float) MATRIX_WIDTH;
-                uint16_t color16 = iPixel > cPixels ? BLACK16 : Screen::to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256/(xHalf))));
-                Screen::fillRect(xHalfM5-(iPixel-1)*xScale, Screen::TopMargin + yVU*yScale, xScale-1, yScale, color16);
-                Screen::fillRect(xHalfM5+iPixel*xScale,     Screen::TopMargin + yVU*yScale, xScale-1, yScale, color16);
+                for (int yVU = 0; yVU < 2; yVU++)
+                {
+                    int xHalfM5 = Screen::screenWidth() / 2;
+                    float xScale = Screen::screenWidth()/ (float) MATRIX_WIDTH;
+                    uint16_t color16 = iPixel > cPixels ? BLACK16 : Screen::to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256/(xHalf))));
+                    Screen::fillRect(xHalfM5-(iPixel-1)*xScale, Screen::TopMargin + yVU*yScale, xScale-1, yScale, color16);
+                    Screen::fillRect(xHalfM5+iPixel*xScale,     Screen::TopMargin + yVU*yScale, xScale-1, yScale, color16);
+                }
+            }    
+
+            // Draw the spectrum
+
+            int spectrumTop = Screen::TopMargin + yScale;                // Start at the bottom of the VU meter
+            for (int iBand = 0; iBand < NUM_BANDS; iBand++)
+            {
+                CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
+                auto dy = Screen::screenHeight() - spectrumTop - Screen::BottomMargin;
+
+                int bandWidth = Screen::screenWidth() / NUM_BANDS;
+                int bandHeight = max(3.0f, dy - yScale - 2);
+                auto color16 = Screen::to16bit(bandColor);
+                auto topSection = bandHeight - bandHeight * g_peak2Decay[iBand] - yScale;
+                if (topSection > 0)
+                    Screen::fillRect(iBand * bandWidth, spectrumTop + yScale, bandWidth - 1, topSection, BLACK16);
+                Screen::fillRect(iBand * bandWidth, spectrumTop + dy - bandHeight * g_peak2Decay[iBand], bandWidth - 1, bandHeight * g_peak2Decay[iBand], color16);
             }
-        }    
-
-        // Draw the spectrum
-
-        int spectrumTop = Screen::TopMargin + yScale;                // Start at the bottom of the VU meter
-        for (int iBand = 0; iBand < NUM_BANDS; iBand++)
-        {
-            CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
-            auto dy = Screen::screenHeight() - spectrumTop - Screen::BottomMargin;
-
-            int bandWidth = Screen::screenWidth() / NUM_BANDS;
-            int bandHeight = max(3.0f, dy - yScale - 2);
-            auto color16 = Screen::to16bit(bandColor);
-            auto topSection = bandHeight - bandHeight * g_peak2Decay[iBand] - yScale;
-            if (topSection > 0)
-                Screen::fillRect(iBand * bandWidth, spectrumTop + yScale, bandWidth - 1, topSection, BLACK16);
-            Screen::fillRect(iBand * bandWidth, spectrumTop + dy - bandHeight * g_peak2Decay[iBand], bandWidth - 1, bandHeight * g_peak2Decay[iBand], color16);
-        }
+        #endif
     }
     else if (giInfoPage == 3)
     {   
@@ -353,9 +360,8 @@ void IRAM_ATTR UpdateScreen()
             gbInfoPageDirty = false;
         }
     }
-
     #if USE_OLED
-        g_u8g2.sendBuffer();
+      g_u8g2.sendBuffer();
     #endif
 }
 
