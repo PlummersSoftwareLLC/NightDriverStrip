@@ -94,7 +94,7 @@ void IRAM_ATTR UpdateScreen()
 	std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
     #if USE_OLED
-    g_u8g2.clearBuffer();
+        g_u8g2.clearBuffer(); 
     #endif
 
     if (giInfoPage == 0)
@@ -361,9 +361,8 @@ void IRAM_ATTR UpdateScreen()
         }
     }
     #if USE_OLED
-    g_u8g2.sendBuffer();
+      g_u8g2.sendBuffer();
     #endif
-
 }
 
 
