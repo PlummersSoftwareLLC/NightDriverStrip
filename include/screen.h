@@ -105,6 +105,8 @@ class Screen
         #if USE_OLED
             return g_u8g2.getDisplayWidth();
         #endif
+
+        return 1;
     }
 
     static uint16_t fontHeight()
@@ -123,7 +125,9 @@ class Screen
 
         #if USE_OLED
             return 12;
-        #endif        
+        #endif   
+
+        return 1;     
     }
 
     static uint16_t textWidth(const char * psz)
@@ -142,7 +146,9 @@ class Screen
 
         #if USE_OLED
             return 9 * strlen(psz);
-        #endif        
+        #endif       
+
+        return 1; 
     }
 
     static uint16_t screenHeight()
@@ -162,6 +168,8 @@ class Screen
         #if USE_OLED
             return g_u8g2.getDisplayHeight();
         #endif
+
+        return 1;
     }
 
     static void fillScreen(uint16_t color)
@@ -288,7 +296,7 @@ class Screen
         #endif
 
         #if USE_OLED
-            g_u8g2.setCursor(x, y);
+            g_u8g2.setCursor(x, y + fontHeight() - 1);
         #endif
     }
 

@@ -483,7 +483,6 @@ void setup()
     // Init the U8G2 compatible SSD1306, 128X64 OLED display on the Heltec board
 
 #if USE_OLED
-extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     debugI("Intializizing OLED display");
     g_u8g2.begin();
 #endif

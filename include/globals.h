@@ -895,9 +895,17 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 // Define fan ordering for drawing into the fan directionally
 
+#ifndef LED_FAN_OFFSET_LR
 #define LED_FAN_OFFSET_LR  (LED_FAN_OFFSET_BU + (FAN_SIZE * 1 / 4))         // High level stuff right here!
+#endif
+
+#ifndef LED_FAN_OFFSET_TD
 #define LED_FAN_OFFSET_TD  (LED_FAN_OFFSET_BU + (FAN_SIZE * 2 / 4))
+#endif
+
+#ifndef LED_FAN_OFFSET_RL
 #define LED_FAN_OFFSET_RL  (LED_FAN_OFFSET_BU + (FAN_SIZE * 3 / 4))
+#endif
 
 #ifndef RING_SIZE_0
 #define RING_SIZE_0 0

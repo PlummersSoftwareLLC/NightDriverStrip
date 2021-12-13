@@ -259,7 +259,8 @@ unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 }
 #endif
 
-
+#define STARRYNIGHT_PROBABILITY 1.0
+#define STARRYNIGHT_MUSICFACTOR 1.0
 
 // AllEffects
 // 
