@@ -305,7 +305,7 @@ class WaveformEffect : public VUMeterEffect
         for (int y=1; y < MATRIX_HEIGHT; y++)
         {
             int x1 = abs(MATRIX_HEIGHT / 2 - y);
-            int dx = 256 / (MATRIX_HEIGHT / 2);
+            int dx = 256 / std::max(1, (MATRIX_HEIGHT / 2));
             CRGB color = CRGB::Black;
             // Invert index so that a rainbow ends up with red at the end, which would match
             // our red VU pixels

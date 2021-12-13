@@ -103,7 +103,7 @@ class Screen
         #endif
 
         #if USE_OLED
-            return u8g2.width();
+            return g_u8g2.getDisplayWidth();
         #endif
     }
 
@@ -160,7 +160,7 @@ class Screen
         #endif
 
         #if USE_OLED
-            return u8g2.height();
+            return g_u8g2.getDisplayHeight();
         #endif
     }
 
@@ -179,7 +179,7 @@ class Screen
         #endif
 
         #if USE_OLED
-            u8g2.clear();
+            g_u8g2.clear();
         #endif
     }
 
@@ -288,7 +288,7 @@ class Screen
         #endif
 
         #if USE_OLED
-            u8g2.setCursor(x, y);
+            g_u8g2.setCursor(x, y);
         #endif
     }
 
@@ -307,7 +307,7 @@ class Screen
         #endif
 
         #if USE_OLED
-            u8g2.println(pszText);
+            g_u8g2.println(pszText);
         #endif
     }
 

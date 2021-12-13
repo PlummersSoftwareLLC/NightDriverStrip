@@ -1062,6 +1062,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #include <gfxfont.h>                // Adafruit GFX font structs
 #include <Fonts/FreeSans9pt7b.h>    // A nice font
 #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
+extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 #endif
 
 #if USE_TFTSPI
