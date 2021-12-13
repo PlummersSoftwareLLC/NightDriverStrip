@@ -892,8 +892,16 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define USE_TFT 0
 #endif
 
-#ifndef USE_TFT                            
+#ifndef USE_LCD  
 #define USE_LCD 0
+#endif
+
+#ifndef STARRYNIGHT_PROBABILITY
+#define STARRYNIGHT_PROBABILITY 0.9
+#endif
+
+#ifndef STARRYNIGHT_MUSICFACTOR
+#define STARRYNIGHT_MUSICFACTOR 1.0
 #endif
 
 // gRingSizeTable

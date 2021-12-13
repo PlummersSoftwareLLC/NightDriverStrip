@@ -74,6 +74,42 @@
             float: left;
         }
 
+        #statusBar
+        {
+            border: 1px lightgray solid;
+            height: 1em;
+            position: relative;
+            width: 450px;
+        }
+
+        .effectStatusItem
+        {
+            font-size: 0.8em;
+            height: 100%;
+            width: 50%;
+        }
+
+        #currentEffect
+        {
+            background-color: #DDD;
+            float: left;
+            z-index: 0;
+        }
+
+        #currentEffectProgress
+        {
+            float: left;
+            opacity: 0.4;
+            position: absolute;
+            z-index: 1;
+        }
+
+        #enabledCount
+        {
+            float: right;
+            text-align: right;
+        }
+
     </style>
 </head>
 <body>
@@ -94,6 +130,14 @@
                 <ol id="effectList" class="effectList">
                 </ol>
                 <div id="Adjustments">
+                </div>
+                <div id="statusBar">
+                    <div id="currentEffect" class="effectStatusItem">
+                    </div>
+                    <div id="currentEffectProgress" class="effectStatusItem">
+                    </div>
+                    <div id="enabledCount" class="effectStatusItem">
+                    </div>
                 </div>
             <div id="tabs-2" style="text-align:left;">
                 If you can see this page, you're reading it live on the NightDriverStrip.  Not on a page written -about- the NightDriverStrip
@@ -162,13 +206,29 @@
                 dataType: "text",
                 success: function (responseData, textStatus, jqXHR) {
                     var obj = JSON.parse(responseData);
-                    UpdateEffectList(obj);
+                    UpdateAll(obj);
                 },
                 error: function (responseData, textStatus, errorThrown) {
-                    UpdateEffectList(null);
-                    setTimeout(RequestEffectList, 2000);
+                    UpdateAll(null);
                 }
             });
+        }
+
+        // UpdateAll
+        //
+        // Update the status on the page based on the state received from the server
+
+        var initialized = false;
+        function UpdateAll(obj)
+        {
+            if (!initialized)
+            {
+                UpdateEffectList(obj);
+                initialized = true;
+            }
+
+            UpdateEnabled(obj);
+            UpdateCurrentEffect(obj);
         }
     </script>
 
@@ -183,6 +243,7 @@
             {
                 effectIndex: i,
             });
+            RequestEffectList();
         }
    
         function DisableEffect(i) 
@@ -192,11 +253,57 @@
             {
                 effectIndex: i,
             });
+            RequestEffectList();
         }
 
         function NextStep()
         {
             // Add here when needed
+        }
+
+        // UpdateEnabled
+        //
+        // Update the status on the page to reflect the currently enabled effects
+
+        function UpdateEnabled(effectData)
+        {
+            if (null == effectData)
+                return;
+            
+            $('#enabledCount').empty();
+            $('#enabledCount').append(text = "Effects Enabled: " + effectData.enabledCount + "/" + effectData.Effects.length);
+
+            if (effectData.enabledCount > 0)
+            {
+                $('#currentEffectProgress').css('background-color', 'green');
+            }
+            else
+            {
+                $('#currentEffectProgress').css('background-color', 'red');
+            }
+
+            $.each($('#effectList li input'), function(i, v)
+            {
+                v.checked = effectData.Effects[i].enabled;
+            });
+        }
+
+        // UpdateCurrentEffect
+        //
+        // Update the status on the page to reflect the currently running effect
+
+        function UpdateCurrentEffect(effectData)
+        {
+            if (null == effectData)
+                return;
+
+            $('#currentEffect').empty();
+            $('#currentEffect').append(text = "Current Effect: " + effectData.Effects[effectData.currentEffect].name);
+            $('#currentEffectProgress').width(((1 - (effectData.millisecondsRemaining / effectData.effectInterval)) * $('#currentEffect').width()) + "px");
+
+            
+            $('.ui-selectee').removeClass('ui-selected');
+            $('#effectList li').eq(effectData.currentEffect).addClass('ui-selected');
         }
 
         // UpdateEffectList
@@ -289,7 +396,7 @@
         } );
 
         UpdateEffectList(null);
-        RequestEffectList();
+        setInterval(RequestEffectList, 2000);
 
         $("body").fadeIn(1000);
 
