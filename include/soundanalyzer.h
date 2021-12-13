@@ -53,14 +53,19 @@
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 
-extern float gScaler;					  // Instanteous read of LED display vertical scaling
-extern float gLogScale;					  // How exponential the peaks are made to be
-extern volatile float gVURatio;			  // Current VU as a ratio to its recent min and max
-extern volatile float gVU;		   	      // Instantaneous read of VU value
-extern volatile float gPeakVU;		      // How high our peak VU scale is in live mode
-extern volatile float gMinVU;		      // How low our peak VU scale is in live mode
-extern volatile unsigned long g_cSamples; // Total number of samples successfully collected
-extern int g_AudioFPS;					  // Framerate of the audio sampler
+extern float gScaler;					  		 // Instanteous read of LED display vertical scaling
+extern float gLogScale;					  		 // How exponential the peaks are made to be
+extern volatile float gVURatio;			    // Current VU as a ratio to its recent min and max
+extern volatile float gVU;		   	       // Instantaneous read of VU value
+extern volatile float gPeakVU;		       // How high our peak VU scale is in live mode
+extern volatile float gMinVU;		     		 // How low our peak VU scale is in live mode
+extern volatile unsigned long g_cSamples;  // Total number of samples successfully collected
+extern int g_AudioFPS;					  		 // Framerate of the audio sampler
+extern unsigned long g_lastPeak1Time[NUM_BANDS];
+extern float g_peak1Decay[NUM_BANDS];
+extern float g_peak2Decay[NUM_BANDS];
+extern float g_peak1DecayRate;
+extern float g_peak2DecayRate;
 
 #if !ENABLE_AUDIO
 extern volatile float gVURatio;			
@@ -97,13 +102,15 @@ using namespace std;
 #endif
 
 #define VUDAMPENMIN 100  								  // How slowly VU min creeps up to test noise floor
-#define VUDAMPENMAX 25								      // How slowly VU max drops down to test noise ceiling
+#define VUDAMPENMAX 25								     // How slowly VU max drops down to test noise ceiling
+
+#define MS_PER_SECOND 1000
 
 class PeakData
 {
   protected:
 
-    static float _Min[NUM_BANDS];
+   static float _Min[NUM_BANDS];
 	static float _Max[NUM_BANDS];
 	static float _Last[NUM_BANDS];
 	static float _allBandsMax;
@@ -219,6 +226,49 @@ class PeakData
 extern PeakData g_Peaks;
 const size_t    MAX_SAMPLES		   = 256;
 const size_t    SAMPLING_FREQUENCY = 44100;
+
+extern PeakData g_Peaks;
+
+// DecayPeaks
+//
+// Every so many ms we decay the peaks by a given amount
+
+inline void DecayPeaks()
+{
+  // REVIEW(davepl) Can be updated to use the frame timers from g_AppTime
+
+  static unsigned long lastDecay = 0;
+  float seconds = (millis() - lastDecay) / (float)MS_PER_SECOND;
+  lastDecay = millis();
+
+  float decayAmount1 = max(0.0f, seconds * g_peak1DecayRate);
+  float decayAmount2 = seconds *g_peak2DecayRate;
+
+  for (int iBand = 0; iBand < NUM_BANDS; iBand++)
+  {
+      g_peak1Decay[iBand] -= min(decayAmount1, g_peak1Decay[iBand]);    
+      g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);    
+  }
+}
+ 
+// Update the local band peaks from the global sound data.  If we establish a new peak in any band, 
+// we reset the peak timestamp on that band
+
+inline void UpdatePeakData()
+{
+  for (int i = 0; i < NUM_BANDS; i++)
+  {
+      if (g_Peaks[i] > g_peak1Decay[i])
+      {
+          g_peak1Decay[i] = g_Peaks[i];
+          g_lastPeak1Time[i] = millis();
+      }
+      if (g_Peaks[i] > g_peak2Decay[i])
+      {
+          g_peak2Decay[i] = g_Peaks[i];
+      }
+  }
+}
 
 // SampleBuffer
 //
@@ -406,6 +456,21 @@ class SampleBuffer
 			i2s_set_pin(I2S_NUM_0, &pin_config);
 			i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
+		#elif TTGO
+			i2s_config_t i2s_config;
+			i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
+			i2s_config.sample_rate = SAMPLING_FREQUENCY;            
+			i2s_config.dma_buf_len = MAX_SAMPLES;                   
+			i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
+			i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;  
+			i2s_config.use_apll = false,
+			i2s_config.communication_format = I2S_COMM_FORMAT_I2S_MSB;
+			i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
+			i2s_config.dma_buf_count = 2;
+			// This assume pin27 as input since it's easy to mount a 4466 style board to it, change as needed
+			ESP_ERROR_CHECK( adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0) );
+			ESP_ERROR_CHECK( i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config,  0, NULL) );
+			ESP_ERROR_CHECK( i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0) );		
 		#else
 			i2s_config_t i2s_config;
 			i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);

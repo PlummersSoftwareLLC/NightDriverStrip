@@ -39,12 +39,17 @@ class Screen
 {
   public:
 
-      static DRAM_ATTR std::mutex _screenMutex;   
+    static DRAM_ATTR std::mutex _screenMutex;   
 
-      // Define the drawable area for the spectrum to render into the status area
+    // Define the drawable area for the spectrum to render into the status area
 
-      static const int TopMargin = 35;  
-      static const int BottomMargin = 25;
+    static const int TopMargin = 37;  
+    static const int BottomMargin = 25;
+
+    static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
+    {
+      return ((rgb.r / 8) << 11) | ((rgb.g / 4) << 5) | (rgb.b / 8);
+    }
 
     // ScreenStatus
     // 

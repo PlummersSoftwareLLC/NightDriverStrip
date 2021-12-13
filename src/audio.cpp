@@ -44,14 +44,21 @@ float PeakData::_Max[NUM_BANDS] = { 0.0 };
 float PeakData::_Last[NUM_BANDS] = { 0.0 }; 
 float PeakData::_allBandsMax = 1.0;
 
+// BUGBUG (Davepl) - Time to collect all of these into an Audio class, I'd say!
+
 float gScaler = 0.0f;					  // Instanteous read of LED display vertical scaling
 float gLogScale = 1.0f;					  // How exponential the peaks are made to be
-volatile float gVURatio = 1.0;			  // Current VU as a ratio to its recent min and max
+volatile float gVURatio = 1.0;		  // Current VU as a ratio to its recent min and max
 volatile float gVU = 0;					  // Instantaneous read of VU value
 volatile float gPeakVU = MAX_VU;		  // How high our peak VU scale is in live mode
-volatile float gMinVU = 0;		          // How low our peak VU scale is in live mode
-volatile unsigned long g_cSamples = 0;	  // Total number of samples successfully collected
-int g_AudioFPS = 0;					      // Framerate of the audio sampler
+volatile float gMinVU = 0;		        // How low our peak VU scale is in live mode
+volatile unsigned long g_cSamples = 0;// Total number of samples successfully collected
+int g_AudioFPS = 0;					     // Framerate of the audio sampler
+unsigned long g_lastPeak1Time[NUM_BANDS] = { 0 } ;
+float g_peak1Decay[NUM_BANDS] = { 0 };
+float g_peak2Decay[NUM_BANDS] = { 0 };
+float g_peak1DecayRate;
+float g_peak2DecayRate;
 
 // Depending on how many bamds have been defined, one of these tables will contain the frequency
 // cutoffs for that "size" of a spectrum display.  
@@ -61,10 +68,17 @@ int g_AudioFPS = 0;					      // Framerate of the audio sampler
 	{
 		250, 450, 565, 715, 900, 1125, 1400, 1750, 2250, 2800, 3150, 4000, 5000, 6400, 12500, 20000
 	};
-	const float scalarsBand[16] = 
-	{
-		0.1f, 0.15f, 0.2f, 0.225f, 0.25f, 0.3f, 0.35f, 0.4f, 0.425f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 1.0f
-	};
+	#if TTGO	
+		const float scalarsBand[16] = 
+		{
+			0.05f, 0.15f, 0.2f, 0.225f, 0.25f, 0.3f, 0.35f, 0.4f, 0.425f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 1.0f
+		};
+	#else
+		const float scalarsBand[16] = 
+		{
+			0.1f, 0.15f, 0.2f, 0.225f, 0.25f, 0.3f, 0.35f, 0.4f, 0.425f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 1.0f
+		};
+	#endif
 #endif
 
 #if NUM_BANDS == 5
@@ -77,9 +91,6 @@ int g_AudioFPS = 0;					      // Framerate of the audio sampler
 		0.1f, 0.2f, 0.3f, 0.3f, 0.4f
 	};
 #endif
-
-
-
 
 // BandCutoffTable
 //
@@ -120,6 +131,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 		}
 
 		g_Peaks = Analyzer.RunSamplerPass();
+      UpdatePeakData();        
+      DecayPeaks();
 
 		gVURatio = (gPeakVU == gMinVU) ? 0.0 : (gVU-gMinVU) / std::max(gPeakVU - gMinVU, (float) MIN_VU) * 2.0f;
 

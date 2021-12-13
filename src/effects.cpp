@@ -269,7 +269,12 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
   #if DEMO 
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-    new PaletteEffect(rainbowPalette, 256/16, .2, 0)
+    new StarryNightEffect<QuietStar>("RGB Twinkle Stars", RGBColors_p, 3.0, 1, NOBLEND, 10.0, 0.0, 1.0), // Rainbow Twinkle
+
+#elif TTGO 
+
+    // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new SpectrumAnalyzerEffect("Spectrum Fade", spectrumBasicColors, 50, 70, -1.0, 3.0),
 
 #elif WROVERKIT 
 
@@ -365,10 +370,10 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
   #elif SPECTRUM
 
-    new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue,  CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
     new SpectrumAnalyzerEffect("Spectrum Standard", spectrumBasicColors),
-    new GhostWave("GhostWave Rainbow", &rainbowPalette, 8),
+    new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue,  CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
     new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
+    new GhostWave("GhostWave Rainbow", &rainbowPalette, 8),
     new SpectrumAnalyzerEffect("Spectrum Fade", spectrumBasicColors, 50, 70, -1.0, 3.0),
     new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
     new GhostWave("GhostWave Rainbow", &rainbowPalette),
@@ -479,10 +484,10 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
 #elif STRAND || ATOMISTRING
 
-    new PaletteEffect(RainbowStripeColors_p, 8.0, .125, 0, 1, 0), // Rainbow palette
-    new TwinkleEffect(NUM_LEDS/2, 10),
+    // Fast: new PaletteEffect(RainbowStripeColors_p, 8.0, .125, 0, 1, 0), // Rainbow palette
+    // Fast: new TwinkleEffect(NUM_LEDS/2, 10),
     new SimpleRainbowTestEffect(8, 1),  // Rainbow palette simple test of walking pixels
-    new TwinkleEffect(NUM_LEDS/2, 0, 50),
+    // Fast: new TwinkleEffect(NUM_LEDS/2, 0, 50),
     new RainbowFillEffect(),
 
 #elif RINGSET

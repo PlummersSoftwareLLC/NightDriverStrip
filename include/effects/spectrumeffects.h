@@ -43,10 +43,9 @@
 #include "soundanalyzer.h"
 #include "musiceffect.h"
 #include "particles.h"
+#include "screen.h"
 
 #if ENABLE_AUDIO
-
-#define MS_PER_SECOND 1000
 
 extern AppTime  g_AppTime;
 extern PeakData g_Peaks;
@@ -89,19 +88,7 @@ class VUMeterEffect : public LEDStripEffect
 		int xHalf = pGFXChannel->width()/2;
 		pGFXChannel->drawPixel(xHalf-i-1, yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
 		pGFXChannel->drawPixel(xHalf+i,   yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
-/*
-        if (giInfoPage == 1)
-        {
-            int xHalfM5 = M5.Lcd.width() / 2;
-            float xScale = M5.Lcd.width() / (float) MATRIX_WIDTH;
-            float yScale = M5.Lcd.height() / (float) MATRIX_HEIGHT;
-            CRGB color = ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy);
-            uint16_t color16 = M5.Lcd.color565(color.r, color.g, color.b);
-            M5.Lcd.fillRect(xHalfM5-(i-1)*xScale, yVU*yScale, xScale, yScale, color16);
-            M5.Lcd.fillRect(xHalfM5+i*xScale,     yVU*yScale, xScale, yScale, color16);
-        }
-*/        
-	}
+    }
 
     // DrawVUMeter
     // 
@@ -117,14 +104,6 @@ class VUMeterEffect : public LEDStripEffect
         const int MAX_FADE = 256;
 
         pGFXChannel->fillRect(0, yVU, MATRIX_WIDTH, 1, BLACK16);
-
-#if USE_TFT
-        if (giInfoPage == 1)
-            M5.Lcd.fillRect(0, 0, M5.Lcd.width(), 10, BLACK16);
-#endif
-
-#if USE_LCD
-#endif
 
         if (iPeakVUy > 1)
         {
@@ -168,41 +147,11 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
 {
   protected:
 
-    float _peak1Decay[NUM_BANDS] = { 0 };
-    float _peak2Decay[NUM_BANDS] = { 0 };
-    unsigned long _lastPeak1Time[NUM_BANDS] = { 0 } ;
-
     uint8_t   _colorOffset;
     uint16_t  _scrollSpeed;
     uint8_t   _fadeRate;
 
     CRGBPalette256 _palette;
-
-    float _peak1DecayRate;
-    float _peak2DecayRate;
-
-    // DecayPeaks
-    //
-    // Every so many ms we decay the peaks by a given amount
-
-    void DecayPeaks()
-    {
-        // REVIEW(davepl) Can be updated to use the frame timers from g_AppTime
-
-        static unsigned long lastDecay = 0;
-        float seconds = (millis() - lastDecay) / (float)MS_PER_SECOND;
-        lastDecay = millis();
-
-        float decayAmount1 = max(0.0f, seconds * _peak1DecayRate);
-        float decayAmount2 = seconds * _peak2DecayRate;
-
-        for (int iBand = 0; iBand < NUM_BANDS; iBand++)
-        {
-            _peak1Decay[iBand] -= min(decayAmount1, _peak1Decay[iBand]);    
-            _peak2Decay[iBand] -= min(decayAmount2, _peak2Decay[iBand]);    
-        }
-    }
-
 
     // DrawBand
     //
@@ -212,24 +161,10 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
     {
         auto pGFXChannel = _GFX[0];
 
-        // Draw a miniature spectrum analyzer on the LCD screen of the M5
+        int value  = g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
+        int value2 = g_peak2Decay[iBand] *  pGFXChannel->height();
 
-/*
-        if (giInfoPage == 1)
-        {
-            float yScale = M5.Lcd.height() / (float)MATRIX_HEIGHT;
-            int bandWidth = M5.Lcd.width() / NUM_BANDS;
-            int bandHeight = max(3.0f, M5.Lcd.height() - yScale);
-            CRGB color = pGFXChannel->from16Bit(baseColor);
-            auto color16 = M5.Lcd.color565(color.r, color.g, color.b);
-            M5.Lcd.fillRect(iBand * bandWidth, yScale, bandWidth - 1, bandHeight - bandHeight * _peak2Decay[iBand]- yScale, BLACK16);
-            M5.Lcd.fillRect(iBand * bandWidth, M5.Lcd.height() - bandHeight * _peak2Decay[iBand], bandWidth - 1, bandHeight * _peak2Decay[iBand], color16);
-        }
-*/
-        int value  = _peak1Decay[iBand] * (pGFXChannel->height() - 1);
-        int value2 = _peak2Decay[iBand] *  pGFXChannel->height();
-
-        debugV("Band: %d, Value: %f\n", iBand, _peak1Decay[iBand] );
+        debugV("Band: %d, Value: %f\n", iBand, g_peak1Decay[iBand] );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
@@ -260,7 +195,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
         const int PeakFadeTime_ms = 1000;
 
         CRGB colorHighlight = CRGB(CRGB::White);
-	    unsigned long msPeakAge = millis() - _lastPeak1Time[iBand];
+	    unsigned long msPeakAge = millis() - g_lastPeak1Time[iBand];
 	    if (msPeakAge > PeakFadeTime_ms)
 		    msPeakAge = PeakFadeTime_ms;
 	    
@@ -274,30 +209,11 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
 
         // if decay rate is less than zero we interpret that here to mean "don't draw it at all".  
 
-        if (_peak1DecayRate >= 0.0f)
+        if (g_peak1DecayRate >= 0.0f)
             pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + bandWidth - 1, max(0, yOffset-1),pGFXChannel->to16bit(colorHighlight));
     }
 
   public:
-
-    // Update the local band peaks from the global sound data.  If we establish a new peak in any band, 
-    // we reset the peak timestamp on that band
-
-    void UpdatePeakData()
-    {
-        for (int i = 0; i < NUM_BANDS; i++)
-        {
-            if (g_Peaks[i] > _peak1Decay[i])
-            {
-                _peak1Decay[i] = g_Peaks[i];
-                _lastPeak1Time[i] = millis();
-            }
-            if (g_Peaks[i] > _peak2Decay[i])
-            {
-                _peak2Decay[i] = g_Peaks[i];
-            }
-        }
-    }
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName = nullptr, 
                            const CRGBPalette256 & palette = spectrumBasicColors, 
@@ -309,10 +225,10 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
           _fadeRate(fadeRate),
-          _palette(palette),
-          _peak1DecayRate(peak1DecayRate),
-          _peak2DecayRate(peak2DecayRate)
+          _palette(palette)
     {
+        g_peak1DecayRate = peak1DecayRate;
+        g_peak2DecayRate = peak2DecayRate;
     }
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName = nullptr, 
@@ -324,9 +240,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
           _colorOffset(0),
           _scrollSpeed(0), 
           _fadeRate(fadeRate),
-          _palette(baseColor),
-          _peak1DecayRate(peak1DecayRate),
-          _peak2DecayRate(peak2DecayRate)
+          _palette(baseColor)
     {
     }
 
@@ -342,25 +256,14 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
             }
         }
 
-        UpdatePeakData();        
-        DecayPeaks();
-
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
         else
             fillSolidOnAllChannels(CRGB::Black);
 
-#if USE_TFT
-        if (giInfoPage == 1)
-        {
-            if (gbInfoPageDirty)
-            {
-                gbInfoPageDirty = false;
-                M5.Lcd.fillScreen(BLACK16);
-            }
-        }
-#endif
-    
+  
+        std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+
         DrawVUMeter(0);
         for (int i = 0; i < NUM_BANDS; i++)
         {

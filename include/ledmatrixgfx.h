@@ -53,6 +53,8 @@
 #define YELLOW16 0xFFE0
 #define WHITE16 0xFFFF
 
+#include "screen.h"
+
 //     FastLED.addLeds<WS2812B, LED_PIN, GRB>(_pLEDs, w * h);
 
 

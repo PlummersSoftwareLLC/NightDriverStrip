@@ -64,7 +64,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
 
 	virtual void Draw() 
     {
-        fillRainbowAllChannels(0, _cLEDs, beatsin16(4, 0, 256), 5, _EveryNth);
+        fillRainbowAllChannels(0, _cLEDs, beatsin16(4, 0, 256), 8, _EveryNth);
 		delay(10);
     }
 	
@@ -235,21 +235,21 @@ class StatusEffect : public LEDStripEffect
     }
 };
 
-#if BELT
-static const CRGB TwinkleColors[] = 
-{
-	CRGB::Red,
-	CRGB::Green,
-	CRGB::Blue,
-	CRGB::White
-};
-#else
+#if CLASSIC_GE_C9
 static const CRGB TwinkleColors[] = 
 {
     CRGB(238, 51, 39),      // Red
     CRGB(0, 172, 87),       // Green
     CRGB(250, 164, 25),     // Yellow
     CRGB(0, 131, 203)       // Blue
+};
+#else
+static const CRGB TwinkleColors[] = 
+{
+	CRGB::Red,
+	CRGB::Green,
+	CRGB::Blue,
+	CRGB::White
 };
 #endif
 

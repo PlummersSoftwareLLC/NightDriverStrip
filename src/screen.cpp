@@ -34,7 +34,9 @@
 #include "effects/effectmanager.h"              // So we can display cur effect
 #include "Bounce2.h"
 #include "freefonts.h"
-
+#include "colordata.h"
+#include "soundanalyzer.h"
+#include <mutex>
 
 #if USE_OLED
     #define SCREEN_ROTATION U8G2_R2
@@ -43,6 +45,13 @@
 
 #if USE_LCD
 Adafruit_ILI9341 * g_pLCD;
+#endif
+
+#if USE_TFTSPI
+    #include <TFT_eSPI.h>
+    #include <SPI.h>
+    
+    TFT_eSPI g_TFTSPI;
 #endif
 
 //
@@ -61,33 +70,12 @@ extern volatile float gVU;
 extern DRAM_ATTR uint8_t giInfoPage;                // What page of screen we are showing
 extern DRAM_ATTR bool gbInfoPageDirty;              // Does display need to be erased?
 
-bool g_ShowFPS = false;                             // Indicates whether little lcd should show FPS
+DRAM_ATTR std::mutex Screen::_screenMutex;          // The storage for the mutex of the screen class
+
+bool g_ShowFPS = true;                             // Indicates whether little lcd should show FPS
 #if ENABLE_AUDIO
 extern volatile float DRAM_ATTR gVURatio;           // Current VU as a ratio to its recent min and max
 #endif
-
-// ScreenStatus
-// 
-// Display a single string of text on the TFT screen, useful during boot for status, etc.
-
-void IRAM_ATTR ScreenStatus(const char *pszStatus)
-{
-#if USE_OLED 
-    g_u8g2.clear();
-    g_u8g2.clearBuffer();                   // clear the internal memory
-    g_u8g2.setFont(u8g2_font_profont15_tf); // choose a suitable font
-    g_u8g2.setCursor(0, 10);
-    g_u8g2.println(pszStatus);
-    g_u8g2.sendBuffer();
-#elif USE_TFT
-    M5.Lcd.fillScreen(BLACK16);
-    M5.Lcd.setFreeFont(FF15);
-    M5.Lcd.setTextColor(0xFBE0);
-    auto xh = 10;
-    auto yh = 0; 
-    M5.Lcd.drawString(pszStatus, xh, yh);
-#endif
-}
 
 // UpdateScreen
 //
@@ -95,7 +83,19 @@ void IRAM_ATTR ScreenStatus(const char *pszStatus)
 
 void IRAM_ATTR UpdateScreen()
 {
-#if USE_LCD
+    // If the display needs a refresh, we clear it here but we don't reset it yet so as to preserve
+    // that info for drawing; it is set to false at the end of the function.
+
+    // We don't want to be in the middle of drawing and have someone one another thread set the dirty
+    // flag on us, so access to the flag is guarded by a mutex
+
+	std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+
+    if (giInfoPage == 0)
+    {
+        if (gbInfoPageDirty)
+            Screen::fillScreen(BLUE16);
+
         char szBuffer[256];
         static const char szStatus[] = "|/-\\";
         static int cStatus = 0;
@@ -103,12 +103,12 @@ void IRAM_ATTR UpdateScreen()
         char chStatus = szStatus[ c2 ];
         cStatus++;
 
-        g_pLCD->setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
-        g_pLCD->setTextSize(1);
+        Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
+        Screen::setTextSize(Screen::SMALL);
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
-        g_pLCD->setCursor(0, 13);
-        g_pLCD->println(szBuffer);
+        Screen::setCursor(0, 0);
+        Screen::println(szBuffer);
 
         if (WiFi.isConnected() == false)
         {
@@ -121,198 +121,234 @@ void IRAM_ATTR UpdateScreen()
                                                     (int)labs(WiFi.RSSI()),                            // skip sign in first character
                                                     address[0], address[1], address[2], address[3]);
         }
-        g_pLCD->setCursor(0, 25);
-        g_pLCD->println(szBuffer);
+        auto lineHeight = Screen::fontHeight();
+        Screen::setCursor(0, lineHeight);
+        Screen::println(szBuffer);
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
-        g_pLCD->setCursor(0, 61);
-        g_pLCD->println(szBuffer);
+        Screen::setCursor(0, lineHeight * 4);
+        Screen::println(szBuffer);
 
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", g_BufferAgeOldest, g_BufferAgeNewest);
-        g_pLCD->setCursor(0, 37);
-        g_pLCD->println(szBuffer);
+        Screen::setCursor(0, lineHeight * 2);
+        Screen::println(szBuffer);
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf", g_AppTime.CurrentTime());
-        g_pLCD->setCursor(0, 49);
-        g_pLCD->println(szBuffer);
+        Screen::setCursor(0, lineHeight * 3);
+        Screen::println(szBuffer);
 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%d   ", ESP.getFreePsram());
-        g_pLCD->setCursor(0, 73);
-        g_pLCD->println(szBuffer);
-
-#elif USE_OLED
-        char szBuffer[256];
-        static const char szStatus[] = "|/-\\";
-        static int cStatus = 0;
-        int c2 = cStatus % strlen(szStatus);
-        char chStatus = szStatus[ c2 ];
-        cStatus++;
-
-        g_u8g2.clearBuffer(); 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
-        g_u8g2.drawStr(0, 13, szBuffer); // write something to the internal memory
-
-        if (WiFi.isConnected() == false)
+        if (Screen::screenHeight() >= lineHeight * 5 + Screen::fontHeight())
         {
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "No Wifi Connection");
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%d Brite:%0.2f%% ", 
+                ESP.getFreePsram(),
+                255.0f * 100 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW));
+
+            Screen::setCursor(0, lineHeight * 5);
+            Screen::println(szBuffer);
         }
-        else
-        {
-            const IPAddress address = WiFi.localIP();
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%ddB:%d.%d.%d.%d", 
-                                                    (int)labs(WiFi.RSSI()),                            // skip sign in first character
-                                                    address[0], address[1], address[2], address[3]);
-        }
-        g_u8g2.drawStr(0, 25, szBuffer); // write something to the internal memory
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
-        g_u8g2.drawStr(0, 61, szBuffer); // write something to the internal memory
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", g_BufferAgeOldest, g_BufferAgeNewest);
-        g_u8g2.drawStr(0, 37, szBuffer); // write something to the internal memory
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf", g_AppTime.CurrentTime());
-        g_u8g2.drawStr(0, 49, szBuffer); // write something to the internal memory
-
-        g_u8g2.sendBuffer();
-
-        if (false == heap_caps_check_integrity_all(true))
-        {
-            debugE("TFT Heap FAILED checks!");
-        }
-
-#elif USE_TFT
 
         // We clear the screen but we don't reset it - we reset it after actually
         // having replaced all the info on the screen (ie: drawing)
 
+        gbInfoPageDirty = false;
+    }
+    else if (giInfoPage == 1)
+    {
         if (gbInfoPageDirty)
-            M5.Lcd.fillScreen(BLACK16);
-        
-        if (giInfoPage == 1)
+            Screen::fillScreen(BLACK16);
+
+        uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
+
+        // We only draw after a page flip or if anything has changed about the information that will be
+        // shown in the page. This avoids flicker, but at the cost that we have to remember what we dispalyed
+        // last time and check each time to see if its any different before drawing.
+
+        static auto lasteffect = g_pEffectManager->GetCurrentEffectIndex();
+        static auto sip        = WiFi.localIP().toString();
+        static auto lastFPS    = g_FPS;
+
+        if (gbInfoPageDirty != false                                     ||
+            lasteffect      != g_pEffectManager->GetCurrentEffectIndex() || 
+            sip             != WiFi.localIP().toString()                 || 
+            (g_ShowFPS && (lastFPS != g_FPS))
+        )
         {
-            // We only draw after a page flip or if anything has changed about the information that will be
-            // shown in the page. This avoids flicker, but at the cost that we have to remember what we dispalyed
-            // last time and check each time to see if its any different before drawing.
+            Screen::fillRect(0, 0, Screen::screenWidth(), Screen::TopMargin, backColor);
+            Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), Screen::BottomMargin, backColor);
+            Screen::fillRect(0, Screen::TopMargin-1, Screen::screenWidth(), 1, BLUE16);
+            Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
 
-            static auto lasteffect = g_pEffectManager->GetCurrentEffectIndex();
-            static auto sip        = WiFi.localIP().toString();
-            static auto lastFPS    = g_FPS;
 
-            if (gbInfoPageDirty != false                                     ||
-                lasteffect      != g_pEffectManager->GetCurrentEffectIndex() || 
-                sip             != WiFi.localIP().toString()                 || 
-                (g_ShowFPS && (lastFPS != g_FPS))
-            )
-            {
-                lasteffect      = g_pEffectManager->GetCurrentEffectIndex();
-                sip             = WiFi.localIP().toString();
-                lastFPS         = g_FPS;
+            lasteffect      = g_pEffectManager->GetCurrentEffectIndex();
+            sip             = WiFi.localIP().toString();
+            lastFPS         = g_FPS;
 
-                M5.Lcd.fillScreen(BLACK16);
+            Screen::setTextSize(Screen::SMALL);
+            Screen::setTextColor(YELLOW16, backColor);
+            auto yh = 1;                        // Start at top of screen
 
-                M5.Lcd.setFreeFont(FF17);
-                M5.Lcd.setTextColor(0xFBE0);
-                auto xh = M5.Lcd.width() / 2;
-                auto yh = 1;                        // Start at top of screen
+            string sEffect = to_string("Current Effect: ") + 
+                             to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
+                             to_string("/") + 
+                             to_string(g_pEffectManager->EffectCount());
+            Screen::drawString(sEffect.c_str(),yh);     
+            
+            yh += Screen::fontHeight();
+            Screen::setTextSize(Screen::MEDIUM);
+            Screen::setTextColor(WHITE16, backColor);
+            Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
 
-                M5.Lcd.setTextDatum(C_BASELINE);
-                string sEffect = to_string("Current Effect: ") + 
-                                 to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
-                                 to_string("/") + 
-                                 to_string(g_pEffectManager->EffectCount());
-
-                M5.Lcd.drawString(sEffect.c_str(), xh, yh += M5.Lcd.fontHeight());      // -4 is purely aesthetic alignment
+            Screen::setTextSize(Screen::TINY);
+            yh = Screen::screenHeight() - Screen::fontHeight() * 3 + 2; 
                 
-                M5.Lcd.setFreeFont(FF18);
-                M5.Lcd.setTextColor(WHITE16);
-                M5.Lcd.drawString(g_pEffectManager->GetCurrentEffectName(), xh, yh += M5.Lcd.fontHeight() - 4);   // -4 is just aesthetic alignment
+            String sIP = WiFi.isConnected() ? "No Wifi" : WiFi.localIP().toString().c_str();
+            sIP += " - NightDriverLED.com";
+            Screen::setTextColor(YELLOW16, backColor);
+            Screen::drawString(sIP.c_str(), yh);
+            yh += Screen::fontHeight();
 
-                if (WiFi.isConnected())
-                {
-                    String sIP = WiFi.localIP().toString().c_str();
-                    M5.Lcd.setFreeFont(FF17);
-                    M5.Lcd.setTextColor(YELLOW16);
-                    M5.Lcd.drawString(sIP.c_str(), xh, yh += M5.Lcd.fontHeight());
-                }
-                if (g_ShowFPS)
-                {
-                    string sFPS = "FPS: " + to_string(g_FPS);
-                    M5.Lcd.setFreeFont(FF1);
-                    M5.Lcd.drawString(sFPS.c_str(), xh, yh += M5.Lcd.fontHeight());
-                }
-
-                M5.Lcd.setFreeFont(TT1);
-                M5.Lcd.setTextColor(GREEN16);
-                M5.Lcd.drawString("NightDriverLED.com", xh, M5.Lcd.height() - M5.Lcd.fontHeight());
-
-                // Reset text color to white (no way to fetch original and save it that I could see)
-                M5.Lcd.setTextColor(WHITE16);
-                
-            }
-        }
-        else if (giInfoPage == 0)
-        {   
-            // It always gets cleared, and that's all we need, so we just set the flag to clean again
-            M5.Lcd.setFreeFont(FF17);
-            M5.Lcd.setTextColor(WHITE16, BLACK16);
-
-            static uint lastFullDraw = 0;
-            char szBuffer[256];
-            const int lineHeight = 20;
-
-            if (millis() - lastFullDraw > 100)
+            if (g_ShowFPS)
             {
-                lastFullDraw = millis();
-                // clear the internal memory
-                #ifdef POWER_LIMIT_MW
-                int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                #else
-                int brite = 255;
-                #endif
-
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK  %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, brite);
-                M5.Lcd.drawString(szBuffer, 0, lineHeight); // write something to the internal memory
-
-                if (WiFi.isConnected() == false)
-                {
-                    snprintf(szBuffer, ARRAYSIZE(szBuffer), g_pEffectManager ? g_pEffectManager->GetCurrentEffectName() : "N/C");
-                }
-                else
-                {
-                    snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s", 
-                                                            String(WiFi.RSSI()).substring(1).c_str(), 
-                                                            WiFi.localIP().toString().c_str());
-                }
-                M5.Lcd.drawString(szBuffer, 0, lineHeight * 2); // write something to the internal memory
-
-                #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%d/%d [%dfps]  %.2lf", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS, gVURatio);
-                M5.Lcd.drawString(szBuffer, 0, lineHeight * 5); // write something to the internal memory
-                #endif
+                char szBuffer[64];
+                snprintf(szBuffer, sizeof(szBuffer), "LED FPS: %2d  Audio FPS: %2d ", g_FPS, g_AudioFPS);
+                Screen::drawString(szBuffer, yh);
+                yh += Screen::fontHeight();
             }
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", g_BufferAgeOldest, g_BufferAgeNewest);
-            M5.Lcd.drawString(szBuffer, 0, lineHeight * 3); // write something to the internal memory
+            string s = "NightDriverLED.com";
+            Screen::setTextColor(GREEN16, backColor);
+            Screen::drawString(s.c_str(), Screen::screenHeight());
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf", g_AppTime.CurrentTime());
-            M5.Lcd.drawString(szBuffer, 0, lineHeight * 4); // write something to the internal memory
-
-            #if ENABLE_AUDIO
-                const int barHeight = 10;
-                int barPos = M5.Lcd.width() * (gVURatio - 1.0);
-                int barY = M5.Lcd.height() - barHeight;
-
-                if (barPos < 6)
-                    barPos = 6;
-
-                M5.Lcd.fillRect(barPos, barY, M5.Lcd.width()-barPos, barHeight, BLACK16);
-                M5.Lcd.fillRect(0, barY, barPos, barHeight, WHITE16);
-            #endif
+            // Reset text color to white (no way to fetch original and save it that I could see)
+            Screen::setTextColor(WHITE16, backColor);
         }
         gbInfoPageDirty = false;
-#endif
+
+        // Draw the VU Meter and Spectrum every time.  yScale is the number of vertical pixels that would represent
+        // a single LED on the LED matrix.  
+
+        float yScale = (Screen::screenHeight() - Screen::TopMargin - Screen::BottomMargin) / (float) MATRIX_HEIGHT;
+
+        int xHalf   = MATRIX_WIDTH/2-1;
+        int cPixels = gVURatio / 2.0 * xHalf; 
+        cPixels = min(cPixels, xHalf);
+
+        for (int iPixel = 0; iPixel < xHalf; iPixel++)
+        {
+            for (int yVU = 0; yVU < 2; yVU++)
+            {
+                int xHalfM5 = Screen::screenWidth() / 2;
+                float xScale = Screen::screenWidth()/ (float) MATRIX_WIDTH;
+                uint16_t color16 = iPixel > cPixels ? BLACK16 : Screen::to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256/(xHalf))));
+                Screen::fillRect(xHalfM5-(iPixel-1)*xScale, Screen::TopMargin + yVU*yScale, xScale-1, yScale, color16);
+                Screen::fillRect(xHalfM5+iPixel*xScale,     Screen::TopMargin + yVU*yScale, xScale-1, yScale, color16);
+            }
+        }    
+
+        // Draw the spectrum
+
+        int spectrumTop = Screen::TopMargin + yScale;                // Start at the bottom of the VU meter
+        for (int iBand = 0; iBand < NUM_BANDS; iBand++)
+        {
+            CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
+            auto dy = Screen::screenHeight() - spectrumTop - Screen::BottomMargin;
+
+            int bandWidth = Screen::screenWidth() / NUM_BANDS;
+            int bandHeight = max(3.0f, dy - yScale - 2);
+            auto color16 = Screen::to16bit(bandColor);
+            auto topSection = bandHeight - bandHeight * g_peak2Decay[iBand] - yScale;
+            if (topSection > 0)
+                Screen::fillRect(iBand * bandWidth, spectrumTop + yScale, bandWidth - 1, topSection, BLACK16);
+            Screen::fillRect(iBand * bandWidth, spectrumTop + dy - bandHeight * g_peak2Decay[iBand], bandWidth - 1, bandHeight * g_peak2Decay[iBand], color16);
+        }
+    }
+    else if (giInfoPage == 3)
+    {   
+        if (gbInfoPageDirty)
+            Screen::fillScreen(BLACK16);
+
+        // It always gets cleared, and that's all we need, so we just set the flag to clean again
+        Screen::setTextSize(Screen::SMALL);
+        Screen::setTextColor(WHITE16, BLACK16);
+
+        static uint lastFullDraw = 0;
+        char szBuffer[256];
+        const int lineHeight = Screen::fontHeight() + 2;
+
+        if (millis() - lastFullDraw > 100)
+        {
+            lastFullDraw = millis();
+
+            #ifdef POWER_LIMIT_MW
+            int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+            #else
+            int brite = 255;
+            #endif
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, brite);
+            Screen::drawString(szBuffer, 0, 0); // write something to the internal memory
+
+            if (WiFi.isConnected() == false)
+            {
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), g_pEffectManager ? g_pEffectManager->GetCurrentEffectName() : "N/C");
+            }
+            else
+            {
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s", 
+                                                        String(WiFi.RSSI()).substring(1).c_str(), 
+                                                        WiFi.localIP().toString().c_str());
+            }
+            Screen::drawString(szBuffer, 0, lineHeight * 1); // write something to the internal memory
+
+            #if ENABLE_AUDIO
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%d/%d[%dfps]%.2lf", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS, gVURatio);
+            Screen::drawString(szBuffer, 0, lineHeight * 4); // write something to the internal memory
+            #endif
+        }
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", g_BufferAgeOldest, g_BufferAgeNewest);
+        Screen::drawString(szBuffer, 0, lineHeight * 2); // write something to the internal memory
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf", g_AppTime.CurrentTime());
+        Screen::drawString(szBuffer, 0, lineHeight * 3); // write something to the internal memory
+
+        #if ENABLE_AUDIO
+            const int barHeight = 10;
+            int barPos = Screen::screenWidth() * (gVURatio - 1.0);
+            int barY = Screen::screenHeight() - barHeight;
+
+            if (barPos < 5)
+                barPos = 5;
+
+            Screen::fillRect(barPos, barY, Screen::screenWidth()-barPos, barHeight, BLACK16);
+            Screen::fillRect(0, barY, barPos, barHeight, RED16);
+        #endif
+
+        gbInfoPageDirty = false;    
+    }
+    else if (giInfoPage == 2)
+    {
+        if (gbInfoPageDirty)
+        {
+            Screen::fillScreen(BLACK16);
+
+            // This page is largely rendered by the Spectrum effect which draws to us during its render
+            Screen::setTextSize(Screen::TINY);
+            Screen::setTextColor(GREEN16, BLACK16);
+
+            string s = "NightDriverLED.com";
+            Screen::setTextColor(GREEN16, BLACK16);
+            auto xh = Screen::screenWidth() / 2 - (s.length() * Screen::fontHeight() * 3 / 4) / 2;
+            Screen::drawString(s.c_str(), xh, Screen::screenHeight() - Screen::fontHeight() * 2 - 2);
+
+            s = "Visit Dave's Garage on YouTube!";
+            Screen::setTextColor(YELLOW16, BLACK16);
+            xh = Screen::screenWidth() / 2 - (s.length() * Screen::fontHeight() * 3 / 4) / 2;
+            Screen::drawString(s.c_str(), xh, Screen::screenHeight() - Screen::fontHeight() * 1);
+            gbInfoPageDirty = false;
+        }
+    }
 }
 
 
@@ -322,10 +358,13 @@ void IRAM_ATTR UpdateScreen()
 // this or modify it to fit a screen you do have.  You could also try serial output, as it's on a low-pri thread it shouldn't
 // disturb the primary cores, but I haven't tried it myself.
 
-#if TOGGLE_BUTTON
-extern Bounce2::Button sideButton;
+#ifdef TOGGLE_BUTTON_1
+extern Bounce2::Button Button1;
 #endif
 
+#ifdef TOGGLE_BUTTON_2
+extern Bounce2::Button Button2;
+#endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 {
@@ -340,21 +379,29 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 
     for (;;)
     {
-        UpdateScreen();
-        delay(g_bUpdateStarted ? 200 : 10);
-
-#ifdef TOGGLE_BUTTON
-        sideButton.update();
-        if (sideButton.pressed())
+#ifdef TOGGLE_BUTTON_1
+        Button1.update();
+        if (Button1.pressed())
         {
+    		std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+
             // When the button is pressed advance to the next information page on the little display
 
             giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
             gbInfoPageDirty = true;
-            
-            if (giInfoPage == 0)            
-                g_pEffectManager->NextEffect();
-        }        
+        }     
 #endif        
+
+#ifdef TOGGLE_BUTTON_2
+        Button2.update();
+        if (Button2.pressed())
+        {
+            g_pEffectManager->NextEffect();
+        }     
+#endif        
+
+        UpdateScreen();
+        delay(g_bUpdateStarted ? 200 : 10);
+
     }
 }

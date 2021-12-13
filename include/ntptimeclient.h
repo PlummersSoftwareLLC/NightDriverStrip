@@ -53,7 +53,7 @@
 class NTPTimeClient
 {
 	static bool _bClockSet;	
-	static std::mutex  _mutex;
+	static std::mutex  _clockMutex;
 
   public:
 
@@ -75,7 +75,7 @@ class NTPTimeClient
 	{
 		debugI("Updating Clock From Web...");
 
-		std::lock_guard<std::mutex> guard(_mutex);
+		std::lock_guard<std::mutex> guard(_clockMutex);
 
 		char chNtpPacket[NTP_PACKET_LENGTH];
 		memset(chNtpPacket, 0, NTP_PACKET_LENGTH);		

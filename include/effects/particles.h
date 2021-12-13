@@ -206,21 +206,19 @@ class FadingPaletteObject : public FadingObject
 
     virtual CRGB ObjectColor() const
     {
+        CRGB c = ColorFromPalette(_palette, _colorIndex, 255, _blendType);
         if (Age() < PreignitionTime())
         {
-            CRGB c = CRGB::White;
             fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
             return c;
         }
-        else if (Age() >= PreignitionTime() && Age() < IgnitionTime() + PreignitionTime())
+        else if (Age() >= PreignitionTime() && (Age() < (IgnitionTime() + PreignitionTime())))
         {
-            CRGB c = CRGB::White;
-            //c.fadeToBlackBy(255 - ((Age() - PreignitionTime()) / IgnitionTime() * 255));
+            CRGB c = CRGB::Green;
             fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
             return c;
         }
-
-        CRGB c = ColorFromPalette(_palette, _colorIndex, 255, _blendType);
+        
         fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
         return c;        
     }    

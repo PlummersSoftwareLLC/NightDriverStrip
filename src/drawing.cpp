@@ -273,7 +273,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
                 
-                // If we draw, we delay so that anything else on our core, like the TFT, can get more CPU and update.
+                // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
 
                 delay(1);        
             }
@@ -289,9 +289,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         if (g_bUpdateStarted)
             delay(100);
         
-        // If we didn't draw anything, we busy-wait so that we are continually checking the clock for an packet
+        // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
         // whose time has come
 
-        delay(1);
+        delay(5);
     }
 }

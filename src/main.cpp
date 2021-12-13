@@ -202,7 +202,7 @@ TaskHandle_t g_taskSocket = nullptr;
 // Global Variables
 //
 
-DRAM_ATTR uint8_t giInfoPage = 1;                   // Which page of the display is being shown
+DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
 DRAM_ATTR bool    gbInfoPageDirty = true;           // Does the display need to be erased?
 DRAM_ATTR WiFiUDP g_Udp;                            // UDP object used for NNTP, etc
 DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
@@ -213,7 +213,7 @@ DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by
 DRAM_ATTR shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];            // Each LED strip gets its own channel
 DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];     // Each channel has its own buffer
 DRAM_ATTR unique_ptr<EffectManager>    g_pEffectManager;                    // The one and only global effect manager
-DRAM_ATTR mutex NTPTimeClient::_mutex;                                      // Clock guard mutex for SNTP client
+DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                // Instance of our telnet debug server
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
@@ -371,7 +371,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d", M5STICKC, USE_TFT, USE_OLED);
+    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d, USE_TFTSPI: %d", M5STICKC, USE_TFT, USE_OLED, USE_TFTSPI);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -404,8 +404,12 @@ void TerminateHandler()
     abort();
 }
 
-#if TOGGLE_BUTTON
-Bounce2::Button sideButton;
+#ifdef TOGGLE_BUTTON_1
+Bounce2::Button Button1;
+#endif
+
+#ifdef TOGGLE_BUTTON_2
+Bounce2::Button Button2;
 #endif
 
 // setup
@@ -451,21 +455,45 @@ void setup()
     // If we have a remote control enabled, set the direction on its input pin accordingly
 
     #if ENABLE_REMOTE
-        pinMode(IR_REMOTE_PIN, INPUT);             // BUGBUG hardcoded pin
+        pinMode(IR_REMOTE_PIN, INPUT);             
     #endif
 
-    #if TOGGLE_BUTTON
-        sideButton.attach(TOGGLE_BUTTON, INPUT);
-        sideButton.interval(5);
-        sideButton.setPressedState(LOW);
+    #if ENABLE_AUDIO
+        pinMode(INPUT_PIN, INPUT);
+        #if TTGO                                    
+            pinMode(37, OUTPUT);            // This pin layout allows for mounting a MAX4466 to the backside
+            digitalWrite(37, LOW);          //   of a TTGO with the OUT pin on 36, GND on 37, and Vcc on 38
+            pinMode(38, OUTPUT);
+            digitalWrite(38, HIGH);
+        #endif
+    #endif
+
+    #ifdef TOGGLE_BUTTON_1
+        Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
+        Button1.interval(5);
+        Button1.setPressedState(LOW);
+    #endif
+
+    #ifdef TOGGLE_BUTTON_2
+        Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
+        Button2.interval(5);
+        Button2.setPressedState(LOW);
     #endif
 
     // Init the U8G2 compatible SSD1306, 128X64 OLED display on the Heltec board
 
 #if USE_OLED
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
-    debugI("Intializizing OLED display\n");
+    debugI("Intializizing OLED display");
     g_u8g2.begin();
+#endif
+
+#if USE_TFTSPI
+    debugI("Initializing TFTSPI");
+    extern TFT_eSPI g_TFTSPI;
+    g_TFTSPI.init();
+    g_TFTSPI.setRotation(1);
+    g_TFTSPI.fillScreen(TFT_BLACK);
 #endif
 
 #if M5STICKC || M5STICKCPLUS
@@ -473,9 +501,10 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
         debugI("Intializizing TFT display\n");
         M5.begin();
         M5.Lcd.setRotation(1);
+        M5.Lcd.setTextDatum(C_BASELINE);
         M5.Lcd.printf("NightDriver: " FLASH_VERSION_NAME);
     #else
-        debugI("Intializizing M5 withOUT display\n");
+        debugI("Intializizing M5 withOUT display");
         M5.begin(false);
     #endif
 #endif
