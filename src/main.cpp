@@ -484,24 +484,27 @@ void setup()
 
 #if USE_OLED
     debugI("Intializizing OLED display");
-    g_u8g2.begin();
+
+    g_pDisplay->begin();
 #endif
 
 #if USE_TFTSPI
     debugI("Initializing TFTSPI");
-    extern TFT_eSPI g_TFTSPI;
-    g_TFTSPI.init();
-    g_TFTSPI.setRotation(1);
-    g_TFTSPI.fillScreen(TFT_BLACK);
+    extern TFT_eSPI * g_pDisplay;
+    g_pDisplay->init();
+    g_pDisplay->setRotation(1);
+    g_pDisplay->fillScreen(TFT_BLACK);
 #endif
 
 #if M5STICKC || M5STICKCPLUS
     #if USE_TFT
         debugI("Intializizing TFT display\n");
+        extern M5Display * g_pDisplay;
         M5.begin();
-        M5.Lcd.setRotation(1);
-        M5.Lcd.setTextDatum(C_BASELINE);
-        M5.Lcd.printf("NightDriver: " FLASH_VERSION_NAME);
+        g_pDisplay = &M5.Lcd;
+        g_pDisplay->setRotation(1);
+        g_pDisplay->setTextDatum(C_BASELINE);
+        g_pDisplay->printf("NightDriver: " FLASH_VERSION_NAME);
     #else
         debugI("Intializizing M5 withOUT display");
         M5.begin(false);
@@ -509,7 +512,7 @@ void setup()
 #endif
 
 #if USE_LCD
-    extern Adafruit_ILI9341 * g_pLCD;
+    extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
 
     // We need-want hardware SPI, but the default construtor that lets us specify the pins we need
@@ -517,20 +520,20 @@ void setup()
 
     SPIClass * hspi = new SPIClass(HSPI);
     hspi->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
-    g_pLCD = new Adafruit_ILI9341(hspi, TFT_DC, TFT_CS, TFT_RST);
-    g_pLCD->begin();
-    g_pLCD->fillScreen(BLUE16);
-    g_pLCD->setRotation(1);
+    g_pDisplay = new Adafruit_ILI9341(hspi, TFT_DC, TFT_CS, TFT_RST);
+    g_pDisplay->begin();
+    g_pDisplay->fillScreen(BLUE16);
+    g_pDisplay->setRotation(1);
 
-    uint8_t x = g_pLCD->readcommand8(ILI9341_RDMODE);
+    uint8_t x = g_pDisplay->readcommand8(ILI9341_RDMODE);
     debugI("Display Power Mode: %x", x); 
-    x = g_pLCD->readcommand8(ILI9341_RDMADCTL);
+    x = g_pDisplay->readcommand8(ILI9341_RDMADCTL);
     debugI("MADCTL Mode: %x", x); 
-    x = g_pLCD->readcommand8(ILI9341_RDPIXFMT);
+    x = g_pDisplay->readcommand8(ILI9341_RDPIXFMT);
     debugI("Pixel Format: %x", x); 
-    x = g_pLCD->readcommand8(ILI9341_RDIMGFMT);
+    x = g_pDisplay->readcommand8(ILI9341_RDIMGFMT);
     debugI("Image Format: %x", x); 
-    x = g_pLCD->readcommand8(ILI9341_RDSELFDIAG);
+    x = g_pDisplay->readcommand8(ILI9341_RDSELFDIAG);
     debugI("Self Diagnostic: %x", x); 
 
 #endif

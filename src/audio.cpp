@@ -46,14 +46,14 @@ float PeakData::_allBandsMax = 1.0;
 
 // BUGBUG (Davepl) - Time to collect all of these into an Audio class, I'd say!
 
-float gScaler = 0.0f;					  // Instanteous read of LED display vertical scaling
+float gScaler = 0.0f;					  // Instantaneous read of LED display vertical scaling
 float gLogScale = 1.0f;					  // How exponential the peaks are made to be
-volatile float gVURatio = 1.0;		  // Current VU as a ratio to its recent min and max
+volatile float gVURatio = 1.0;		  		  // Current VU as a ratio to its recent min and max
 volatile float gVU = 0;					  // Instantaneous read of VU value
-volatile float gPeakVU = MAX_VU;		  // How high our peak VU scale is in live mode
-volatile float gMinVU = 0;		        // How low our peak VU scale is in live mode
-volatile unsigned long g_cSamples = 0;// Total number of samples successfully collected
-int g_AudioFPS = 0;					     // Framerate of the audio sampler
+volatile float gPeakVU = MAX_VU;		  	  // How high our peak VU scale is in live mode
+volatile float gMinVU = 0;		        	  // How low our peak VU scale is in live mode
+volatile unsigned long g_cSamples = 0;			  // Total number of samples successfully collected
+int g_AudioFPS = 0;				          // Framerate of the audio sampler
 unsigned long g_lastPeak1Time[NUM_BANDS] = { 0 } ;
 float g_peak1Decay[NUM_BANDS] = { 0 };
 float g_peak2Decay[NUM_BANDS] = { 0 };
