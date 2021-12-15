@@ -144,6 +144,9 @@ Time to build the SPECTRUM config.  Assumes a clean build after everything has b
 - AMD 5950X 16-cores, 64GB, SSD
 -> [davepl 09/19/2021] 16.90 seconds
 
+- Apple MacBook Pro M1 MAX, 8+2 cores, 64GB, 4TB SSD
+-> [davepl 12/15/2021] 20.90 seconds
+
 - MacBook Pro 2020, 8 Cores 2.4GHz i9, 64GB, 4TB SSD
 -> [davepl 09/19/2021] 34.09 seconds
 
