@@ -11,13 +11,13 @@ _Davepl, 9/19/2021_
 ## What NightDriverStrip is
 NightDriverStrip is a source code package for building a flash program that you upload to the [ESP32 microcontroller](https://en.wikipedia.org/wiki/ESP32).  It can drive up to 8 channels of WS2812B style LEDs connected to the chip pins and display fancy colors and patterns and designs on them.  There are numerous effects built in that can be configured to be shown on the LED strip, including audio/music/beat-reactive effects for modules equipped with a microphone.  It can also optionally receive color data for the LEDs in a simple LZ-compressed (or noncompressed) format over a TCP/IP socket that is opened by default on port 49152.  The ESP32 keeps its clock in sync using NTP.
 
-To add new effects, you derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`.  Add your class to the `AllEffects` table in `effects.cpp` (under your build configuration section, like `DEMO`).  Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet.  Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately.  Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
+To add new effects, you derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`.  Add your class to the `AllEffects` table in `effects.cpp` (under your build configuration section, like `DEMO`).  Check out what the built-in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet.  Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately.  Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
 
-There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controled by `DEFAULT_EFFEECT_INTERVAL`.  Effects are not notified when they go active or not, they're just asked to draw when needed.
+There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controlled by `DEFAULT_EFFEECT_INTERVAL`.  Effects are not notified when they go active or not, they're just asked to draw when needed.
 
 Each channel of LEDs has an `LEDMatrixGfx` instance associated with it.  `_GFX[0]` is the `LEDMatrixGfx` associated with `LED_PIN0`, and so on.  You can get the LED buffer of Pin0 by calling `_GFX[0]->GetLEDBuffer()`, and it will contain `_GFX[0]->GetLEDCount` pixels.  You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
 
-The simplest configuation, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32.  It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs.  If working correctly it should draw a scrolling rainbow palette on your LED strip.
+The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32.  It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs.  If working correctly it should draw a scrolling rainbow palette on your LED strip.
 
 ## Getting Started
 I recommend you do the following:
@@ -57,7 +57,7 @@ pio run --target uploadfs --environment <project name>
 - Infinity Mirror for use with the MAGICMIRROR config: https://amzn.to/3lEZo2D
 - Super-handy breakout board for ESP32-DevKitC: https://amzn.to/3nKX7Wt
 
-Full Disclosure: As an Amazon Associate, PlummersSoftwareLLC earns commission from qualifying purchases.  It's not added to the purcahse price, and does not increase your cost at all.  Plus, all 2021 profits from the Dave's Garage Channel, which includes these sales, will go to the UW Autism Center.
+Full Disclosure: As an Amazon Associate, PlummersSoftwareLLC earns commission from qualifying purchases.  It's not added to the purchase price and does not increase your cost at all.  Plus, all 2021 profits from the Dave's Garage Channel, which includes these sales, will go to the UW Autism Center.
 
 ## Bonus Exercise
 Write something simple to send color data to the socket.  The format is very basic: which channel, how many LEDs you're drawing, when to draw it, and the color data itself.  You can send uncompressed data with a zero timestamp as long as you send the correct header before your data, which is very simple.  Data with a zero timestamp will just be drawn immediately with no buffering.
@@ -81,7 +81,7 @@ Rather than produce a complex set of guidelines, here's what I hope open-source 
 
 Let's consider the inconsistent naming, which should be fixed.  Some is camelCase, some is pszHungarian, and so on, depending on the source. I'd prefer it were all updated to a single standard TBD.  Until the TBD is determined, I lean towards [the Win32 standard](https://docs.microsoft.com/en-us/windows/win32/stg/coding-style-conventions?redirectedfrom=MSDN).  
 
-When working in a function, work in the style of the function.  When working on a class, work in the style of the class.  When working on a file, work in the style of the file.  If those are inconsistent, do whatever minimizes changes.  Stylistic changes should only be introduced after discussion in the group, and generally should entain owning that style change across the entire project.
+When working in a function, work in the style of the function.  When working on a class, work in the style of the class.  When working on a file, work in the style of the file.  If those are inconsistent, do whatever minimizes changes.  Stylistic changes should only be introduced after discussion in the group, and generally should entail owning that style change across the entire project.
 
 Next, let's consider `#define`s to control the build.  There may be better and more elegant ways of doing things. There could be entire configuration platforms.  But I'd prefer to keep it simple.  And I define simplest to be "the least that an experienced C++ programmer needs to learn before being constructive with the code in question".  I don't want to learn a new class library if I can avoid it!
 
@@ -113,18 +113,18 @@ Note: Some defines are board specific, this is noted below.
 | ENABLE_WIFI            | Connect to WiFi |
 | INCOMING_WIFI_ENABLED  | Accepting incoming color data and commands |
 | ENABLE_WEBSERVER       | Turn on the internal webserver |
-| TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local contexnt |
+| TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local context |
 | ENABLE_NTP             | Set the clock from the web |
 | ENABLE_OTA             | Accept over the air flash updates |
 
-| Harware Specific | Description | Supported Boards |
+| Hardware Specific | Description | Supported Boards |
 | - | - | - |
 | USE_TFT                | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
 | USE_OLED               | Enable stats display on built in OLED | Heltec Wifi Kit 32 |
 | USE_LCD                | Enable stats display on external ILI9341 LCD | Wrover32 |
 | USE_TFTSPI             | Enable stats display on external TTGO LCD | esp32dev |
 | ENABLE_AUDIO           | Listen for audio from the microphone and process it | M5Stick-C and M5Stick-C Plus |
-| ENABLE_REMOTE          | IR Remote Control | Requires IR Harware |
+| ENABLE_REMOTE          | IR Remote Control | Requires IR Hardware |
 
 example in platformio.ini
 ```
