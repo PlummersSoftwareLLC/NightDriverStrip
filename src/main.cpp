@@ -109,7 +109,7 @@
 // of the General Public License (GPL). This requires that anyone modifying 
 // the NightDriver code (for anything other than personal use) or building 
 // applications based on NightDriver code must also make their derived 
-// product available under the same open source GPL terms. By purcahasing 
+// product available under the same open source GPL terms. By purchasing 
 // a license for NightDriver, you would not then be bound by the GPL and 
 // you would gain an extended feature set and various levels of support.  
 // Think commas, not zeros, when discussing product volumes and license 
