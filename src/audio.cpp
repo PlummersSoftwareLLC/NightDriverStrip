@@ -46,7 +46,7 @@ float PeakData::_allBandsMax = 1.0;
 
 // BUGBUG (Davepl) - Time to collect all of these into an Audio class, I'd say!
 
-float gScaler = 0.0f;					  // Instanteous read of LED display vertical scaling
+float gScaler = 0.0f;					  // Instantaneous read of LED display vertical scaling
 float gLogScale = 1.0f;					  // How exponential the peaks are made to be
 volatile float gVURatio = 1.0;		  // Current VU as a ratio to its recent min and max
 volatile float gVU = 0;					  // Instantaneous read of VU value
@@ -60,7 +60,7 @@ float g_peak2Decay[NUM_BANDS] = { 0 };
 float g_peak1DecayRate;
 float g_peak2DecayRate;
 
-// Depending on how many bamds have been defined, one of these tables will contain the frequency
+// Depending on how many bands have been defined, one of these tables will contain the frequency
 // cutoffs for that "size" of a spectrum display.  
 
 #if NUM_BANDS == 16

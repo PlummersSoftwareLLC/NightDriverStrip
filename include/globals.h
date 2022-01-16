@@ -57,7 +57,7 @@
 //              Apr-23-2021  v015       Davepl      Fixed fan effects
 //              Apr-23-2021  v016       Davepl      Fix max power limit!
 //              Apr-24-2021  v017       Davepl      Fix compressed frames - stable!
-//              May-01-2021  v018       Davepl      Put recive timeout back in, cRec'd to 0
+//              May-01-2021  v018       Davepl      Put receive timeout back in, cRec'd to 0
 //              Jun-17-2021  v019       Davepl      Atomlight2 + variable FPS
 //              Jul-08-2021  v020       Davepl      Particle System, Insulators, lib deps
 //              Sep-18-2021  v021       Davepl      Github Release
@@ -190,7 +190,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // One and only one of DEMO, SPECTRUM, ATOMLIGHT, etc should be set to true by the build config for your project
 // 
 // I've used this code to build a dozen different projects, most of which can be created by defining
-// the right built environment (like INSULATORS=1).  The config here defines everythig about the
+// the right built environment (like INSULATORS=1).  The config here defines everything about the
 // LEDs, how many, on how many channels, laid out into how many fang/rings, and so on.  You can also
 // specify the audio system config like how many band channels.
 
@@ -286,7 +286,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local context
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              1   // Accept over the air flash updates

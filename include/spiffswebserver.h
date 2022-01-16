@@ -29,7 +29,7 @@
 //   adjusting effect paramters.  I'm in no way attached to it and it
 //   should likely be redone!
 //
-//   Server also exposes basic RESTful API for querying variablesl etc.
+//   Server also exposes basic RESTful API for querying variables etc.
 //
 // History:     Jul-12-2018         Davepl      Created
 //              Apr-29-2019 		Davepl		Adapted from BigBlueLCD project

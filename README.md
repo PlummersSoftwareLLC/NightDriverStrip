@@ -57,7 +57,7 @@ pio run --target uploadfs --environment <project name>
 - Infinity Mirror for use with the MAGICMIRROR config: https://amzn.to/3lEZo2D
 - Super-handy breakout board for ESP32-DevKitC: https://amzn.to/3nKX7Wt
 
-Full Disclosure: As an Amazon Associate, PlummersSoftwareLLC earns commission from qualifying purchases.  It's not added to the purcahse price, and does not increase your cost at all.  Plus, all 2021 profits from the Dave's Garage Channel, which includes these sales, will go to the UW Autism Center.
+Full Disclosure: As an Amazon Associate, PlummersSoftwareLLC earns commission from qualifying purchases.  It's not added to the purchase price, and does not increase your cost at all.  Plus, all 2021 profits from the Dave's Garage Channel, which includes these sales, will go to the UW Autism Center.
 
 ## Bonus Exercise
 Write something simple to send color data to the socket.  The format is very basic: which channel, how many LEDs you're drawing, when to draw it, and the color data itself.  You can send uncompressed data with a zero timestamp as long as you send the correct header before your data, which is very simple.  Data with a zero timestamp will just be drawn immediately with no buffering.
@@ -113,7 +113,7 @@ Note: Some defines are board specific, this is noted below.
 | ENABLE_WIFI            | Connect to WiFi |
 | INCOMING_WIFI_ENABLED  | Accepting incoming color data and commands |
 | ENABLE_WEBSERVER       | Turn on the internal webserver |
-| TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local contexnt |
+| TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local context |
 | ENABLE_NTP             | Set the clock from the web |
 | ENABLE_OTA             | Accept over the air flash updates |
 
@@ -124,7 +124,7 @@ Note: Some defines are board specific, this is noted below.
 | USE_LCD                | Enable stats display on external ILI9341 LCD | Wrover32 |
 | USE_TFTSPI             | Enable stats display on external TTGO LCD | esp32dev |
 | ENABLE_AUDIO           | Listen for audio from the microphone and process it | M5Stick-C and M5Stick-C Plus |
-| ENABLE_REMOTE          | IR Remote Control | Requires IR Harware |
+| ENABLE_REMOTE          | IR Remote Control | Requires IR Hardware |
 
 example in platformio.ini
 ```
