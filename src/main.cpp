@@ -109,7 +109,7 @@
 // of the General Public License (GPL). This requires that anyone modifying 
 // the NightDriver code (for anything other than personal use) or building 
 // applications based on NightDriver code must also make their derived 
-// product available under the same open source GPL terms. By purchasing 
+// product available under the same open source GPL terms. By purcahasing 
 // a license for NightDriver, you would not then be bound by the GPL and 
 // you would gain an extended feature set and various levels of support.  
 // Think commas, not zeros, when discussing product volumes and license 
@@ -483,7 +483,7 @@ void setup()
     // Init the U8G2 compatible SSD1306, 128X64 OLED display on the Heltec board
 
 #if USE_OLED
-    debugI("Intializizing OLED display");
+    debugI("Initializing OLED display");
     g_u8g2.begin();
 #endif
 
@@ -497,13 +497,13 @@ void setup()
 
 #if M5STICKC || M5STICKCPLUS
     #if USE_TFT
-        debugI("Intializizing TFT display\n");
+        debugI("Initializing TFT display\n");
         M5.begin();
         M5.Lcd.setRotation(1);
         M5.Lcd.setTextDatum(C_BASELINE);
         M5.Lcd.printf("NightDriver: " FLASH_VERSION_NAME);
     #else
-        debugI("Intializizing M5 withOUT display");
+        debugI("Initializing M5 withOUT display");
         M5.begin(false);
     #endif
 #endif

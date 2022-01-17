@@ -300,7 +300,7 @@ class SimpleColorBeat : public BeatEffectBase, protected virtual LEDStripEffect
         {
           c = CRGB::Cyan;
 
-          if (elapsed > 0.5)                                // Medium beats fill blue and proceed with insualtor2
+          if (elapsed > 0.5)                                // Medium beats fill blue and proceed with insulator2
           {
             c = CHSV(beatsin8(4), 255, 255);
             cInsulators = random(1, NUM_FANS);
