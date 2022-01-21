@@ -512,7 +512,7 @@ void setup()
     extern Adafruit_ILI9341 * g_pLCD;
     debugI("Initializing LCD display\n");
 
-    // We need-want hardware SPI, but the default construtor that lets us specify the pins we need
+    // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
     // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
 
     SPIClass * hspi = new SPIClass(HSPI);
@@ -689,7 +689,7 @@ void setup()
     Debug.setSerialEnabled(true);
 #endif
 
-    // Init the zlib comprfession
+    // Init the zlib compression
 
     debugI("Initializing compression...");
     uzlib_init();
