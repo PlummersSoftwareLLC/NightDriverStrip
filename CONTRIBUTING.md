@@ -5,7 +5,7 @@ My hope when I released this work as open source was that people would (a) add c
 
 I realize it's easier to fork a project than it is to properly extend the classes or even the #defines.  But by doing the work in the main tree, everyone reaps the benefits of every other fix and improvement.  I invite you to contribute your important work to the MAIN tree (i.e. the [PlummersSoftwareLLC/NightDriverStrip](https://github.com/PlummersSoftwareLLC/NightDriverStrip) repository) where everyone can benefit from it!
 
-If you're doing something truly obscure, like adding suport for an LED type that almost no one else would need, I can see a fork being reasonable.  But if others could in general benefit from what you're doing, please do it in such a way that it goes back into the main tree for everyone's beenfit!
+If you're doing something truly obscure, like adding support for an LED type that almost no one else would need, I can see a fork being reasonable.  But if others could in general benefit from what you're doing, please do it in such a way that it goes back into the main tree for everyone's benefit!
 
 _(This is an exact copy of the equally-named section of [README.md](README.md))_
 

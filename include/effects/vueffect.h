@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//    Draws a VU meter based on thec current sound measurements
+//    Draws a VU meter based on the current sound measurements.
 //
 // History:     Apr-17-2019         Davepl      Adapted from NightDriver
 //              
@@ -293,7 +293,7 @@ class VUFlameEffect : public LEDStripEffect
 
         for (int frame = 0; frame < 6; frame++)
             if (random(255) < threshold ) 
-                heat[random(NUM_LEDS)] += random(160, 255);		// This randomly rolls over sometimes of course, which seems inadvertantly essential to the effect
+                heat[random(NUM_LEDS)] += random(160, 255);		// This randomly rolls over sometimes of course, which seems inadvertently essential to the effect
 
         // Convert heat to LED colors and draws them
 

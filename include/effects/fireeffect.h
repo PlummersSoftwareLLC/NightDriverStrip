@@ -120,7 +120,7 @@ class FireEffect : public LEDStripEffect
 
     virtual void DrawFire()
     {
-        // First cool each cell by a litle bit
+        // First cool each cell by a little bit
 
         EVERY_N_MILLISECONDS(50)
         {
@@ -555,7 +555,7 @@ class BaseFireEffect : public LEDStripEffect
 
     virtual void DrawFire()
     {
-        // First cool each cell by a litle bit
+        // First cool each cell by a little bit
         for (int i = 0; i < CellCount; i++)
             heat[i] = max(0L, heat[i] - random(0, ((Cooling * 10) / CellCount) + 2));
 

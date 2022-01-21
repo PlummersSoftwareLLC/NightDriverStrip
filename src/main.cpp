@@ -483,7 +483,7 @@ void setup()
     // Init the U8G2 compatible SSD1306, 128X64 OLED display on the Heltec board
 
 #if USE_OLED
-    debugI("Intializizing OLED display");
+    debugI("Initializing OLED display");
     g_u8g2.begin();
 #endif
 
@@ -497,13 +497,13 @@ void setup()
 
 #if M5STICKC || M5STICKCPLUS
     #if USE_TFT
-        debugI("Intializizing TFT display\n");
+        debugI("Initializing TFT display\n");
         M5.begin();
         M5.Lcd.setRotation(1);
         M5.Lcd.setTextDatum(C_BASELINE);
         M5.Lcd.printf("NightDriver: " FLASH_VERSION_NAME);
     #else
-        debugI("Intializizing M5 withOUT display");
+        debugI("Initializing M5 withOUT display");
         M5.begin(false);
     #endif
 #endif
@@ -512,7 +512,7 @@ void setup()
     extern Adafruit_ILI9341 * g_pLCD;
     debugI("Initializing LCD display\n");
 
-    // We need-want hardware SPI, but the default construtor that lets us specify the pins we need
+    // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
     // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
 
     SPIClass * hspi = new SPIClass(HSPI);
@@ -689,7 +689,7 @@ void setup()
     Debug.setSerialEnabled(true);
 #endif
 
-    // Init the zlib comprfession
+    // Init the zlib compression
 
     debugI("Initializing compression...");
     uzlib_init();

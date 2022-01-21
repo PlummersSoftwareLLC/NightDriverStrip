@@ -13,11 +13,11 @@ NightDriverStrip is a source code package for building a flash program that you 
 
 To add new effects, you derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`.  Add your class to the `AllEffects` table in `effects.cpp` (under your build configuration section, like `DEMO`).  Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet.  Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately.  Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
 
-There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controled by `DEFAULT_EFFEECT_INTERVAL`.  Effects are not notified when they go active or not, they're just asked to draw when needed.
+There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`.  Effects are not notified when they go active or not, they're just asked to draw when needed.
 
 Each channel of LEDs has an `LEDMatrixGfx` instance associated with it.  `_GFX[0]` is the `LEDMatrixGfx` associated with `LED_PIN0`, and so on.  You can get the LED buffer of Pin0 by calling `_GFX[0]->GetLEDBuffer()`, and it will contain `_GFX[0]->GetLEDCount` pixels.  You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
 
-The simplest configuation, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32.  It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs.  If working correctly it should draw a scrolling rainbow palette on your LED strip.
+The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32.  It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs.  If working correctly it should draw a scrolling rainbow palette on your LED strip.
 
 ## Getting Started
 I recommend you do the following:
@@ -113,11 +113,11 @@ Note: Some defines are board specific, this is noted below.
 | ENABLE_WIFI            | Connect to WiFi |
 | INCOMING_WIFI_ENABLED  | Accepting incoming color data and commands |
 | ENABLE_WEBSERVER       | Turn on the internal webserver |
-| TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local context |
+| TIME_BEFORE_LOCAL      | How many seconds before the lamp times out and shows local content |
 | ENABLE_NTP             | Set the clock from the web |
 | ENABLE_OTA             | Accept over the air flash updates |
 
-| Harware Specific | Description | Supported Boards |
+| Hardware Specific | Description | Supported Boards |
 | - | - | - |
 | USE_TFT                | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
 | USE_OLED               | Enable stats display on built in OLED | Heltec Wifi Kit 32 |
