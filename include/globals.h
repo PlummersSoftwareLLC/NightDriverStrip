@@ -57,7 +57,7 @@
 //              Apr-23-2021  v015       Davepl      Fixed fan effects
 //              Apr-23-2021  v016       Davepl      Fix max power limit!
 //              Apr-24-2021  v017       Davepl      Fix compressed frames - stable!
-//              May-01-2021  v018       Davepl      Put recive timeout back in, cRec'd to 0
+//              May-01-2021  v018       Davepl      Put receive timeout back in, cRec'd to 0
 //              Jun-17-2021  v019       Davepl      Atomlight2 + variable FPS
 //              Jul-08-2021  v020       Davepl      Particle System, Insulators, lib deps
 //              Sep-18-2021  v021       Davepl      Github Release
