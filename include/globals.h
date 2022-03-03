@@ -121,19 +121,9 @@
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
 
-// If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1. 
-// My current core layout is as follows, and as of today it's solid as of (7/16/21).
-//
-// #define DRAWING_CORE            0
-// #define INCOMING_CORE           1
-// #define NET_CORE                1
-// #define AUDIO_CORE              0
-// #define SCREEN_CORE             1
-// #define DEBUG_CORE              1
-// #define SOCKET_CORE             1
-// #define REMOTE_CORE             1
+// Defines which process runs on core 0 or 1. Setting DRAWING_CORE to 0 can cause led-flickering during WiFi IO.
 
-#define DRAWING_CORE            0
+#define DRAWING_CORE            1
 #define INCOMING_CORE           0
 #define NET_CORE                1
 #define AUDIO_CORE              1
