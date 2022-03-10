@@ -42,30 +42,34 @@
 
 #if USE_OLED
     #define SCREEN_ROTATION U8G2_R2
-    U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
+    U8G2_SSD1306_128X64_NONAME_F_HW_I2C * g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
 
 #if USE_LCD
-Adafruit_ILI9341 * g_pLCD;
+    Adafruit_ILI9341 * g_pDisplay;
+#endif
+
+#if USE_TFT
+    M5Display * g_pDisplay;
 #endif
 
 #if USE_TFTSPI
     #include <TFT_eSPI.h>
     #include <SPI.h>
-    
-    TFT_eSPI g_TFTSPI;
+    TFT_eSPI * g_pDisplay = new TFT_eSPI();
 #endif
 
 //
 // Externals - Mostly things that the screen will report or display for us
 //
 
+extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+
 extern byte g_Brightness;                           // Global brightness from drawing.cpp
 extern double g_BufferAgeOldest;                    // Age of oldest frame in WiFi buffer
 extern double g_BufferAgeNewest;                    // Age of newest frame in WiFi buffer
 extern DRAM_ATTR bool g_bUpdateStarted;             // Has an OTA update started?
 extern byte g_Brightness;                           // Global brightness from drawing.cpp
-extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern DRAM_ATTR AppTime g_AppTime;                 // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;                    // Our global framerate
 extern volatile float gVU;
@@ -74,7 +78,7 @@ extern DRAM_ATTR bool gbInfoPageDirty;              // Does display need to be e
 
 DRAM_ATTR std::mutex Screen::_screenMutex;          // The storage for the mutex of the screen class
 
-bool g_ShowFPS = true;                             // Indicates whether little lcd should show FPS
+bool g_ShowFPS = true;                              // Indicates whether little lcd should show FPS
 #if ENABLE_AUDIO
 extern volatile float DRAM_ATTR gVURatio;           // Current VU as a ratio to its recent min and max
 #endif
@@ -94,7 +98,7 @@ void IRAM_ATTR UpdateScreen()
 	std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
     #if USE_OLED
-        g_u8g2.clearBuffer(); 
+        g_pDisplay->clearBuffer(); 
     #endif
 
     if (giInfoPage == 0)
@@ -361,7 +365,7 @@ void IRAM_ATTR UpdateScreen()
         }
     }
     #if USE_OLED
-      g_u8g2.sendBuffer();
+      g_pDisplay->sendBuffer();
     #endif
 }
 
@@ -386,9 +390,9 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
     debugI("ScreenUpdateLoop started\n");
 
     #if USE_OLED
-      g_u8g2.setDisplayRotation(SCREEN_ROTATION);
-      g_u8g2.setFont(u8g2_font_profont15_tf); // choose a suitable font
-      g_u8g2.clear();
+      g_pDisplay->setDisplayRotation(SCREEN_ROTATION);
+      g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable font
+      g_pDisplay->clear();
     #endif
 
     for (;;)

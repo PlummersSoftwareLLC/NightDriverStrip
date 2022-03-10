@@ -269,8 +269,8 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 {
   #if DEMO 
 
-    // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-    new StarryNightEffect<QuietStar>("RGB Twinkle Stars", RGBColors_p, 3.0, 1, NOBLEND, 10.0, 0.0, 1.0), // Rainbow Twinkle
+    new RainbowFillEffect(6, 2),
+    new ClassicFireEffect(),
 
 #elif TTGO 
 
