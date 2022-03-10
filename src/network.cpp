@@ -431,7 +431,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                 settimeofday(&tv, nullptr);
             }
             else
-            {                                                   // Clock recieved and it's old but not old enough to matter, so its a discard
+            {                                                   // Clock received and it's old but not old enough to matter, so its a discard
                 debugV("Server clock: Updated clock TOO OLD, NOT written to ESP32 rtc: %ld.%ld, DELTA: %lf", tvNew.tv_sec, tvNew.tv_usec, dOld - dNew );
             }
             

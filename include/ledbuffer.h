@@ -25,7 +25,7 @@
 //
 //   Provides a timestamped buffer of colordata.  The LEDBufferManager keeps
 //   N of these buffers in a circular queue, and each has a timestamp on it
-//   indicating wheb it becomes valid.
+//   indicating when it becomes valid.
 //
 // History:     Oct-9-2018         Davepl      Created from other projects
 //
@@ -314,7 +314,7 @@ class LEDBufferManager
 
     // PeekOldestBuffer
     //
-    // Take a "peek" at the newest buffer, or nullptr if emptyu
+    // Take a "peek" at the newest buffer, or nullptr if empty
 
     const shared_ptr<LEDBuffer> PeekOldestBuffer() const
     {

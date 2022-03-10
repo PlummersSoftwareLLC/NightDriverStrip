@@ -53,7 +53,7 @@
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 
-extern float gScaler;					  		 // Instanteous read of LED display vertical scaling
+extern float gScaler;					  		 // Instantaneous read of LED display vertical scaling
 extern float gLogScale;					  		 // How exponential the peaks are made to be
 extern volatile float gVURatio;			    // Current VU as a ratio to its recent min and max
 extern volatile float gVU;		   	       // Instantaneous read of VU value
@@ -137,7 +137,7 @@ class PeakData
 
 			//_Max[band] = max(_Max[band], 0.6f);
 
-			// If new peak is below the min, it becaomes the new min. Otherwise we drift
+			// If new peak is below the min, it becomes the new min. Otherwise we drift
 			// toward it using a weighted average
 
 			if (_Level[band] < _Min[band])
@@ -678,7 +678,7 @@ class SampleBuffer
 //
 // The SoundAnalyzer class uses I2S to read samples from the microphone and then runs an FFT on the
 // results to generate the peaks in each band, as well as tracking an overall VU and VU ratio, the
-// latter being the reatio of the current VU to the trailing min and max VU.
+// latter being the ratio of the current VU to the trailing min and max VU.
 
 class SoundAnalyzer
 {

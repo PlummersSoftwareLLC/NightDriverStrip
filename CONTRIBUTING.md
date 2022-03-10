@@ -1,11 +1,11 @@
 # To Fork or Not To Fork?
-When you read this, note that when I talk about forking, I mean it in the sense of starting a sprin-off project, not the "technical step" of creating a fork on GitHub. I accept that the latter is required to be able to contribute to the main project.
+When you read this, note that when I talk about forking, I mean it in the sense of starting a spin-off project, not the "technical step" of creating a fork on GitHub. I accept that the latter is required to be able to contribute to the main project.
 
-My hope when I realeased this work as open source was that people would (a) add cool features that I never thought of, and (b) improve the implementation of things I did think of.  My hope all along is that important and useful features get added to the MAIN branch as soon as possible rather than having 10 forks with support for 10 different LED types.
+My hope when I released this work as open source was that people would (a) add cool features that I never thought of, and (b) improve the implementation of things I did think of.  My hope all along is that important and useful features get added to the MAIN branch as soon as possible rather than having 10 forks with support for 10 different LED types.
 
 I realize it's easier to fork a project than it is to properly extend the classes or even the #defines.  But by doing the work in the main tree, everyone reaps the benefits of every other fix and improvement.  I invite you to contribute your important work to the MAIN tree (i.e. the [PlummersSoftwareLLC/NightDriverStrip](https://github.com/PlummersSoftwareLLC/NightDriverStrip) repository) where everyone can benefit from it!
 
-If you're doing something truly obscure, like adding suport for an LED type that almost no one else would need, I can see a fork being reasonable.  But if others could in general benefit from what you're doing, please do it in such a way that it goes back into the main tree for everyone's beenfit!
+If you're doing something truly obscure, like adding support for an LED type that almost no one else would need, I can see a fork being reasonable.  But if others could in general benefit from what you're doing, please do it in such a way that it goes back into the main tree for everyone's benefit!
 
 _(This is an exact copy of the equally-named section of [README.md](README.md))_
 

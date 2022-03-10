@@ -22,7 +22,7 @@
 //
 // Description:
 //
-//    Main table of buil-in effects and related constants and data
+//    Main table of built-in effects and related constants and data
 //
 // History:     Jul-14-2021         Davepl      Split off from main.cpp
 //---------------------------------------------------------------------------

@@ -884,7 +884,7 @@ class FireFanEffect : public LEDStripEffect
 
     virtual void DrawFire(PixelOrder order = Sequential)
     {
-        // First cool each cell by a litle bit
+        // First cool each cell by a little bit
 
         EVERY_N_MILLISECONDS(50)
         {

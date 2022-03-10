@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//    Palettes and other coolor table defnitions.  CPP daa in colordata.cpp 
+//    Palettes and other color table defnitions.  CPP daa in colordata.cpp 
 //
 // History:     May-11-2021         Davepl      Commented
 //

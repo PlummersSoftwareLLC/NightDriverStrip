@@ -171,7 +171,7 @@ void IRAM_ATTR UpdateScreen()
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
 
         // We only draw after a page flip or if anything has changed about the information that will be
-        // shown in the page. This avoids flicker, but at the cost that we have to remember what we dispalyed
+        // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
         // last time and check each time to see if its any different before drawing.
 
         static auto lasteffect = g_pEffectManager->GetCurrentEffectIndex();
