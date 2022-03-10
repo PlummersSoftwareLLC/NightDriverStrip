@@ -133,7 +133,7 @@
 // #define SOCKET_CORE             1
 // #define REMOTE_CORE             1
 
-#define DRAWING_CORE            0
+#define DRAWING_CORE            1
 #define INCOMING_CORE           0
 #define NET_CORE                1
 #define AUDIO_CORE              1
