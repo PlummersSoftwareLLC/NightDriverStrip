@@ -212,7 +212,7 @@ void IRAM_ATTR UpdateScreen()
             Screen::setTextSize(Screen::TINY);
             yh = Screen::screenHeight() - Screen::fontHeight() * 3 + 4; 
                 
-            String sIP = WiFi.isConnected() ? "No Wifi" : WiFi.localIP().toString().c_str();
+            String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
             sIP += " - NightDriverLED.com";
             Screen::setTextColor(YELLOW16, backColor);
             Screen::drawString(sIP.c_str(), yh);
