@@ -205,7 +205,9 @@ void IRAM_ATTR UpdateScreen()
             Screen::drawString(sEffect.c_str(),yh);     
             
             yh += Screen::fontHeight();
-            Screen::setTextSize(Screen::screenWidth() > 160 ? Screen::MEDIUM : Screen::SMALL);
+			// get effect name length and switch text size accordingly
+            int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
+            Screen::setTextSize((Screen::screenWidth() > 160) && (effectnamelen <= 18) ? Screen::MEDIUM : Screen::SMALL);
             Screen::setTextColor(WHITE16, backColor);
             Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
 
