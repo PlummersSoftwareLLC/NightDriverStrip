@@ -101,9 +101,8 @@ class CSPIFFSWebServer
 			j["effectInterval"] 	   = g_pEffectManager->GetInterval();
 			j["enabledCount"]		   = g_pEffectManager->EnabledCount();
 
-			DynamicJsonDocument effectDoc(256);
-
 			for (int i = 0; i < g_pEffectManager->EffectCount(); i++) {	
+				DynamicJsonDocument effectDoc(256);
 				effectDoc["name"]    = g_pEffectManager->EffectsList()[i]->FriendlyName();
 				effectDoc["enabled"] = g_pEffectManager->IsEffectEnabled(i);
 
