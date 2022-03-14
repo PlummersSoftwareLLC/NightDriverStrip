@@ -109,6 +109,7 @@ class CSPIFFSWebServer
 
 				if (!j["Effects"].add(effectDoc)) {
 					bufferOverflow = true;
+					delete response;
 					jsonBufferSize += JSON_BUFFER_INCREMENT;
 					debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
 					break;
