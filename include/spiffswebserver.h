@@ -90,9 +90,11 @@ class CSPIFFSWebServer
 
 		debugI("GetEffectListText");
 
+		AsyncJsonResponse * response;
+
 		do {
 			bufferOverflow = false;
-			AsyncJsonResponse * response = new AsyncJsonResponse(false, jsonBufferSize);
+			response = new AsyncJsonResponse(false, jsonBufferSize);
 			response->addHeader("Server","NightDriverStrip");
 			auto j = response->getRoot();
 
@@ -110,15 +112,14 @@ class CSPIFFSWebServer
 					bufferOverflow = true;
 					jsonBufferSize += JSON_BUFFER_INCREMENT;
 					debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
-					continue;
+					break;
 				}
-			}
-
-			response->addHeader("Access-Control-Allow-Origin", "*");
-			response->setLength();
-			pRequest->send(response);
-		
+			}		
 		} while (bufferOverflow);
+
+		response->addHeader("Access-Control-Allow-Origin", "*");
+		response->setLength();
+		pRequest->send(response);
 	}
 
 	void SetSettings(AsyncWebServerRequest * pRequest)
