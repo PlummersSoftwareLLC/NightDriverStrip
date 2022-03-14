@@ -87,10 +87,9 @@ class CSPIFFSWebServer
 	{
 		static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
 		bool bufferOverflow;
+		AsyncJsonResponse * response;
 
 		debugI("GetEffectListText");
-
-		AsyncJsonResponse * response;
 
 		do {
 			bufferOverflow = false;
