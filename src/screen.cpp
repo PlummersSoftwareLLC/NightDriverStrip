@@ -40,10 +40,15 @@
 #endif
 #include <mutex>
 
+double g_Brite;
+uint32_t g_Watts;  
+
 #if USE_OLED
     #define SCREEN_ROTATION U8G2_R2
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C * g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
+
+extern DRAM_ATTR shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
 
 #if USE_LCD
     Adafruit_ILI9341 * g_pDisplay;
@@ -116,7 +121,11 @@ void IRAM_ATTR UpdateScreen()
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
         Screen::setTextSize(Screen::SMALL);
 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+        // snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+
+        auto w = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount() )/ 1000;
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, w);
         Screen::setCursor(0, 0);
         Screen::println(szBuffer);
 
@@ -296,12 +305,12 @@ void IRAM_ATTR UpdateScreen()
             lastFullDraw = millis();
 
             #ifdef POWER_LIMIT_MW
-            int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+            double brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
             #else
-            int brite = 255;
+            int brite = 100;
             #endif
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, brite);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, (int)brite);
             Screen::drawString(szBuffer, 0, 0); // write something to the internal memory
 
             if (WiFi.isConnected() == false)

@@ -37,6 +37,8 @@
 #include <memory>
 #include <iostream>
 
+#include "ledbuffer.h"
+
 extern "C" 
 {
     #include "uzlib/src/uzlib.h"
@@ -54,15 +56,37 @@ bool ProcessIncomingData(uint8_t * payloadData, size_t payloadLength);          
 
 #if INCOMING_WIFI_ENABLED
 
-typedef struct
+// SocketResponse
+//
+// Response data sent back to server ever time we receive a packet
+struct SocketResponse
 {
-    uint32_t Size;
-    uint32_t Version;
-    int64_t  ClockSeconds;
-    int64_t  ClockMicros;
-} SocketStatsResponse;
+    uint32_t size;              // 4
+    uint32_t flashVersion;      // 4
+    double   currentClock;      // 8
+    double   oldestPacket;      // 8
+    double   newestPacket;      // 8
+    double   brightness;        // 8
+    uint32_t bufferSize;        // 4
+    uint32_t bufferPos;         // 4
+    uint32_t fpsDrawing;        // 4    
+    uint32_t watts;             // 4
+};
 
+// Two things must be true for this to work and interop with the C# side:  doubles must be 8 bytes, not the default
+// of 4 for Arduino.  So that must be set in 'platformio.ini', and you must ensure that you align things such that
+// doubles land on byte multiples of 8, otherwise you'll get packing bytes inserted.  Welcome to my world! Once upon
+// a time, I ported about a billion lines of x86 'pragma_pack(1)' code to the MIPS (davepl)!
 
+static_assert( sizeof(SocketResponse) == 56, "SocketResponse struct size is not what is expected - check alignment and double size" );            
+
+extern AppTime g_AppTime;
+extern double g_BufferAgeNewest;
+extern double g_BufferAgeOldest;
+extern unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern uint32_t g_FPS;
+extern double g_Brite;
+extern uint32_t g_Watts; 
 // SocketServer
 //
 // Handles incoming connections from the server and pass the data that comes in 
@@ -393,7 +417,23 @@ public:
 
             ResetReadBuffer();
             delay(1);
-            
+
+            SocketResponse response = { 
+                                        .size = sizeof(SocketResponse),
+                                        .flashVersion = FLASH_VERSION,
+                                        .currentClock = g_AppTime.CurrentTime(),
+                                        .oldestPacket = g_BufferAgeOldest,
+                                        .newestPacket = g_BufferAgeNewest,
+                                        .brightness   = g_Brite,
+                                        .bufferSize   = g_apBufferManager[0]->BufferCount(),
+                                        .bufferPos    = g_apBufferManager[0]->Depth(),
+                                        .fpsDrawing   = g_FPS,
+                                        .watts        = g_Watts
+                                      };
+
+            if (sizeof(response) != write(new_socket, &response, sizeof(response)))
+                debugW("Unable to send response back to server.");
+
         } while (true);
     }    
 
