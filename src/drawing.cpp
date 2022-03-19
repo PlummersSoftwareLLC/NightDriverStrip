@@ -202,7 +202,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                     auto pNewest = g_apBufferManager[iChannel]->PeekNewestBuffer();                    
                     g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - dClockTime;
                             g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - dClockTime;
-                    debugI("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", dClockTime, g_BufferAgeOldest, g_BufferAgeNewest);
+                    debugV("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", dClockTime, g_BufferAgeOldest, g_BufferAgeNewest);
                 }
                 else
                 {

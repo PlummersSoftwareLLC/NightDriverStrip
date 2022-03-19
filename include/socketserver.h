@@ -67,6 +67,7 @@ struct SocketResponse
     double   oldestPacket;      // 8
     double   newestPacket;      // 8
     double   brightness;        // 8
+    double   wifiSignal;        // 8
     uint32_t bufferSize;        // 4
     uint32_t bufferPos;         // 4
     uint32_t fpsDrawing;        // 4    
@@ -78,7 +79,7 @@ struct SocketResponse
 // doubles land on byte multiples of 8, otherwise you'll get packing bytes inserted.  Welcome to my world! Once upon
 // a time, I ported about a billion lines of x86 'pragma_pack(1)' code to the MIPS (davepl)!
 
-static_assert( sizeof(SocketResponse) == 56, "SocketResponse struct size is not what is expected - check alignment and double size" );            
+static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and double size" );            
 
 extern AppTime g_AppTime;
 extern double g_BufferAgeNewest;
@@ -425,6 +426,7 @@ public:
                                         .oldestPacket = g_BufferAgeOldest,
                                         .newestPacket = g_BufferAgeNewest,
                                         .brightness   = g_Brite,
+                                        .wifiSignal   = (double) WiFi.RSSI(),
                                         .bufferSize   = g_apBufferManager[0]->BufferCount(),
                                         .bufferPos    = g_apBufferManager[0]->Depth(),
                                         .fpsDrawing   = g_FPS,

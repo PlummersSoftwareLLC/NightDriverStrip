@@ -63,6 +63,7 @@
 //              Sep-18-2021  v021       Davepl      Github Release
 //              Nov-07-2021  v022       Davepl      Rev'd with new Github PRs to date
 //              Mar-16-2022  v023       Davepl      Response packet on socket with stats
+//              Mar-17-2022  v024       Davepl      Catchup clock to server when in future
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -73,7 +74,7 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION           23  // Update ONLY this to increment the version number
+#define FLASH_VERSION          24   // Update ONLY this to increment the version number
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
 #define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic
@@ -583,7 +584,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  170000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
 

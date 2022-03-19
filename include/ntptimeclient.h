@@ -39,7 +39,8 @@
 #include <mutex>
 
 // define the NTP server to connect too (replace . [dots] in IP addresses with , [commas])
-#define cszNTPServer  94, 199, 173, 123     // 0.pool.ntp.org
+#define cszNTPServer  192, 168, 1, 2
+//#define cszNTPServer  94, 199, 173, 123     // 0.pool.ntp.org
 //#define cszNTPServer 216, 239, 35, 12     // google time
 //#define cszNTPServer 17, 253, 16, 253     // apple time
 
@@ -139,6 +140,14 @@ class NTPTimeClient
 
 		uint32_t microsecs = ((uint64_t) frac * 1000000) >> 32;
 
+		// BUGBUG (davepl): I've been gettin back odd packets where the clock is year 2036 and micros is 0. I ignore those.
+
+		if (microsecs == 0)
+		{
+			debugW("Bogus NTP time received, ignoring.");
+			return false;
+		}
+
 		debugV("NTP clock: Raw values sec=%u, usec=%u", frac, microsecs);
 		
 		tvNew.tv_sec = ((unsigned long)chNtpPacket[40] << 24) +       // bits 24 through 31 of ntp time
@@ -154,7 +163,21 @@ class NTPTimeClient
 
 		double dOld = tvOld.tv_sec + (tvOld.tv_usec / (double) MICROS_PER_SECOND);
 		double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
-		settimeofday(&tvNew, NULL);									// Set the ESP32 rtc.
+
+		// If the clock is off by more than a quarter second, update it
+
+		auto delta = abs(dNew - dOld);
+		if (delta < 0.25)
+		{
+			debugI("Clock is only off by %lf so not updating the RTC.", delta);
+		}
+		else
+		{
+			debugI("Adjusting time by %lf to %lf", delta, dNew);
+			settimeofday(&tvNew, NULL);									// Set the ESP32 rtc.
+			time_t newtime = time(NULL);
+			debugI("New Time: %s", ctime(&newtime));
+		}
 
 		// Time has been received.
 		// Output date and time to serial.
