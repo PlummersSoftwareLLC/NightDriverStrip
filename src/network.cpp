@@ -331,17 +331,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
             double dServer = seconds + (micros / (double) MICROS_PER_SECOND);
             double delta = abs(dServer - AppTime::CurrentTime());
-
-            if (delta > 1000)
-            {
-                /*
-                debugI("Server is wildly different so adjusting time by %lf to %lf", delta, dServer);
-                auto tv = AppTime::TimevalFromTime(dServer);
-                settimeofday(&tv, nullptr);
-                time_t newtime = time(NULL);
-                debugI("New Time: %s", ctime(&newtime));
-                */
-            };
            
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
                    channel16, 
@@ -432,14 +421,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
             auto   delta = abs(dNew - dOld);
 
-            /*
-            if (false == NTPTimeClient::HasClockBeenSet() && delta > 1.0)
-            {
-                settimeofday(&tvNew, nullptr);
-                debugI("Old clock, new clock: %lf, %lf\n", dOld, dNew);
-                debugI("Server clock: Updated clock received, time written to ESP32 rtc: %ld.%ld, DELTA: %lf", tvNew.tv_sec, tvNew.tv_usec, dNew - dOld );
-            }
-            */
             return true;
         }
 
