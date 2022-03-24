@@ -328,6 +328,10 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
+
+            double dServer = seconds + (micros / (double) MICROS_PER_SECOND);
+            double delta = abs(dServer - AppTime::CurrentTime());
+           
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
                    channel16, 
                    length32, 
@@ -415,26 +419,16 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             
             double dOld = tvOld.tv_sec + (tvOld.tv_usec / (double) MICROS_PER_SECOND);
             double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
- 
-            const double ClockCreepBackLimit = 5.0;
+            auto   delta = abs(dNew - dOld);
 
-            if (dNew > dOld)                                    // If clock goes forward
+            /*
+            if (false == NTPTimeClient::HasClockBeenSet() && delta > 1.0)
             {
                 settimeofday(&tvNew, nullptr);
                 debugI("Old clock, new clock: %lf, %lf\n", dOld, dNew);
                 debugI("Server clock: Updated clock received, time written to ESP32 rtc: %ld.%ld, DELTA: %lf", tvNew.tv_sec, tvNew.tv_usec, dNew - dOld );
             }
-            else if (dNew < dOld - ClockCreepBackLimit)         // If clock goes backwards, we stay stable unless its more than 'ClockCreepBackLimit' behind us
-            {                                                   //  in which case we also track it backwards by a max of that little step amount
-                debugI("Server clock: Creeping time back by %lf to to %lf, as clock was ahead by %lf\n", ClockCreepBackLimit, dOld - ClockCreepBackLimit, dNew-dOld);
-                timeval tv = AppTime::TimevalFromTime(dOld - ClockCreepBackLimit);
-                settimeofday(&tv, nullptr);
-            }
-            else
-            {                                                   // Clock received and it's old but not old enough to matter, so its a discard
-                debugV("Server clock: Updated clock TOO OLD, NOT written to ESP32 rtc: %ld.%ld, DELTA: %lf", tvNew.tv_sec, tvNew.tv_usec, dOld - dNew );
-            }
-            
+            */
             return true;
         }
 

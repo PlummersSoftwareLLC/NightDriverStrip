@@ -62,6 +62,8 @@
 //              Jul-08-2021  v020       Davepl      Particle System, Insulators, lib deps
 //              Sep-18-2021  v021       Davepl      Github Release
 //              Nov-07-2021  v022       Davepl      Rev'd with new Github PRs to date
+//              Mar-16-2022  v023       Davepl      Response packet on socket with stats
+//              Mar-17-2022  v024       Davepl      Catchup clock to server when in future
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -72,10 +74,10 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          022  // Update ONLY this to increment the version number
+#define FLASH_VERSION          24   // Update ONLY this to increment the version number
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
-#define STR(x) "v"#x
+#define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic
 #define FLASH_VERSION_NAME_X(x) "v"#x 
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
@@ -113,11 +115,11 @@
 // We have a half-dozen workers and these are their relative priorities.  It might survive if all were set equal,
 // but I think drawing should be lower than audio so that a bad or greedy effect doesn't starve the audio system.
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+3
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+2
-#define NET_PRIORITY            tskIDLE_PRIORITY+2
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+4      // Draw any available frames first
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+3      // ...then process and decompress incoming frames
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
+#define NET_PRIORITY            tskIDLE_PRIORITY+2
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
 
@@ -135,11 +137,11 @@
 
 #define DRAWING_CORE            1
 #define INCOMING_CORE           0
-#define NET_CORE                1
+#define NET_CORE                0
 #define AUDIO_CORE              1
 #define SCREEN_CORE             1       
 #define DEBUG_CORE              1
-#define SOCKET_CORE             1
+#define SOCKET_CORE             0
 #define REMOTE_CORE             1
 
 #define FASTLED_INTERNAL        1   // Suppresses the compilation banner from FastLED
@@ -582,7 +584,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  170000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
 
@@ -827,7 +829,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
-#define TIME_CHECK_INTERVAL_MS (1000 * 60 * 15)   // 15 min - How often in ms we resync the clock from NTP
+#define TIME_CHECK_INTERVAL_MS (1000 * 60 * 1)   // 15 min - How often in ms we resync the clock from NTP
 #define MIN_BRIGHTNESS  4                   
 #define MAX_BRIGHTNESS  255
 #define BRIGHTNESS_STEP 10          // Amount to step brightness on each remote control repeat 

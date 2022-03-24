@@ -37,6 +37,8 @@
 #include <memory>
 #include <iostream>
 
+#include "ledmatrixgfx.h"
+
 using namespace std;
 
 #ifdef USE_PSRAM
