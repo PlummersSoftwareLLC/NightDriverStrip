@@ -331,17 +331,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
             double dServer = seconds + (micros / (double) MICROS_PER_SECOND);
             double delta = abs(dServer - AppTime::CurrentTime());
-
-            if (delta > 1000)
-            {
-                /*
-                debugI("Server is wildly different so adjusting time by %lf to %lf", delta, dServer);
-                auto tv = AppTime::TimevalFromTime(dServer);
-                settimeofday(&tv, nullptr);
-                time_t newtime = time(NULL);
-                debugI("New Time: %s", ctime(&newtime));
-                */
-            };
            
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
                    channel16, 
