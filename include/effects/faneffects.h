@@ -779,6 +779,7 @@ class FireFanEffect : public LEDStripEffect
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
     bool    bMulticolor;        // If each arm of the atomlight should have its own color
+    int     _hue;               // Hue "color" from FastLED, int or HSVHue color name
 
     PixelOrder Order;
 
@@ -807,7 +808,8 @@ class FireFanEffect : public LEDStripEffect
                   PixelOrder order = Sequential, 
                   bool breversed = false, 
                   bool bmirrored = false, 
-                  bool bmulticolor = false)
+                  bool bmulticolor = false,
+                  int hue = HUE_RED)
         : LEDStripEffect("FireFanEffect"),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
@@ -818,6 +820,7 @@ class FireFanEffect : public LEDStripEffect
           bReversed(breversed),
           bMirrored(bmirrored),
           bMulticolor(bmulticolor),
+          _hue(hue),
           Order(order)          
     {
         if (bMirrored)
@@ -950,7 +953,7 @@ class FireFanEffect : public LEDStripEffect
     }
 };
 
-class BlueFireFanEffect : public FireFanEffect
+class HueFireFanEffect : public FireFanEffect
 {
     using FireFanEffect::FireFanEffect;
 
@@ -960,24 +963,7 @@ class BlueFireFanEffect : public FireFanEffect
       byte heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
 
-      CHSV hsv(HUE_BLUE, 255, heatramp);
-      CRGB rgb;
-      hsv2rgb_rainbow(hsv, rgb);
-      return rgb;
-    }
-};
-
-class GreenFireFanEffect : public FireFanEffect
-{
-    using FireFanEffect::FireFanEffect;
-
-    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
-    {
-      byte t192 = round((temperature/255.0)*191);
-      byte heatramp = t192 & 0x3F; // 0..63
-      heatramp <<= 2; // scale up to 0..252
-
-      CHSV hsv(HUE_GREEN, 255, heatramp);
+      CHSV hsv(_hue, 255, heatramp);
       CRGB rgb;
       hsv2rgb_rainbow(hsv, rgb);
       return rgb;
