@@ -779,7 +779,7 @@ class FireFanEffect : public LEDStripEffect
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
     bool    bMulticolor;        // If each arm of the atomlight should have its own color
-    int     _hue;               // Hue "color" from FastLED, int or HSVHue color name
+    int     iHue;               // Hue "color" from FastLED, int or HSVHue color name
 
     PixelOrder Order;
 
@@ -820,7 +820,7 @@ class FireFanEffect : public LEDStripEffect
           bReversed(breversed),
           bMirrored(bmirrored),
           bMulticolor(bmulticolor),
-          _hue(hue),
+          iHue(hue),
           Order(order)          
     {
         if (bMirrored)
@@ -963,7 +963,7 @@ class HueFireFanEffect : public FireFanEffect
       byte heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
 
-      CHSV hsv(_hue, 255, heatramp);
+      CHSV hsv(iHue, 255, heatramp);
       CRGB rgb;
       hsv2rgb_rainbow(hsv, rgb);
       return rgb;
