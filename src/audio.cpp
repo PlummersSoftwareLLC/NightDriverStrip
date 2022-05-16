@@ -66,7 +66,7 @@ float g_peak2DecayRate;
 #if NUM_BANDS == 16
 	const int cutOffsBand[16] =
 	{
-		250, 450, 565, 715, 900, 1125, 1400, 1750, 2250, 2800, 3150, 4000, 5000, 6400, 12500, 20000
+		250, 450, 565, 715, 900, 1125, 1400, 1750, 2250, 2800, 3150, 4000, 5000, 6400, 10500, 14000
 	};
 	#if TTGO	
 		const float scalarsBand[16] = 
@@ -76,7 +76,7 @@ float g_peak2DecayRate;
 	#else
 		const float scalarsBand[16] = 
 		{
-			0.1f, 0.15f, 0.2f, 0.225f, 0.25f, 0.3f, 0.35f, 0.4f, 0.425f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 1.0f
+			0.1f, 0.15f, 0.2f, 0.225f, 0.25f, 0.3f, 0.35f, 0.4f, 0.25f, 0.25f, 0.25f, 0.25f, 0.4f, 0.5f, 0.5f, 0.35f
 		};
 	#endif
 #endif

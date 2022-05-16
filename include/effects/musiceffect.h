@@ -71,7 +71,7 @@ class BeatEffectBase : public virtual LEDStripEffect
 
   public:
    
-    BeatEffectBase(double lowLatch = 1.0, double highLatch = 1.25, double minElapsed = 0.00)      // Eighth note at 120BPM is .125
+    BeatEffectBase(double lowLatch = 1.0, double highLatch = 1.75, double minElapsed = 0.25)      // Eighth note at 120BPM is .125
      : LEDStripEffect(nullptr),
        _lowLatch(lowLatch),
        _highLatch(highLatch),

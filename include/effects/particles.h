@@ -427,14 +427,14 @@ class ColorBeatWithFlash : public virtual BeatEffectBase, public virtual Particl
     }
 };
 
-class ColorBeatOverRedBkgnd : public virtual BeatEffectBase, public virtual ParticleSystemEffect<RingParticle>
+class ColorBeatOverRed : public virtual BeatEffectBase, public virtual ParticleSystemEffect<RingParticle>
 {
     int  _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
-    ColorBeatOverRedBkgnd(const char * pszName)
+    ColorBeatOverRed(const char * pszName)
       : LEDStripEffect(pszName),
         BeatEffectBase(),
         ParticleSystemEffect<RingParticle>(pszName)
@@ -537,7 +537,8 @@ class SpinningPaletteRingParticle : public FadingObject
         assert(iInsulator < NUM_FANS);
         debugV("Creating particle at insulator %d", iInsulator);
 
-        // REVIEW(davepl): I'm not sure what I was doing here.
+        // REVIEW(davepl): I'm not sure what I was doing here.  I think it allows you to pass 0 for speed and always start at 0 index?
+
         _paletteIndex += beatsin16(4, 0, 255) * paletteSpeed;
         _startIndex += beatsin16(4, 0, 255) * ledsPerSecond;
 
@@ -564,9 +565,9 @@ class SpinningPaletteRingParticle : public FadingObject
         // A single color step in a palette is 32 increments.  There are 256 total in a palette, and 144 pixels per meter typical, so this
         // scaling yields a color rotation of "one full palette per meter" by default.  We go backwards (-1) to match pixel scrolling direction.
 
-        _paletteIndex = _paletteIndex - deltaTime * _paletteSpeed * _density;    
+        _paletteIndex = _paletteIndex - (deltaTime * _paletteSpeed * _density);    
 
-        float iColor = fmodf(_paletteIndex + _startIndex * _density, 256);
+        float iColor = 0; // fmodf(_paletteIndex + _startIndex * _density, 256);
 
         if (_gapSize == 0)
         {
@@ -695,7 +696,7 @@ class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual P
 
     MoltenGlassOnVioletBkgnd(const char * pszName, const CRGBPalette256 & Palette)
       : LEDStripEffect(pszName),
-        BeatEffectBase(0.5, 1.5, 0.020),
+        BeatEffectBase(0.25, 1.75, .05),
         ParticleSystemEffect<SpinningPaletteRingParticle>(pszName),
         _Palette(Palette)
     {
@@ -710,9 +711,31 @@ class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual P
         } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
         _iLastInsulator = iInsulator;
         
+        switch (random(10))
+        {
+          case 0:
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 0, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 2, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 4, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+            break;
 
-        // REVIEW(davepl) This might look interesting if it didn't erase...
-        _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, 12, 0, LINEARBLEND, true, 1.0, max(0.12f, elapsed/4)));
+          case 1:
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 1, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 3, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+            break;
+
+          case 2:
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 0, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 1, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 2, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 3, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, 4, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+            break;
+        
+          default:
+            _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+            break;
+        }
     }
 
     virtual void Draw()
@@ -723,7 +746,7 @@ class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual P
       // pass and rely on the fade effects of the particles to blend the 
 
       uint8_t v = 16  * gVURatio;
-      _baseColor += CRGB(CHSV(HUE_PURPLE, 255, v));   
+      _baseColor += CRGB(CHSV(200, 255, v));   
       _baseColor.fadeToBlackBy((min(255.0,1000 * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 

@@ -763,7 +763,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
 
-    #define DEFAULT_EFFECT_INTERVAL     (10*60*24)
+    #define DEFAULT_EFFECT_INTERVAL     (45*60*24)
 
     #define LED_PIN0          26
     #define NUM_CHANNELS      1
@@ -780,10 +780,18 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
     #define IR_REMOTE_PIN     26                    
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW    10000
+    #define POWER_LIMIT_MW    50000
 
-    #define TOGGLE_BUTTON  37
-    #define NUM_INFO_PAGES 1
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
+
+    #define NUM_INFO_PAGES          2
+    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
+
+
 
 #elif CUBE
 
