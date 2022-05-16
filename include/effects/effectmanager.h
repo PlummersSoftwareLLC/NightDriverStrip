@@ -349,7 +349,7 @@ public:
 		{
 			_ppEffects[_iCurrentEffect]->Draw();	// Draw the currently active effect
 	
-			// If we do indeed have muliple effects (BUGBUG what if only a single enabled?) then we 
+			// If we do indeed have multiple effects (BUGBUG what if only a single enabled?) then we 
 			// fade in and out at the appropriate time based on the time remaining/used by the effect
 		
 			if (EffectCount() < 2)	

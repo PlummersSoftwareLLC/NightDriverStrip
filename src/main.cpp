@@ -109,7 +109,7 @@
 // of the General Public License (GPL). This requires that anyone modifying 
 // the NightDriver code (for anything other than personal use) or building 
 // applications based on NightDriver code must also make their derived 
-// product available under the same open source GPL terms. By purcahasing 
+// product available under the same open source GPL terms. By purchasing 
 // a license for NightDriver, you would not then be bound by the GPL and 
 // you would gain an extended feature set and various levels of support.  
 // Think commas, not zeros, when discussing product volumes and license 
@@ -484,8 +484,8 @@ void setup()
 
 #if USE_OLED
     debugI("Intializizing OLED display");
-
     g_pDisplay->begin();
+    debugI("Initializing OLED display");
 #endif
 
 #if USE_TFTSPI
@@ -506,7 +506,7 @@ void setup()
         g_pDisplay->setTextDatum(C_BASELINE);
         g_pDisplay->printf("NightDriver: " FLASH_VERSION_NAME);
     #else
-        debugI("Intializizing M5 withOUT display");
+        debugI("Initializing M5 withOUT display");
         M5.begin(false);
     #endif
 #endif
@@ -515,7 +515,7 @@ void setup()
     extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
 
-    // We need-want hardware SPI, but the default construtor that lets us specify the pins we need
+    // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
     // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
 
     SPIClass * hspi = new SPIClass(HSPI);
@@ -692,7 +692,7 @@ void setup()
     Debug.setSerialEnabled(true);
 #endif
 
-    // Init the zlib comprfession
+    // Init the zlib compression
 
     debugI("Initializing compression...");
     uzlib_init();

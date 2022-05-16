@@ -60,7 +60,7 @@
 
 class LEDMatrixGFX : public Adafruit_GFX
 {
-  friend class LEDStripEffect;                                          // I might a shower after this lifetime first, but it needs acess to the pixels to do its job, so BUGBUG expose this more nicely
+  friend class LEDStripEffect;                                          // I might a shower after this lifetime first, but it needs access to the pixels to do its job, so BUGBUG expose this more nicely
 
 private:
   CRGB *_pLEDs;

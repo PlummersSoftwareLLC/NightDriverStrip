@@ -339,7 +339,7 @@ class RingParticle : public FadingColoredObject
     {
         assert(iRing <= NUM_RINGS);
         assert(iInsulator < NUM_FANS);
-        debugV("Creating particle at insultator %d", iInsulator);
+        debugV("Creating particle at insulator %d", iInsulator);
     }
 
     virtual void Render()
@@ -535,7 +535,7 @@ class SpinningPaletteRingParticle : public FadingObject
     {
         assert(iRing <= NUM_RINGS);
         assert(iInsulator < NUM_FANS);
-        debugV("Creating particle at insultator %d", iInsulator);
+        debugV("Creating particle at insulator %d", iInsulator);
 
         // REVIEW(davepl): I'm not sure what I was doing here.
         _paletteIndex += beatsin16(4, 0, 255) * paletteSpeed;
@@ -629,7 +629,7 @@ class HotWhiteRingParticle : public FadingObject
     {
         assert(iRing <= NUM_RINGS);
         assert(iInsulator < NUM_FANS);
-        debugV("Creating particle at insultator %d", iInsulator);
+        debugV("Creating particle at insulator %d", iInsulator);
     }
 
     virtual void Render()

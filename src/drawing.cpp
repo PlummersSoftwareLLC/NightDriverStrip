@@ -44,10 +44,13 @@ extern std::mutex         g_buffer_mutex;
 
 extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern DRAM_ATTR unique_ptr<LEDMatrixGFX []>  g_aStrands;
+extern DRAM_ATTR shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];        
+extern DRAM_ATTR unique_ptr<EffectManager> g_pEffectManager;
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
-extern unique_ptr<EffectManager> g_pEffectManager;
 extern bool               g_bUpdateStarted;
+extern double             g_Brite;
+extern uint32_t           g_Watts; 
 
 
 void ShowTM1814();
@@ -68,7 +71,7 @@ void DrawPlaceholderDisplay()
         else
             color = color.setHue((iChannel - 1) * 36);                      
 
-        g_aStrands[iChannel].fillScreen(CRGB::Black);
+        //g_aStrands[iChannel].fillScreen(CRGB::Black);
 
         static float iOffset = 0.0f;
 
@@ -117,8 +120,8 @@ void DrawPlaceholderDisplay()
 #else
         const int step = 1;
 #endif
-        for (float i = iOffset; i < g_aStrands[iChannel].GetLEDCount(); i += step)
-            g_aStrands[iChannel].drawPixel(i, color);
+        //for (float i = iOffset; i < g_aStrands[iChannel].GetLEDCount(); i += step)
+        //    g_aStrands[iChannel].drawPixel(i, color);
     }
 #if ATOMISTRING
     ShowTM1814();
@@ -199,7 +202,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                     auto pNewest = g_apBufferManager[iChannel]->PeekNewestBuffer();                    
                     g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - dClockTime;
                             g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - dClockTime;
-                    debugI("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", dClockTime, g_BufferAgeOldest, g_BufferAgeNewest);
+                    debugV("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", dClockTime, g_BufferAgeOldest, g_BufferAgeNewest);
                 }
                 else
                 {
@@ -272,6 +275,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 #endif
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
+                g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+                g_Watts = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), cPixelsDrawnThisFrame )/ 1000;
+
                 
                 // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
 

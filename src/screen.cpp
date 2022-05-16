@@ -40,10 +40,15 @@
 #endif
 #include <mutex>
 
+double g_Brite;
+uint32_t g_Watts;  
+
 #if USE_OLED
     #define SCREEN_ROTATION U8G2_R2
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C * g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
+
+extern DRAM_ATTR shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
 
 #if USE_LCD
     Adafruit_ILI9341 * g_pDisplay;
@@ -116,7 +121,11 @@ void IRAM_ATTR UpdateScreen()
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
         Screen::setTextSize(Screen::SMALL);
 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+        // snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+
+        auto w = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount() )/ 1000;
+
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, w);
         Screen::setCursor(0, 0);
         Screen::println(szBuffer);
 
@@ -171,7 +180,7 @@ void IRAM_ATTR UpdateScreen()
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
 
         // We only draw after a page flip or if anything has changed about the information that will be
-        // shown in the page. This avoids flicker, but at the cost that we have to remember what we dispalyed
+        // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
         // last time and check each time to see if its any different before drawing.
 
         static auto lasteffect = g_pEffectManager->GetCurrentEffectIndex();
@@ -205,14 +214,16 @@ void IRAM_ATTR UpdateScreen()
             Screen::drawString(sEffect.c_str(),yh);     
             
             yh += Screen::fontHeight();
-            Screen::setTextSize(Screen::screenWidth() > 160 ? Screen::MEDIUM : Screen::SMALL);
+			// get effect name length and switch text size accordingly
+            int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
+            Screen::setTextSize((Screen::screenWidth() > 160) && (effectnamelen <= 18) ? Screen::MEDIUM : Screen::SMALL);
             Screen::setTextColor(WHITE16, backColor);
             Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
 
             Screen::setTextSize(Screen::TINY);
             yh = Screen::screenHeight() - Screen::fontHeight() * 3 + 4; 
                 
-            String sIP = WiFi.isConnected() ? "No Wifi" : WiFi.localIP().toString().c_str();
+            String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
             sIP += " - NightDriverLED.com";
             Screen::setTextColor(YELLOW16, backColor);
             Screen::drawString(sIP.c_str(), yh);
@@ -296,12 +307,12 @@ void IRAM_ATTR UpdateScreen()
             lastFullDraw = millis();
 
             #ifdef POWER_LIMIT_MW
-            int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+            double brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
             #else
-            int brite = 255;
+            int brite = 100;
             #endif
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, brite);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, (int)brite);
             Screen::drawString(szBuffer, 0, 0); // write something to the internal memory
 
             if (WiFi.isConnected() == false)
