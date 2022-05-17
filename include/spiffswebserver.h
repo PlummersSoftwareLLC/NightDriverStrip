@@ -52,6 +52,8 @@
 
 
 extern std::unique_ptr<EffectManager> g_pEffectManager;
+#define JSON_BUFFER_BASE_SIZE 2048
+#define JSON_BUFFER_INCREMENT 2048
 
 
 class CSPIFFSWebServer
@@ -82,22 +84,38 @@ class CSPIFFSWebServer
 
 	void GetEffectListText(AsyncWebServerRequest * pRequest)
 	{
+		static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+		bool bufferOverflow;
+		AsyncJsonResponse * response;
+
 		debugI("GetEffectListText");
 
-		AsyncJsonResponse * response = new AsyncJsonResponse();
-		response->addHeader("Server","NightDriverStrip");
-		auto j = response->getRoot();
+		do {
+			bufferOverflow = false;
+			response = new AsyncJsonResponse(false, jsonBufferSize);
+			response->addHeader("Server","NightDriverStrip");
+			auto j = response->getRoot();
 
-		j["currentEffect"] 		   = g_pEffectManager->GetCurrentEffectIndex();
-		j["millisecondsRemaining"] = g_pEffectManager->GetTimeRemainingForCurrentEffect();
-		j["effectInterval"] 	   = g_pEffectManager->GetInterval();
-		j["enabledCount"]		   = g_pEffectManager->EnabledCount();
-		
-		for (int i = 0; i < g_pEffectManager->EffectCount(); i++) {
-			j["Effects"][i]["name"]    = g_pEffectManager->EffectsList()[i]->FriendlyName();
-			j["Effects"][i]["enabled"] = g_pEffectManager->IsEffectEnabled(i);
-		}
-			
+			j["currentEffect"] 		   = g_pEffectManager->GetCurrentEffectIndex();
+			j["millisecondsRemaining"] = g_pEffectManager->GetTimeRemainingForCurrentEffect();
+			j["effectInterval"] 	   = g_pEffectManager->GetInterval();
+			j["enabledCount"]		   = g_pEffectManager->EnabledCount();
+
+			for (int i = 0; i < g_pEffectManager->EffectCount(); i++) {	
+				DynamicJsonDocument effectDoc(256);
+				effectDoc["name"]    = g_pEffectManager->EffectsList()[i]->FriendlyName();
+				effectDoc["enabled"] = g_pEffectManager->IsEffectEnabled(i);
+
+				if (!j["Effects"].add(effectDoc)) {
+					bufferOverflow = true;
+					delete response;
+					jsonBufferSize += JSON_BUFFER_INCREMENT;
+					debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+					break;
+				}
+			}		
+		} while (bufferOverflow);
+
 		response->addHeader("Access-Control-Allow-Origin", "*");
 		response->setLength();
 		pRequest->send(response);

@@ -287,8 +287,8 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     new ColorBeatOverRed("ColorBeatOverRed"),
 
     new FireFanEffect(NUM_LEDS,      1, 12, 210, 2, NUM_LEDS / 2, Sequential, false, true),
-    new GreenFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-    new BlueFireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true),
+    new HueFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
+    new HueFireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
 
     new ColorCycleEffect(BottomUp, 6),
     new ColorCycleEffect(BottomUp, 2),
@@ -405,8 +405,8 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     new ColorFillEffect(CRGB::White, 1),
     new FireFanEffect(NUM_LEDS,      1, 15, 80, 2, 7, Sequential, true, false),
     new FireFanEffect(NUM_LEDS,      1, 15, 80, 2, 7, Sequential, true, false, true),
-    new BlueFireFanEffect(NUM_LEDS,      2, 5, 120, 1, 1, Sequential, true, false),
-    new GreenFireFanEffect(NUM_LEDS,      2, 3, 100, 1, 1, Sequential, true, false),
+    new HueFireFanEffect(NUM_LEDS,      2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
+    new HueFireFanEffect(NUM_LEDS,      2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
     new RainbowFillEffect(60, 0),
     new ColorCycleEffect(Sequential),
     new PaletteEffect(RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0),
@@ -506,15 +506,15 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     new FireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true),
     new FireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true),
 
-    new BlueFireFanEffect(NUM_LEDS,      4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-    new BlueFireFanEffect(NUM_LEDS,      3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-    new BlueFireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-    new BlueFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true),
+    new HueFireFanEffect(NUM_LEDS,      4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
+    new HueFireFanEffect(NUM_LEDS,      3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
+    new HueFireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
+    new HueFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
     
-    new GreenFireFanEffect(NUM_LEDS,      4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-    new GreenFireFanEffect(NUM_LEDS,      3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-    new GreenFireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-    new GreenFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true),
+    new HueFireFanEffect(NUM_LEDS,      4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
+    new HueFireFanEffect(NUM_LEDS,      3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
+    new HueFireFanEffect(NUM_LEDS,      2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
+    new HueFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
 
     #if ENABLE_AUDIO
       

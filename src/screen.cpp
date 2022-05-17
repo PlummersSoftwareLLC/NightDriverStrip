@@ -210,13 +210,31 @@ void IRAM_ATTR UpdateScreen()
                 Screen::setTextSize(Screen::SMALL);
                 Screen::setTextColor(YELLOW16, backColor);
                 auto yh = 1;                        // Start at top of screen
+            string sEffect = to_string("Current Effect: ") + 
+                             to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
+                             to_string("/") + 
+                             to_string(g_pEffectManager->EffectCount());
+            Screen::drawString(sEffect.c_str(),yh);     
+            
+            yh += Screen::fontHeight();
+			// get effect name length and switch text size accordingly
+            int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
+            Screen::setTextSize((Screen::screenWidth() > 160) && (effectnamelen <= 18) ? Screen::MEDIUM : Screen::SMALL);
+            Screen::setTextColor(WHITE16, backColor);
+            Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
 
-                string sEffect = to_string("Current Effect: ") + 
-                                to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
-                                to_string("/") + 
-                                to_string(g_pEffectManager->EffectCount());
-                Screen::drawString(sEffect.c_str(),yh);     
-                
+            String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
+            sIP += " - NightDriverLED.com";
+            Screen::setTextColor(YELLOW16, backColor);
+            Screen::drawString(sIP.c_str(), yh);
+            yh += Screen::fontHeight();
+
+            #if ENABLE_AUDIO
+            if (g_ShowFPS)
+            {
+                char szBuffer[64];
+                snprintf(szBuffer, sizeof(szBuffer), "LED FPS: %2d  Audio FPS: %2d ", g_FPS, g_AudioFPS);
+                Screen::drawString(szBuffer, yh);
                 yh += Screen::fontHeight();
                 Screen::setTextSize(Screen::screenWidth() > 160 ? Screen::MEDIUM : Screen::SMALL);
                 Screen::setTextColor(WHITE16, backColor);
@@ -248,6 +266,7 @@ void IRAM_ATTR UpdateScreen()
                 // Reset text color to white (no way to fetch original and save it that I could see)
                 Screen::setTextColor(WHITE16, backColor);
             }
+            #endif
             gbInfoPageDirty = false;    
         }
 
