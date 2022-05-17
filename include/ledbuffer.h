@@ -100,18 +100,18 @@ class LEDBuffer
 {
   public:
   
-     shared_ptr<LEDMatrixGFX> _pStrand;
+     std::shared_ptr<LEDMatrixGFX> _pStrand;
 
   private:
     
-    unique_ptr<CRGB []> _leds;
+    std::unique_ptr<CRGB []> _leds;
     uint32_t            _pixelCount;
     uint64_t            _timeStampMicroseconds;
     uint64_t            _timeStampSeconds;
    
   public:
 
-    explicit LEDBuffer(shared_ptr<LEDMatrixGFX> pStrand) : 
+    explicit LEDBuffer(std::shared_ptr<LEDMatrixGFX> pStrand) : 
                  _pStrand(pStrand),
                  _pixelCount(0),
                  _timeStampMicroseconds(0),
@@ -219,16 +219,16 @@ class LEDBuffer
 
 class LEDBufferManager
 {
-    const unique_ptr<shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
-    shared_ptr<LEDBuffer>                      _pLastBufferAdded;   // Keeps track of the MRU buffer
+    const std::unique_ptr<shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
+    std::shared_ptr<LEDBuffer>                      _pLastBufferAdded;   // Keeps track of the MRU buffer
     size_t                                     _iNextBuffer;        // Head pointer index
     size_t                                     _iLastBuffer;        // Tail pointer index
     uint32_t                                   _cBuffers;           // Number of buffers
    
   public:
 
-    LEDBufferManager(uint32_t cBuffers, shared_ptr<LEDMatrixGFX> pGFX)
-     : _ppBuffers(make_unique<shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
+    LEDBufferManager(uint32_t cBuffers, std::shared_ptr<LEDMatrixGFX> pGFX)
+     : _ppBuffers(std::make_unique<std::shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
        _iNextBuffer(0),
        _iLastBuffer(0),
        _cBuffers(cBuffers)
@@ -242,7 +242,7 @@ class LEDBufferManager
             #if USE_PSRAM
                 _ppBuffers[i] = allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
             #else
-                _ppBuffers[i] = make_shared<LEDBuffer>(pGFX);
+                _ppBuffers[i] = std::make_shared<LEDBuffer>(pGFX);
             #endif
         }
     }
@@ -277,7 +277,7 @@ class LEDBufferManager
     //
     // Get a pointer to the most recently added (newest) buffer, or nullptr if empty
 
-    shared_ptr<LEDBuffer> PeekNewestBuffer() const
+    std::shared_ptr<LEDBuffer> PeekNewestBuffer() const
     {
         if (IsEmpty())
             return nullptr; 
@@ -289,7 +289,7 @@ class LEDBufferManager
     // Grabs the next buffer in the circle, advancing the tail pointer as well if we've
     // 'caught up' to the head pointer, which effective throws away that buffer via reuse
 
-    shared_ptr<LEDBuffer> GetNewBuffer()
+    std::shared_ptr<LEDBuffer> GetNewBuffer()
     {
         auto pResult = _ppBuffers[_iNextBuffer++];
         _iNextBuffer %= _cBuffers;
@@ -304,7 +304,7 @@ class LEDBufferManager
     // 
     // Return a pointer to the very oldest buffer, or nullptr if empty
 
-    shared_ptr<LEDBuffer> GetOldestBuffer() 
+    std::shared_ptr<LEDBuffer> GetOldestBuffer() 
     {
         if (IsEmpty())
             return nullptr; 
@@ -318,7 +318,7 @@ class LEDBufferManager
     //
     // Take a "peek" at the newest buffer, or nullptr if empty
 
-    const shared_ptr<LEDBuffer> PeekOldestBuffer() const
+    const std::shared_ptr<LEDBuffer> PeekOldestBuffer() const
     {
         if (IsEmpty())
             return nullptr; 

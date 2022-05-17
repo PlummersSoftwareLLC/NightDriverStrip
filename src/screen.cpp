@@ -48,7 +48,7 @@ uint32_t g_Watts;
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C * g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
 
-extern DRAM_ATTR shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
 
 #if USE_LCD
     Adafruit_ILI9341 * g_pDisplay;
@@ -68,13 +68,13 @@ extern DRAM_ATTR shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
 // Externals - Mostly things that the screen will report or display for us
 //
 
-extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 
-extern byte g_Brightness;                           // Global brightness from drawing.cpp
+extern uint8_t g_Brightness;                           // Global brightness from drawing.cpp
 extern double g_BufferAgeOldest;                    // Age of oldest frame in WiFi buffer
 extern double g_BufferAgeNewest;                    // Age of newest frame in WiFi buffer
 extern DRAM_ATTR bool g_bUpdateStarted;             // Has an OTA update started?
-extern byte g_Brightness;                           // Global brightness from drawing.cpp
+extern uint8_t g_Brightness;                           // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;                 // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;                    // Our global framerate
 extern volatile float gVU;

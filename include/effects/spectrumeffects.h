@@ -186,7 +186,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
     //
     // Draws the bar graph rectangle for a bar and then the white line on top of it
 
-    void DrawBand(byte iBand, uint16_t baseColor)
+    void DrawBand(uint8_t iBand, uint16_t baseColor)
     {
         auto pGFXChannel = _GFX[0];
 
@@ -229,7 +229,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
 		    msPeakAge = PeakFadeTime_ms;
 	    
         float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
-	    byte fadeAmount = std::min(255.0f, agePercent * 256);
+	    uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
 
         colorHighlight = CRGB(CRGB::White).fadeToBlackBy(fadeAmount);
 
@@ -310,12 +310,12 @@ class WaveformEffect : public VUMeterEffect
 {
   protected:
     const CRGBPalette256 * _pPalette = nullptr;
-    byte                   _iColorOffset = 0;
-    byte                   _increment = 0;
+    uint8_t                   _iColorOffset = 0;
+    uint8_t                   _increment = 0;
 
   public:
 	
-    WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, byte increment = 0) 
+    WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
         : VUMeterEffect(pszFriendlyName)
 	{
         _pPalette = pPalette;
@@ -373,7 +373,7 @@ class GhostWave : public WaveformEffect
 {
     public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, byte increment = 0) 
+    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
         : WaveformEffect(pszFriendlyName, pPalette, increment)
     {
     }

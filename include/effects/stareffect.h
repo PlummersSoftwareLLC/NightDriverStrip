@@ -259,8 +259,8 @@ class ColorCycleStar : public Star
 class MultiColorStar : public Star
 {
     protected:
-    byte         _brightness;
-    byte         _hue;
+    uint8_t         _brightness;
+    uint8_t         _hue;
 
     public:
     MultiColorStar(const CRGBPalette256 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 2.0, int speedDivisor = 1)
@@ -513,7 +513,7 @@ public:
 		return "Twinkle";
 	}
 
-    virtual bool Init(shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
 	{
         LEDStripEffect::Init(gfx);
 		for (int i = 0; i < NUM_TWINKLES; i++)

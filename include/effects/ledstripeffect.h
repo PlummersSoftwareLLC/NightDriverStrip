@@ -43,11 +43,9 @@
 #include <deque>
 #include <memory>
 
-using namespace std;
-
 class EffectManager;
 
-extern unique_ptr<EffectManager> g_pEffectManager;
+extern std::unique_ptr<EffectManager> g_pEffectManager;
 extern bool 			    	 g_bUpdateStarted;
 
 // LEDStripEffect
@@ -61,7 +59,7 @@ class LEDStripEffect
 	size_t _cLEDs;
 	String _friendlyName;
 
-    shared_ptr<LEDMatrixGFX> _GFX[NUM_CHANNELS];
+    std::shared_ptr<LEDMatrixGFX> _GFX[NUM_CHANNELS];
 
     inline static double randomDouble(double lower, double upper)
     {
@@ -81,7 +79,7 @@ class LEDStripEffect
 	{
 	}
 
-    virtual bool Init(shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])				// There are up to 8 channel in play per effect and when we
+    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])				// There are up to 8 channel in play per effect and when we
     {																//   start up, we are given copies to their graphics interfaces
         for (int i = 0; i < NUM_CHANNELS; i++)						//   so that we can call them directly later from other calls
         {
@@ -118,7 +116,7 @@ class LEDStripEffect
 	static inline CRGB RandomSaturatedColor()
 	{
 		CRGB c;
-		c.setHSV((byte)randomDouble(0, 255), 255, 255);
+		c.setHSV((uint8_t)randomDouble(0, 255), 255, 255);
 		return c;
 	}
 

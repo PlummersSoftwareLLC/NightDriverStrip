@@ -51,7 +51,7 @@
 #include <ArduinoJson.h>
 
 
-extern unique_ptr<EffectManager> g_pEffectManager;
+extern std::unique_ptr<EffectManager> g_pEffectManager;
 
 
 class CSPIFFSWebServer

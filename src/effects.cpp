@@ -52,7 +52,7 @@
 // Externals
 //
 
-extern DRAM_ATTR shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
 
 // Palettes
 //
@@ -249,7 +249,7 @@ CRGBPalette256 MagentaStripes(CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::M
 // A little factory that makes colored spectrum analyzers to be used by the remote control
 // colored buttons
 
-unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
+std::unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
     CRGB colorDark = color;
     colorDark.fadeToBlackBy(64);

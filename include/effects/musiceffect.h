@@ -168,7 +168,7 @@ class BeatEffect : public LEDStripEffect
 
 class ChannelBeatEffect : public BeatEffect
 {
-    shared_ptr<LEDMatrixGFX> * _gfx;
+    std::shared_ptr<LEDMatrixGFX> * _gfx;
 
   public:
 
@@ -193,7 +193,7 @@ class ChannelBeatEffect : public BeatEffect
     }
 
 
-    virtual bool Init(shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])	
+    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])	
     {
         _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))
