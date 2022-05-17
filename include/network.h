@@ -31,7 +31,7 @@
 #include "ntptimeclient.h"
 #include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
 
-extern byte g_Brightness;
+extern uint8_t g_Brightness;
 extern bool g_bUpdateStarted;
 extern WiFiUDP g_Udp;
 #if INCOMING_WIFI_ENABLED

@@ -42,7 +42,6 @@
 #include "ledstripeffect.h"
 
 extern AppTime g_AppTime;
-using namespace std;
 
 // BouncingBallEffect
 //
@@ -93,7 +92,7 @@ private:
 	{
 	}
 
-    virtual bool Init(shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

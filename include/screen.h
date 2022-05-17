@@ -71,7 +71,7 @@ class Screen
 #endif
 
 
-    static const int BottomMargin = 22;
+    static const int BottomMargin = 38;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {

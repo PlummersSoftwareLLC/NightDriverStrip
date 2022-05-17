@@ -49,15 +49,16 @@
 
 #define MAX_EFFECTS 32
 
-using namespace std;
 
-extern byte g_Brightness;
-extern byte g_Fader;
+extern uint8_t g_Brightness;
+extern uint8_t g_Fader;
+
+using namespace std;
 
 // References to functions in other C files
 
 void InitEffectsManager();
-unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
+std::unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 
 // EffectManager
 // 
@@ -74,16 +75,16 @@ class EffectManager
 	uint    		 _effectInterval;
 	bool             _bPlayAll;
 
-	unique_ptr<bool []> _abEffectEnabled;
-	shared_ptr<LEDMatrixGFX> * _gfx;
-	unique_ptr<LEDStripEffect> _pRemoteEffect;
+	std::unique_ptr<bool []> _abEffectEnabled;
+	std::shared_ptr<LEDMatrixGFX> * _gfx;
+	std::unique_ptr<LEDStripEffect> _pRemoteEffect;
 
 public:
 
 	static const uint csFadeButtonSpeed = 15 * 1000;
 	static const uint csSmoothButtonSpeed = 60 * 1000;
 
-	EffectManager(LEDStripEffect ** pEffects, size_t cEffects, shared_ptr<LEDMatrixGFX> * gfx)
+	EffectManager(LEDStripEffect ** pEffects, size_t cEffects, std::shared_ptr<LEDMatrixGFX> * gfx)
 		  : _ppEffects(pEffects),
 	  	    _cEffects(cEffects),
 			_cEnabled(0),
@@ -105,7 +106,7 @@ public:
 		ClearRemoteColor();
 	}
 
-	shared_ptr<LEDMatrixGFX> operator [](size_t index)
+	std::shared_ptr<LEDMatrixGFX> operator [](size_t index)
 	{
 		return _gfx[index];
 	}

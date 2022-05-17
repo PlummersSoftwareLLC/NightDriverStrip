@@ -210,9 +210,9 @@ DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started
 DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
 
-DRAM_ATTR shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];            // Each LED strip gets its own channel
-DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];     // Each channel has its own buffer
-DRAM_ATTR unique_ptr<EffectManager>    g_pEffectManager;                    // The one and only global effect manager
+DRAM_ATTR std::shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];            // Each LED strip gets its own channel
+DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];     // Each channel has its own buffer
+DRAM_ATTR std::unique_ptr<EffectManager>    g_pEffectManager;                    // The one and only global effect manager
 DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                // Instance of our telnet debug server
 

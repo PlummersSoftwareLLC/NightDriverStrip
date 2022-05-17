@@ -52,25 +52,54 @@ extern PeakData g_Peaks;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
 extern DRAM_ATTR bool gbInfoPageDirty;
 
-class InsulatorSpectrumEffect : public LEDStripEffect
+class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual ParticleSystemEffect<SpinningPaletteRingParticle>
 {
+    int                    _iLastInsulator = 0;
+    const CRGBPalette256 & _Palette;
+    CRGB _baseColor = CRGB::Black;
+    
   public:
 
-    using LEDStripEffect::LEDStripEffect;
-    
+    InsulatorSpectrumEffect(const char * pszName, const CRGBPalette256 & Palette)
+      : LEDStripEffect(pszName),
+        BeatEffectBase(0.25, 1.75, .25),
+        ParticleSystemEffect<SpinningPaletteRingParticle>(pszName),
+        _Palette(Palette)
+    {
+    }
+
     virtual void Draw()
     {
         //fillSolidOnAllChannels(CRGB::Black);
         for (int band = 0; band < min(NUM_BANDS, NUM_FANS); band++) {
-            CRGB color = ColorFromPalette(spectrumBasicColors, band * 16);
+            CRGB color = ColorFromPalette(_Palette, ::map(band, 0, min(NUM_BANDS, NUM_FANS), 0, 255) + beatsin8(1) );
             color = color.fadeToBlackBy(255 - 255 * g_Peaks[band]);
+            color = color.fadeToBlackBy((2.0 - gVURatio) * 228);
             DrawRingPixels(0, FAN_SIZE * g_Peaks[band], color, NUM_FANS-1-band, 0);
         }
 
+        BeatEffectBase::Draw();
+        ParticleSystemEffect<SpinningPaletteRingParticle>::Draw();        
+      
         fadeAllChannelsToBlackBy(min(255.0,2000 * g_AppTime.DeltaTime()));
         delay(30);
     }
 
+    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    {
+        int iInsulator;
+        do
+        {
+          iInsulator = random(0, NUM_FANS);
+        } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
+        _iLastInsulator = iInsulator;
+        
+
+        // REVIEW(davepl) This might look interesting if it didn't erase...
+        bool bFlash = gVURatio > 1.99 && span > 1.9 && elapsed > 0.25;
+
+        _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
+    }
 };
 
 class VUMeterEffect : public LEDStripEffect
@@ -157,7 +186,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
     //
     // Draws the bar graph rectangle for a bar and then the white line on top of it
 
-    void DrawBand(byte iBand, uint16_t baseColor)
+    void DrawBand(uint8_t iBand, uint16_t baseColor)
     {
         auto pGFXChannel = _GFX[0];
 
@@ -200,7 +229,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
 		    msPeakAge = PeakFadeTime_ms;
 	    
         float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
-	    byte fadeAmount = std::min(255.0f, agePercent * 256);
+	    uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
 
         colorHighlight = CRGB(CRGB::White).fadeToBlackBy(fadeAmount);
 
@@ -281,12 +310,12 @@ class WaveformEffect : public VUMeterEffect
 {
   protected:
     const CRGBPalette256 * _pPalette = nullptr;
-    byte                   _iColorOffset = 0;
-    byte                   _increment = 0;
+    uint8_t                   _iColorOffset = 0;
+    uint8_t                   _increment = 0;
 
   public:
 	
-    WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, byte increment = 0) 
+    WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
         : VUMeterEffect(pszFriendlyName)
 	{
         _pPalette = pPalette;
@@ -344,7 +373,7 @@ class GhostWave : public WaveformEffect
 {
     public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, byte increment = 0) 
+    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
         : WaveformEffect(pszFriendlyName, pPalette, increment)
     {
     }

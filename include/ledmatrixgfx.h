@@ -76,7 +76,7 @@ public:
     _pLEDs = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
     if(!_pLEDs)
     {
-      throw runtime_error("Unable to allocate LEDs in LEDMatrixGFX");
+      throw std::runtime_error("Unable to allocate LEDs in LEDMatrixGFX");
     }
   }
 
@@ -96,14 +96,14 @@ public:
     return _width * _height;
   }
 
-  static const byte gamma5[];
-  static const byte gamma6[];
+  static const uint8_t gamma5[];
+  static const uint8_t gamma6[];
 
   inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
   {
-    byte r = gamma5[color >> 11];
-    byte g = gamma6[(color >> 5) & 0x3F];
-    byte b = gamma5[color & 0x1F];
+    uint8_t r = gamma5[color >> 11];
+    uint8_t g = gamma6[(color >> 5) & 0x3F];
+    uint8_t b = gamma5[color & 0x1F];
 
     return CRGB(r, g, b);
   }
@@ -144,7 +144,7 @@ public:
       return _pLEDs[x];
     else
     {
-      throw runtime_error("Invalid index in getPixel: " + x);
+      throw std::runtime_error("Invalid index in getPixel: " + x);
       return CRGB::Black;
     }
     
@@ -158,7 +158,7 @@ public:
     {
       char szBuffer[80];
       snprintf(szBuffer, 80, "Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
-      throw runtime_error(szBuffer);
+      throw std::runtime_error(szBuffer);
     }
   }
 
