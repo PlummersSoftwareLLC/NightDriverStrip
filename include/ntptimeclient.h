@@ -39,8 +39,8 @@
 #include <mutex>
 
 // define the NTP server to connect too (replace . [dots] in IP addresses with , [commas])
-#define cszNTPServer  94, 199, 173, 123     // 0.pool.ntp.org
 //#define cszNTPServer  192, 168, 1, 2
+#define cszNTPServer  94, 199, 173, 123     // 0.pool.ntp.org
 //#define cszNTPServer 216, 239, 35, 12     // google time
 //#define cszNTPServer 17, 253, 16, 253     // apple time
 
