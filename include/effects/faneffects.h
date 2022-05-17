@@ -963,24 +963,6 @@ class HueFireFanEffect : public FireFanEffect
       uint8_t heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
 
-      CHSV hsv(HUE_BLUE, 255, heatramp);
-      CRGB rgb;
-      hsv2rgb_rainbow(hsv, rgb);
-      return rgb;
-    }
-};
-
-class GreenFireFanEffect : public FireFanEffect
-{
-    using FireFanEffect::FireFanEffect;
-
-    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
-    {
-      uint8_t t192 = round((temperature/255.0)*191);
-      uint8_t heatramp = t192 & 0x3F; // 0..63
-      heatramp <<= 2; // scale up to 0..252
-
-      CHSV hsv(HUE_GREEN, 255, heatramp);
       CHSV hsv(iHue, 255, heatramp);
       CRGB rgb;
       hsv2rgb_rainbow(hsv, rgb);
