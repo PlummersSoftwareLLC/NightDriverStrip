@@ -100,7 +100,7 @@ void IRAM_ATTR UpdateScreen()
     // We don't want to be in the middle of drawing and have someone one another thread set the dirty
     // flag on us, so access to the flag is guarded by a mutex
 
-	std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+    std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
     #if USE_OLED
         g_pDisplay->clearBuffer(); 
@@ -187,6 +187,7 @@ void IRAM_ATTR UpdateScreen()
         static auto sip        = WiFi.localIP().toString();
         static auto lastFPS    = g_FPS;
         static auto lastFullDraw = 0;
+               auto yh = 1;                        // Start at top of screen
 
         if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
         {
@@ -209,25 +210,25 @@ void IRAM_ATTR UpdateScreen()
 
                 Screen::setTextSize(Screen::SMALL);
                 Screen::setTextColor(YELLOW16, backColor);
-                auto yh = 1;                        // Start at top of screen
-            string sEffect = to_string("Current Effect: ") + 
-                             to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
-                             to_string("/") + 
-                             to_string(g_pEffectManager->EffectCount());
-            Screen::drawString(sEffect.c_str(),yh);     
-            
-            yh += Screen::fontHeight();
-			// get effect name length and switch text size accordingly
-            int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
-            Screen::setTextSize((Screen::screenWidth() > 160) && (effectnamelen <= 18) ? Screen::MEDIUM : Screen::SMALL);
-            Screen::setTextColor(WHITE16, backColor);
-            Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
+                string sEffect = to_string("Current Effect: ") + 
+                                to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) + 
+                                to_string("/") + 
+                                to_string(g_pEffectManager->EffectCount());
+                Screen::drawString(sEffect.c_str(),yh);     
+                
+                yh += Screen::fontHeight();
+                // get effect name length and switch text size accordingly
+                int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
+                Screen::setTextSize((Screen::screenWidth() > 160) && (effectnamelen <= 18) ? Screen::MEDIUM : Screen::SMALL);
+                Screen::setTextColor(WHITE16, backColor);
+                Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
 
-            String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
-            sIP += " - NightDriverLED.com";
-            Screen::setTextColor(YELLOW16, backColor);
-            Screen::drawString(sIP.c_str(), yh);
-            yh += Screen::fontHeight();
+                String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
+                sIP += " - NightDriverLED.com";
+                Screen::setTextColor(YELLOW16, backColor);
+                Screen::drawString(sIP.c_str(), yh);
+                yh += Screen::fontHeight();
+            }
 
             #if ENABLE_AUDIO
             if (g_ShowFPS)
@@ -267,6 +268,7 @@ void IRAM_ATTR UpdateScreen()
                 Screen::setTextColor(WHITE16, backColor);
             }
             #endif
+            
             gbInfoPageDirty = false;    
         }
 
@@ -431,7 +433,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         Button1.update();
         if (Button1.pressed())
         {
-    		std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+            std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
             // When the button is pressed advance to the next information page on the little display
 
