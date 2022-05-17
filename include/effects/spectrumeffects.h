@@ -72,7 +72,7 @@ class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual Pa
     {
         //fillSolidOnAllChannels(CRGB::Black);
         for (int band = 0; band < min(NUM_BANDS, NUM_FANS); band++) {
-            CRGB color = ColorFromPalette(_Palette, map(band, 0, min(NUM_BANDS, NUM_FANS), 0, 255) + beatsin8(1) );
+            CRGB color = ColorFromPalette(_Palette, ::map(band, 0, min(NUM_BANDS, NUM_FANS), 0, 255) + beatsin8(1) );
             color = color.fadeToBlackBy(255 - 255 * g_Peaks[band]);
             color = color.fadeToBlackBy((2.0 - gVURatio) * 228);
             DrawRingPixels(0, FAN_SIZE * g_Peaks[band], color, NUM_FANS-1-band, 0);
