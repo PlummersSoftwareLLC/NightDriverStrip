@@ -121,11 +121,11 @@ void IRAM_ATTR UpdateScreen()
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
         Screen::setTextSize(Screen::SMALL);
 
-        // snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
 
         auto w = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount() )/ 1000;
 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, w);
+        //snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, w);
         Screen::setCursor(0, 0);
         Screen::println(szBuffer);
 

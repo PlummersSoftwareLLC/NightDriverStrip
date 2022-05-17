@@ -433,7 +433,7 @@ public:
 
             if (sizeof(response) != write(new_socket, &response, sizeof(response)))
                 debugW("Unable to send response back to server.");
-
+                
         } while (true);
     }    
 
