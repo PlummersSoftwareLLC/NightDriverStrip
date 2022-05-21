@@ -298,6 +298,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
         // whose time has come
 
-        delay(5);
+        delay(1);
     }
 }

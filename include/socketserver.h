@@ -253,6 +253,13 @@ public:
             return false;
         } 
 
+        // Report where this connection is coming from 
+
+        struct sockaddr_in addr;
+        socklen_t addr_size = sizeof(struct sockaddr_in);
+        int res = getpeername(new_socket, (struct sockaddr *)&addr, &addr_size);
+        debugI("Incoming connection from: %s", inet_ntoa(addr.sin_addr));
+
         // Set a timeout of 3 seconds on the socket so we don't permanently hang on a corrupt or partial packet
                
         struct timeval to;
