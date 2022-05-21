@@ -116,8 +116,8 @@
 // We have a half-dozen workers and these are their relative priorities.  It might survive if all were set equal,
 // but I think drawing should be lower than audio so that a bad or greedy effect doesn't starve the audio system.
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+4      // Draw any available frames first
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+3      // ...then process and decompress incoming frames
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+3      // Draw any available frames first
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+4      // ...then process and decompress incoming frames
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
@@ -137,7 +137,6 @@
 // #define REMOTE_CORE             1
 
 #define DRAWING_CORE            1
-#define INCOMING_CORE           0
 #define NET_CORE                0
 #define AUDIO_CORE              1
 #define SCREEN_CORE             1       
@@ -583,7 +582,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
 

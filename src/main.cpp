@@ -344,7 +344,7 @@ void IRAM_ATTR SocketServerTaskEntry(void *)
     {
         if (WiFi.isConnected())
             g_SocketServer.ProcessIncomingConnectionsLoop();
-        debugV("Socket connection closed.  Retrying...\n");
+        debugW("Socket connection closed.  Retrying...\n");
         delay(500);
     }
 }
