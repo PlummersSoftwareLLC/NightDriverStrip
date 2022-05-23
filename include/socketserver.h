@@ -44,8 +44,6 @@ extern "C"
     #include "uzlib/src/uzlib.h"
 }
 
-using namespace std;
-
 #define EXPANDED_DATA_HEADER_SIZE 24                                                // Size of the header for expanded data
 #define COMPRESSED_DATA_HEADER_SIZE 16                                              // Size of the header for compressed data
 #define LED_DATA_SIZE     3                                                         // Data size of an LED (24 bits or 3 bytes)
@@ -84,7 +82,7 @@ static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not 
 extern AppTime g_AppTime;
 extern double g_BufferAgeNewest;
 extern double g_BufferAgeOldest;
-extern unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern uint32_t g_FPS;
 extern double g_Brite;
 extern uint32_t g_Watts; 
@@ -100,8 +98,8 @@ private:
     int                    _numLeds;
     int                    _server_fd;
     struct sockaddr_in     _address; 
-    unique_ptr<uint8_t []> _pBuffer;
-    unique_ptr<uint8_t []> _abOutputBuffer;
+    std::unique_ptr<uint8_t []> _pBuffer;
+    std::unique_ptr<uint8_t []> _abOutputBuffer;
 
 public:
 
@@ -254,6 +252,13 @@ public:
             debugW("Error accepting data!");
             return false;
         } 
+
+        // Report where this connection is coming from 
+
+        struct sockaddr_in addr;
+        socklen_t addr_size = sizeof(struct sockaddr_in);
+        int res = getpeername(new_socket, (struct sockaddr *)&addr, &addr_size);
+        debugI("Incoming connection from: %s", inet_ntoa(addr.sin_addr));
 
         // Set a timeout of 3 seconds on the socket so we don't permanently hang on a corrupt or partial packet
                
@@ -435,7 +440,7 @@ public:
 
             if (sizeof(response) != write(new_socket, &response, sizeof(response)))
                 debugW("Unable to send response back to server.");
-
+                
         } while (true);
     }    
 

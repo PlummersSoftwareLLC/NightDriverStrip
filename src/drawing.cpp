@@ -42,10 +42,10 @@
 
 extern std::mutex         g_buffer_mutex;
 
-extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
-extern DRAM_ATTR unique_ptr<LEDMatrixGFX []>  g_aStrands;
-extern DRAM_ATTR shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];        
-extern DRAM_ATTR unique_ptr<EffectManager> g_pEffectManager;
+extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<LEDMatrixGFX []>  g_aStrands;
+extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];        
+extern DRAM_ATTR std::unique_ptr<EffectManager> g_pEffectManager;
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
 extern bool               g_bUpdateStarted;
@@ -140,8 +140,8 @@ DRAM_ATTR uint64_t g_msLastWifiDraw  = 0;
 DRAM_ATTR double   g_BufferAgeOldest = 0;
 DRAM_ATTR double   g_BufferAgeNewest = 0;
 
-DRAM_ATTR byte     g_Brightness      = 255;
-DRAM_ATTR byte     g_Fader           = 255;
+DRAM_ATTR uint8_t  g_Brightness      = 255;
+DRAM_ATTR uint8_t  g_Fader           = 255;
 
 // DrawLoopTaskEntry
 // 
@@ -174,7 +174,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
                 if (false == g_apBufferManager[iChannel]->IsEmpty())
                 {
-                    shared_ptr<LEDBuffer> pBuffer;
+                    std::shared_ptr<LEDBuffer> pBuffer;
                     if (NTPTimeClient::HasClockBeenSet() == false)
                     {
                         pBuffer = g_apBufferManager[iChannel]->GetOldestBuffer();
@@ -298,6 +298,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
         // whose time has come
 
-        delay(5);
+        delay(1);
     }
 }

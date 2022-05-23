@@ -263,7 +263,7 @@ class TwinkleEffect : public LEDStripEffect
 
   public:
 	
-    TwinkleEffect(int countToDraw = NUM_LEDS / 2, byte fadeFactor = 10, int updateSpeed = 10)
+    TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
 	  : LEDStripEffect("Twinkle"),
 	  	_countToDraw(countToDraw),
 		_fadeFactor(fadeFactor),

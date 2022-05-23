@@ -39,7 +39,7 @@
 #if ENABLE_REMOTE
 
 //extern RemoteDebug Debug;
-extern unique_ptr<EffectManager> g_pEffectManager;
+extern std::unique_ptr<EffectManager> g_pEffectManager;
 
 #define	key24  true
 #define	key44  false

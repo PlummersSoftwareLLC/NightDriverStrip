@@ -56,17 +56,17 @@ class FireEffect : public LEDStripEffect
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
 
-    unique_ptr<byte []> heat;
+    std::unique_ptr<uint8_t []> heat;
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
     // You can tune these coefficients to control how quickly and smoothly the fire spreads
 
-    static const byte BlendSelf = 0;            // 2
-    static const byte BlendNeighbor1 = 1;       // 3
-    static const byte BlendNeighbor2 = 2;       // 2
-    static const byte BlendNeighbor3 = 0;       // 1
+    static const uint8_t BlendSelf = 0;            // 2
+    static const uint8_t BlendNeighbor1 = 1;       // 3
+    static const uint8_t BlendNeighbor2 = 2;       // 2
+    static const uint8_t BlendNeighbor3 = 0;       // 1
 
-    static const byte BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
+    static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
     int CellCount() const { return LEDCount * CellsPerLED; } 
 
@@ -86,7 +86,7 @@ class FireEffect : public LEDStripEffect
         if (bMirrored)
             LEDCount = LEDCount / 2;
 
-        heat = make_unique<byte []>(CellCount());
+        heat = make_unique<uint8_t []>(CellCount());
     }
 
     virtual ~FireEffect()
@@ -96,10 +96,10 @@ class FireEffect : public LEDStripEffect
     virtual CRGB GetBlackBodyHeatColor(double temp)
     {
         temp *= 255;
-        byte t192 = round((temp/255.0)*191);
+        uint8_t t192 = round((temp/255.0)*191);
  
         // calculate ramp up from
-        byte heatramp = t192 & 0x3F; // 0..63
+        uint8_t heatramp = t192 & 0x3F; // 0..63
         heatramp <<= 2; // scale up to 0..252
 
         // figure out which third of the spectrum we're in:
@@ -135,7 +135,7 @@ class FireEffect : public LEDStripEffect
         {
           // Next drift heat up and diffuse it a little bit
           for (int i = 0; i < CellCount(); i++)
-              heat[i] = min(255, (heat[i] * BlendSelf +
+              heat[i] = std::min(255, (heat[i] * BlendSelf +
                         heat[(i + 1) % CellCount()] * BlendNeighbor1 +
                         heat[(i + 2) % CellCount()] * BlendNeighbor2 +
                         heat[(i + 3) % CellCount()] * BlendNeighbor3)
@@ -240,7 +240,7 @@ public:
     {
         setAllOnAllChannels(0,0,0);
 
-        static byte heat[NUM_LEDS];
+        static uint8_t heat[NUM_LEDS];
         int cooldown;
 
         // Step 1.  Cool down every cell a little
@@ -303,13 +303,13 @@ public:
         } 
     }
 
-    void setPixelHeatColor(int Pixel, byte temperature)
+    void setPixelHeatColor(int Pixel, uint8_t temperature)
     {
         // Scale 'heat' down from 0-255 to 0-191
-        byte t192 = round((temperature / 255.0) * 191);
+        uint8_t t192 = round((temperature / 255.0) * 191);
 
         // calculate ramp up from
-        byte heatramp = t192 & 0x3F; // 0..63
+        uint8_t heatramp = t192 & 0x3F; // 0..63
         heatramp <<= 2;              // scale up to 0..252
 
         // figure out which third of the spectrum we're in:
@@ -371,7 +371,7 @@ public:
     {
     }
 
-    virtual bool Init(shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)malloc(sizeof(float) * _cLEDs);
@@ -493,17 +493,17 @@ class BaseFireEffect : public LEDStripEffect
     int     Sparking;           // Probability of a spark each attempt
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
-    unique_ptr<byte []> heat;
+    std::unique_ptr<uint8_t []> heat;
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
     // You can tune these coefficients to control how quickly and smoothly the fire spreads
 
-    static const byte BlendSelf = 0;            // 2
-    static const byte BlendNeighbor1 = 1;       // 3
-    static const byte BlendNeighbor2 = 2;       // 2
-    static const byte BlendNeighbor3 = 0;       // 1
+    static const uint8_t BlendSelf = 0;            // 2
+    static const uint8_t BlendNeighbor1 = 1;       // 3
+    static const uint8_t BlendNeighbor2 = 2;       // 2
+    static const uint8_t BlendNeighbor3 = 0;       // 1
 
-    static const byte BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
+    static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
   public:
 
@@ -519,19 +519,19 @@ class BaseFireEffect : public LEDStripEffect
         LEDCount = bmirrored ? LEDCount / 2 : LEDCount;
         CellCount = LEDCount * cellsPerLED;
 
-        heat = make_unique<byte []>(CellCount);
+        heat = std::make_unique<uint8_t []>(CellCount);
     }
 
     virtual ~BaseFireEffect()
     {
     }
 
-    virtual CRGB MapHeatToColor(byte temperature)
+    virtual CRGB MapHeatToColor(uint8_t temperature)
     {
-        byte t192 = round((temperature/255.0)*191);
+        uint8_t t192 = round((temperature/255.0)*191);
  
         // calculate ramp up from
-        byte heatramp = t192 & 0x3F; // 0..63
+        uint8_t heatramp = t192 & 0x3F; // 0..63
         heatramp <<= 2; // scale up to 0..252
 
         // figure out which third of the spectrum we're in:

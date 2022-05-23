@@ -41,7 +41,7 @@
 DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 #endif
 
-extern DRAM_ATTR unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
 
 std::mutex g_buffer_mutex;
@@ -421,14 +421,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
             auto   delta = abs(dNew - dOld);
 
-            /*
-            if (false == NTPTimeClient::HasClockBeenSet() && delta > 1.0)
-            {
-                settimeofday(&tvNew, nullptr);
-                debugI("Old clock, new clock: %lf, %lf\n", dOld, dNew);
-                debugI("Server clock: Updated clock received, time written to ESP32 rtc: %ld.%ld, DELTA: %lf", tvNew.tv_sec, tvNew.tv_usec, dNew - dOld );
-            }
-            */
             return true;
         }
 

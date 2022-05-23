@@ -52,7 +52,7 @@
 // Externals
 //
 
-extern DRAM_ATTR shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
 
 // Palettes
 //
@@ -249,7 +249,7 @@ CRGBPalette256 MagentaStripes(CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::M
 // A little factory that makes colored spectrum analyzers to be used by the remote control
 // colored buttons
 
-unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
+std::unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
     CRGB colorDark = color;
     colorDark.fadeToBlackBy(64);
@@ -284,7 +284,7 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
   #elif XMASTREES
 
-    new ColorBeatOverRedBkgnd("ColorBeatOverRedBkgnd"),
+    new ColorBeatOverRed("ColorBeatOverRed"),
 
     new FireFanEffect(NUM_LEDS,      1, 12, 210, 2, NUM_LEDS / 2, Sequential, false, true),
     new HueFireFanEffect(NUM_LEDS,      1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
@@ -317,7 +317,7 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
     //new StarryNightEffect<Star>()
     /*
     new SparklySpinningMusicEffect("SparklySpinningMusical", RainbowColors_p), 
-    new ColorBeatOverRedBkgnd("ColorBeatOnRedBkgnd"),
+    new ColorBeatOverRed("ColorBeatOnRedBkgnd"),
     new MoltenGlassOnVioletBkgnd("MoltenGlassOnViolet", RainbowColors_p),
     new ColorBeatWithFlash("ColorBeatWithFlash"),
     new MusicalHotWhiteInsulatorEffect("MusicalHotWhite"),
@@ -329,30 +329,24 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
   #elif INSULATORS
 
-    new SparklySpinningMusicEffect(RainbowColors_p), 
-    /*
-    new ColorBeatOverRedBkgnd(),
-    new MoltenGlassOnVioletBkgnd(RainbowColors_p),
-    new ColorBeatWithFlash(),
-    new MusicalHotWhiteInsulatorEffect(),
+    new MoltenGlassOnVioletBkgnd("Molten Glass", RainbowColors_p),
+    new ColorBeatOverRed("ColorBeatOverRed"),
+    new InsulatorSpectrumEffect("Spectrum Effect", RainbowColors_p),
 
-    new ColorBeatOverRedBkgnd(),              // Color beat over red background
-
-    new SimpleInsulatorBeatEffect2(),
-    new ColorBeatOverRedBkgnd(),              // Color beat over red background
-    new InsulatorSpectrumEffect(),
-
-    new ColorBeatOverRedBkgnd(),              // Color beat over red background
-    new SparklySpinningMusicEffect(RainbowColors_p), 
-    new MoltenGlassOnVioletBkgnd(RainbowColors_p),
-*/
+    //new SparklySpinningMusicEffect(RainbowColors_p), 
+    //new SparklySpinningMusicEffect("Blu Sprkl Spin", BlueColors_p), 
+   // new ColorBeatOverRed("ColorBeatOverRed"),
+    //new ColorBeatWithFlash("ColorBeatFlash"),
+    //new MusicalHotWhiteInsulatorEffect("Hot White"),
+    //new SimpleInsulatorBeatEffect2("Simple Beat 2"),
+    //new SparklySpinningMusicEffect("Sparkle Spin", RainbowColors_p), 
 
   #elif CUBE
     // Simple rainbow pallette
     new PaletteEffect(rainbowPalette, 256/16, .2, 0),
 
     new SparklySpinningMusicEffect("SparklySpinningMusical", RainbowColors_p), 
-    new ColorBeatOverRedBkgnd("ColorBeatOnRedBkgnd"),
+    new ColorBeatOverRed("ColorBeatOnRedBkgnd"),
     new ColorBeatWithFlash("ColorBeatWithFlash"),
     new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
     new InsulatorSpectrumEffect("InsulatorSpectrumEffect"),

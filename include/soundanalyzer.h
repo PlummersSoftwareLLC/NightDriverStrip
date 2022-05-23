@@ -94,15 +94,15 @@ using namespace std;
 #define MIN_VU 8
 
 #ifndef GAINDAMPEN
-#define GAINDAMPEN  25									  // How slowly brackets narrow in for spectrum bands
+#define GAINDAMPEN  1									  // How slowly brackets narrow in for spectrum bands
 #endif
 
 #ifndef VUDAMPEN
-#define VUDAMPEN    20 									  // How slowly VU reacts
+#define VUDAMPEN    3 									  // How slowly VU reacts
 #endif
 
-#define VUDAMPENMIN 100  								  // How slowly VU min creeps up to test noise floor
-#define VUDAMPENMAX 25								     // How slowly VU max drops down to test noise ceiling
+#define VUDAMPENMIN 5  								  // How slowly VU min creeps up to test noise floor
+#define VUDAMPENMAX 5								     // How slowly VU max drops down to test noise ceiling
 
 #define MS_PER_SECOND 1000
 
@@ -434,7 +434,9 @@ class SampleBuffer
 		debugV("Begin SamplerBufferInitI2S...");
 
 		#if M5STICKC || M5STICKCPLUS
-			i2s_config_t i2s_config = {
+
+			i2s_config_t i2s_config = 
+			{
 				.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
 				.sample_rate =  SAMPLING_FREQUENCY,
 				.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // is fixed at 12bit, stereo, MSB
@@ -450,13 +452,13 @@ class SampleBuffer
 			pin_config.ws_io_num    = IO_PIN;
 			pin_config.data_out_num = I2S_PIN_NO_CHANGE;
 			pin_config.data_in_num  = INPUT_PIN;
-				
 			
 			i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
 			i2s_set_pin(I2S_NUM_0, &pin_config);
 			i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
 		#elif TTGO
+
 			i2s_config_t i2s_config;
 			i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
 			i2s_config.sample_rate = SAMPLING_FREQUENCY;            
@@ -602,7 +604,9 @@ class SampleBuffer
 		}
 
 		for (int i = 0; i < _BandCount; i++)
+		{
 		    _vPeaks[i] *= GetBandScalars(_BandCount)[i];
+		}
 
 		// If you want the peaks to be a lot more prominent, you can exponentially raise the values
 		// and then they'll be scaled back down linearly, but you'd have to adjust allBandsPeak 
@@ -618,11 +622,15 @@ class SampleBuffer
 		// just triggering the bottom pixel, and real silence yielding darkness
 		
 		debugV("All Bands Peak: %f", allBandsPeak);
-		allBandsPeak = max(NOISE_FLOOR, allBandsPeak);				
+		//allBandsPeak = max(NOISE_FLOOR, allBandsPeak);		
+
+		auto multiplier = mapDouble(gVURatio, 0.0, 2.0, 1.5, 1.0);
+		allBandsPeak *= multiplier;
 
 		for (int i = 0; i < _BandCount; i++)
+		{
 			_vPeaks[i] /= allBandsPeak;
-
+		}
 
 		// We'll use the average as the gVU.  I assume the average of the samples tracks sound pressure level, but don't really know...
 

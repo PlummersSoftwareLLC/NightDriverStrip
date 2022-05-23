@@ -51,10 +51,9 @@
 #include <ArduinoJson.h>
 
 
+extern std::unique_ptr<EffectManager> g_pEffectManager;
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
-
-extern unique_ptr<EffectManager> g_pEffectManager;
 
 
 class CSPIFFSWebServer

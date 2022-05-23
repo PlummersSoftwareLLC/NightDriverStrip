@@ -63,7 +63,7 @@ public:
         _colorSpeed = colorSpeed;
 	}
 
-    virtual bool Init(shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -178,13 +178,13 @@ class VUFlameEffect : public LEDStripEffect
     // Depending on the color mode, we generate a pixel color here based on the temperature.  For the classic flame that's
     // black up through red then yellow then white.  For the multicolor mode, the palette also cycles.
 
-	void setPixelHeatColor(int Pixel, byte temperature) 
+	void setPixelHeatColor(int Pixel, uint8_t temperature) 
 	{
         // Scale 'heat' down from 0-255 to 0-191
-		byte t192 = round((temperature / 255.0) * 191);
+		uint8_t t192 = round((temperature / 255.0) * 191);
 
 		// calculate ramp up from
-		byte heatramp = t192 & 0x3F; // 0..63
+		uint8_t heatramp = t192 & 0x3F; // 0..63
 		heatramp <<= 2; // scale up to 0..252
 
         CRGB c;
@@ -253,7 +253,7 @@ class VUFlameEffect : public LEDStripEffect
 
 	virtual void Draw()
 	{
-		static byte heat[NUM_LEDS];
+		static uint8_t heat[NUM_LEDS];
 
         // A bit of a HACKy solution; we simply don't want to scroll too fast and the floating point versions look too "smooth"
         // so I'm staying frame-rate dependent on this one.  As long as it doesn't run too fast, it looks fine, so we just bail

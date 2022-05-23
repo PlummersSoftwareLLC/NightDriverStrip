@@ -64,6 +64,7 @@
 //              Nov-07-2021  v022       Davepl      Rev'd with new Github PRs to date
 //              Mar-16-2022  v023       Davepl      Response packet on socket with stats
 //              Mar-17-2022  v024       Davepl      Catchup clock to server when in future
+//              May-17-2022  v025       Davepl      After merge of RepsonsePacket into main
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -74,7 +75,7 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          24   // Update ONLY this to increment the version number
+#define FLASH_VERSION          25   // Update ONLY this to increment the version number
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
 #define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic
@@ -115,8 +116,8 @@
 // We have a half-dozen workers and these are their relative priorities.  It might survive if all were set equal,
 // but I think drawing should be lower than audio so that a bad or greedy effect doesn't starve the audio system.
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+4      // Draw any available frames first
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+3      // ...then process and decompress incoming frames
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+3      // Draw any available frames first
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+4      // ...then process and decompress incoming frames
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
@@ -136,7 +137,6 @@
 // #define REMOTE_CORE             1
 
 #define DRAWING_CORE            1
-#define INCOMING_CORE           0
 #define NET_CORE                0
 #define AUDIO_CORE              1
 #define SCREEN_CORE             1       
@@ -161,8 +161,6 @@
 #include <sys/time.h>
 #include <exception>
 #include "RemoteDebug.h"
-
-using namespace std;
 
 #include<sstream>
 
@@ -584,7 +582,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  170000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
 
@@ -763,7 +761,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
 
-    #define DEFAULT_EFFECT_INTERVAL     (10*60*24)
+    #define DEFAULT_EFFECT_INTERVAL     (45*60*24)
 
     #define LED_PIN0          26
     #define NUM_CHANNELS      1
@@ -780,10 +778,18 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
     #define IR_REMOTE_PIN     26                    
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW    10000
+    #define POWER_LIMIT_MW    50000
 
-    #define TOGGLE_BUTTON  37
-    #define NUM_INFO_PAGES 1
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
+
+    #define NUM_INFO_PAGES          2
+    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
+
+
 
 #elif CUBE
 
@@ -1044,7 +1050,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #define INPUT_PIN (34)	 
 #define IO_PIN (0)
 #else
-#define INPUT_PIN (ADC1_CHANNEL_0_GPIO_NUM)	  // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+#define INPUT_PIN (36)	  // Audio line input, ADC #1, input line 0 (GPIO pin 36)
 #endif
 #endif
 
@@ -1217,7 +1223,7 @@ inline double mapDouble(double x, double in_min, double in_max, double out_min, 
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-inline uint64_t ULONGFromMemory(byte * payloadData)
+inline uint64_t ULONGFromMemory(uint8_t * payloadData)
 {
     return  (uint64_t)payloadData[7] << 56  | 
             (uint64_t)payloadData[6] << 48  | 
@@ -1229,7 +1235,7 @@ inline uint64_t ULONGFromMemory(byte * payloadData)
             (uint64_t)payloadData[0];
 }
 
-inline uint32_t DWORDFromMemory(byte * payloadData)
+inline uint32_t DWORDFromMemory(uint8_t * payloadData)
 {
     return  (uint32_t)payloadData[3] << 24  | 
             (uint32_t)payloadData[2] << 16  | 
@@ -1237,7 +1243,7 @@ inline uint32_t DWORDFromMemory(byte * payloadData)
             (uint32_t)payloadData[0];
 }
 
-inline uint16_t WORDFromMemory(byte * payloadData)
+inline uint16_t WORDFromMemory(uint8_t * payloadData)
 {
     return  (uint16_t)payloadData[1] << 8   | 
             (uint16_t)payloadData[0];
