@@ -318,7 +318,19 @@ public:
                     return false;
                 }
 
-                if (!DecompressBuffer(&_pBuffer[COMPRESSED_DATA_HEADER_SIZE], compressedSize, _abOutputBuffer.get(), expandedSize))
+                // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
+                // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
+                // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
+                
+                #if USE_PSRAM
+                    std::unique_ptr<uint8_t []> _abTempBuffer = make_unique<uint8_t []>(compressedSize);
+                    memcpy(_abTempBuffer.get(), _pBuffer.get(), compressedSize);
+                    auto pSourceBuffer = _abTempBuffer.get();
+                #else
+                    auto pSourceBuffer = _pBuffer;
+                #endif
+                
+                if (!DecompressBuffer(&pSourceBuffer[COMPRESSED_DATA_HEADER_SIZE], compressedSize, _abOutputBuffer.get(), expandedSize))
                 {
                     close(new_socket);
                     debugW("Error decompressing data\n");
