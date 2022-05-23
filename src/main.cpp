@@ -371,7 +371,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d, USE_TFTSPI: %d", M5STICKC, USE_TFT, USE_OLED, USE_TFTSPI);
+    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d", M5STICKC, USE_TFT, USE_OLED, USE_TFTSPI, USE_LCD);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -491,9 +491,10 @@ void setup()
 #if USE_TFTSPI
     debugI("Initializing TFTSPI");
     extern TFT_eSPI * g_pDisplay;
+
     g_pDisplay->init();
     g_pDisplay->setRotation(1);
-    g_pDisplay->fillScreen(TFT_BLACK);
+    g_pDisplay->fillScreen(TFT_RED);
 #endif
 
 #if M5STICKC || M5STICKCPLUS
@@ -514,6 +515,11 @@ void setup()
 #if USE_LCD
     extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
+
+    // Without these two magic lines, you get no picture, which is pretty annoying...
+    
+    #define TFT_BL 5 // LED back-light
+    pinMode(TFT_BL, OUTPUT); //initialize BL
 
     // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
     // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.

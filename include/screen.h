@@ -44,6 +44,9 @@
 
 #if USE_LCD
     extern Adafruit_ILI9341 * g_pDisplay;
+    #include <fonts/FreeMono18pt7b.h>
+    #include <fonts/FreeMono12pt7b.h>
+    #include <fonts/FreeMono9pt7b.h>
 #endif
 
 #if USE_TFT
@@ -106,12 +109,13 @@ class Screen
         auto yh = 0; 
         g_pDisplay->drawString(pszStatus, xh, yh);
     #elif USE_LCD
-        g_pDisplay->fillScreen(TFT_BLACK);
-        g_pDisplay->setFreeFont(FF15);
-        g_pDisplay->setTextColor(0xFBE0);
+        g_pDisplay->fillScreen(BLUE16);
+        g_pDisplay->setFont(FM9);
+        g_pDisplay->setTextColor(WHITE16);
         auto xh = 10;
         auto yh = 0; 
-        g_pDisplay->drawString(pszStatus, xh, yh);
+        g_pDisplay->setCursor(xh, yh);
+        g_pDisplay->print(pszStatus);
     #endif
     }
 
@@ -131,7 +135,10 @@ class Screen
         #if USE_OLED
             return 12;
         #elif USE_SCREEN
-            return g_pDisplay->fontHeight();
+            int16_t x1, y1;
+            uint16_t w, h;
+            g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
+            return w + 2;                                                   // One pixel above and below chars looks better
         #else
             return 1;
         #endif
@@ -142,7 +149,10 @@ class Screen
         #if USE_OLED
             return g_pDisplay->getStrWidth(psz);
         #elif USE_SCREEN
-            return g_pDisplay->textWidth(psz);
+            int16_t x1, y1;
+            uint16_t w, h;
+            g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
+            return w;
         #else 
             return 1;
         #endif
@@ -232,16 +242,16 @@ class Screen
             switch(size)
             {
                 case BIG:
-                    g_pDisplay->setFreeFont(FF17);
+                    g_pDisplay->setFont(&FreeMono18pt7b);
                     break;
                 case MEDIUM:
-                    g_pDisplay->setFreeFont(FF16);
+                    g_pDisplay->setFont(&FreeMono12pt7b);
                     break;
                 case TINY:
-                    g_pLCCD->setFreeFont(FF1);
+                    g_pDisplay->setFont(&FreeMono9pt7b);
                     break;                
                 default:
-                    g_pDisplay->setFreeFont(FF15);
+                    g_pDisplay->setFont(&FreeMono9pt7b);
                     break;
             }
         #endif
