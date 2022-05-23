@@ -323,14 +323,14 @@ public:
                 // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
                 
                 #if USE_PSRAM
-                    std::unique_ptr<uint8_t> _abTempBuffer = make_unique<uint8_t>(compressedSize);
-                    memcpy(_abTempBuffer.get(), _pBuffer.get(), compressedSize);
-                    auto pSourceBuffer = _abTempBuffer.get();
+                    std::unique_ptr<uint8_t []> _abTempBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+                    memcpy(_abTempBuffer.get(), _pBuffer.get(), EXPECTED_EXPANDED_PACKET_SIZE);
+                    auto pSourceBuffer = &_abTempBuffer[COMPRESSED_DATA_HEADER_SIZE];
                 #else
-                    auto pSourceBuffer = _pBuffer.get();
+                    auto pSourceBuffer = &_pBuffer[COMPRESSED_DATA_HEADER_SIZE];
                 #endif
                 
-                if (!DecompressBuffer(&pSourceBuffer[COMPRESSED_DATA_HEADER_SIZE], compressedSize, _abOutputBuffer.get(), expandedSize))
+                if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
                 {
                     close(new_socket);
                     debugW("Error decompressing data\n");

@@ -412,7 +412,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
 
     #if USE_PSRAM
-        #define MAX_BUFFERS     99      // If PSRAM, limit to 50 buffers
+        #define MAX_BUFFERS     99      // If PSRAM, limit the buffers to something practical and reasonable
     #else
         #define MAX_BUFFERS     20
     #endif
