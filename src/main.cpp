@@ -581,7 +581,7 @@ void setup()
         cBuffers = MAX_BUFFERS;
     }
 
-    debugI("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc);
+    debugI("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pStrands[iChannel]);

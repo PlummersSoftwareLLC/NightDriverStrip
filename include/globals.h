@@ -411,7 +411,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
 
-    #define MAX_BUFFERS     20
+    #if USE_PSRAM
+        #define MAX_BUFFERS     99      // If PSRAM, limit to 50 buffers
+    #else
+        #define MAX_BUFFERS     20
+    #endif
 
 
     #define LED_PIN0        26
@@ -424,7 +428,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE        MATRIX_HEIGHT
     #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000
+    #define RESERVE_MEMORY  180000
     #define IR_REMOTE_PIN   25                    
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
@@ -1028,7 +1032,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #elif defined(USE_LCD)
 
         // Good enough on its own
-        
+
     #elif defined(WROVERKIT) 
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard

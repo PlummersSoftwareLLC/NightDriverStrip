@@ -117,7 +117,14 @@ class LEDBuffer
                  _timeStampMicroseconds(0),
                  _timeStampSeconds(0)
     {
-        _leds = make_unique<CRGB []>(NUM_LEDS);
+        #if USE_PSRAM
+            //psram_allocator<CRGB []> alloc = psram_allocator<CRGB []>();
+            // _leds = psram_allocator<CRGB>().allocate(NUM_LEDS);
+            _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
+        #else
+            _leds = make_unique<CRGB []>(NUM_LEDS);
+        #endif
+
 
         for (int i = 0; i < ARRAYSIZE(_leds); i++)
             _leds[i] = CRGB::Yellow;
