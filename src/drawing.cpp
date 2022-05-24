@@ -79,7 +79,6 @@ DRAM_ATTR uint8_t  g_Fader           = 255;
 
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
-   
     debugI(">> DrawLoopTaskEntry\n");
     debugE("Entry Heap: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
 

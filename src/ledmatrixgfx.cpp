@@ -41,6 +41,14 @@
 
 void StartMatrix()
 {
-  matrix.begin();
+    matrix.addLayer(&backgroundLayer);
+    matrix.begin();
+
+    backgroundLayer.fillScreen(rgb24(0, 0, 64));
+    backgroundLayer.setFont(gohufont11b);
+    backgroundLayer.drawString(0, kMatrixHeight / 2 - 6, rgb24(255,255,255), "NightDriver");
+    backgroundLayer.swapBuffers(false);    
+
+    matrix.setBrightness(255);
 }
 #endif

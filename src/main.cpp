@@ -571,6 +571,11 @@ void setup()
             g_pDevices[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
     #endif
 
+    #ifdef USEMATRIX
+        for (int i = 0; i < NUM_CHANNELS; i++)
+            g_pDevices[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+    #endif
+
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram();
     #else
@@ -665,14 +670,7 @@ void setup()
             FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_pStrands[7]->GetLEDBuffer(), g_pStrands[7]->GetLEDCount());
             pinMode(LED_PIN7, OUTPUT);
         #endif
-
-            pinMode(BUILTIN_LED_PIN, OUTPUT);
-            
-            // Microphone stuff
-        #if ENABLE_AUDIO    
-            pinMode(INPUT_PIN, INPUT);
-        #endif
-            
+           
             //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
             //digitalWrite(35, 0);
 
@@ -692,6 +690,14 @@ void setup()
             pinMode(14, INPUT);
             pinMode(15, INPUT);
         #endif
+    #endif
+
+
+    pinMode(BUILTIN_LED_PIN, OUTPUT);
+
+    // Microphone stuff
+    #if ENABLE_AUDIO    
+        pinMode(INPUT_PIN, INPUT);
     #endif
 
     debugI("Initializing effects manager...");

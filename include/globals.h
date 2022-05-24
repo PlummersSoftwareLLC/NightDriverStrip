@@ -420,21 +420,17 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define MAX_BUFFERS     20
     #endif
 
-
-    #define LED_PIN0        26
-    
     #define NUM_CHANNELS    1
-
     #define RING_SIZE_0     24    
     #define BONUS_PIXELS    0
-    #define MATRIX_WIDTH    144
-    #define MATRIX_HEIGHT   1
-    #define NUM_FANS        MATRIX_WIDTH
-    #define FAN_SIZE        MATRIX_HEIGHT
+    #define MATRIX_WIDTH    64
+    #define MATRIX_HEIGHT   32
+    #define NUM_FANS        128
+    #define FAN_SIZE        16
     #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define RESERVE_MEMORY  180000
-    #define IR_REMOTE_PIN   25                    
+    #define IR_REMOTE_PIN   39                    
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
 

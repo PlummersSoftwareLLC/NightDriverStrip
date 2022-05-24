@@ -78,13 +78,16 @@ class LEDStripEffect
 	}
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])				// There are up to 8 channel in play per effect and when we
-    {																//   start up, we are given copies to their graphics interfaces
+    {			
+		debugW("Init Init");													//   start up, we are given copies to their graphics interfaces
         for (int i = 0; i < NUM_CHANNELS; i++)						//   so that we can call them directly later from other calls
         {
             _GFX[i] = gfx[i];    
         }
-        _cLEDs = _GFX[0]->GetLEDCount();      
-		//Serial.printf("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
+		debugW("Get LED COunt");
+        _cLEDs = _GFX[0]->GetLEDCount();   
+		debugW("Got LED COunt");
+		Serial.printf("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
 		return true;  
     }
 	virtual void Draw() = 0;										// Your effect must implement these

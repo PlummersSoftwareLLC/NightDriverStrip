@@ -314,11 +314,14 @@ public:
 
        	for (int i = 0; i < _cEffects; i++)
         {
+			debugV("About to init effect %s", _ppEffects[i]->FriendlyName());
     		if (false == _ppEffects[i]->Init(_gfx))
             {
                 debugW("Could not initialize effect: %s\n", _ppEffects[i]->FriendlyName());
                 return false;
 			}
+			debugI("Loaded Effect: %s", _ppEffects[i]->FriendlyName());
+
 			// First time only, we ensure the data is cleared 
 			
 			//_ppEffects[i]->setAll(0,0,0);

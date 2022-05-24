@@ -95,7 +95,15 @@ class GFXBase : public Adafruit_GFX
       return _width * _height;
     }
 
-    virtual uint16_t xy( uint8_t x, uint8_t y) const = 0;
+    inline virtual uint16_t xy( uint8_t x, uint8_t y) const
+    {
+        if( x >= MATRIX_WIDTH || x < 0) 
+          return 0;
+        if( y >= MATRIX_HEIGHT || y < 0) 
+          return 0;  
+        return (y * MATRIX_WIDTH) + x; 
+    }
+    
     virtual uint16_t getPixelIndex(int16_t x, int16_t y) const = 0;
     virtual CRGB getPixel(int16_t x) const = 0;
     virtual void setPixel(int16_t x, int16_t y, uint16_t color) = 0;

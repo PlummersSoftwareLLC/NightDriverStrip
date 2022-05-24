@@ -175,14 +175,4 @@ public:
           for (int i = 0; i < NUM_CHANNELS; i++)
               _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c2 : c2;  
     }
-
-    inline uint16_t xy( uint8_t x, uint8_t y) const
-    {
-        if( x >= MATRIX_WIDTH || x < 0) 
-          return 0;
-        if( y >= MATRIX_HEIGHT || y < 0) 
-          return 0;  
-        return (y * MATRIX_WIDTH) + x; 
-    }
-    
 };
