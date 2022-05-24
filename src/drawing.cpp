@@ -37,15 +37,22 @@
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include "ntptimeclient.h"
 
+#ifdef USESTRIP
+#include "ledstripgfx.h"
+#endif
+
+#ifdef USEMATRIX
+#include "ledmatrixgfx.h"
+#endif
+
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
 // from the led buffer.  
 
 extern std::mutex         g_buffer_mutex;
 
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
-extern DRAM_ATTR std::unique_ptr<LEDStripGFX []>  g_aStrands;
-extern DRAM_ATTR std::shared_ptr<LEDStripGFX>     g_pStrands[NUM_CHANNELS];        
-extern DRAM_ATTR std::unique_ptr<EffectManager> g_pEffectManager;
+DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
 extern bool               g_bUpdateStarted;
@@ -171,6 +178,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         }
 
 
+#if USESTRIP
         // If we've drawn anything from either source, we can now show it
 
         if (FastLED.count() == 0)
@@ -183,8 +191,12 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             if (cPixelsDrawnThisFrame > 0)
             {
                 debugV("Telling FastLED that we'll be drawing %d pixels\n", cPixelsDrawnThisFrame);
+                
                 for (int i  = 0; i < NUM_CHANNELS; i++)
-                    FastLED[i].setLeds((*g_pEffectManager)[i]->GetLEDBuffer(), cPixelsDrawnThisFrame);
+                {
+                    LEDStripGFX * pStrip = (LEDStripGFX *)(*g_pEffectManager)[i].get();
+                    FastLED[i].setLeds(pStrip->GetLEDBuffer(), cPixelsDrawnThisFrame);
+                }
 
                 //vTaskPrioritySet(g_taskDraw, DRAWING_PRIORITY_BOOST);
                 #if ATOMISTRING
@@ -199,7 +211,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
                 g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                g_Watts = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), cPixelsDrawnThisFrame )/ 1000;
+                g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->GetLEDBuffer(), cPixelsDrawnThisFrame )/ 1000;
 
                 
                 // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
@@ -211,6 +223,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 debugV("Draw loop ended without a draw.");
             }
         }
+#endif
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly, 
         // so we'll pause to share the CPU a bit once the update has begun

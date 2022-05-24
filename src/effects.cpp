@@ -52,7 +52,15 @@
 // Externals
 //
 
-extern DRAM_ATTR std::shared_ptr<LEDStripGFX> g_pStrands[NUM_CHANNELS];
+#ifdef USEMATRIX
+#include "ledmatrixgfx.h"
+#endif
+
+#ifdef USESTRIP
+#include "ledstripgfx.h"
+#endif
+
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 
 // Palettes
 //
@@ -275,7 +283,7 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-    new SpectrumAnalyzerEffect("Spectrum Fade", spectrumBasicColors, 50, 70, -1.0, 3.0),
+    new ColorFillEffect(CRGB::Blue, 4),
 
 #elif TTGO 
 
@@ -596,7 +604,8 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 
 void InitEffectsManager()
 {
-    g_pEffectManager = make_unique<EffectManager>(AllEffects, ARRAYSIZE(AllEffects), g_pStrands);
+    g_pEffectManager = make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
+
     if (false == g_pEffectManager->Init())
         throw runtime_error("Could not initialize effect manager");
 }

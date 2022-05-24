@@ -186,5 +186,3 @@ public:
     }
     
 };
-
-extern DRAM_ATTR std::shared_ptr<LEDStripGFX> g_pStrands[NUM_CHANNELS];

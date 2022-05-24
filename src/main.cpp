@@ -210,11 +210,19 @@ DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started
 DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
 
-DRAM_ATTR std::shared_ptr<LEDStripGFX>     g_pStrands[NUM_CHANNELS];            // Each LED strip gets its own channel
-DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];     // Each channel has its own buffer
-DRAM_ATTR std::unique_ptr<EffectManager>    g_pEffectManager;                    // The one and only global effect manager
+#ifdef USEMATRIX
+#include "ledmatrixgfx.h"
+#endif
+
+#ifdef USESTRIP
+#include "ledstripgfx.h"
+#endif
+
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
+
+DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
-DRAM_ATTR RemoteDebug Debug;                                                // Instance of our telnet debug server
+DRAM_ATTR RemoteDebug Debug;                                                     // Instance of our telnet debug server
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
@@ -558,8 +566,10 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    for (int i = 0; i < NUM_CHANNELS; i++)
-        g_pStrands[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+    #ifdef USESTRIP
+        for (int i = 0; i < NUM_CHANNELS; i++)
+            g_pDevices[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+    #endif
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram();
@@ -584,7 +594,7 @@ void setup()
     debugI("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pStrands[iChannel]);
+        g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
 
     // Initialize all of the built in effects
 
@@ -593,90 +603,96 @@ void setup()
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
 
-#if ATOMISTRING
-    strip.Begin();
-    strip.SetPixelSettings(NeoTm1814Settings(165,165,165,165));
-    strip.Show();
-    pinMode(LED_PIN0, OUTPUT);
-#endif
-
-#if STRAND
-    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount()); // Neopixel strand uses RGB color order, others are all GRB
-    //FastLED.addLeds<AtomiController, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
-#elif NUM_CHANNELS == 1
-    debugI("Adding %d LEDs to FastLED.", g_pStrands[0]->GetLEDCount());
-    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), 3*144);
-    
-    FastLED[0].setLeds(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
-    
-    FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
-    pinMode(LED_PIN0, OUTPUT);
-#endif
-
-#if NUM_CHANNELS >= 2
-    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
-    pinMode(LED_PIN0, OUTPUT);
-
-    FastLED.addLeds<WS2812B, LED_PIN1, COLOR_ORDER>(g_pStrands[1]->GetLEDBuffer(), g_pStrands[1]->GetLEDCount());
-    pinMode(LED_PIN1, OUTPUT);
-#endif
-
-#if NUM_CHANNELS >= 3
-    FastLED.addLeds<WS2812B, LED_PIN2, COLOR_ORDER>(g_pStrands[2]->GetLEDBuffer(), g_pStrands[2]->GetLEDCount());
-    pinMode(LED_PIN2, OUTPUT);
-#endif
-
-#if NUM_CHANNELS >= 4
-    FastLED.addLeds<WS2812B, LED_PIN3, COLOR_ORDER>(g_pStrands[3]->GetLEDBuffer(), g_pStrands[3]->GetLEDCount());
-    pinMode(LED_PIN3, OUTPUT);
-#endif
-
-#if NUM_CHANNELS >= 5
-    FastLED.addLeds<WS2812B, LED_PIN4, COLOR_ORDER>(g_pStrands[4]->GetLEDBuffer(), g_pStrands[4]->GetLEDCount());
-    pinMode(LED_PIN4, OUTPUT);
-#endif
-
-#if NUM_CHANNELS >= 6
-    FastLED.addLeds<WS2812B, LED_PIN5, COLOR_ORDER>(g_pStrands[5]->GetLEDBuffer(), g_pStrands[5]->GetLEDCount());
-    pinMode(LED_PIN5, OUTPUT);
-#endif
-
-#if NUM_CHANNELS >= 7
-    FastLED.addLeds<WS2812B, LED_PIN6, COLOR_ORDER>(g_pStrands[6]->GetLEDBuffer(), g_pStrands[6]->GetLEDCount());
-    pinMode(LED_PIN6, OUTPUT);
-#endif
-
-#if NUM_CHANNELS >= 8
-    FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_pStrands[7]->GetLEDBuffer(), g_pStrands[7]->GetLEDCount());
-    pinMode(LED_PIN7, OUTPUT);
-#endif
-
-    pinMode(BUILTIN_LED_PIN, OUTPUT);
-    
-    // Microphone stuff
-#if ENABLE_AUDIO    
-    pinMode(INPUT_PIN, INPUT);
-#endif
-    
-    //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
-    //digitalWrite(35, 0);
-
-#ifdef POWER_LIMIT_MW
-    set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
-    #ifdef LED_BUILTIN
-        set_max_power_indicator_LED(LED_BUILTIN);
+    #if USEMATRIX
+        StartMatrix();
     #endif
-#endif
 
-    g_Brightness = 255;
-    
-#if ATOMLIGHT
-    pinMode(4, INPUT);
-    pinMode(12, INPUT);
-    pinMode(13, INPUT);
-    pinMode(14, INPUT);
-    pinMode(15, INPUT);
-#endif
+    #if USESTRIP
+
+        #if ATOMISTRING
+            strip.Begin();
+            strip.SetPixelSettings(NeoTm1814Settings(165,165,165,165));
+            strip.Show();
+            pinMode(LED_PIN0, OUTPUT);
+        #endif
+
+        #if STRAND
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount()); // Neopixel strand uses RGB color order, others are all GRB
+            //FastLED.addLeds<AtomiController, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
+        #elif NUM_CHANNELS == 1
+            debugI("Adding %d LEDs to FastLED.", g_pDevices[0]->GetLEDCount());
+            
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->GetLEDBuffer(), 3*144);
+            FastLED[0].setLeds(((LEDStripGFX *)g_pDevices[0].get())->GetLEDBuffer(), g_pDevices[0]->GetLEDCount());   
+            FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
+            pinMode(LED_PIN0, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 2
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->GetLEDBuffer(), ((LEDStripGFX *)g_pDevices[0].get())->GetLEDCount());
+            pinMode(LED_PIN0, OUTPUT);
+
+            FastLED.addLeds<WS2812B, LED_PIN1, COLOR_ORDER>(g_pStrands[1]->GetLEDBuffer(), g_pStrands[1]->GetLEDCount());
+            pinMode(LED_PIN1, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 3
+            FastLED.addLeds<WS2812B, LED_PIN2, COLOR_ORDER>(g_pStrands[2]->GetLEDBuffer(), g_pStrands[2]->GetLEDCount());
+            pinMode(LED_PIN2, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 4
+            FastLED.addLeds<WS2812B, LED_PIN3, COLOR_ORDER>(g_pStrands[3]->GetLEDBuffer(), g_pStrands[3]->GetLEDCount());
+            pinMode(LED_PIN3, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 5
+            FastLED.addLeds<WS2812B, LED_PIN4, COLOR_ORDER>(g_pStrands[4]->GetLEDBuffer(), g_pStrands[4]->GetLEDCount());
+            pinMode(LED_PIN4, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 6
+            FastLED.addLeds<WS2812B, LED_PIN5, COLOR_ORDER>(g_pStrands[5]->GetLEDBuffer(), g_pStrands[5]->GetLEDCount());
+            pinMode(LED_PIN5, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 7
+            FastLED.addLeds<WS2812B, LED_PIN6, COLOR_ORDER>(g_pStrands[6]->GetLEDBuffer(), g_pStrands[6]->GetLEDCount());
+            pinMode(LED_PIN6, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 8
+            FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_pStrands[7]->GetLEDBuffer(), g_pStrands[7]->GetLEDCount());
+            pinMode(LED_PIN7, OUTPUT);
+        #endif
+
+            pinMode(BUILTIN_LED_PIN, OUTPUT);
+            
+            // Microphone stuff
+        #if ENABLE_AUDIO    
+            pinMode(INPUT_PIN, INPUT);
+        #endif
+            
+            //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
+            //digitalWrite(35, 0);
+
+        #ifdef POWER_LIMIT_MW
+            set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
+            #ifdef LED_BUILTIN
+                set_max_power_indicator_LED(LED_BUILTIN);
+            #endif
+        #endif
+
+            g_Brightness = 255;
+            
+        #if ATOMLIGHT
+            pinMode(4, INPUT);
+            pinMode(12, INPUT);
+            pinMode(13, INPUT);
+            pinMode(14, INPUT);
+            pinMode(15, INPUT);
+        #endif
+    #endif
 
     debugI("Initializing effects manager...");
     InitEffectsManager();

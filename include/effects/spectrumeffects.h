@@ -361,12 +361,11 @@ class WaveformEffect : public VUMeterEffect
 
     virtual void Draw()
 	{
-        auto leds = _GFX[0]->GetLEDBuffer();
-
-        memcpy(&leds[0], &leds[1], sizeof(leds[0]) * NUM_LEDS-1);
+        _GFX[0]->ScrollLeft();
+        
         DrawVUMeter(0);        
         DrawSpike(63, gVURatio);
-	}
+    }
 };
 
 class GhostWave : public WaveformEffect

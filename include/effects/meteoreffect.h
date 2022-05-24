@@ -39,6 +39,7 @@
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
+#include "gfxbase.h"
 #if ENABLE_AUDIO
 #include "soundanalyzer.h"
 #endif
@@ -69,7 +70,7 @@ public:
 	
 	}
 
-	virtual void Init(std::shared_ptr<LEDStripGFX> pGFX, size_t meteors = 4, uint size = 4, uint decay = 3, double minSpeed = 0.5, double maxSpeed = 0.5)
+	virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, uint size = 4, uint decay = 3, double minSpeed = 0.5, double maxSpeed = 0.5)
 	{
 		meteorCount = meteors;
 		meteorSize = size;
@@ -102,7 +103,7 @@ public:
 		bLeft[iMeteor] = !bLeft[iMeteor];
 	}
 
-	virtual void Draw(std::shared_ptr<LEDStripGFX> pGFX)
+	virtual void Draw(std::shared_ptr<GFXBase> pGFX)
 	{
 		static CHSV hsv;
 		hsv.val = 255;
@@ -169,7 +170,7 @@ class MeteorEffect : public LEDStripEffect
 {
   private:
 	MeteorChannel   _Meteors[NUM_CHANNELS];
-    std::shared_ptr<LEDStripGFX> * _gfx;
+    std::shared_ptr<GFXBase> * _gfx;
 
 	int				_cMeteors;
 	uint8_t         _meteorSize;
@@ -188,7 +189,7 @@ class MeteorEffect : public LEDStripEffect
 		_meteorSpeedMax = maxSpeed;
     }
 
-    virtual bool Init(std::shared_ptr<LEDStripGFX> gfx[NUM_CHANNELS])	
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])	
     {
         _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))

@@ -76,9 +76,9 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          25   // Update ONLY this to increment the version number
+#define FLASH_VERSION          26   // Update ONLY this to increment the version number
 
-#ifndef USESTRIP                    // We support strips by default unless specifically defined out
+#ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
 #endif
 
@@ -422,11 +422,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 
     #define LED_PIN0        26
+    
     #define NUM_CHANNELS    1
+
     #define RING_SIZE_0     24    
     #define BONUS_PIXELS    0
-    #define MATRIX_WIDTH    48
-    #define MATRIX_HEIGHT   16
+    #define MATRIX_WIDTH    144
+    #define MATRIX_HEIGHT   1
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
     #define NUM_BANDS       16

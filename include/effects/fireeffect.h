@@ -371,7 +371,7 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<LEDStripGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)malloc(sizeof(float) * _cLEDs);

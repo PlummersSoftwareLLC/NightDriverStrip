@@ -54,6 +54,8 @@ const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
 const uint8_t kDefaultBrightness = (100*255)/100;        // full (100%) brightness
 const rgb24   defaultBackgroundColor = {0x40, 0, 0};
 
+void StartMatrix();
+
 class LEDMatrixGFX : public GFXBase
 {
 private:

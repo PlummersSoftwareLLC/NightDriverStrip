@@ -39,4 +39,8 @@
   SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
   SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(titleLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
 
+void StartMatrix()
+{
+  matrix.begin();
+}
 #endif

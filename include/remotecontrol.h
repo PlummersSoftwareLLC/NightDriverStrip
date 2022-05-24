@@ -39,7 +39,7 @@
 #if ENABLE_REMOTE
 
 //extern RemoteDebug Debug;
-extern std::unique_ptr<EffectManager> g_pEffectManager;
+extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 #define	key24  true
 #define	key44  false
@@ -234,17 +234,17 @@ class RemoteControl
         else if (IR_SMOOTH == result)
         {
             g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->SetInterval(EffectManager::csSmoothButtonSpeed);
+            g_pEffectManager->SetInterval(EffectManager<GFXBase>::csSmoothButtonSpeed);
         }
         else if (IR_FADE == result)
         {
             g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->SetInterval(EffectManager::csSmoothButtonSpeed);
+            g_pEffectManager->SetInterval(EffectManager<GFXBase>::csSmoothButtonSpeed);
         }
         else if (IR_FLASH == result)
         {
             g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->SetCurrentEffectIndex(EffectManager::FireEffectIndex);
+            g_pEffectManager->SetCurrentEffectIndex(EffectManager<GFXBase>::FireEffectIndex);
         }
         else if (IR_STROBE == result)
         {

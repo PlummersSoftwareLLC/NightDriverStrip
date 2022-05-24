@@ -29,7 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                            // CONFIG and global headers
-#include "ledstripgfx.h"
+#include "gfxbase.h"
 #include "ledbuffer.h"                          // For g_apBufferManager type
 #include "effects/effectmanager.h"              // So we can display cur effect
 #include "Bounce2.h"

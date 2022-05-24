@@ -30,8 +30,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "ledstripgfx.h"
-
+#include "gfxbase.h"
 DEFINE_GRADIENT_PALETTE( vu_gpGreen ) 
 {
       0,     0,   4,   0,   // near black green

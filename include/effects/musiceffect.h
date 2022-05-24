@@ -39,6 +39,7 @@
 #include "globals.h"
 #include "ledstripeffect.h" 
 #include "faneffects.h"
+#include "gfxbase.h"
 
 extern DRAM_ATTR AppTime g_AppTime;
 
@@ -168,7 +169,7 @@ class BeatEffect : public LEDStripEffect
 
 class ChannelBeatEffect : public BeatEffect
 {
-    std::shared_ptr<LEDStripGFX> * _gfx;
+    std::shared_ptr<GFXBase> * _gfx;
 
   public:
 
@@ -193,7 +194,7 @@ class ChannelBeatEffect : public BeatEffect
     }
 
 
-    virtual bool Init(std::shared_ptr<LEDStripGFX> gfx[NUM_CHANNELS])	
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])	
     {
         _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))

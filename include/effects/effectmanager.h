@@ -42,8 +42,8 @@
 #include <vector>
 #include <math.h>
 #include "colorutils.h"
-#include "ledstripgfx.h"
 #include "ledstripeffect.h"
+
 #include "globals.h"
 #include "misceffects.h"
 
@@ -64,7 +64,7 @@ std::unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 // 
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
-class EffectManager
+template <typename GFXTYPE> class EffectManager
 {
 	LEDStripEffect ** _ppEffects;
 	size_t            _cEffects;
@@ -76,7 +76,7 @@ class EffectManager
 	bool             _bPlayAll;
 
 	std::unique_ptr<bool []> _abEffectEnabled;
-	std::shared_ptr<LEDStripGFX> * _gfx;
+	std::shared_ptr<GFXTYPE> * _gfx;
 	std::unique_ptr<LEDStripEffect> _pRemoteEffect;
 
 public:
@@ -84,7 +84,7 @@ public:
 	static const uint csFadeButtonSpeed = 15 * 1000;
 	static const uint csSmoothButtonSpeed = 60 * 1000;
 
-	EffectManager(LEDStripEffect ** pEffects, size_t cEffects, std::shared_ptr<LEDStripGFX> * gfx)
+	EffectManager(LEDStripEffect ** pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> * gfx)
 		  : _ppEffects(pEffects),
 	  	    _cEffects(cEffects),
 			_cEnabled(0),
@@ -106,7 +106,7 @@ public:
 		ClearRemoteColor();
 	}
 
-	std::shared_ptr<LEDStripGFX> operator [](size_t index)
+	std::shared_ptr<GFXTYPE> operator [](size_t index)
 	{
 		return _gfx[index];
 	}

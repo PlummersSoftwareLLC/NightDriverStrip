@@ -113,4 +113,12 @@ class GFXBase : public Adafruit_GFX
       setPixel(x, y, color);
     }
 
+    inline virtual void ScrollLeft()
+    {
+      for (int i = 0; i < NUM_LEDS - 1; i++)
+      {
+        setPixel(i, getPixel(i+1));
+      }
+    }
+
 };
