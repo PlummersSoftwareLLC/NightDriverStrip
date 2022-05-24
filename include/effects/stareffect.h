@@ -513,7 +513,7 @@ public:
 		return "Twinkle";
 	}
 
-    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<LEDStripGFX> gfx[NUM_CHANNELS])
 	{
         LEDStripEffect::Init(gfx);
 		for (int i = 0; i < NUM_TWINKLES; i++)

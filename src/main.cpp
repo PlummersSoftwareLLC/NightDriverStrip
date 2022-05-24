@@ -210,7 +210,7 @@ DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started
 DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
 
-DRAM_ATTR std::shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];            // Each LED strip gets its own channel
+DRAM_ATTR std::shared_ptr<LEDStripGFX>     g_pStrands[NUM_CHANNELS];            // Each LED strip gets its own channel
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];     // Each channel has its own buffer
 DRAM_ATTR std::unique_ptr<EffectManager>    g_pEffectManager;                    // The one and only global effect manager
 DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
@@ -559,7 +559,7 @@ void setup()
     // Initialize the strand controllers depending on how many channels we have
 
     for (int i = 0; i < NUM_CHANNELS; i++)
-        g_pStrands[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        g_pStrands[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram();

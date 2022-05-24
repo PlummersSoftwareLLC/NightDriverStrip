@@ -321,7 +321,7 @@ class RingParticle : public FadingColoredObject
 { 
   protected:
 
-    std::shared_ptr<LEDMatrixGFX> * _pGFX;
+    std::shared_ptr<LEDStripGFX> * _pGFX;
     int             _iInsulator;
     int             _iRing;
     float           _ignitionTime;
@@ -329,7 +329,7 @@ class RingParticle : public FadingColoredObject
 
   public:
 
-    RingParticle(std::shared_ptr<LEDMatrixGFX> * pGFX, int iInsulator, int iRing, CRGB color, float ignitionTime = 0.0f, float fadeTime = 1.0f)
+    RingParticle(std::shared_ptr<LEDStripGFX> * pGFX, int iInsulator, int iRing, CRGB color, float ignitionTime = 0.0f, float fadeTime = 1.0f)
       :  FadingColoredObject(color),
          _pGFX(pGFX),
          _iInsulator(iInsulator),
@@ -482,7 +482,7 @@ class SpinningPaletteRingParticle : public FadingObject
 { 
   protected:
 
-          std::shared_ptr<LEDMatrixGFX> * _pGFX;
+          std::shared_ptr<LEDStripGFX> * _pGFX;
           int             _iInsulator;
           int             _iRing;
     const CRGBPalette256  _palette;
@@ -504,7 +504,7 @@ class SpinningPaletteRingParticle : public FadingObject
   public:
 
     SpinningPaletteRingParticle(
-                  std::shared_ptr<LEDMatrixGFX> * pGFX, 
+                  std::shared_ptr<LEDStripGFX> * pGFX, 
                   int                    iInsulator, 
                   int                    iRing, 
                   const CRGBPalette256 & palette, 
@@ -613,7 +613,7 @@ class HotWhiteRingParticle : public FadingObject
 { 
   protected:
 
-    std::shared_ptr<LEDMatrixGFX> * _pGFX;
+    std::shared_ptr<LEDStripGFX> * _pGFX;
     int             _iInsulator;
     int             _iRing;
     float           _ignitionTime;
@@ -621,7 +621,7 @@ class HotWhiteRingParticle : public FadingObject
 
   public:
 
-    HotWhiteRingParticle(std::shared_ptr<LEDMatrixGFX> * pGFX, int iInsulator, int iRing, float ignitionTime = 0.25f, float fadeTime = 1.0f)
+    HotWhiteRingParticle(std::shared_ptr<LEDStripGFX> * pGFX, int iInsulator, int iRing, float ignitionTime = 0.25f, float fadeTime = 1.0f)
       :  _pGFX(pGFX),
          _iInsulator(iInsulator),
          _iRing(iRing),

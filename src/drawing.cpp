@@ -43,8 +43,8 @@
 extern std::mutex         g_buffer_mutex;
 
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
-extern DRAM_ATTR std::unique_ptr<LEDMatrixGFX []>  g_aStrands;
-extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];        
+extern DRAM_ATTR std::unique_ptr<LEDStripGFX []>  g_aStrands;
+extern DRAM_ATTR std::shared_ptr<LEDStripGFX>     g_pStrands[NUM_CHANNELS];        
 extern DRAM_ATTR std::unique_ptr<EffectManager> g_pEffectManager;
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;

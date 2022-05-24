@@ -52,7 +52,7 @@
 // Externals
 //
 
-extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<LEDStripGFX> g_pStrands[NUM_CHANNELS];
 
 // Palettes
 //

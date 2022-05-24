@@ -30,7 +30,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "ledmatrixgfx.h"                   // For LED drawing and color code
+#include "ledstripgfx.h"
 
 DEFINE_GRADIENT_PALETTE( vu_gpGreen ) 
 {
@@ -66,7 +66,7 @@ CRGBPalette256 bluesky_pal = bluesky_gp;
 //
 // These tables can't go in the .H file so we have this .CPP file for them instead
 
-const byte LEDMatrixGFX::gamma5[] =
+const byte GFXBase::gamma5[] =
 {
     0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b,
     0x0e, 0x11, 0x14, 0x18, 0x1d, 0x22, 0x28, 0x2e,
@@ -74,7 +74,7 @@ const byte LEDMatrixGFX::gamma5[] =
     0x89, 0x97, 0xa6, 0xb6, 0xc7, 0xd9, 0xeb, 0xff
 };
 
-const byte LEDMatrixGFX::gamma6[] =
+const byte GFXBase::gamma6[] =
 {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
     0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x10, 0x12, 0x13,

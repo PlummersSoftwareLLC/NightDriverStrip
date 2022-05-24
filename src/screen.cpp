@@ -29,7 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                            // CONFIG and global headers
-#include "ledmatrixgfx.h"                       // Req'd for drawing types
+#include "ledstripgfx.h"
 #include "ledbuffer.h"                          // For g_apBufferManager type
 #include "effects/effectmanager.h"              // So we can display cur effect
 #include "Bounce2.h"
@@ -48,7 +48,7 @@ uint32_t g_Watts;
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C * g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
 
-extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<LEDStripGFX> g_pStrands[NUM_CHANNELS];
 
 #if USE_LCD
     Adafruit_ILI9341 * g_pDisplay;

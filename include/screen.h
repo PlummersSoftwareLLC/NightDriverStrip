@@ -31,7 +31,7 @@
 #pragma once
 
 #include "globals.h"
-#include "ledmatrixgfx.h"
+#include "ledstripgfx.h"
 #include "freefonts.h"
 #include <mutex>
 

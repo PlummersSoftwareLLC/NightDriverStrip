@@ -37,7 +37,7 @@
 #include <memory>
 #include <iostream>
 
-#include "ledmatrixgfx.h"
+#include "ledstripgfx.h"
 
 using namespace std;
 
@@ -100,7 +100,7 @@ class LEDBuffer
 {
   public:
   
-     std::shared_ptr<LEDMatrixGFX> _pStrand;
+     std::shared_ptr<LEDStripGFX> _pStrand;
 
   private:
     
@@ -111,7 +111,7 @@ class LEDBuffer
    
   public:
 
-    explicit LEDBuffer(std::shared_ptr<LEDMatrixGFX> pStrand) : 
+    explicit LEDBuffer(std::shared_ptr<LEDStripGFX> pStrand) : 
                  _pStrand(pStrand),
                  _pixelCount(0),
                  _timeStampMicroseconds(0),
@@ -234,7 +234,7 @@ class LEDBufferManager
    
   public:
 
-    LEDBufferManager(uint32_t cBuffers, std::shared_ptr<LEDMatrixGFX> pGFX)
+    LEDBufferManager(uint32_t cBuffers, std::shared_ptr<LEDStripGFX> pGFX)
      : _ppBuffers(std::make_unique<std::shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
        _iNextBuffer(0),
        _iLastBuffer(0),

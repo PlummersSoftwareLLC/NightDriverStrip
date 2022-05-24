@@ -59,7 +59,7 @@ class LEDStripEffect
 	size_t _cLEDs;
 	String _friendlyName;
 
-    std::shared_ptr<LEDMatrixGFX> _GFX[NUM_CHANNELS];
+    std::shared_ptr<LEDStripGFX> _GFX[NUM_CHANNELS];
 
     inline static double randomDouble(double lower, double upper)
     {
@@ -79,7 +79,7 @@ class LEDStripEffect
 	{
 	}
 
-    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])				// There are up to 8 channel in play per effect and when we
+    virtual bool Init(std::shared_ptr<LEDStripGFX> gfx[NUM_CHANNELS])				// There are up to 8 channel in play per effect and when we
     {																//   start up, we are given copies to their graphics interfaces
         for (int i = 0; i < NUM_CHANNELS; i++)						//   so that we can call them directly later from other calls
         {

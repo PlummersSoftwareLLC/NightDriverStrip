@@ -58,7 +58,7 @@ class DoublePaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])	
+    virtual bool Init(std::shared_ptr<LEDStripGFX> gfx[NUM_CHANNELS])	
     {
         LEDStripEffect::Init(gfx);
         if (!_PaletteEffect1.Init(gfx) || !_PaletteEffect2.Init(gfx))

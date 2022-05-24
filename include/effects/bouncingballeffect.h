@@ -92,7 +92,7 @@ private:
 	{
 	}
 
-    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<LEDStripGFX> gfx[NUM_CHANNELS])
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
