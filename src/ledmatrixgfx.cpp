@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        drawing.h
+// File:        ledmatrixgfx.cpp
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -22,10 +22,21 @@
 //
 // Description:
 //
-//    Functions exported from Drawing.cpp
+//    Code for handling HUB75 matrix panels
 //
-// History:     May-11-2021         Davepl      Commented
+// History:     May-24-2021         Davepl      Commented
 //
 //---------------------------------------------------------------------------
 
-void IRAM_ATTR DrawLoopTaskEntry(void *);
+#include "gfxbase.h"
+#include "globals.h"
+
+#ifdef USEMATRIX
+  #include <SmartMatrix.h>
+  #include "ledmatrixgfx.h"
+
+  SMARTMATRIX_ALLOCATE_BUFFERS(matrix, kMatrixWidth, kMatrixHeight, kRefreshDepth, kDmaBufferRows, kPanelType, kMatrixOptions);
+  SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
+  SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(titleLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
+
+#endif

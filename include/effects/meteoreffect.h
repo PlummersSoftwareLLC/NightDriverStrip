@@ -114,7 +114,7 @@ public:
             {
                 CRGB c = pGFX->getPixel(j, 0);
                 c.fadeToBlackBy(meteorTrailDecay);
-                pGFX->drawPixel(j, c);
+                pGFX->setPixel(j, c);
             }
         }
 
@@ -156,7 +156,9 @@ public:
 					hsv.hue = hue[i];
 					hsv2rgb_rainbow(hsv, rgb);
 					int x = iPos[i] - j;
-                    nblend(pGFX->GetLEDBuffer()[x], rgb, 75);						
+					CRGB c = pGFX->getPixel(x);
+					nblend(c, rgb , 75);
+					pGFX->setPixel(x, c);
 				}
 			}
 		}

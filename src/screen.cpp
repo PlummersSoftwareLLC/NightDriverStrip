@@ -48,8 +48,6 @@ uint32_t g_Watts;
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C * g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
 
-extern DRAM_ATTR std::shared_ptr<LEDStripGFX> g_pStrands[NUM_CHANNELS];
-
 #if USE_LCD
     Adafruit_ILI9341 * g_pDisplay;
 #endif
@@ -122,8 +120,6 @@ void IRAM_ATTR UpdateScreen()
         Screen::setTextSize(Screen::SMALL);
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
-
-        auto w = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount() )/ 1000;
 
         //snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, w);
         Screen::setCursor(0, 0);

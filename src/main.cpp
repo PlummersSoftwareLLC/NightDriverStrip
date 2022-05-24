@@ -606,7 +606,9 @@ void setup()
 #elif NUM_CHANNELS == 1
     debugI("Adding %d LEDs to FastLED.", g_pStrands[0]->GetLEDCount());
     FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), 3*144);
+    
     FastLED[0].setLeds(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
+    
     FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
     pinMode(LED_PIN0, OUTPUT);
 #endif

@@ -278,14 +278,13 @@ class TwinkleEffect : public LEDStripEffect
 
 	virtual void Draw()
 	{
-		CRGB * pPixels = _GFX[0]->GetLEDBuffer();
 		EVERY_N_MILLISECONDS(_updateSpeed)
 		{
 			if (litPixels.size() > _countToDraw)
 			{
 				size_t i = litPixels.back();
 				litPixels.pop_back();
-				pPixels[i] = CRGB::Black;
+				_GFX[0]->setPixel(i, CRGB::Black);
 			}
 		
 			// Pick a random pixel and put it in the TOP slot
@@ -293,7 +292,7 @@ class TwinkleEffect : public LEDStripEffect
 			for (int iPass = 0; iPass < NUM_LEDS * 10; iPass++)
 			{
 				size_t i = random(0, NUM_LEDS);
-				if (pPixels[i] != CRGB(0,0,0))
+				if (getPixel(i) != CRGB(0,0,0))
 					continue;
 				iNew = i;
 				break;
@@ -306,14 +305,7 @@ class TwinkleEffect : public LEDStripEffect
 			}
 			
 			assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
-			pPixels[iNew] = TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))];
-
-			if (pPixels[iNew] == CRGB(0,0,0))
-			{
-				debugI("Just set pixel %d to %d,%d,%d but shows as black", iNew, pPixels[iNew].r, pPixels[iNew].g, pPixels[iNew].b );
-			}
-			
-			
+			setPixel(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
 			litPixels.push_front(iNew);
 		}
 

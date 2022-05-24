@@ -407,20 +407,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                 debugW("Nonzero channel for clock not currently supported, but received: %d\n", channel16);
             }
 
-            uint64_t seconds      = ULONGFromMemory(&payloadData[4]);
-            uint64_t micros       = ULONGFromMemory(&payloadData[12]);
-            
-            timeval tvNew;
-            tvNew.tv_sec = seconds;
-            tvNew.tv_usec = micros;
-            
-            timeval tvOld;
-            gettimeofday(&tvOld, nullptr);
-            
-            double dOld = tvOld.tv_sec + (tvOld.tv_usec / (double) MICROS_PER_SECOND);
-            double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
-            auto   delta = abs(dNew - dOld);
-
             return true;
         }
 

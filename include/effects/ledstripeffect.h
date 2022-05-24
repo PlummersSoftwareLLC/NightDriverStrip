@@ -166,7 +166,7 @@ class LEDStripEffect
 		{
 			CRGB crgb = _GFX[i]->getPixel(pixel);
 			crgb.fadeToBlackBy(fadeValue);
-        	_GFX[i]->GetLEDBuffer()[pixel] = crgb;
+			_GFX[i]->setPixel(pixel, crgb);
 		}
 	}
 
@@ -189,8 +189,8 @@ class LEDStripEffect
 	inline void setPixel(int pixel, uint8_t r, uint8_t g, uint8_t b) const
 	{
 		#if STRAND && MIRROR_ALL_PIXELS
-            _GFX[0]->drawPixel(STRAND_LEDS/2 + pixel, CRGB(r, g, b));
-            _GFX[0]->drawPixel(STRAND_LEDS/2 - pixel, CRGB(r, g, b));
+            _GFX[0]->setPixel(STRAND_LEDS/2 + pixel, CRGB(r, g, b));
+            _GFX[0]->setPixel(STRAND_LEDS/2 - pixel, CRGB(r, g, b));
 		#else
 			if (pixel < 0 || pixel >= _cLEDs)
 			{

@@ -52,7 +52,7 @@
 
 
 
-    #pragma message "MatrixHardware: Custom Wrover Kit wiring"
+    // #pragma message "MatrixHardware: Custom Wrover Kit wiring"
 
     // ADDX is output directly using GPIO
     #define CLKS_DURING_LATCH   0 

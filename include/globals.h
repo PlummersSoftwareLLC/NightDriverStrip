@@ -65,6 +65,7 @@
 //              Mar-16-2022  v023       Davepl      Response packet on socket with stats
 //              Mar-17-2022  v024       Davepl      Catchup clock to server when in future
 //              May-17-2022  v025       Davepl      After merge of RepsonsePacket into main
+//              May-24-2022  v026       Davepl      Adding BaseGFX/LEDMatrixGFX/LEDStripGFX
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -76,6 +77,10 @@
 // If you know a cleaner way, please improve this!
 
 #define FLASH_VERSION          25   // Update ONLY this to increment the version number
+
+#ifndef USESTRIP                    // We support strips by default unless specifically defined out
+#define USESTRIP 1
+#endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
 #define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic
@@ -876,8 +881,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define COLOR_ORDER EOrder::RGB
 #endif
 
-#ifdef MESMERIZER
+#ifdef USEMATRIX
 #include "MatrixHardware_ESP32_Custom.h"
+#define SM_INTERNAL     // Silence build messages from their header
 #include <SmartMatrix.h>
 #endif
 

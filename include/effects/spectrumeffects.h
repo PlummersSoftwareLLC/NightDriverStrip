@@ -115,8 +115,8 @@ class VUMeterEffect : public LEDStripEffect
         auto pGFXChannel = _GFX[0];
 
 		int xHalf = pGFXChannel->width()/2;
-		pGFXChannel->drawPixel(xHalf-i-1, yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
-		pGFXChannel->drawPixel(xHalf+i,   yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
+		pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
+		pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
     }
 
     // DrawVUMeter
@@ -353,7 +353,7 @@ class WaveformEffect : public VUMeterEffect
 
             }
                 
-            _GFX[0]->drawPixel(x, y, color);
+            _GFX[0]->setPixel(x, y, color);
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
 
@@ -387,8 +387,8 @@ class GhostWave : public WaveformEffect
         {
             for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
             {
-                graphics->drawPixel(x, y, graphics->getPixel(x+1, y));
-                graphics->drawPixel(MATRIX_WIDTH-x-1, y, graphics->getPixel(MATRIX_WIDTH-x-2, y));
+                graphics->setPixel(x, y, graphics->getPixel(x+1, y));
+                graphics->setPixel(MATRIX_WIDTH-x-1, y, graphics->getPixel(MATRIX_WIDTH-x-2, y));
             }
         }
     

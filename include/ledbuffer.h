@@ -210,7 +210,7 @@ class LEDBuffer
         {
             int x = iPixel % _pStrand->width();
             int y = iPixel / _pStrand->width();
-            _pStrand->drawPixel(x, y, _leds[iPixel]);
+            _pStrand->setPixel(x, y, _leds[iPixel]);
             iPixel++;
             if (iPixel >= _pixelCount)
                 break;
