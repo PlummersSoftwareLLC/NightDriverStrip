@@ -32,12 +32,14 @@
 #include "globals.h"
 
 #ifdef USEMATRIX
+
   #include <SmartMatrix.h>
   #include "ledmatrixgfx.h"
+  
+  SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer(kMatrixWidth, kMatrixHeight);
+  SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh; 
+  SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
 
-  SMARTMATRIX_ALLOCATE_BUFFERS(matrix, kMatrixWidth, kMatrixHeight, kRefreshDepth, kDmaBufferRows, kPanelType, kMatrixOptions);
-  SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(backgroundLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
-  SMARTMATRIX_ALLOCATE_BACKGROUND_LAYER(titleLayer, kMatrixWidth, kMatrixHeight, COLOR_DEPTH, kBackgroundLayerOptions);
 
 void StartMatrix()
 {
@@ -45,10 +47,17 @@ void StartMatrix()
     matrix.begin();
 
     backgroundLayer.fillScreen(rgb24(0, 0, 64));
-    backgroundLayer.setFont(gohufont11b);
-    backgroundLayer.drawString(0, kMatrixHeight / 2 - 6, rgb24(255,255,255), "NightDriver");
+    backgroundLayer.setFont(font5x7);
+    backgroundLayer.drawString(8, kMatrixHeight / 2 - 6, rgb24(255,255,255), "NightDriver");
     backgroundLayer.swapBuffers(false);    
 
     matrix.setBrightness(255);
 }
+
+void UpdateMatrix()
+{
+    backgroundLayer.swapBuffers(false);    
+    matrix.setBrightness(255);
+}
+
 #endif

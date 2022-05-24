@@ -54,12 +54,22 @@ const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
 const uint8_t kDefaultBrightness = (100*255)/100;        // full (100%) brightness
 const rgb24   defaultBackgroundColor = {0x40, 0, 0};
 
+extern SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh; 
+extern SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
+
+typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;                                                                 
+extern SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
+
+ 
 void StartMatrix();
+void UpdateMatrix();
 
 class LEDMatrixGFX : public GFXBase
 {
 private:
   
+    CRGB * leds = nullptr;
+    
 public:
 
   LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
@@ -78,7 +88,9 @@ public:
   inline CRGB getPixel(int16_t x) const
   {
     if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
-      return CRGB::Orange;
+    {
+      return CRGB::Yellow;
+    }
     else
     {
       throw std::runtime_error("Invalid index in getPixel: " + x);

@@ -176,6 +176,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             debugV("Already drew from WiFi so not drawing locally this frame.");
         }
 
+#if USEMATRIX
+        UpdateMatrix();
+#endif
 
 #if USESTRIP
         // If we've drawn anything from either source, we can now show it
