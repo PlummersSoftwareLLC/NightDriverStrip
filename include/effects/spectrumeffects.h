@@ -68,6 +68,11 @@ class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual Pa
     {
     }
 
+    virtual const char * FriendlyName() const
+    {
+        return "Insulator Spectrum";
+    }
+    
     virtual void Draw()
     {
         //fillSolidOnAllChannels(CRGB::Black);
@@ -273,6 +278,11 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
     {
     }
 
+    virtual const char * FriendlyName() const
+    {
+        return "Spectrum Analyzer";
+    }
+    
     virtual void Draw()
     {
         auto pGFXChannel = _GFX[0];

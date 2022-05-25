@@ -107,6 +107,11 @@ class GFXBase : public Adafruit_GFX
         return (y * MATRIX_WIDTH) + x; 
     }
     
+    virtual void Clear()
+    {
+      memset(_pLEDs, 0, sizeof(CRGB) * _width * _height);
+    }
+    
     virtual uint16_t getPixelIndex(int16_t x, int16_t y)
     {
       return y * _width + x;
@@ -150,6 +155,11 @@ class GFXBase : public Adafruit_GFX
     {
         if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
             _pLEDs[getPixelIndex(x, y)] = color;
+    }
+
+    inline virtual void setPixel(int16_t x, int r, int g, int b)
+    {
+        setPixel(x, CRGB(r,g,b));
     }
 
     inline virtual void setPixel(int x, CRGB color)
@@ -214,4 +224,6 @@ class GFXBase : public Adafruit_GFX
           for (int i = 0; i < NUM_CHANNELS; i++)
               _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c2 : c2;  
     }
+    
+    
 };

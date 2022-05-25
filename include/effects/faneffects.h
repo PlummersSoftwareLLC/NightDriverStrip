@@ -282,7 +282,7 @@ class FanBeatEffect : public LEDStripEffect
         CRGB c = CHSV(random(0, 255), 255, 255);
         for (int i = NUM_FANS * FAN_SIZE; i < NUM_LEDS; i++)
         {
-          setPixel(i, c);
+          setPixelOnAllChannels(i, c);
         }
 
     }

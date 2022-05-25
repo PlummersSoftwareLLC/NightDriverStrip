@@ -209,7 +209,7 @@ class ChannelBeatEffect : public BeatEffect
       lastBeat = g_AppTime.CurrentTime();
 
       CRGB b = CHSV(random(0, 255), 255, 80);
-      setPixels(0, NUM_LEDS, b, true);
+      setPixelsOnAllChannels(0, NUM_LEDS, b, true);
 
       // Color is additive, so we start with 200 V instead of 255 so that if the same beat in the same color iis replayed in the same insulator, it gets brighter
 
@@ -276,7 +276,7 @@ class SimpleColorBeat : public BeatEffectBase, protected virtual LEDStripEffect
         BeatEffectBase::Draw();
 
         CRGB c = CRGB::Blue * gVURatio * g_AppTime.DeltaTime() * 0.75;
-        setPixels(0, NUM_LEDS, c, true);
+        setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
         LEDStripEffect::fadeAllChannelsToBlackBy(min(255.0,1000 * g_AppTime.DeltaTime()));
         delay(1);

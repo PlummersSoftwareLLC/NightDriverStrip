@@ -329,9 +329,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
 
-            double dServer = seconds + (micros / (double) MICROS_PER_SECOND);
-            double delta = abs(dServer - AppTime::CurrentTime());
-           
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
                    channel16, 
                    length32, 

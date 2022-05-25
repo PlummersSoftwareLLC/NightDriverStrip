@@ -49,25 +49,25 @@
 class SimpleRainbowTestEffect : public LEDStripEffect
 {
   private:
-	uint8_t		_EveryNth;
-	uint8_t     _SpeedDivisor;
+    uint8_t		_EveryNth;
+    uint8_t     _SpeedDivisor;
 
   public:
   
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
-	  : LEDStripEffect("Simple Rainbow"),
-		  _EveryNth(everyNthPixel),
-	    _SpeedDivisor(speedDivisor)
-	{
-		debugV("SimpleRainbowTestEffect constructor");
-	}
+      : LEDStripEffect("Simple Rainbow"),
+          _EveryNth(everyNthPixel),
+        _SpeedDivisor(speedDivisor)
+    {
+        debugV("SimpleRainbowTestEffect constructor");
+    }
 
-	virtual void Draw() 
+    virtual void Draw() 
     {
         fillRainbowAllChannels(0, _cLEDs, beatsin16(4, 0, 256), 8, _EveryNth);
-		delay(10);
+        delay(10);
     }
-	
+    
     virtual const char * FriendlyName() const
     {
         return "Sample Effect";
@@ -81,35 +81,35 @@ class SimpleRainbowTestEffect : public LEDStripEffect
 class RainbowTwinkleEffect : public LEDStripEffect
 {
   private:
-	float _speedDivisor;
-	int   _deltaHue;
+    float _speedDivisor;
+    int   _deltaHue;
 
   public:
   
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-	  : LEDStripEffect("RainowFill Rainbow"),
-	    _speedDivisor(speedDivisor),
-		_deltaHue(deltaHue)
-	{
-		debugV("RainbowFill constructor");
-	}
+      : LEDStripEffect("RainowFill Rainbow"),
+        _speedDivisor(speedDivisor),
+        _deltaHue(deltaHue)
+    {
+        debugV("RainbowFill constructor");
+    }
 
-	virtual void Draw()
-	{
-		static float hue = 0.0f;
-		static unsigned long lastms = millis();
+    virtual void Draw()
+    {
+        static float hue = 0.0f;
+        static unsigned long lastms = millis();
 
-		unsigned long msElapsed = millis() - lastms;
-		lastms = millis();
+        unsigned long msElapsed = millis() - lastms;
+        lastms = millis();
 
-		hue += (float) msElapsed / _speedDivisor;
-		hue = fmod(hue, 256.0);
-		fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
+        hue += (float) msElapsed / _speedDivisor;
+        hue = fmod(hue, 256.0);
+        fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
 
-		if (random(0, 1) == 0)
-			setPixel(random(0, _cLEDs), CRGB::White);
-		delay(10);
-	}
+        if (random(0, 1) == 0)
+            setPixelOnAllChannels(random(0, _cLEDs), CRGB::White);
+        delay(10);
+    }
 
     virtual const char * FriendlyName() const
     {
@@ -128,32 +128,32 @@ class RainbowFillEffect : public LEDStripEffect
 
 protected:
 
-	float _speedDivisor;
-	int   _deltaHue;
+    float _speedDivisor;
+    int   _deltaHue;
 
   public:
-	
+    
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-	  : LEDStripEffect("RainowFill Rainbow"),
-	    _speedDivisor(speedDivisor),
-		_deltaHue(deltaHue)
-	{
-		debugV("RainbowFill constructor");
-	}
+      : LEDStripEffect("RainowFill Rainbow"),
+        _speedDivisor(speedDivisor),
+        _deltaHue(deltaHue)
+    {
+        debugV("RainbowFill constructor");
+    }
 
-	virtual void Draw()
-	{
-		static float hue = 0.0f;
-		static unsigned long lastms = millis();
+    virtual void Draw()
+    {
+        static float hue = 0.0f;
+        static unsigned long lastms = millis();
 
-		unsigned long msElapsed = millis() - lastms;
-		lastms = millis();
+        unsigned long msElapsed = millis() - lastms;
+        lastms = millis();
 
-		hue += (float) msElapsed / _speedDivisor;
-		hue = fmod(hue, 256.0);
-		fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
-		delay(10);
-	}
+        hue += (float) msElapsed / _speedDivisor;
+        hue = fmod(hue, 256.0);
+        fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
+        delay(10);
+    }
 
     virtual const char * FriendlyName() const
     {
@@ -172,24 +172,24 @@ class ColorFillEffect : public LEDStripEffect
 
 protected:
 
-	int _everyNth;
-	CRGB _color;
+    int _everyNth;
+    CRGB _color;
 
   public:
-	
+    
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
-	  : LEDStripEffect("Color Fill"),
-	    _everyNth(everyNth),
-		_color(color)
-	{
-		debugV("Color Fill constructor");
-	}
+      : LEDStripEffect("Color Fill"),
+        _everyNth(everyNth),
+        _color(color)
+    {
+        debugV("Color Fill constructor");
+    }
 
-	virtual void Draw()
-	{
-		fillSolidOnAllChannels(CRGB::Black);
-		fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
-	}
+    virtual void Draw()
+    {
+        fillSolidOnAllChannels(CRGB::Black);
+        fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
+    }
 
     virtual const char * FriendlyName() const
     {
@@ -201,33 +201,33 @@ class StatusEffect : public LEDStripEffect
 {
   protected:
 
-	int  _everyNth;
-	CRGB _color;
+    int  _everyNth;
+    CRGB _color;
 
   public:
-	
+    
     StatusEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
-	  : LEDStripEffect("Color Fill"),
-	    _everyNth(everyNth),
-		_color(color)
-	{
-		debugV("Status Fill constructor");
-	}
+      : LEDStripEffect("Color Fill"),
+        _everyNth(everyNth),
+        _color(color)
+    {
+        debugV("Status Fill constructor");
+    }
 
-	virtual void Draw()
-	{
-		CRGB color = _color;
+    virtual void Draw()
+    {
+        CRGB color = _color;
 
-		if (g_bUpdateStarted)
-			color = CRGB::Purple;
-		else if (!WiFi.isConnected())
-			color = CRGB::Red;
-		else if (!NTPTimeClient::HasClockBeenSet())
-			color = CRGB::Green;
+        if (g_bUpdateStarted)
+            color = CRGB::Purple;
+        else if (!WiFi.isConnected())
+            color = CRGB::Red;
+        else if (!NTPTimeClient::HasClockBeenSet())
+            color = CRGB::Green;
 
-		fillSolidOnAllChannels(CRGB::Black);
-		fillSolidOnAllChannels(color, 0, 0, _everyNth);
-	}
+        fillSolidOnAllChannels(CRGB::Black);
+        fillSolidOnAllChannels(color, 0, 0, _everyNth);
+    }
 
     virtual const char * FriendlyName() const
     {
@@ -246,10 +246,10 @@ static const CRGB TwinkleColors[] =
 #else
 static const CRGB TwinkleColors[] = 
 {
-	CRGB::Red,
-	CRGB::Green,
-	CRGB::Blue,
-	CRGB::White
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::White
 };
 #endif
 
@@ -257,73 +257,73 @@ class TwinkleEffect : public LEDStripEffect
 {
   protected:
 
-	int  _countToDraw;
-	int  _fadeFactor;
-	int  _updateSpeed;
+    int  _countToDraw;
+    int  _fadeFactor;
+    int  _updateSpeed;
 
   public:
-	
+    
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
-	  : LEDStripEffect("Twinkle"),
-	  	_countToDraw(countToDraw),
-		_fadeFactor(fadeFactor),
-		_updateSpeed(updateSpeed)
-	{
-	}
+      : LEDStripEffect("Twinkle"),
+          _countToDraw(countToDraw),
+        _fadeFactor(fadeFactor),
+        _updateSpeed(updateSpeed)
+    {
+    }
 
-	const int Count = 99;
-	int buffer[99] = { 0 };
+    const int Count = 99;
+    int buffer[99] = { 0 };
 
-	std::deque<size_t> litPixels;
+    std::deque<size_t> litPixels;
 
-	virtual void Draw()
-	{
-		EVERY_N_MILLISECONDS(_updateSpeed)
-		{
-			if (litPixels.size() > _countToDraw)
-			{
-				size_t i = litPixels.back();
-				litPixels.pop_back();
-				_GFX[0]->setPixel(i, CRGB::Black);
-			}
-		
-			// Pick a random pixel and put it in the TOP slot
-			int iNew = -1;
-			for (int iPass = 0; iPass < NUM_LEDS * 10; iPass++)
-			{
-				size_t i = random(0, NUM_LEDS);
-				if (getPixel(i) != CRGB(0,0,0))
-					continue;
-				iNew = i;
-				break;
-			}
-			if (iNew == -1)				// No empty slot could be found!
-			{	
-				litPixels.clear();
-				setAllOnAllChannels(0,0,0);
-				return;
-			}
-			
-			assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
-			setPixel(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
-			litPixels.push_front(iNew);
-		}
+    virtual void Draw()
+    {
+        EVERY_N_MILLISECONDS(_updateSpeed)
+        {
+            if (litPixels.size() > _countToDraw)
+            {
+                size_t i = litPixels.back();
+                litPixels.pop_back();
+                _GFX[0]->setPixel(i, CRGB::Black);
+            }
+        
+            // Pick a random pixel and put it in the TOP slot
+            int iNew = -1;
+            for (int iPass = 0; iPass < NUM_LEDS * 10; iPass++)
+            {
+                size_t i = random(0, NUM_LEDS);
+                if (_GFX[0]->getPixel(i) != CRGB(0,0,0))
+                    continue;
+                iNew = i;
+                break;
+            }
+            if (iNew == -1)				// No empty slot could be found!
+            {	
+                litPixels.clear();
+                setAllOnAllChannels(0,0,0);
+                return;
+            }
+            
+            assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
+            setPixelOnAllChannels(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
+            litPixels.push_front(iNew);
+        }
 
-		EVERY_N_MILLISECONDS(20)
-		{
-			fadeToBlackBy(FastLED.leds(), NUM_LEDS, _fadeFactor);
-		}
-	}
+        EVERY_N_MILLISECONDS(20)
+        {
+            fadeToBlackBy(FastLED.leds(), NUM_LEDS, _fadeFactor);
+        }
+    }
 };
 
 class PoliceEffect : public LEDStripEffect
 {
-	typedef enum { INNERRED, OUTERRED, INNERBLUE, OUTERBLUE, MIXED, STROBE } lampStates;
-	const lampStates highestState = STROBE;
+    typedef enum { INNERRED, OUTERRED, INNERBLUE, OUTERBLUE, MIXED, STROBE } lampStates;
+    const lampStates highestState = STROBE;
 
-	virtual void Draw()
-	{
-		
+    virtual void Draw()
+    {
+        
 
-	}
+    }
 };

@@ -85,8 +85,8 @@ public:
             nblend(c, ColorFromPalette(RainbowColors_p, beatsin16(_colorSpeed, 0, 256)), 128);
         }
 
-        setPixel(xHalf - i - 1, c);
-        setPixel(xHalf + i, c);
+        setPixelOnAllChannels(xHalf - i - 1, c);
+        setPixelOnAllChannels(xHalf + i, c);
     }
 
     // DrawVURing - Draws a VU meter ring in the specified ring, rotated by the given amount
@@ -164,13 +164,13 @@ class VUFlameEffect : public LEDStripEffect
     uint      _frameRate;
 
 
-    void setPixelWithMirror(int Pixel, CRGB temperature)
+    void setPixelOnAllChannelsWithMirror(int Pixel, CRGB temperature)
     {
         if (_Reversed || _Mirrored)
-            setPixel(Pixel, temperature);
+            setPixelOnAllChannels(Pixel, temperature);
         
         if (!_Reversed || _Mirrored)
-            setPixel(_cLEDs - 1 - Pixel, temperature);
+            setPixelOnAllChannels(_cLEDs - 1 - Pixel, temperature);
     }
 
     // setPixelHeatColor
@@ -231,9 +231,9 @@ class VUFlameEffect : public LEDStripEffect
             }
         }
         if (!_Mirrored)
-            setPixel(Pixel, c);
+            setPixelOnAllChannels(Pixel, c);
         else
-            setPixelWithMirror(Pixel, c);
+            setPixelOnAllChannelsWithMirror(Pixel, c);
 	}    
 
     bool      _Reversed;
@@ -325,7 +325,7 @@ class SpectrumEffect : public LEDStripEffect
             int xStartPixel = (band * _cLEDs) / NUM_BANDS;
             int xLength = _cLEDs * min(1.0, 1.0) / NUM_BANDS;
             for (int xPixel = xStartPixel; xPixel < xStartPixel + xLength; xPixel++)
-                setPixel(xPixel, color);
+                setPixelOnAllChannels(xPixel, color);
         }
     }
 };

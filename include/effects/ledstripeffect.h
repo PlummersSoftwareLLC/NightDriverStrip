@@ -54,11 +54,10 @@ class LEDStripEffect
 {
   protected:
 
-	size_t _cLEDs;
-	String _friendlyName;
+    size_t _cLEDs;
+    String _friendlyName;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
-
     inline static double randomDouble(double lower, double upper)
     {
         double result = (lower + ((upper - lower) * rand()) / RAND_MAX);
@@ -67,156 +66,136 @@ class LEDStripEffect
 
   public:
 
-	LEDStripEffect(const char * pszName)
-	{
-		if (pszName)
-			_friendlyName = pszName;
-	}
+    LEDStripEffect(const char * pszName)
+    {
+        if (pszName)
+            _friendlyName = pszName;
+    }
 
-	virtual ~LEDStripEffect()
-	{
-	}
+    virtual ~LEDStripEffect()
+    {
+    }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])				// There are up to 8 channel in play per effect and when we
     {			
-		debugW("Init Init");													//   start up, we are given copies to their graphics interfaces
+        debugW("Init Init");													//   start up, we are given copies to their graphics interfaces
         for (int i = 0; i < NUM_CHANNELS; i++)						//   so that we can call them directly later from other calls
         {
             _GFX[i] = gfx[i];    
         }
-		debugW("Get LED COunt");
+        debugW("Get LED COunt");
         _cLEDs = _GFX[0]->GetLEDCount();   
-		debugW("Got LED COunt");
-		Serial.printf("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
-		return true;  
+        debugI("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
+        return true;  
     }
-	virtual void Draw() = 0;										// Your effect must implement these
-	
-	virtual const char *FriendlyName() const
-	{
-		if (_friendlyName.length() > 0)
-			return _friendlyName.c_str();
-		return "Unnamed Effect";
-	}
+    
+    virtual void Draw() = 0;										// Your effect must implement these
+    
+    virtual const char *FriendlyName() const = 0;
 
-	static inline CRGB RandomRainbowColor()
-	{
-		static const CRGB colors[] =
-			{
-				CRGB::Green,
-				CRGB::Red,
-				CRGB::Blue,
-				CRGB::Orange,
-				CRGB::Indigo,
-				CRGB::Violet
+    static inline CRGB RandomRainbowColor()
+    {
+        static const CRGB colors[] =
+            {
+                CRGB::Green,
+                CRGB::Red,
+                CRGB::Blue,
+                CRGB::Orange,
+                CRGB::Indigo,
+                CRGB::Violet
             };
-		int randomColorIndex = (int)randomDouble(0, ARRAYSIZE(colors));
-		return colors[randomColorIndex];
-	}
+        int randomColorIndex = (int)randomDouble(0, ARRAYSIZE(colors));
+        return colors[randomColorIndex];
+    }
 
-	static inline CRGB RandomSaturatedColor()
-	{
-		CRGB c;
-		c.setHSV((uint8_t)randomDouble(0, 255), 255, 255);
-		return c;
-	}
+    static inline CRGB RandomSaturatedColor()
+    {
+        CRGB c;
+        c.setHSV((uint8_t)randomDouble(0, 255), 255, 255);
+        return c;
+    }
 
-	void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0,  uint everyN = 1)
-	{
-		if (numToFill == 0)
-			numToFill = _cLEDs-iStart;
+    void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0,  uint everyN = 1)
+    {
+        if (numToFill == 0)
+            numToFill = _cLEDs-iStart;
 
-		if (iStart + numToFill > _cLEDs)
-		{
-			printf("Boundary Exceeded in FillRainbow");
-			return;
-		}
-			
-		for (int i = iStart; i < numToFill; i+= everyN)
-			setPixel(i, color);
-	}
+        if (iStart + numToFill > _cLEDs)
+        {
+            printf("Boundary Exceeded in FillRainbow");
+            return;
+        }
+            
+        for (int n = 0; n < NUM_CHANNELS; n++)
+        {            
+            for (int i = iStart; i < numToFill; i+= everyN)
+                _GFX[n]->setPixel(i, color);
+        }
+    }
 
-	void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1) const
-	{
-		if (iStart + numToFill > _cLEDs)
-		{
-			printf("Boundary Exceeded in FillRainbow");
-			return;
-		}
+    void ClearFrameOnAllChannels()
+    {
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            _GFX[i]->Clear();
+        }
+    }
+    
+    void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1) 
+    {
+        if (iStart + numToFill > _cLEDs)
+        {
+            printf("Boundary Exceeded in FillRainbow");
+            return;
+        }
 
-		CHSV hsv;
-		hsv.hue = initialhue;
-		hsv.val = 255;
-		hsv.sat = 240;
-		for (int i = 0; i < numToFill; i+=everyNth)
-		{
-			CRGB rgb;
-			hsv2rgb_rainbow(hsv, rgb);
-            setPixel(iStart + i, rgb);
-			hsv.hue += deltahue;
-			for (int q = 1; q < everyNth; q++)
-				setPixel(iStart + i + q, CRGB::Black);
-		}
-	}
+        CHSV hsv;
+        hsv.hue = initialhue;
+        hsv.val = 255;
+        hsv.sat = 240;
+        for (int i = 0; i < numToFill; i+=everyNth)
+        {
+            CRGB rgb;
+            hsv2rgb_rainbow(hsv, rgb);
+            setPixelOnAllChannels(iStart + i, rgb);
+            hsv.hue += deltahue;
+            for (int q = 1; q < everyNth; q++)
+                _GFX[q]->setPixel(iStart + i + q, CRGB::Black);
+        }
+    }
 
-	// Helper functions to make it easier to port common strip effects
+    inline void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const
+    {
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            CRGB crgb = _GFX[i]->getPixel(pixel);
+            crgb.fadeToBlackBy(fadeValue);
+            _GFX[i]->setPixel(pixel, crgb);
+        }
+    }
 
-	inline void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const
-	{
-		for (int i = 0; i < NUM_CHANNELS; i++)
-		{
-			CRGB crgb = _GFX[i]->getPixel(pixel);
-			crgb.fadeToBlackBy(fadeValue);
-			_GFX[i]->setPixel(pixel, crgb);
-		}
-	}
+    inline void fadeAllChannelsToBlackBy(uint8_t fadeValue) const
+    {
+        for (int i = 0; i < _cLEDs; i++)
+            fadePixelToBlackOnAllChannelsBy(i, fadeValue);
+    }
 
-	inline void fadeAllChannelsToBlackBy(uint8_t fadeValue) const
-	{
-		for (int i = 0; i < _cLEDs; i++)
-			fadePixelToBlackOnAllChannelsBy(i, fadeValue);
-	}
+    inline void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const
+    {
+        for (int n = 0; n < NUM_CHANNELS; n++)    
+            for (int i = 0; i < _cLEDs; i++)
+                _GFX[n]->setPixel(i, r, g, b);
+    }
 
-	inline void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const
-	{
-		for (int i = 0; i < _cLEDs; i++)
-			setPixel(i, r, g, b);
-	}
+    inline void setPixelOnAllChannels(int i, CRGB c)
+    {		
+        for (int i = 0; i < NUM_CHANNELS; i++)
+            _GFX[i]->setPixel(i, c);
+    }
 
-	// setPixel
-	//
-	// Takes the call and replays it on all 8 (or however many) of the spokes
-
-	inline void setPixel(int pixel, uint8_t r, uint8_t g, uint8_t b) const
-	{
-		#if STRAND && MIRROR_ALL_PIXELS
-            _GFX[0]->setPixel(STRAND_LEDS/2 + pixel, CRGB(r, g, b));
-            _GFX[0]->setPixel(STRAND_LEDS/2 - pixel, CRGB(r, g, b));
-		#else
-			if (pixel < 0 || pixel >= _cLEDs)
-			{
-				printf("Bad pixel index: %d\n", pixel);
-				return;
-			}
-			setPixels(pixel, 1, CRGB(r, g, b), false);
-		#endif
-	}
-
-	inline void setPixel(int pixel, const CRGB & color) const
-	{
-		setPixels(pixel, 1, color, false);
-	}
-
-	inline CRGB getPixel(int pixel) const
-	{
-		return _GFX[0]->getPixel(pixel, 0);
-	}
-
-	// setPixels - Draw pixels with floating point accuracy by dimming/fading the lead/exit pixels
-
-	inline void setPixels(float fPos, float count, CRGB c, bool bMerge = false) const
-	{		
-		for (int i = 0; i < NUM_CHANNELS; i++)
-			_GFX[i]->setPixels(fPos, count, c, bMerge);
-	}
+    inline void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const
+    {		
+        for (int i = 0; i < NUM_CHANNELS; i++)
+            _GFX[i]->setPixels(fPos, count, c, bMerge);
+    }
 };

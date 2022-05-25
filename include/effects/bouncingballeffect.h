@@ -142,7 +142,7 @@ private:
                 {
                     CRGB c = _GFX[0]->getPixel(j, 0);
                     c.fadeToBlackBy(10);
-                    setPixels(j, 1, c, false);
+                    setPixelsOnAllChannels(j, 1, c, false);
                 }
             }            
         }
@@ -164,9 +164,9 @@ private:
 			}
 
 			float position = Height[i] * (_cLength - 1) / StartHeight;
-			setPixels(position, _cBallSize, Colors[i]);
+			setPixelsOnAllChannels(position, _cBallSize, Colors[i]);
             if (_bMirrored)
-                setPixels(_cLength-1-position, _cBallSize, Colors[i], true);
+                setPixelsOnAllChannels(_cLength-1-position, _cBallSize, Colors[i], true);
         }
 	}
 };

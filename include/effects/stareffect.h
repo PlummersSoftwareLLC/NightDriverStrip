@@ -425,9 +425,9 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             {
                 if (randomDouble(0, 10)>2) 
                 {
-                    CRGB c = getPixel(j);
+                    CRGB c = _GFX[0]->getPixel(j);
                     c.fadeToBlackBy(3);
-                    setPixel(j, c);
+                    setPixelOnAllChannels(j, c);
                 }
             }
             fadeAllChannelsToBlackBy(1);
@@ -535,11 +535,11 @@ public:
         // If we had a valid pixel in slot 0, we can blank it now
 
         if (buffer[0] >= 0)
-            setPixel(buffer[0], 0, 0, 0);
+            setPixelsOnAllChannels(buffer[0], 0, 0, 0);
 
         // Pick a random pixel and put it in the TOP slot
         int iNew = (int) randomDouble(0, _cLEDs);
-        setPixel(iNew, RandomRainbowColor());
+        setPixelOnAllChannels(iNew, RandomRainbowColor());
         buffer[NUM_TWINKLES - 1] = iNew;
 	}
 };

@@ -166,9 +166,9 @@ class FireEffect : public LEDStripEffect
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
             int j = (!bReversed) ? i : LEDCount - 1 - i;
-            setPixels(j, 1, color, false);
+            setPixelsOnAllChannels(j, 1, color, false);
             if (bMirrored)
-                setPixels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
+                setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
         }
     }
 };
@@ -291,15 +291,15 @@ public:
         if (_Mirrored)
         {
             int middle = _cLEDs / 2;
-            setPixel(middle - Pixel, temperature);
-            setPixel(middle + Pixel, temperature);
+            setPixelOnAllChannels(middle - Pixel, temperature);
+            setPixelOnAllChannels(middle + Pixel, temperature);
         }
         else
         {
             if (_Reversed)
-                setPixel(_cLEDs - 1 - Pixel, temperature);
+                setPixelOnAllChannels(_cLEDs - 1 - Pixel, temperature);
             else
-                setPixel(Pixel, temperature);
+                setPixelOnAllChannels(Pixel, temperature);
         } 
     }
 
@@ -469,10 +469,10 @@ public:
     void setPixelWithMirror(int Pixel, CRGB temperature)
     {
         if (_Reversed || _Mirrored)
-            setPixel(Pixel, temperature);
+            setPixelOnAllChannels(Pixel, temperature);
         
         if (!_Reversed || _Mirrored)
-            setPixel(_cLEDs - 1 - Pixel, temperature);
+            setPixelOnAllChannels(_cLEDs - 1 - Pixel, temperature);
     }
 
 
@@ -589,9 +589,9 @@ class BaseFireEffect : public LEDStripEffect
             int avg = sum / cellsPerLED;
             CRGB color = MapHeatToColor(heat[avg]);
             int j = bReversed ? (LEDCount - 1 - i) : i;
-            setPixels(j, 1, color, true);
+            setPixelsOnAllChannels(j, 1, color, true);
             if (bMirrored)
-                setPixels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, true);
+                setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, true);
         }
     }
 };
