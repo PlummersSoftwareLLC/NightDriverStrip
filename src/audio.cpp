@@ -145,6 +145,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
 		if (g_bUpdateStarted)
 			delay(1000);
+		
+		delay(20);
 	}
 }
 #endif

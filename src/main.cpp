@@ -609,7 +609,7 @@ void setup()
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
 
     #if USEMATRIX
-        StartMatrix();
+        LEDMatrixGFX::StartMatrix();
     #endif
 
     #if USESTRIP

@@ -205,6 +205,10 @@ class LEDBuffer
         _timeStampMicroseconds = 0;
         _timeStampSeconds      = 0;
         
+        // BUGBUG I think this could be cpymem...
+
+        _pStrand->fillLeds(_leds.get());
+        /*
         int iPixel = 0; 
         for (int i = 0; i < _pStrand->width() * _pStrand->height(); i++)
         {
@@ -215,6 +219,7 @@ class LEDBuffer
             if (iPixel >= _pixelCount)
                 break;
         }
+        */
     }
 };
 

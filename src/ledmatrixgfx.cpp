@@ -35,18 +35,20 @@
 
   #include <SmartMatrix.h>
   #include "ledmatrixgfx.h"
-  
+    
+  SMLayerIndexed<SM_RGB, kIndexedLayerOptions> indexedLayer(kMatrixWidth, kMatrixHeight);  
+  SMLayerScrolling<SM_RGB, kScrollingLayerOptions> scrollingLayer(kMatrixWidth, kMatrixHeight);  
   SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer(kMatrixWidth, kMatrixHeight);
   SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh; 
   SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
 
-
-void StartMatrix()
+    
+void LEDMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
-    matrix.begin();
+    matrix.begin(RESERVE_MEMORY);
 
-    backgroundLayer.fillScreen(rgb24(0, 0, 64));
+    backgroundLayer.fillScreen(rgb24(0, 64, 0));
     backgroundLayer.setFont(font5x7);
     backgroundLayer.drawString(8, kMatrixHeight / 2 - 6, rgb24(255,255,255), "NightDriver");
     backgroundLayer.swapBuffers(false);    
@@ -54,10 +56,13 @@ void StartMatrix()
     matrix.setBrightness(255);
 }
 
-void UpdateMatrix()
+CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 {
-    backgroundLayer.swapBuffers(false);    
-    matrix.setBrightness(255);
+    return (CRGB *) backgroundLayer.getRealBackBuffer();
 }
 
+void LEDMatrixGFX::MatrixSwapBuffers()
+{
+  backgroundLayer.swapBuffers(true);
+}
 #endif

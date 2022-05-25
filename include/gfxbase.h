@@ -35,6 +35,7 @@
 #include "globals.h"
 #include "FastLED.h"
 #include "Adafruit_GFX.h"
+#include <stdexcept>
 
 // 5:6:5 Color definitions
 #define BLACK16 0x0000
@@ -51,6 +52,8 @@
 class GFXBase : public Adafruit_GFX
 {
   protected:
+
+    CRGB * _pLEDs;
 
     size_t _width;
     size_t _height;
@@ -104,12 +107,15 @@ class GFXBase : public Adafruit_GFX
         return (y * MATRIX_WIDTH) + x; 
     }
     
-    virtual uint16_t getPixelIndex(int16_t x, int16_t y) const = 0;
-    virtual CRGB getPixel(int16_t x) const = 0;
-    virtual void setPixel(int16_t x, int16_t y, uint16_t color) = 0;
-    virtual void setPixel(int16_t x, int16_t y, CRGB color) = 0;
-    virtual void setPixel(int x, CRGB color) = 0;
-    virtual void setPixels(float fPos, float count, CRGB c, bool bMerge = false) const = 0;
+    virtual uint16_t getPixelIndex(int16_t x, int16_t y)
+    {
+      return y * _width + x;
+    }
+
+    virtual CRGB getPixel(int16_t x) const 
+    {
+      return _pLEDs[x];
+    }
 
     inline virtual CRGB getPixel(int16_t x, int16_t y)
     {
@@ -121,7 +127,7 @@ class GFXBase : public Adafruit_GFX
       setPixel(x, y, color);
     }
 
-    inline virtual void ScrollLeft()
+    inline virtual void scrollLeft()
     {
       for (int i = 0; i < NUM_LEDS - 1; i++)
       {
@@ -129,4 +135,83 @@ class GFXBase : public Adafruit_GFX
       }
     }
 
+    inline virtual void fillLeds(const CRGB * pLEDs)
+    {
+      memcpy(_pLEDs, pLEDs, sizeof(CRGB) * _width * _height);
+    }
+
+    virtual void setPixel(int16_t x, int16_t y, uint16_t color)
+    {
+        if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
+            _pLEDs[getPixelIndex(x, y)] = from16Bit(color);
+    }
+
+    inline virtual void setPixel(int16_t x, int16_t y, CRGB color)
+    {
+        if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
+            _pLEDs[getPixelIndex(x, y)] = color;
+    }
+
+    inline virtual void setPixel(int x, CRGB color)
+    {
+        if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
+            _pLEDs[x] = color;
+    }
+
+    inline virtual CRGB getPixel(int x)
+    {
+        if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
+            return _pLEDs[x];
+        throw std::runtime_error("Pixel out of bounds in getPixel");
+    }
+
+    inline void setPixels(float fPos, float count, CRGB c, bool bMerge = false) const
+    {		
+        float frac1 = fPos - floor(fPos);							// eg:   3.25 becomes 0.25
+        float frac2 = fPos + count - floor(fPos + count);			// eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
+
+      /* Example:
+      
+        Starting at 3.25, draw for 1.5:
+        We start at pixel 3.
+        We fill pixel with .75 worth of color
+        We advance to next pixel
+        
+        We fill one pixel and advance to next pixel
+
+        We are now at pixel 5, frac2 = .75
+        We fill pixel with .75 worth of color
+      */
+
+      uint8_t fade1 = (std::max(frac1, 1.0f-count)) * 255;					// Fraction is how far past pixel boundary we are (up to our total size) so larger fraction is more dimming
+      uint8_t fade2 = (1.0 - frac2) * 255;		// Fraction is how far we are poking into this pixel, so larger fraction is less dimming
+      CRGB c1 = c;
+      CRGB c2 = c;
+      c1 = c1.fadeToBlackBy(fade1);
+      c2 = c2.fadeToBlackBy(fade2);
+
+      float p = fPos;
+      if (p >= 0 && p < GetLEDCount())
+        for (int i = 0; i < NUM_CHANNELS; i++)
+            _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c1 : c1;  
+      p=fPos+(1.0 - frac1);
+      count -= (1.0 - frac1);
+
+      // Middle (body) pixels
+
+      while (count >= 1)
+      {
+        if (p >= 0 && p < GetLEDCount())
+            for (int i = 0; i < NUM_CHANNELS; i++)
+              _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c : c;  
+        count--;
+        p++;
+      };
+
+      // Final pixel, if in bounds
+      if (count > 0)
+        if (p >= 0 && p < GetLEDCount())
+          for (int i = 0; i < NUM_CHANNELS; i++)
+              _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c2 : c2;  
+    }
 };

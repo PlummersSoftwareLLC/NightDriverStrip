@@ -283,7 +283,7 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-    new ColorFillEffect(CRGB::Blue, 4),
+    new PaletteEffect(RainbowColors_p, 0.1,  16, 1, 1, 0, LINEARBLEND, false, 1.0),
 
 #elif TTGO 
 

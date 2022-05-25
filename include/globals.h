@@ -143,10 +143,10 @@
 
 #define DRAWING_CORE            1
 #define NET_CORE                0
-#define AUDIO_CORE              1
+#define AUDIO_CORE              0
 #define SCREEN_CORE             1       
 #define DEBUG_CORE              1
-#define SOCKET_CORE             0
+#define SOCKET_CORE             1
 #define REMOTE_CORE             1
 
 #define FASTLED_INTERNAL        1   // Suppresses the compilation banner from FastLED
@@ -406,7 +406,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              1  // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control

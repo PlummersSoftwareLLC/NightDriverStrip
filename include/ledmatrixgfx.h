@@ -49,7 +49,8 @@ const uint8_t kDmaBufferRows = 4;                   // known working: 2-4, use 2
 const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;   // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
 const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING);      // see http://docs.pixelmatix.com/SmartMatrix for options
 const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
-//const uint8_t kScrollingLayerOptions = (SM_SCROLLING_OPTIONS_NONE);
+const uint8_t kScrollingLayerOptions = (SM_SCROLLING_OPTIONS_NONE);
+const uint8_t kIndexedLayerOptions = (SM_INDEXED_OPTIONS_NONE);
 
 const uint8_t kDefaultBrightness = (100*255)/100;        // full (100%) brightness
 const rgb24   defaultBackgroundColor = {0x40, 0, 0};
@@ -59,17 +60,13 @@ extern SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType
 
 typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;                                                                 
 extern SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
-
- 
-void StartMatrix();
-void UpdateMatrix();
+extern SMLayerIndexed<SM_RGB, kIndexedLayerOptions> indexedLayer;
+extern SMLayerScrolling<SM_RGB, kScrollingLayerOptions> scrollingLayer;
 
 class LEDMatrixGFX : public GFXBase
 {
 private:
   
-    CRGB * leds = nullptr;
-    
 public:
 
   LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
@@ -80,52 +77,21 @@ public:
   {
   }
 
+  inline void setLeds(CRGB * pLeds)
+  {
+    _pLEDs = pLeds;
+  }
+
   inline uint16_t getPixelIndex(int16_t x, int16_t y) const
   {
     return y * _width + x;
   }
 
-  inline CRGB getPixel(int16_t x) const
-  {
-    if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
-    {
-      return CRGB::Yellow;
-    }
-    else
-    {
-      throw std::runtime_error("Invalid index in getPixel: " + x);
-      return CRGB::Black;
-    }
-  }
+  // Matrix interop
 
-  inline CRGB getPixel(int16_t x, int16_t y) const
-  {
-    if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
-    {
-      return getPixel(getPixelIndex(x, y));
-    }
-    else
-    {
-      char szBuffer[80];
-      snprintf(szBuffer, 80, "Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
-      throw std::runtime_error(szBuffer);
-    }
-  }
-
-  inline virtual void setPixel(int16_t x, int16_t y, uint16_t color)
-  {
-  }
-
-  inline virtual void setPixel(int16_t x, int16_t y, CRGB color)
-  {
-  }
-
-  inline virtual void setPixel(int x, CRGB color)
-  {
-  }
-
-  inline void setPixels(float fPos, float count, CRGB c, bool bMerge = false) const
-	{		
-  }
-
+  static void StartMatrix();
+  static CRGB * GetMatrixBackBuffer();
+  static void MatrixSwapBuffers();  
 };
+
+

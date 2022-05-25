@@ -84,10 +84,25 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     for (;;)
     {
+        static uint64_t lastFrame = millis();
+        g_FPS = FPS(lastFrame, millis());
+		lastFrame = millis();        
+        
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
         uint cPixelsDrawnThisFrame = 0;
  
+        #if USEMATRIX
+            // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
+            // both 24-bits RGB triplets.  Or at least the same size!
+
+            static_assert( sizeof(CRGB) == sizeof(SM_RGB), "Code assumes 24 bits in both places" );
+
+            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
+            LEDMatrixGFX::MatrixSwapBuffers();
+            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+        #endif
+
         if (WiFi.isConnected())
         {
             timeval tv;
@@ -177,7 +192,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         }
 
 #if USEMATRIX
-        UpdateMatrix();
+        //LEDMatrixGFX::MatrixSwapBuffers();
 #endif
 
 #if USESTRIP
