@@ -31,6 +31,15 @@
 #include "gfxbase.h"
 #include "globals.h"
 
+uint32_t GFXBase::noise_x;
+uint32_t GFXBase::noise_y;
+uint32_t GFXBase::noise_z;
+uint32_t GFXBase::noise_scale_x;
+uint32_t GFXBase::noise_scale_y;
+
+uint8_t GFXBase::noise[MATRIX_WIDTH][MATRIX_HEIGHT];   // BUGBUG Could this go in PSRAM if allocated instead?
+uint8_t GFXBase::noisesmoothing;
+
 #ifdef USEMATRIX
 
   #include <SmartMatrix.h>
@@ -46,7 +55,7 @@
 void LEDMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
-    matrix.begin(RESERVE_MEMORY);
+    matrix.begin(100000);
 
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
     backgroundLayer.setFont(font5x7);

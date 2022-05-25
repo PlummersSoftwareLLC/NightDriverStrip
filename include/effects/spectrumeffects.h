@@ -371,7 +371,7 @@ class WaveformEffect : public VUMeterEffect
 
     virtual void Draw()
 	{
-        _GFX[0]->scrollLeft();
+        _GFX[0]->MoveX(1);
         
         DrawVUMeter(0);        
         DrawSpike(63, gVURatio);

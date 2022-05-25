@@ -554,7 +554,7 @@ class SpinningPaletteRingParticle : public FadingObject
         debugV("Particle Render at insulator %d", _iInsulator);
 
         if (_bErase)
-          _pGFX[0]->setPixels(_start, _length, CRGB::Black, false);
+          _pGFX[0]->setPixelsF(_start, _length, CRGB::Black, false);
 
 
         float deltaTime = g_AppTime.DeltaTime();
@@ -574,7 +574,7 @@ class SpinningPaletteRingParticle : public FadingObject
           for (int i = _start; i < _start+_length; i+=_lightSize)
           {
             iColor = fmodf(iColor + _density, 256);
-            _pGFX[0]->setPixels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 - 255 * FadeoutAmount(), _blend), true);
+            _pGFX[0]->setPixelsF(i, _lightSize, ColorFromPalette(_palette, iColor, 255 - 255 * FadeoutAmount(), _blend), true);
           }
         }
         else
@@ -593,13 +593,13 @@ class SpinningPaletteRingParticle : public FadingObject
               {
                   CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness * FadeoutAmount(), _blend);
                   if (i + _startIndex > _start)
-                    _pGFX[0]->setPixels(i+_startIndex, _lightSize, c,true);
+                    _pGFX[0]->setPixelsF(i+_startIndex, _lightSize, c,true);
               }
           }
         }
 
         if (Age() < IgnitionTime() + PreignitionTime() && Age() >= PreignitionTime())
-          _pGFX[0]->setPixels(_start + random(0, _length), 1, CRGB::White, true);
+          _pGFX[0]->setPixelsF(_start + random(0, _length), 1, CRGB::White, true);
     }
 
     virtual float PreignitionTime() const         { return 0.0f;          }

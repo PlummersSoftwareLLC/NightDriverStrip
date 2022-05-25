@@ -196,6 +196,6 @@ class LEDStripEffect
     inline void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const
     {		
         for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->setPixels(fPos, count, c, bMerge);
+            _GFX[i]->setPixelsF(fPos, count, c, bMerge);
     }
 };
