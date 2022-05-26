@@ -89,7 +89,7 @@ using namespace std;
 #define SAMPLE_BITS  12									  // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
 #define MAX_VU MAX_ANALOG_IN
-#define MIN_VU 8
+#define MIN_VU 512
 
 #ifndef GAINDAMPEN
 #define GAINDAMPEN  1									  // How slowly brackets narrow in for spectrum bands
@@ -622,7 +622,7 @@ class SampleBuffer
 		debugV("All Bands Peak: %f", allBandsPeak);
 		//allBandsPeak = max(NOISE_FLOOR, allBandsPeak);		
 
-		auto multiplier = mapDouble(gVURatio, 0.0, 2.0, 1.5, 1.0);
+		auto multiplier = mapDouble(gVURatio, 0.0, 1.0, 1.5, 1.0);
 		allBandsPeak *= multiplier;
 
 		for (int i = 0; i < _BandCount; i++)

@@ -34,7 +34,7 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 #include "FastLED.h"
-#include "effects/effectmanager.h"
+#include "effectmanager.h"
 
 #if ENABLE_REMOTE
 

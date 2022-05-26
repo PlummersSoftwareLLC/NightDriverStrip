@@ -41,8 +41,8 @@
 #include "globals.h"
 #include "ledstripeffect.h"
 #include "soundanalyzer.h"
-#include "musiceffect.h"
-#include "particles.h"
+#include "effects/strip/musiceffect.h"
+#include "effects/strip/particles.h"
 #include "screen.h"
 #include "gfxbase.h"
 

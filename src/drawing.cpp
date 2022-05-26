@@ -29,7 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "effects/effectmanager.h"
+#include "effectmanager.h"
 #include "ledbuffer.h"
 #include "ntptimeclient.h"
 #include "remotecontrol.h"

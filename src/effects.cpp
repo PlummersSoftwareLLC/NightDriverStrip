@@ -28,24 +28,24 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                            // CONFIG and global headers
-#include "effects/effectmanager.h"              // manages all of the effects
-#include "effects/fireeffect.h"                 // fire effects
-#include "effects/paletteeffect.h"              // palette effects
-#include "effects/doublepaletteeffect.h"        // double palette effect
-#include "effects/meteoreffect.h"               // meteor blend effect
-#include "effects/stareffect.h"                 // star effects
-#include "effects/bouncingballeffect.h"         // bouincing ball effectsenable+
-#include "effects/vueffect.h"                   // vu (sound) based effects
-#include "effects/tempeffect.h"
+#include "effectmanager.h"              // manages all of the effects
+#include "effects/strip/fireeffect.h"                 // fire effects
+#include "effects/strip/paletteeffect.h"              // palette effects
+#include "effects/strip/doublepaletteeffect.h"        // double palette effect
+#include "effects/strip/meteoreffect.h"               // meteor blend effect
+#include "effects/strip/stareffect.h"                 // star effects
+#include "effects/strip/bouncingballeffect.h"         // bouincing ball effectsenable+
+#include "effects/strip/tempeffect.h"
+#include "effects/matrix/vueffect.h"                  // vu (sound) based effects
 
 
 #if ENABLE_AUDIO
-#include "effects/spectrumeffects.h"            // Musis spectrum effects
-#include "effects/musiceffect.h"                // Music based effects
+#include "effects/matrix/spectrumeffects.h"            // Musis spectrum effects
+#include "effects/strip/musiceffect.h"                // Music based effects
 #endif
 
 #ifdef FAN_SIZE
-    #include "effects/faneffects.h"             // Fan-based effects
+    #include "effects/strip/faneffects.h"             // Fan-based effects
 #endif
 
 //
