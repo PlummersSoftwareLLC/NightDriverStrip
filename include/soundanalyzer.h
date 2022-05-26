@@ -622,7 +622,7 @@ class SampleBuffer
 		debugV("All Bands Peak: %f", allBandsPeak);
 		//allBandsPeak = max(NOISE_FLOOR, allBandsPeak);		
 
-		auto multiplier = mapDouble(gVURatio, 0.0, 1.0, 1.5, 1.0);
+		auto multiplier = mapDouble(gVURatio, 0.0, 2.0, 1.5, 1.0);
 		allBandsPeak *= multiplier;
 
 		for (int i = 0; i < _BandCount; i++)

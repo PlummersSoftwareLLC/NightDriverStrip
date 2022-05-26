@@ -84,8 +84,7 @@
 class GFXBase : public Adafruit_GFX
 {
 protected:
-    CRGB *_pLEDs;
-
+    
     size_t _width;
     size_t _height;
 
@@ -112,11 +111,17 @@ protected:
 
 public:
 
+    CRGB * leds;
+
     GFXBase(int w, int h) : Adafruit_GFX(w, h),
                             _width(w),
                             _height(h)
     {
         NoiseVariablesSetup();
+    }
+
+    virtual ~GFXBase()
+    {
     }
 
     inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
@@ -148,31 +153,36 @@ public:
         return _width * _height;
     }
 
+    virtual void Clear()
+    {
+        memset(leds, 0, sizeof(CRGB) * _width * _height);
+    }
+
+    inline virtual uint16_t getPixelIndex(int16_t x, int16_t y) const
+    {
+        return y * _width + x;
+    }
+
     inline virtual uint16_t xy(uint8_t x, uint8_t y) const
     {
         if (x >= MATRIX_WIDTH || x < 0)
             return 0;
         if (y >= MATRIX_HEIGHT || y < 0)
             return 0;
-        return (y * MATRIX_WIDTH) + x;
+        return getPixelIndex(x, y);
     }
 
-    virtual void Clear()
+    virtual CRGB getPixel(int16_t x) const 
     {
-        memset(_pLEDs, 0, sizeof(CRGB) * _width * _height);
+        return leds[x];
     }
 
-    virtual uint16_t getPixelIndex(int16_t x, int16_t y)
+    virtual CRGB addColor(int16_t x, CRGB c)
     {
-        return y * _width + x;
+        return leds[x] += c;
     }
 
-    virtual CRGB getPixel(int16_t x) const
-    {
-        return _pLEDs[x];
-    }
-
-    inline virtual CRGB getPixel(int16_t x, int16_t y)
+    inline virtual CRGB getPixel(int16_t x, int16_t y) const
     {
         return getPixel(getPixelIndex(x, y));
     }
@@ -189,19 +199,19 @@ public:
 
     inline virtual void fillLeds(const CRGB *pLEDs)
     {
-        memcpy(_pLEDs, pLEDs, sizeof(CRGB) * _width * _height);
+        memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
     }
 
     virtual void setPixel(int16_t x, int16_t y, uint16_t color)
     {
         if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
-            _pLEDs[getPixelIndex(x, y)] = from16Bit(color);
+            leds[getPixelIndex(x, y)] = from16Bit(color);
     }
 
     inline virtual void setPixel(int16_t x, int16_t y, CRGB color)
     {
         if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
-            _pLEDs[getPixelIndex(x, y)] = color;
+            leds[getPixelIndex(x, y)] = color;
     }
 
     inline virtual void setPixel(int16_t x, int r, int g, int b)
@@ -212,14 +222,7 @@ public:
     inline virtual void setPixel(int x, CRGB color)
     {
         if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
-            _pLEDs[x] = color;
-    }
-
-    inline virtual CRGB getPixel(int x)
-    {
-        if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
-            return _pLEDs[x];
-        throw std::runtime_error("Pixel out of bounds in getPixel");
+            leds[x] = color;
     }
 
     // setPixelsF - Floating point variant
@@ -239,7 +242,7 @@ public:
     //   We are now at pixel 5, frac2 = .75
     //   We fill pixel with .75 worth of color
 
-    inline void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false) const
+    inline void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false)
     {
         float frac1 = fPos - floor(fPos);                 // eg:   3.25 becomes 0.25
         float frac2 = fPos + count - floor(fPos + count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
@@ -271,7 +274,7 @@ public:
         float p = fPos;
         if (p >= 0 && p < GetLEDCount())
             for (int i = 0; i < NUM_CHANNELS; i++)
-                _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p] + c1 : c1;
+                leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
         p = fPos + (1.0 - frac1);
         count -= (1.0 - frac1);
 
@@ -281,7 +284,7 @@ public:
         {
             if (p >= 0 && p < GetLEDCount())
                 for (int i = 0; i < NUM_CHANNELS; i++)
-                    _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p] + c : c;
+                    leds[(int)p] = bMerge ? leds[(int)p] + c : c;
             count--;
             p++;
         };
@@ -290,7 +293,7 @@ public:
         if (count > 0)
             if (p >= 0 && p < GetLEDCount())
                 for (int i = 0; i < NUM_CHANNELS; i++)
-                    _pLEDs[(int)p] = bMerge ? _pLEDs[(int)p] + c2 : c2;
+                    leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
     void Setup()
@@ -315,7 +318,7 @@ public:
     {
         for (int x = x0; x < x1; x++)
             for (int y = y0; y < y1; y++)
-                _pLEDs[xy(x, y)] = color;
+                leds[xy(x, y)] = color;
     }
 
     void loadPalette(int index)
@@ -404,7 +407,7 @@ public:
             RandomPalette();
     }
 
-    inline void listPalettes()
+    inline void listPalettes() const
     {
         Serial.println(F("{"));
         Serial.print(F("  \"count\": "));
@@ -453,7 +456,7 @@ public:
     
     inline void Pixel(int x, int y, uint8_t colorIndex) 
     {
-        _pLEDs[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
+        leds[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
     }
 
     // Oscillators and Emitters
@@ -489,7 +492,7 @@ public:
 
     inline void BlurFrame(int amount)
     {
-        blur2d(_pLEDs, MATRIX_WIDTH, MATRIX_HEIGHT, amount);
+        blur2d(leds, MATRIX_WIDTH, MATRIX_HEIGHT, amount);
     }
 
     // All the caleidoscope functions work directly within the screenbuffer (_pLEDs array).
@@ -506,9 +509,9 @@ public:
         {
             for (int y = 0; y < MATRIX_CENTER_Y; y++)
             {
-                _pLEDs[xy(MATRIX_WIDTH - 1 - x, y)] = _pLEDs[xy(x, y)];
-                _pLEDs[xy(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y)] = _pLEDs[xy(x, y)];
-                _pLEDs[xy(x, MATRIX_HEIGHT - 1 - y)] = _pLEDs[xy(x, y)];
+                leds[xy(MATRIX_WIDTH - 1 - x, y)] = leds[xy(x, y)];
+                leds[xy(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y)] = leds[xy(x, y)];
+                leds[xy(x, MATRIX_HEIGHT - 1 - y)] = leds[xy(x, y)];
             }
         }
     }
@@ -520,9 +523,9 @@ public:
         {
             for (int y = 0; y < MATRIX_CENTER_Y; y++)
             {
-                _pLEDs[xy(MATRIX_WIDTH - 1 - x, y)] = _pLEDs[xy(y, x)];
-                _pLEDs[xy(x, MATRIX_HEIGHT - 1 - y)] = _pLEDs[xy(y, x)];
-                _pLEDs[xy(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y)] = _pLEDs[xy(x, y)];
+                leds[xy(MATRIX_WIDTH - 1 - x, y)] = leds[xy(y, x)];
+                leds[xy(x, MATRIX_HEIGHT - 1 - y)] = leds[xy(y, x)];
+                leds[xy(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y)] = leds[xy(x, y)];
             }
         }
     }
@@ -534,7 +537,7 @@ public:
         {
             for (int y = 0; y <= x; y++)
             {
-                _pLEDs[xy(x, y)] = _pLEDs[xy(y, x)];
+                leds[xy(x, y)] = leds[xy(y, x)];
             }
         }
     }
@@ -546,7 +549,7 @@ public:
         {
             for (int y = 0; y <= MATRIX_CENTER_Y - x; y++)
             {
-                _pLEDs[xy(MATRIX_CENTER_Y - y, MATRIX_CENTER_X - x)] = _pLEDs[xy(x, y)];
+                leds[xy(MATRIX_CENTER_Y - y, MATRIX_CENTER_X - x)] = leds[xy(x, y)];
             }
         }
     }
@@ -558,7 +561,7 @@ public:
         {
             for (int y = 0; y <= x; y++)
             {
-                _pLEDs[xy(x, y)] = _pLEDs[xy(y, x)];
+                leds[xy(x, y)] = leds[xy(y, x)];
             }
         }
 
@@ -566,7 +569,7 @@ public:
         {
             for (int y = MATRIX_HEIGHT / 4; y >= 0; y--)
             {
-                _pLEDs[xy(x, y)] = _pLEDs[xy(y, x)];
+                leds[xy(x, y)] = leds[xy(y, x)];
             }
         }
     }
@@ -575,31 +578,31 @@ public:
     {
         for (int x = 1; x < MATRIX_CENTER_X; x++)
         {
-            _pLEDs[xy(7 - x, 7)] = _pLEDs[xy(x, 0)];
+            leds[xy(7 - x, 7)] = leds[xy(x, 0)];
         } // a
         for (int x = 2; x < MATRIX_CENTER_X; x++)
         {
-            _pLEDs[xy(7 - x, 6)] = _pLEDs[xy(x, 1)];
+            leds[xy(7 - x, 6)] = leds[xy(x, 1)];
         } // b
         for (int x = 3; x < MATRIX_CENTER_X; x++)
         {
-            _pLEDs[xy(7 - x, 5)] = _pLEDs[xy(x, 2)];
+            leds[xy(7 - x, 5)] = leds[xy(x, 2)];
         } // c
         for (int x = 4; x < MATRIX_CENTER_X; x++)
         {
-            _pLEDs[xy(7 - x, 4)] = _pLEDs[xy(x, 3)];
+            leds[xy(7 - x, 4)] = leds[xy(x, 3)];
         } // d
         for (int x = 5; x < MATRIX_CENTER_X; x++)
         {
-            _pLEDs[xy(7 - x, 3)] = _pLEDs[xy(x, 4)];
+            leds[xy(7 - x, 3)] = leds[xy(x, 4)];
         } // e
         for (int x = 6; x < MATRIX_CENTER_X; x++)
         {
-            _pLEDs[xy(7 - x, 2)] = _pLEDs[xy(x, 5)];
+            leds[xy(7 - x, 2)] = leds[xy(x, 5)];
         } // f
         for (int x = 7; x < MATRIX_CENTER_X; x++)
         {
-            _pLEDs[xy(7 - x, 1)] = _pLEDs[xy(x, 6)];
+            leds[xy(7 - x, 1)] = leds[xy(x, 6)];
         } // g
     }
 
@@ -614,23 +617,23 @@ public:
         { // from the outside to the inside
             for (int i = x - d; i <= x + d; i++)
             {
-                _pLEDs[xy(i, y - d)] += _pLEDs[xy(i + 1, y - d)]; // lowest row to the right
-                _pLEDs[xy(i, y - d)].nscale8(dimm);
+                leds[xy(i, y - d)] += leds[xy(i + 1, y - d)]; // lowest row to the right
+                leds[xy(i, y - d)].nscale8(dimm);
             }
             for (int i = y - d; i <= y + d; i++)
             {
-                _pLEDs[xy(x + d, i)] += _pLEDs[xy(x + d, i + 1)]; // right colum up
-                _pLEDs[xy(x + d, i)].nscale8(dimm);
+                leds[xy(x + d, i)] += leds[xy(x + d, i + 1)]; // right colum up
+                leds[xy(x + d, i)].nscale8(dimm);
             }
             for (int i = x + d; i >= x - d; i--)
             {
-                _pLEDs[xy(i, y + d)] += _pLEDs[xy(i - 1, y + d)]; // upper row to the left
-                _pLEDs[xy(i, y + d)].nscale8(dimm);
+                leds[xy(i, y + d)] += leds[xy(i - 1, y + d)]; // upper row to the left
+                leds[xy(i, y + d)].nscale8(dimm);
             }
             for (int i = y + d; i >= y - d; i--)
             {
-                _pLEDs[xy(x - d, i)] += _pLEDs[xy(x - d, i - 1)]; // left colum down
-                _pLEDs[xy(x - d, i)].nscale8(dimm);
+                leds[xy(x - d, i)] += leds[xy(x - d, i - 1)]; // left colum down
+                leds[xy(x - d, i)].nscale8(dimm);
             }
         }
     }
@@ -655,24 +658,24 @@ public:
             while (a >= b)
             {
                 // move them out one pixel on the radius
-                _pLEDs[xy(a + centerX, b + centerY)]   = _pLEDs[xy(nextA + centerX, nextB + centerY)];
-                _pLEDs[xy(b + centerX, a + centerY)]   = _pLEDs[xy(nextB + centerX, nextA + centerY)];
-                _pLEDs[xy(-a + centerX, b + centerY)]  = _pLEDs[xy(-nextA + centerX, nextB + centerY)];
-                _pLEDs[xy(-b + centerX, a + centerY)]  = _pLEDs[xy(-nextB + centerX, nextA + centerY)];
-                _pLEDs[xy(-a + centerX, -b + centerY)] = _pLEDs[xy(-nextA + centerX, -nextB + centerY)];
-                _pLEDs[xy(-b + centerX, -a + centerY)] = _pLEDs[xy(-nextB + centerX, -nextA + centerY)];
-                _pLEDs[xy(a + centerX, -b + centerY)]  = _pLEDs[xy(nextA + centerX, -nextB + centerY)];
-                _pLEDs[xy(b + centerX, -a + centerY)]  = _pLEDs[xy(nextB + centerX, -nextA + centerY)];
+                leds[xy(a + centerX, b + centerY)]   = leds[xy(nextA + centerX, nextB + centerY)];
+                leds[xy(b + centerX, a + centerY)]   = leds[xy(nextB + centerX, nextA + centerY)];
+                leds[xy(-a + centerX, b + centerY)]  = leds[xy(-nextA + centerX, nextB + centerY)];
+                leds[xy(-b + centerX, a + centerY)]  = leds[xy(-nextB + centerX, nextA + centerY)];
+                leds[xy(-a + centerX, -b + centerY)] = leds[xy(-nextA + centerX, -nextB + centerY)];
+                leds[xy(-b + centerX, -a + centerY)] = leds[xy(-nextB + centerX, -nextA + centerY)];
+                leds[xy(a + centerX, -b + centerY)]  = leds[xy(nextA + centerX, -nextB + centerY)];
+                leds[xy(b + centerX, -a + centerY)]  = leds[xy(nextB + centerX, -nextA + centerY)];
 
                 // dim them
-                _pLEDs[xy(a + centerX, b + centerY)].nscale8(dimm);
-                _pLEDs[xy(b + centerX, a + centerY)].nscale8(dimm);
-                _pLEDs[xy(-a + centerX, b + centerY)].nscale8(dimm);
-                _pLEDs[xy(-b + centerX, a + centerY)].nscale8(dimm);
-                _pLEDs[xy(-a + centerX, -b + centerY)].nscale8(dimm);
-                _pLEDs[xy(-b + centerX, -a + centerY)].nscale8(dimm);
-                _pLEDs[xy(a + centerX, -b + centerY)].nscale8(dimm);
-                _pLEDs[xy(b + centerX, -a + centerY)].nscale8(dimm);
+                leds[xy(a + centerX, b + centerY)].nscale8(dimm);
+                leds[xy(b + centerX, a + centerY)].nscale8(dimm);
+                leds[xy(-a + centerX, b + centerY)].nscale8(dimm);
+                leds[xy(-b + centerX, a + centerY)].nscale8(dimm);
+                leds[xy(-a + centerX, -b + centerY)].nscale8(dimm);
+                leds[xy(-b + centerX, -a + centerY)].nscale8(dimm);
+                leds[xy(a + centerX, -b + centerY)].nscale8(dimm);
+                leds[xy(b + centerX, -a + centerY)].nscale8(dimm);
 
                 b++;
                 if (radiusError < 0)
@@ -704,12 +707,12 @@ public:
         {
             for (int y = fromY; y < toY; y++)
             {
-                _pLEDs[xy(x, y)] += _pLEDs[xy(x - 1, y)];
-                _pLEDs[xy(x, y)].nscale8(scale);
+                leds[xy(x, y)] += leds[xy(x - 1, y)];
+                leds[xy(x, y)].nscale8(scale);
             }
         }
         for (int y = fromY; y < toY; y++)
-            _pLEDs[xy(0, y)].nscale8(scale);
+            leds[xy(0, y)].nscale8(scale);
     }
 
     // give it a linear tail to the left
@@ -719,12 +722,12 @@ public:
         {
             for (int y = fromY; y < toY; y++)
             {
-                _pLEDs[xy(x, y)] += _pLEDs[xy(x + 1, y)];
-                _pLEDs[xy(x, y)].nscale8(scale);
+                leds[xy(x, y)] += leds[xy(x + 1, y)];
+                leds[xy(x, y)].nscale8(scale);
             }
         }
         for (int y = fromY; y < toY; y++)
-            _pLEDs[xy(0, y)].nscale8(scale);
+            leds[xy(0, y)].nscale8(scale);
     }
 
     // give it a linear tail downwards
@@ -734,12 +737,12 @@ public:
         {
             for (int y = 1; y < MATRIX_HEIGHT; y++)
             {
-                _pLEDs[xy(x, y)] += _pLEDs[xy(x, y - 1)];
-                _pLEDs[xy(x, y)].nscale8(scale);
+                leds[xy(x, y)] += leds[xy(x, y - 1)];
+                leds[xy(x, y)].nscale8(scale);
             }
         }
         for (int x = 0; x < MATRIX_WIDTH; x++)
-            _pLEDs[xy(x, 0)].nscale8(scale);
+            leds[xy(x, 0)].nscale8(scale);
     }
 
     // give it a linear tail upwards
@@ -749,12 +752,12 @@ public:
         {
             for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
             {
-                _pLEDs[xy(x, y)] += _pLEDs[xy(x, y + 1)];
-                _pLEDs[xy(x, y)].nscale8(scale);
+                leds[xy(x, y)] += leds[xy(x, y + 1)];
+                leds[xy(x, y)].nscale8(scale);
             }
         }
         for (int x = 0; x < MATRIX_WIDTH; x++)
-            _pLEDs[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
+            leds[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
     }
 
     // give it a linear tail up and to the left
@@ -764,14 +767,14 @@ public:
         {
             for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
             {
-                _pLEDs[xy(x, y)] += _pLEDs[xy(x + 1, y + 1)];
-                _pLEDs[xy(x, y)].nscale8(scale);
+                leds[xy(x, y)] += leds[xy(x + 1, y + 1)];
+                leds[xy(x, y)].nscale8(scale);
             }
         }
         for (int x = 0; x < MATRIX_WIDTH; x++)
-            _pLEDs[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
+            leds[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
         for (int y = 0; y < MATRIX_HEIGHT; y++)
-            _pLEDs[xy(MATRIX_WIDTH - 1, y)].nscale8(scale);
+            leds[xy(MATRIX_WIDTH - 1, y)].nscale8(scale);
     }
 
     // give it a linear tail up and to the right
@@ -782,17 +785,17 @@ public:
         {
             for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
             {
-                _pLEDs[xy(x + 1, y)] += _pLEDs[xy(x, y + 1)];
-                _pLEDs[xy(x, y)].nscale8(scale);
+                leds[xy(x + 1, y)] += leds[xy(x, y + 1)];
+                leds[xy(x, y)].nscale8(scale);
             }
         }
         // fade the bottom row
         for (int x = 0; x < MATRIX_WIDTH; x++)
-            _pLEDs[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
+            leds[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
 
         // fade the right column
         for (int y = 0; y < MATRIX_HEIGHT; y++)
-            _pLEDs[xy(MATRIX_WIDTH - 1, y)].nscale8(scale);
+            leds[xy(MATRIX_WIDTH - 1, y)].nscale8(scale);
     }
 
     // just move everything one line down - BUGBUG (DAVEPL) Redundant with MoveX?
@@ -803,7 +806,7 @@ public:
         {
             for (int x = 0; x < MATRIX_WIDTH; x++)
             {
-                _pLEDs[xy(x, y)] = _pLEDs[xy(x, y - 1)];
+                leds[xy(x, y)] = leds[xy(x, y - 1)];
             }
         }
     }
@@ -816,7 +819,7 @@ public:
         {
             for (int x = 0; x < MATRIX_WIDTH; x++)
             {
-                _pLEDs[xy(x, y)] = _pLEDs[xy(x, y - 1)];
+                leds[xy(x, y)] = leds[xy(x, y - 1)];
             }
         }
     }
@@ -830,7 +833,7 @@ public:
         {
             for (int x = x0; x < x1 + 1; x++)
             {
-                _pLEDs[xy(x + x2 - x0, y + y2 - y0)] = _pLEDs[xy(x, y)];
+                leds[xy(x + x2 - x0, y + y2 - y0)] = leds[xy(x, y)];
             }
         }
     }
@@ -842,7 +845,7 @@ public:
         {
             for (int y = 0; y < x; y++)
             {
-                _pLEDs[xy(x, 7 - y)] = _pLEDs[xy(7 - x, y)];
+                leds[xy(x, 7 - y)] = leds[xy(7 - x, y)];
             }
         }
     }
@@ -854,7 +857,7 @@ public:
         {
             for (int y = 0; y < x; y++)
             {
-                _pLEDs[xy(7 - y, x)] = _pLEDs[xy(7 - x, y)];
+                leds[xy(7 - y, x)] = leds[xy(7 - x, y)];
             }
         }
     }
@@ -873,11 +876,6 @@ public:
         }
     }
 
-    inline void BresenhamLine(int x0, int y0, int x1, int y1, byte colorIndex)
-    {
-        BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex));
-    }
-
     inline void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
     {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
@@ -885,7 +883,7 @@ public:
         int err = dx + dy, e2;
         for (;;)
         {
-            _pLEDs[xy(x0, y0)] = bMerge ? _pLEDs[xy(x0, y0)] + color : color;
+            leds[xy(x0, y0)] = bMerge ? leds[xy(x0, y0)] + color : color;
             if (x0 == x1 && y0 == y1)
                 break;
             e2 = 2 * err;
@@ -902,11 +900,25 @@ public:
         }
     }
 
+    inline void BresenhamLine(int x0, int y0, int x1, int y1, byte colorIndex, bool bMerge = false)
+    {
+        BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
+    }
+
+
     inline void drawLine(int x0, int y0, int x1, int y1, CRGB color)
     {
         BresenhamLine(x0, y0, x1, y1, color);
     }
 
+    void DimAll(byte value)
+    {
+        for (int i = 0; i < NUM_LEDS; i++)
+        {
+            // if ((leds[i].r != 255) || (leds[i].g != 255) || (leds[i].b != 255))           // Don't dim pure white
+            leds[i].nscale8(value);
+        }
+    } 
     // write one pixel with the specified color from the current palette to coordinates
     /*
     void Pixel(int x, int y, uint8_t colorIndex) {
@@ -915,12 +927,12 @@ public:
     }
     */
 
-    inline CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND)
+    inline CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
     {
         return ColorFromPalette(currentPalette, index, brightness, currentBlendType);
     }
 
-    inline CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
+    inline CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v) const
     {
         CHSV hsv = CHSV(h, s, v);
         CRGB rgb;
@@ -965,10 +977,10 @@ public:
         for (int y = startY; y <= endY; y++)
         {
             for (int x = MATRIX_WIDTH / 2; x > 0; x--)
-                _pLEDs[xy(x, y)] = _pLEDs[xy(x - 1, y)];
+                leds[xy(x, y)] = leds[xy(x - 1, y)];
 
             for (int x = MATRIX_WIDTH / 2; x < MATRIX_WIDTH; x++)
-                _pLEDs[xy(x, y)] = _pLEDs[xy(x + 1, y)];
+                leds[xy(x, y)] = leds[xy(x + 1, y)];
         }
     }
 
@@ -1001,13 +1013,13 @@ public:
             // Shift
             for (int x = 0; x < MATRIX_WIDTH - delta; x++)  
             {
-                _pLEDs[xy(x, y)] = _pLEDs[xy(x + delta, y)];
+                leds[xy(x, y)] = leds[xy(x + delta, y)];
             }
 
             // Wrap around
             for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++)
             {
-                _pLEDs[xy(x, y)] = _pLEDs[xy(x + delta - MATRIX_WIDTH, y)];
+                leds[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
             }
 
         } // end row loop
@@ -1030,16 +1042,16 @@ public:
         CRGB tmp = 0;
         for (int x = 0; x < MATRIX_WIDTH; x++)
         {
-            tmp = _pLEDs[xy(x, 0)];
+            tmp = leds[xy(x, 0)];
             for (int m = 0; m < delta; m++) // moves
             {
                 // Do this delta time for each row... computationally expensive potentially.
                 for (int y = 0; y < MATRIX_HEIGHT; y++)
                 {
-                    _pLEDs[xy(x, y)] = _pLEDs[xy(x, y + 1)];
+                    leds[xy(x, y)] = leds[xy(x, y + 1)];
                 }
 
-                _pLEDs[xy(x, MATRIX_HEIGHT - 1)] = tmp;
+                leds[xy(x, MATRIX_HEIGHT - 1)] = tmp;
             }
         } // end column loop
     }     /// MoveY

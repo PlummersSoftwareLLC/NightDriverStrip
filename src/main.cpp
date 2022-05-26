@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        main.cpp
+// File:        main.cpp  
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -573,7 +573,10 @@ void setup()
 
     #ifdef USEMATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
+        {
             g_pDevices[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i]->loadPalette(0);
+        }
     #endif
 
     #if USE_PSRAM

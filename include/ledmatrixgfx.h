@@ -79,7 +79,7 @@ public:
 
   inline void setLeds(CRGB * pLeds)
   {
-    _pLEDs = pLeds;
+    leds = pLeds;
   }
 
   inline uint16_t getPixelIndex(int16_t x, int16_t y) const
@@ -93,5 +93,3 @@ public:
   static CRGB * GetMatrixBackBuffer();
   static void MatrixSwapBuffers();  
 };
-
-

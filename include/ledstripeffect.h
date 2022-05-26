@@ -91,7 +91,10 @@ class LEDStripEffect
     
     virtual void Draw() = 0;										// Your effect must implement these
     
-    virtual const char *FriendlyName() const = 0;
+    virtual const char *FriendlyName() const
+    {
+        return _friendlyName.c_str();
+    }
 
     static inline CRGB RandomRainbowColor()
     {

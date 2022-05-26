@@ -38,7 +38,6 @@
 #include "effects/strip/tempeffect.h"
 #include "effects/matrix/vueffect.h"                  // vu (sound) based effects
 
-
 #if ENABLE_AUDIO
 #include "effects/matrix/spectrumeffects.h"            // Musis spectrum effects
 #include "effects/strip/musiceffect.h"                // Music based effects
@@ -54,6 +53,8 @@
 
 #ifdef USEMATRIX
 #include "ledmatrixgfx.h"
+#include "effects/matrix/PatternSerendipity.h"          
+#include "effects/matrix/PatternSwirl.h"                
 #endif
 
 #ifdef USESTRIP
@@ -283,6 +284,8 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new PatternSwirl(),
+    new PatternSerendipity(),
     new SpectrumAnalyzerEffect("Spectrum Standard", spectrumBasicColors, 100, 0, 2.0, 2.0),
     new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
     new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
@@ -615,3 +618,18 @@ void InitEffectsManager()
     if (false == g_pEffectManager->Init())
         throw runtime_error("Could not initialize effect manager");
 }
+
+
+// Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
+// any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
+// more than one matrix and some FastLED functions like blur2d, this would be why.
+
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
+uint16_t XY(uint8_t x, uint8_t y)
+{
+    // Have a drink on me!
+
+    return (*g_pEffectManager)[0].get()->xy(x, y);
+}
+
