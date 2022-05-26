@@ -45,7 +45,7 @@
 #include "ledstripeffect.h"
 
 #include "globals.h"
-#include "misceffects.h"
+#include "effects/strip/misceffects.h"
 
 #define MAX_EFFECTS 32
 

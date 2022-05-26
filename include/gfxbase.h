@@ -28,6 +28,7 @@
 //   the Effects class from Aurora (see below) so it's available as well.
 //
 // History:     Oct-9-2018         Davepl      Created from other projects
+//              May-26-2022        Davepl      Refactor and add Effects features
 //
 //---------------------------------------------------------------------------
 
@@ -110,10 +111,12 @@ protected:
     static uint8_t  noisesmoothing;
 
 public:
+
     GFXBase(int w, int h) : Adafruit_GFX(w, h),
                             _width(w),
                             _height(h)
     {
+        NoiseVariablesSetup();
     }
 
     inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
@@ -442,6 +445,7 @@ public:
     }
 
     // write one pixel with the specified color from the current palette to coordinates
+    
     inline void Pixel(int x, int y, uint8_t colorIndex) 
     {
         _pLEDs[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
@@ -456,6 +460,7 @@ public:
     byte p[6];
 
     // set the speeds (and by that ratios) of the oscillators here
+    
     inline void MoveOscillators()
     {
         osci[0] = osci[0] + 5;
@@ -593,8 +598,11 @@ public:
         } // g
     }
 
+    // SpiralStream
+    //
     // create a square twister to the left or counter-clockwise
     // x and y for center, r for radius
+    
     inline void SpiralStream(int x, int y, int r, byte dimm)
     {
         for (int d = r; d >= 0; d--)
@@ -762,6 +770,7 @@ public:
     }
 
     // give it a linear tail up and to the right
+    
     inline void StreamUpAndRight(byte scale)
     {
         for (int x = 0; x < MATRIX_WIDTH - 1; x++)
@@ -781,7 +790,8 @@ public:
             _pLEDs[xy(MATRIX_WIDTH - 1, y)].nscale8(scale);
     }
 
-    // just move everything one line down
+    // just move everything one line down - BUGBUG (DAVEPL) Redundant with MoveX?
+    
     inline void MoveDown()
     {
         for (int y = MATRIX_HEIGHT - 1; y > 0; y--)
@@ -793,8 +803,9 @@ public:
         }
     }
 
-    // just move everything one line down
-    inline void VerticalMoveFrom(int start, int end)
+    // just move everything one line down - BUGBUG (davepl) Redundant with MoveY?
+    
+    inline void VerticalMoveFrom(int start, int end)  
     {
         for (int y = end; y > start; y--)
         {
@@ -807,6 +818,7 @@ public:
 
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
+    
     inline void Copy(byte x0, byte y0, byte x1, byte y1, byte x2, byte y2)
     {
         for (int y = y0; y < y1 + 1; y++)
@@ -943,7 +955,8 @@ public:
         }
     }
 
-    // non _pLEDs2 memory version.
+    // MoveX - Shift the content on the matrix left or right
+    
     inline void MoveX(byte delta)
     {
 
@@ -991,6 +1004,8 @@ public:
         */
     }
 
+    // MoveY - Shifts the content on the matix up or down
+    
     inline void MoveY(byte delta)
     {
 
