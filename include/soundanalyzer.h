@@ -64,8 +64,6 @@ extern int g_AudioFPS;					  		 // Framerate of the audio sampler
 extern unsigned long g_lastPeak1Time[NUM_BANDS];
 extern float g_peak1Decay[NUM_BANDS];
 extern float g_peak2Decay[NUM_BANDS];
-extern float g_peak1DecayRate;
-extern float g_peak2DecayRate;
 
 #if !ENABLE_AUDIO
 extern volatile float gVURatio;			
@@ -241,8 +239,8 @@ inline void DecayPeaks()
   float seconds = (millis() - lastDecay) / (float)MS_PER_SECOND;
   lastDecay = millis();
 
-  float decayAmount1 = max(0.0f, seconds * g_peak1DecayRate);
-  float decayAmount2 = seconds *g_peak2DecayRate;
+  float decayAmount1 = max(0.0f, seconds * 2.0f);					// BUGBUG hardcoded decay rates 
+  float decayAmount2 = seconds * 2.0f;
 
   for (int iBand = 0; iBand < NUM_BANDS; iBand++)
   {
@@ -457,7 +455,7 @@ class SampleBuffer
 			i2s_set_pin(I2S_NUM_0, &pin_config);
 			i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
-		#elif TTGO
+		#elif TTGO || MESMERIZER
 
 			i2s_config_t i2s_config;
 			i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);

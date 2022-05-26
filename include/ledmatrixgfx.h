@@ -66,7 +66,7 @@ extern SMLayerScrolling<SM_RGB, kScrollingLayerOptions> scrollingLayer;
 class LEDMatrixGFX : public GFXBase
 {
 private:
-  
+
 public:
 
   LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)

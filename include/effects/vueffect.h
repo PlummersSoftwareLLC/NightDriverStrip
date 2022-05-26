@@ -133,7 +133,7 @@ public:
             if (i <= barsReal)          
                 DrawVUPixels(i, 0, vuPaletteBlue);
             else 
-                DrawVUPixels(i, 0, vuPaletteGreen);
+                DrawVUPixels(i, 0, vuPaletteBlue);
         }
     }	
 

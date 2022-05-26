@@ -174,6 +174,11 @@ public:
         return getPixel(getPixelIndex(x, y));
     }
 
+    inline virtual void drawPixel(int16_t x, int16_t y, CRGB color)
+    {
+        setPixel(x, y, color);
+    }
+
     inline virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
         setPixel(x, y, color);
@@ -861,14 +866,14 @@ public:
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex));
     }
 
-    inline void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color)
+    inline void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
     {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
         int err = dx + dy, e2;
         for (;;)
         {
-            _pLEDs[xy(x0, y0)] += color;
+            _pLEDs[xy(x0, y0)] = bMerge ? _pLEDs[xy(x0, y0)] + color : color;
             if (x0 == x1 && y0 == y1)
                 break;
             e2 = 2 * err;
@@ -940,6 +945,18 @@ public:
 
                 noise[i][j] = data;
             }
+        }
+    }
+
+    inline void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    {
+        for (int y = startY; y <= endY; y++)
+        {
+            for (int x = MATRIX_WIDTH / 2; x > 0; x--)
+                _pLEDs[xy(x, y)] = _pLEDs[xy(x - 1, y)];
+
+            for (int x = MATRIX_WIDTH / 2; x < MATRIX_WIDTH; x++)
+                _pLEDs[xy(x, y)] = _pLEDs[xy(x + 1, y)];
         }
     }
 

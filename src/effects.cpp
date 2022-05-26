@@ -283,7 +283,13 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-    new PaletteEffect(RainbowColors_p, 0.1,  16, 1, 1, 0, LINEARBLEND, false, 1.0),
+    new SpectrumAnalyzerEffect("Spectrum Standard", spectrumBasicColors, 100, 0, 2.0, 2.0),
+    new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
+    new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
+    new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue,  CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
+    new SpectrumAnalyzerEffect("Spectrum Fade", spectrumBasicColors, 0, 70, -1.0, 3.0),
+    new GhostWave("GhostWave Rainbow", &rainbowPalette),
+    new WaveformEffect("WaveForm", &rainbowPalette, 8),
 
 #elif TTGO 
 

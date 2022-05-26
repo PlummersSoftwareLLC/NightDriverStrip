@@ -31,6 +31,8 @@
 #include "gfxbase.h"
 #include "globals.h"
 
+extern DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
+
 uint32_t GFXBase::noise_x;
 uint32_t GFXBase::noise_y;
 uint32_t GFXBase::noise_z;
@@ -51,6 +53,7 @@ uint8_t GFXBase::noisesmoothing;
   SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh; 
   SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
 
+  double frameStartTime = 0;
     
 void LEDMatrixGFX::StartMatrix()
 {
@@ -65,13 +68,21 @@ void LEDMatrixGFX::StartMatrix()
     matrix.setBrightness(255);
 }
 
+
+
 CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 {
+    frameStartTime = g_AppTime.CurrentTime();
     return (CRGB *) backgroundLayer.getRealBackBuffer();
 }
 
 void LEDMatrixGFX::MatrixSwapBuffers()
 {
+  constexpr double minimumFrameTime = 1/35.0;
+
   backgroundLayer.swapBuffers(true);
+  double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+  if (elapsed < minimumFrameTime)
+    delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
 }
 #endif
