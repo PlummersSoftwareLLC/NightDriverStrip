@@ -148,7 +148,7 @@ class Screen
     {
         #if USE_OLED
             return g_pDisplay->getStrWidth(psz);
-        #elif USE_SCREEN
+        #elif USE_LCD
             int16_t x1, y1;
             uint16_t w, h;
             g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);

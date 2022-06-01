@@ -358,6 +358,34 @@ class MusicPulseStar : public Star
     virtual double GetStarSize()    const { return 1 + _objectSize * gVURatio; }
 };
 
+/*
+template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
+{
+  protected:
+
+    uint16_t                        _maxSize;
+
+  public:
+
+    BeatStarterEffect<ObjectType>(uint16_t )
+
+    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    {
+        ObjectType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
+        // This always starts stars on even pixel boundaries so they look like the desired width if not moving
+        newstar._iPos = (int) randomDouble(0, _cLEDs-1-starWidth);
+        _allParticles.push_back(newstar);
+
+    }
+
+    virtual void Draw()
+    {
+        BeatEffectBase::Draw();
+    }
+};
+
+*/
+
 // StarryNightEffect template 
 //
 // Generates up to 
@@ -409,8 +437,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         LEDStripEffect::setAllOnAllChannels(_skyColor.r, _skyColor.g, _skyColor.b);
     }
 
-	virtual void Draw()
-	{
+    virtual void Draw()
+    {
         if (_blurFactor == 0)
         {
             Clear();
@@ -421,7 +449,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             //    blur1d(_GFX[channel]->GetLEDBuffer(), _cLEDs, _blurFactor * 255);
 
 
-            for (int j = 0; j < _cLEDs; j++)							// fade brightness all LEDs one step
+            for (int j = 0; j < _cLEDs; j++)                            // fade brightness all LEDs one step
             {
                 if (randomDouble(0, 10)>2) 
                 {
@@ -458,6 +486,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             }
         }
     }
+
     virtual void Update()
     {
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
@@ -508,23 +537,23 @@ public:
     {
 
     }
-	virtual const char * FriendlyName() const
-	{
-		return "Twinkle";
-	}
+    virtual const char * FriendlyName() const
+    {
+        return "Twinkle";
+    }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
-	{
+    {
         LEDStripEffect::Init(gfx);
-		for (int i = 0; i < NUM_TWINKLES; i++)
-			buffer[i] = -1;      
-        return true;  	
-	}
+        for (int i = 0; i < NUM_TWINKLES; i++)
+            buffer[i] = -1;      
+        return true;    
+    }
 
-	virtual void Draw()
-	{
+    virtual void Draw()
+    {
 
-		// Init all the memory slots to -1 which means "empty slot"
+        // Init all the memory slots to -1 which means "empty slot"
 
 
         // Rotate the buffer
@@ -541,5 +570,5 @@ public:
         int iNew = (int) randomDouble(0, _cLEDs);
         setPixelOnAllChannels(iNew, RandomRainbowColor());
         buffer[NUM_TWINKLES - 1] = iNew;
-	}
+    }
 };

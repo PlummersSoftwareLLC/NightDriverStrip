@@ -86,7 +86,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     {
         static uint64_t lastFrame = millis();
         g_FPS = FPS(lastFrame, millis());
-		lastFrame = millis();        
+        lastFrame = millis();        
         
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
@@ -191,10 +191,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             debugV("Already drew from WiFi so not drawing locally this frame.");
         }
 
-#if USEMATRIX
-        //LEDMatrixGFX::MatrixSwapBuffers();
-#endif
-
 #if USESTRIP
         // If we've drawn anything from either source, we can now show it
 
@@ -240,6 +236,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 debugV("Draw loop ended without a draw.");
             }
         }
+#endif
+
+#if USEMATRIX
+            LEDMatrixGFX::PresentFrame();
 #endif
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly, 

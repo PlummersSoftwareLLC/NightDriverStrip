@@ -151,6 +151,25 @@ class FadingObject : public Lifespan
     } 
 };
 
+class FadingCountDownObject : public FadingObject
+{
+  protected:
+
+    unsigned long               _maxValue;
+
+  public:
+
+    FadingCountDownObject(unsigned long maxvalue) 
+      : _maxValue(maxvalue)
+    {
+    }
+
+    virtual unsigned long CurrentCountdown()
+    {
+        return mapDouble(Age(), 0, TotalLifetime(), _maxValue, 0);
+    }
+};
+
 // FadingColoredObject
 //
 // Object that flashes white during ignition and fades color throughout the the rest of its lifetime

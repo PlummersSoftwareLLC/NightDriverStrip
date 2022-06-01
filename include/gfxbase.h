@@ -96,6 +96,7 @@ protected:
     TBlendType currentBlendType = LINEARBLEND;
     CRGBPalette16 currentPalette;
     CRGBPalette16 targetPalette;
+    uint lastSecond = 99;
     char *currentPaletteName;
 
     static const int HeatColorsPaletteIndex = 6;
@@ -165,36 +166,46 @@ public:
 
     inline virtual uint16_t xy(uint8_t x, uint8_t y) const
     {
-        if (x >= MATRIX_WIDTH || x < 0)
+        if (x >= _width || x < 0)
             return 0;
-        if (y >= MATRIX_HEIGHT || y < 0)
+        if (y >= _height || y < 0)
             return 0;
         return getPixelIndex(x, y);
     }
 
     virtual CRGB getPixel(int16_t x) const 
     {
-        return leds[x];
+        if (x >= 0 && x < _width * _height)
+            return leds[x];
+        else
+            throw std::runtime_error("Pixel out of range in getPixel(x)");
     }
 
-    virtual CRGB addColor(int16_t x, CRGB c)
+    virtual void addColor(int16_t x, CRGB c)
     {
-        return leds[x] += c;
+        if (x >= 0 && x < _width * _height)
+            leds[x] += c;
     }
 
     inline virtual CRGB getPixel(int16_t x, int16_t y) const
     {
-        return getPixel(getPixelIndex(x, y));
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
+            return getPixel(getPixelIndex(x, y));
+        else
+            throw std::runtime_error("Pixel out of range in getPixel(x,y)");
+
     }
 
     inline virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
-        setPixel(x, y, color);
+        addColor(getPixelIndex(x, y), color);
+        //setPixel(x, y, color);
     }
 
-    inline virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
+    virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        setPixel(x, y, color);
+        addColor(getPixelIndex(x, y), from16Bit(color));
+        //setPixel(x, y, color);
     }
 
     inline virtual void fillLeds(const CRGB *pLEDs)
@@ -204,13 +215,16 @@ public:
 
     virtual void setPixel(int16_t x, int16_t y, uint16_t color)
     {
-        if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
+        {
+            debugV("setPixel %02d, %02d - %02x", x, y, color);
             leds[getPixelIndex(x, y)] = from16Bit(color);
+        }
     }
 
     inline virtual void setPixel(int16_t x, int16_t y, CRGB color)
     {
-        if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
             leds[getPixelIndex(x, y)] = color;
     }
 
@@ -221,7 +235,7 @@ public:
 
     inline virtual void setPixel(int x, CRGB color)
     {
-        if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
+        if (x >= 0 && x < _width * _height)
             leds[x] = color;
     }
 
@@ -298,7 +312,6 @@ public:
 
     void Setup()
     {
-        currentPalette = RainbowColors_p;
         loadPalette(0);
         NoiseVariablesSetup();
         ResetOscillators();
@@ -307,6 +320,46 @@ public:
     void CyclePalette(int offset = 1)
     {
         loadPalette(paletteIndex + offset);
+    }
+
+    void ChangePalettePeriodically()
+    {
+        const int minutesPerPaletteCycle = 2;
+        uint8_t secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
+        
+        if( lastSecond != secondHand) 
+        {
+            lastSecond = secondHand;
+            if( secondHand ==  0)  
+                { targetPalette = RainbowColors_p; }
+            if( secondHand == 10)  
+                { targetPalette = redorange_gp; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
+            if( secondHand == 20)  
+                { targetPalette = ForestColors_p; } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
+            if( secondHand == 30)  
+                { targetPalette = LavaColors_p; }       // Black gaps
+            if( secondHand == 40)  
+                { targetPalette = CloudColors_p; }
+            if( secondHand == 50)  
+                { targetPalette = PartyColors_p; }
+        }
+    }
+
+    // Crossfade current palette slowly toward the target palette
+    //
+    // Each time that nblendPaletteTowardPalette is called, small changes
+    // are made to currentPalette to bring it closer to matching targetPalette.
+    // You can control how many changes are made in each call:
+    //   - the default of 24 is a good balance
+    //   - meaningful values are 1-48.  1=veeeeeeeery slow, 48=quickest
+    //   - "0" means do not change the currentPalette at all; freeze
+    
+    void UpdatePaletteCycle()
+    {
+
+        ChangePalettePeriodically();
+        uint8_t maxChanges = 24; 
+        nblendPaletteTowardPalette( currentPalette, targetPalette, maxChanges);
     }
 
     void RandomPalette()
@@ -318,7 +371,7 @@ public:
     {
         for (int x = x0; x < x1; x++)
             for (int y = y0; y < y1; y++)
-                leds[xy(x, y)] = color;
+                drawPixel(x, y, color);
     }
 
     void loadPalette(int index)

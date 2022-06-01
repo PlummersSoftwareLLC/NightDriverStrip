@@ -40,11 +40,13 @@
 #include "ntptimeclient.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
+#include "ledstripeffect.h"
 
 #include <deque>
 #include <memory>
 
-extern bool 			    	 g_bUpdateStarted;
+extern bool                      g_bUpdateStarted;
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 
 // LEDStripEffect
 //
@@ -76,10 +78,10 @@ class LEDStripEffect
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])				// There are up to 8 channel in play per effect and when we
-    {			
-        debugW("Init Init");													//   start up, we are given copies to their graphics interfaces
-        for (int i = 0; i < NUM_CHANNELS; i++)						//   so that we can call them directly later from other calls
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               // There are up to 8 channel in play per effect and when we
+    {           
+        debugW("Init Init");                                                    //   start up, we are given copies to their graphics interfaces
+        for (int i = 0; i < NUM_CHANNELS; i++)                      //   so that we can call them directly later from other calls
         {
             _GFX[i] = gfx[i];    
         }
@@ -89,13 +91,18 @@ class LEDStripEffect
         return true;  
     }
     
-    virtual void Draw() = 0;										// Your effect must implement these
+    virtual void Draw() = 0;                                        // Your effect must implement these
     
     virtual const char *FriendlyName() const
     {
         return _friendlyName.c_str();
     }
 
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 30;
+    }
+    
     static inline CRGB RandomRainbowColor()
     {
         static const CRGB colors[] =
@@ -191,13 +198,13 @@ class LEDStripEffect
     }
 
     inline void setPixelOnAllChannels(int i, CRGB c)
-    {		
+    {       
         for (int i = 0; i < NUM_CHANNELS; i++)
             _GFX[i]->setPixel(i, c);
     }
 
     inline void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const
-    {		
+    {       
         for (int i = 0; i < NUM_CHANNELS; i++)
             _GFX[i]->setPixelsF(fPos, count, c, bMerge);
     }

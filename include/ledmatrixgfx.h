@@ -92,4 +92,5 @@ public:
   static void StartMatrix();
   static CRGB * GetMatrixBackBuffer();
   static void MatrixSwapBuffers();  
+  static void PresentFrame();
 };

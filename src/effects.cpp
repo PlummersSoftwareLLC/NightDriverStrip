@@ -36,7 +36,6 @@
 #include "effects/strip/stareffect.h"                 // star effects
 #include "effects/strip/bouncingballeffect.h"         // bouincing ball effectsenable+
 #include "effects/strip/tempeffect.h"
-#include "effects/matrix/vueffect.h"                  // vu (sound) based effects
 
 #if ENABLE_AUDIO
 #include "effects/matrix/spectrumeffects.h"            // Musis spectrum effects
@@ -55,6 +54,7 @@
 #include "ledmatrixgfx.h"
 #include "effects/matrix/PatternSerendipity.h"          
 #include "effects/matrix/PatternSwirl.h"                
+#include "effects/matrix/PatternPulse.h"
 #endif
 
 #ifdef USESTRIP
@@ -199,18 +199,18 @@ CRGBPalette256 MagentaColors_p =
 
 CRGBPalette256 spectrumBasicColors  =
 {
-	CRGB(0xFD0E35),                     // Red
-	CRGB(0xFF8833),                     // Orange
-	CRGB(0xFFEB00),                     // Middle Yellow
-	CRGB(0xAFE313),                     // Inchworm
+    CRGB(0xFD0E35),                     // Red
+    CRGB(0xFF8833),                     // Orange
+    CRGB(0xFFEB00),                     // Middle Yellow
+    CRGB(0xAFE313),                     // Inchworm
     CRGB(0x3AA655),                     // Green
     CRGB(0x8DD9CC),                     // Middle Blue Green
     CRGB(0x0066FF),                     // Blue III
     CRGB(0xDB91EF),                     // Lilac
     CRGB(0xFD0E35),                     // Red
-	CRGB(0xFF8833),                     // Orange
-	CRGB(0xFFEB00),                     // Middle Yellow
-	CRGB(0xAFE313),                     // Inchworm
+    CRGB(0xFF8833),                     // Orange
+    CRGB(0xFFEB00),                     // Middle Yellow
+    CRGB(0xAFE313),                     // Inchworm
     CRGB(0x3AA655),                     // Green
     CRGB(0x8DD9CC),                     // Middle Blue Green
     CRGB(0x0066FF),                     // Blue III
@@ -219,7 +219,7 @@ CRGBPalette256 spectrumBasicColors  =
 
 CRGBPalette256 USAColors_p  =
 {
-	CRGB::Blue,	 						
+    CRGB::Blue,                         
     CRGB::Blue,
     CRGB::Blue,
     CRGB::Blue,
@@ -284,12 +284,13 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new PatternPulse2(1.95, 1.95, 0.01),
+    new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue,  CRGB::Green, CRGB::Yellow, CRGB::Red)), 8),
     new PatternSwirl(),
     new PatternSerendipity(),
     new SpectrumAnalyzerEffect("Spectrum Standard", spectrumBasicColors, 100, 0, 2.0, 2.0),
     new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
     new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
-    new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue,  CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
     new SpectrumAnalyzerEffect("Spectrum Fade", spectrumBasicColors, 0, 70, -1.0, 3.0),
     new GhostWave("GhostWave Rainbow", &rainbowPalette),
     new WaveformEffect("WaveForm", &rainbowPalette, 8),

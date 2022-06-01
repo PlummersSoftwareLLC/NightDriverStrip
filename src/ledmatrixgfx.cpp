@@ -30,8 +30,11 @@
 
 #include "gfxbase.h"
 #include "globals.h"
+#include "effectmanager.h"
 
 extern DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 uint32_t GFXBase::noise_x;
 uint32_t GFXBase::noise_y;
@@ -68,21 +71,28 @@ void LEDMatrixGFX::StartMatrix()
     matrix.setBrightness(255);
 }
 
-
-
 CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 {
-    frameStartTime = g_AppTime.CurrentTime();
+    for (int i = 0; i < NUM_CHANNELS; i++)
+      g_pDevices[i]->UpdatePaletteCycle();
+
     return (CRGB *) backgroundLayer.getRealBackBuffer();
+
 }
 
 void LEDMatrixGFX::MatrixSwapBuffers()
 {
-  constexpr double minimumFrameTime = 1/35.0;
-
+  frameStartTime = g_AppTime.CurrentTime();
   backgroundLayer.swapBuffers(true);
-  double elapsed = g_AppTime.CurrentTime() - frameStartTime;
-  if (elapsed < minimumFrameTime)
-    delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
 }
+
+void LEDMatrixGFX::PresentFrame()
+{
+    const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+    double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+    if (elapsed < minimumFrameTime)
+        delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
+
+}
+
 #endif

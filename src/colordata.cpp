@@ -31,6 +31,7 @@
 
 #include "globals.h"
 #include "gfxbase.h"
+
 DEFINE_GRADIENT_PALETTE( vu_gpGreen ) 
 {
       0,     0,   4,   0,   // near black green
@@ -60,6 +61,17 @@ DEFINE_GRADIENT_PALETTE(bluesky_gp){
     192, 0, 0, 128,    // dark blue
     255, 0, 0, 64}; // dark blue
 CRGBPalette256 bluesky_pal = bluesky_gp;
+
+DEFINE_GRADIENT_PALETTE(redorange_gp){
+    0,    128,   0, 0,  
+    64,   192,   0, 0,  
+    96,   255,   64, 0,  
+    128,  255,  255, 0,  
+    160,  192,   64, 0,
+    192,  128,    0, 0,  
+    255,   64,    0, 0}; 
+CRGBPalette256 redorange_pal = redorange_gp;
+
 
 // For LEDMatrixGFX::from16Bit color conversions
 //

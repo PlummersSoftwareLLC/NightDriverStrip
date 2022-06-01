@@ -103,7 +103,7 @@ class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual Pa
     }
 };
 
-class VUMeterEffect : public LEDStripEffect
+class VUMeterEffect 
 {
   protected:
 
@@ -111,13 +111,11 @@ class VUMeterEffect : public LEDStripEffect
     //
     // Draw i-th pixel in row y
 
-	void DrawVUPixels(int i, int yVU, int fadeBy = 0)
-	{
-        auto pGFXChannel = _GFX[0];
-
-		int xHalf = pGFXChannel->width()/2;
-		pGFXChannel->drawPixel(xHalf-i-1, yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
-		pGFXChannel->drawPixel(xHalf+i,   yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
+    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0)
+    {
+        int xHalf = pGFXChannel->width()/2;
+        pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
+        pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
     }
 
     // DrawVUMeter
@@ -130,18 +128,18 @@ class VUMeterEffect : public LEDStripEffect
     const double VU_DECAY_PER_SECOND = 3.0;
 
 
-    void DrawVUMeter(int yVU)
+    void DrawVUMeter(GFXBase * pGFXChannel, int yVU)
     {
-        auto pGFXChannel = _GFX[0];
         const int MAX_FADE = 256;
 
-        pGFXChannel->fillRect(0, yVU, MATRIX_WIDTH, 1, BLACK16);
+        pGFXChannel->drawLine(0, 0, MATRIX_WIDTH, 0, CRGB::Black);
+        //        fillRect(0, yVU, MATRIX_WIDTH, 1, BLACK16);
 
         if (iPeakVUy > 1)
         {
             int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
-            DrawVUPixels(iPeakVUy,   yVU, fade);
-            DrawVUPixels(iPeakVUy-1, yVU, fade);
+            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade);
+            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade);
         }
 
         if (gVURatio > lastVU)
@@ -166,23 +164,17 @@ class VUMeterEffect : public LEDStripEffect
         }
 
         for (int i = 0; i < bars; i++)
-            DrawVUPixels(i, yVU, i > bars ? 255 : 0);
-    }
-
-  public:
-
-    VUMeterEffect(const char * pszName = nullptr)
-      : LEDStripEffect(pszName)
-    {
+            DrawVUPixels(pGFXChannel, i, yVU, i > bars ? 255 : 0);
     }
 };
+
 
 // SpectrumAnalyzerEffect
 //
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
 // matrix is 48x16 using LED Channel 0 only.   Has a VU meter up top and 16 bands.
 
-class SpectrumAnalyzerEffect : public VUMeterEffect
+class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffect
 {
   protected:
 
@@ -229,17 +221,17 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
         const int PeakFadeTime_ms = 1000;
 
         CRGB colorHighlight = CRGB(CRGB::White);
-	    unsigned long msPeakAge = millis() - g_lastPeak1Time[iBand];
-	    if (msPeakAge > PeakFadeTime_ms)
-		    msPeakAge = PeakFadeTime_ms;
-	    
+        unsigned long msPeakAge = millis() - g_lastPeak1Time[iBand];
+        if (msPeakAge > PeakFadeTime_ms)
+            msPeakAge = PeakFadeTime_ms;
+        
         float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
-	    uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
+        uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
 
         colorHighlight = CRGB(CRGB::White).fadeToBlackBy(fadeAmount);
 
         if (value == 0)
-		    colorHighlight = baseColor;
+            colorHighlight = baseColor;
 
         // if decay rate is less than zero we interpret that here to mean "don't draw it at all".  
 
@@ -255,7 +247,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
-        : VUMeterEffect(pszFriendlyName),
+        : LEDStripEffect(pszFriendlyName),
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
           _fadeRate(fadeRate),
@@ -270,7 +262,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
-        : VUMeterEffect(pszFriendlyName),
+        : LEDStripEffect(pszFriendlyName), 
           _colorOffset(0),
           _scrollSpeed(0), 
           _fadeRate(fadeRate),
@@ -281,14 +273,14 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
     {
     }
 
-	virtual const char * FriendlyName() const
-	{
-		return "Spectrum";
-	}
+    virtual const char * FriendlyName() const
+    {
+        return "Spectrum";
+    }
 
     virtual void Draw()
     {
-        auto pGFXChannel = _GFX[0];
+        auto pGFXChannel = _GFX[0].get();
 
         if (_scrollSpeed > 0)
         {
@@ -306,10 +298,12 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
   
         std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-        DrawVUMeter(0);
+        DrawVUMeter(pGFXChannel, 0);
         for (int i = 0; i < NUM_BANDS; i++)
         {
-            CRGB bandColor = ColorFromPalette(_palette, (::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 256);
+            // Start at 32 because first two bands are usually too dark to use as bar colors.  This winds up selecting a number up
+            // to 192 and then adding 64 to it in order to skip those darker 0-64 colors
+            CRGB bandColor = _GFX[0].get()->ColorFromCurrentPalette((::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 1892 + 76);
             DrawBand(i, bandColor);
         }
     }
@@ -319,7 +313,7 @@ class SpectrumAnalyzerEffect : public VUMeterEffect
 //
 // Draws a colorful scrolling waveform driven by instantaneous VU as it scrolls
 
-class WaveformEffect : public VUMeterEffect
+class WaveformEffect : public LEDStripEffect, virtual public VUMeterEffect
 {
   protected:
     const CRGBPalette256 *    _pPalette = nullptr;
@@ -332,21 +326,23 @@ class WaveformEffect : public VUMeterEffect
     const double VU_DECAY_PER_SECOND = 3.0;
 
   public:
-	
+    
     WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
-        : VUMeterEffect(pszFriendlyName)
-	{
+        : LEDStripEffect(pszFriendlyName)
+    {
         _pPalette = pPalette;
         _increment = increment;
     }
 
-	virtual const char * FriendlyName() const
-	{
-		return "Waveform Effect";
-	}
+    virtual const char * FriendlyName() const
+    {
+        return "Waveform Effect";
+    }
 
     void DrawSpike(int x, double v) 
     {
+        auto g = g_pDevices[0];
+
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2 - 1);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
         if (yTop < 1)
@@ -364,10 +360,12 @@ class WaveformEffect : public VUMeterEffect
             auto index = (x1 * dx +_iColorOffset) % 256;
             if (y >= yTop && y <= yBottom )
             {
+                uint16_t ms = millis();
+
                 if (y < 2 || y > (MATRIX_HEIGHT - 2))
                     color  = CRGB::Red;
                 else
-                    color = ColorFromPalette(*_pPalette, 255 - index);
+                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND); // color = ColorFromPalette(*_pPalette, 255 - index);
 
                 // Sparkles
                 //
@@ -376,20 +374,16 @@ class WaveformEffect : public VUMeterEffect
 
             }
                 
-            _GFX[0]->drawPixel(x, y, color);
+            _GFX[0]->setPixel(x, y, color);
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
 
     }
 
     virtual void Draw()
-	{
-        //_GFX[0]->MoveX(1);
-
-        _GFX[0]->MoveInwardX();
+    {
+        _GFX[0]->MoveInwardX(1);                            // Start on Y=1 so we don't shift the VU meter
         
-        DrawVUMeter(0);        
-
         if (gVURatio > lastVU)
             lastVU = gVURatio;
         else
@@ -399,7 +393,9 @@ class WaveformEffect : public VUMeterEffect
 
         DrawSpike(63, lastVU/2.0);
         DrawSpike(0, lastVU/2.0);
-	}
+
+        DrawVUMeter(_GFX[0].get(), 0);        
+    }
 };
 
 class GhostWave : public WaveformEffect
@@ -414,16 +410,16 @@ class GhostWave : public WaveformEffect
     {
     }
 
-	virtual void Draw()
-	{
-        auto graphics = _GFX[0];
+    virtual void Draw()
+    {
+        auto graphics = _GFX[0].get();
 
         for (int y = 1; y < MATRIX_HEIGHT; y++)
         {
             for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
             {
-                graphics->drawPixel(x, y, graphics->getPixel(x+1, y));
-                graphics->drawPixel(MATRIX_WIDTH-x-1, y, graphics->getPixel(MATRIX_WIDTH-x-2, y));
+                graphics->setPixel(x, y, graphics->getPixel(x+1, y));
+                graphics->setPixel(MATRIX_WIDTH-x-1, y, graphics->getPixel(MATRIX_WIDTH-x-2, y));
             }
         }
     
@@ -434,11 +430,11 @@ class GhostWave : public WaveformEffect
         lastVU = max(lastVU, 0.0);
         lastVU = min(lastVU, 2.0);
 
-        DrawVUMeter(0);
+        DrawVUMeter(graphics, 0);
         DrawSpike(MATRIX_WIDTH/2, lastVU / 2.0);
         DrawSpike(MATRIX_WIDTH/2-1, lastVU / 2.0);
         //BlurFrame(32);
-	}
+    }
 };
 
 #endif

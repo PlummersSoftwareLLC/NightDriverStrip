@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        PatternSpiral.h
+// File:        PatternSerendipity.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -102,9 +102,10 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])	
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
     {
-        LEDStripEffect::Init(gfx);
+        if (!LEDStripEffect::Init(gfx))
+            return false;
 
         // set all counting directions positive for the beginning
         for (int i = 0; i < timers; i++)
@@ -143,6 +144,8 @@ public:
         multiTimer[4].up = MATRIX_HEIGHT - 1;
         multiTimer[4].down = 0;
         multiTimer[4].count = 0;
+    
+        return true;
     }
 
     virtual void Draw()
