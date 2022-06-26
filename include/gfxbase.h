@@ -134,6 +134,33 @@ public:
         return CRGB(r, g, b);
     }
 
+    static inline uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
+    {
+        uint8_t beat = beat8(beats_per_minute, timebase);
+        uint8_t beatcos = cos8(beat + phase_offset);
+        uint8_t rangewidth = highest - lowest;
+        uint8_t scaledbeat = scale8(beatcos, rangewidth);
+        uint8_t result = lowest + scaledbeat;
+        return result;
+    }
+
+    static inline uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
+    {
+        uint8_t beatsin = sin8(theta);
+        uint8_t rangewidth = highest - lowest;
+        uint8_t scaledbeat = scale8(beatsin, rangewidth);
+        uint8_t result = lowest + scaledbeat;
+        return result;
+    }
+
+    static inline uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
+    {
+        uint8_t beatcos = cos8(theta);
+        uint8_t rangewidth = highest - lowest;
+        uint8_t scaledbeat = scale8(beatcos, rangewidth);
+        uint8_t result = lowest + scaledbeat;
+        return result;
+    }
     static inline uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) // Convert RGB -> 16bit 5:6:5
     {
         return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);

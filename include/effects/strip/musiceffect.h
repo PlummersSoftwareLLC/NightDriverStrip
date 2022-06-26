@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <iostream>
 #include <vector>
+#include <deque>
 #include <math.h>
 #include "colorutils.h"
 #include "globals.h"
@@ -65,11 +66,6 @@ class BeatEffectBase : public virtual LEDStripEffect
     double _minElapsed;                               // Min time between beats or we ignore
     double _lowestSeen;
 
-    double SecondsSinceLastBeat()
-    {
-      return g_AppTime.CurrentTime() - _lastBeat;
-    }
-
   public:
    
     BeatEffectBase(double lowLatch = 1.0, double highLatch = 1.75, double minElapsed = 0.25)      // Eighth note at 120BPM is .125
@@ -88,6 +84,12 @@ class BeatEffectBase : public virtual LEDStripEffect
     {
         debugV("BEAT: [%s], gVURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", gVURatio, g_AppTime.CurrentTime() - _lastBeat, gVURatio - _lowestSeen);
     }
+
+    double SecondsSinceLastBeat()
+    {
+      return g_AppTime.CurrentTime() - _lastBeat;
+    }
+
 
     // BeatEffectBase::Draw
     //
@@ -118,6 +120,75 @@ class BeatEffectBase : public virtual LEDStripEffect
             _lastBeat = g_AppTime.CurrentTime();
             _latched = false;
             _lowestSeen = 2.0;
+        }
+    }
+};
+
+class BeatEffectBase2 : public virtual LEDStripEffect
+{
+  protected:
+    const int _maxSamples = DesiredFramesPerSecond() * 2;
+    deque<double> _samples;
+    double _lastBeat = 0;
+    double _minRange = 0;
+    double _minElapsed = 0;
+
+  public:
+   
+    BeatEffectBase2(double minRange = 0, double minElapsed = 0)      
+     : LEDStripEffect(nullptr),
+       _minRange(minRange),
+       _minElapsed(minElapsed)
+    {
+    }
+
+    // When a beat is detected, this is called.  The 'bMajor' indicates whether this is a more important beat, which
+    // for now simply means it's been a minimum delay since the last beat.
+
+    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    {
+    }
+
+    double SecondsSinceLastBeat()
+    {
+      return g_AppTime.CurrentTime() - _lastBeat;
+    }
+
+
+    // BeatEffectBase::Draw
+    //
+    // Doesn't actually "draw" anything, but rather it scans the audio VU to detect beats, and when it finds one,
+    // it calls the virtual "HandleBeat" function.
+
+    virtual void Draw()
+    {
+        debugV("BeatEffectBase2::Draw");
+        double elapsed = SecondsSinceLastBeat();
+    
+        _samples.push_back(gVURatio);
+        double minimum = *min_element(_samples.begin(), _samples.end());
+        double maximum = *max_element(_samples.begin(), _samples.end());
+
+        // debugI("Samples: %d, max: %0.2lf, min: %0.2lf, span: %0.2lf\n", _samples.size(), maximum, minimum, maximum-minimum);
+
+        if (_samples.size() >= _maxSamples)
+          _samples.pop_front();
+
+        if (maximum - minimum > _minRange)
+        {
+            if (elapsed < _minElapsed)
+            {
+                // False beat too early, clear data but don't reset lastBeat
+                 _samples.clear();
+            }
+            else
+            {
+              debugI("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
+
+              HandleBeat(false, elapsed, maximum - minimum);
+              _lastBeat = g_AppTime.CurrentTime();
+              _samples.clear();
+            }
         }
     }
 };
@@ -194,7 +265,7 @@ class ChannelBeatEffect : public BeatEffect
     }
 
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])	
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
     {
         _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))
@@ -242,8 +313,8 @@ class ChannelBeatEffect : public BeatEffect
         }
       }
   
-      if (iNew == -1)				// No empty slot could be found!
-      {	
+      if (iNew == -1)               // No empty slot could be found!
+      { 
         litArms.clear();
         setAllOnAllChannels(0,0,0);
         debugI("No slot!\n");

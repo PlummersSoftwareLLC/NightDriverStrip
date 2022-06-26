@@ -104,12 +104,12 @@ class PatternPulse : public LEDStripEffect
             if (step < maxSteps)
             {
                 // initial pulse
-                graphics->drawCircle(centerX, centerY, step, graphics->to16bit(graphics->ColorFromCurrentPalette(hue, pow(fadeRate, step - 2) * 255)));
+                graphics->drawCircle(centerX, centerY, step, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
 
                 // secondary pulse
                 if (step > 5)
                 {
-                    graphics->drawCircle(centerX, centerY, step - 3, graphics->to16bit(graphics->ColorFromCurrentPalette(hue, pow(fadeRate, step - 2) * 255)));
+                    graphics->drawCircle(centerX, centerY, step - 3, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
                 }
                 step++;
             }
@@ -122,7 +122,7 @@ class PatternPulse : public LEDStripEffect
     }
 };
 
-class PatternPulse2 : private virtual VUMeterEffect, public virtual BeatEffectBase
+class PatternPulse2 : private virtual VUMeterEffect, public virtual BeatEffectBase2
 {
   private:
 
@@ -144,9 +144,9 @@ class PatternPulse2 : private virtual VUMeterEffect, public virtual BeatEffectBa
 
   public:
 
-    PatternPulse2(double lowLatch = 1.75, double highLatch = 1.75, double minElapsed = 0.00) : 
+    PatternPulse2(double lowLatch = 1, double highLatch = 1, double minElapsed = 0.00) : 
         LEDStripEffect("PatternPulse2"), 
-        BeatEffectBase(lowLatch, highLatch, minElapsed)
+        BeatEffectBase2(1.95, 0.25 )
     {
     }
     
@@ -157,28 +157,28 @@ class PatternPulse2 : private virtual VUMeterEffect, public virtual BeatEffectBa
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        if (elapsed > 0.35)
+        if (span > 1.95)
         {
-            for (int i = 0; i < gVURatio * 1.5; i ++)
+            for (int i = 0; i < random(2)+2; i ++)
                 _pops.push_back( PulsePop() );            
         }
         else
         {
             PulsePop small;
-            small.maxSteps = random(12);
+            small.maxSteps = random(12)+4;
             _pops.push_back( small );
         }
     }
 
     virtual void Draw()
     {
-        auto graphics = (GFXBase *) BeatEffectBase::_GFX[0].get();
+        auto graphics = (GFXBase *) BeatEffectBase2::_GFX[0].get();
 
-        BeatEffectBase::Draw();
-        VUMeterEffect::DrawVUMeter(graphics, 0);
-
+        BeatEffectBase2::Draw();
+        //VUMeterEffect::DrawVUMeter(graphics, 0);
         //blur2d(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 25);
-        BeatEffectBase::fadeAllChannelsToBlackBy(20);
+        BeatEffectBase2     ::fadeAllChannelsToBlackBy(20);
+        DrawVUMeter(graphics, 0, SecondsSinceLastBeat() < 0.25 ? &vuPaletteBlue : &vuPaletteGreen);
 
         // Add some sparkle
 

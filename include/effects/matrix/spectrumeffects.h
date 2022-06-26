@@ -111,11 +111,11 @@ class VUMeterEffect
     //
     // Draw i-th pixel in row y
 
-    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0)
+    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, CRGBPalette256 * pPalette = nullptr)
     {
         int xHalf = pGFXChannel->width()/2;
-        pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
-        pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
+        pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vuPaletteGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
+        pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
     }
 
     // DrawVUMeter
@@ -128,7 +128,7 @@ class VUMeterEffect
     const double VU_DECAY_PER_SECOND = 3.0;
 
 
-    void DrawVUMeter(GFXBase * pGFXChannel, int yVU)
+    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, CRGBPalette256 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
 
@@ -138,8 +138,8 @@ class VUMeterEffect
         if (iPeakVUy > 1)
         {
             int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
-            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade);
-            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade);
+            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade, pPalette);
+            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade, pPalette);
         }
 
         if (gVURatio > lastVU)
@@ -164,7 +164,7 @@ class VUMeterEffect
         }
 
         for (int i = 0; i < bars; i++)
-            DrawVUPixels(pGFXChannel, i, yVU, i > bars ? 255 : 0);
+            DrawVUPixels(pGFXChannel, i, yVU, i > bars ? 255 : 0, pPalette);
     }
 };
 

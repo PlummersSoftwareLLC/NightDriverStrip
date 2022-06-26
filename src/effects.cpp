@@ -55,6 +55,10 @@
 #include "effects/matrix/PatternSerendipity.h"          
 #include "effects/matrix/PatternSwirl.h"                
 #include "effects/matrix/PatternPulse.h"
+#include "effects/matrix/PatternWave.h"
+#include "effects/matrix/PatternLife.h"
+#include "effects/matrix/PatternSpiro.h"
+#include "effects/matrix/PatternCube.h"
 #endif
 
 #ifdef USESTRIP
@@ -284,6 +288,10 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new PatternCube(),
+    new PatternSpiro(),
+    new PatternLife(),
+    new PatternWave(),
     new PatternPulse2(1.95, 1.95, 0.01),
     new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue,  CRGB::Green, CRGB::Yellow, CRGB::Red)), 8),
     new PatternSwirl(),

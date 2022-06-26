@@ -1,0 +1,250 @@
+//+--------------------------------------------------------------------------
+//
+// File:        PatternLife.h
+//
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+//
+// This file is part of the NightDriver software project.
+//
+//    NightDriver is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    NightDriver is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Nightdriver.  It is normally found in copying.txt
+//    If not, see <https://www.gnu.org/licenses/>.
+//
+//
+// Description:
+//
+//   Effect code ported from Aurora to Mesmerizer's draw routines
+//   and
+//
+// History:     Jun-25-202         Davepl      Based on Aurora
+//
+//---------------------------------------------------------------------------
+
+/*
+ * Aurora: https://github.com/pixelmatix/aurora
+ * Copyright (c) 2014 Jason Coon
+ *
+ * Portions of this code are adapted from Andrew: http://pastebin.com/f22bfe94d
+ * which, in turn, was "Adapted from the Life example on the Processing.org site"
+ *
+ * Made much more colorful by J.B. Langston:
+ *  https://github.com/jblang/aurora/commit/6db5a884e3df5d686445c4f6b669f1668841929b
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#ifndef PatternLife_H
+#define PatternLife_H
+
+#include "globals.h"
+#include "ledstripeffect.h"
+#include "gfxbase.h"
+
+
+
+class Cell 
+{
+public:
+  byte alive : 3;
+  byte prev  : 1;
+  byte hue   : 8;  
+  byte brightness;
+};
+
+#define CRC_LENGTH 64                           // Depth of loop check buffer
+
+class PatternLife : public LEDStripEffect 
+{
+private:
+
+    Cell world[MATRIX_WIDTH][MATRIX_HEIGHT];
+    uint32_t checksums[CRC_LENGTH];
+    int iChecksum = 0;
+    uint32_t bStuckInLoop = 0;
+    
+    unsigned int density = 50;
+    int cGeneration = 0;
+
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 30;
+    }
+
+    void randomFillWorld() 
+    {
+        srand(millis());
+        for (int i = 0; i < MATRIX_WIDTH; i++) {
+            for (int j = 0; j < MATRIX_HEIGHT; j++) {
+                if ((rand() % 100) < density) {
+                    world[i][j].alive = 1;
+                    world[i][j].brightness = 128;
+                }
+                else {
+                    world[i][j].alive = 0;
+                    world[i][j].brightness = 0;
+                }
+                world[i][j].prev = world[i][j].alive;
+                world[i][j].hue = 0;
+            }
+        }
+
+        for (int i = 0; i < CRC_LENGTH; i++)
+            checksums[i] = 0xFFFFFFF;
+    }
+
+    int neighbours(int x, int y) {
+        return (world[(x + 1) % MATRIX_WIDTH][y].prev) +
+            (world[x][(y + 1) % MATRIX_HEIGHT].prev) +
+            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][y].prev) +
+            (world[x][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
+            (world[(x + 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
+            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
+            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
+            (world[(x + 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev);
+    }
+
+public:
+
+    PatternLife() : LEDStripEffect("Life")
+    {
+    }
+
+    void Reset()
+    {
+        randomFillWorld();
+        for (int i = 0; i < CRC_LENGTH; i++)
+            checksums[i] = 0xFFFFFFF;
+        cGeneration = 0;
+        bStuckInLoop = 0;
+    }
+
+    virtual void Draw()
+    {
+        auto graphics = (GFXBase *) _GFX[0].get();
+        
+        if (cGeneration == 0) 
+            Reset();
+
+        // Display current generation
+
+        for (int i = 0; i < MATRIX_WIDTH; i++) {
+            for (int j = 0; j < MATRIX_HEIGHT; j++) {
+                if (world[i][j].brightness > 0)
+                    graphics->leds[graphics->xy(i, j)] += graphics->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
+                else
+                    graphics->leds[graphics->xy(i, j)] = CRGB::Black;
+            }
+        }
+
+        // We maintain a scrolling window of the last N crcs and if the current crc makes it all
+        // the way down to the bototm half we assume we're stuck in a loop and restart.
+        // We have to first extract the alive bits alone because we don't want the hue and brightness 
+        // data to mess with the CRC.
+
+        bool alive[MATRIX_WIDTH][MATRIX_HEIGHT];
+        for (int i = 0; i < MATRIX_WIDTH; i++) 
+            for (int j = 0; j < MATRIX_HEIGHT; j++) 
+                alive[i][j] = world[i][j].alive;
+
+        auto crc = uzlib_crc32(alive, sizeof(alive), 0xffffffff);
+        for (int i = 0; i < CRC_LENGTH - 1; i++)
+            checksums[i] = checksums[i+1];
+        checksums[CRC_LENGTH - 1] = crc;
+
+
+        // Look for any occurance of the current CRC in the first half of the window, which would mean
+        // a loop has occured.  If 
+
+        if (bStuckInLoop)
+        {
+            const int flashTime = 250;
+            const int resetTime = 5000;
+
+            auto elapsed = millis() - bStuckInLoop;
+            if (elapsed < flashTime)
+            {
+                auto whiteColor = CRGB(0x60, 0x00, 0x00);
+                graphics->fillRectangle(0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, whiteColor);
+            }
+            graphics->DimAll(255 - 255*elapsed/resetTime);
+
+            for (int x = 0; x < MATRIX_WIDTH; x++) 
+                for (int y = 0; y < MATRIX_HEIGHT; y++) 
+                        world[x][y].brightness *= 0.9;
+            if (elapsed > resetTime)
+                Reset();
+        }
+        else
+        {
+            for (int i = 0; i < CRC_LENGTH / 2; i++)
+            {
+                if (checksums[i] == crc)
+                {
+                    bStuckInLoop = millis();
+                }
+            }
+        }
+
+        // Birth and death cycle
+        for (int x = 0; x < MATRIX_WIDTH; x++) {
+            for (int y = 0; y < MATRIX_HEIGHT; y++) {
+                // Default is for cell to stay the same
+                if (world[x][y].brightness > 0 && world[x][y].prev == 0)
+                  world[x][y].brightness *= 0.75;
+                  
+                int count = neighbours(x, y);
+                if (count == 3 && world[x][y].prev == 0) {
+                    // A new cell is born
+                    world[x][y].alive = 1;
+                    world[x][y].hue += 1;
+                    world[x][y].brightness = 255;
+                } else if ((count < 2 || count > 3) && world[x][y].prev == 1) {
+                    // Cell dies
+                    world[x][y].alive = 0;
+                    world[x][y].brightness = 0;
+                }
+            }
+        }
+
+        // Copy next generation into place
+
+        int cCount = 0;
+
+        for (int x = 0; x < MATRIX_WIDTH; x++) {
+            for (int y = 0; y < MATRIX_HEIGHT; y++) {
+                if (world[x][y].prev != world[x][y].alive)
+                    cCount++;
+                world[x][y].prev = world[x][y].alive;
+            }
+        }
+
+        cGeneration++;
+    }
+};
+
+#endif
