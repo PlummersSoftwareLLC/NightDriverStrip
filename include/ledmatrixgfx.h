@@ -82,10 +82,12 @@ public:
     leds = pLeds;
   }
 
-  inline uint16_t getPixelIndex(int16_t x, int16_t y) const
+/*
+  inline uint16_t xy(int16_t x, int16_t y) const
   {
     return y * _width + x;
   }
+*/
 
   // Matrix interop
 
@@ -93,4 +95,10 @@ public:
   static CRGB * GetMatrixBackBuffer();
   static void MatrixSwapBuffers();  
   static void PresentFrame();
+
+  SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
+  {
+    return backgroundLayer;
+  }
+  
 };

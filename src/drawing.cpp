@@ -98,8 +98,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
             static_assert( sizeof(CRGB) == sizeof(SM_RGB), "Code assumes 24 bits in both places" );
 
-            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
             LEDMatrixGFX::MatrixSwapBuffers();
+            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
@@ -239,6 +239,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 #endif
 
 #if USEMATRIX
+            pMatrix->leds[0] = CRGB::Green;
+            pMatrix->leds[1] = CRGB::Blue;
             LEDMatrixGFX::PresentFrame();
 #endif
 

@@ -74,9 +74,9 @@ private:
   uint8_t radiusx = MATRIX_WIDTH / 4;
   uint8_t radiusy = MATRIX_HEIGHT / 4;
   uint8_t minx = MATRIX_CENTER_X - radiusx;
-  uint8_t maxx = MATRIX_CENTER_X + radiusx + 1;
+  uint8_t maxx = MATRIX_CENTER_X + radiusx - 1;
   uint8_t miny = MATRIX_CENTER_Y - radiusy;
-  uint8_t maxy = MATRIX_CENTER_Y + radiusy + 1;
+  uint8_t maxy = MATRIX_CENTER_Y + radiusy - 1;
 
   uint8_t spirocount = 1;
   uint8_t spirooffset = 256 / spirocount;

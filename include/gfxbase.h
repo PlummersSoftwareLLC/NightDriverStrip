@@ -186,38 +186,33 @@ public:
         memset(leds, 0, sizeof(CRGB) * _width * _height);
     }
 
-    inline virtual uint16_t getPixelIndex(int16_t x, int16_t y) const
-    {
-        return y * _width + x;
-    }
-
     inline virtual uint16_t xy(uint8_t x, uint8_t y) const
     {
         if (x >= _width || x < 0)
-            return 0;
+            return 0; // throw std::runtime_error("x Pixel out of range in xy(x,y)");
         if (y >= _height || y < 0)
-            return 0;
-        return getPixelIndex(x, y);
+            return 0; // throw std::runtime_error("y Pixel out of range in xy(x,y)");
+        return y * _width + x;
     }
 
-    virtual CRGB getPixel(int16_t x) const 
+    virtual CRGB getPixel(int16_t i) const 
     {
-        if (x >= 0 && x < _width * _height)
-            return leds[x];
+        if (i >= 0 && i < _width * _height)
+            return leds[i];
         else
             throw std::runtime_error("Pixel out of range in getPixel(x)");
     }
 
-    virtual void addColor(int16_t x, CRGB c)
+    virtual void addColor(int16_t i, CRGB c)
     {
-        if (x >= 0 && x < _width * _height)
-            leds[x] += c;
+        if (i >= 0 && i < _width * _height)
+            leds[i] += c;
     }
 
     inline virtual CRGB getPixel(int16_t x, int16_t y) const
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
-            return getPixel(getPixelIndex(x, y));
+            return getPixel(xy(x, y));
         else
             throw std::runtime_error("Pixel out of range in getPixel(x,y)");
 
@@ -225,13 +220,13 @@ public:
 
     inline virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
-        addColor(getPixelIndex(x, y), color);
+        addColor(xy(x, y), color);
         //setPixel(x, y, color);
     }
 
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        addColor(getPixelIndex(x, y), from16Bit(color));
+        addColor(xy(x, y), from16Bit(color));
         //setPixel(x, y, color);
     }
 
@@ -243,16 +238,13 @@ public:
     virtual void setPixel(int16_t x, int16_t y, uint16_t color)
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
-        {
-            debugV("setPixel %02d, %02d - %02x", x, y, color);
-            leds[getPixelIndex(x, y)] = from16Bit(color);
-        }
+            leds[xy(x, y)] = from16Bit(color);
     }
 
     inline virtual void setPixel(int16_t x, int16_t y, CRGB color)
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
-            leds[getPixelIndex(x, y)] = color;
+            leds[xy(x, y)] = color;
     }
 
     inline virtual void setPixel(int16_t x, int r, int g, int b)

@@ -71,29 +71,29 @@
     13 14 STB/Latch
     15 16 Gnd
                         ESP32 pin / comment
-    1	R0	2	Red Data (columns 1-16)
-    2	G0	15	Green Data (columns 1-16)
+    1   R0  2   Red Data (columns 1-16)
+    2   G0  15  Green Data (columns 1-16)
 
-    3	B0	4	Blue Data (columns 1-16)
-    4	GND	GND	Ground
+    3   B0  4   Blue Data (columns 1-16)
+    4   GND GND Ground
     
-    5	R1	16/RX2	Red Data (columns 17-32)
-    6	G1	27	Green Data (columns 17-32)
+    5   R1  16/RX2  Red Data (columns 17-32)
+    6   G1  27  Green Data (columns 17-32)
     
-    7	B1	17/TX2	Blue Data (columns 17-32)
-    8	E	12	Demux Input E for 64x64 panels
+    7   B1  17/TX2  Blue Data (columns 17-32)
+    8   E   12  Demux Input E for 64x64 panels
    
-    9	A	5	Demux Input A0
-    10	B	18	Demux Input A1
+    9   A   5   Demux Input A0
+    10  B   18  Demux Input A1
 
-    11	C	19	Demux Input A2
-    12	D	21	Demux Input E1, E3 (32x32 panels only)
+    11  C   19  Demux Input A2
+    12  D   21  Demux Input E1, E3 (32x32 panels only)
     
-    13	CLK	22	LED Drivers' Clock
-    14	STB	26	LED Drivers' Latch
+    13  CLK 22  LED Drivers' Clock
+    14  STB 26  LED Drivers' Latch
     
-    15	OE	25	LED Drivers' Output Enable
-    16	GND	GND	Ground
+    15  OE  25  LED Drivers' Output Enable
+    16  GND GND Ground
     */ 
     #define R1_PIN  GPIO_NUM_12
     #define G1_PIN  GPIO_NUM_13

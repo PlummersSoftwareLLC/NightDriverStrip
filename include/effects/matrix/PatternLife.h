@@ -76,7 +76,7 @@ public:
   byte brightness;
 };
 
-#define CRC_LENGTH 64                           // Depth of loop check buffer
+#define CRC_LENGTH 256                           // Depth of loop check buffer
 
 class PatternLife : public LEDStripEffect 
 {
@@ -86,18 +86,23 @@ private:
     uint32_t checksums[CRC_LENGTH];
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
-    
     unsigned int density = 50;
     int cGeneration = 0;
+    unsigned long seed;
 
     virtual size_t DesiredFramesPerSecond() const
     {
         return 30;
     }
 
+    // Seed: 92465, Generations: 1626
+    //       130908,             3253
     void randomFillWorld() 
     {
-        srand(millis());
+        // 130908 Loop
+        seed = millis();
+        debugW("Seeding Life: %lu", seed);
+        srand(seed);
         for (int i = 0; i < MATRIX_WIDTH; i++) {
             for (int j = 0; j < MATRIX_HEIGHT; j++) {
                 if ((rand() % 100) < density) {
@@ -183,7 +188,7 @@ public:
         if (bStuckInLoop)
         {
             const int flashTime = 250;
-            const int resetTime = 5000;
+            const int resetTime = 1500;
 
             auto elapsed = millis() - bStuckInLoop;
             if (elapsed < flashTime)
@@ -206,6 +211,7 @@ public:
                 if (checksums[i] == crc)
                 {
                     bStuckInLoop = millis();
+                    debugI("Seed: %lu, Generations: %d, %s", seed, cGeneration, cGeneration > 3000 ? "<<<<<" : "");
                 }
             }
         }

@@ -59,6 +59,7 @@
 #include "effects/matrix/PatternLife.h"
 #include "effects/matrix/PatternSpiro.h"
 #include "effects/matrix/PatternCube.h"
+#include "effects/matrix/PatternCircuit.h"
 #endif
 
 #ifdef USESTRIP
@@ -288,6 +289,7 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new PatternCircuit(),
     new PatternCube(),
     new PatternSpiro(),
     new PatternLife(),

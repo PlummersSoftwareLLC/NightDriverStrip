@@ -93,7 +93,7 @@ public:
     {
         if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
         {
-            return _pLEDs[getPixelIndex(x, y)];
+            return _pLEDs[xy(x, y)];
         }
         else
         {

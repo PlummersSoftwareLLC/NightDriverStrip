@@ -132,7 +132,7 @@ class VUMeterEffect
     {
         const int MAX_FADE = 256;
 
-        pGFXChannel->drawLine(0, 0, MATRIX_WIDTH, 0, CRGB::Black);
+        pGFXChannel->drawLine(0, 0, MATRIX_WIDTH-1, 0, CRGB::Black);
         //        fillRect(0, yVU, MATRIX_WIDTH, 1, BLACK16);
 
         if (iPeakVUy > 1)
