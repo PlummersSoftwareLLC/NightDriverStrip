@@ -81,6 +81,7 @@
 
 #include "screen.h"
 
+
 class GFXBase : public Adafruit_GFX
 {
 protected:
@@ -352,7 +353,7 @@ public:
             if( secondHand ==  0)  
                 { targetPalette = RainbowColors_p; }
             if( secondHand == 10)  
-                { targetPalette = redorange_gp; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
+                { targetPalette = HeatColors_p; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
             if( secondHand == 20)  
                 { targetPalette = ForestColors_p; } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
             if( secondHand == 30)  

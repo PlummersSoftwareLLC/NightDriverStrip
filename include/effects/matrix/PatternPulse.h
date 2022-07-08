@@ -122,7 +122,7 @@ class PatternPulse : public LEDStripEffect
     }
 };
 
-class PatternPulse2 : private virtual VUMeterEffect, public virtual BeatEffectBase2
+class PatternPulse2 : public BeatEffectBase2
 {
   private:
 
@@ -178,7 +178,6 @@ class PatternPulse2 : private virtual VUMeterEffect, public virtual BeatEffectBa
         //VUMeterEffect::DrawVUMeter(graphics, 0);
         //blur2d(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 25);
         BeatEffectBase2     ::fadeAllChannelsToBlackBy(20);
-        DrawVUMeter(graphics, 0, SecondsSinceLastBeat() < 0.25 ? &vuPaletteBlue : &vuPaletteGreen);
 
         // Add some sparkle
 

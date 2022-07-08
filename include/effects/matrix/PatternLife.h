@@ -92,7 +92,7 @@ private:
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 30;
+        return 24;
     }
 
     // Seed: 92465, Generations: 1626

@@ -43,6 +43,7 @@
 #include "paletteeffect.h"
 #include "effectmanager.h"
 
+extern volatile float gVURatio;                // Current VU as a ratio to its recent min and max
 
 // Simple definitions of what direction we're talking about
 
@@ -56,14 +57,8 @@ enum PixelOrder
   RightLeft   = 16
 };
 
-DEFINE_GRADIENT_PALETTE( gpSeahawks ) 
-{
-    0,       0,     0,   4,      
-    64,      3,    38,  58,      
-   128,      0,    21,  50,      
-   192,     78,   167,   1,      
-   255,     54,    87, 140,      
-};
+extern CRGBPalette256 vuPaletteSeahawks;
+extern CRGBPalette256 golden;
 
 // These tables represent the physical order of LEDs when looking at
 // the fan in a particular direction, like top to bottom or left to right
@@ -99,7 +94,7 @@ static const int FanPixelsVertical[FAN_SIZE] =
 // Returns the sequential strip postion of a an LED on the fans based
 // on the index and direction specified, like 32nd most TopDown pixel.
 
-int GetFanPixelOrder(int iPos, PixelOrder order = Sequential)
+inline int GetFanPixelOrder(int iPos, PixelOrder order = Sequential)
 {
   while (iPos < 0)
     iPos += FAN_SIZE;
@@ -147,7 +142,7 @@ int GetFanPixelOrder(int iPos, PixelOrder order = Sequential)
 // Clears pixels logically into a fan bank in a direction such as top down rather than
 // just straight sequential strip order
 
-void ClearFanPixels(float fPos, float count, PixelOrder order = Sequential, int iFan = 0)
+inline void ClearFanPixels(float fPos, float count, PixelOrder order = Sequential, int iFan = 0)
 {
     fPos += iFan * FAN_SIZE;
     while (count > 0)
@@ -162,7 +157,7 @@ void ClearFanPixels(float fPos, float count, PixelOrder order = Sequential, int 
 //
 // A fan is a ring set with a single ring
 
-void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order = Sequential, int iFan = 0)
+inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order = Sequential, int iFan = 0)
 {
   fPos += iFan * FAN_SIZE;
 
@@ -222,7 +217,7 @@ void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order = Seque
 // With multiple rings, a fan or insulator becomes a ringset, and this function will
 // draw to particular ring within a particular insulator
 
-void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, int iRing)
+inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, int iRing)
 {
     for (int i = 0; i < iRing; i++)
         fPos += gRingSizeTable[i];
@@ -230,7 +225,7 @@ void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, int iRi
     DrawFanPixels(fPos, count, color, Sequential, iInsulator); 
 }
 
-void FillRingPixels(CRGB color, int iInsulator, int iRing)
+inline void FillRingPixels(CRGB color, int iInsulator, int iRing)
 {
     DrawRingPixels(0, gRingSizeTable[iRing], color, iInsulator, iRing);
 }

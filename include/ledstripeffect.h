@@ -101,7 +101,7 @@ class LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 30;
+        return 31;
     }
     
     static inline CRGB RandomRainbowColor()

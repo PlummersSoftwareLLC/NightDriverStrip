@@ -42,6 +42,18 @@ DEFINE_GRADIENT_PALETTE( vu_gpGreen )
 };
 CRGBPalette256 vuPaletteGreen = vu_gpGreen;
 
+CRGBPalette256 golden(CRGB::Gold);
+
+DEFINE_GRADIENT_PALETTE( gpSeahawks ) 
+{
+    0,       0,     0,   4,      
+    64,      3,    38,  58,      
+   128,      0,    21,  50,      
+   192,     78,   167,   1,      
+   255,     54,    87, 140,      
+};
+CRGBPalette256 vuPaletteSeahawks = gpSeahawks;
+
 DEFINE_GRADIENT_PALETTE( vu_gpBlue ) 
 {
       0,     0,   0,   4,   // near black green
@@ -70,7 +82,7 @@ DEFINE_GRADIENT_PALETTE(redorange_gp){
     160,  192,   64, 0,
     192,  128,    0, 0,  
     255,   64,    0, 0}; 
-CRGBPalette256 redorange_pal = redorange_gp;
+    CRGBPalette256 redorange_pal = redorange_gp;
 
 
 // For LEDMatrixGFX::from16Bit color conversions

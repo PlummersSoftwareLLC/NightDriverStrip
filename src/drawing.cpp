@@ -36,6 +36,7 @@
 #include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include "ntptimeclient.h"
+#include "effects/matrix/spectrumeffects.h"
 
 #ifdef USESTRIP
 #include "ledstripgfx.h"
@@ -58,6 +59,7 @@ extern AppTime            g_AppTime;
 extern bool               g_bUpdateStarted;
 extern double             g_Brite;
 extern uint32_t           g_Watts; 
+extern CRGBPalette256     vuPaletteGreen;
 
 void ShowTM1814();
 
@@ -94,6 +96,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // Starting the effect might need to draw, so we need to set the leds up before doing so
         LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+        auto spectrum = GetSpectrumAnalyzer(CRGB::Red);
     #endif
     g_pEffectManager->StartEffect();
     
@@ -231,6 +234,11 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                     g_pEffectManager->Update(); // Draw the current built in effect
                     cPixelsDrawnThisFrame = NUM_LEDS;
                     debugV("Back from EffectManager::Update");
+
+                    #if USEMATRIX
+                        auto * pGraphics = (*g_pEffectManager)[0].get();
+                        ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(pGraphics, 0, &vuPaletteGreen);
+                    #endif
 
                 }
                 else

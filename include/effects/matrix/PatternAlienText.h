@@ -90,7 +90,7 @@ public:
   {
     GFXBase * graphics = (GFXBase *) _GFX[0].get();
 
-    graphics->DimAll(240);
+    graphics->DimAll(245);
 
     CRGB color1 = RandomSaturatedColor();
 

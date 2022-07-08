@@ -118,6 +118,7 @@ class VUMeterEffect
         pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
     }
 
+
     // DrawVUMeter
     // 
     // Draws the symmetrical VU meter along with its fading peaks up at the top of the display.
@@ -127,6 +128,7 @@ class VUMeterEffect
     double lastVU = 0;
     const double VU_DECAY_PER_SECOND = 3.0;
 
+  public:
 
     void DrawVUMeter(GFXBase * pGFXChannel, int yVU, CRGBPalette256 * pPalette = nullptr)
     {
@@ -313,7 +315,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 //
 // Draws a colorful scrolling waveform driven by instantaneous VU as it scrolls
 
-class WaveformEffect : public LEDStripEffect, virtual public VUMeterEffect
+class WaveformEffect : public LEDStripEffect
 {
   protected:
     const CRGBPalette256 *    _pPalette = nullptr;
@@ -393,8 +395,6 @@ class WaveformEffect : public LEDStripEffect, virtual public VUMeterEffect
 
         DrawSpike(63, lastVU/2.0);
         DrawSpike(0, lastVU/2.0);
-
-        DrawVUMeter(_GFX[0].get(), 0);        
     }
 };
 
@@ -430,7 +430,6 @@ class GhostWave : public WaveformEffect
         lastVU = max(lastVU, 0.0);
         lastVU = min(lastVU, 2.0);
 
-        DrawVUMeter(graphics, 0);
         DrawSpike(MATRIX_WIDTH/2, lastVU / 2.0);
         DrawSpike(MATRIX_WIDTH/2-1, lastVU / 2.0);
         //BlurFrame(32);

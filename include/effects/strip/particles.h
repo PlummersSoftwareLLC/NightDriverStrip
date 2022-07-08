@@ -704,7 +704,7 @@ class HotWhiteRingParticle : public FadingObject
 
 #if ENABLE_AUDIO
 
-CRGBPalette256 golden(CRGB::Gold);
+
 class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual ParticleSystemEffect<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
