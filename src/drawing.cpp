@@ -82,6 +82,23 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     debugI(">> DrawLoopTaskEntry\n");
     debugE("Entry Heap: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
 
+    // Initialize our graphics and the first effect
+
+    GFXBase * graphics = (GFXBase *)(*g_pEffectManager)[0].get();
+    graphics->Setup();
+
+    // We don't need color correction on the chromakey'd title layer
+    LEDMatrixGFX::titleLayer.enableColorCorrection(false);
+
+    #if USEMATRIX
+        // Starting the effect might need to draw, so we need to set the leds up before doing so
+        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
+        pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+    #endif
+    g_pEffectManager->StartEffect();
+    
+    // Run the draw loop
+
     for (;;)
     {
         static uint64_t lastFrame = millis();
@@ -96,11 +113,47 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
             // both 24-bits RGB triplets.  Or at least the same size!
 
-            static_assert( sizeof(CRGB) == sizeof(SM_RGB), "Code assumes 24 bits in both places" );
+            static_assert( sizeof(CRGB) == sizeof(LEDMatrixGFX::SM_RGB), "Code assumes 24 bits in both places" );
 
             LEDMatrixGFX::MatrixSwapBuffers();
             LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+
+            LEDMatrixGFX::titleLayer.setFont(font3x5);
+            if (pMatrix->GetCaptionTransparency() > 0) 
+            {
+                rgb24 chromaKeyColor = rgb24(255,0,255);
+                rgb24 shadowColor = rgb24(0,0,0);
+                rgb24 titleColor = rgb24(255,255,255);
+                
+                LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
+                LEDMatrixGFX::titleLayer.enableChromaKey(true);
+
+                LEDMatrixGFX::titleLayer.setFont(font5x7);
+                LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
+
+                const size_t kCharWidth = 5;
+                const size_t kCharHeight = 7;
+
+                int y = MATRIX_HEIGHT - 2 - kCharHeight;
+
+                int w = strlen(pMatrix->GetCaption()) * kCharWidth;
+                int x = (MATRIX_WIDTH / 2) - (w / 2); 
+
+                LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  pMatrix->GetCaption());
+                
+                LEDMatrixGFX::titleLayer.setBrightness(pMatrix->GetCaptionTransparency() * 240);                // 255 would obscure it entirely
+            }
+            else 
+            {
+                LEDMatrixGFX::titleLayer.enableChromaKey(false);
+                LEDMatrixGFX::titleLayer.setBrightness(0);
+            }   
+ 
         #endif
 
         if (WiFi.isConnected())
@@ -239,8 +292,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 #endif
 
 #if USEMATRIX
-            pMatrix->leds[0] = CRGB::Green;
-            pMatrix->leds[1] = CRGB::Blue;
             LEDMatrixGFX::PresentFrame();
 #endif
 

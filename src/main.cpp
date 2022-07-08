@@ -177,6 +177,8 @@
 
 #include "colordata.h"                          // color palettes
 #include "drawing.h"                            // drawing code
+#include <YouTubeSight.h>                       // For fetching YouTube sub count
+#include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 
 #if ENABLE_REMOTE
     #include "remotecontrol.h" // Allows us to use a IR remote with it
@@ -300,6 +302,18 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 // Pumps the various network loops and sets the time periodically, as well as reconnecting
 // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
 
+// Data for Dave's Garage as an example,
+
+char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
+char PatternSubscribers::szChannelName1[] = "Daves Garage";
+
+#define SUB_CHECK_INTERVAL 60000
+#define SUB_CHECK_ERROR_INTERVAL 10000
+#define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4" 
+
+WiFiClient http;
+YouTubeSight sight(CHANNEL_GUID, http);
+
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
     debugI(">> NetworkHandlingLoopEntry\n");
@@ -321,6 +335,37 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                         DelayedReboot("Rebooting due to no Wifi available.");
                     #endif
                 }
+
+                // Get Subscriber Count
+
+                    if (WiFi.isConnected())
+                    {
+                        static uint64_t     _NextRunTime = millis();
+                        //int                 _NewSubsSinceLast;
+
+                        if (millis() > _NextRunTime)
+                        {
+                            debugI("Fetching YouTube Data...");
+
+                            sight._debug = true;
+                            if (sight.getData())
+                            {
+                                debugI("Got YouTube Data...");
+                                long result = atol(sight.channelStats.subscribers_count.c_str());
+                                //_NewSubsSinceLast = result - PatternSubscribers::cSubscribers;
+                                PatternSubscribers::cSubscribers = result;
+                                _NextRunTime = millis() + SUB_CHECK_INTERVAL;
+
+                                PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
+
+                            }
+                            else
+                            {
+                                debugW("YouTubeSight Subscriber API failed\n");
+                                _NextRunTime = millis() + SUB_CHECK_ERROR_INTERVAL;
+                            }
+                        }
+                    }                
             }
         #endif
 

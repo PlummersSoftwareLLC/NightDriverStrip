@@ -84,7 +84,7 @@ class PatternPulse : public LEDStripEffect
     {
         auto graphics = (GFXBase *) _GFX[0].get();
 
-        graphics->DimAll(235);
+        graphics->DimAll(245);
 
         if (step == -1)
         {

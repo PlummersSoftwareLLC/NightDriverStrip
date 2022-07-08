@@ -217,6 +217,7 @@ class RemoteControl
             debugI("Turning ON via remote");
             g_pEffectManager->ClearRemoteColor();
             g_pEffectManager->SetInterval(std::numeric_limits<int>::max());
+            g_pEffectManager->StartEffect();
             g_Brightness = 255;
             return;
         }

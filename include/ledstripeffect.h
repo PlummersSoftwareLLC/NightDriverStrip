@@ -91,6 +91,7 @@ class LEDStripEffect
         return true;  
     }
     
+    virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
     virtual const char *FriendlyName() const

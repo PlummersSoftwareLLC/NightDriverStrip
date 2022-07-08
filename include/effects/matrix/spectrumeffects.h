@@ -336,7 +336,7 @@ class WaveformEffect : public LEDStripEffect, virtual public VUMeterEffect
 
     virtual const char * FriendlyName() const
     {
-        return "Waveform Effect";
+        return "Waveform";
     }
 
     void DrawSpike(int x, double v) 

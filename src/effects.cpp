@@ -60,6 +60,8 @@
 #include "effects/matrix/PatternSpiro.h"
 #include "effects/matrix/PatternCube.h"
 #include "effects/matrix/PatternCircuit.h"
+#include "effects/matrix/PatternSubscribers.h"
+#include "effects/matrix/PatternAlienText.h"
 #endif
 
 #ifdef USESTRIP
@@ -67,6 +69,9 @@
 #endif
 
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
+
+volatile long PatternSubscribers::cSubscribers;
+volatile long PatternSubscribers::cViews;
 
 // Palettes
 //
@@ -289,6 +294,8 @@ DRAM_ATTR LEDStripEffect * AllEffects[] =
 #elif MESMERIZER
 
     // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+    new PatternAlienText(),
+    new PatternSubscribers(),
     new PatternCircuit(),
     new PatternCube(),
     new PatternSpiro(),

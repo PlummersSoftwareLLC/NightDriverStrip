@@ -50,17 +50,19 @@ uint8_t GFXBase::noisesmoothing;
   #include <SmartMatrix.h>
   #include "ledmatrixgfx.h"
     
-  SMLayerIndexed<SM_RGB, kIndexedLayerOptions> indexedLayer(kMatrixWidth, kMatrixHeight);  
-  SMLayerScrolling<SM_RGB, kScrollingLayerOptions> scrollingLayer(kMatrixWidth, kMatrixHeight);  
-  SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer(kMatrixWidth, kMatrixHeight);
-  SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh; 
-  SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
+const rgb24 LEDMatrixGFX::defaultBackgroundColor = {0x40, 0, 0};    
 
-  double frameStartTime = 0;
+SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::backgroundLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
+SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::titleLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
+SmartMatrixHub75Refresh<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> matrixRefresh; 
+SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
+
+double frameStartTime = 0;
     
 void LEDMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
+    matrix.addLayer(&titleLayer); 
     matrix.begin(100000);
 
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
@@ -84,6 +86,7 @@ void LEDMatrixGFX::MatrixSwapBuffers()
 {
   frameStartTime = g_AppTime.CurrentTime();
   backgroundLayer.swapBuffers(true);
+  titleLayer.swapBuffers(false);  
 }
 
 void LEDMatrixGFX::PresentFrame()

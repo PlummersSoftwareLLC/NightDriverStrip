@@ -46,6 +46,8 @@
 
 #include "globals.h"
 #include "effects/strip/misceffects.h"
+#include "gfxbase.h"
+#include "ledmatrixgfx.h"
 
 #define MAX_EFFECTS 32
 
@@ -151,6 +153,15 @@ public:
         _pRemoteEffect = nullptr;
     }
 
+    void StartEffect()
+    {
+        #if USEMATRIX
+            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+            pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 2000);
+        #endif
+         _ppEffects[_iCurrentEffect]->Start();
+    }
+   
     void EnableEffect(size_t i)
     {
         if (i >= _cEffects)
@@ -258,6 +269,7 @@ public:
         }
         _iCurrentEffect = i;
         _effectStartTime = millis();
+        StartEffect();
     }
 
     uint GetTimeRemainingForCurrentEffect() const
@@ -308,6 +320,7 @@ public:
             _iCurrentEffect %= EffectCount();
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        StartEffect();
     }
 
     // Go back to the previous effect and abort the current one.
@@ -322,6 +335,7 @@ public:
             _iCurrentEffect--;
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        StartEffect();
     }
 
     bool Init()
