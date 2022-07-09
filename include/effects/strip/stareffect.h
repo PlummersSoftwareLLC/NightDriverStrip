@@ -533,13 +533,9 @@ class TwinkleStarEffect : public LEDStripEffect
 
 public:
 
-    TwinkleStarEffect() : LEDStripEffect("Double Palette Effect")
+    TwinkleStarEffect() : LEDStripEffect("Twinkle Star")
     {
 
-    }
-    virtual const char * FriendlyName() const
-    {
-        return "Twinkle";
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])

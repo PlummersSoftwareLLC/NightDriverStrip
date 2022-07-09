@@ -35,7 +35,8 @@
 #pragma once
 #include "gfxbase.h"
 #include <SmartMatrix.h>
-
+#include "effects/matrix/Boid.h"
+#include "effects/matrix/Vector.h"
 //
 // Matrix Panel
 //
@@ -45,85 +46,90 @@
 class LEDMatrixGFX : public GFXBase
 {
 protected:
-
-  const char * pszCaption = nullptr;
-  unsigned long captionStartTime;
-  unsigned long captionDuration;
-  const unsigned long captionFadeInTime = 1000;
-  const unsigned long captionFadeOutTime = 2000;
+    const char *pszCaption = nullptr;
+    unsigned long captionStartTime;
+    unsigned long captionDuration;
+    const unsigned long captionFadeInTime = 500;
+    const unsigned long captionFadeOutTime = 1000;
 
 public:
+    typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;
+    static const uint8_t kMatrixWidth = MATRIX_WIDTH;                                   // known working: 32, 64, 96, 128
+    static const uint8_t kMatrixHeight = MATRIX_HEIGHT;                                 // known working: 16, 32, 48, 64
+    static const uint8_t kRefreshDepth = COLOR_DEPTH;                                   // known working: 24, 36, 48
+    static const uint8_t kDmaBufferRows = 4;                                            // known working: 2-4, use 2 to save memory, more to keep from dropping frames and automatically lowering refresh rate
+    static const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;                // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
+    static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING); // see http://docs.pixelmatix.com/SmartMatrix for options
+    static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
+    static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
+    static const rgb24 defaultBackgroundColor;
 
-  typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;
-  static const uint8_t kMatrixWidth = MATRIX_WIDTH;                                   // known working: 32, 64, 96, 128
-  static const uint8_t kMatrixHeight = MATRIX_HEIGHT;                                 // known working: 16, 32, 48, 64
-  static const uint8_t kRefreshDepth = COLOR_DEPTH;                                   // known working: 24, 36, 48
-  static const uint8_t kDmaBufferRows = 4;                                            // known working: 2-4, use 2 to save memory, more to keep from dropping frames and automatically lowering refresh rate
-  static const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;                // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
-  static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING); // see http://docs.pixelmatix.com/SmartMatrix for options
-  static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
-  static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
-  static const rgb24 defaultBackgroundColor;
+    static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
+    static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
+    static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
+    static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
 
-  static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
-  static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
-  static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
-  static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
+    static Boid *boids;
 
-  LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
-  {
-  }
+    LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
+    {
+        if (boids == nullptr)
+            boids = new Boid[MATRIX_WIDTH]();
+    }
 
-  ~LEDMatrixGFX()
-  {
-  }
+    ~LEDMatrixGFX()
+    {
+        // We're going to leak the static instance of boids on exit because there's no cheap and easy
+        // way to know when the last instance is being cleaned up.
+    }
 
-  inline void setLeds(CRGB *pLeds)
-  {
-    leds = pLeds;
-  }
+    inline void setLeds(CRGB *pLeds)
+    {
+        leds = pLeds;
+    }
 
-  const char * GetCaption()
-  {
-    return pszCaption;
-  }
+    const char *GetCaption()
+    {
+        return pszCaption;
+    }
 
-  double GetCaptionTransparency()
-  {
-    unsigned long now = millis();
-    if (pszCaption == nullptr)
-      return 0;
+    double GetCaptionTransparency()
+    {
+        unsigned long now = millis();
+        if (pszCaption == nullptr)
+            return 0;
 
-    if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
-      return 0;
+        if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
+            return 0;
 
-    double elapsed = now - captionStartTime;
+        double elapsed = now - captionStartTime;
 
-    if (elapsed < captionFadeInTime)
-      return elapsed / captionFadeInTime;
+        if (elapsed < captionFadeInTime)
+            return elapsed / captionFadeInTime;
 
-    if (elapsed > captionFadeInTime + captionDuration)
-      return 1 - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
- 
-    return 1;
-  }
+        if (elapsed > captionFadeInTime + captionDuration)
+            return 1 - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
 
-  void SetCaption(const char * psz, uint32_t duration)
-  {
-    captionDuration = duration;
-    pszCaption = psz;
-    captionStartTime = millis();
-  }  
+        return 1;
+    }
 
-  // Matrix interop
+    void SetCaption(const char *psz, uint32_t duration)
+    {
+        captionDuration = duration;
+        pszCaption = psz;
+        captionStartTime = millis();
+    }
 
-  static void StartMatrix();
-  static CRGB *GetMatrixBackBuffer();
-  static void MatrixSwapBuffers();
-  static void PresentFrame();
+    // Matrix interop
 
-  SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
-  {
-    return backgroundLayer;
-  }
+    static void StartMatrix();
+    static CRGB *GetMatrixBackBuffer();
+    static void MatrixSwapBuffers();
+    static void PresentFrame();
+
+    SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
+    {
+        return backgroundLayer;
+    }
+
 };

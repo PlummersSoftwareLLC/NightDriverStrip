@@ -96,7 +96,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // Starting the effect might need to draw, so we need to set the leds up before doing so
         LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        auto spectrum = GetSpectrumAnalyzer(CRGB::Red);
+        auto spectrum = GetSpectrumAnalyzer(0);
     #endif
     g_pEffectManager->StartEffect();
     

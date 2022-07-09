@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        PatternLife.h
+// File:        PatternSpiro.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -24,17 +24,14 @@
 // Description:
 //
 //   Effect code ported from Aurora to Mesmerizer's draw routines
-//   and
 //
-// History:     Jun-25-2022         Davepl      Based on Aurora
+// History:     Jul-08-2022         Davepl      Based on Aurora
 //
 //---------------------------------------------------------------------------
 
 /*
  * Aurora: https://github.com/pixelmatix/aurora
  * Copyright (c) 2014 Jason Coon
- *
- * Inspired by 'Space Invader Generator': https://the8bitpimp.wordpress.com/2013/05/07/space-invader-generator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -54,75 +51,67 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PatternAlienText_H
-#define PatternAlienText_H
+#ifndef PatternBounce_H
+#define PatternBounce_H
 
 #include "globals.h"
 #include "ledstripeffect.h"
 #include "gfxbase.h"
+#include "Vector.h"
+#include "Boid.h"
 
-class PatternAlienText : public LEDStripEffect
+class PatternBounce : public LEDStripEffect
 {
 private:
-  const int charWidth = 6;
-  const int charHeight = 6;
-  const int leftMargin = 2;
-  const int topMargin = 2;
-  uint8_t x;
-  uint8_t y;
+    static const int count = MATRIX_WIDTH;
+    PVector gravity = PVector(0, 0.0125);
 
 public:
-
-  PatternAlienText() : LEDStripEffect("AlienText")
-  {
-  }
-
-  virtual void Start()
-  {
-      GFXBase * graphics = (GFXBase *) _GFX[0].get();
-      x = leftMargin;
-      y = topMargin;
-      graphics->Clear();
-      debugW("Starting AlienText...");
-  }
-
-  virtual void Draw()
-  {
-    GFXBase * graphics = (GFXBase *) _GFX[0].get();
-
-    graphics->DimAll(245);
-
-    CRGB color1 = RandomSaturatedColor();
-
-    for (int i = 0; i < (charWidth / 2 + 1); i++)
+    PatternBounce() : LEDStripEffect("Bounce")
     {
-      for (int j = 0; j < (charHeight - 1); j++)
-      {
-        CRGB color = CRGB::Black;
-
-        if (random(0, 2) == 1)
-          color = color1;
-
-        graphics->setPixel(x + i, y + j, color);
-
-        if (i < 2)
-          graphics->setPixel(x + ((charWidth / 2 + 1) - i), y + j, color);
-      }
     }
 
-    x += charWidth;
-    if (x > MATRIX_WIDTH - charWidth)
+    virtual void Start()
     {
-      x = leftMargin;
-      y += charHeight;
+        unsigned int colorWidth = 256 / count;
+        for (int i = 0; i < count; i++)
+        {
+            Boid boid = Boid(i, 0);
+            boid.velocity.x = 0;
+            boid.velocity.y = i * -0.01;
+            boid.colorIndex = colorWidth * i;
+            boid.maxforce = 10;
+            boid.maxspeed = 10;
+            LEDMatrixGFX::boids[i] = boid;
+        }
     }
 
-    if (y > MATRIX_HEIGHT - charHeight)
+    virtual void Draw()
     {
-      x = leftMargin;
-      y = topMargin;
+        auto graphics = (GFXBase *)_GFX[0].get();
+        // dim all pixels on the display
+
+        //graphics->BlurFrame(200);
+        graphics->blurColumns(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 1, 200);
+        graphics->DimAll(250);
+
+        for (int i = 0; i < count; i++)
+        {
+            Boid boid = LEDMatrixGFX::boids[i];
+            boid.applyForce(gravity);
+            boid.update();
+
+            graphics->setPixel(boid.location.x, boid.location.y, graphics->ColorFromCurrentPalette(boid.colorIndex));
+
+            if (boid.location.y >= MATRIX_HEIGHT - 1)
+            {
+                boid.location.y = MATRIX_HEIGHT - 1;
+                boid.velocity.y *= -1.0;
+            }
+
+            LEDMatrixGFX::boids[i] = boid;
+        }
     }
-  }
 };
 
 #endif

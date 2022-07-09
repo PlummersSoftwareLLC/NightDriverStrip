@@ -244,8 +244,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
   public:
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName = nullptr, 
-                           const CRGBPalette256 & palette = spectrumBasicColors, 
-                           uint16_t           scrollSpeed = 0, 
+                           const CRGBPalette256   palette = spectrumBasicColors, 
+                           uint16_t           scrollSpeed = .2, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
@@ -275,11 +275,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     {
     }
 
-    virtual const char * FriendlyName() const
-    {
-        return "Spectrum";
-    }
-
     virtual void Draw()
     {
         auto pGFXChannel = _GFX[0].get();
@@ -305,7 +300,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         {
             // Start at 32 because first two bands are usually too dark to use as bar colors.  This winds up selecting a number up
             // to 192 and then adding 64 to it in order to skip those darker 0-64 colors
-            CRGB bandColor = _GFX[0].get()->ColorFromCurrentPalette((::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 1892 + 76);
+            //CRGB bandColor = _GFX[0].get()->ColorFromCurrentPalette((::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 1892 + 76);
+            CRGB bandColor = ColorFromPalette(_palette, (::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset));
             DrawBand(i, bandColor);
         }
     }
@@ -334,11 +330,6 @@ class WaveformEffect : public LEDStripEffect
     {
         _pPalette = pPalette;
         _increment = increment;
-    }
-
-    virtual const char * FriendlyName() const
-    {
-        return "Waveform";
     }
 
     void DrawSpike(int x, double v) 
@@ -412,7 +403,7 @@ class GhostWave : public WaveformEffect
 
     virtual void Draw()
     {
-        auto graphics = _GFX[0].get();
+        auto graphics = (GFXBase *)_GFX[0].get();
 
         for (int y = 1; y < MATRIX_HEIGHT; y++)
         {
@@ -430,9 +421,9 @@ class GhostWave : public WaveformEffect
         lastVU = max(lastVU, 0.0);
         lastVU = min(lastVU, 2.0);
 
+        graphics->BlurFrame(24);
         DrawSpike(MATRIX_WIDTH/2, lastVU / 2.0);
         DrawSpike(MATRIX_WIDTH/2-1, lastVU / 2.0);
-        //BlurFrame(32);
     }
 };
 

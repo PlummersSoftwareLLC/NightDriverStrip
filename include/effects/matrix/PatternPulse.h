@@ -26,7 +26,7 @@
 //   Effect code ported from Aurora to Mesmerizer's draw routines
 //   and
 //
-// History:     May-26-202         Davepl      Converted from Aurora
+// History:     May-26-2022         Davepl      Converted from Aurora
 //
 //---------------------------------------------------------------------------
 
@@ -122,7 +122,7 @@ class PatternPulse : public LEDStripEffect
     }
 };
 
-class PatternPulse2 : public BeatEffectBase2
+class PatternPulsar : public BeatEffectBase2
 {
   private:
 
@@ -144,8 +144,8 @@ class PatternPulse2 : public BeatEffectBase2
 
   public:
 
-    PatternPulse2(double lowLatch = 1, double highLatch = 1, double minElapsed = 0.00) : 
-        LEDStripEffect("PatternPulse2"), 
+    PatternPulsar(double lowLatch = 1, double highLatch = 1, double minElapsed = 0.00) : 
+        LEDStripEffect("Pulsars"), 
         BeatEffectBase2(1.95, 0.25 )
     {
     }

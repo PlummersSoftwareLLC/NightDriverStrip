@@ -34,6 +34,7 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 #include <limits>
+#include "pixeltypes.h"
 
 #include "FastLED.h"
 #include "effectmanager.h"
@@ -124,33 +125,34 @@ void IRAM_ATTR RemoteLoopEntry(void *);
 
 static struct 
 {
-    uint code;
-    CRGB color;
+    uint    code;
+    CRGB    color;
+    uint8_t hue;
 } 
 RemoteColorCodes[] =
 {
-    { IR_OFF, CRGB(000, 000, 000) },
+    { IR_OFF, CRGB(000, 000, 000), 0    },
 
-    { IR_R,   CRGB(255, 000, 000) },
-    { IR_G,   CRGB(000, 255, 000) },
-    { IR_B,   CRGB(000, 000, 255) },
-    { IR_W,   CRGB(255, 255, 255) },
+    { IR_R,   CRGB(255, 000, 000), 0    },
+    { IR_G,   CRGB(000, 255, 000), 96   },
+    { IR_B,   CRGB(000, 000, 255), 160  },
+    { IR_W,   CRGB(255, 255, 255), 0    },
 
-    { IR_B1,  CRGB(255,  64, 000) },
-    { IR_B2,  CRGB(000, 255,  64) },
-    { IR_B3,  CRGB( 64, 000, 255) },
+    { IR_B1,  CRGB(255,  64, 000), 16   },
+    { IR_B2,  CRGB(000, 255,  64), 112  },
+    { IR_B3,  CRGB( 64, 000, 255), 176  },
     
-    { IR_B4,  CRGB(255, 128, 000) },
-    { IR_B5,  CRGB(000, 255, 128) },
-    { IR_B6,  CRGB(128, 000, 255) },
+    { IR_B4,  CRGB(255, 128, 000), 32   },
+    { IR_B5,  CRGB(000, 255, 128), 128  },
+    { IR_B6,  CRGB(128, 000, 255), 192  },
     
-    { IR_B7,  CRGB(255, 192, 000) },
-    { IR_B8,  CRGB(000, 255, 192) },
-    { IR_B9,  CRGB(192, 000, 255) },
+    { IR_B7,  CRGB(255, 192, 000), 48   },
+    { IR_B8,  CRGB(000, 255, 192), 112  },
+    { IR_B9,  CRGB(192, 000, 255), 208  },
 
-    { IR_B10,  CRGB(255, 255, 000) },
-    { IR_B11,  CRGB(000, 255, 255) },
-    { IR_B12,  CRGB(255, 000, 255) }
+    { IR_B10,  CRGB(255, 255, 000), 64  },
+    { IR_B11,  CRGB(000, 255, 255), 144 },
+    { IR_B12,  CRGB(255, 000, 255), 224 }
 };
 
 class RemoteControl

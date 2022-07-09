@@ -99,6 +99,7 @@ protected:
     CRGBPalette16 targetPalette;
     uint lastSecond = 99;
     char *currentPaletteName;
+    bool palettePaused = false;
 
     static const int HeatColorsPaletteIndex = 6;
     static const int RandomPaletteIndex = 9;
@@ -330,6 +331,60 @@ public:
                     leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
+
+    inline void blurRows(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
+    {
+        // blur rows same as columns, for irregular matrix
+        uint8_t keep = 255 - blur_amount;
+        uint8_t seep = blur_amount >> 1;
+        for (uint8_t row = 0; row < height; row++)
+        {
+            CRGB carryover = CRGB::Black;
+            for (uint8_t i = first; i < width; i++)
+            {
+                CRGB cur = leds[xy(i, row)];
+                CRGB part = cur;
+                part.nscale8(seep);
+                cur.nscale8(keep);
+                cur += carryover;
+                if (i)
+                    leds[xy(i - 1, row)] += part;
+                leds[xy(i, row)] = cur;
+                carryover = part;
+            }
+        }
+    }
+
+    // blurColumns: perform a blur1d on each column of a rectangular matrix
+    inline void blurColumns(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
+    {
+        // blur columns
+        uint8_t keep = 255 - blur_amount;
+        uint8_t seep = blur_amount >> 1;
+        for (uint8_t col = 0; col < width; ++col)
+        {
+            CRGB carryover = CRGB::Black;
+            for (uint8_t i = first; i < height; ++i)
+            {
+                CRGB cur = leds[xy(col, i)];
+                CRGB part = cur;
+                part.nscale8(seep);
+                cur.nscale8(keep);
+                cur += carryover;
+                if (i)
+                    leds[xy(col, i - 1)] += part;
+                leds[xy(col, i)] = cur;
+                carryover = part;
+            }
+        }
+    }
+
+    void blur2d(CRGB *leds, uint8_t width, uint8_t firstColumn, uint8_t height, uint8_t firstRow, fract8 blur_amount)
+    {
+        blurRows(leds, width, height, firstColumn, blur_amount);
+        blurColumns(leds, width, height, firstRow, blur_amount);
+    }
+
     void Setup()
     {
         loadPalette(0);
@@ -344,6 +399,9 @@ public:
 
     void ChangePalettePeriodically()
     {
+        if (palettePaused)
+            return;
+
         const int minutesPerPaletteCycle = 2;
         uint8_t secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
         
@@ -374,6 +432,11 @@ public:
     //   - meaningful values are 1-48.  1=veeeeeeeery slow, 48=quickest
     //   - "0" means do not change the currentPalette at all; freeze
     
+    void PausePalette(bool bPaused)
+    {
+        palettePaused = bPaused;
+    }
+    
     void UpdatePaletteCycle()
     {
 
@@ -392,6 +455,13 @@ public:
         for (int x = x0; x < x1; x++)
             for (int y = y0; y < y1; y++)
                 drawPixel(x, y, color);
+    }
+
+    void setPalette(CRGBPalette16 palette)
+    {
+        currentPalette = palette;
+        targetPalette = palette;
+        currentPaletteName = (char *)"Custom";
     }
 
     void loadPalette(int index)
@@ -565,7 +635,7 @@ public:
 
     inline void BlurFrame(int amount)
     {
-        blur2d(leds, MATRIX_WIDTH, MATRIX_HEIGHT, amount);
+        blur2d(leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1 /* Leave one row for VU Meter */, amount);
     }
 
     // All the caleidoscope functions work directly within the screenbuffer (_pLEDs array).

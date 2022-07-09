@@ -49,48 +49,48 @@ extern AppTime g_AppTime;
 
 static const CRGB ballColors[] =
 {
-	CRGB::Green,
-	CRGB::Red,
-	CRGB::Blue,
-	CRGB::Orange,
-	CRGB::Indigo,
-	CRGB::Violet
+    CRGB::Green,
+    CRGB::Red,
+    CRGB::Blue,
+    CRGB::Orange,
+    CRGB::Indigo,
+    CRGB::Violet
 };
 
 class BouncingBallEffect : public LEDStripEffect
 {
 private:
 
-	size_t	_iOffset;
-	size_t  _cLength;
-	size_t  _cBalls;
-	size_t  _cBallSize;
-	bool    _bMirrored;
+    size_t  _iOffset;
+    size_t  _cLength;
+    size_t  _cBalls;
+    size_t  _cBallSize;
+    bool    _bMirrored;
 
-	static const int BallCount = 3;
+    static const int BallCount = 3;
     const bool _bErase;
 
-	double Gravity = -9.81;
-	double StartHeight = 1;
-	double ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
-	
-	vector<double> ClockTimeSinceLastBounce;
-	vector<double> TimeSinceLastBounce;
-	vector<double> Height;
-	vector<double> ImpactVelocity;
-	vector<double> Dampening;
-	vector<CRGB> Colors;
-	
+    double Gravity = -9.81;
+    double StartHeight = 1;
+    double ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
+    
+    vector<double> ClockTimeSinceLastBounce;
+    vector<double> TimeSinceLastBounce;
+    vector<double> Height;
+    vector<double> ImpactVelocity;
+    vector<double> Dampening;
+    vector<CRGB> Colors;
+    
   public:
 
-	BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
-		: LEDStripEffect("Bouncing Ball Effect"),
-		  _cBalls(ballCount),
-		  _cBallSize(ballSize),
-		  _bMirrored(bMirrored),
+    BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
+        : LEDStripEffect("Bouncing Balls"),
+          _cBalls(ballCount),
+          _cBallSize(ballSize),
+          _bMirrored(bMirrored),
           _bErase(bErase)
-	{
-	}
+    {
+    }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
@@ -99,44 +99,39 @@ private:
 
         _cLength = gfx[0]->GetLEDCount();
 
-		ClockTimeSinceLastBounce.resize(_cBalls);
-		TimeSinceLastBounce.resize(_cBalls);
-		Height.resize(_cBalls);
-		ImpactVelocity.resize(_cBalls);
-		Dampening.resize(_cBalls);
-		Colors.resize(_cBalls);
+        ClockTimeSinceLastBounce.resize(_cBalls);
+        TimeSinceLastBounce.resize(_cBalls);
+        Height.resize(_cBalls);
+        ImpactVelocity.resize(_cBalls);
+        Dampening.resize(_cBalls);
+        Colors.resize(_cBalls);
 
-		for (size_t i = 0; i < _cBalls; i++)
-		{
-			Height[i] 					= StartHeight;
-			ImpactVelocity[i] 			= ImpactVelocityStart;
-			ClockTimeSinceLastBounce[i] = g_AppTime.FrameStartTime();
-			Dampening[i] 				= 1.0 - i / pow(_cBalls, 2);               // Was 0.9
-			TimeSinceLastBounce[i] 		= 0;
-			Colors[i] 					= ballColors[i % ARRAYSIZE(ballColors)];
-		}           
+        for (size_t i = 0; i < _cBalls; i++)
+        {
+            Height[i]                   = StartHeight;
+            ImpactVelocity[i]           = ImpactVelocityStart;
+            ClockTimeSinceLastBounce[i] = g_AppTime.FrameStartTime();
+            Dampening[i]                = 1.0 - i / pow(_cBalls, 2);               // Was 0.9
+            TimeSinceLastBounce[i]      = 0;
+            Colors[i]                   = ballColors[i % ARRAYSIZE(ballColors)];
+        }           
         return true; 
     }
 
-	virtual const char * FriendlyName() const
-	{
-		return "Bouncing Balls";
-	}
-
-	// Draw
-	//
-	// Draw each of the balls.  When any ball gets too little energy it would just sit at the base so it is re-kicked with new energy.#pragma endregion
-	
-	virtual void Draw()
-	{
-		// Erase the drawing area
+    // Draw
+    //
+    // Draw each of the balls.  When any ball gets too little energy it would just sit at the base so it is re-kicked with new energy.#pragma endregion
+    
+    virtual void Draw()
+    {
+        // Erase the drawing area
         if (_bErase)
         {
-		    setAllOnAllChannels(0,0,0);
+            setAllOnAllChannels(0,0,0);
         }
         else
         {
-            for (int j = 0; j<_cLength; j++)							// fade brightness all LEDs one step
+            for (int j = 0; j<_cLength; j++)                            // fade brightness all LEDs one step
             {
                 if (randomDouble(0, 10)>5) 
                 {
@@ -147,26 +142,26 @@ private:
             }            
         }
 
-		// Draw each of the the balls
-		for (size_t i = 0; i < BallCount; i++)
-		{
-			TimeSinceLastBounce[i] = (g_AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 3;		// BUGBUG hardcoded was 3 for NightDriverStrip
-			Height[i] = 0.5 * Gravity * pow(TimeSinceLastBounce[i], 2.0) + ImpactVelocity[i] * TimeSinceLastBounce[i];
+        // Draw each of the the balls
+        for (size_t i = 0; i < BallCount; i++)
+        {
+            TimeSinceLastBounce[i] = (g_AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 3;        // BUGBUG hardcoded was 3 for NightDriverStrip
+            Height[i] = 0.5 * Gravity * pow(TimeSinceLastBounce[i], 2.0) + ImpactVelocity[i] * TimeSinceLastBounce[i];
 
-			if (Height[i] < 0)
-			{
-				Height[i] = 0;
-				ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
-				ClockTimeSinceLastBounce[i] = g_AppTime.FrameStartTime();;
+            if (Height[i] < 0)
+            {
+                Height[i] = 0;
+                ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
+                ClockTimeSinceLastBounce[i] = g_AppTime.FrameStartTime();;
 
-				if (ImpactVelocity[i] < 0.5 * ImpactVelocityStart)                                    // Was .01 and not multiplied by anything
-					ImpactVelocity[i] = ImpactVelocityStart;
-			}
+                if (ImpactVelocity[i] < 0.5 * ImpactVelocityStart)                                    // Was .01 and not multiplied by anything
+                    ImpactVelocity[i] = ImpactVelocityStart;
+            }
 
-			float position = Height[i] * (_cLength - 1) / StartHeight;
-			setPixelsOnAllChannels(position, _cBallSize, Colors[i]);
+            float position = Height[i] * (_cLength - 1) / StartHeight;
+            setPixelsOnAllChannels(position, _cBallSize, Colors[i]);
             if (_bMirrored)
                 setPixelsOnAllChannels(_cLength-1-position, _cBallSize, Colors[i], true);
         }
-	}
+    }
 };

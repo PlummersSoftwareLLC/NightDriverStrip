@@ -94,9 +94,9 @@
 
 // C Helpers and Macros
 
-#define ARRAYSIZE(a)		(sizeof(a)/sizeof(a[0]))		// Returns the number of elements in an array
-#define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))	// Calculate period in microseconds (us) from frequency in Hz
-#define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)				// Calculate frequency in Hz given the period in microseconds (us)
+#define ARRAYSIZE(a)        (sizeof(a)/sizeof(a[0]))        // Returns the number of elements in an array
+#define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))    // Calculate period in microseconds (us) from frequency in Hz
+#define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
 
 // I've built and run this on the Heltec Wifi 32 module and the M5StickC.  The
 // main difference is pinout and the OLED/LCD screen.  The presense of absence
@@ -1081,6 +1081,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define USE_TFTSPI 0
 #endif
 
+#ifndef CAPTION_TIME
+#define CAPTION_TIME 3000
+#endif
+
 // gRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
@@ -1107,10 +1111,10 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #if TTGO
 #define INPUT_PIN (ADC1_CHANNEL_0_GPIO_NUM)   // Pin 27
 #elif M5STICKC || M5STICKCPLUS
-#define INPUT_PIN (34)	 
+#define INPUT_PIN (34)   
 #define IO_PIN (0)
 #else
-#define INPUT_PIN (36)	  // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+#define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
 #endif
 #endif
 
@@ -1155,15 +1159,15 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 
 inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SECOND)
 {
-	uint32_t duration = end - start;
+    uint32_t duration = end - start;
     if (duration == 0)
         return 999;
 
-	double fpsf = 1.0f / (duration / (double) perSecond);
-	int FPS = (int)fpsf;
-	if (FPS > 999)
-		FPS = 999;
-	return FPS;
+    double fpsf = 1.0f / (duration / (double) perSecond);
+    int FPS = (int)fpsf;
+    if (FPS > 999)
+        FPS = 999;
+    return FPS;
 }
 
 // PreferPSRAMAlloc

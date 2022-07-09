@@ -26,7 +26,7 @@
 //   Effect code ported from Aurora to Mesmerizer's draw routines
 //   and
 //
-// History:     May-26-202         Davepl      Converted from Aurora
+// History:     May-26-2022        Davepl      Converted from Aurora
 //
 //---------------------------------------------------------------------------
 

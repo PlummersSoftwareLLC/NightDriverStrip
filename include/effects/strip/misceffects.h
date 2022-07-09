@@ -49,7 +49,7 @@
 class SimpleRainbowTestEffect : public LEDStripEffect
 {
   private:
-    uint8_t		_EveryNth;
+    uint8_t     _EveryNth;
     uint8_t     _SpeedDivisor;
 
   public:
@@ -66,12 +66,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
     {
         fillRainbowAllChannels(0, _cLEDs, beatsin16(4, 0, 256), 8, _EveryNth);
         delay(10);
-    }
-    
-    virtual const char * FriendlyName() const
-    {
-        return "Sample Effect";
-    }
+    }   
 };
 
 // SimpleRainbowTestEffect
@@ -87,7 +82,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
   public:
   
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect("RainowFill Rainbow"),
+      : LEDStripEffect("Rainbow Twinkle"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
@@ -110,11 +105,6 @@ class RainbowTwinkleEffect : public LEDStripEffect
             setPixelOnAllChannels(random(0, _cLEDs), CRGB::White);
         delay(10);
     }
-
-    virtual const char * FriendlyName() const
-    {
-        return "RainbowTwinkle Effect";
-    }
 };
 
 // RainbowFillEffect
@@ -134,7 +124,7 @@ protected:
   public:
     
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect("RainowFill Rainbow"),
+      : LEDStripEffect("RainobwFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
@@ -153,11 +143,6 @@ protected:
         hue = fmod(hue, 256.0);
         fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
         delay(10);
-    }
-
-    virtual const char * FriendlyName() const
-    {
-        return "RainbowFill Effect";
     }
 };
 
@@ -190,11 +175,6 @@ protected:
         fillSolidOnAllChannels(CRGB::Black);
         fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
     }
-
-    virtual const char * FriendlyName() const
-    {
-        return "Color Fill Effect";
-    }
 };
 
 class StatusEffect : public LEDStripEffect
@@ -207,7 +187,7 @@ class StatusEffect : public LEDStripEffect
   public:
     
     StatusEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
-      : LEDStripEffect("Color Fill"),
+      : LEDStripEffect("Status Fill"),
         _everyNth(everyNth),
         _color(color)
     {
@@ -227,11 +207,6 @@ class StatusEffect : public LEDStripEffect
 
         fillSolidOnAllChannels(CRGB::Black);
         fillSolidOnAllChannels(color, 0, 0, _everyNth);
-    }
-
-    virtual const char * FriendlyName() const
-    {
-        return "Status Fill Effect";
     }
 };
 
@@ -297,8 +272,8 @@ class TwinkleEffect : public LEDStripEffect
                 iNew = i;
                 break;
             }
-            if (iNew == -1)				// No empty slot could be found!
-            {	
+            if (iNew == -1)             // No empty slot could be found!
+            {   
                 litPixels.clear();
                 setAllOnAllChannels(0,0,0);
                 return;

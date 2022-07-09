@@ -59,7 +59,7 @@ using namespace std;
 // References to functions in other C files
 
 void InitEffectsManager();
-std::unique_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
+std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 
 // EffectManager
 //
@@ -79,7 +79,7 @@ class EffectManager
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> *_gfx;
-    std::unique_ptr<LEDStripEffect> _pRemoteEffect;
+    std::shared_ptr<LEDStripEffect> _pRemoteEffect;
 
 public:
     static const uint csFadeButtonSpeed = 15 * 1000;
@@ -133,31 +133,34 @@ public:
     void SetGlobalColor(CRGB color)
     {
         ClearRemoteColor();
-#if SPECTRUM
-        _pRemoteEffect = GetSpectrumAnalyzer(color);
+#if (USEMATRIX || SPECTRUM)
+        CHSV hueColor = rgb2hsv_approximate(color);
+        CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
+        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+        pMatrix->setPalette(CRGBPalette16(color, color2));
+        pMatrix->PausePalette(true);
 #else
         _pRemoteEffect = make_unique<ColorFillEffect>(color, 1);
+        _pRemoteEffect->Init(_gfx);
 #endif
-
-        if (!_pRemoteEffect->Init(_gfx))
-        {
-            ClearRemoteColor();
-            debugE("Unable to init global color effect\n");
-            return;
-        }
     }
 
     void ClearRemoteColor()
     {
-        _pRemoteEffect.release();
         _pRemoteEffect = nullptr;
+
+#if (USEMATRIX || SPECTRUM)        
+        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+        pMatrix->PausePalette(false);
+#endif        
     }
 
     void StartEffect()
     {
         #if USEMATRIX
             LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
-            pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 2000);
+            pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 3000);
+            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
          _ppEffects[_iCurrentEffect]->Start();
     }

@@ -92,8 +92,8 @@ class PaletteEffect : public LEDStripEffect
     ~PaletteEffect()
     {
     }
-	
-	  virtual void Draw() 
+    
+      virtual void Draw() 
     {
         if (_bErase)
           setAllOnAllChannels(0,0,0);
@@ -138,9 +138,4 @@ class PaletteEffect : public LEDStripEffect
           }
         }
     }
-
-    virtual const char * FriendlyName() const
-    {
-        return "Palette Effect";
-    }    
 };

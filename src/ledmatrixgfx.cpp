@@ -31,6 +31,8 @@
 #include "gfxbase.h"
 #include "globals.h"
 #include "effectmanager.h"
+#include "effects/matrix/Boid.h"
+#include "effects/matrix/Vector.h"
 
 extern DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
@@ -44,6 +46,9 @@ uint32_t GFXBase::noise_scale_y;
 
 uint8_t GFXBase::noise[MATRIX_WIDTH][MATRIX_HEIGHT];   // BUGBUG Could this go in PSRAM if allocated instead?
 uint8_t GFXBase::noisesmoothing;
+
+Boid    * LEDMatrixGFX::boids;
+
 
 #ifdef USEMATRIX
 
@@ -63,7 +68,7 @@ void LEDMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
     matrix.addLayer(&titleLayer); 
-    matrix.begin(100000);
+    matrix.begin(50000);
 
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
     backgroundLayer.setFont(font5x7);

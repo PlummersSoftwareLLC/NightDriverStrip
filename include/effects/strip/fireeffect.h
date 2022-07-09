@@ -218,11 +218,6 @@ public:
         _Cooling  = cooling;
     }
 
-    virtual const char *FriendlyName() const
-    {
-        return "Classic Fire";
-    }
-
     virtual void Draw()
     {
         //static double lastDraw = 0;
@@ -476,10 +471,6 @@ public:
     }
 
 
-    virtual const char *FriendlyName() const
-    {
-        return "Smooth Fire Effect";
-    }
 };
 
 class BaseFireEffect : public LEDStripEffect
