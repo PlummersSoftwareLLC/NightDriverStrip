@@ -26,7 +26,7 @@
 //   Effect code ported from Aurora to Mesmerizer's draw routines
 //   and
 //
-// History:     Jun-25-202         Davepl      Based on Aurora
+// History:     Jun-25-2022         Davepl      Based on Aurora
 //
 //---------------------------------------------------------------------------
 
@@ -76,13 +76,17 @@ public:
   byte brightness;
 };
 
-#define CRC_LENGTH 256                           // Depth of loop check buffer
+#define CRC_LENGTH 32                           // Depth of loop check buffer
 
 class PatternLife : public LEDStripEffect 
 {
 private:
-
-    Cell world[MATRIX_WIDTH][MATRIX_HEIGHT];
+    
+    // BUGBUG (davepl) - This looks hideous.  I'm just trying to dynamically allocate a 2D array from PSRAM in a manner that can
+    //                   then be used in the world[x][y] format by the subsequent code.  Like Apu said, "there's got to be a better way"/
+    
+    Cell (*world)[MATRIX_HEIGHT] =  (Cell (*)[MATRIX_HEIGHT]) PreferPSRAMAlloc( sizeof(Cell) * MATRIX_WIDTH * MATRIX_HEIGHT);
+    
     uint32_t checksums[CRC_LENGTH];
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
