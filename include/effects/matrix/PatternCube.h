@@ -200,13 +200,13 @@ class PatternCube : public LEDStripEffect
 
     virtual void Draw()
     {
-      auto graphics = (GFXBase *)_GFX[0].get();
+      auto g = g_pEffectManager->graphics();
 
       //uint8_t blurAmount = beatsin8(2, 250, 255);
-      graphics->Clear();
+      g->Clear();
       zCamera = beatsin8(2, 100, 140);
       AngxSpeed = beatsin8(3, 3, 10) / 100.0f;
-      AngySpeed = graphics->beatcos8(5, 3, 10) / 100.0f;
+      AngySpeed = g->beatcos8(5, 3, 10) / 100.0f;
 
       // Update values
       Angx += AngxSpeed;
@@ -223,18 +223,18 @@ class PatternCube : public LEDStripEffect
 
       for (int xOffset = 0; xOffset < MATRIX_WIDTH; xOffset +=32)
       {
-        CRGB color = graphics->ColorFromCurrentPalette(hue + 64 + xOffset);
+        CRGB color = g->ColorFromCurrentPalette(hue + 64 + xOffset);
         // Backface
         EdgePoint *e;
         for (i = 0; i < 12; i++)
         {
           e = edge + i;
           if (!e->visible) {
-            graphics->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
+            g->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
           }
         }
 
-        color = graphics->ColorFromCurrentPalette(hue + 128 + xOffset);
+        color = g->ColorFromCurrentPalette(hue + 128 + xOffset);
 
         // Frontface
         for (i = 0; i < 12; i++)
@@ -242,7 +242,7 @@ class PatternCube : public LEDStripEffect
           e = edge + i;
           if (e->visible)
           {
-            graphics->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
+            g->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
           }
         }
 

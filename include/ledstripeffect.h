@@ -46,7 +46,6 @@
 #include <memory>
 
 extern bool                      g_bUpdateStarted;
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 
 // LEDStripEffect
 //

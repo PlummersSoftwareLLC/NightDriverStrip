@@ -181,11 +181,7 @@ public:
 
     virtual void Draw()
     {
-        auto graphics = (GFXBase *)_GFX[0].get();
-
-//        graphics->drawLine(0, 0, 0, MATRIX_HEIGHT-1, CRGB::Red);                                // Left
-//        graphics->drawLine(MATRIX_WIDTH-1, 0, MATRIX_WIDTH-1, MATRIX_HEIGHT-1, CRGB::Blue);     // Right
-//        return;
+        auto g = g_pEffectManager->graphics();
 
         // Reset after 20 seconds
         if (millis() - msStart > 20000)
@@ -193,7 +189,7 @@ public:
 
         for (int i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT / 10; i++)
         {
-            graphics->leds[graphics->xy(random(0, MATRIX_WIDTH), random(0, MATRIX_HEIGHT))].fadeToBlackBy(32);
+            g->leds[g->xy(random(0, MATRIX_WIDTH), random(0, MATRIX_HEIGHT))].fadeToBlackBy(32);
         }
 
         // fill_palette(colors, SNAKE_LENGTH, initialHue++, 5, graphics->currentPalette, 255, LINEARBLEND);
@@ -210,7 +206,7 @@ public:
             }
 
             path->move();
-            path->draw(graphics, colors);
+            path->draw(g.get(), colors);
         }
     }
 };

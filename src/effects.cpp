@@ -81,169 +81,172 @@ volatile long PatternSubscribers::cViews;
 // Palettes that are referenced by effects need to be instantiated first
 
 CRGBPalette256 BlueColors_p =
-    {
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue,
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue,
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue,
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue};
+{
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue,
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue,
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue,
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue
+};
 
 CRGBPalette256 RedColors_p =
-    {
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
+{
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
 
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
 
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
 
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::OrangeRed,
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::OrangeRed
 };
 
 CRGBPalette256 GreenColors_p =
-    {
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
+{
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
 
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
 
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
 
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::LimeGreen,
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::LimeGreen
 };
 
 CRGBPalette256 PurpleColors_p =
-    {
-        CRGB::Purple,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+{
+    CRGB::Purple,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 
-        CRGB::Purple,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+    CRGB::Purple,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 
-        CRGB::Purple,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+    CRGB::Purple,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 
-        CRGB::Pink,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+    CRGB::Pink,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 };
 
 CRGBPalette256 RGBColors_p =
-    {
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Blue};
+{
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Blue
+};
 
 CRGBPalette256 MagentaColors_p =
-    {
-        CRGB::Pink,
-        CRGB::DeepPink,
-        CRGB::HotPink,
-        CRGB::LightPink,
-        CRGB::LightCoral,
-        CRGB::Purple,
-        CRGB::MediumPurple,
-        CRGB::Magenta,
-        CRGB::DarkMagenta,
-        CRGB::DarkSalmon,
-        CRGB::MediumVioletRed,
-        CRGB::Pink,
-        CRGB::DeepPink,
-        CRGB::HotPink,
-        CRGB::LightPink,
-        CRGB::Magenta};
+{
+    CRGB::Pink,
+    CRGB::DeepPink,
+    CRGB::HotPink,
+    CRGB::LightPink,
+    CRGB::LightCoral,
+    CRGB::Purple,
+    CRGB::MediumPurple,
+    CRGB::Magenta,
+    CRGB::DarkMagenta,
+    CRGB::DarkSalmon,
+    CRGB::MediumVioletRed,
+    CRGB::Pink,
+    CRGB::DeepPink,
+    CRGB::HotPink,
+    CRGB::LightPink,
+    CRGB::Magenta
+};
 
 CRGBPalette256 spectrumBasicColors =
-    {
-        CRGB(0xFD0E35), // Red
-        CRGB(0xFF8833), // Orange
-        CRGB(0xFFEB00), // Middle Yellow
-        CRGB(0xAFE313), // Inchworm
-        CRGB(0x3AA655), // Green
-        CRGB(0x8DD9CC), // Middle Blue Green
-        CRGB(0x0066FF), // Blue III
-        CRGB(0xDB91EF), // Lilac
-        CRGB(0xFD0E35), // Red
-        CRGB(0xFF8833), // Orange
-        CRGB(0xFFEB00), // Middle Yellow
-        CRGB(0xAFE313), // Inchworm
-        CRGB(0x3AA655), // Green
-        CRGB(0x8DD9CC), // Middle Blue Green
-        CRGB(0x0066FF), // Blue III
-        CRGB(0xDB91EF)  // Lilac
+{
+    CRGB(0xFD0E35), // Red
+    CRGB(0xFF8833), // Orange
+    CRGB(0xFFEB00), // Middle Yellow
+    CRGB(0xAFE313), // Inchworm
+    CRGB(0x3AA655), // Green
+    CRGB(0x8DD9CC), // Middle Blue Green
+    CRGB(0x0066FF), // Blue III
+    CRGB(0xDB91EF), // Lilac
+    CRGB(0xFD0E35), // Red
+    CRGB(0xFF8833), // Orange
+    CRGB(0xFFEB00), // Middle Yellow
+    CRGB(0xAFE313), // Inchworm
+    CRGB(0x3AA655), // Green
+    CRGB(0x8DD9CC), // Middle Blue Green
+    CRGB(0x0066FF), // Blue III
+    CRGB(0xDB91EF)  // Lilac
 };
 
 CRGBPalette256 USAColors_p =
-    {
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
+{
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
 };
 
 // AllEffects
@@ -284,7 +287,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 //
 // A list of internal effects, if any.
 DRAM_ATTR LEDStripEffect *AllEffects[] =
-    {
+{
 #if DEMO
 
         new RainbowFillEffect(6, 2),
@@ -293,10 +296,14 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+        new SpectrumAnalyzerEffect("Spectrum", spectrumBasicColors, 100, 0, 2.0, 2.0),
+        new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
+        new SpectrumAnalyzerEffect("Spectrum++", spectrumBasicColors, 0, 70, -1.0, 3.0),
+        new WaveformEffect("WaveForm", &rainbowPalette, 8),
+        new GhostWave("GhostWave", &rainbowPalette),
+        new PatternPulsar(1.95, 1.95, 0.01),
         new PatternBounce(),
         new PatternPongClock(),
-        new GhostWave("GhostWave", &rainbowPalette),
-                                               /* new PatternRadar(), */ 
         new PatternAlienText(),
         new PatternSubscribers(),
         new PatternCircuit(),
@@ -304,14 +311,9 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new PatternSpiro(),
         new PatternLife(),
         new PatternWave(),
-        new PatternPulsar(1.95, 1.95, 0.01),
         new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red)), 8),
         new PatternSwirl(),
         new PatternSerendipity(),
-        new SpectrumAnalyzerEffect("Spectrum", spectrumBasicColors, 100, 0, 2.0, 2.0),
-        new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
-        new SpectrumAnalyzerEffect("Spectrum++", spectrumBasicColors, 0, 70, -1.0, 3.0),
-        new WaveformEffect("WaveForm", &rainbowPalette, 8),
 
 #elif TTGO
 
@@ -635,15 +637,14 @@ void InitEffectsManager()
         throw runtime_error("Could not initialize effect manager");
 }
 
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
 // any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
 // more than one matrix and some FastLED functions like blur2d, this would be why.
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
-
 uint16_t XY(uint8_t x, uint8_t y)
 {
     // Have a drink on me!
-
     return (*g_pEffectManager)[0].get()->xy(x, y);
 }

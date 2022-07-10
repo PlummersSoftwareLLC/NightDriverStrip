@@ -130,12 +130,16 @@ class VUMeterEffect
 
   public:
 
+    inline void EraseVUMeter(GFXBase * pGFXChannel, int yVU) const
+    {
+        pGFXChannel->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
+    }
+
     void DrawVUMeter(GFXBase * pGFXChannel, int yVU, CRGBPalette256 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
 
-        pGFXChannel->drawLine(0, 0, MATRIX_WIDTH-1, 0, CRGB::Black);
-        //        fillRect(0, yVU, MATRIX_WIDTH, 1, BLACK16);
+        EraseVUMeter(pGFXChannel, yVU);
 
         if (iPeakVUy > 1)
         {
@@ -212,13 +216,9 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
     
-        int iRow = 0;
+        uint16_t c = pGFXChannel->to16bit(baseColor);
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
-        {
-            CRGB color = baseColor;
-            iRow++;
-            pGFXChannel->drawLine(xOffset, y, xOffset+bandWidth-1, y, color);
-        }
+            pGFXChannel->drawFastHLine(xOffset, y, bandWidth, c);
     
         const int PeakFadeTime_ms = 1000;
 
@@ -295,14 +295,21 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
   
         std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-        DrawVUMeter(pGFXChannel, 0);
+        //DrawVUMeter(pGFXChannel, 0);
         for (int i = 0; i < NUM_BANDS; i++)
         {
-            // Start at 32 because first two bands are usually too dark to use as bar colors.  This winds up selecting a number up
-            // to 192 and then adding 64 to it in order to skip those darker 0-64 colors
-            //CRGB bandColor = _GFX[0].get()->ColorFromCurrentPalette((::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 1892 + 76);
-            CRGB bandColor = ColorFromPalette(_palette, (::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset));
-            DrawBand(i, bandColor);
+            // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one
+
+            if (pGFXChannel->IsPalettePaused())
+            {
+                // Start at 32 because first two bands are usually too dark to use as bar colors.  This winds up selecting a number up
+                // to 192 and then adding 64 to it in order to skip those darker 0-64 colors
+                DrawBand(i, pGFXChannel->ColorFromCurrentPalette((::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 1892 + 76));
+            }
+            else
+            {
+                DrawBand(i, ColorFromPalette(_palette, (::map(i, 0, NUM_BANDS, 0, 255))));
+            }
         }
     }
 };
@@ -334,16 +341,16 @@ class WaveformEffect : public LEDStripEffect
 
     void DrawSpike(int x, double v) 
     {
-        auto g = g_pDevices[0];
+        auto g = g_pEffectManager->graphics();
 
-        int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2 - 1);
+        int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
-        if (yTop < 1)
-            yTop = 1;
+        if (yTop < 0)
+            yTop = 0;
         if (yBottom > MATRIX_HEIGHT - 1)
             yBottom = MATRIX_HEIGHT - 1;
 
-        for (int y=1; y < MATRIX_HEIGHT; y++)
+        for (int y=0; y < MATRIX_HEIGHT; y++)
         {
             int x1 = abs(MATRIX_HEIGHT / 2 - y);
             int dx = 256 / std::max(1, (MATRIX_HEIGHT / 2));
@@ -354,20 +361,13 @@ class WaveformEffect : public LEDStripEffect
             if (y >= yTop && y <= yBottom )
             {
                 uint16_t ms = millis();
-
                 if (y < 2 || y > (MATRIX_HEIGHT - 2))
                     color  = CRGB::Red;
                 else
-                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND); // color = ColorFromPalette(*_pPalette, 255 - index);
-
-                // Sparkles
-                //
-                // if (random(16)  < 2)
-                //    color = CRGB::White;
-
+                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND); 
             }
                 
-            _GFX[0]->setPixel(x, y, color);
+            g->setPixel(x, y, color);
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
 
@@ -375,7 +375,10 @@ class WaveformEffect : public LEDStripEffect
 
     virtual void Draw()
     {
-        _GFX[0]->MoveInwardX(1);                            // Start on Y=1 so we don't shift the VU meter
+        auto g = g_pEffectManager->graphics();
+        
+        int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
+        g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         
         if (gVURatio > lastVU)
             lastVU = gVURatio;
@@ -403,14 +406,14 @@ class GhostWave : public WaveformEffect
 
     virtual void Draw()
     {
-        auto graphics = (GFXBase *)_GFX[0].get();
+        auto g = g_pEffectManager->graphics();
 
-        for (int y = 1; y < MATRIX_HEIGHT; y++)
+        for (int y = 0; y < MATRIX_HEIGHT; y++)
         {
             for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
             {
-                graphics->setPixel(x, y, graphics->getPixel(x+1, y));
-                graphics->setPixel(MATRIX_WIDTH-x-1, y, graphics->getPixel(MATRIX_WIDTH-x-2, y));
+                g->setPixel(x, y, g->getPixel(x+1, y));
+                g->setPixel(MATRIX_WIDTH-x-1, y, g->getPixel(MATRIX_WIDTH-x-2, y));
             }
         }
     
@@ -421,7 +424,7 @@ class GhostWave : public WaveformEffect
         lastVU = max(lastVU, 0.0);
         lastVU = min(lastVU, 2.0);
 
-        graphics->BlurFrame(24);
+        g->BlurFrame(24);
         DrawSpike(MATRIX_WIDTH/2, lastVU / 2.0);
         DrawSpike(MATRIX_WIDTH/2-1, lastVU / 2.0);
     }

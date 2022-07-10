@@ -69,6 +69,7 @@
 #include "Adafruit_GFX.h"
 #include <stdexcept>
 
+
 // 5:6:5 Color definitions
 #define BLACK16 0x0000
 #define BLUE16 0x001F
@@ -436,7 +437,12 @@ public:
     {
         palettePaused = bPaused;
     }
-    
+
+    bool IsPalettePaused()
+    {
+        return palettePaused;
+    }    
+
     void UpdatePaletteCycle()
     {
 
@@ -635,7 +641,7 @@ public:
 
     inline void BlurFrame(int amount)
     {
-        blur2d(leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1 /* Leave one row for VU Meter */, amount);
+        blur2d(leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, amount);
     }
 
     // All the caleidoscope functions work directly within the screenbuffer (_pLEDs array).

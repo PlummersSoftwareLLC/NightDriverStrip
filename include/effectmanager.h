@@ -76,6 +76,8 @@ class EffectManager
     uint _effectStartTime;
     uint _effectInterval;
     bool _bPlayAll;
+    bool _bShowVU = true;
+    CRGB lastManualColor = CRGB::Red;
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> *_gfx;
@@ -107,9 +109,35 @@ public:
         ClearRemoteColor();
     }
 
-    std::shared_ptr<GFXTYPE> operator[](size_t index)
+    std::shared_ptr<GFXTYPE> operator[](size_t index) const
     {
         return _gfx[index];
+    }
+
+    // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
+    inline std::shared_ptr<GFXTYPE> graphics() const
+    {
+        return _gfx[0];
+    }
+
+    // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.
+
+    virtual bool ShowVU(bool bShow)
+    {
+        bool bResult = _bShowVU;
+        debugW("Setting ShowVU to %d\n", bShow);
+        _bShowVU = bShow;
+
+        // Erase any exising pixels since effects don't all clear each frame
+        if (!bShow)
+            _gfx[0]->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
+
+        return bResult;
+    }
+
+    virtual bool IsVUVisible() const
+    {
+        return _bShowVU;
     }
 
 #if ATOMLIGHT
@@ -134,10 +162,10 @@ public:
     {
         ClearRemoteColor();
 #if (USEMATRIX || SPECTRUM)
-        CHSV hueColor = rgb2hsv_approximate(color);
-        CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
+        CRGB oldColor = lastManualColor;
+        lastManualColor = color;
         LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
-        pMatrix->setPalette(CRGBPalette16(color, color2));
+        pMatrix->setPalette(CRGBPalette16(oldColor, color));
         pMatrix->PausePalette(true);
 #else
         _pRemoteEffect = make_unique<ColorFillEffect>(color, 1);

@@ -126,24 +126,24 @@ class PatternPongClock : public LEDStripEffect
 
     virtual void Draw()
     {
-        auto graphics = (GFXBase *)_GFX[0].get();
+        auto g = g_pEffectManager->graphics();
 
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
         local_time->tm_hour = (local_time->tm_hour+5)%24;           // BUGBUG: Hardcoded to PST for now
 
-        LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(0,0,0));
+        g->Clear();
 
         // draw pitch centre line
         for (byte i = 0; i < MATRIX_WIDTH / 2; i += 2)
-            graphics->setPixel(MATRIX_WIDTH / 2, i, 0x6666);
+            g->setPixel(MATRIX_WIDTH / 2, i, 0x6666);
 
         // draw hh:mm seperator colon that blinks once per second
 
         if (local_time->tm_sec % 2 == 0)
         {
-            graphics->setPixel(MATRIX_WIDTH / 2, 4, RED16);
-            graphics->setPixel(MATRIX_WIDTH / 2, 6, RED16);
+            g->setPixel(MATRIX_WIDTH / 2, 4, RED16);
+            g->setPixel(MATRIX_WIDTH / 2, 6, RED16);
         }
         
         LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
@@ -454,7 +454,7 @@ class PatternPongClock : public LEDStripEffect
         byte plot_x = (int)(ballpos_x + 0.5f);
         byte plot_y = (int)(ballpos_y + 0.5f);
 
-        LEDMatrixGFX::backgroundLayer.drawPixel(plot_x, plot_y, rgb24(255,255,255));
+        g->setPixel(plot_x, plot_y, CRGB::White);
 
         // check if a bat missed the ball. if it did, reset the game.
         if (ballpos_x < 0 || ballpos_x > MATRIX_WIDTH)

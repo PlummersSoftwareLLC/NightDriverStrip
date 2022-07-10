@@ -237,7 +237,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
                     #if USEMATRIX
                         auto * pGraphics = (*g_pEffectManager)[0].get();
-                        ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(pGraphics, 0, &vuPaletteGreen);
+                        if (g_pEffectManager->IsVUVisible())
+                            ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(pGraphics, 0, &vuPaletteGreen);
                     #endif
 
                 }

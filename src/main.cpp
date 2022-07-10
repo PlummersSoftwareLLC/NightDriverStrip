@@ -341,23 +341,18 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     if (WiFi.isConnected())
                     {
                         static uint64_t     _NextRunTime = millis();
-                        //int                 _NewSubsSinceLast;
-
                         if (millis() > _NextRunTime)
                         {
                             debugI("Fetching YouTube Data...");
 
-                            sight._debug = true;
+                            sight._debug = false;
                             if (sight.getData())
                             {
                                 debugI("Got YouTube Data...");
                                 long result = atol(sight.channelStats.subscribers_count.c_str());
-                                //_NewSubsSinceLast = result - PatternSubscribers::cSubscribers;
                                 PatternSubscribers::cSubscribers = result;
                                 _NextRunTime = millis() + SUB_CHECK_INTERVAL;
-
                                 PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
-
                             }
                             else
                             {

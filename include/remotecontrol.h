@@ -251,12 +251,8 @@ class RemoteControl
         }
         else if (IR_FADE == result)
         {
-#if ATOMLIGHT            
-            g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->SetCurrentEffectIndex(EffectManager::VUEffectIndex);
-#endif            
+            g_pEffectManager->ShowVU( !g_pEffectManager->IsVUVisible() );
         }
-        
 
         for (int i = 0; i < ARRAYSIZE(RemoteColorCodes); i++)
         {

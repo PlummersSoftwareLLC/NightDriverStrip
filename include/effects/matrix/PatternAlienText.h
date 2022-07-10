@@ -79,10 +79,10 @@ public:
 
   virtual void Start()
   {
-      GFXBase * graphics = (GFXBase *) _GFX[0].get();
+      auto g = g_pEffectManager->graphics();
       x = leftMargin;
       y = topMargin;
-      graphics->Clear();
+      g->Clear();
       debugW("Starting AlienText...");
   }
 

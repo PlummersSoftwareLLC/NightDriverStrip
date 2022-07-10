@@ -88,12 +88,12 @@ public:
 
     virtual void Draw()
     {
-        auto graphics = (GFXBase *)_GFX[0].get();
+        auto g = g_pEffectManager->graphics();
         // dim all pixels on the display
 
-        //graphics->BlurFrame(200);
-        graphics->blurColumns(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 1, 200);
-        graphics->DimAll(250);
+        // Blue columns only, and skip the first row of each column if the VU meter is being shown so we don't blend it onto ourselves
+        g->blurColumns(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_pEffectManager->IsVUVisible() ? 1 : 0, 200);
+        g->DimAll(250);
 
         for (int i = 0; i < count; i++)
         {
@@ -101,7 +101,7 @@ public:
             boid.applyForce(gravity);
             boid.update();
 
-            graphics->setPixel(boid.location.x, boid.location.y, graphics->ColorFromCurrentPalette(boid.colorIndex));
+            g->setPixel(boid.location.x, boid.location.y, g->ColorFromCurrentPalette(boid.colorIndex));
 
             if (boid.location.y >= MATRIX_HEIGHT - 1)
             {
