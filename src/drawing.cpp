@@ -298,7 +298,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             ledcWrite(1, graphics->leds[0].r); // write red component to channel 1, etc.
             ledcWrite(2, graphics->leds[0].g);
             ledcWrite(3, graphics->leds[0].b);
-            //ledcWrite(4, (graphics->leds[0].r + graphics->leds[0].g + graphics->leds[0].b) / 3);
+            ledcWrite(4, (graphics->leds[0].r + graphics->leds[0].g + graphics->leds[0].b) / 3);
         #endif
 
 #endif

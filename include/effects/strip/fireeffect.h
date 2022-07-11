@@ -93,6 +93,11 @@ class FireEffect : public LEDStripEffect
     {
     }
 
+    virtual size_t DesiredFramesPerSecond()
+    {
+        return 45;
+    }
+    
     virtual CRGB GetBlackBodyHeatColor(double temp)
     {
         temp *= 255;
@@ -161,7 +166,7 @@ class FireEffect : public LEDStripEffect
         for (int i = 0; i < LEDCount; i++)
         {
 
-            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]);
+            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]/(double)std::numeric_limits<uint8_t>::max());
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 

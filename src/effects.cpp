@@ -421,13 +421,13 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif UMBRELLA
 
-        new ColorFillEffect(CRGB::White, 1),
-        new DoublePaletteEffect(),
-        new BouncingBallEffect(),
-        new PaletteFlameEffect("Smooth Red Fire", HeatColors_p),
+        new PaletteFlameEffect("Smooth Red Fire", HeatColors_p, NUM_LEDS, 1, 10, 100, 10, true, false),
         new ClassicFireEffect(),
         new StarryNightEffect<MusicStar>("RGB Music Bubbles", RGBColors_p, 0.5, 1, NOBLEND, 15.0, 0.0, 75.0),   // RGB Music Bubbles
         new StarryNightEffect<MusicPulseStar>("RGB Pulse", RainbowColors_p, 0.02, 20, NOBLEND, 5.0, 0.0, 75.0), // RGB Music Bubbles
+        new BouncingBallEffect(),
+        new ColorFillEffect(CRGB::Green, 1),
+        new DoublePaletteEffect(),
         // purple flame
 
         new MeteorEffect(),                                                                                                                                           // Our overlapping color meteors
