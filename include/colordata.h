@@ -36,3 +36,4 @@ extern CRGBPalette256 vuPaletteBlue;
 extern CRGBPalette256 spectrumBasicColors;
 extern CRGBPalette256 bluesky_pal;
 
+extern TProgmemRGBGradientPalette_byte vu_gpGreen[];

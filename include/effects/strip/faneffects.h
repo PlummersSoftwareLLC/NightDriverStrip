@@ -343,11 +343,7 @@ class CountEffect : public LEDStripEffect
             if (t >= OPEN_LEN)
               t -= OPEN_LEN;
           }
-          #if ATOMISTRING
-            ShowTM1814();
-          #else
-            FastLED.show();
-          #endif
+          FastLED.show();
         }
     }
 

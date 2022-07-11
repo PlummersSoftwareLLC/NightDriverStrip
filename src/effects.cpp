@@ -50,7 +50,7 @@
 // Externals
 //
 
-#ifdef USEMATRIX
+#if USEMATRIX
 #include "ledmatrixgfx.h"
 #include "effects/matrix/PatternSerendipity.h"
 #include "effects/matrix/PatternSwirl.h"
@@ -65,6 +65,7 @@
 #include "effects/matrix/PatternRadar.h"
 #include "effects/matrix/PatternPongClock.h"
 #include "effects/matrix/PatternBounce.h"
+#include "effects/matrix/PatternMandala.h"
 #endif
 
 #ifdef USESTRIP
@@ -73,8 +74,10 @@
 
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 
+#if USEMATRIX
 volatile long PatternSubscribers::cSubscribers;
 volatile long PatternSubscribers::cViews;
+#endif
 
 // Palettes
 //
@@ -296,6 +299,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+        new PatternMandala(),
         new SpectrumAnalyzerEffect("Spectrum", spectrumBasicColors, 100, 0, 2.0, 2.0),
         new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
         new SpectrumAnalyzerEffect("Spectrum++", spectrumBasicColors, 0, 70, -1.0, 3.0),
@@ -417,13 +421,15 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif UMBRELLA
 
-        new PaletteFlameEffect("Smooth Red Fire", heatmap_pal),
+        new ColorFillEffect(CRGB::White, 1),
+        new DoublePaletteEffect(),
+        new BouncingBallEffect(),
+        new PaletteFlameEffect("Smooth Red Fire", HeatColors_p),
         new ClassicFireEffect(),
         new StarryNightEffect<MusicStar>("RGB Music Bubbles", RGBColors_p, 0.5, 1, NOBLEND, 15.0, 0.0, 75.0),   // RGB Music Bubbles
         new StarryNightEffect<MusicPulseStar>("RGB Pulse", RainbowColors_p, 0.02, 20, NOBLEND, 5.0, 0.0, 75.0), // RGB Music Bubbles
-        new PaletteFlameEffect("Smooth Purple Fire", purpleflame_pal),
-        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR),
-        new BouncingBallEffect(),
+        // purple flame
+
         new MeteorEffect(),                                                                                                                                           // Our overlapping color meteors
         new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
         new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),                                                    // Blooming Rainbow Stars
@@ -442,7 +448,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                                                           // Red Twinkle
         new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
         new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
-        new DoublePaletteEffect(),
+
 #elif ATOMLIGHT
         new ColorFillEffect(CRGB::White, 1),
         new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
@@ -518,7 +524,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new BouncingBallEffect(),
         new VUEffect()
 
-#elif STRAND || ATOMISTRING
+#elif STRAND 
 
         // Fast: new PaletteEffect(RainbowStripeColors_p, 8.0, .125, 0, 1, 0), // Rainbow palette
         // Fast: new TwinkleEffect(NUM_LEDS/2, 10),

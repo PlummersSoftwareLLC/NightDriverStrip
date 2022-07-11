@@ -40,7 +40,7 @@ DEFINE_GRADIENT_PALETTE( vu_gpGreen )
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red
 };
-CRGBPalette256 vuPaletteGreen = vu_gpGreen;
+const CRGBPalette256 vuPaletteGreen = vu_gpGreen;
 
 CRGBPalette256 golden(CRGB::Gold);
 

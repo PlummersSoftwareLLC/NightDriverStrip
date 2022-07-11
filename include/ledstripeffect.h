@@ -90,6 +90,11 @@ class LEDStripEffect
         return true;  
     }
     
+    inline std::shared_ptr<GFXBase> graphics() const
+    {
+        return _GFX[0];
+    }
+
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     

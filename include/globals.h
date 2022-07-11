@@ -408,7 +408,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              1  // Accept over the air flash updates
+    #define ENABLE_OTA              0  // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
@@ -577,18 +577,30 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #elif UMBRELLA
 
-    // The "Tiki Fire Umbrella" project, with 8 channels
-
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_OTA              1   // Enable over the air updates to the flash
+    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
+    #define ENABLE_REMOTE   0                     // IR Remote Control
+    #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
 
-    #define NUM_CHANNELS    8
+    #define POWER_LIMIT_MW (1600 * 1000)                 // 100W transformer for an 8M strip max
+    #define DEFAULT_EFFECT_INTERVAL     (1000*60)
+
+
+    // The "Tiki Fire Umbrella" project, with 8 channels
+
+    #define LED_PIN0                5   // Only one pin, it's routed to all 8 spokes.  Independent turned out not to be that useful.
+    #define NUM_CHANNELS    1
     #define MATRIX_WIDTH    228                   // Number of pixels wide (how many LEDs per channel)
     #define MATRIX_HEIGHT   1                     // Number of pixels tall
-    #define RESERVE_MEMORY  200000                // How much to leave free for system operation (it's not stable in low mem)
-    #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
+
+    #define ONBOARD_LED_R    16
+    #define ONBOARD_LED_G    17
+    #define ONBOARD_LED_B    18
+    #define ONBOARD_LED      19
 
 #elif MAGICMIRROR
 
@@ -739,37 +751,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define IR_REMOTE_PIN 36
     
-
-#elif ATOMISTRING
-
-    // Some experimentation with TM1814 and RGBW lamps. I haven't tested this config in a while but
-    // am preserving it in case it's useful in the future
-
-    #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-
-    #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
-
-    #define NUM_CHANNELS    1
-    #define MATRIX_WIDTH    (144)    
-    #define NUM_LEDS        MATRIX_WIDTH
-    #define MATRIX_HEIGHT   1
-    #define RESERVE_MEMORY  150000
-    #define ENABLE_REMOTE   0                     // IR Remote Control
-    #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
-
-    #define FAN_SIZE        MATRIX_WIDTH
-    #define NUM_FANS        1
-    #define LED_FAN_OFFSET_BU 0
-
-    #if M5STICKC || M5STICKCPLUS
-        #define LED_PIN0 26
-    #else
-        #define LED_PIN0 5
-    #endif
-
 #elif SINGLE_INSULATOR
 
     // A single glass insulator with a 12-pixel ring and then a 7=pixel "bonus" ring in the middle
@@ -879,7 +860,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define COLOR_ORDER EOrder::RGB
 #endif
 
-#ifdef USEMATRIX
+#if USEMATRIX
 #include "MatrixHardware_ESP32_Custom.h"
 #define SM_INTERNAL     // Silence build messages from their header
 #include <SmartMatrix.h>
@@ -920,6 +901,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef ENABLE_NTP
 #define ENABLE_NTP              1   // Update the clock from NTP
+#endif
+
+#ifndef NUM_LEDS
+#define NUM_LEDS (MATRIX_HEIGHT * MATRIX_WIDTH)
 #endif
 
 #ifndef FAN_SIZE                // How man LEDs around the circumference
@@ -1178,7 +1163,7 @@ inline void * PreferPSRAMAlloc(size_t s)
 {
     if (psramInit())
     {
-        //Serial.printf("PSRAM Array Request for %u bytes\n", s);
+        Serial.printf("PSRAM Array Request for %u bytes\n", s);
         return ps_malloc(s);
     }
     else
@@ -1186,22 +1171,6 @@ inline void * PreferPSRAMAlloc(size_t s)
         return malloc(s);
     }
 }
-
-// DelayedReboot
-//
-// Used for fatal errors and asserts, displays a message on the serial terminal and then resets the chip
-
-inline void DelayedReboot(const char * psz) 
-{ 
-    debugE("This is an ERROR message from RemoteDebug");
-    Serial.printf("\n\nUNHANDLED FATAL ERROR: %s\n", psz ? psz : "Not Specified");
-    Serial.printf("** REBOOT **\n"); 
-    Serial.printf("-------------------------------------------------------------------------------------\n");
-    Serial.flush(); 
-    delay(2500); 
-    ESP.restart();
-    exit(0);
-}  
 
 // AppTime
 //

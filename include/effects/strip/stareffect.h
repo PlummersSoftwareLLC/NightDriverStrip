@@ -493,7 +493,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         {
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            setPixels(fPos - i->_objectSize / 2.0, i->_objectSize, c);         
+            graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c);         
         }
 
         while (_allParticles.size() > 0 && _allParticles.front().Age() >= _allParticles.front().TotalLifetime())

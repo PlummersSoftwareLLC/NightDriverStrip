@@ -165,10 +165,15 @@ class FireEffect : public LEDStripEffect
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
+            
             int j = (!bReversed) ? i : LEDCount - 1 - i;
             setPixelsOnAllChannels(j, 1, color, false);
-            if (bMirrored)
-                setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
+            //if (bMirrored)
+            //    setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
+
+            if (!heap_caps_check_integrity_all(true))
+                throw new std::runtime_error("Heap bad in FireEffect Draw!");
+
         }
     }
 };
@@ -369,7 +374,7 @@ public:
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         LEDStripEffect::Init(gfx);
-        _Temperatures = (float *)malloc(sizeof(float) * _cLEDs);
+        _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
         if (!_Temperatures)
         {
             Serial.println("ERROR: Could not allocate memory for FireEffect");

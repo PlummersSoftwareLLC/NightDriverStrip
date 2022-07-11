@@ -204,22 +204,7 @@ class LEDBuffer
     {
         _timeStampMicroseconds = 0;
         _timeStampSeconds      = 0;
-        
-        // BUGBUG I think this could be cpymem...
-
         _pStrand->fillLeds(_leds.get());
-        /*
-        int iPixel = 0; 
-        for (int i = 0; i < _pStrand->width() * _pStrand->height(); i++)
-        {
-            int x = iPixel % _pStrand->width();
-            int y = iPixel / _pStrand->width();
-            _pStrand->setPixel(x, y, _leds[iPixel]);
-            iPixel++;
-            if (iPixel >= _pixelCount)
-                break;
-        }
-        */
     }
 };
 
@@ -233,9 +218,9 @@ class LEDBufferManager
 {
     const std::unique_ptr<shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
     std::shared_ptr<LEDBuffer>                      _pLastBufferAdded;   // Keeps track of the MRU buffer
-    size_t                                     _iNextBuffer;        // Head pointer index
-    size_t                                     _iLastBuffer;        // Tail pointer index
-    uint32_t                                   _cBuffers;           // Number of buffers
+    size_t                                          _iNextBuffer;        // Head pointer index
+    size_t                                          _iLastBuffer;        // Tail pointer index
+    uint32_t                                        _cBuffers;           // Number of buffers
    
   public:
 

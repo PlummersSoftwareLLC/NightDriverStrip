@@ -81,18 +81,19 @@ DRAM_ATTR uint8_t  g_Fader           = 255;
 
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
+    CRGBPalette256 greenPalette(vu_gpGreen);
+    
     debugI(">> DrawLoopTaskEntry\n");
-    debugE("Entry Heap: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
 
     // Initialize our graphics and the first effect
 
     GFXBase * graphics = (GFXBase *)(*g_pEffectManager)[0].get();
     graphics->Setup();
 
-    // We don't need color correction on the chromakey'd title layer
-    LEDMatrixGFX::titleLayer.enableColorCorrection(false);
-
     #if USEMATRIX
+        // We don't need color correction on the chromakey'd title layer
+        LEDMatrixGFX::titleLayer.enableColorCorrection(false);
+
         // Starting the effect might need to draw, so we need to set the leds up before doing so
         LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
@@ -230,10 +231,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 if (g_msLastWifiDraw == 0 || (micros() - g_msLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))  
                 {
                     g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
-                    debugV("Calling EffectManager::Update to draw the built-in effect for %d pixels.", NUM_LEDS);
                     g_pEffectManager->Update(); // Draw the current built in effect
                     cPixelsDrawnThisFrame = NUM_LEDS;
-                    debugV("Back from EffectManager::Update");
 
                     #if USEMATRIX
                         auto * pGraphics = (*g_pEffectManager)[0].get();
@@ -274,15 +273,11 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 }
 
                 //vTaskPrioritySet(g_taskDraw, DRAWING_PRIORITY_BOOST);
-                #if ATOMISTRING
-                    ShowTM1814();
-                #else
-                    int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                    debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
-                        cPixelsDrawnThisFrame, NUM_LEDS, brite, FastLED.getFPS());
-                    FastLED.show((brite * g_Fader) / 256);
-                    debugV("Back from FastLED::show");
-                #endif
+                int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+                debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
+                    cPixelsDrawnThisFrame, NUM_LEDS, brite, FastLED.getFPS());
+                FastLED.show((brite * g_Fader) / 256);
+                debugV("Back from FastLED::show");
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
                 g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
@@ -298,6 +293,14 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 debugV("Draw loop ended without a draw.");
             }
         }
+
+        #ifdef ONBOARD_LED_R
+            ledcWrite(1, graphics->leds[0].r); // write red component to channel 1, etc.
+            ledcWrite(2, graphics->leds[0].g);
+            ledcWrite(3, graphics->leds[0].b);
+            //ledcWrite(4, (graphics->leds[0].r + graphics->leds[0].g + graphics->leds[0].b) / 3);
+        #endif
+
 #endif
 
 #if USEMATRIX

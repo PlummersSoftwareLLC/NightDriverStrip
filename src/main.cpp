@@ -154,13 +154,6 @@
 // If the Atomi TM1814 lights are being used, we include the NeoPixelBus code
 // to drive them, but otherwise we do not use or include NeoPixelBus
 
-#if ATOMISTRING
-#include <NeoPixelBus.h>
-#include <NeoPixelAnimator.h>
-#include <SPI.h> 
-#include <SD.h>
-#endif
-
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
 
 #include "ntptimeclient.h"                      // setting the system clock from ntp
@@ -177,8 +170,6 @@
 
 #include "colordata.h"                          // color palettes
 #include "drawing.h"                            // drawing code
-#include <YouTubeSight.h>                       // For fetching YouTube sub count
-#include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 
 #if ENABLE_REMOTE
     #include "remotecontrol.h" // Allows us to use a IR remote with it
@@ -214,6 +205,9 @@ DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by
 
 #ifdef USEMATRIX
 #include "ledmatrixgfx.h"
+#include <YouTubeSight.h>                       // For fetching YouTube sub count
+#include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
+
 #endif
 
 #ifdef USESTRIP
@@ -304,6 +298,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
 // Data for Dave's Garage as an example,
 
+#if USEMATRIX
 char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
 char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
@@ -313,6 +308,7 @@ char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
 WiFiClient http;
 YouTubeSight sight(CHANNEL_GUID, http);
+#endif
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
@@ -332,35 +328,39 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     #if WAIT_FOR_WIFI
                         debugE("Rebooting in 5 seconds due to no Wifi available.");
                         delay(5000);
-                        DelayedReboot("Rebooting due to no Wifi available.");
+                        throw new std::runtime_error("Rebooting due to no Wifi available.");
                     #endif
                 }
-
+            }
+            EVERY_N_SECONDS(60)
+            {
                 // Get Subscriber Count
 
-                    if (WiFi.isConnected())
+                if (WiFi.isConnected())
+                {
+                    #if USEMATRIX
+                    static uint64_t     _NextRunTime = millis();
+                    if (millis() > _NextRunTime)
                     {
-                        static uint64_t     _NextRunTime = millis();
-                        if (millis() > _NextRunTime)
-                        {
-                            debugI("Fetching YouTube Data...");
+                        debugI("Fetching YouTube Data...");
 
-                            sight._debug = false;
-                            if (sight.getData())
-                            {
-                                debugI("Got YouTube Data...");
-                                long result = atol(sight.channelStats.subscribers_count.c_str());
-                                PatternSubscribers::cSubscribers = result;
-                                _NextRunTime = millis() + SUB_CHECK_INTERVAL;
-                                PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
-                            }
-                            else
-                            {
-                                debugW("YouTubeSight Subscriber API failed\n");
-                                _NextRunTime = millis() + SUB_CHECK_ERROR_INTERVAL;
-                            }
+                        sight._debug = false;
+                        if (sight.getData())
+                        {
+                            debugI("Got YouTube Data...");
+                            long result = atol(sight.channelStats.subscribers_count.c_str());
+                            PatternSubscribers::cSubscribers = result;
+                            _NextRunTime = millis() + SUB_CHECK_INTERVAL;
+                            PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
                         }
-                    }                
+                        else
+                        {
+                            debugW("YouTubeSight Subscriber API failed\n");
+                            _NextRunTime = millis() + SUB_CHECK_ERROR_INTERVAL;
+                        }
+                    }
+                    #endif
+                }                
             }
         #endif
 
@@ -611,7 +611,7 @@ void setup()
             g_pDevices[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
     #endif
 
-    #ifdef USEMATRIX
+    #if USEMATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             g_pDevices[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
@@ -631,7 +631,7 @@ void setup()
     if (cBuffers < MIN_BUFFERS)
     {
         debugI("Not enough memory, could only allocate %d buffers and need %d\n", cBuffers, MIN_BUFFERS);
-        DelayedReboot("Could not allocate all buffers");
+        throw std::runtime_error("Could not allocate all buffers");
     }
     if (cBuffers > MAX_BUFFERS)
     {
@@ -657,11 +657,17 @@ void setup()
 
     #if USESTRIP
 
-        #if ATOMISTRING
-            strip.Begin();
-            strip.SetPixelSettings(NeoTm1814Settings(165,165,165,165));
-            strip.Show();
-            pinMode(LED_PIN0, OUTPUT);
+        // Onboard PWM LED 
+
+        #ifdef ONBOARD_LED_R
+            ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
+            ledcAttachPin(ONBOARD_LED_G,  2);
+            ledcAttachPin(ONBOARD_LED_B,  3);
+            ledcAttachPin(ONBOARD_LED,    4);
+            ledcSetup(1, 12000, 8);             // 12 kHz PWM, 8-bit resolution
+            ledcSetup(2, 12000, 8);
+            ledcSetup(3, 12000, 8);
+            ledcSetup(4, 12000, 8);            
         #endif
 
         #if STRAND

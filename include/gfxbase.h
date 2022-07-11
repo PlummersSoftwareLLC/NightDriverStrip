@@ -113,6 +113,11 @@ protected:
     static uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
     static uint8_t  noisesmoothing;
 
+    // This class parties right on the noise variables, but I don't want to encourage that by making them public.
+    // THey should be turned into member variables, etc.
+
+    friend class PatternMandala;
+
 public:
 
     CRGB * leds;
@@ -644,7 +649,7 @@ public:
         blur2d(leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, amount);
     }
 
-    // All the caleidoscope functions work directly within the screenbuffer (_pLEDs array).
+    // All the caleidoscope functions work directly within the screenbuffer (leds array).
     // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it arround.
 
     // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
@@ -1071,8 +1076,8 @@ public:
     // write one pixel with the specified color from the current palette to coordinates
     /*
     void Pixel(int x, int y, uint8_t colorIndex) {
-      _pLEDs[XY(x, y)] = ColorFromCurrentPalette(colorIndex);
-      matrix.drawBackgroundPixelRGB888(x,y, _pLEDs[XY(x, y)]); // now draw it?
+      leds[XY(x, y)] = ColorFromCurrentPalette(colorIndex);
+      matrix.drawBackgroundPixelRGB888(x,y, leds[XY(x, y)]); // now draw it?
     }
     */
 
@@ -1133,7 +1138,7 @@ public:
         }
     }
 
-    // non _pLEDs2 memory version.
+    // non leds2 memory version.
     // MoveX - Shift the content on the matrix left or right
     
     inline void MoveX(byte delta)
@@ -1145,18 +1150,18 @@ public:
         {
 
             // Shift Left: https://codedost.com/c/arraypointers-in-c/c-program-shift-elements-array-left-direction/
-            // Computationally heavier but doesn't need an entire _pLEDs2 array
+            // Computationally heavier but doesn't need an entire leds2 array
 
-            // tmp = _pLEDs[XY(0, y)];
+            // tmp = leds[XY(0, y)];
             // for (int m = 0; m < delta; m++)
             // {
             // Do this delta time for each row... computationally expensive potentially.
             // for(int x = 0; x < MATRIX_WIDTH; x++)
             //{
-            //     _pLEDs[XY(x, y)] = _pLEDs [XY(x+1, y)];
+            //     leds[XY(x, y)] = leds [XY(x+1, y)];
             // }
 
-            // _pLEDs[XY(MATRIX_WIDTH-1, y)] = tmp;
+            // leds[XY(MATRIX_WIDTH-1, y)] = tmp;
             //}
 
             // Shift
@@ -1174,10 +1179,10 @@ public:
         } // end row loop
 
         /*
-        // write back to _pLEDs
+        // write back to leds
         for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
           for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
-            _pLEDs[XY(x, y)] = _pLEDs2[XY(x, y)];
+            leds[XY(x, y)] = leds2[XY(x, y)];
           }
         }
         */

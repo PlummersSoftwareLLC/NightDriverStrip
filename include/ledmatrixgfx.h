@@ -34,9 +34,12 @@
 
 #pragma once
 #include "gfxbase.h"
+
+#if USEMATRIX
 #include <SmartMatrix.h>
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
+
 //
 // Matrix Panel
 //
@@ -64,10 +67,12 @@ public:
     static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
     static const rgb24 defaultBackgroundColor;
 
+    #if USEMATRIX
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
     static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
+    #endif
 
     static Boid *boids;
 
@@ -131,5 +136,5 @@ public:
     {
         return backgroundLayer;
     }
-
 };
+#endif

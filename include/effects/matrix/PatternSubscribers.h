@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        PatternSpiro.h
+// File:        PatternSubscribers.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -31,7 +31,6 @@
 
 #ifndef PatternSub_H
 #define PatternSub_H
-
 
 #include "globals.h"
 #include "ledstripeffect.h"

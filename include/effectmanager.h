@@ -411,6 +411,8 @@ public:
         }
         else
         {
+            //
+
             _ppEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
 
             // If we do indeed have multiple effects (BUGBUG what if only a single enabled?) then we

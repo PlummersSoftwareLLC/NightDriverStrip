@@ -47,10 +47,11 @@ uint32_t GFXBase::noise_scale_y;
 uint8_t GFXBase::noise[MATRIX_WIDTH][MATRIX_HEIGHT];   // BUGBUG Could this go in PSRAM if allocated instead?
 uint8_t GFXBase::noisesmoothing;
 
+#if USEMATRIX
 Boid    * LEDMatrixGFX::boids;
+#endif
 
-
-#ifdef USEMATRIX
+#if USEMATRIX
 
   #include <SmartMatrix.h>
   #include "ledmatrixgfx.h"

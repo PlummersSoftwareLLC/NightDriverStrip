@@ -45,6 +45,7 @@
 #include "effects/strip/particles.h"
 #include "screen.h"
 #include "gfxbase.h"
+#include "effectmanager.h"
 
 #if ENABLE_AUDIO
 
@@ -52,6 +53,8 @@ extern AppTime  g_AppTime;
 extern PeakData g_Peaks;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
 extern DRAM_ATTR bool gbInfoPageDirty;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
 
 class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual ParticleSystemEffect<SpinningPaletteRingParticle>
 {
@@ -114,8 +117,8 @@ class VUMeterEffect
     void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, CRGBPalette256 * pPalette = nullptr)
     {
         int xHalf = pGFXChannel->width()/2;
-        pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vuPaletteGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
-        pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vuPaletteGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
+        pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
+        pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
     }
 
 
@@ -313,6 +316,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         }
     }
 };
+
 
 // WaveformEffect [MATRIX EFFECT]
 //

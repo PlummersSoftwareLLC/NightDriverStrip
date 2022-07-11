@@ -76,18 +76,14 @@ public:
   byte brightness;
 };
 
-#define CRC_LENGTH 32                           // Depth of loop check buffer
+#define CRC_LENGTH 128                           // Depth of loop check buffer
 
 class PatternLife : public LEDStripEffect 
 {
 private:
     
-    // BUGBUG (davepl) - This looks hideous.  I'm just trying to dynamically allocate a 2D array from PSRAM in a manner that can
-    //                   then be used in the world[x][y] format by the subsequent code.  Like Apu said, "there's got to be a better way"/
-    
-    Cell (*world)[MATRIX_HEIGHT] =  (Cell (*)[MATRIX_HEIGHT]) PreferPSRAMAlloc( sizeof(Cell) * MATRIX_WIDTH * MATRIX_HEIGHT);
-    
-    uint32_t checksums[CRC_LENGTH];
+    Cell (*world)[MATRIX_HEIGHT];
+    uint32_t * checksums;
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
     unsigned int density = 50;
@@ -99,6 +95,18 @@ private:
         return 24;
     }
 
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               
+    {
+        LEDStripEffect::Init(gfx);
+
+        // BUGBUG (Davepl)  Although this saves us on base mem, access to the PSRAM is fairly random which is
+        //                  not ideal and slows this down to about 23 fps.  If you need more, you'll need to go
+        //                  to regular RAM.
+        
+        world =  (Cell (*)[MATRIX_HEIGHT]) PreferPSRAMAlloc( sizeof(Cell) * MATRIX_WIDTH * MATRIX_HEIGHT);        
+        checksums = (uint32_t *) PreferPSRAMAlloc( CRC_LENGTH * sizeof(uint32_t) );
+    }
+    
     // Seed: 92465, Generations: 1626
     //       130908,             3253
     void randomFillWorld() 

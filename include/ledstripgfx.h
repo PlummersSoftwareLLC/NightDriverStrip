@@ -40,8 +40,8 @@ public:
 
     LEDStripGFX(size_t w, size_t h) : GFXBase(w, h)
     {
-        _pLEDs = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
-        if(!_pLEDs)
+        leds = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
+        if(!leds)
         {
             throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
         }
@@ -49,13 +49,13 @@ public:
 
     CRGB * GetLEDBuffer() const
     {
-        return _pLEDs;
+        return leds;
     }
 
     ~LEDStripGFX()
     {
-        free(_pLEDs);
-        _pLEDs = nullptr;
+        free(leds);
+        leds = nullptr;
     }
 
     virtual size_t GetLEDCount() const
@@ -81,7 +81,7 @@ public:
     inline CRGB getPixel(int16_t x) const
     {
         if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
-            return _pLEDs[x];
+            return leds[x];
         else
         {
             throw std::runtime_error("Invalid index in getPixel: " + x);
@@ -93,7 +93,7 @@ public:
     {
         if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
         {
-            return _pLEDs[xy(x, y)];
+            return leds[xy(x, y)];
         }
         else
         {

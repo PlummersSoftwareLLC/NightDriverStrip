@@ -40,6 +40,8 @@
 #endif
 #include <mutex>
 
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
 double g_Brite;
 uint32_t g_Watts;  
 
