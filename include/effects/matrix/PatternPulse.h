@@ -122,7 +122,7 @@ class PatternPulse : public LEDStripEffect
     }
 };
 
-class PatternPulsar : public BeatEffectBase2, LEDStripEffect
+class PatternPulsar : public BeatEffectBase2, public LEDStripEffect
 {
   private:
 
@@ -144,9 +144,9 @@ class PatternPulsar : public BeatEffectBase2, LEDStripEffect
 
   public:
 
-    PatternPulsar(double lowLatch = 1, double highLatch = 1, double minElapsed = 0.00) : 
-        LEDStripEffect("Pulsars"), 
-        BeatEffectBase2(1.95, 0.25 )
+    PatternPulsar(double lowLatch = 1, double highLatch = 1, double minElapsed = 0.00) :
+        BeatEffectBase2(1.95, 0.25 ),
+        LEDStripEffect("Pulsars")
     {
     }
     
@@ -172,20 +172,18 @@ class PatternPulsar : public BeatEffectBase2, LEDStripEffect
 
     virtual void Draw()
     {
-        auto graphics = (GFXBase *) BeatEffectBase2::_GFX[0].get();
-
         ProcessAudio();
         
         //VUMeterEffect::DrawVUMeter(graphics, 0);
         //blur2d(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 25);
-        graphics->fadeAllChannelsToBlackBy(20);
+        fadeAllChannelsToBlackBy(20);
 
         // Add some sparkle
 
         const int maxNewStarsPerFrame = 4;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
             if (random(4) < gVURatio)
-                graphics->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
+                graphics()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
 
         for (auto pop = _pops.begin(); pop != _pops.end(); pop++)
         {
@@ -199,7 +197,7 @@ class PatternPulsar : public BeatEffectBase2, LEDStripEffect
 
             if (pop->step == 0)
             {
-                graphics->drawCircle(pop->centerX, pop->centerY, pop->step, graphics->to16bit(graphics->ColorFromCurrentPalette(pop->hue)));
+                graphics()->drawCircle(pop->centerX, pop->centerY, pop->step, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue)));
                 pop->step++;
             }
             else
@@ -207,12 +205,12 @@ class PatternPulsar : public BeatEffectBase2, LEDStripEffect
                 if (pop->step < pop->maxSteps)
                 {
                     // initial pulse
-                    graphics->drawCircle(pop->centerX, pop->centerY, pop->step, graphics->to16bit(graphics->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                    graphics()->drawCircle(pop->centerX, pop->centerY, pop->step, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
 
                     // secondary pulse
                     if (pop->step > 3)
                     {
-                        graphics->drawCircle(pop->centerX, pop->centerY, pop->step - 3, graphics->to16bit(graphics->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                        graphics()->drawCircle(pop->centerX, pop->centerY, pop->step - 3, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
                     }
                     pop->step++;
                 }

@@ -49,8 +49,8 @@ class PatternSubscribers : public LEDStripEffect
 
   static volatile long cSubscribers;
   static volatile long cViews;
-  static char szChannelID[];
-  static char szChannelName1[];
+  static const char szChannelID[];
+  static const char szChannelName1[];
 
   virtual void Draw()
   {
