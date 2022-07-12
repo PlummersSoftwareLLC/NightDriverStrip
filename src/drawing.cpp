@@ -113,6 +113,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         
         uint cPixelsDrawnThisFrame = 0;
  
+        double frameStartTime = g_AppTime.CurrentTime();
+
         #if USEMATRIX
             // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
             // both 24-bits RGB triplets.  Or at least the same size!
@@ -281,7 +283,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
                 g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->GetLEDBuffer(), cPixelsDrawnThisFrame )/ 1000;
+                g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->GetLEDBuffer(), cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
 
                 
                 // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
@@ -295,17 +297,21 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         }
 
         #ifdef ONBOARD_LED_R
-            ledcWrite(1, graphics->leds[0].r); // write red component to channel 1, etc.
-            ledcWrite(2, graphics->leds[0].g);
-            ledcWrite(3, graphics->leds[0].b);
-            ledcWrite(4, (graphics->leds[0].r + graphics->leds[0].g + graphics->leds[0].b) / 3);
+            int iLed = NUM_LEDS/2;
+            ledcWrite(1, graphics->leds[iLed].b ); // write red component to channel 1, etc.
+            ledcWrite(2, graphics->leds[iLed].r );
+            ledcWrite(3, graphics->leds[iLed].g );
+            //ledcWrite(4, (graphics->leds[iLed].r + graphics->leds[iLed].g + graphics->leds[iLed].b) / 3);
         #endif
 
 #endif
 
-#if USEMATRIX
-            LEDMatrixGFX::PresentFrame();
-#endif
+        // Delay enough to slow down to the desired framerate
+
+        const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+        double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+        if (elapsed < minimumFrameTime)
+            delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly, 
         // so we'll pause to share the CPU a bit once the update has begun

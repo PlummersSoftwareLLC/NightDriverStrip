@@ -177,7 +177,7 @@ class MusicStar : public Star
     virtual float PreignitionTime() const      { return 0.0f; }
     virtual float IgnitionTime()    const      { return 0.25 ; }
     virtual float HoldTime()        const      { return 0.00f; }
-    virtual float FadeTime()        const      { return 0.75f;  }
+    virtual float FadeTime()        const      { return 1.75f;  }
 
 };
 float MusicStar::_baseHue = 0.0f;
@@ -473,8 +473,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
             if (_musicFactor != 1.0)
             {
-                //prob = prob * 0.5 + (prob * 0.5 * gVURatio);
-                prob = prob * (gVURatio - 1.0) * _musicFactor;
+                // 
+                prob = prob * (gVURatio - 0.5) * _musicFactor; 
             }   
 
             if (randomDouble(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)

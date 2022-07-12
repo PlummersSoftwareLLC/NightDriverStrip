@@ -84,7 +84,7 @@ class LEDStripEffect
         {
             _GFX[i] = gfx[i];    
         }
-        debugW("Get LED COunt");
+        debugW("Get LED Count");
         _cLEDs = _GFX[0]->GetLEDCount();   
         debugI("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
         return true;  
@@ -132,6 +132,9 @@ class LEDStripEffect
 
     void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0,  uint everyN = 1)
     {
+        if (!_GFX[0])
+            throw new std::runtime_error("Graphcis not set up properly");
+
         if (numToFill == 0)
             numToFill = _cLEDs-iStart;
 
@@ -140,11 +143,12 @@ class LEDStripEffect
             printf("Boundary Exceeded in FillRainbow");
             return;
         }
-            
+
         for (int n = 0; n < NUM_CHANNELS; n++)
         {            
             for (int i = iStart; i < numToFill; i+= everyN)
                 _GFX[n]->setPixel(i, color);
+               
         }
     }
 
@@ -204,8 +208,8 @@ class LEDStripEffect
 
     inline void setPixelOnAllChannels(int i, CRGB c)
     {       
-        for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->setPixel(i, c);
+        for (int j = 0; j < NUM_CHANNELS; j++)  
+            _GFX[j]->setPixel(i, c);
     }
 
     inline void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const

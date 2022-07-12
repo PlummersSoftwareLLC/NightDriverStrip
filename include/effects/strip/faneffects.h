@@ -36,7 +36,9 @@
 #include <errno.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <math.h>
+#include <memory>
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
@@ -89,6 +91,56 @@ static const int FanPixelsVertical[FAN_SIZE] =
   0
 };
 #endif
+
+
+// FractionalColor
+//
+// Returns a fraction of a color; abstracts the fadeToBlack away so that we can later
+// do better color correction as needed
+
+inline CRGB ColorFraction(const CRGB colorIn, float fraction)
+{
+    fraction = min(1.0f, fraction);
+    fraction = max(0.0f, fraction);
+    return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
+}
+
+#ifdef FAN_SIZE
+inline void RotateForward(int iStart, int length = FAN_SIZE, int count = 1)
+{
+    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + count], &FastLED.leds()[iStart + length]);
+}
+
+inline void RotateReverse(int iStart, int length = FAN_SIZE, int count = 1)
+{
+    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + length - count], &FastLED.leds()[iStart + length]);
+}
+
+// Rotate
+//
+// Rotate all the pixels in the buffer forward or back
+
+inline void RotateAll(bool bForward = true, int count = 1)
+{
+    if (bForward)
+        RotateForward(0, count);
+    else
+        RotateReverse(0, count);
+}
+#endif
+
+// RotateFan
+//
+// Rotate one circular section within itself, like a single fan
+
+inline void RotateFan(int iFan, bool bForward = true, int count = 1)
+{
+    if (bForward)
+        RotateForward(iFan * FAN_SIZE, FAN_SIZE, count);
+    else
+        RotateReverse(iFan * FAN_SIZE, FAN_SIZE, count);
+}
+
 // GetFanPixelOrder
 // 
 // Returns the sequential strip postion of a an LED on the fans based
@@ -816,7 +868,7 @@ class FireFanEffect : public LEDStripEffect
     {
         if (bMirrored)
             LEDCount = LEDCount / 2;
-        abHeat = make_unique<uint8_t []>(CellCount());
+        abHeat = std::make_unique<uint8_t []>(CellCount());
     }
 
     virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)

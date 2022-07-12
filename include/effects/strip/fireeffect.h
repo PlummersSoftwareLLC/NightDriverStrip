@@ -37,9 +37,14 @@
 #include <vector>
 #include <math.h>
 #include <memory>
+#include <algorithm>
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
+
+#ifdef ENABLE_AUDIO
+#include "musiceffect.h"
+#endif
 
 extern AppTime g_AppTime;
 extern volatile float gVURatio;
@@ -72,8 +77,8 @@ class FireEffect : public LEDStripEffect
 
   public:
 
-    FireEffect(int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
-        : LEDStripEffect("FireEffect"),
+    FireEffect(const char * pszName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
+        : LEDStripEffect(pszName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
           Cooling(cooling),
@@ -86,14 +91,14 @@ class FireEffect : public LEDStripEffect
         if (bMirrored)
             LEDCount = LEDCount / 2;
 
-        heat = make_unique<uint8_t []>(CellCount());
+        heat = std::make_unique<uint8_t []>(CellCount());
     }
 
     virtual ~FireEffect()
     {
     }
 
-    virtual size_t DesiredFramesPerSecond()
+    virtual size_t DesiredFramesPerSecond() const
     {
         return 45;
     }
@@ -123,6 +128,18 @@ class FireEffect : public LEDStripEffect
         DrawFire();
     }
 
+    virtual void GenerateSparks(double multiplier = 1.0)
+    {
+        for (int i = 0 ; i < Sparks * multiplier; i++)
+        {
+            if (random(255) < Sparking)
+            {
+                int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
+                heat[y] = random(200, 255);   // Can roll over which actually looks good!
+            }
+        }
+    }
+    
     virtual void DrawFire()
     {
         // First cool each cell by a little bit
@@ -151,14 +168,7 @@ class FireEffect : public LEDStripEffect
 
         EVERY_N_MILLISECONDS(20)
         {
-          for (int i = 0 ; i < Sparks; i++)
-          {
-              if (random(255) < Sparking)
-              {
-                  int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
-                  heat[y] = random(200, 255);   // Can roll over which actually looks good!
-              }
-          }
+            GenerateSparks(1.0);
         }
 
         // Finally, convert heat to a color
@@ -175,10 +185,6 @@ class FireEffect : public LEDStripEffect
             setPixelsOnAllChannels(j, 1, color, false);
             //if (bMirrored)
             //    setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
-
-            if (!heap_caps_check_integrity_all(true))
-                throw new std::runtime_error("Heap bad in FireEffect Draw!");
-
         }
     }
 };
@@ -194,10 +200,11 @@ public:
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
                        int sparking = 100,
+                       int sparks = 3,
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : FireEffect(ledCount, cellsPerLED, cooling, sparking, sparking, sparkHeight, reversed, mirrored),
+        : FireEffect(pszName,ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           _palette(palette)
     {
     }
@@ -212,6 +219,49 @@ public:
         //        heatramp <<=2;
     }
 };
+
+#ifdef ENABLE_AUDIO
+class MusicalPaletteFire : public PaletteFlameEffect, protected virtual BeatEffectBase2
+{
+  public:
+
+    MusicalPaletteFire(const char *pszName,
+                       const CRGBPalette256 &palette,
+                       int ledCount = NUM_LEDS,
+                       int cellsPerLED = 1,
+                       int cooling = 20,         // Was 1.8 for NightDriverStrip
+                       int sparking = 100,
+                       int sparks = 3,
+                       int sparkHeight = 3,
+                       bool reversed = false,
+                       bool mirrored = false)
+        :   BeatEffectBase2(1.00, 0.01),
+            PaletteFlameEffect(pszName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
+          
+    {
+    }
+
+  protected:
+
+    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    {
+        if (elapsed > 1)
+        {
+            GenerateSparks(100);
+        }
+        else
+        {
+            GenerateSparks(gVURatio * 50);
+        }
+    }
+
+    virtual void Draw()
+    {
+        BeatEffectBase2::ProcessAudio();
+        PaletteFlameEffect::Draw();
+    }
+};
+#endif
 
 class ClassicFireEffect : public LEDStripEffect
 {

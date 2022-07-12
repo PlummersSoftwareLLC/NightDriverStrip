@@ -262,7 +262,7 @@ class MovingFadingPaletteObject: public FadingPaletteObject, public MovingObject
 {
   public:
 
-    MovingFadingPaletteObject(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, uint8_t colorIndex = 0)
+    MovingFadingPaletteObject(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, uint8_t colorIndex = random8())
       : FadingPaletteObject(palette, blendType, colorIndex), 
         MovingObject(maxSpeed)
     {

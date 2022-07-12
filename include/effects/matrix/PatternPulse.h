@@ -122,7 +122,7 @@ class PatternPulse : public LEDStripEffect
     }
 };
 
-class PatternPulsar : public BeatEffectBase2
+class PatternPulsar : public BeatEffectBase2, LEDStripEffect
 {
   private:
 
@@ -174,10 +174,11 @@ class PatternPulsar : public BeatEffectBase2
     {
         auto graphics = (GFXBase *) BeatEffectBase2::_GFX[0].get();
 
-        BeatEffectBase2::Draw();
+        ProcessAudio();
+        
         //VUMeterEffect::DrawVUMeter(graphics, 0);
         //blur2d(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 25);
-        BeatEffectBase2     ::fadeAllChannelsToBlackBy(20);
+        graphics->fadeAllChannelsToBlackBy(20);
 
         // Add some sparkle
 

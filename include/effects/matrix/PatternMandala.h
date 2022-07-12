@@ -83,7 +83,7 @@ public:
 
     /// Generate an 8-bit random number
 
-    virtual size_t DesiredFramesPerSecond()
+    virtual size_t DesiredFramesPerSecond() const
     {
         return 45;
     }

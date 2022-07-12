@@ -63,8 +63,6 @@ SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> L
 SmartMatrixHub75Refresh<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> matrixRefresh; 
 SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
 
-double frameStartTime = 0;
-    
 void LEDMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
@@ -90,18 +88,12 @@ CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 
 void LEDMatrixGFX::MatrixSwapBuffers()
 {
-  frameStartTime = g_AppTime.CurrentTime();
   backgroundLayer.swapBuffers(true);
   titleLayer.swapBuffers(false);  
 }
 
 void LEDMatrixGFX::PresentFrame()
 {
-    const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
-    double elapsed = g_AppTime.CurrentTime() - frameStartTime;
-    if (elapsed < minimumFrameTime)
-        delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
-
 }
 
 #endif

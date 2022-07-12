@@ -123,7 +123,7 @@ void IRAM_ATTR RemoteLoopEntry(void *);
 #define IR_FADE7  0xFFE01F  // 
 #endif
 
-static struct 
+const static struct 
 {
     uint    code;
     CRGB    color;
@@ -183,17 +183,14 @@ class RemoteControl
         static uint lastResult = 0;
 
         if (!_IR_Receive.decode(&results))
-        {
-            //Serial.printf("IR: Nothing received, nothing decoded\n");
             return;
-        }
 
         uint result = results.value;
         _IR_Receive.resume();
 
         debugI("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
 
-        if ((uint)-1 == result)
+        if (0xFFFFFFFF == result)
         {
             debugI("Remote Repeat; lastResult == %08x\n", lastResult);
             if (lastResult == IR_BMINUS)
@@ -218,7 +215,7 @@ class RemoteControl
         {
             debugI("Turning ON via remote");
             g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->SetInterval(std::numeric_limits<int>::max());
+            g_pEffectManager->SetInterval(0);
             g_pEffectManager->StartEffect();
             g_Brightness = 255;
             return;
@@ -262,12 +259,6 @@ class RemoteControl
                 g_pEffectManager->SetGlobalColor(RemoteColorCodes[i].color);
                 return;
             }
-        }
-
-        if (result == (uint)-1)
-        {
-            debugI("Remote REPEAT\n");
-            return;
         }
     }
 };

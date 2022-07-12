@@ -99,7 +99,7 @@ class PatternPongClock : public LEDStripEffect
     {
     }
 
-    virtual size_t DesiredFramesPerSecond()
+    virtual size_t DesiredFramesPerSecond() const
     {
         return 41;
     }

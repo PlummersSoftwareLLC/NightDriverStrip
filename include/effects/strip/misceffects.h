@@ -172,8 +172,9 @@ protected:
 
     virtual void Draw()
     {
-        fillSolidOnAllChannels(CRGB::Black);
-        fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
+        if (_everyNth != 1)
+          fillSolidOnAllChannels(CRGB::Black);                    
+        fillSolidOnAllChannels(_color);
     }
 };
 
@@ -205,7 +206,8 @@ class StatusEffect : public LEDStripEffect
         else if (!NTPTimeClient::HasClockBeenSet())
             color = CRGB::Green;
 
-        fillSolidOnAllChannels(CRGB::Black);
+        if (_everyNth != 1)
+          fillSolidOnAllChannels(CRGB::Black);
         fillSolidOnAllChannels(color, 0, 0, _everyNth);
     }
 };

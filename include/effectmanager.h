@@ -45,9 +45,12 @@
 #include "ledstripeffect.h"
 
 #include "globals.h"
-#include "effects/strip/misceffects.h"
 #include "gfxbase.h"
+
 #include "ledmatrixgfx.h"
+#include "effects/strip/misceffects.h"
+#include "effects/strip/fireeffect.h"
+#include "effects/strip/bouncingballeffect.h"
 
 #define MAX_EFFECTS 32
 
@@ -60,7 +63,7 @@ using namespace std;
 
 void InitEffectsManager();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
-
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 // EffectManager
 //
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
@@ -160,7 +163,8 @@ public:
 
     void SetGlobalColor(CRGB color)
     {
-        ClearRemoteColor();
+        debugW("Setting Global Color");
+                
 #if (USEMATRIX || SPECTRUM)
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
@@ -168,8 +172,18 @@ public:
         pMatrix->setPalette(CRGBPalette16(oldColor, color));
         pMatrix->PausePalette(true);
 #else
-        _pRemoteEffect = make_unique<ColorFillEffect>(color, 1);
-        _pRemoteEffect->Init(_gfx);
+        std::shared_ptr<LEDStripEffect> effect;
+
+        if (color == CRGB(CRGB::White))
+            effect = make_shared<ColorFillEffect>(CRGB::White, 1);
+        else
+            effect = make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+        
+        if (effect->Init(g_pDevices))
+        {
+            _pRemoteEffect = effect;
+            StartEffect();
+        }
 #endif
     }
 
@@ -190,7 +204,13 @@ public:
             pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 3000);
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
-         _ppEffects[_iCurrentEffect]->Start();
+
+        if (_pRemoteEffect)
+            _pRemoteEffect->Start();
+        else
+            _ppEffects[_iCurrentEffect]->Start();
+
+        _effectStartTime = millis();
     }
    
     void EnableEffect(size_t i)
@@ -286,6 +306,9 @@ public:
 
     const char *GetCurrentEffectName() const
     {
+        if (_pRemoteEffect)
+            return _pRemoteEffect->FriendlyName();
+
         return _ppEffects[_iCurrentEffect]->FriendlyName();
     }
 
@@ -305,13 +328,14 @@ public:
 
     uint GetTimeRemainingForCurrentEffect() const
     {
-        // If the Interval is set to max, we don't even look at the time
+        // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
 
-        if (GetInterval() == std::numeric_limits<int>::max())
-            return GetInterval();
+        if (GetInterval() == 0)
+            return std::numeric_limits<int>::max();
 
         if (GetTimeUsedByCurrentEffect() > GetInterval())
             return 0;
+            
         return GetInterval() - GetTimeUsedByCurrentEffect();
     }
 
@@ -322,6 +346,11 @@ public:
 
     void CheckEffectTimerExpired()
     {
+        // If interval is zero, the current effect never expires
+        
+        if (GetInterval() == 0)
+            return;
+
         if (millis() - _effectStartTime >= GetInterval()) // See if its time for a new effect yet
         {
             debugI("%ldms elapsed: Next Effect", millis() - _effectStartTime);
@@ -411,86 +440,32 @@ public:
         }
         else
         {
-            //
-
             _ppEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
+        }
+        
+        // If we do indeed have multiple effects (BUGBUG what if only a single enabled?) then we
+        // fade in and out at the appropriate time based on the time remaining/used by the effect
 
-            // If we do indeed have multiple effects (BUGBUG what if only a single enabled?) then we
-            // fade in and out at the appropriate time based on the time remaining/used by the effect
+        if (EffectCount() < 2)
+        {
+            g_Fader = 255;
+            return;
+        }
 
-            if (EffectCount() < 2)
-            {
-                g_Fader = 255;
-                return;
-            }
+        int r = GetTimeRemainingForCurrentEffect();
+        int e = GetTimeUsedByCurrentEffect();
 
-            int r = GetTimeRemainingForCurrentEffect();
-            int e = GetTimeUsedByCurrentEffect();
-
-            if (e < msFadeTime)
-            {
-                g_Fader = 255 * (e / msFadeTime); // Fade in
-            }
-            else if (r < msFadeTime)
-            {
-                g_Fader = 255 * (r / msFadeTime); // Fade out
-            }
-            else
-            {
-                g_Fader = 255; // No fade, not at start or end
-            }
+        if (e < msFadeTime)
+        {
+            g_Fader = 255 * (e / msFadeTime); // Fade in
+        }
+        else if (r < msFadeTime)
+        {
+            g_Fader = 255 * (r / msFadeTime); // Fade out
+        }
+        else
+        {
+            g_Fader = 255; // No fade, not at start or end
         }
     }
 };
-
-// FractionalColor
-//
-// Returns a fraction of a color; abstracts the fadeToBlack away so that we can later
-// do better color correction as needed
-
-inline CRGB ColorFraction(const CRGB colorIn, float fraction)
-{
-    fraction = min(1.0f, fraction);
-    fraction = max(0.0f, fraction);
-    return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
-}
-
-#ifdef FAN_SIZE
-inline void RotateForward(int iStart, int length = FAN_SIZE, int count = 1)
-{
-    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + count], &FastLED.leds()[iStart + length]);
-}
-
-inline void RotateReverse(int iStart, int length = FAN_SIZE, int count = 1)
-{
-    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + length - count], &FastLED.leds()[iStart + length]);
-}
-
-// Rotate
-//
-// Rotate all the pixels in the buffer forward or back
-
-inline void RotateAll(bool bForward = true, int count = 1)
-{
-    if (bForward)
-        RotateForward(0, count);
-    else
-        RotateReverse(0, count);
-}
-#endif
-
-#ifdef FAN_SIZE
-
-// RotateFan
-//
-// Rotate one circular section within itself, like a single fan
-
-inline void RotateFan(int iFan, bool bForward = true, int count = 1)
-{
-    if (bForward)
-        RotateForward(iFan * FAN_SIZE, FAN_SIZE, count);
-    else
-        RotateReverse(iFan * FAN_SIZE, FAN_SIZE, count);
-}
-
-#endif

@@ -130,7 +130,7 @@ public:
     static void StartMatrix();
     static CRGB *GetMatrixBackBuffer();
     static void MatrixSwapBuffers();
-    static void PresentFrame();
+s    static void PresentFrame();
 
     SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
     {

@@ -42,6 +42,7 @@
 #include "ledstripeffect.h"
 
 extern AppTime g_AppTime;
+using namespace std;
 
 // BouncingBallEffect
 //
@@ -90,6 +91,11 @@ private:
           _bMirrored(bMirrored),
           _bErase(bErase)
     {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 61;
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])

@@ -43,6 +43,8 @@
 #include "gfxbase.h"
 
 extern DRAM_ATTR AppTime g_AppTime;
+extern volatile float gVURatio;                 // Current VU as a ratio to its recent min and max
+extern volatile float gVU;                      // Instantaneous read of VU value
 
 // BeatEffectBase
 //
@@ -124,11 +126,11 @@ class BeatEffectBase : public virtual LEDStripEffect
     }
 };
 
-class BeatEffectBase2 : public virtual LEDStripEffect
+class BeatEffectBase2
 {
   protected:
-    const int _maxSamples = DesiredFramesPerSecond() * 2;
-    deque<double> _samples;
+    const int _maxSamples = 60;
+    std::deque<double> _samples;
     double _lastBeat = 0;
     double _minRange = 0;
     double _minElapsed = 0;
@@ -136,7 +138,7 @@ class BeatEffectBase2 : public virtual LEDStripEffect
   public:
    
     BeatEffectBase2(double minRange = 0, double minElapsed = 0)      
-     : LEDStripEffect(nullptr),
+     :
        _minRange(minRange),
        _minElapsed(minElapsed)
     {
@@ -160,7 +162,7 @@ class BeatEffectBase2 : public virtual LEDStripEffect
     // Doesn't actually "draw" anything, but rather it scans the audio VU to detect beats, and when it finds one,
     // it calls the virtual "HandleBeat" function.
 
-    virtual void Draw()
+    virtual void ProcessAudio()
     {
         debugV("BeatEffectBase2::Draw");
         double elapsed = SecondsSinceLastBeat();
@@ -250,7 +252,7 @@ class ChannelBeatEffect : public BeatEffect
     double lastBeat = 0;
     CRGB   lastColor;
 
-    deque<int> litArms;
+    std::deque<int> litArms;
 
     virtual void Draw()
     {

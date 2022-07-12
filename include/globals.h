@@ -127,7 +127,7 @@
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
-#define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
+#define REMOTE_PRIORITY         tskIDLE_PRIORITY+5
 
 // If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1. 
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
@@ -584,11 +584,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_OTA              1   // Enable over the air updates to the flash
     #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
-    #define ENABLE_REMOTE   0                     // IR Remote Control
+    #define ENABLE_REMOTE   1                     // IR Remote Control
+    #define IR_REMOTE_PIN   39
     #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
+    #define MAX_BUFFERS     40                    
 
     #define POWER_LIMIT_MW (1600 * 1000)                 // 100W transformer for an 8M strip max
-    #define DEFAULT_EFFECT_INTERVAL     (1000*60)
+    #define DEFAULT_EFFECT_INTERVAL     (1000*30 * 1000)
 
 
     // The "Tiki Fire Umbrella" project, with 8 channels
@@ -1095,7 +1097,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 
 #if ENABLE_AUDIO
 #if TTGO
-#define INPUT_PIN (ADC1_CHANNEL_0_GPIO_NUM)   // Pin 27
+#define INPUT_PIN (ADC1_CHANNEL_0_GPIO_NUM)   
 #elif M5STICKC || M5STICKCPLUS
 #define INPUT_PIN (34)   
 #define IO_PIN (0)

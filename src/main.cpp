@@ -299,8 +299,8 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 // Data for Dave's Garage as an example,
 
 #if USEMATRIX
-char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
-char PatternSubscribers::szChannelName1[] = "Daves Garage";
+const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
+const char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
 #define SUB_CHECK_INTERVAL 60000
 #define SUB_CHECK_ERROR_INTERVAL 10000
