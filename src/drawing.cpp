@@ -59,7 +59,7 @@ extern AppTime            g_AppTime;
 extern bool               g_bUpdateStarted;
 extern double             g_Brite;
 extern uint32_t           g_Watts; 
-extern CRGBPalette256     vuPaletteGreen;
+extern const CRGBPalette256 vuPaletteGreen;
 
 void ShowTM1814();
 
@@ -81,7 +81,6 @@ DRAM_ATTR uint8_t  g_Fader           = 255;
 
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
-    CRGBPalette256 greenPalette(vu_gpGreen);
     
     debugI(">> DrawLoopTaskEntry\n");
 
@@ -95,7 +94,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         LEDMatrixGFX::titleLayer.enableColorCorrection(false);
 
         // Starting the effect might need to draw, so we need to set the leds up before doing so
-        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
+        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)graphics;
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         auto spectrum = GetSpectrumAnalyzer(0);
     #endif
@@ -298,10 +297,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
         #ifdef ONBOARD_LED_R
             int iLed = NUM_LEDS/2;
-            ledcWrite(1, graphics->leds[iLed].b ); // write red component to channel 1, etc.
-            ledcWrite(2, graphics->leds[iLed].r );
-            ledcWrite(3, graphics->leds[iLed].g );
-            //ledcWrite(4, (graphics->leds[iLed].r + graphics->leds[iLed].g + graphics->leds[iLed].b) / 3);
+            ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - graphics->leds[iLed].g );
+            ledcWrite(3, 255 - graphics->leds[iLed].b );
+            ledcWrite(4, (graphics->leds[iLed].r + graphics->leds[iLed].g + graphics->leds[iLed].b) / 3);
         #endif
 
 #endif

@@ -40,9 +40,13 @@ DEFINE_GRADIENT_PALETTE( vu_gpGreen )
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red
 };
-CRGBPalette256 vuPaletteGreen = vu_gpGreen;
+// BUGBUG (davepl) - For reasons that escape me, if I do not do the extern decl here
+// it winds up unresolved by the linker, but ONLY when const.
 
-CRGBPalette256 golden(CRGB::Gold);
+extern const CRGBPalette256 vuPaletteGreen;
+const CRGBPalette256 vuPaletteGreen = vu_gpGreen;
+
+const CRGBPalette256 golden(CRGB::Gold);
 
 DEFINE_GRADIENT_PALETTE( gpSeahawks ) 
 {
@@ -52,7 +56,8 @@ DEFINE_GRADIENT_PALETTE( gpSeahawks )
    192,     78,   167,   1,      
    255,     54,    87, 140,      
 };
-CRGBPalette256 vuPaletteSeahawks = gpSeahawks;
+extern const CRGBPalette256 vuPaletteSeahawks;
+const CRGBPalette256 vuPaletteSeahawks = gpSeahawks;
 
 DEFINE_GRADIENT_PALETTE( vu_gpBlue ) 
 {
@@ -62,27 +67,35 @@ DEFINE_GRADIENT_PALETTE( vu_gpBlue )
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red
 };
-CRGBPalette256 vuPaletteBlue = vu_gpBlue;
 
-DEFINE_GRADIENT_PALETTE(bluesky_gp){
+extern const CRGBPalette256 vuPaletteBlue;
+const CRGBPalette256 vuPaletteBlue = vu_gpBlue;
+
+DEFINE_GRADIENT_PALETTE(bluesky_gp)
+{
     0, 0, 0, 64,          // black
     64, 0, 0, 128,       // blue
     96, 0, 64, 255,    // Cyan blue
     128, 255, 255, 255,      // white
     160, 0, 64, 255, 
     192, 0, 0, 128,    // dark blue
-    255, 0, 0, 64}; // dark blue
-CRGBPalette256 bluesky_pal = bluesky_gp;
+    255, 0, 0, 64
+}; // dark blue
+extern const CRGBPalette256 bluesky_pal;
+const CRGBPalette256 bluesky_pal = bluesky_gp;
 
-DEFINE_GRADIENT_PALETTE(redorange_gp){
+DEFINE_GRADIENT_PALETTE(redorange_gp)
+{
     0,    128,   0, 0,  
     64,   192,   0, 0,  
     96,   255,   64, 0,  
     128,  255,  255, 0,  
     160,  192,   64, 0,
     192,  128,    0, 0,  
-    255,   64,    0, 0}; 
-    CRGBPalette256 redorange_pal = redorange_gp;
+    255,   64,    0, 0
+}; 
+extern const CRGBPalette256 redorange_pal;
+const CRGBPalette256 redorange_pal = redorange_gp;
 
 
 // For LEDMatrixGFX::from16Bit color conversions

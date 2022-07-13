@@ -59,8 +59,8 @@ enum PixelOrder
   RightLeft   = 16
 };
 
-extern CRGBPalette256 vuPaletteSeahawks;
-extern CRGBPalette256 golden;
+extern const CRGBPalette256 vuPaletteSeahawks;
+extern const CRGBPalette256 golden;
 
 // These tables represent the physical order of LEDs when looking at
 // the fan in a particular direction, like top to bottom or left to right

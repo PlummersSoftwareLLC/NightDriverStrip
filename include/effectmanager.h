@@ -409,13 +409,13 @@ public:
                 debugW("Could not initialize effect: %s\n", _ppEffects[i]->FriendlyName());
                 return false;
             }
-            debugI("Loaded Effect: %s", _ppEffects[i]->FriendlyName());
+            debugV("Loaded Effect: %s", _ppEffects[i]->FriendlyName());
 
             // First time only, we ensure the data is cleared
 
             //_ppEffects[i]->setAll(0,0,0);
         }
-        debugI("First Effect: %s", GetCurrentEffectName());
+        debugV("First Effect: %s", GetCurrentEffectName());
         return true;
     }
 

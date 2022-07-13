@@ -114,7 +114,7 @@ class VUMeterEffect
     //
     // Draw i-th pixel in row y
 
-    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, CRGBPalette256 * pPalette = nullptr)
+    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette256 * pPalette = nullptr)
     {
         int xHalf = pGFXChannel->width()/2;
         pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
@@ -138,7 +138,7 @@ class VUMeterEffect
         pGFXChannel->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
     }
 
-    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, CRGBPalette256 * pPalette = nullptr)
+    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette256 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
 

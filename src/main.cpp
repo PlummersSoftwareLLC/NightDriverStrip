@@ -773,7 +773,7 @@ void setup()
 
     // Init the zlib compression
 
-    debugI("Initializing compression...");
+    debugV("Initializing compression...");
     uzlib_init();
     CheckHeap();
 

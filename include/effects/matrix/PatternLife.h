@@ -105,6 +105,7 @@ private:
         
         world =  (Cell (*)[MATRIX_HEIGHT]) PreferPSRAMAlloc( sizeof(Cell) * MATRIX_WIDTH * MATRIX_HEIGHT);        
         checksums = (uint32_t *) PreferPSRAMAlloc( CRC_LENGTH * sizeof(uint32_t) );
+        return true;
     }
     
     // Seed: 92465, Generations: 1626

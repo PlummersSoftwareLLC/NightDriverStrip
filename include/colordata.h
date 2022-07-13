@@ -31,7 +31,7 @@
 
 // Palettes defined in colordata.cpp
 
-extern CRGBPalette256 vuPaletteGreen;
+extern const CRGBPalette256 vuPaletteGreen;
 extern CRGBPalette256 vuPaletteBlue;    
 extern CRGBPalette256 spectrumBasicColors;
 extern CRGBPalette256 bluesky_pal;

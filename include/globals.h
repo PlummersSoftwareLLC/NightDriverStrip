@@ -605,6 +605,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ONBOARD_LED_B    18
     #define ONBOARD_LED      19
 
+    #define TOGGLE_BUTTON_2  0
+    
 #elif MAGICMIRROR
 
     // A magic infinity mirror such as: https://amzn.to/3lEZo2D

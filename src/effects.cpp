@@ -299,15 +299,15 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new PatternMandala(),
+        
         new SpectrumAnalyzerEffect("Spectrum", spectrumBasicColors, 100, 0, 2.0, 2.0),
         new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
         new SpectrumAnalyzerEffect("Spectrum++", spectrumBasicColors, 0, 70, -1.0, 3.0),
         new WaveformEffect("WaveForm", &rainbowPalette, 8),
         new GhostWave("GhostWave", &rainbowPalette),
+        new PatternPongClock(),
         new PatternPulsar(1.95, 1.95, 0.01),
         new PatternBounce(),
-        new PatternPongClock(),
         new PatternAlienText(),
         new PatternSubscribers(),
         new PatternCircuit(),
@@ -318,6 +318,46 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red)), 8),
         new PatternSwirl(),
         new PatternSerendipity(),
+        new PatternMandala(),
+
+#elif UMBRELLA
+ 
+        new FireEffect("Calm Fire",   NUM_LEDS, 2,  2,  75, 3, 10, true, false),
+        new FireEffect("Medium Fire", NUM_LEDS, 1,  5, 100, 3,  4, true, false),
+        new MusicalPaletteFire("Musical Red Fire", HeatColors_p, NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+
+        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+
+        new MusicalPaletteFire("Blue Fire",   CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue),    NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Blue Fire",   CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue),    NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        
+        new MusicalPaletteFire("Green Fire",  CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen),     NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Green Fire",  CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen),     NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        
+        new BouncingBallEffect(),
+        new DoublePaletteEffect(),
+
+        new MeteorEffect( 4, 4, 10, 2.0, 2.0),
+        new MeteorEffect(10, 1, 20, 1.5, 1.5),        
+        new MeteorEffect(25, 1, 40, 1.0, 1.0),
+        new MeteorEffect(50, 1, 50, 0.5, 0.5),
+
+        new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
+        new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),                                                     // RGB Music Blur - Can You Hear Me Knockin'
+        new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0),                                                // Rainbow Music Star
+        new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
+        new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
+        new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),        // Blue Sparkle
+        new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                                                           // Red Twinkle
+        new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
+
+        new PaletteEffect(RainbowColors_p),                                                                                                                 
+        new PaletteEffect(RainbowColors_p, 1.0, 1.0),
+        new PaletteEffect(RainbowColors_p, .25),
 
 #elif TTGO
 
@@ -419,39 +459,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
         new GhostWave("GhostWave Rainbow", &rainbowPalette),
 
-#elif UMBRELLA
 
-        new FireEffect("Calm Fire",   NUM_LEDS, 2,  2,  75, 3, 10, true, false),
-        new FireEffect("Medium Fire", NUM_LEDS, 1,  5, 100, 3,  4, true, false),
-        new MusicalPaletteFire("Musical Red Fire", HeatColors_p, NUM_LEDS, 1, 8, 50, 1, 24, true, false),
-
-        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
-
-        new MusicalPaletteFire("Blue Fire",   CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue),    NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Blue Fire",   CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue),    NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
-        
-        new MusicalPaletteFire("Green Fire",  CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen),     NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Green Fire",  CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen),     NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
-        
-        new BouncingBallEffect(),
-        new DoublePaletteEffect(),
-
-        new PaletteEffect(RainbowColors_p),                                                                                                                 
-        new PaletteEffect(RainbowColors_p, 1.0, 1.0),
-        new PaletteEffect(RainbowColors_p, .25),
-
-        new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
-        new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),                                                     // RGB Music Blur - Can You Hear Me Knockin'
-        new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0),                                                // Rainbow Music Star
-        new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
-        new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
-        new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),        // Blue Sparkle
-        new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                                                           // Red Twinkle
-        new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
 
 #elif ATOMLIGHT
         new ColorFillEffect(CRGB::White, 1),

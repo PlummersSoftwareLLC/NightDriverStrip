@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        PatternSpiro.h
+// File:        PatternPongClock.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -23,7 +23,9 @@
 //
 // Description:
 //
-//   Effect code ported from Aurora to Mesmerizer's draw routines
+//   Effect code ported from Aurora to Mesmerizer's draw routines.  I
+//   removed the hard-coded pixel counts, made the AI a little more
+//   flexible, variable ball velocity, etc.
 //
 // History:     Jul-08-2022         Davepl      Based on Aurora
 //
@@ -454,7 +456,7 @@ class PatternPongClock : public LEDStripEffect
         byte plot_x = (int)(ballpos_x + 0.5f);
         byte plot_y = (int)(ballpos_y + 0.5f);
 
-        g->setPixel(plot_x, plot_y, CRGB::White);
+        g->setPixel(plot_x, plot_y, WHITE16);
 
         // check if a bat missed the ball. if it did, reset the game.
         if (ballpos_x < 0 || ballpos_x > MATRIX_WIDTH)
