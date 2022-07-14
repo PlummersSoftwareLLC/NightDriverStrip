@@ -323,14 +323,14 @@ class PatternPongClock : public LEDStripEffect
         // check ball collision with top and bottom of screen and reverse the y velocity if either is hit
         if (ballpos_y <= 0)
         {
-            ballvel_y = ballvel_y * -1;
-            ballpos_y = 0; // make sure value goes no less that 0
+            ballpos_y *= -1;
+            ballvel_y *= -1;
         }
 
-        if (ballpos_y >= MATRIX_HEIGHT - 1)
+        if (ballpos_y >= MATRIX_HEIGHT)
         {
-            ballvel_y = ballvel_y * -1;
-            ballpos_y = MATRIX_HEIGHT - 1; // make sure value goes no more than 15
+            ballpos_y = 2 * MATRIX_HEIGHT - ballpos_y; 
+            ballvel_y *= -1;
         }
 
         // check for ball collision with bat1. check ballx is same as batx
@@ -479,24 +479,17 @@ class PatternPongClock : public LEDStripEffect
         }
     }
 
-    byte pong_get_ball_endpoint(float ballPosition_x, float ballPosition_y, float ballVelocity_x, float ballVelocity_y)
+    float pong_get_ball_endpoint(float xpos, float ypos, float xspeed, float yspeed)
     {
-        // Predicts where the ball will land based on running it forward in time.  I'm sure there's a trig version
-        // that solves it in one step, but you'd have to account for it bouncing off the top and bottom.  Perhaps
-        // that's a simple modulus(height) on the final Y, but...  I don't know, and this works!
-
-        while (ballPosition_x > BAT1_X && ballPosition_x < BAT2_X)
-        {
-            ballPosition_x = ballPosition_x + ballVelocity_x;
-            ballPosition_y = ballPosition_y + ballVelocity_y;
-
-            // If the ball goes below zero or above the height, we assume it's hit the top or bottom
-            // bounce it by inverting the Y velocity
-
-            if (ballPosition_y <= 0 || ballPosition_y >= MATRIX_HEIGHT-1)
-                ballVelocity_y = ballVelocity_y * -1;
-        }
-        return ballPosition_y;
+        // In the following, the fabs() mirrors it over the bottom wall.  The fmod wraps it when it exceeds twice
+        // the top wall.  If the ball ends up in the top half of the double height section, we reflect it back 
+        
+        auto deltaX = (xspeed > 0) ? (BAT2_X - xpos) : -(xpos - BAT1_X);        // How far from ball to opponent bat
+        auto slope = yspeed / xspeed;                                           // Rise over run, ie: deltaY per X
+        float newY = fmod(fabs(ypos + deltaX * slope), (2 * MATRIX_HEIGHT));    // New Y, but wrappped every 2*height
+        if (newY > MATRIX_HEIGHT)                                               // If in top half, reflect to bottom
+            newY = 2 * MATRIX_HEIGHT - newY;
+        return newY;
     }
 };
 

@@ -304,12 +304,12 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         
+        new PatternPongClock(),
         new SpectrumAnalyzerEffect("Spectrum", spectrumBasicColors, 100, 0, 2.0, 2.0),
         new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
         new SpectrumAnalyzerEffect("Spectrum++", spectrumBasicColors, 0, 70, -1.0, 3.0),
         new WaveformEffect("WaveForm", &rainbowPalette, 8),
         new GhostWave("GhostWave", &rainbowPalette),
-        new PatternPongClock(),
         new PatternPulsar(1.95, 1.95, 0.01),
         new PatternBounce(),
         new PatternAlienText(),
