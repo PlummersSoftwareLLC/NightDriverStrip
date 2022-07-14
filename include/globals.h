@@ -124,6 +124,7 @@
 #define DRAWING_PRIORITY        tskIDLE_PRIORITY+3      // Draw any available frames first
 #define SOCKET_PRIORITY         tskIDLE_PRIORITY+4      // ...then process and decompress incoming frames
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
+#define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
@@ -144,6 +145,7 @@
 #define DRAWING_CORE            1
 #define NET_CORE                0
 #define AUDIO_CORE              0
+#define AUDIOSERIAL_CORE        0
 #define SCREEN_CORE             1       
 #define DEBUG_CORE              1
 #define SOCKET_CORE             1
@@ -239,6 +241,59 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
 
     #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+
+#elif LANTERN 
+
+    // A railway-style landter with concentric rings of light (16+12+8+1)
+
+    #define NUM_FANS                1
+    #define NUM_RINGS               4
+    #define FAN_SIZE                (RING_SIZE_0 + RING_SIZE_1 + RING_SIZE_2 + RING_SIZE_3)
+    #define RING_SIZE_0             16
+    #define RING_SIZE_1             12
+    #define RING_SIZE_2             8
+    #define RING_SIZE_3             1
+    #define MATRIX_WIDTH            FAN_SIZE
+    #define MATRIX_HEIGHT           1
+    #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define NUM_CHANNELS            1
+    #define ENABLE_AUDIO            1
+
+    #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
+
+    // Once you have a working project, selectively enable various additional features by setting
+    // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
+
+    #define ENABLE_WIFI             0   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
+    #define ENABLE_NTP              0   // Set the clock from the web
+    #define ENABLE_OTA              0   // Accept over the air flash updates
+
+    #if M5STICKC 
+        #define LED_PIN0 26
+    #elif M5STICKCPLUS || M5STACKCORE2
+        #define LED_PIN0 32
+    #else
+        #define LED_PIN0 5
+    #endif
+
+    // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
+    // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
+    // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
+    // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
+
+    #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
+    #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
+
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
+
+    #define NUM_INFO_PAGES          2
+    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spctrum analyzer on one of the info pages (slower)
 
 #elif STRAND
 
@@ -357,7 +412,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
-    
+
+    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -402,6 +458,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
     
+    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -871,6 +928,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #include <SmartMatrix.h>
 #endif
 
+#if ENABLE_AUDIOSERIAL
+#ifndef SERIAL_PINRX
+    #define SERIAL_PINRX    33
+    #define SERIAL_PINTX    32
+#endif
+#endif
 
 #ifndef BUILTIN_LED_PIN
 #define BUILTIN_LED_PIN 25          // Pin for the built in LED on the Heltec board
@@ -961,6 +1024,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define LED_FAN_OFFSET_RL  (LED_FAN_OFFSET_BU + (FAN_SIZE * 3 / 4))
 #endif
 
+#ifndef NUM_FANS
+#define NUM_FANS 1
+#endif
+
 #ifndef RING_SIZE_0
 #define RING_SIZE_0 0
 #endif
@@ -1022,21 +1089,25 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 
-    #elif defined(ARDUINO_M5Stick_C)                          // screen definitions for m5stick-c (or m5stick-c plus)
+    #elif defined(M5STICKCPLUS)                               // screen definitions for m5stick-c-plus
 
         #define USE_TFT 1                                     // enable the M5's LCD screen
-        
-    #elif defined(USE_LCD)
 
-        // Good enough on its own
+    #elif defined(M5STICKC)                                   // screen definitions for m5stick-c (or m5stick-c plus)
 
-    #elif defined(WROVERKIT) 
+        #define USE_TFT 1                                     // enable the M5's LCD screen
+
+    #elif defined(WROVERKIT)
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard
 
     #elif defined(TTGO)
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
+
+    #elif defined(M5STACKCORE2)
+
+        #define  USE_TFT 1       
 
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
@@ -1092,6 +1163,10 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #ifndef M5STICKCPLUS
 #define M5STICKCPLUS 0
 #endif 
+
+#ifndef M5STACKCORE2
+#define M5STACKCORE2 0
+#endif
 
 // Microphone
 //

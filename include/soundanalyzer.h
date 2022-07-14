@@ -52,6 +52,7 @@
 #endif
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
+void IRAM_ATTR AudioSerialTaskEntry(void *);
 
 extern float gScaler;                            // Instantaneous read of LED display vertical scaling
 extern float gLogScale;                          // How exponential the peaks are made to be
@@ -64,7 +65,8 @@ extern int g_AudioFPS;                           // Framerate of the audio sampl
 extern unsigned long g_lastPeak1Time[NUM_BANDS];
 extern float g_peak1Decay[NUM_BANDS];
 extern float g_peak2Decay[NUM_BANDS];
-
+extern float g_peak1DecayRate;
+extern float g_peak2DecayRate;
 #if !ENABLE_AUDIO
 extern volatile float gVURatio;         
 #endif
@@ -93,6 +95,7 @@ using namespace std;
 
 #ifndef GAINDAMPEN
 #define GAINDAMPEN  1                                     // How slowly brackets narrow in for spectrum bands
+#define GAINDAMPENMIN 1000                                //   We want the quiet part to adjust quite slowly
 #endif
 
 #ifndef VUDAMPEN
@@ -239,8 +242,8 @@ inline void DecayPeaks()
   float seconds = (millis() - lastDecay) / (float)MS_PER_SECOND;
   lastDecay = millis();
 
-  float decayAmount1 = max(0.0f, seconds * 2.0f);                   // BUGBUG hardcoded decay rates 
-  float decayAmount2 = seconds * 2.0f;
+  float decayAmount1 = std::max(0.0f, seconds * g_peak1DecayRate);
+  float decayAmount2 = std::max(0.0f, seconds * g_peak2DecayRate);
 
   for (int iBand = 0; iBand < NUM_BANDS; iBand++)
   {

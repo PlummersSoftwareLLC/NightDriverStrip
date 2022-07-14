@@ -58,8 +58,8 @@ int g_AudioFPS = 0;                         // Framerate of the audio sampler
 unsigned long g_lastPeak1Time[NUM_BANDS] = { 0 } ;
 float g_peak1Decay[NUM_BANDS] = { 0 };
 float g_peak2Decay[NUM_BANDS] = { 0 };
-float g_peak1DecayRate;
-float g_peak2DecayRate;
+float g_peak1DecayRate = 1.0f;
+float g_peak2DecayRate = 1.0f;
 
 // Depending on how many bands have been defined, one of these tables will contain the frequency
 // cutoffs for that "size" of a spectrum display.  
@@ -77,7 +77,7 @@ float g_peak2DecayRate;
     #else
         const float scalarsBand[16] = 
         {
-            0.1f, 0.15f, 0.2f, 0.225f, 0.25f, 0.3f, 0.35f, 0.4f, 0.25f, 0.25f, 0.25f, 0.25f, 0.4f, 0.5f, 0.5f, 0.35f
+            0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
         };
     #endif
 #endif
@@ -151,5 +151,241 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         delay(1);
     }
 }
+
+#if ENABLE_AUDIOSERIAL
+
+// AudioSerial
+//
+// There is a project at https://github.com/PlummersSoftwareLLC/PETRock which allows you to connect the ESP to the USERPORT
+// of a Commodore 64 or PET (40 or 80 cols) and display the spectrum visualization on the computer's screen in assembly 
+// language.  
+//
+// To support this, when enabled, this task repeatedly sends out copies of the latest data peaks, scaled to 20, which is
+// the max height of the PET/C64 spectrum bar.  This should manage around 24 fps at 2400baud.
+
+#include <fcntl.h>
+
+/** Returns true on success, or false if there was an error */
+bool SetSocketBlockingEnabled(int fd, bool blocking)
+{
+   if (fd < 0) return false;
+
+   int flags = fcntl(fd, F_GETFL, 0);
+   if (flags == -1) return false;
+   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+}
+
+class VICESocketServer
+{
+private:
+
+    int                    _port;
+    int                    _server_fd;
+    struct sockaddr_in     _address; 
+    unique_ptr<uint8_t []> _pBuffer;
+    unique_ptr<uint8_t []> _abOutputBuffer;
+
+    const int BUFFER_SIZE = 255;
+
+public:
+
+    size_t              _cbReceived;
+
+    VICESocketServer(int port) :
+        _port(port),
+        _server_fd(0),
+        _cbReceived(0)
+    {
+        _abOutputBuffer = make_unique<uint8_t []>(BUFFER_SIZE);
+        memset(&_address, 0, sizeof(_address));
+    }
+
+    void release()
+    {
+        _pBuffer.release();
+        _pBuffer = nullptr;
+
+        if (_server_fd)
+        {
+            close(_server_fd);
+            _server_fd = 0;
+        }
+    }
+
+    bool begin()
+    {
+        _pBuffer = make_unique<uint8_t []>(BUFFER_SIZE);
+        _cbReceived = 0;
+        
+        // Creating socket file descriptor 
+
+        if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
+        { 
+            debugW("socket error\n");
+            release();
+            return false;
+        } 
+        SetSocketBlockingEnabled(_server_fd, false);
+
+        memset(&_address, 0, sizeof(_address));
+        _address.sin_family = AF_INET; 
+        _address.sin_addr.s_addr = INADDR_ANY; 
+        _address.sin_port = htons( _port ); 
+       
+        if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port 
+        { 
+            debugW("bind failed\n"); 
+            release();
+            return false;
+        } 
+        if (listen(_server_fd, 6) < 0)                                                  // Start listening for connections
+        { 
+            debugW("listen failed\n"); 
+            release();
+            return false;
+        } 
+        return true;
+    }
+
+    int CheckForConnection()
+    {
+        int new_socket = -1;
+        // Accept a new incoming connnection
+        int addrlen = sizeof(_address); 
+        struct timeval to;
+        to.tv_sec = 1;
+        to.tv_usec = 0;     
+        if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0) 
+        { 
+            return -1;
+        } 
+        if (setsockopt(new_socket,SOL_SOCKET,SO_SNDTIMEO,&to,sizeof(to)) < 0)
+        {
+            debugW("Unable to set send timeout on socket!");
+            close(new_socket);
+            return false;
+        }
+        if (setsockopt(new_socket,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to)) < 0)
+        {
+            debugW("Unable to set receive timeout on socket!");
+            close(new_socket);
+            return false;
+        }
+        /*
+        int flag = 1;
+        if (setsockopt(new_socket,IPPROTO_TCP,TCP_NODELAY,&flag,sizeof(flag)) < 0)
+        {
+            debugW("Unable to set TCP_NODELAY on socket!");
+            close(new_socket);
+            return false;
+        }
+        */
+        Serial.println("Accepted new VICE Client!");
+        return new_socket;
+    }
+
+    bool SendPacketToVICE(int socket, void * pData, size_t cbSize)
+    {
+        // Send data to the emulator's virtual serial port
+
+        if (cbSize != write(socket, pData, cbSize))
+        {
+            debugW("Could not write to socket\n");
+            return false;
+        }
+        return true;
+    }
+};
+
+struct SerialData
+{
+    uint8_t header[1];          // 'DP'
+    uint8_t vu;                 // VU meter, 0-31
+    uint8_t peaks[8];           // 16 4-bit values representing the band peaks, 0-31 (constrained to 0-19)
+    uint8_t tail;               // (0x0D)
+};
+
+int g_serialFPS = 0.0;
+
+void IRAM_ATTR AudioSerialTaskEntry(void *)
+{
+//  SoftwareSerial Serial64(SERIAL_PINRX, SERIAL_PINTX);
+    debugI(">>> Sampler Task Started");
+
+    SoundAnalyzer Analyzer(INPUT_PIN);
+    VICESocketServer socketServer(25232);
+    
+    if (!socketServer.begin()) {
+        debugE("Unable to start socket server for VICE!");
+    } else {
+        debugW("Started socket server for VICE!");
+    }
+
+    Serial2.begin(2400, SERIAL_8N1, SERIAL_PINRX, SERIAL_PINTX);
+    debugI("    Opened Serial2 on pins %d,%d\n", SERIAL_PINRX, SERIAL_PINTX);
+
+    int socket = -1;
+
+    for (;;)
+    {
+        SerialData data;
+            
+        const int MAXPET = 16;                                      // Highest value that the PET can display in a bar
+        data.header[0] = ((3 << 4) + 15);
+        data.vu = mapDouble(gVU, gMinVU, gPeakVU, 0, 17);           // Convert VU to a 1-16 value
+        
+        // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
+        // it is displayed, this has no effect on the display
+
+        for (int i = 0; i < 8; i++)
+        {
+            byte low   = g_peak2Decay[i*2] * MAXPET;
+            byte high  = g_peak2Decay[i*2+1] * MAXPET;
+            data.peaks[i] = (high << 4) + low;
+        }
+
+        data.tail = 00;
+        if (Serial2.availableForWrite())
+        {
+            Serial2.write((byte *)&data, sizeof(data));
+            Serial2.flush(true);
+        }
+        
+        static int lastFrame = millis();
+        while (Serial2.available() > 0)
+        {
+            char byte = Serial2.read();
+            Serial.print(byte);
+            if (byte=='*')
+            {
+                static uint64_t lastFrame = millis();
+                g_serialFPS = FPS(lastFrame, millis());
+                lastFrame = millis();
+            }
+        }
+
+        // If we have a socket open, send our packet to its virtual serial port now as well.
+    
+        if (socket < 0)
+            socket = socketServer.CheckForConnection();
+
+        if (socket >= 0)
+        {
+            if (!socketServer.SendPacketToVICE(socket, (byte *)&data, sizeof(data)))
+            {
+                // If anything goes wrong, we close the socket so it can accept new incoming attempts
+                debugI("Error on socket, so closing");
+                close(socket);
+                socket = -1;
+            }
+        }
+    
+        delay(1);
+    }
+}
+
+#endif
+
 #endif
 

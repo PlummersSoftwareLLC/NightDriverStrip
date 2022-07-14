@@ -36,16 +36,15 @@
 #include <errno.h>
 #include <iostream>
 #include <vector>
-#include <algorithm>
 #include <math.h>
-#include <memory>
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
 #include "paletteeffect.h"
 #include "effectmanager.h"
 
-extern volatile float gVURatio;                // Current VU as a ratio to its recent min and max
+extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+extern volatile float gVURatio;  
 
 // Simple definitions of what direction we're talking about
 
@@ -59,86 +58,21 @@ enum PixelOrder
   RightLeft   = 16
 };
 
-extern const CRGBPalette256 vuPaletteSeahawks;
-extern const CRGBPalette256 golden;
 
-// These tables represent the physical order of LEDs when looking at
-// the fan in a particular direction, like top to bottom or left to right
 
-#if INSULATORS || SINGLE_INSULATOR
-static const int FanPixelsVertical[FAN_SIZE] =
+// BUGBUG (davepl) - Perhaps instead of a bunch of global functions these could be packaged
+// up as a superset of LEDStripEffect called FanEffect or similar?
+
+// Get the pixel position working our way over a circle, rather than around it.
+// For a 24 led ring this return 0, 23, 1, 22, 2, 21, 3, 20, 4, 19, etc...
+
+inline int16_t GetRingPixelPosition(float fPos, int16_t ringSize)
 {
-  0, 11, 1, 10, 2, 9, 3, 8, 4, 7, 5, 6
-};
-#elif CUBE
-static const int FanPixelsVertical[FAN_SIZE] =
-{
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
-};
-#elif FAN_SIZE == 24 
-static const int FanPixelsVertical[FAN_SIZE] =
-{
-  0, 23, 1, 22, 2, 21, 3, 20, 4, 19, 5, 18, 6, 17, 7, 16, 8, 15, 9, 14, 10, 13, 11, 12
-};
-#elif FAN_SIZE == 16
-static const int FanPixelsVertical[FAN_SIZE] =
-{
-  0, 15, 1, 14, 2, 13, 3, 12, 4, 11, 5, 10, 6, 9, 7, 8
-};
-#elif FAN_SIZE == 1
-static const int FanPixelsVertical[FAN_SIZE] =
-{
-  0
-};
-#endif
-
-
-// FractionalColor
-//
-// Returns a fraction of a color; abstracts the fadeToBlack away so that we can later
-// do better color correction as needed
-
-inline CRGB ColorFraction(const CRGB colorIn, float fraction)
-{
-    fraction = min(1.0f, fraction);
-    fraction = max(0.0f, fraction);
-    return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
-}
-
-#ifdef FAN_SIZE
-inline void RotateForward(int iStart, int length = FAN_SIZE, int count = 1)
-{
-    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + count], &FastLED.leds()[iStart + length]);
-}
-
-inline void RotateReverse(int iStart, int length = FAN_SIZE, int count = 1)
-{
-    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + length - count], &FastLED.leds()[iStart + length]);
-}
-
-// Rotate
-//
-// Rotate all the pixels in the buffer forward or back
-
-inline void RotateAll(bool bForward = true, int count = 1)
-{
-    if (bForward)
-        RotateForward(0, count);
-    else
-        RotateReverse(0, count);
-}
-#endif
-
-// RotateFan
-//
-// Rotate one circular section within itself, like a single fan
-
-inline void RotateFan(int iFan, bool bForward = true, int count = 1)
-{
-    if (bForward)
-        RotateForward(iFan * FAN_SIZE, FAN_SIZE, count);
-    else
-        RotateReverse(iFan * FAN_SIZE, FAN_SIZE, count);
+  int pos = fPos;
+  if (pos & 1)
+    return ringSize - 1 - pos / 2;
+  else
+    return pos / 2;
 }
 
 // GetFanPixelOrder
@@ -166,16 +100,16 @@ inline int GetFanPixelOrder(int iPos, PixelOrder order = Sequential)
   switch (order)
   { 
     case BottomUp:
-      return fanBase + ((FanPixelsVertical[fPos] + LED_FAN_OFFSET_BU) % FAN_SIZE);
+      return fanBase + ((GetRingPixelPosition(fPos, RING_SIZE_0) + LED_FAN_OFFSET_BU) % FAN_SIZE);
 
     case TopDown:
-      return fanBase + ((FanPixelsVertical[fPos] + LED_FAN_OFFSET_TD) % FAN_SIZE);
+      return fanBase + ((GetRingPixelPosition(fPos, RING_SIZE_0) + LED_FAN_OFFSET_TD) % FAN_SIZE);
 
     case LeftRight:
-      return fanBase + ((FanPixelsVertical[fPos] + LED_FAN_OFFSET_LR) % FAN_SIZE);
+      return fanBase + ((GetRingPixelPosition(fPos, RING_SIZE_0) + LED_FAN_OFFSET_LR) % FAN_SIZE);
 
     case RightLeft:
-      return fanBase + ((FanPixelsVertical[fPos] + LED_FAN_OFFSET_RL) % FAN_SIZE);
+      return fanBase + ((GetRingPixelPosition(fPos, RING_SIZE_0) + LED_FAN_OFFSET_RL) % FAN_SIZE);
 
     case Reverse:
       return NUM_LEDS - 1 - iPos;
@@ -185,9 +119,6 @@ inline int GetFanPixelOrder(int iPos, PixelOrder order = Sequential)
       return fanBase + fPos;
   }
 }
-
-
-
 
 // ClearFanPixels
 //
@@ -205,6 +136,63 @@ inline void ClearFanPixels(float fPos, float count, PixelOrder order = Sequentia
     }
 }
 
+// GetRingSize
+//
+// Returns the size of the Nth ring
+
+inline int GetRingSize(int iRing)
+{
+  return gRingSizeTable[iRing];
+}
+
+// GetFanIndex
+//
+// Given the index into NUM_LEDS, returns the index of the fan that this must belong to
+
+inline int GetFanIndex(float fPos) 
+{
+    return fPos / FAN_SIZE;
+}
+
+// GetRingIndex
+//
+// Ggiven the index into NUM_LEDS or FAN_SIZE, returns the index of the ring this must be on
+
+inline int GetRingIndex(float fPos)
+{
+  fPos = fmod(fPos, FAN_SIZE);
+  int iRing = 0;
+  do
+  {
+    if (fPos < GetRingSize(iRing))
+    {
+      return iRing;
+    }
+    else
+    {
+      fPos -= GetRingSize(iRing);
+      iRing++;
+    }
+  } while (iRing < NUM_RINGS);
+  return iRing;
+}
+
+// GetRingPos
+//
+// Given the index into NUM_LEDS or FAN_SIZE, returns the index of the LED on the current ring
+
+inline int GetRingPos(float fPos)
+{
+  fPos = fmod(fPos, FAN_SIZE);
+  for (int iRing = 0; iRing < NUM_RINGS; iRing++)
+  {
+    if (fPos < GetRingSize(iRing))
+      return fPos;
+    fPos -= GetRingSize(iRing);
+  }
+  return 0;
+}
+
 // DrawFanPixels
 //
 // A fan is a ring set with a single ring
@@ -216,12 +204,6 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
   if (fPos + count > NUM_LEDS)
   {
     debugE("DrawFanPixels called with fPos=%f, count=%f, but there are only %d LEDs", fPos, count, NUM_LEDS);
-    return;
-  }
-
-  if (fPos < 0)
-  {
-    debugE("Negative fPos in DrawFanPixels");
     return;
   }
 
@@ -242,7 +224,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
   if (remaining > 0.0f && amtFirstPixel > 0.0f)
   {
     for (int i = 0; i < NUM_CHANNELS; i++)
-      FastLED[i][GetFanPixelOrder(iPos++, order)] += ColorFraction(color, amtFirstPixel);
+      FastLED[i][GetFanPixelOrder(iPos++, order)] += g_pEffectManager->ColorFraction(color, amtFirstPixel);
     remaining -= amtFirstPixel;
   }
 
@@ -260,21 +242,81 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
   if (remaining > 0.0f)
   {
     for (int i = 0; i < NUM_CHANNELS; i++)
-      FastLED[i][GetFanPixelOrder(iPos, order)] += ColorFraction(color, remaining);
+      FastLED[i][GetFanPixelOrder(iPos, order)] +=  g_pEffectManager->ColorFraction(color, remaining);
   }
 }
 
 // DrawRingPixels
 // 
 // With multiple rings, a fan or insulator becomes a ringset, and this function will
-// draw to particular ring within a particular insulator
+// draw to particular ring within a particular insulator.  If merge is true the color
+// is added to the cell, if false it is replaced.
 
-inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, int iRing)
+inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, int iRing, bool bMerge = true)
 {
+    // bPos will be the start of this ring (relative to NUM_LEDS)
+    int bPos = 0;
     for (int i = 0; i < iRing; i++)
-        fPos += gRingSizeTable[i];
+        bPos += gRingSizeTable[i];
+    bPos += iInsulator * FAN_SIZE;
 
-    DrawFanPixels(fPos, count, color, Sequential, iInsulator); 
+  if (bPos + fPos + count > NUM_LEDS + 1)         // +1 because we work in the 0..1.0 range when drawing
+  {
+    debugE("DrawFanPixels called with fPos=%f, count=%f, but there are only %d LEDs", fPos, count, NUM_LEDS);
+    return;
+  }
+
+  if (count < 0)
+  {
+    debugE("Negative count in DrawFanPixels");
+    return;
+  }
+  // Calculate how much the first pixel will hold
+
+  float availFirstPixel = 1.0f - (fPos - (long)(fPos));
+  float amtFirstPixel = min(availFirstPixel, count);
+  float remaining = min(count, FastLED.size()-fPos);
+  int iPos = fPos;
+  // Blend (add) in the color of the first partial pixel
+
+  iPos %= GetRingSize(iRing);
+  if (remaining > 0.0f && amtFirstPixel > 0.0f)
+  {
+    for (int i = 0; i < NUM_CHANNELS; i++)
+    {
+      if (!bMerge)
+        FastLED[i][bPos + iPos] = CRGB::Black;
+      FastLED[i][bPos + iPos++] +=  g_pEffectManager->ColorFraction(color, amtFirstPixel);
+    }
+    remaining -= amtFirstPixel;
+  }
+  
+  // Now draw any full pixels in the middle
+
+  while (remaining > 1.0f)
+  {
+    for (int i = 0; i < NUM_CHANNELS; i++)
+    {
+      iPos %= GetRingSize(iRing);
+      if (!bMerge)
+        FastLED[i][bPos + iPos] = CRGB::Black;      
+      FastLED[i][bPos + iPos++] += color;
+    }
+    remaining--;
+  }
+
+  // Draw tail pixel, up to a single full pixel
+
+  iPos %= GetRingSize(iRing);
+  if (remaining > 0.0f)
+  {
+    for (int i = 0; i < NUM_CHANNELS; i++)
+    {
+      if (!bMerge)
+        FastLED[i][bPos + iPos] = CRGB::Black;      
+      FastLED[i][bPos + iPos++] +=  g_pEffectManager->ColorFraction(color, remaining);
+    }
+  }
 }
 
 inline void FillRingPixels(CRGB color, int iInsulator, int iRing)
@@ -329,7 +371,7 @@ class FanBeatEffect : public LEDStripEffect
         CRGB c = CHSV(random(0, 255), 255, 255);
         for (int i = NUM_FANS * FAN_SIZE; i < NUM_LEDS; i++)
         {
-          setPixelOnAllChannels(i, c);
+           g_pEffectManager->graphics()->setPixel(i, c);
         }
 
     }
@@ -395,7 +437,11 @@ class CountEffect : public LEDStripEffect
             if (t >= OPEN_LEN)
               t -= OPEN_LEN;
           }
-          FastLED.show();
+          #if ATOMISTRING
+            ShowTM1814();
+          #else
+            FastLED.show();
+          #endif
         }
     }
 
@@ -659,8 +705,8 @@ class ColorCycleEffect : public LEDStripEffect
 
     void DrawEffect()
     {
-        static uint8_t basehue = 0;
-        uint8_t hue = basehue;
+        static byte basehue = 0;
+        byte hue = basehue;
         EVERY_N_MILLISECONDS(20) 
         {
             basehue += 1;
@@ -683,8 +729,8 @@ class ColorCycleEffectBottomUp : public LEDStripEffect
 
     void DrawEffect()
     {
-        static uint8_t basehue = 0;
-        uint8_t hue = basehue;
+        static byte basehue = 0;
+        byte hue = basehue;
         EVERY_N_MILLISECONDS(20) 
         {
             basehue += 2;
@@ -708,8 +754,8 @@ class ColorCycleEffectTopDown : public LEDStripEffect
 
     void DrawEffect()
     {
-        static uint8_t basehue = 0;
-        uint8_t hue = basehue;
+        static byte basehue = 0;
+        byte hue = basehue;
         EVERY_N_MILLISECONDS(30) 
         {
             basehue += 1;
@@ -732,8 +778,8 @@ class ColorCycleEffectSequential : public LEDStripEffect
 
     void DrawEffect()
     {
-        static uint8_t basehue = 0;
-        uint8_t hue = basehue;
+        static byte basehue = 0;
+        byte hue = basehue;
         EVERY_N_MILLISECONDS(30) 
         {
             basehue += 1;
@@ -780,8 +826,8 @@ class ColorCycleEffectRightLeft : public LEDStripEffect
 
     void DrawEffect()
     {
-        static uint8_t basehue = 0;
-        uint8_t hue = basehue;
+        static byte basehue = 0;
+        byte hue = basehue;
         basehue += 8;
         for (int i = 0; i < NUM_LEDS; i++)
           DrawFanPixels(i, 1, CHSV(hue+=16, 255, 255), RightLeft);
@@ -802,8 +848,8 @@ class ColorCycleEffectLeftRight : public LEDStripEffect
 
     void DrawEffect()
     {
-        static uint8_t basehue = 0;
-        uint8_t hue = basehue;
+        static byte basehue = 0;
+        byte hue = basehue;
         basehue += 8;
         for (int i = 0; i < NUM_LEDS; i++)
           DrawFanPixels(i, 1, CHSV(hue+=16, 255, 255), LeftRight);
@@ -822,21 +868,20 @@ class FireFanEffect : public LEDStripEffect
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
     bool    bMulticolor;        // If each arm of the atomlight should have its own color
-    int     iHue;               // Hue "color" from FastLED, int or HSVHue color name
 
     PixelOrder Order;
 
-    std::unique_ptr<uint8_t []> abHeat; // Heat table to map temp to color
+    unique_ptr<byte []> abHeat; // Heat table to map temp to color
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
     // You can tune these coefficients to control how quickly and smoothly the fire spreads
 
-    static const uint8_t BlendSelf = 0;            // 2
-    static const uint8_t BlendNeighbor1 = 1;       // 3
-    static const uint8_t BlendNeighbor2 = 1;       // 2
-    static const uint8_t BlendNeighbor3 = 0;       // 1
+    static const byte BlendSelf = 0;            // 2
+    static const byte BlendNeighbor1 = 1;       // 3
+    static const byte BlendNeighbor2 = 1;       // 2
+    static const byte BlendNeighbor3 = 0;       // 1
 
-    static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
+    static const byte BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
     int CellCount() const { return LEDCount * CellsPerLED; } 
 
@@ -851,8 +896,7 @@ class FireFanEffect : public LEDStripEffect
                   PixelOrder order = Sequential, 
                   bool breversed = false, 
                   bool bmirrored = false, 
-                  bool bmulticolor = false,
-                  int hue = HUE_RED)
+                  bool bmulticolor = false)
         : LEDStripEffect("FireFanEffect"),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
@@ -863,20 +907,19 @@ class FireFanEffect : public LEDStripEffect
           bReversed(breversed),
           bMirrored(bmirrored),
           bMulticolor(bmulticolor),
-          iHue(hue),
           Order(order)          
     {
         if (bMirrored)
             LEDCount = LEDCount / 2;
-        abHeat = std::make_unique<uint8_t []>(CellCount());
+        abHeat = make_unique<byte []>(CellCount());
     }
 
-    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
+    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
     {
-        uint8_t t192 = round((temperature/255.0)*191);
+        byte t192 = round((temperature/255.0)*191);
  
         // calculate ramp up from
-        uint8_t heatramp = t192 & 0x3F; // 0..63
+        byte heatramp = t192 & 0x3F; // 0..63
         heatramp <<= 2; // scale up to 0..252
 
         int iVariant = iChannel % 4;
@@ -930,7 +973,7 @@ class FireFanEffect : public LEDStripEffect
 
     virtual void DrawFire(PixelOrder order = Sequential)
     {
-        // First cool each cell by a little bit
+        // First cool each cell by a litle bit
 
         EVERY_N_MILLISECONDS(50)
         {
@@ -996,17 +1039,34 @@ class FireFanEffect : public LEDStripEffect
     }
 };
 
-class HueFireFanEffect : public FireFanEffect
+class BlueFireFanEffect : public FireFanEffect
 {
     using FireFanEffect::FireFanEffect;
 
-    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
+    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
     {
-      uint8_t t192 = round((temperature/255.0)*191);
-      uint8_t heatramp = t192 & 0x3F; // 0..63
+      byte t192 = round((temperature/255.0)*191);
+      byte heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
 
-      CHSV hsv(iHue, 255, heatramp);
+      CHSV hsv(HUE_BLUE, 255, heatramp);
+      CRGB rgb;
+      hsv2rgb_rainbow(hsv, rgb);
+      return rgb;
+    }
+};
+
+class GreenFireFanEffect : public FireFanEffect
+{
+    using FireFanEffect::FireFanEffect;
+
+    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
+    {
+      byte t192 = round((temperature/255.0)*191);
+      byte heatramp = t192 & 0x3F; // 0..63
+      heatramp <<= 2; // scale up to 0..252
+
+      CHSV hsv(HUE_GREEN, 255, heatramp);
       CRGB rgb;
       hsv2rgb_rainbow(hsv, rgb);
       return rgb;
@@ -1058,13 +1118,13 @@ class MusicFireEffect : public FireFanEffect
       }
     }
 
-    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
+    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
     {
               // Scale 'heat' down from 0-255 to 0-191
-      uint8_t t192 = round((temperature / 255.0) * 191);
+      byte t192 = round((temperature / 255.0) * 191);
 
       // calculate ramp up from
-      uint8_t heatramp = t192 & 0x3F; // 0..63
+      byte heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
       CRGB c;
       c.setHSV((heatramp+_colorOffset*0), 255, heatramp);
@@ -1123,5 +1183,172 @@ class HueTest : public LEDStripEffect
         {
             DrawFanPixels(0, FAN_SIZE, CRGB( CHSV(HUE_RED, sat, 255)), Sequential, iFan++);
         }
+    }
+};
+
+class RingTestEffect : public LEDStripEffect
+{
+  private:
+
+  public:
+  
+  RingTestEffect() : LEDStripEffect("Ring Test")
+    {
+    }
+
+    virtual void Draw() 
+    {
+         for (int i = 0; i < NUM_FANS; i++)
+         {
+             for (int c = 0; c < NUM_RINGS; c++)
+             {
+                 FillRingPixels(CRGB(CHSV(c * 16, 255, 255)), i, c);
+             }
+         }
+    }
+};
+
+/*
+ * Effects intended for a train-style lantern with concentric rings of 16/12/8/1
+ */
+
+// Lantern - A candle-like effect that flickers in the center of an LED disc
+//           Inspired by a candle effect I saw done by carangil 
+class LanternParticle
+{ 
+    const int minPeturbation        = 1000;
+    const int maxPeterbation        = 12500;
+    const int perterbationIncrement = 10;
+    const int maxDeviation          = 35;
+
+    int centerX = maxDeviation;
+    int centery = maxDeviation/2;
+
+    int velocityX = 0;
+    int velocityY = 0;
+
+    int pertub           = minPeturbation;
+    int perturbDirection = perterbationIncrement;
+
+    float rotation = 0.0f;
+
+  protected:
+
+    CRGB flameColor(int val)
+    {
+        val = min(val, 255);
+        val = max(val, 0);
+        return CRGB( val,  val*.25, val*.05);
+    }
+
+  public:
+
+    void Draw()
+    {
+        //random trigger brightness oscillation, if at least half uncalm
+        
+        EVERY_N_MILLISECONDS(15)
+        {
+          int movx=0;
+          int movy=0;
+
+
+          if (pertub > (maxPeterbation/2))
+              if (random(2000)<5) 
+                  pertub = maxPeterbation;  //occasional 'bonus' wind
+          
+          //random poke, intensity determined by uncalm value (0 is perfectly calm)
+          
+          movx = random(pertub>>7) -(pertub>>9);
+          movy = random(pertub>>7) -(pertub>>9);
+
+          // if reach most calm value, start moving towards uncalm
+          if (pertub < minPeturbation)
+            perturbDirection = perterbationIncrement;
+          
+          // if reach most uncalm value, start going towards calm
+          if (pertub > maxPeterbation)
+            perturbDirection = -perterbationIncrement;
+          
+          pertub += perturbDirection;
+
+          // Move center of flame around by the current velocity
+          
+          centerX += movx + (velocityX / 7);
+          centery += movy + (velocityY / 7);
+          
+          // Enforce some range limits
+          if (centerX < -maxDeviation)
+            centerX = -maxDeviation;
+            
+          if (centerX > maxDeviation)
+            centerX = maxDeviation;
+
+          if (centery < -maxDeviation)
+            centery = -maxDeviation;
+            
+          if (centery > maxDeviation)
+            centery = maxDeviation;
+
+          // Dampen the velocity down a fraction
+
+          velocityX = (velocityX *999)/1000;
+          velocityY = (velocityY *999)/1000;
+        
+          // Apply Hooke's law of spring motion to accelerate back towards rest/center
+
+          velocityX -= centerX;
+          velocityY -= centery;
+        }
+
+        rotation += 0.0;
+        
+        float scalar = .75 + gVURatio / 2;
+        
+        // Draw four outer pixels in second ring outwards.  We draw 1.05 to take advantage of the non-linear red response in
+        // the second pixels (when drawn at 5%, the red will show up more, depending on color correction).
+
+        DrawRingPixels(fmod(rotation + 0, RING_SIZE_2), 1.05, flameColor(128 - centerX * scalar - centery * scalar ), 0, 2);
+        DrawRingPixels(fmod(rotation + 4, RING_SIZE_2), 1.05, flameColor(128 + centerX * scalar - centery * scalar ), 0, 2);
+        DrawRingPixels(fmod(rotation + 2, RING_SIZE_2), 1.05, flameColor(128 + centerX * scalar + centery * scalar ), 0, 2);
+        DrawRingPixels(fmod(rotation + 6, RING_SIZE_2), 1.15, flameColor(128 - centerX * scalar + centery * scalar ), 0, 2);
+        
+        // Now draw a center pixel which is dimmed proportional to the distance the center is from actual
+
+        CRGB centerColor = CRGB(255, 12, 0);
+        centerColor.fadeToBlackBy((centerX * centerX + centery * centery)/25);
+        DrawRingPixels(0, 1.0, centerColor, 0, 3);
+
+        /* Additional LED ring, up to your preference
+        DrawRingPixels(fmod(rotation + 0, RING_SIZE_1), 1.05, centerColor, 0, 1);
+        DrawRingPixels(fmod(rotation + 3, RING_SIZE_1), 1.05, centerColor, 0, 1);
+        DrawRingPixels(fmod(rotation + 6, RING_SIZE_1), 1.05, centerColor, 0, 1);
+        DrawRingPixels(fmod(rotation + 9, RING_SIZE_1), 1.05, centerColor, 0, 1);
+        */                                                                                                                                                                                                                                            
+    }
+};
+
+class LanternEffect : public LEDStripEffect
+{
+  static const int _maxParticles = 1;
+
+  private:
+    LanternParticle _particles[_maxParticles];
+
+  public:
+
+    LanternEffect() : LEDStripEffect("LanternEffect")
+      {
+      }
+
+    virtual void Draw()
+    {
+      EVERY_N_MILLISECONDS(10)
+      {
+        setAllOnAllChannels(0,0,0);
+        for (int i = 0; i < _maxParticles; i++)
+          _particles[i].Draw();
+      }
+      delay(10);
     }
 };

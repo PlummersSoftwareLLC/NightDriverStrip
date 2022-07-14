@@ -479,20 +479,24 @@ class PatternPongClock : public LEDStripEffect
         }
     }
 
-    byte pong_get_ball_endpoint(float tempballpos_x, float tempballpos_y, float tempballvel_x, float tempballvel_y)
+    byte pong_get_ball_endpoint(float ballPosition_x, float ballPosition_y, float ballVelocity_x, float ballVelocity_y)
     {
-        // run prediction until ball hits bat
-        while (tempballpos_x > BAT1_X && tempballpos_x < BAT2_X)
+        // Predicts where the ball will land based on running it forward in time.  I'm sure there's a trig version
+        // that solves it in one step, but you'd have to account for it bouncing off the top and bottom.  Perhaps
+        // that's a simple modulus(height) on the final Y, but...  I don't know, and this works!
+
+        while (ballPosition_x > BAT1_X && ballPosition_x < BAT2_X)
         {
-            tempballpos_x = tempballpos_x + tempballvel_x;
-            tempballpos_y = tempballpos_y + tempballvel_y;
-            // check for collisions with top / bottom
-            if (tempballpos_y <= 0 || tempballpos_y >= MATRIX_HEIGHT-1)
-            {
-                tempballvel_y = tempballvel_y * -1;
-            }
+            ballPosition_x = ballPosition_x + ballVelocity_x;
+            ballPosition_y = ballPosition_y + ballVelocity_y;
+
+            // If the ball goes below zero or above the height, we assume it's hit the top or bottom
+            // bounce it by inverting the Y velocity
+
+            if (ballPosition_y <= 0 || ballPosition_y >= MATRIX_HEIGHT-1)
+                ballVelocity_y = ballVelocity_y * -1;
         }
-        return tempballpos_y;
+        return ballPosition_y;
     }
 };
 

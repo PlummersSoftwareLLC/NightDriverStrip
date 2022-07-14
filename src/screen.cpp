@@ -40,6 +40,8 @@
 #endif
 #include <mutex>
 
+extern int g_serialFPS;                       // Frames per sec reported on serial
+
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 double g_Brite;
@@ -185,6 +187,8 @@ void IRAM_ATTR UpdateScreen()
         static auto sip        = WiFi.localIP().toString();
         static auto lastFPS    = g_FPS;
         static auto lastFullDraw = 0;
+        static auto lastAudio  = 0;
+        static auto lastSerial = 0;        
                auto yh = 1;                        // Start at top of screen
 
         if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
@@ -228,6 +232,22 @@ void IRAM_ATTR UpdateScreen()
                 yh += Screen::fontHeight();
             }
 
+            if (gbInfoPageDirty != false ||
+                (g_ShowFPS && ( (lastFPS != g_FPS) || (lastAudio != g_AudioFPS) || (lastSerial != g_serialFPS) )) )
+            {
+                lastFPS         = g_FPS;
+                lastSerial      = g_serialFPS;
+                lastAudio       = g_AudioFPS;
+                Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
+                char szBuffer[64];
+                yh = Screen::screenHeight() - Screen::fontHeight() - 2;
+                snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Audio: %2d Serial:%2d ", g_FPS, g_AudioFPS, g_serialFPS);
+                Screen::setTextColor(YELLOW16, backColor);
+                Screen::drawString(szBuffer, yh);
+                yh += Screen::fontHeight();
+            }
+
+            gbInfoPageDirty = false;
             #if ENABLE_AUDIO
             if (g_ShowFPS)
             {

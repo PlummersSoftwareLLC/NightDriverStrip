@@ -296,6 +296,10 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new RainbowFillEffect(6, 2),
         new ClassicFireEffect(),
 
+#elif LANTERN
+
+        new LanternEffect(),  
+
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
