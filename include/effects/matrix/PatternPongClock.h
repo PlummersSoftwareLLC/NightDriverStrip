@@ -73,7 +73,7 @@
 #define BAT1_X 2 // Pong left bat x pos (this is where the ball collision occurs, the bat is drawn 1 behind these coords)
 #define BAT2_X (MATRIX_WIDTH - 4)
 #define BAT_HEIGHT (MATRIX_HEIGHT / 4)
-#define SPEEDUP 1.2
+#define SPEEDUP 1.15
 #define MAXSPEED 4.0f
 
 class PatternPongClock : public LEDStripEffect
@@ -103,7 +103,7 @@ class PatternPongClock : public LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 41;
+        return 35;
     }
      
     virtual void Start()
@@ -217,8 +217,15 @@ class PatternPongClock : public LEDStripEffect
             bat2_target_y = ballpos_y;
         }
 
-        // when the ball is closer to the left bat, run the ball maths to find out where the ball will land
-        if (ballpos_x < MATRIX_WIDTH / 2  && ballpos_x > MATRIX_WIDTH / 2 - MAXSPEED && ballvel_x < 0)
+        // Define the "Thinking zone" around center.  Player will set their targets based on what they see here.
+
+        constexpr float LOOKAHEAD = 1.0;
+        constexpr float leftEdge  = MATRIX_WIDTH / 2 - MAXSPEED * LOOKAHEAD;
+        constexpr float rightEdge = MATRIX_WIDTH / 2 + MAXSPEED * LOOKAHEAD;
+
+        // If ball going leftwards towards BAT1, 
+
+        if (ballvel_x < 0 && ballpos_x > leftEdge  && ballpos_x < rightEdge)   
         {
 
             byte end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
@@ -250,7 +257,8 @@ class PatternPongClock : public LEDStripEffect
         // right bat AI
         // if positive velocity then predict for right bat - first just match ball height
         // when the ball is closer to the right bat, run the ball maths to find out where it will land
-        if (ballpos_x > MATRIX_WIDTH / 2 && ballpos_x < MATRIX_WIDTH / 2 + MAXSPEED && ballvel_x > 0)
+
+        if (ballvel_x > 0 && ballpos_x > leftEdge && ballpos_x < rightEdge) 
         {
             byte end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
             
@@ -413,19 +421,17 @@ class PatternPongClock : public LEDStripEffect
                 byte flick; // 0 = up, 1 = down.
 
                 if (bat2_y > 1 || bat2_y < MATRIX_HEIGHT / 2)
-                {
                     flick = random(0, 2); // pick a random dir to flick - up or down
-                }
+
                 // if bat 1 or 2 away from top only flick down
+
                 if (bat2_y <= 1)
-                {
                     flick = 0; // move bat up 1 or 2 pixels
-                }
+
                 // if bat 1 or 2 away from bottom only flick up
+
                 if (bat2_y >= MATRIX_HEIGHT / 2)
-                {
                     flick = 1; // move bat down 1 or 2 pixels
-                }
 
                 switch (flick)
                 {
@@ -434,9 +440,7 @@ class PatternPongClock : public LEDStripEffect
                     bat2_target_y = bat2_target_y + random(1, 3);
                     ballvel_x = ballvel_x * -1;
                     if (ballvel_y < 2)
-                    {
-                        ballvel_y = ballvel_y + 0.5;
-                    }
+                        ballvel_y = ballvel_y + random(1.0) + 0.5;
                     break;
 
                     // flick down
@@ -444,9 +448,7 @@ class PatternPongClock : public LEDStripEffect
                     bat2_target_y = bat2_target_y - random(1, 3);
                     ballvel_x = ballvel_x * -1;
                     if (ballvel_y > 0.5)
-                    {
-                        ballvel_y = ballvel_y - 0.5;
-                    }
+                        ballvel_y = ballvel_y - random(1.0) - 0.5;;
                     break;
                 }
             }
@@ -469,13 +471,9 @@ class PatternPongClock : public LEDStripEffect
             mins = local_time->tm_min;
             hours = local_time->tm_hour;
             if (hours > 12)
-            {
                 hours = hours - ampm * 12;
-            }
             if (hours < 1)
-            {
                 hours = hours + ampm * 12;
-            }
         }
     }
 
@@ -483,7 +481,14 @@ class PatternPongClock : public LEDStripEffect
     {
         // In the following, the fabs() mirrors it over the bottom wall.  The fmod wraps it when it exceeds twice
         // the top wall.  If the ball ends up in the top half of the double height section, we reflect it back 
-        
+        // 
+        // auto deltaX = (xspeed > 0) ? (BAT2_X - xpos) : -(xpos - BAT1_X);        // How far from ball to opponent bat
+        // auto slope = yspeed / xspeed;                                           // Rise over run, ie: deltaY per X
+        // float newY = fmod(fabs(ypos + deltaX * slope), (2 * MATRIX_HEIGHT));    // New Y, but wrappped every 2*height
+        //
+        // if (newY > MATRIX_HEIGHT)                                               // If in top half, reflect to bottom
+        //    newY = 2 * MATRIX_HEIGHT - newY;
+        // return newY;
         auto deltaX = (xspeed > 0) ? (BAT2_X - xpos) : -(xpos - BAT1_X);        // How far from ball to opponent bat
         auto slope = yspeed / xspeed;                                           // Rise over run, ie: deltaY per X
         float newY = fmod(fabs(ypos + deltaX * slope), (2 * MATRIX_HEIGHT));    // New Y, but wrappped every 2*height

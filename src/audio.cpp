@@ -162,6 +162,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 //
 // To support this, when enabled, this task repeatedly sends out copies of the latest data peaks, scaled to 20, which is
 // the max height of the PET/C64 spectrum bar.  This should manage around 24 fps at 2400baud.
+//
+// The VICESocketServer acts as a server that sends serial data to the socket on the emulator machine to emulate serial data.
 
 #include <fcntl.h>
 
@@ -348,6 +350,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         data.tail = 00;
         if (Serial2.availableForWrite())
         {
+            debugW("Sending serial data...");
             Serial2.write((byte *)&data, sizeof(data));
             Serial2.flush(true);
         }
