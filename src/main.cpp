@@ -391,8 +391,10 @@ void IRAM_ATTR SocketServerTaskEntry(void *)
     for (;;)
     {
         if (WiFi.isConnected())
+        {
             g_SocketServer.ProcessIncomingConnectionsLoop();
-        debugW("Socket connection closed.  Retrying...\n");
+            debugW("Socket connection closed.  Retrying...\n");
+        }
         delay(500);
     }
 }
@@ -793,6 +795,12 @@ void setup()
 #if ENABLE_AUDIO
     // The audio sampler task might as well be on a different core from the LED stuff
     xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &g_taskAudio, AUDIO_CORE);
+    CheckHeap();
+#endif
+
+#if ENABLE_AUDIOSERIAL
+    // The audio sampler task might as well be on a different core from the LED stuff
+    xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &g_taskAudio, AUDIOSERIAL_CORE);
     CheckHeap();
 #endif
 

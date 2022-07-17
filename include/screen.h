@@ -74,7 +74,7 @@ class Screen
 #endif
 
 
-    static const int BottomMargin = 38;
+    static const int BottomMargin = 20;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
@@ -135,10 +135,7 @@ class Screen
         #if USE_OLED
             return 12;
         #elif USE_SCREEN
-            int16_t x1, y1;
-            uint16_t w, h;
-            g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
-            return w + 2;                                                   // One pixel above and below chars looks better
+            return g_pDisplay->fontHeight();
         #else
             return 1;
         #endif
@@ -153,6 +150,8 @@ class Screen
             uint16_t w, h;
             g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
             return w;
+        #elif USE_SCREEN
+            return g_pDisplay->textWidth(psz);          
         #else 
             return 1;
         #endif
@@ -210,13 +209,13 @@ class Screen
                     g_pDisplay->setTextSize(1);
                     break;                
                 default:
-                    g_pDisplay->setTextFont(screenWidth() > 160 ? 2 : 1);
+                    g_pDisplay->setTextFont(1);
                     g_pDisplay->setTextSize(1);
                     break;
             }
         #endif
         
-        #if USE_TFTSPI
+        #if USE_TFTSPI 
             switch(size)
             {
                 case BIG:

@@ -79,7 +79,7 @@ class LEDStripEffect
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               // There are up to 8 channel in play per effect and when we
     {           
-        debugW("Init Init");                                                    //   start up, we are given copies to their graphics interfaces
+        debugW("Init %s", _friendlyName.c_str());                                                    //   start up, we are given copies to their graphics interfaces
         for (int i = 0; i < NUM_CHANNELS; i++)                      //   so that we can call them directly later from other calls
         {
             _GFX[i] = gfx[i];    

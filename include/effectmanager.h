@@ -168,7 +168,7 @@ public:
 #if (USEMATRIX || SPECTRUM)
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
-        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+        GFXBase * pMatrix = (*this)[0].get();
         pMatrix->setPalette(CRGBPalette16(oldColor, color));
         pMatrix->PausePalette(true);
 #else
@@ -192,7 +192,7 @@ public:
         _pRemoteEffect = nullptr;
 
 #if (USEMATRIX || SPECTRUM)        
-        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+        GFXBase * pMatrix = (*this)[0].get();
         pMatrix->PausePalette(false);
 #endif        
     }

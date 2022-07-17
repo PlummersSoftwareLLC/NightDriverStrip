@@ -316,13 +316,15 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
     debugI(">>> Sampler Task Started");
 
     SoundAnalyzer Analyzer(INPUT_PIN);
-    VICESocketServer socketServer(25232);
-    
-    if (!socketServer.begin()) {
-        debugE("Unable to start socket server for VICE!");
-    } else {
-        debugW("Started socket server for VICE!");
-    }
+
+    #if ENABLE_VICE_SERVER
+        VICESocketServer socketServer(25232);
+        if (!socketServer.begin()) {
+            debugE("Unable to start socket server for VICE!");
+        } else {
+            debugW("Started socket server for VICE!");
+        }
+    #endif
 
     Serial2.begin(2400, SERIAL_8N1, SERIAL_PINRX, SERIAL_PINTX);
     debugI("    Opened Serial2 on pins %d,%d\n", SERIAL_PINRX, SERIAL_PINTX);
@@ -350,9 +352,16 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         data.tail = 00;
         if (Serial2.availableForWrite())
         {
-            debugW("Sending serial data...");
             Serial2.write((byte *)&data, sizeof(data));
-            Serial2.flush(true);
+            
+            // Flushing seems like a good idea, but it triggers the watchdog if there's no one listening to receive the serial data
+            // because it sits and waits, I suppose?
+            //
+            //Serial2.flush(true);
+        }
+        else
+        {
+            delay(10);
         }
         
         static int lastFrame = millis();
@@ -368,22 +377,24 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             }
         }
 
-        // If we have a socket open, send our packet to its virtual serial port now as well.
-    
-        if (socket < 0)
-            socket = socketServer.CheckForConnection();
+        #if ENABLE_VICE_SERVER
+            // If we have a socket open, send our packet to its virtual serial port now as well.
+        
+            if (socket < 0)
+                socket = socketServer.CheckForConnection();
 
-        if (socket >= 0)
-        {
-            if (!socketServer.SendPacketToVICE(socket, (byte *)&data, sizeof(data)))
+            if (socket >= 0)
             {
-                // If anything goes wrong, we close the socket so it can accept new incoming attempts
-                debugI("Error on socket, so closing");
-                close(socket);
-                socket = -1;
+                if (!socketServer.SendPacketToVICE(socket, (byte *)&data, sizeof(data)))
+                {
+                    // If anything goes wrong, we close the socket so it can accept new incoming attempts
+                    debugI("Error on socket, so closing");
+                    close(socket);
+                    socket = -1;
+                }
             }
-        }
-    
+        #endif
+
         delay(1);
     }
 }
