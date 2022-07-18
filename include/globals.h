@@ -647,7 +647,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MAX_BUFFERS     40                    
 
     #define POWER_LIMIT_MW (1600 * 1000)                 // 100W transformer for an 8M strip max
-    #define DEFAULT_EFFECT_INTERVAL     (1000*30 * 1000)
+    #define DEFAULT_EFFECT_INTERVAL     (1000*30 * 60)
 
 
     // The "Tiki Fire Umbrella" project, with 8 channels

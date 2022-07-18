@@ -194,13 +194,36 @@ public:
         memset(leds, 0, sizeof(CRGB) * _width * _height);
     }
 
+    // Matrices that are built from individually addressable strips like WS2812b generally
+    // follow a boustrophodon layout as follows:
+    // 
+    //     0 >  1 >  2 >  3 >  4
+    //                         |
+    //     .----<----<----<----'
+    //     |
+    //     5 >  6 >  7 >  8 >  9
+    //                         |
+    //     .----<----<----<----'
+    //     |
+    //    10 > 11 > 12 > 13 > 14
+    //                         |
+    //     .----<----<----<----'
+    //     |
+    //    15 > 16 > 17 > 18 > 19
+
     inline virtual uint16_t xy(uint8_t x, uint8_t y) const
     {
-        if (x >= _width || x < 0)
-            return 0; // throw std::runtime_error("x Pixel out of range in xy(x,y)");
-        if (y >= _height || y < 0)
-            return 0; // throw std::runtime_error("y Pixel out of range in xy(x,y)");
-        return y * _width + x;
+        if (x & 0x01)
+        {
+            // Odd rows run backwards
+            uint8_t reverseY = (_height - 1) - y;
+            return (x * _height) + reverseY;
+        }
+        else
+        {
+            // Even rows run forwards
+            return (x * _height) + y;
+        }
     }
 
     virtual CRGB getPixel(int16_t i) const 
