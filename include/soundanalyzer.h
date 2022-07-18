@@ -92,7 +92,12 @@ using namespace std;
 #define SAMPLE_BITS  12                                   // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
 #define MAX_VU MAX_ANALOG_IN
-#define MIN_VU 128
+
+#if M5STICKC || M5STICKCPLUS                              // The MAX9814 mic has different sensitivity than th M5's mic, so each needs its own value here
+    #define MIN_VU 128
+#else
+    #define MIN_VU 512
+#endif
 
 #ifndef GAINDAMPEN
 #define GAINDAMPEN  1                                     // How slowly brackets narrow in for spectrum bands
@@ -289,8 +294,7 @@ class SampleBuffer
     static float      _oldVU;
     static float      _oldPeakVU;
     static float      _oldMinVU;
-    portMUX_TYPE      _mutex;
-
+    
     // BucketFrequency
     //
     // Return the frequency corresponding to the Nth sample bucket.  Skips the first two 
@@ -332,8 +336,6 @@ class SampleBuffer
         _oldVU             = 0.0f;
         _oldPeakVU         = 0.0f;
         _oldMinVU          = 0.0f;
-        _mutex = portMUX_INITIALIZER_UNLOCKED;
-        vPortCPUInitializeMutex(&_mutex);
 
 #if USE_I2S
         SampleBufferInitI2S();
@@ -348,21 +350,6 @@ class SampleBuffer
         free(_vPeaks);
     }
 
-    bool TryForImmediateLock()
-    {
-        return vPortCPUAcquireMutexTimeout(&_mutex, portMUX_TRY_LOCK);
-    }
-
-    void WaitForLock() 
-    {
-        vPortCPUAcquireMutex(&_mutex);
-    }
-
-    void ReleaseLock()
-    {
-        vPortCPUReleaseMutex(&_mutex);
-    }
-    
     // SampleBuffer::Reset
     //
     // Resets (clears) everything about the buffer except for the time stamp.
@@ -414,7 +401,7 @@ class SampleBuffer
     //i2s number
     #define EXAMPLE_I2S_NUM           (I2S_NUM_0)
     //i2s sample rate
-    #define EXAMPLE_I2S_SAMPLE_BITS   (I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+    #define EXAMPLE_I2S_SAMPLE_BITS   (I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_STAND_MSB)
     //enable display buffer for debug
     #define EXAMPLE_I2S_BUF_DEBUG     (0)
     //I2S read buffer length
@@ -443,13 +430,22 @@ class SampleBuffer
                 .sample_rate =  SAMPLING_FREQUENCY,
                 .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // is fixed at 12bit, stereo, MSB
                 .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT,
-                .communication_format = I2S_COMM_FORMAT_I2S,
+                #if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 1, 0)
+                        .communication_format = I2S_COMM_FORMAT_STAND_I2S,  // Set the format of the communication.
+                #else 
+                        .communication_format = I2S_COMM_FORMAT_I2S,
+                #endif
                 .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
                 .dma_buf_count = 2,
                 .dma_buf_len = 256,
             };
 
             i2s_pin_config_t pin_config;
+
+            #if (ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 3, 0))
+                pin_config.mck_io_num = I2S_PIN_NO_CHANGE;
+            #endif
+            
             pin_config.bck_io_num   = I2S_PIN_NO_CHANGE;
             pin_config.ws_io_num    = IO_PIN;
             pin_config.data_out_num = I2S_PIN_NO_CHANGE;
@@ -468,7 +464,7 @@ class SampleBuffer
             i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
             i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;  
             i2s_config.use_apll = false,
-            i2s_config.communication_format = I2S_COMM_FORMAT_I2S_MSB;
+            i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
             i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
             i2s_config.dma_buf_count = 2;
             // This assume pin27 as input since it's easy to mount a 4466 style board to it, change as needed
@@ -483,7 +479,7 @@ class SampleBuffer
             i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
             i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;  
             i2s_config.use_apll = false,
-            i2s_config.communication_format = I2S_COMM_FORMAT_I2S_MSB;
+            i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
             i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
             i2s_config.dma_buf_count = 2;
 
@@ -624,7 +620,7 @@ class SampleBuffer
         // just triggering the bottom pixel, and real silence yielding darkness
         
         debugV("All Bands Peak: %f", allBandsPeak);
-        //allBandsPeak = max(NOISE_FLOOR, allBandsPeak);        
+        allBandsPeak = max(NOISE_FLOOR, allBandsPeak);        
 
         auto multiplier = mapDouble(gVURatio, 0.0, 2.0, 1.5, 1.0);
         allBandsPeak *= multiplier;

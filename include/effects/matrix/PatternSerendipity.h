@@ -72,8 +72,8 @@ private:
         unsigned long lastMillis;
         unsigned long count;
         int delta;
-        byte up;
-        byte down;
+        uint8_t up;
+        uint8_t down;
     };
     timer multiTimer[5];
 

@@ -293,12 +293,21 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             }
         }
 
+        // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
+        // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
+
         #ifdef ONBOARD_LED_R
-            int iLed = NUM_LEDS/2;
-            ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
-            ledcWrite(2, 255 - graphics->leds[iLed].g );
-            ledcWrite(3, 255 - graphics->leds[iLed].b );
-            ledcWrite(4, (graphics->leds[iLed].r + graphics->leds[iLed].g + graphics->leds[iLed].b) / 3);
+            #ifdef ENABLE_AUDIO
+                CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); )
+                ledcWrite(1, 255 - c.r ); // write red component to channel 1, etc.
+                ledcWrite(2, 255 - c.g );
+                ledcWrite(3, 255 - c.b );
+            #else
+                int iLed = NUM_LEDS/2;
+                ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
+                ledcWrite(2, 255 - graphics->leds[iLed].g );
+                ledcWrite(3, 255 - graphics->leds[iLed].b );
+            #endif
         #endif
 
 #endif

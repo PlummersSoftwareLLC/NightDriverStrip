@@ -185,7 +185,7 @@ class PatternCube : public LEDStripEffect
       }
     }
 
-    byte hue = 0;
+    uint8_t hue = 0;
     int step = 0;
 
     virtual size_t DesiredFramesPerSecond() const

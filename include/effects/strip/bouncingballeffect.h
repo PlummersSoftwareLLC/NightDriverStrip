@@ -35,8 +35,6 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#define FASTLED_INTERNAL 1
-#include "FastLED.h"
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"

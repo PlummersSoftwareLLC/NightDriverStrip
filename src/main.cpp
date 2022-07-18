@@ -657,20 +657,19 @@ void setup()
         LEDMatrixGFX::StartMatrix();
     #endif
 
-    #if USESTRIP
-
         // Onboard PWM LED 
 
-        #ifdef ONBOARD_LED_R
-            ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
-            ledcAttachPin(ONBOARD_LED_G,  2);
-            ledcAttachPin(ONBOARD_LED_B,  3);
-            ledcAttachPin(ONBOARD_LED,    4);
-            ledcSetup(1, 12000, 8);             // 12 kHz PWM, 8-bit resolution
-            ledcSetup(2, 12000, 8);
-            ledcSetup(3, 12000, 8);
-            ledcSetup(4, 12000, 8);            
-        #endif
+    #ifdef ONBOARD_LED_R
+        ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
+        ledcAttachPin(ONBOARD_LED_G,  2);
+        ledcAttachPin(ONBOARD_LED_B,  3);
+        ledcSetup(1, 12000, 8);             // 12 kHz PWM, 8-bit resolution
+        ledcSetup(2, 12000, 8);
+        ledcSetup(3, 12000, 8);
+    #endif
+
+    #if USESTRIP
+
 
         #if STRAND
             FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount()); // Neopixel strand uses RGB color order, others are all GRB

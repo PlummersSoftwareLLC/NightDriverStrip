@@ -63,9 +63,7 @@
  */
 
 #pragma once
-#define fastled_internal 1
 #include "globals.h"
-#include "FastLED.h"
 #include "Adafruit_GFX.h"
 #include <stdexcept>
 
@@ -639,10 +637,10 @@ public:
     // Oscillators and Emitters
 
     // the oscillators: linear ramps 0-255
-    byte osci[6];
+    uint8_t osci[6];
 
     // sin8(osci) swinging between 0 to MATRIX_WIDTH - 1
-    byte p[6];
+    uint8_t p[6];
 
     // set the speeds (and by that ratios) of the oscillators here
     
@@ -788,7 +786,7 @@ public:
     // create a square twister to the left or counter-clockwise
     // x and y for center, r for radius
     
-    inline void SpiralStream(int x, int y, int r, byte dimm)
+    inline void SpiralStream(int x, int y, int r, uint8_t dimm)
     {
         for (int d = r; d >= 0; d--)
         { // from the outside to the inside
@@ -816,7 +814,7 @@ public:
     }
 
     // expand everything within a circle
-    inline void Expand(int centerX, int centerY, int radius, byte dimm)
+    inline void Expand(int centerX, int centerY, int radius, uint8_t dimm)
     {
         if (radius == 0)
             return;
@@ -878,7 +876,7 @@ public:
     }
 
     // give it a linear tail to the right
-    inline void StreamRight(byte scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT)
+    inline void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT)
     {
         for (int x = fromX + 1; x < toX; x++)
         {
@@ -893,7 +891,7 @@ public:
     }
 
     // give it a linear tail to the left
-    inline void StreamLeft(byte scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT)
+    inline void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT)
     {
         for (int x = toX; x < fromX; x++)
         {
@@ -908,7 +906,7 @@ public:
     }
 
     // give it a linear tail downwards
-    inline void StreamDown(byte scale)
+    inline void StreamDown(uint8_t scale)
     {
         for (int x = 0; x < MATRIX_WIDTH; x++)
         {
@@ -923,7 +921,7 @@ public:
     }
 
     // give it a linear tail upwards
-    inline void StreamUp(byte scale)
+    inline void StreamUp(uint8_t scale)
     {
         for (int x = 0; x < MATRIX_WIDTH; x++)
         {
@@ -938,7 +936,7 @@ public:
     }
 
     // give it a linear tail up and to the left
-    inline void StreamUpAndLeft(byte scale)
+    inline void StreamUpAndLeft(uint8_t scale)
     {
         for (int x = 0; x < MATRIX_WIDTH - 1; x++)
         {
@@ -956,7 +954,7 @@ public:
 
     // give it a linear tail up and to the right
     
-    inline void StreamUpAndRight(byte scale)
+    inline void StreamUpAndRight(uint8_t scale)
     {
         for (int x = 0; x < MATRIX_WIDTH - 1; x++)
         {
@@ -1004,7 +1002,7 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
     
-    inline void Copy(byte x0, byte y0, byte x1, byte y1, byte x2, byte y2)
+    inline void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1077,7 +1075,7 @@ public:
         }
     }
 
-    inline void BresenhamLine(int x0, int y0, int x1, int y1, byte colorIndex, bool bMerge = false)
+    inline void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
     {
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
@@ -1088,7 +1086,7 @@ public:
         BresenhamLine(x0, y0, x1, y1, color);
     }
 
-    void DimAll(byte value)
+    void DimAll(uint8_t value)
     {
         for (int i = 0; i < NUM_LEDS; i++)
         {
@@ -1138,7 +1136,7 @@ public:
             {
                 uint32_t joffset = noise_scale_y * (j - MATRIX_CENTER_Y);
 
-                byte data = inoise16(noise_x + ioffset, noise_y + joffset, noise_z) >> 8;
+                uint8_t data = inoise16(noise_x + ioffset, noise_y + joffset, noise_z) >> 8;
 
                 uint8_t olddata = noise[i][j];
                 uint8_t newdata = scale8(olddata, noisesmoothing) + scale8(data, 256 - noisesmoothing);
@@ -1164,7 +1162,7 @@ public:
     // non leds2 memory version.
     // MoveX - Shift the content on the matrix left or right
     
-    inline void MoveX(byte delta)
+    inline void MoveX(uint8_t delta)
     {
 
         // CRGB tmp = 0;
@@ -1213,7 +1211,7 @@ public:
 
     // MoveY - Shifts the content on the matix up or down
     
-    inline void MoveY(byte delta)
+    inline void MoveY(uint8_t delta)
     {
 
         CRGB tmp = 0;

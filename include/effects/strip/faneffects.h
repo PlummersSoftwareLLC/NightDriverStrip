@@ -706,8 +706,8 @@ class ColorCycleEffect : public LEDStripEffect
 
     void DrawEffect()
     {
-        static byte basehue = 0;
-        byte hue = basehue;
+        static uint8_t basehue = 0;
+        uint8_t hue = basehue;
         EVERY_N_MILLISECONDS(20) 
         {
             basehue += 1;
@@ -730,8 +730,8 @@ class ColorCycleEffectBottomUp : public LEDStripEffect
 
     void DrawEffect()
     {
-        static byte basehue = 0;
-        byte hue = basehue;
+        static uint8_t basehue = 0;
+        uint8_t hue = basehue;
         EVERY_N_MILLISECONDS(20) 
         {
             basehue += 2;
@@ -755,8 +755,8 @@ class ColorCycleEffectTopDown : public LEDStripEffect
 
     void DrawEffect()
     {
-        static byte basehue = 0;
-        byte hue = basehue;
+        static uint8_t basehue = 0;
+        uint8_t hue = basehue;
         EVERY_N_MILLISECONDS(30) 
         {
             basehue += 1;
@@ -779,8 +779,8 @@ class ColorCycleEffectSequential : public LEDStripEffect
 
     void DrawEffect()
     {
-        static byte basehue = 0;
-        byte hue = basehue;
+        static uint8_t basehue = 0;
+        uint8_t hue = basehue;
         EVERY_N_MILLISECONDS(30) 
         {
             basehue += 1;
@@ -827,8 +827,8 @@ class ColorCycleEffectRightLeft : public LEDStripEffect
 
     void DrawEffect()
     {
-        static byte basehue = 0;
-        byte hue = basehue;
+        static uint8_t basehue = 0;
+        uint8_t hue = basehue;
         basehue += 8;
         for (int i = 0; i < NUM_LEDS; i++)
           DrawFanPixels(i, 1, CHSV(hue+=16, 255, 255), RightLeft);
@@ -849,8 +849,8 @@ class ColorCycleEffectLeftRight : public LEDStripEffect
 
     void DrawEffect()
     {
-        static byte basehue = 0;
-        byte hue = basehue;
+        static uint8_t basehue = 0;
+        uint8_t hue = basehue;
         basehue += 8;
         for (int i = 0; i < NUM_LEDS; i++)
           DrawFanPixels(i, 1, CHSV(hue+=16, 255, 255), LeftRight);
@@ -872,17 +872,17 @@ class FireFanEffect : public LEDStripEffect
 
     PixelOrder Order;
 
-    unique_ptr<byte []> abHeat; // Heat table to map temp to color
+    unique_ptr<uint8_t []> abHeat; // Heat table to map temp to color
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
     // You can tune these coefficients to control how quickly and smoothly the fire spreads
 
-    static const byte BlendSelf = 0;            // 2
-    static const byte BlendNeighbor1 = 1;       // 3
-    static const byte BlendNeighbor2 = 1;       // 2
-    static const byte BlendNeighbor3 = 0;       // 1
+    static const uint8_t BlendSelf = 0;            // 2
+    static const uint8_t BlendNeighbor1 = 1;       // 3
+    static const uint8_t BlendNeighbor2 = 1;       // 2
+    static const uint8_t BlendNeighbor3 = 0;       // 1
 
-    static const byte BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
+    static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
     int CellCount() const { return LEDCount * CellsPerLED; } 
 
@@ -912,15 +912,15 @@ class FireFanEffect : public LEDStripEffect
     {
         if (bMirrored)
             LEDCount = LEDCount / 2;
-        abHeat = make_unique<byte []>(CellCount());
+        abHeat = make_unique<uint8_t []>(CellCount());
     }
 
-    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
+    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
     {
-        byte t192 = round((temperature/255.0)*191);
+        uint8_t t192 = round((temperature/255.0)*191);
  
         // calculate ramp up from
-        byte heatramp = t192 & 0x3F; // 0..63
+        uint8_t heatramp = t192 & 0x3F; // 0..63
         heatramp <<= 2; // scale up to 0..252
 
         int iVariant = iChannel % 4;
@@ -1016,7 +1016,7 @@ class FireFanEffect : public LEDStripEffect
 
         for (int i = 0; i < LEDCount; i++)
         {
-            //byte maxv = 0;
+            //uint8_t maxv = 0;
             //for (int iCell = 0; iCell < CellsPerLED; iCell++)
             //  maxv = max(maxv, heat[i * CellsPerLED + iCell]);
 
@@ -1044,10 +1044,10 @@ class BlueFireFanEffect : public FireFanEffect
 {
     using FireFanEffect::FireFanEffect;
 
-    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
+    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
     {
-      byte t192 = round((temperature/255.0)*191);
-      byte heatramp = t192 & 0x3F; // 0..63
+      uint8_t t192 = round((temperature/255.0)*191);
+      uint8_t heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
 
       CHSV hsv(HUE_BLUE, 255, heatramp);
@@ -1061,10 +1061,10 @@ class GreenFireFanEffect : public FireFanEffect
 {
     using FireFanEffect::FireFanEffect;
 
-    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
+    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
     {
-      byte t192 = round((temperature/255.0)*191);
-      byte heatramp = t192 & 0x3F; // 0..63
+      uint8_t t192 = round((temperature/255.0)*191);
+      uint8_t heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
 
       CHSV hsv(HUE_GREEN, 255, heatramp);
@@ -1119,13 +1119,13 @@ class MusicFireEffect : public FireFanEffect
       }
     }
 
-    virtual CRGB MapHeatToColor(byte temperature, int iChannel = 0)
+    virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
     {
               // Scale 'heat' down from 0-255 to 0-191
-      byte t192 = round((temperature / 255.0) * 191);
+      uint8_t t192 = round((temperature / 255.0) * 191);
 
       // calculate ramp up from
-      byte heatramp = t192 & 0x3F; // 0..63
+      uint8_t heatramp = t192 & 0x3F; // 0..63
       heatramp <<= 2; // scale up to 0..252
       CRGB c;
       c.setHSV((heatramp+_colorOffset*0), 255, heatramp);

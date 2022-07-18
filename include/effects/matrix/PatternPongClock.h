@@ -80,20 +80,20 @@ class PatternPongClock : public LEDStripEffect
 {
   private:
     float ballpos_x, ballpos_y;
-    byte erase_x = 10; // holds ball old pos so we can erase it, set to blank area of screen initially.
-    byte erase_y = 10;
+    uint8_t erase_x = 10; // holds ball old pos so we can erase it, set to blank area of screen initially.
+    uint8_t erase_y = 10;
     float ballvel_x, ballvel_y;
     int bat1_y = 5; // bat starting y positions
     int bat2_y = 5;
     int bat1_target_y = 5; // bat targets for bats to move to
     int bat2_target_y = 5;
-    byte bat1_update = 1; // flags - set to update bat position
-    byte bat2_update = 1;
-    byte bat1miss, bat2miss; // flags set on the minute or hour that trigger the bats to miss the ball, thus upping the score to match the time.
-    byte restart = 1;        // game restart flag - set to 1 initially to setup 1st game
+    uint8_t bat1_update = 1; // flags - set to update bat position
+    uint8_t bat2_update = 1;
+    uint8_t bat1miss, bat2miss; // flags set on the minute or hour that trigger the bats to miss the ball, thus upping the score to match the time.
+    uint8_t restart = 1;        // game restart flag - set to 1 initially to setup 1st game
 
-    byte mins;
-    byte hours;
+    uint8_t mins;
+    uint8_t hours;
 
   public:
 
@@ -137,7 +137,7 @@ class PatternPongClock : public LEDStripEffect
         g->Clear();
 
         // draw pitch centre line
-        for (byte i = 0; i < MATRIX_WIDTH / 2; i += 2)
+        for (uint8_t i = 0; i < MATRIX_WIDTH / 2; i += 2)
             g->setPixel(MATRIX_WIDTH / 2, i, 0x6666);
 
         // draw hh:mm seperator colon that blinks once per second
@@ -228,7 +228,7 @@ class PatternPongClock : public LEDStripEffect
         if (ballvel_x < 0 && ballpos_x > leftEdge  && ballpos_x < rightEdge)   
         {
 
-            byte end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
+            uint8_t end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
 
             // if the miss flag is set,  then the bat needs to miss the ball when it gets to end_ball_y
             if (bat1miss == 1)
@@ -260,7 +260,7 @@ class PatternPongClock : public LEDStripEffect
 
         if (ballvel_x > 0 && ballpos_x > leftEdge && ballpos_x < rightEdge) 
         {
-            byte end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
+            uint8_t end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
             
             // if flag set to miss, move bat out way of ball
             if (bat2miss == 1)
@@ -358,7 +358,7 @@ class PatternPongClock : public LEDStripEffect
             else
             {
                 bat1_update = 1;
-                byte flick; // 0 = up, 1 = down.
+                uint8_t flick; // 0 = up, 1 = down.
 
                 if (bat1_y > 1 || bat1_y < MATRIX_HEIGHT / 2)
                 {
@@ -418,7 +418,7 @@ class PatternPongClock : public LEDStripEffect
             else
             {
                 bat1_update = 1;
-                byte flick; // 0 = up, 1 = down.
+                uint8_t flick; // 0 = up, 1 = down.
 
                 if (bat2_y > 1 || bat2_y < MATRIX_HEIGHT / 2)
                     flick = random(0, 2); // pick a random dir to flick - up or down
@@ -455,8 +455,8 @@ class PatternPongClock : public LEDStripEffect
         }
 
         // plot the ball on the screen
-        byte plot_x = (int)(ballpos_x + 0.5f);
-        byte plot_y = (int)(ballpos_y + 0.5f);
+        uint8_t plot_x = (int)(ballpos_x + 0.5f);
+        uint8_t plot_y = (int)(ballpos_y + 0.5f);
 
         g->setPixel(plot_x, plot_y, WHITE16);
 

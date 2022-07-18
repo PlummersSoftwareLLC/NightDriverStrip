@@ -80,7 +80,7 @@ class Boid {
 
     float desiredseparation = 4;
     float neighbordist = 8;
-    byte colorIndex = 0;
+    uint8_t colorIndex = 0;
     float mass;
 
     boolean enabled = true;

@@ -67,9 +67,9 @@
 class PatternSpiro : public LEDStripEffect
 {
 private:
-  byte theta1 = 0;
-  byte theta2 = 0;
-  byte hueoffset = 0;
+  uint8_t theta1 = 0;
+  uint8_t theta2 = 0;
+  uint8_t hueoffset = 0;
 
   uint8_t radiusx = MATRIX_WIDTH / 4;
   uint8_t radiusy = MATRIX_HEIGHT / 4;

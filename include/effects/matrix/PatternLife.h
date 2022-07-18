@@ -70,10 +70,10 @@
 class Cell 
 {
 public:
-  byte alive : 3;
-  byte prev  : 1;
-  byte hue   : 8;  
-  byte brightness;
+  uint8_t alive : 3;
+  uint8_t prev  : 1;
+  uint8_t hue   : 8;  
+  uint8_t brightness;
 };
 
 #define CRC_LENGTH 128                           // Depth of loop check buffer

@@ -36,7 +36,6 @@
 #include <limits>
 #include "pixeltypes.h"
 
-#include "FastLED.h"
 #include "effectmanager.h"
 
 #if ENABLE_REMOTE

@@ -137,7 +137,7 @@ public:
     }
 
     // show just one layer
-    void ShowNoiseLayer(byte layer, byte colorrepeat, byte colorshift)
+    void ShowNoiseLayer(uint8_t layer, uint8_t colorrepeat, uint8_t colorshift)
     {
         for (uint8_t i = 0; i < MATRIX_WIDTH; i++)
         {

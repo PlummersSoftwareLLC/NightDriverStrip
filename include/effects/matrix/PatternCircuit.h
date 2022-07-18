@@ -65,7 +65,7 @@
 class PatternCircuit : public LEDStripEffect
 {
 private:
-    static const byte SNAKE_LENGTH = 64;
+    static const uint8_t SNAKE_LENGTH = 64;
 
     CRGB colors[SNAKE_LENGTH];
     uint8_t initialHue;
@@ -110,7 +110,7 @@ private:
 
         void shuffleDown()
         {
-            for (byte i = SNAKE_LENGTH - 1; i > 0; i--)
+            for (uint8_t i = SNAKE_LENGTH - 1; i > 0; i--)
             {
                 pixels[i] = pixels[i - 1];
             }
@@ -147,11 +147,11 @@ private:
 
         void draw(GFXBase * graphics, CRGB colors[SNAKE_LENGTH])
         {
-            for (byte i = 0; i < SNAKE_LENGTH; i++)
+            for (uint8_t i = 0; i < SNAKE_LENGTH; i++)
             {
                 graphics->leds[graphics->xy(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH / 4));
             }
-            byte m = random(20, 100);
+            uint8_t m = random(20, 100);
             graphics->leds[graphics->xy(pixels[SNAKE_LENGTH - 1].x, pixels[SNAKE_LENGTH - 1].y)] = CRGB(0, m, 0); // End tail with random dark green
             graphics->leds[graphics->xy(pixels[0].x, pixels[0].y)] = CRGB::White;                                 // Head end bright white dot
         }

@@ -61,8 +61,8 @@
 class PatternRadar : public LEDStripEffect
 {
 private:
-  byte theta = 0;
-  byte hueoffset = 0;
+  uint8_t theta = 0;
+  uint8_t hueoffset = 0;
 
 public:
   PatternRadar() : LEDStripEffect("Radar")
@@ -76,7 +76,7 @@ public:
 
     for (int offset = 0; offset < MATRIX_CENTER_X; offset++)
     {
-      byte hue = 255 - (offset * 16 + hueoffset);
+      uint8_t hue = 255 - (offset * 16 + hueoffset);
       CRGB color = graphics->ColorFromCurrentPalette(hue);
       uint8_t x = graphics->mapcos8(theta, offset, (MATRIX_WIDTH - 1) - offset);
       uint8_t y = graphics->mapsin8(theta, offset, (MATRIX_HEIGHT - 1) - offset);

@@ -492,7 +492,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
 
     #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
+    #define NOISE_FLOOR    1000.0f
 
     #define TOGGLE_BUTTON_1 0
 
@@ -660,7 +660,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ONBOARD_LED_R    16
     #define ONBOARD_LED_G    17
     #define ONBOARD_LED_B    18
-    #define ONBOARD_LED      19
 
     #define TOGGLE_BUTTON_2  0
     

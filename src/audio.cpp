@@ -79,7 +79,11 @@ float g_peak2DecayRate = 1.0f;
     #else
         const float scalarsBand[16] = 
         {
-            0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
+            #if M5STICKC || M5STICKCPLUS
+                0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
+            #else
+                0.12f, 0.18f, 0.20f, 0.25f, 0.35f, 0.35f, 0.45f, 0.55f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
+            #endif
         };
     #endif
 #endif
@@ -128,6 +132,19 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         g_AudioFPS = FPS(lastFrame, millis());
         static double lastVU = 0.0;
 
+        // VURatio with a fadeout
+
+        constexpr auto VU_DECAY_PER_SECOND = 3.0;
+        if (gVURatio > lastVU)
+            lastVU = gVURatio;
+        else
+            lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
+        lastVU = std::max(lastVU, 0.0);
+        lastVU = std::min(lastVU, 2.0);
+        gVURatioFade = lastVU;
+
+        lastFrame = millis();
+
         EVERY_N_SECONDS(10)
         {
             debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, gPeakVU: %9.2f, gMinVU: %9.2f, gVURatio: %5.4f, Peaks: %8.2f, %8.2f, %8.2f, %8.2f, %8.2f", 
@@ -142,17 +159,6 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         gVURatio = (gPeakVU == gMinVU) ? 0.0 : (gVU-gMinVU) / std::max(gPeakVU - gMinVU, (float) MIN_VU) * 2.0f;
 
-        // VURatio with a fadeout
-
-        constexpr auto VU_DECAY_PER_SECOND = 3.0;
-        if (gVURatio > lastVU)
-            lastVU = gVURatio;
-        else
-            lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
-        lastVU = std::max(lastVU, 0.0);
-        lastVU = std::min(lastVU, 2.0);
-
-        gVURatioFade = lastVU;
 
         // Delay enough time to yield 25ms total used this frame, which will net 40FPS exactly (as long as the CPU keeps up)
 
@@ -164,7 +170,6 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         if (g_bUpdateStarted)
             delay(1000);
 
-        lastFrame = millis();
         delay(1);
     }
 }
@@ -363,30 +368,30 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
 
         for (int i = 0; i < 8; i++)
         {
-            byte low   = g_peak2Decay[i*2] * MAXPET;
-            byte high  = g_peak2Decay[i*2+1] * MAXPET;
+            uint8_t low   = g_peak2Decay[i*2] * MAXPET;
+            uint8_t high  = g_peak2Decay[i*2+1] * MAXPET;
             data.peaks[i] = (high << 4) + low;
         }
 
         data.tail = 00;
         if (Serial2.availableForWrite())
         {
-            Serial2.write((byte *)&data, sizeof(data));
+            Serial2.write((uint8_t *)&data, sizeof(data));
             Serial2.flush(true);
+            static int lastFrame = millis();
+            g_serialFPS = FPS(lastFrame, millis());
+            lastFrame = millis();
         }
 
         // When the CBM processes a packet, it sends us a * to ACK.  We count those to determine the number
         // of packets per second being processed
 
-        static int lastFrame = millis();
         while (Serial2.available() > 0)
         {
-            char byte = Serial2.read();
-            if (byte=='*')
+            char read = Serial2.read();
+            Serial.print(read);
+            if (read == '*')
             {
-                static uint64_t lastFrame = millis();
-                g_serialFPS = FPS(lastFrame, millis());
-                lastFrame = millis();
             }
         }
 
@@ -398,7 +403,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
 
             if (socket >= 0)
             {
-                if (!socketServer.SendPacketToVICE(socket, (byte *)&data, sizeof(data)))
+                if (!socketServer.SendPacketToVICE(socket, (uint8_t *)&data, sizeof(data)))
                 {
                     // If anything goes wrong, we close the socket so it can accept new incoming attempts
                     debugI("Error on socket, so closing");
@@ -408,7 +413,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             }
         #endif
 
-        auto targetFPS = 240.0 / sizeof(data);
+        auto targetFPS = 480.0 / sizeof(data);
         auto targetElapsed = 1.0 / targetFPS * 1000;
         auto elapsed = millis() - startTime;
         if (targetElapsed > elapsed)

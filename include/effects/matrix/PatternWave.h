@@ -65,15 +65,15 @@
 class PatternWave : public LEDStripEffect 
 {
 private:
-    byte thetaUpdate = 4;
-    byte thetaUpdateFrequency = 0;
-    byte theta = 0;
+    uint8_t thetaUpdate = 4;
+    uint8_t thetaUpdateFrequency = 0;
+    uint8_t theta = 0;
 
-    byte hueUpdate = 0;
-    byte hueUpdateFrequency = 0;
-    byte hue = 0;
+    uint8_t hueUpdate = 0;
+    uint8_t hueUpdateFrequency = 0;
+    uint8_t hue = 0;
 
-    byte rotation = 0;
+    uint8_t rotation = 0;
 
     uint8_t scale = 256 / MATRIX_WIDTH;
 
