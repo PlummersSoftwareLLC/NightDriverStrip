@@ -79,7 +79,8 @@ extern DRAM_ATTR bool g_bUpdateStarted;             // Has an OTA update started
 extern uint8_t g_Brightness;                           // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;                 // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;                    // Our global framerate
-extern volatile float gVU;
+extern volatile float gVU;                          // VU Ratio, 0-2
+extern volatile float gVURatioFade;                 // VU Ratio with decay
 extern DRAM_ATTR uint8_t giInfoPage;                // What page of screen we are showing
 extern DRAM_ATTR bool gbInfoPageDirty;              // Does display need to be erased?
 
@@ -256,11 +257,13 @@ void IRAM_ATTR UpdateScreen()
             // Draw the VU Meter and Spectrum every time.  yScale is the number of vertical pixels that would represent
             // a single LED on the LED matrix.  
 
+            static unsigned long lastDraw = millis();
+
             int   xHalf     = Screen::screenWidth() / 2 - 1;            // xHalf is half the screen width
             float ySizeVU   = Screen::screenHeight() / 16;              // vu is 1/20th the screen height, height of each block
             int   cPixels   = 16;
             float xSize     = xHalf / cPixels + 1;                          // xSize is count of pixels in each block
-            int   litBlocks = (gVURatio / 2.0f) * cPixels;                // litPixels is number that are lit
+            int   litBlocks = (gVURatioFade / 2.0f) * cPixels;                // litPixels is number that are lit
 
             for (int iPixel = 0; iPixel < cPixels; iPixel++)              // For each pixel
             {

@@ -48,6 +48,7 @@
 
 extern AppTime g_AppTime;
 extern volatile float gVURatio;
+extern volatile float gVURatioFade;
 
 class FireEffect : public LEDStripEffect
 {

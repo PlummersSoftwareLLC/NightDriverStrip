@@ -43,6 +43,7 @@
 #include "gfxbase.h"
 
 extern DRAM_ATTR AppTime g_AppTime;
+extern volatile float gVURatioFade;
 extern volatile float gVURatio;                 // Current VU as a ratio to its recent min and max
 extern volatile float gVU;                      // Instantaneous read of VU value
 

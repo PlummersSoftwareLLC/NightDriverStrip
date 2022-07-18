@@ -128,9 +128,7 @@ class VUMeterEffect
     
     int iPeakVUy = 0;                 // size (in LED pixels) of the VU peak
     unsigned long msPeakVU = 0;       // timestamp in ms when that peak happened so we know how old it is
-    double lastVU = 0;
-    const double VU_DECAY_PER_SECOND = 3.0;
-
+    
   public:
 
     inline void EraseVUMeter(GFXBase * pGFXChannel, int yVU) const
@@ -151,15 +149,8 @@ class VUMeterEffect
             DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade, pPalette);
         }
 
-        if (gVURatio > lastVU)
-            lastVU = gVURatio;
-        else
-            lastVU -= g_AppTime.DeltaTime() * VU_DECAY_PER_SECOND;
-        lastVU = max(lastVU, 0.0);
-        lastVU = min(lastVU, 2.0);
-
         int xHalf = pGFXChannel->width()/2-1;
-        int bars  = lastVU / 2.0 * xHalf; // map(gVU, 0, MAX_VU/8, 1, xHalf);
+        int bars  = gVURatioFade / 2.0 * xHalf; // map(gVU, 0, MAX_VU/8, 1, xHalf);
         bars = min(bars, xHalf);
 
         if (bars > iPeakVUy)
@@ -391,13 +382,6 @@ class WaveformEffect : public LEDStripEffect
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         
-        if (gVURatio > lastVU)
-            lastVU = gVURatio;
-        else
-            lastVU -= g_AppTime.DeltaTime() * 10.0;
-        lastVU = max(lastVU, 0.0);
-        lastVU = min(lastVU, 2.0);
-
         DrawSpike(63, lastVU/2.0);
         DrawSpike(0, lastVU/2.0);
     }
@@ -428,16 +412,9 @@ class GhostWave : public WaveformEffect
             }
         }
     
-        if (gVURatio > lastVU)
-            lastVU = gVURatio;
-        else
-            lastVU -= g_AppTime.DeltaTime() * 20.0;
-        lastVU = max(lastVU, 0.0);
-        lastVU = min(lastVU, 2.0);
-
         g->BlurFrame(24);
-        DrawSpike(MATRIX_WIDTH/2, lastVU / 2.0);
-        DrawSpike(MATRIX_WIDTH/2-1, lastVU / 2.0);
+        DrawSpike(MATRIX_WIDTH/2, gVURatioFade / 2.0);
+        DrawSpike(MATRIX_WIDTH/2-1, gVURatioFade / 2.0);
     }
 };
 

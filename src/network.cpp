@@ -56,6 +56,7 @@ extern double   g_BufferAgeOldest;
 extern double   g_BufferAgeNewest;
 extern uint32_t g_FPS;
 
+extern volatile float gVURatioFade;
 extern volatile float gVURatio;       // Current VU as a ratio to its recent min and max
 extern volatile float gVU;            // Instantaneous read of VU value
 extern volatile float gPeakVU;        // How high our peak VU scale is in live mode

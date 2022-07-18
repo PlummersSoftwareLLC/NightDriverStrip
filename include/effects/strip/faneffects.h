@@ -45,6 +45,7 @@
 
 extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 extern volatile float gVURatio;  
+extern volatile float gVURatioFade;
 
 // Simple definitions of what direction we're talking about
 

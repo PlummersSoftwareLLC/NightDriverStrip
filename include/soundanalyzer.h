@@ -57,6 +57,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 extern float gScaler;                            // Instantaneous read of LED display vertical scaling
 extern float gLogScale;                          // How exponential the peaks are made to be
 extern volatile float gVURatio;             // Current VU as a ratio to its recent min and max
+extern volatile float gVURatioFade;
 extern volatile float gVU;                 // Instantaneous read of VU value
 extern volatile float gPeakVU;             // How high our peak VU scale is in live mode
 extern volatile float gMinVU;                    // How low our peak VU scale is in live mode
@@ -91,7 +92,7 @@ using namespace std;
 #define SAMPLE_BITS  12                                   // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
 #define MAX_VU MAX_ANALOG_IN
-#define MIN_VU 512
+#define MIN_VU 128
 
 #ifndef GAINDAMPEN
 #define GAINDAMPEN  1                                     // How slowly brackets narrow in for spectrum bands

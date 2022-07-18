@@ -32,6 +32,7 @@
 #include "globals.h"                      // CONFIG and global headers
 #if ENABLE_AUDIO
 #include "soundanalyzer.h"
+#include <esp_task_wdt.h>
 
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
 
@@ -49,6 +50,7 @@ float PeakData::_allBandsMax = 1.0;
 float gScaler = 0.0f;                       // Instantaneous read of LED display vertical scaling
 float gLogScale = 1.0f;                     // How exponential the peaks are made to be
 volatile float gVURatio = 1.0;              // Current VU as a ratio to its recent min and max
+volatile float gVURatioFade = 1.0;          // Same as gVURatio but with a slow decay
 volatile float gVU = 0;                     // Instantaneous read of VU value
 volatile float gPeakVU = MAX_VU;            // How high our peak VU scale is in live mode
 volatile float gMinVU = 0;                  // How low our peak VU scale is in live mode
@@ -124,7 +126,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
     {
         static uint64_t lastFrame = millis();
         g_AudioFPS = FPS(lastFrame, millis());
-        lastFrame = millis();
+        static double lastVU = 0.0;
 
         EVERY_N_SECONDS(10)
         {
@@ -133,10 +135,24 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         }
 
         g_Peaks = Analyzer.RunSamplerPass();
-      UpdatePeakData();        
-      DecayPeaks();
+        UpdatePeakData();        
+        DecayPeaks();
+
+        // Instantaneous VURatio
 
         gVURatio = (gPeakVU == gMinVU) ? 0.0 : (gVU-gMinVU) / std::max(gPeakVU - gMinVU, (float) MIN_VU) * 2.0f;
+
+        // VURatio with a fadeout
+
+        constexpr auto VU_DECAY_PER_SECOND = 3.0;
+        if (gVURatio > lastVU)
+            lastVU = gVURatio;
+        else
+            lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
+        lastVU = std::max(lastVU, 0.0);
+        lastVU = std::min(lastVU, 2.0);
+
+        gVURatioFade = lastVU;
 
         // Delay enough time to yield 25ms total used this frame, which will net 40FPS exactly (as long as the CPU keeps up)
 
@@ -147,7 +163,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         if (g_bUpdateStarted)
             delay(1000);
-        
+
+        lastFrame = millis();
         delay(1);
     }
 }
@@ -333,11 +350,13 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
 
     for (;;)
     {
+        unsigned long startTime = millis();
+
         SerialData data;
             
         const int MAXPET = 16;                                      // Highest value that the PET can display in a bar
         data.header[0] = ((3 << 4) + 15);
-        data.vu = mapDouble(gVURatio, 0, 2, 1, 16);           // Convert VU to a 1-16 value
+        data.vu = mapDouble(gVURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
 
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display
@@ -353,22 +372,16 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         if (Serial2.availableForWrite())
         {
             Serial2.write((byte *)&data, sizeof(data));
-            
-            // Flushing seems like a good idea, but it triggers the watchdog if there's no one listening to receive the serial data
-            // because it sits and waits, I suppose?
-            //
-            // Serial2.flush(true);
+            Serial2.flush(true);
         }
-        else
-        {
-            delay(10);
-        }
-        
+
+        // When the CBM processes a packet, it sends us a * to ACK.  We count those to determine the number
+        // of packets per second being processed
+
         static int lastFrame = millis();
         while (Serial2.available() > 0)
         {
             char byte = Serial2.read();
-            Serial.print(byte);
             if (byte=='*')
             {
                 static uint64_t lastFrame = millis();
@@ -395,7 +408,11 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             }
         #endif
 
-        delay(1);
+        auto targetFPS = 240.0 / sizeof(data);
+        auto targetElapsed = 1.0 / targetFPS * 1000;
+        auto elapsed = millis() - startTime;
+        if (targetElapsed > elapsed)
+            delay(targetElapsed - elapsed);
     }
 }
 
