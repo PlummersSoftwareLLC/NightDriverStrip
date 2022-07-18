@@ -121,11 +121,11 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             static_assert( sizeof(CRGB) == sizeof(LEDMatrixGFX::SM_RGB), "Code assumes 24 bits in both places" );
 
             LEDMatrixGFX::MatrixSwapBuffers();
-            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*g_pEffectManager)[0].get();
+            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
 
             LEDMatrixGFX::titleLayer.setFont(font3x5);
-            if (pMatrix->GetCaptionTransparency() > 0) 
+            if (pMatrix->GetCaptionTransparency() > 0.01) 
             {
                 rgb24 chromaKeyColor = rgb24(255,0,255);
                 rgb24 shadowColor = rgb24(0,0,0);
@@ -236,9 +236,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                     cPixelsDrawnThisFrame = NUM_LEDS;
 
                     #if USEMATRIX
-                        auto * pGraphics = (*g_pEffectManager)[0].get();
                         if (g_pEffectManager->IsVUVisible())
-                            ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(pGraphics, 0, &vuPaletteGreen);
+                            ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
                     #endif
 
                 }

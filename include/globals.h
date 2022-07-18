@@ -121,14 +121,14 @@
 // We have a half-dozen workers and these are their relative priorities.  It might survive if all were set equal,
 // but I think drawing should be lower than audio so that a bad or greedy effect doesn't starve the audio system.
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+3      // Draw any available frames first
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+5      // Draw any available frames first
 #define SOCKET_PRIORITY         tskIDLE_PRIORITY+4      // ...then process and decompress incoming frames
+#define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+3      // If equal or lower than audio, will produce garbage on serial
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
-#define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
-#define REMOTE_PRIORITY         tskIDLE_PRIORITY+5
+#define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
 
 // If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1. 
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
@@ -142,14 +142,14 @@
 // #define SOCKET_CORE             1
 // #define REMOTE_CORE             1
 
-#define DRAWING_CORE            1
+#define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
 #define NET_CORE                0
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        0
-#define SCREEN_CORE             1       
-#define DEBUG_CORE              1
-#define SOCKET_CORE             1
-#define REMOTE_CORE             1
+#define SCREEN_CORE             0       
+#define DEBUG_CORE              0
+#define SOCKET_CORE             0
+#define REMOTE_CORE             0
 
 #define FASTLED_INTERNAL        1   // Suppresses the compilation banner from FastLED
 
@@ -458,7 +458,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
     
-    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
