@@ -302,7 +302,7 @@ public:
 
 struct SerialData
 {
-    uint8_t header[1];          // 'DP'
+    uint8_t header[1];          // 'DP' in the high and low nibbles
     uint8_t vu;                 // VU meter, 0-31
     uint8_t peaks[8];           // 16 4-bit values representing the band peaks, 0-31 (constrained to 0-19)
     uint8_t tail;               // (0x0D)
@@ -337,8 +337,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             
         const int MAXPET = 16;                                      // Highest value that the PET can display in a bar
         data.header[0] = ((3 << 4) + 15);
-        data.vu = mapDouble(gVU, gMinVU, gPeakVU, 0, 17);           // Convert VU to a 1-16 value
-        
+        data.vu = mapDouble(gVURatio, 0, 2, 1, 16);           // Convert VU to a 1-16 value
+
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display
 
@@ -357,7 +357,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             // Flushing seems like a good idea, but it triggers the watchdog if there's no one listening to receive the serial data
             // because it sits and waits, I suppose?
             //
-            //Serial2.flush(true);
+            // Serial2.flush(true);
         }
         else
         {

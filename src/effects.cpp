@@ -305,9 +305,9 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         
         new PatternPongClock(),
-        new SpectrumAnalyzerEffect("Spectrum", spectrumBasicColors, 100, 0, 2.0, 2.0),
-        new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
-        new SpectrumAnalyzerEffect("Spectrum++", spectrumBasicColors, 0, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum", false, spectrumBasicColors, 100, 0, 2.0, 2.0),
+        new SpectrumAnalyzerEffect("Spectrum USA", false, USAColors_p, 0),
+        new SpectrumAnalyzerEffect("Spectrum++", false, spectrumBasicColors, 0, 70, -1.0, 3.0),
         new WaveformEffect("WaveForm", &rainbowPalette, 8),
         new GhostWave("GhostWave", &rainbowPalette),
         new PatternPulsar(1.95, 1.95, 0.01),
@@ -366,7 +366,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif TTGO
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new SpectrumAnalyzerEffect("Spectrum Fade", spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", true, spectrumBasicColors, 50, 70, -1.0, 3.0),
 
 #elif WROVERKIT
 
@@ -455,11 +455,11 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif SPECTRUM
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", spectrumBasicColors),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, spectrumBasicColors),
         new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
-        new SpectrumAnalyzerEffect("Spectrum USA", USAColors_p, 0),
+        new SpectrumAnalyzerEffect("Spectrum USA",  true, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", &rainbowPalette, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade", spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade",  true, spectrumBasicColors, 50, 70, -1.0, 3.0),
         new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
         new GhostWave("GhostWave Rainbow", &rainbowPalette),
 

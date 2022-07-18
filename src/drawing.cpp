@@ -239,7 +239,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                         if (g_pEffectManager->IsVUVisible())
                             ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
                     #endif
-
                 }
                 else
                 {

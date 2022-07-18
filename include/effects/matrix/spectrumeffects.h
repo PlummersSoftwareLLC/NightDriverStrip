@@ -187,6 +187,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 {
   protected:
 
+    bool      _bShowVU;
     uint8_t   _colorOffset;
     uint16_t  _scrollSpeed;
     uint8_t   _fadeRate;
@@ -246,13 +247,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
   public:
 
-    SpectrumAnalyzerEffect(const char   * pszFriendlyName = nullptr, 
+    SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
+                           bool                   bShowVU,
                            const CRGBPalette256   palette = spectrumBasicColors, 
                            uint16_t           scrollSpeed = .2, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
         : LEDStripEffect(pszFriendlyName),
+          _bShowVU(bShowVU),
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
           _fadeRate(fadeRate),
@@ -262,12 +265,14 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     {
     }
 
-    SpectrumAnalyzerEffect(const char   * pszFriendlyName = nullptr, 
-                           CRGB                 baseColor = 0, 
+    SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
+                           bool                   bShowVU,    
+                           CRGB                 baseColor, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
         : LEDStripEffect(pszFriendlyName), 
+          _bShowVU(bShowVU),        
           _colorOffset(0),
           _scrollSpeed(0), 
           _fadeRate(fadeRate),
@@ -298,7 +303,9 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
   
         std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-        //DrawVUMeter(pGFXChannel, 0);
+        if (_bShowVU)
+            DrawVUMeter(pGFXChannel, 0);
+        
         for (int i = 0; i < NUM_BANDS; i++)
         {
             // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one
