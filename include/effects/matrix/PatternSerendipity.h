@@ -98,7 +98,7 @@ private:
     }
 
 public:
-    PatternSerendipity() : LEDStripEffect("Spiral")
+    PatternSerendipity() : LEDStripEffect("Serendipity")
     {
     }
 
@@ -157,29 +157,17 @@ public:
 
         // draw just a line defined by 5 oszillators
 
-        graphics->BresenhamLine(
+        graphics->drawLine(
             multiTimer[3].count, // x1
             multiTimer[4].count, // y1
             multiTimer[0].count, // x2
             multiTimer[1].count, // y2
-            multiTimer[2].count, // color
-            true);               // merge colors
+            CRGB(CHSV(multiTimer[2].count, 255, 255)));
 
-        // manipulate the screen buffer
-        // with fixed parameters (could be oszillators too)
-        // Params: center x, y, radius, scale color down
-        // --> NOTE: Affects always a SQUARE with an odd length
-        //   effects.SpiralStream(15, 15, 10, 128);
-
-        graphics->SpiralStream(31, 15, 64, 128); // for 64 pixel wide matrix!
-                                       //  effects.SpiralStream(47, 15, 10, 128);        // for 64 pixel wide matrix!
-
-        // why not several times?!
-        // effects.SpiralStream(16, 6, 6, 128);
-        // effects.SpiralStream(10, 24, 10, 128);
+        graphics->BlurFrame(50);
 
         // increase the contrast
-        graphics->DimAll(250);
+//        graphics->DimAll(252);
         return;
     }
 };

@@ -667,6 +667,7 @@ public:
 
     inline void BlurFrame(int amount)
     {
+        // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
         blur2d(leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, amount);
     }
 

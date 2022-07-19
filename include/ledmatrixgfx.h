@@ -88,7 +88,7 @@ public:
         // way to know when the last instance is being cleaned up.
     }
 
-    inline virtual uint16_t xy(uint8_t x, uint8_t y) const
+    inline virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         return y * MATRIX_WIDTH + x;    
     }

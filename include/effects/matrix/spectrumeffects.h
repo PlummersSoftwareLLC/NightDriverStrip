@@ -186,6 +186,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     float _peak1DecayRate;
     float _peak2DecayRate;
 
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 45;
+    }
+
     // DrawBand
     //
     // Draws the bar graph rectangle for a bar and then the white line on top of it
@@ -325,11 +330,6 @@ class WaveformEffect : public LEDStripEffect
     const CRGBPalette256 *    _pPalette = nullptr;
     uint8_t                   _iColorOffset = 0;
     uint8_t                   _increment = 0;
-    double                    _iPeakVUy = 0;
-    unsigned long             _msPeakVU = 0;
-
-    double lastVU = 0;
-    const double VU_DECAY_PER_SECOND = 3.0;
 
   public:
     
@@ -381,8 +381,8 @@ class WaveformEffect : public LEDStripEffect
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         
-        DrawSpike(63, lastVU/2.0);
-        DrawSpike(0, lastVU/2.0);
+        DrawSpike(63, gVURatio/2.0);
+        DrawSpike(0, gVURatio/2.0);
     }
 };
 
