@@ -44,8 +44,9 @@
 #include "globals.h"
 #include "network.h"
 
-#include "driver/i2s.h"
-#include "driver/adc.h"
+#include <driver/i2s.h>
+#include <driver/adc.h>
+#include <driver/adc_deprecated.h>
 
 #if !ENABLE_AUDIO
 #error You must have ENABLE_AUDIO set true to include this header file, as it relies on audio hardware
