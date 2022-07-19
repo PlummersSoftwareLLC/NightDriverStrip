@@ -133,7 +133,7 @@ class VUInsulatorsEffect : public LEDStripEffect
     void DrawVUPixels(int i, int fadeBy, const CRGBPalette256 & palette)
     {
       CRGB c = ColorFromPalette(palette, ::map(i, 0, _cLEDs, 0, 255)).fadeToBlackBy(fadeBy);
-      setPixel(i, c);
+      setPixelOnAllChannels(i, c);
     }
 
     virtual void Draw()
@@ -149,7 +149,7 @@ class VUInsulatorsEffect : public LEDStripEffect
       {
         int fade = MAX_FADE * ((millis() - msPeakVU) / (float) MILLIS_PER_SECOND);
         fade = min(fade, MAX_FADE);
-        DrawVUPixels(iPeakVUy, fade, vuPaletteGreen);
+        DrawVUPixels(iPeakVUy, fade, vu_gpGreen);
       }
 
       int bars = ::map(gVU, gMinVU, 150.0, 1, _cLEDs - 1);

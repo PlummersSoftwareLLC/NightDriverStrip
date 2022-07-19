@@ -37,12 +37,19 @@
 #include <vector>
 #include <math.h>
 #include <memory>
+#include <algorithm>
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
 
+#ifdef ENABLE_AUDIO
+#include "musiceffect.h"
+#endif
+
 extern AppTime g_AppTime;
 extern volatile float gVURatio;
+extern volatile float gVURatioFade;
+
 
 class FireEffect : public LEDStripEffect
 {
@@ -72,8 +79,8 @@ class FireEffect : public LEDStripEffect
 
   public:
 
-    FireEffect(int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
-        : LEDStripEffect("FireEffect"),
+    FireEffect(const char * pszName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
+        : LEDStripEffect(pszName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
           Cooling(cooling),
@@ -86,13 +93,18 @@ class FireEffect : public LEDStripEffect
         if (bMirrored)
             LEDCount = LEDCount / 2;
 
-        heat = make_unique<uint8_t []>(CellCount());
+        heat = std::make_unique<uint8_t []>(CellCount());
     }
 
     virtual ~FireEffect()
     {
     }
 
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 45;
+    }
+    
     virtual CRGB GetBlackBodyHeatColor(double temp)
     {
         temp *= 255;
@@ -118,6 +130,18 @@ class FireEffect : public LEDStripEffect
         DrawFire();
     }
 
+    virtual void GenerateSparks(double multiplier = 1.0)
+    {
+        for (int i = 0 ; i < Sparks * multiplier; i++)
+        {
+            if (random(255) < Sparking)
+            {
+                int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
+                heat[y] = random(200, 255);   // Can roll over which actually looks good!
+            }
+        }
+    }
+    
     virtual void DrawFire()
     {
         // First cool each cell by a little bit
@@ -146,14 +170,7 @@ class FireEffect : public LEDStripEffect
 
         EVERY_N_MILLISECONDS(20)
         {
-          for (int i = 0 ; i < Sparks; i++)
-          {
-              if (random(255) < Sparking)
-              {
-                  int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
-                  heat[y] = random(200, 255);   // Can roll over which actually looks good!
-              }
-          }
+            GenerateSparks(1.0);
         }
 
         // Finally, convert heat to a color
@@ -161,14 +178,15 @@ class FireEffect : public LEDStripEffect
         for (int i = 0; i < LEDCount; i++)
         {
 
-            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]);
+            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]/(double)std::numeric_limits<uint8_t>::max());
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
+            
             int j = (!bReversed) ? i : LEDCount - 1 - i;
-            setPixels(j, 1, color, false);
-            if (bMirrored)
-                setPixels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
+            setPixelsOnAllChannels(j, 1, color, false);
+            //if (bMirrored)
+            //    setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
         }
     }
 };
@@ -184,10 +202,11 @@ public:
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
                        int sparking = 100,
+                       int sparks = 3,
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : FireEffect(ledCount, cellsPerLED, cooling, sparking, sparking, sparkHeight, reversed, mirrored),
+        : FireEffect(pszName,ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           _palette(palette)
     {
     }
@@ -203,6 +222,49 @@ public:
     }
 };
 
+#ifdef ENABLE_AUDIO
+class MusicalPaletteFire : public PaletteFlameEffect, protected virtual BeatEffectBase2
+{
+  public:
+
+    MusicalPaletteFire(const char *pszName,
+                       const CRGBPalette256 &palette,
+                       int ledCount = NUM_LEDS,
+                       int cellsPerLED = 1,
+                       int cooling = 20,         // Was 1.8 for NightDriverStrip
+                       int sparking = 100,
+                       int sparks = 3,
+                       int sparkHeight = 3,
+                       bool reversed = false,
+                       bool mirrored = false)
+        :   BeatEffectBase2(1.00, 0.01),
+            PaletteFlameEffect(pszName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
+          
+    {
+    }
+
+  protected:
+
+    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    {
+        if (elapsed > 1)
+        {
+            GenerateSparks(100);
+        }
+        else
+        {
+            GenerateSparks(gVURatio * 50);
+        }
+    }
+
+    virtual void Draw()
+    {
+        BeatEffectBase2::ProcessAudio();
+        PaletteFlameEffect::Draw();
+    }
+};
+#endif
+
 class ClassicFireEffect : public LEDStripEffect
 {
     bool _Mirrored;
@@ -216,11 +278,6 @@ public:
         _Mirrored = mirrored;
         _Reversed = reversed;
         _Cooling  = cooling;
-    }
-
-    virtual const char *FriendlyName() const
-    {
-        return "Classic Fire";
     }
 
     virtual void Draw()
@@ -281,7 +338,7 @@ public:
         }
 
         //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-        //    blur1d(_GFX[channel]->GetLEDBuffer(), _cLEDs, 255);
+        //    blur1d(_GFX[channel]->leds(), _cLEDs, 255);
     }
 
     void setPixelWithMirror(int Pixel, CRGB temperature)
@@ -291,15 +348,15 @@ public:
         if (_Mirrored)
         {
             int middle = _cLEDs / 2;
-            setPixel(middle - Pixel, temperature);
-            setPixel(middle + Pixel, temperature);
+            setPixelOnAllChannels(middle - Pixel, temperature);
+            setPixelOnAllChannels(middle + Pixel, temperature);
         }
         else
         {
             if (_Reversed)
-                setPixel(_cLEDs - 1 - Pixel, temperature);
+                setPixelOnAllChannels(_cLEDs - 1 - Pixel, temperature);
             else
-                setPixel(Pixel, temperature);
+                setPixelOnAllChannels(Pixel, temperature);
         } 
     }
 
@@ -371,10 +428,10 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         LEDStripEffect::Init(gfx);
-        _Temperatures = (float *)malloc(sizeof(float) * _cLEDs);
+        _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
         if (!_Temperatures)
         {
             Serial.println("ERROR: Could not allocate memory for FireEffect");
@@ -469,17 +526,13 @@ public:
     void setPixelWithMirror(int Pixel, CRGB temperature)
     {
         if (_Reversed || _Mirrored)
-            setPixel(Pixel, temperature);
+            setPixelOnAllChannels(Pixel, temperature);
         
         if (!_Reversed || _Mirrored)
-            setPixel(_cLEDs - 1 - Pixel, temperature);
+            setPixelOnAllChannels(_cLEDs - 1 - Pixel, temperature);
     }
 
 
-    virtual const char *FriendlyName() const
-    {
-        return "Smooth Fire Effect";
-    }
 };
 
 class BaseFireEffect : public LEDStripEffect
@@ -589,9 +642,9 @@ class BaseFireEffect : public LEDStripEffect
             int avg = sum / cellsPerLED;
             CRGB color = MapHeatToColor(heat[avg]);
             int j = bReversed ? (LEDCount - 1 - i) : i;
-            setPixels(j, 1, color, true);
+            setPixelsOnAllChannels(j, 1, color, true);
             if (bMirrored)
-                setPixels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, true);
+                setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, true);
         }
     }
 };

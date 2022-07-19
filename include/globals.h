@@ -65,6 +65,7 @@
 //              Mar-16-2022  v023       Davepl      Response packet on socket with stats
 //              Mar-17-2022  v024       Davepl      Catchup clock to server when in future
 //              May-17-2022  v025       Davepl      After merge of RepsonsePacket into main
+//              May-24-2022  v026       Davepl      Adding BaseGFX/LEDMatrixGFX/LEDStripGFX
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -75,7 +76,11 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          25   // Update ONLY this to increment the version number
+#define FLASH_VERSION          26   // Update ONLY this to increment the version number
+
+#ifndef USEMATRIX                   // We support strips by default unless specifically defined out
+#define USESTRIP 1
+#endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
 #define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic
@@ -89,9 +94,9 @@
 
 // C Helpers and Macros
 
-#define ARRAYSIZE(a)		(sizeof(a)/sizeof(a[0]))		// Returns the number of elements in an array
-#define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))	// Calculate period in microseconds (us) from frequency in Hz
-#define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)				// Calculate frequency in Hz given the period in microseconds (us)
+#define ARRAYSIZE(a)        (sizeof(a)/sizeof(a[0]))        // Returns the number of elements in an array
+#define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))    // Calculate period in microseconds (us) from frequency in Hz
+#define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
 
 // I've built and run this on the Heltec Wifi 32 module and the M5StickC.  The
 // main difference is pinout and the OLED/LCD screen.  The presense of absence
@@ -116,8 +121,9 @@
 // We have a half-dozen workers and these are their relative priorities.  It might survive if all were set equal,
 // but I think drawing should be lower than audio so that a bad or greedy effect doesn't starve the audio system.
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+3      // Draw any available frames first
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+5      // Draw any available frames first
 #define SOCKET_PRIORITY         tskIDLE_PRIORITY+4      // ...then process and decompress incoming frames
+#define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+3      // If equal or lower than audio, will produce garbage on serial
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
@@ -136,13 +142,14 @@
 // #define SOCKET_CORE             1
 // #define REMOTE_CORE             1
 
-#define DRAWING_CORE            1
+#define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
 #define NET_CORE                0
-#define AUDIO_CORE              1
-#define SCREEN_CORE             1       
-#define DEBUG_CORE              1
+#define AUDIO_CORE              0
+#define AUDIOSERIAL_CORE        0
+#define SCREEN_CORE             0       
+#define DEBUG_CORE              0
 #define SOCKET_CORE             0
-#define REMOTE_CORE             1
+#define REMOTE_CORE             0
 
 #define FASTLED_INTERNAL        1   // Suppresses the compilation banner from FastLED
 
@@ -235,36 +242,37 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
 
-#elif STRAND
+#elif LANTERN 
 
+    // A railway-style landter with concentric rings of light (16+12+8+1)
 
-    // This is a simple demo configuration.  To build, simply connect the data lead from a WS2812B
-    // strip to pin 5.  This does not use the OLED, LCD, or anything fancy, it simply drives the
-    // LEDs with a simple rainbow effect as specified in effects.cpp for DEMO.
-    //
-    // Please ensure you supply sufficent power to your strip, as even the DEMO of 144 LEDs, if set
-    // to white, would overload a USB port.
-
-    #define MATRIX_WIDTH            50
+    #define NUM_FANS                1
+    #define NUM_RINGS               4
+    #define FAN_SIZE                (RING_SIZE_0 + RING_SIZE_1 + RING_SIZE_2 + RING_SIZE_3)
+    #define RING_SIZE_0             16
+    #define RING_SIZE_1             12
+    #define RING_SIZE_2             8
+    #define RING_SIZE_3             1
+    #define MATRIX_WIDTH            FAN_SIZE
     #define MATRIX_HEIGHT           1
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
-    #define NUM_RINGS               5
-    #define RING_SIZE_0             24
     #define ENABLE_AUDIO            1
 
-    #define POWER_LIMIT_MW       1000   // 1 amp supply at 5 volts assumed
+    #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
 
     // Once you have a working project, selectively enable various additional features by setting
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
     #define ENABLE_WIFI             0   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
-    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
-    #if M5STICKC || M5STICKCPLUS
+    #if M5STICKC 
+        #define LED_PIN0 26
+    #elif M5STICKCPLUS || M5STACKCORE2
         #define LED_PIN0 32
     #else
         #define LED_PIN0 5
@@ -275,11 +283,17 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
     // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
 
-    #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+    #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
+    #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
 
-    #define TOGGLE_BUTTON_1         37
-    #define TOGGLE_BUTTON_2         39
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
+
     #define NUM_INFO_PAGES          2
+    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spctrum analyzer on one of the info pages (slower)
 
 #elif TREESET
 
@@ -352,7 +366,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
-    
+
+    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -391,6 +406,52 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_INFO_PAGES          2
     #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
 
+#elif MESMERIZER
+
+    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
+    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
+    // It displays a spectrum analyzer and music visualizer
+    
+    #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              0  // Accept over the air flash updates
+    #define ENABLE_REMOTE           1   // IR Remote Control
+    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
+
+    #if USE_PSRAM
+        #define MAX_BUFFERS     99      // If PSRAM, limit the buffers to something practical and reasonable
+    #else
+        #define MAX_BUFFERS     20
+    #endif
+
+    #define NUM_CHANNELS    1
+    #define RING_SIZE_0     24    
+    #define BONUS_PIXELS    0
+    #define MATRIX_WIDTH    64
+    #define MATRIX_HEIGHT   32
+    #define NUM_FANS        128
+    #define FAN_SIZE        16
+    #define NUM_BANDS       16
+    #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define RESERVE_MEMORY  180000
+    #define IR_REMOTE_PIN   39                    
+    #define LED_FAN_OFFSET_BU 6
+    #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
+
+    #define NOISE_CUTOFF   75
+    #define NOISE_FLOOR    1000.0f
+
+    #define TOGGLE_BUTTON_1 0
+
+    #define NUM_INFO_PAGES          2
+    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
 
 #elif TTGO
 
@@ -483,7 +544,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This is the "Tiki Atomic Fire Lamp" project, which is an LED lamp with 4 arms of 53 LEDs each.
     // Each arm is wired as a separate channel.
 
-    #define ENABLE_WIFI             0               `// Connect to WiFi
+    #define ENABLE_WIFI             0               // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0               // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0               // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       0               // How many seconds before the lamp times out and shows local content
@@ -527,19 +588,35 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #elif UMBRELLA
 
-    // The "Tiki Fire Umbrella" project, with 8 channels
-
+    #define COLOR_ORDER     EOrder::RGB
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_OTA              1   // Enable over the air updates to the flash
+    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
+    #define ENABLE_REMOTE   1                     // IR Remote Control
+    #define IR_REMOTE_PIN   39
+    #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
+    #define MAX_BUFFERS     40                    
 
-    #define NUM_CHANNELS    8
+    #define POWER_LIMIT_MW (1600 * 1000)                 // 100W transformer for an 8M strip max
+    #define DEFAULT_EFFECT_INTERVAL     (1000*30 * 60)
+
+
+    // The "Tiki Fire Umbrella" project, with 8 channels
+
+    #define LED_PIN0                5   // Only one pin, it's routed to all 8 spokes.  Independent turned out not to be that useful.
+    #define NUM_CHANNELS    1
     #define MATRIX_WIDTH    228                   // Number of pixels wide (how many LEDs per channel)
     #define MATRIX_HEIGHT   1                     // Number of pixels tall
-    #define RESERVE_MEMORY  200000                // How much to leave free for system operation (it's not stable in low mem)
-    #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
 
+    #define ONBOARD_LED_R    16
+    #define ONBOARD_LED_G    17
+    #define ONBOARD_LED_B    18
+
+    #define TOGGLE_BUTTON_2  0
+    
 #elif MAGICMIRROR
 
     // A magic infinity mirror such as: https://amzn.to/3lEZo2D
@@ -664,7 +741,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define NUM_CHANNELS    1           // Everything wired sequentially on a single channel
     #define NUM_FANS        10          // My system has 10 fans.  Because RGB.
-    #define NUM_BANDS      8
+    #define NUM_BANDS       8
     #define NUM_RINGS       1           // Fans have a single outer ring of pixels
     #define FAN_SIZE        16          // Each fan's pixel ring has 16 LEDs
     #define FAN_LEN         (NUM_FANS * FAN_SIZE)
@@ -689,37 +766,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define IR_REMOTE_PIN 36
     
-
-#elif ATOMISTRING
-
-    // Some experimentation with TM1814 and RGBW lamps. I haven't tested this config in a while but
-    // am preserving it in case it's useful in the future
-
-    #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-
-    #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
-
-    #define NUM_CHANNELS    1
-    #define MATRIX_WIDTH    (144)    
-    #define NUM_LEDS        MATRIX_WIDTH
-    #define MATRIX_HEIGHT   1
-    #define RESERVE_MEMORY  150000
-    #define ENABLE_REMOTE   0                     // IR Remote Control
-    #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
-
-    #define FAN_SIZE        MATRIX_WIDTH
-    #define NUM_FANS        1
-    #define LED_FAN_OFFSET_BU 0
-
-    #if M5STICKC || M5STICKCPLUS
-        #define LED_PIN0 26
-    #else
-        #define LED_PIN0 5
-    #endif
-
 #elif SINGLE_INSULATOR
 
     // A single glass insulator with a 12-pixel ring and then a 7=pixel "bonus" ring in the middle
@@ -829,6 +875,18 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define COLOR_ORDER EOrder::RGB
 #endif
 
+#if USEMATRIX
+#include "MatrixHardware_ESP32_Custom.h"
+#define SM_INTERNAL     // Silence build messages from their header
+#include <SmartMatrix.h>
+#endif
+
+#if ENABLE_AUDIOSERIAL
+#ifndef SERIAL_PINRX
+    #define SERIAL_PINRX    33
+    #define SERIAL_PINTX    32
+#endif
+#endif
 
 #ifndef BUILTIN_LED_PIN
 #define BUILTIN_LED_PIN 25          // Pin for the built in LED on the Heltec board
@@ -864,6 +922,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef ENABLE_NTP
 #define ENABLE_NTP              1   // Update the clock from NTP
+#endif
+
+#ifndef NUM_LEDS
+#define NUM_LEDS (MATRIX_HEIGHT * MATRIX_WIDTH)
 #endif
 
 #ifndef FAN_SIZE                // How man LEDs around the circumference
@@ -915,6 +977,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define LED_FAN_OFFSET_RL  (LED_FAN_OFFSET_BU + (FAN_SIZE * 3 / 4))
 #endif
 
+#ifndef NUM_FANS
+#define NUM_FANS 1
+#endif
+
 #ifndef RING_SIZE_0
 #define RING_SIZE_0 0
 #endif
@@ -947,10 +1013,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define RESERVE_MEMORY 120000
 #endif
 
-#ifndef STRAND_LEDS
-#define STRAND_LEDS NUM_LEDS
-#endif
-
 #ifndef TIME_BEFORE_LOCAL
 #define TIME_BEFORE_LOCAL 5
 #endif
@@ -976,7 +1038,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 
-    #elif defined(ARDUINO_M5Stick_C)                          // screen definitions for m5stick-c (or m5stick-c plus)
+    #elif defined(M5STICKCPLUS)                               // screen definitions for m5stick-c-plus
+
+        #define USE_TFT 1                                     // enable the M5's LCD screen
+
+    #elif defined(M5STICKC)                                   // screen definitions for m5stick-c (or m5stick-c plus)
 
         #define USE_TFT 1                                     // enable the M5's LCD screen
 
@@ -987,6 +1053,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #elif defined(TTGO)
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
+
+    #elif defined(M5STACKCORE2)
+
+        #define  USE_TFT 1       
 
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
@@ -1021,6 +1091,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define USE_TFTSPI 0
 #endif
 
+#ifndef CAPTION_TIME
+#define CAPTION_TIME 3000
+#endif
+
 // gRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
@@ -1039,18 +1113,22 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #define M5STICKCPLUS 0
 #endif 
 
+#ifndef M5STACKCORE2
+#define M5STACKCORE2 0
+#endif
+
 // Microphone
 //
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
 
 #if ENABLE_AUDIO
 #if TTGO
-#define INPUT_PIN (ADC1_CHANNEL_0_GPIO_NUM)   // Pin 27
+#define INPUT_PIN (36)   
 #elif M5STICKC || M5STICKCPLUS
-#define INPUT_PIN (34)	 
+#define INPUT_PIN (34)   
 #define IO_PIN (0)
 #else
-#define INPUT_PIN (36)	  // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+#define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
 #endif
 #endif
 
@@ -1076,7 +1154,6 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #if USE_OLED
 #include <U8g2lib.h>                // Library for monochrome displays
 #include <gfxfont.h>                // Adafruit GFX font structs
-#include <Fonts/FreeSans9pt7b.h>    // A nice font
 #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 #endif
@@ -1095,15 +1172,15 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 
 inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SECOND)
 {
-	uint32_t duration = end - start;
+    uint32_t duration = end - start;
     if (duration == 0)
         return 999;
 
-	double fpsf = 1.0f / (duration / (double) perSecond);
-	int FPS = (int)fpsf;
-	if (FPS > 999)
-		FPS = 999;
-	return FPS;
+    double fpsf = 1.0f / (duration / (double) perSecond);
+    int FPS = (int)fpsf;
+    if (FPS > 999)
+        FPS = 999;
+    return FPS;
 }
 
 // PreferPSRAMAlloc
@@ -1114,7 +1191,7 @@ inline void * PreferPSRAMAlloc(size_t s)
 {
     if (psramInit())
     {
-        //Serial.printf("PSRAM Array Request for %u bytes\n", s);
+        Serial.printf("PSRAM Array Request for %u bytes\n", s);
         return ps_malloc(s);
     }
     else
@@ -1122,22 +1199,6 @@ inline void * PreferPSRAMAlloc(size_t s)
         return malloc(s);
     }
 }
-
-// DelayedReboot
-//
-// Used for fatal errors and asserts, displays a message on the serial terminal and then resets the chip
-
-inline void DelayedReboot(const char * psz) 
-{ 
-    debugE("This is an ERROR message from RemoteDebug");
-    Serial.printf("\n\nUNHANDLED FATAL ERROR: %s\n", psz ? psz : "Not Specified");
-    Serial.printf("** REBOOT **\n"); 
-    Serial.printf("-------------------------------------------------------------------------------------\n");
-    Serial.flush(); 
-    delay(2500); 
-    ESP.restart();
-    exit(0);
-}  
 
 // AppTime
 //

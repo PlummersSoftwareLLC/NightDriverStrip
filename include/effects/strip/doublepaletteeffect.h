@@ -45,35 +45,32 @@ extern AppTime g_AppTime;
 class DoublePaletteEffect : public LEDStripEffect
 {
   private:
-	
-	PaletteEffect   _PaletteEffect1;
-	PaletteEffect   _PaletteEffect2;
+    
+    PaletteEffect   _PaletteEffect1;
+    PaletteEffect   _PaletteEffect2;
 
   public:
   
     DoublePaletteEffect() 
-     :  LEDStripEffect("Double Palette Effect"),
+     :  LEDStripEffect("Double Palette"),
         _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
         _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
     {
     }
 
-    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])	
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
     {
         LEDStripEffect::Init(gfx);
         if (!_PaletteEffect1.Init(gfx) || !_PaletteEffect2.Init(gfx))
             return false;
         return true;
     }
-	virtual void Draw() 
+    virtual void Draw() 
     {
         setAllOnAllChannels(0,0,0);
         _PaletteEffect1.Draw();
         _PaletteEffect2.Draw();
     }
-	
-    virtual const char * FriendlyName() const
-    {
-        return "DoublePaletteEffect Effect";
-    }
+
 };
+

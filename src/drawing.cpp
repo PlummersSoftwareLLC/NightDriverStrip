@@ -29,107 +29,39 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "effects/effectmanager.h"
+#include "effectmanager.h"
 #include "ledbuffer.h"
 #include "ntptimeclient.h"
 #include "remotecontrol.h"
 #include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include "ntptimeclient.h"
+#include "effects/matrix/spectrumeffects.h"
+
+#ifdef USESTRIP
+#include "ledstripgfx.h"
+#endif
+
+#ifdef USEMATRIX
+#include "ledmatrixgfx.h"
+#endif
 
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
 // from the led buffer.  
 
 extern std::mutex         g_buffer_mutex;
 
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
-extern DRAM_ATTR std::unique_ptr<LEDMatrixGFX []>  g_aStrands;
-extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];        
-extern DRAM_ATTR std::unique_ptr<EffectManager> g_pEffectManager;
+DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
 extern bool               g_bUpdateStarted;
 extern double             g_Brite;
 extern uint32_t           g_Watts; 
-
+extern const CRGBPalette256 vuPaletteGreen;
 
 void ShowTM1814();
-
-// DrawPlaceholderDisplay
-//
-// When there's nothing to draw, fill the LEDs with colored dots so we know it's alive
-
-void DrawPlaceholderDisplay()
-{
-    for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-    {
-        // Each channel is set to a different color, so red, orange, yellow, etc.
-
-        CRGB color;
-        if (iChannel == 0)
-            color = CRGB::White;
-        else
-            color = color.setHue((iChannel - 1) * 36);                      
-
-        //g_aStrands[iChannel].fillScreen(CRGB::Black);
-
-        static float iOffset = 0.0f;
-
-        iOffset += 0.004f;
-        if (iOffset >= 12)
-            iOffset -= 12;
-
-        // If we're a lamp, we don't want the colorful init, just go white.  The lamp
-        // has few enough pixels we can light them all as well
-
-        // bugbug Clean up this #if code
-
-#if ATOMLIGHT
-        color = CRGB::White;
-        const int step  = 1;
-#elif LEDSTRIP
-        const int step = 12;            // On LED strips, we light every 12th
-
-        // For the LED strips we set the color to something that shows the status of the WiFi and the clock.
-        // Note that because the DrawLoop starts in parallel early on, you may not see any/all of these.
-
-        if (WiFi.isConnected())
-        {
-            if (NTPTimeClient::HasClockBeenSet())
-            {
-                color = CRGB::Green;   // Green is ready to go
-            }
-            else
-            {
-                color = CRGB::Blue;   // Blue is WiFi connected but no clock (normal now that clock is streamed)
-            }
-        }
-        else
-        {
-            color = CRGB::Red;          // No Wifi
-        }
-
-#elif STRAND 
-        const int step = 3;             // Bulbs aren't very dense on a strand, so every third will do
-#elif FANSET
-        const int step = 2;             // Bulbs aren't very dense on a strand, so every third will do
-#elif BROOKLYNROOM
-        const int step = 3;             // BUGBUG move this to the #define section
-#elif ATOMISTRING
-        const int step = 1;
-#else
-        const int step = 1;
-#endif
-        //for (float i = iOffset; i < g_aStrands[iChannel].GetLEDCount(); i += step)
-        //    g_aStrands[iChannel].drawPixel(i, color);
-    }
-#if ATOMISTRING
-    ShowTM1814();
-#else
-    FastLED.setBrightness(255);
-    FastLED.show();
-#endif
-}
 
 // DrawLoop
 //
@@ -149,16 +81,86 @@ DRAM_ATTR uint8_t  g_Fader           = 255;
 
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
-   
+    
     debugI(">> DrawLoopTaskEntry\n");
-    debugE("Entry Heap: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
+
+    // Initialize our graphics and the first effect
+
+    GFXBase * graphics = (GFXBase *)(*g_pEffectManager)[0].get();
+    graphics->Setup();
+
+    #if USEMATRIX
+        // We don't need color correction on the chromakey'd title layer
+        LEDMatrixGFX::titleLayer.enableColorCorrection(false);
+
+        // Starting the effect might need to draw, so we need to set the leds up before doing so
+        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)graphics;
+        pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+        auto spectrum = GetSpectrumAnalyzer(0);
+    #endif
+    g_pEffectManager->StartEffect();
+    
+    // Run the draw loop
 
     for (;;)
     {
+        static uint64_t lastFrame = millis();
+        g_FPS = FPS(lastFrame, millis());
+        lastFrame = millis();        
+        
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
         uint cPixelsDrawnThisFrame = 0;
  
+        double frameStartTime = g_AppTime.CurrentTime();
+
+        #if USEMATRIX
+            // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
+            // both 24-bits RGB triplets.  Or at least the same size!
+
+            static_assert( sizeof(CRGB) == sizeof(LEDMatrixGFX::SM_RGB), "Code assumes 24 bits in both places" );
+
+            LEDMatrixGFX::MatrixSwapBuffers();
+            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
+            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+
+            LEDMatrixGFX::titleLayer.setFont(font3x5);
+            if (pMatrix->GetCaptionTransparency() > 0.01) 
+            {
+                rgb24 chromaKeyColor = rgb24(255,0,255);
+                rgb24 shadowColor = rgb24(0,0,0);
+                rgb24 titleColor = rgb24(255,255,255);
+                
+                LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
+                LEDMatrixGFX::titleLayer.enableChromaKey(true);
+
+                LEDMatrixGFX::titleLayer.setFont(font5x7);
+                LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
+
+                const size_t kCharWidth = 5;
+                const size_t kCharHeight = 7;
+
+                int y = MATRIX_HEIGHT - 2 - kCharHeight;
+
+                int w = strlen(pMatrix->GetCaption()) * kCharWidth;
+                int x = (MATRIX_WIDTH / 2) - (w / 2); 
+
+                LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, pMatrix->GetCaption());
+                LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  pMatrix->GetCaption());
+                
+                LEDMatrixGFX::titleLayer.setBrightness(pMatrix->GetCaptionTransparency() * 240);                // 255 would obscure it entirely
+            }
+            else 
+            {
+                LEDMatrixGFX::titleLayer.enableChromaKey(false);
+                LEDMatrixGFX::titleLayer.setBrightness(0);
+            }   
+ 
+        #endif
+
         if (WiFi.isConnected())
         {
             timeval tv;
@@ -230,11 +232,13 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 if (g_msLastWifiDraw == 0 || (micros() - g_msLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))  
                 {
                     g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
-                    debugV("Calling EffectManager::Update to draw the built-in effect for %d pixels.", NUM_LEDS);
                     g_pEffectManager->Update(); // Draw the current built in effect
                     cPixelsDrawnThisFrame = NUM_LEDS;
-                    debugV("Back from EffectManager::Update");
 
+                    #if USEMATRIX
+                        if (g_pEffectManager->IsVUVisible())
+                            ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
+                    #endif
                 }
                 else
                 {
@@ -247,7 +251,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             debugV("Already drew from WiFi so not drawing locally this frame.");
         }
 
-
+#if USESTRIP
         // If we've drawn anything from either source, we can now show it
 
         if (FastLED.count() == 0)
@@ -260,23 +264,23 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             if (cPixelsDrawnThisFrame > 0)
             {
                 debugV("Telling FastLED that we'll be drawing %d pixels\n", cPixelsDrawnThisFrame);
+                
                 for (int i  = 0; i < NUM_CHANNELS; i++)
-                    FastLED[i].setLeds((*g_pEffectManager)[i]->GetLEDBuffer(), cPixelsDrawnThisFrame);
+                {
+                    LEDStripGFX * pStrip = (LEDStripGFX *)(*g_pEffectManager)[i].get();
+                    FastLED[i].setLeds(pStrip->leds, cPixelsDrawnThisFrame);
+                }
 
                 //vTaskPrioritySet(g_taskDraw, DRAWING_PRIORITY_BOOST);
-                #if ATOMISTRING
-                    ShowTM1814();
-                #else
-                    int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                    debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
-                        cPixelsDrawnThisFrame, NUM_LEDS, brite, FastLED.getFPS());
-                    FastLED.show((brite * g_Fader) / 256);
-                    debugV("Back from FastLED::show");
-                #endif
+                int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+                debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
+                    cPixelsDrawnThisFrame, NUM_LEDS, brite, FastLED.getFPS());
+                FastLED.show((brite * g_Fader) / 256);
+                debugV("Back from FastLED::show");
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
                 g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                g_Watts = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), cPixelsDrawnThisFrame )/ 1000;
+                g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
 
                 
                 // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
@@ -288,6 +292,32 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 debugV("Draw loop ended without a draw.");
             }
         }
+
+        // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
+        // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
+
+        #ifdef ONBOARD_LED_R
+            #ifdef ENABLE_AUDIO
+                CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); 
+                ledcWrite(1, 255 - c.r ); // write red component to channel 1, etc.
+                ledcWrite(2, 255 - c.g );
+                ledcWrite(3, 255 - c.b );
+            #else
+                int iLed = NUM_LEDS/2;
+                ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
+                ledcWrite(2, 255 - graphics->leds[iLed].g );
+                ledcWrite(3, 255 - graphics->leds[iLed].b );
+            #endif
+        #endif
+
+#endif
+
+        // Delay enough to slow down to the desired framerate
+
+        const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+        double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+        if (elapsed < minimumFrameTime)
+            delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly, 
         // so we'll pause to share the CPU a bit once the update has begun

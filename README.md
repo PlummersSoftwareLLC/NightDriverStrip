@@ -15,7 +15,7 @@ To add new effects, you derive from `LEDStripEffect` (or an existing effect clas
 
 There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`.  Effects are not notified when they go active or not, they're just asked to draw when needed.
 
-Each channel of LEDs has an `LEDMatrixGfx` instance associated with it.  `_GFX[0]` is the `LEDMatrixGfx` associated with `LED_PIN0`, and so on.  You can get the LED buffer of Pin0 by calling `_GFX[0]->GetLEDBuffer()`, and it will contain `_GFX[0]->GetLEDCount` pixels.  You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
+Each channel of LEDs has an `LEDStripGfx` instance associated with it.  `_GFX[0]` is the `LEDStripGfx` associated with `LED_PIN0`, and so on.  You can get the LED buffer of Pin0 by calling `_GFX[0]->leds()`, and it will contain `_GFX[0]->GetLEDCount` pixels.  You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
 
 The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32.  It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs.  If working correctly it should draw a scrolling rainbow palette on your LED strip.
 

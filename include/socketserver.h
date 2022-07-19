@@ -257,7 +257,7 @@ public:
 
         struct sockaddr_in addr;
         socklen_t addr_size = sizeof(struct sockaddr_in);
-        int res = getpeername(new_socket, (struct sockaddr *)&addr, &addr_size);
+        getpeername(new_socket, (struct sockaddr *)&addr, &addr_size);
         debugI("Incoming connection from: %s", inet_ntoa(addr.sin_addr));
 
         // Set a timeout of 3 seconds on the socket so we don't permanently hang on a corrupt or partial packet
@@ -318,7 +318,19 @@ public:
                     return false;
                 }
 
-                if (!DecompressBuffer(&_pBuffer[COMPRESSED_DATA_HEADER_SIZE], compressedSize, _abOutputBuffer.get(), expandedSize))
+                // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
+                // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
+                // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
+                
+                #if USE_PSRAM
+                    std::unique_ptr<uint8_t []> _abTempBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+                    memcpy(_abTempBuffer.get(), _pBuffer.get(), EXPECTED_EXPANDED_PACKET_SIZE);
+                    auto pSourceBuffer = &_abTempBuffer[COMPRESSED_DATA_HEADER_SIZE];
+                #else
+                    auto pSourceBuffer = &_pBuffer[COMPRESSED_DATA_HEADER_SIZE];
+                #endif
+                
+                if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
                 {
                     close(new_socket);
                     debugW("Error decompressing data\n");

@@ -151,6 +151,25 @@ class FadingObject : public Lifespan
     } 
 };
 
+class FadingCountDownObject : public FadingObject
+{
+  protected:
+
+    unsigned long               _maxValue;
+
+  public:
+
+    FadingCountDownObject(unsigned long maxvalue) 
+      : _maxValue(maxvalue)
+    {
+    }
+
+    virtual unsigned long CurrentCountdown()
+    {
+        return mapDouble(Age(), 0, TotalLifetime(), _maxValue, 0);
+    }
+};
+
 // FadingColoredObject
 //
 // Object that flashes white during ignition and fades color throughout the the rest of its lifetime
@@ -243,7 +262,7 @@ class MovingFadingPaletteObject: public FadingPaletteObject, public MovingObject
 {
   public:
 
-    MovingFadingPaletteObject(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, uint8_t colorIndex = 0)
+    MovingFadingPaletteObject(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, uint8_t colorIndex = random8())
       : FadingPaletteObject(palette, blendType, colorIndex), 
         MovingObject(maxSpeed)
     {
@@ -321,7 +340,7 @@ class RingParticle : public FadingColoredObject
 { 
   protected:
 
-    std::shared_ptr<LEDMatrixGFX> * _pGFX;
+    std::shared_ptr<GFXBase> * _pGFX;
     int             _iInsulator;
     int             _iRing;
     float           _ignitionTime;
@@ -329,7 +348,7 @@ class RingParticle : public FadingColoredObject
 
   public:
 
-    RingParticle(std::shared_ptr<LEDMatrixGFX> * pGFX, int iInsulator, int iRing, CRGB color, float ignitionTime = 0.0f, float fadeTime = 1.0f)
+    RingParticle(std::shared_ptr<GFXBase> * pGFX, int iInsulator, int iRing, CRGB color, float ignitionTime = 0.0f, float fadeTime = 1.0f)
       :  FadingColoredObject(color),
          _pGFX(pGFX),
          _iInsulator(iInsulator),
@@ -482,7 +501,7 @@ class SpinningPaletteRingParticle : public FadingObject
 { 
   protected:
 
-          std::shared_ptr<LEDMatrixGFX> * _pGFX;
+          std::shared_ptr<GFXBase> * _pGFX;
           int             _iInsulator;
           int             _iRing;
     const CRGBPalette256  _palette;
@@ -504,7 +523,7 @@ class SpinningPaletteRingParticle : public FadingObject
   public:
 
     SpinningPaletteRingParticle(
-                  std::shared_ptr<LEDMatrixGFX> * pGFX, 
+                  std::shared_ptr<GFXBase> * pGFX, 
                   int                    iInsulator, 
                   int                    iRing, 
                   const CRGBPalette256 & palette, 
@@ -554,7 +573,7 @@ class SpinningPaletteRingParticle : public FadingObject
         debugV("Particle Render at insulator %d", _iInsulator);
 
         if (_bErase)
-          _pGFX[0]->setPixels(_start, _length, CRGB::Black, false);
+          _pGFX[0]->setPixelsF(_start, _length, CRGB::Black, false);
 
 
         float deltaTime = g_AppTime.DeltaTime();
@@ -574,7 +593,7 @@ class SpinningPaletteRingParticle : public FadingObject
           for (int i = _start; i < _start+_length; i+=_lightSize)
           {
             iColor = fmodf(iColor + _density, 256);
-            _pGFX[0]->setPixels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 - 255 * FadeoutAmount(), _blend), true);
+            _pGFX[0]->setPixelsF(i, _lightSize, ColorFromPalette(_palette, iColor, 255 - 255 * FadeoutAmount(), _blend), true);
           }
         }
         else
@@ -593,13 +612,13 @@ class SpinningPaletteRingParticle : public FadingObject
               {
                   CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness * FadeoutAmount(), _blend);
                   if (i + _startIndex > _start)
-                    _pGFX[0]->setPixels(i+_startIndex, _lightSize, c,true);
+                    _pGFX[0]->setPixelsF(i+_startIndex, _lightSize, c,true);
               }
           }
         }
 
         if (Age() < IgnitionTime() + PreignitionTime() && Age() >= PreignitionTime())
-          _pGFX[0]->setPixels(_start + random(0, _length), 1, CRGB::White, true);
+          _pGFX[0]->setPixelsF(_start + random(0, _length), 1, CRGB::White, true);
     }
 
     virtual float PreignitionTime() const         { return 0.0f;          }
@@ -613,7 +632,7 @@ class HotWhiteRingParticle : public FadingObject
 { 
   protected:
 
-    std::shared_ptr<LEDMatrixGFX> * _pGFX;
+    std::shared_ptr<GFXBase> * _pGFX;
     int             _iInsulator;
     int             _iRing;
     float           _ignitionTime;
@@ -621,7 +640,7 @@ class HotWhiteRingParticle : public FadingObject
 
   public:
 
-    HotWhiteRingParticle(std::shared_ptr<LEDMatrixGFX> * pGFX, int iInsulator, int iRing, float ignitionTime = 0.25f, float fadeTime = 1.0f)
+    HotWhiteRingParticle(std::shared_ptr<GFXBase> * pGFX, int iInsulator, int iRing, float ignitionTime = 0.25f, float fadeTime = 1.0f)
       :  _pGFX(pGFX),
          _iInsulator(iInsulator),
          _iRing(iRing),
@@ -685,7 +704,7 @@ class HotWhiteRingParticle : public FadingObject
 
 #if ENABLE_AUDIO
 
-CRGBPalette256 golden(CRGB::Gold);
+
 class MoltenGlassOnVioletBkgnd : public virtual BeatEffectBase, public virtual ParticleSystemEffect<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;

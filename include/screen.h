@@ -31,7 +31,7 @@
 #pragma once
 
 #include "globals.h"
-#include "ledmatrixgfx.h"
+#include "gfxbase.h"
 #include "freefonts.h"
 #include <mutex>
 
@@ -44,6 +44,9 @@
 
 #if USE_LCD
     extern Adafruit_ILI9341 * g_pDisplay;
+    #include <fonts/FreeMono18pt7b.h>
+    #include <fonts/FreeMono12pt7b.h>
+    #include <fonts/FreeMono9pt7b.h>
 #endif
 
 #if USE_TFT
@@ -71,7 +74,7 @@ class Screen
 #endif
 
 
-    static const int BottomMargin = 38;
+    static const int BottomMargin = 20;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
@@ -106,12 +109,13 @@ class Screen
         auto yh = 0; 
         g_pDisplay->drawString(pszStatus, xh, yh);
     #elif USE_LCD
-        g_pDisplay->fillScreen(TFT_BLACK);
-        g_pDisplay->setFreeFont(FF15);
-        g_pDisplay->setTextColor(0xFBE0);
+        g_pDisplay->fillScreen(BLUE16);
+        g_pDisplay->setFont(FM9);
+        g_pDisplay->setTextColor(WHITE16);
         auto xh = 10;
         auto yh = 0; 
-        g_pDisplay->drawString(pszStatus, xh, yh);
+        g_pDisplay->setCursor(xh, yh);
+        g_pDisplay->print(pszStatus);
     #endif
     }
 
@@ -141,8 +145,13 @@ class Screen
     {
         #if USE_OLED
             return g_pDisplay->getStrWidth(psz);
+        #elif USE_LCD
+            int16_t x1, y1;
+            uint16_t w, h;
+            g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
+            return w;
         #elif USE_SCREEN
-            return g_pDisplay->textWidth(psz);
+            return g_pDisplay->textWidth(psz);          
         #else 
             return 1;
         #endif
@@ -200,13 +209,13 @@ class Screen
                     g_pDisplay->setTextSize(1);
                     break;                
                 default:
-                    g_pDisplay->setTextFont(screenWidth() > 160 ? 2 : 1);
+                    g_pDisplay->setTextFont(1);
                     g_pDisplay->setTextSize(1);
                     break;
             }
         #endif
         
-        #if USE_TFTSPI
+        #if USE_TFTSPI 
             switch(size)
             {
                 case BIG:
@@ -232,16 +241,16 @@ class Screen
             switch(size)
             {
                 case BIG:
-                    g_pDisplay->setFreeFont(FF17);
+                    g_pDisplay->setFont(&FreeMono18pt7b);
                     break;
                 case MEDIUM:
-                    g_pDisplay->setFreeFont(FF16);
+                    g_pDisplay->setFont(&FreeMono12pt7b);
                     break;
                 case TINY:
-                    g_pLCCD->setFreeFont(FF1);
+                    g_pDisplay->setFont(&FreeMono9pt7b);
                     break;                
                 default:
-                    g_pDisplay->setFreeFont(FF15);
+                    g_pDisplay->setFont(&FreeMono9pt7b);
                     break;
             }
         #endif

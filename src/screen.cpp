@@ -29,16 +29,19 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                            // CONFIG and global headers
-#include "ledmatrixgfx.h"                       // Req'd for drawing types
+#include "gfxbase.h"
 #include "ledbuffer.h"                          // For g_apBufferManager type
-#include "effects/effectmanager.h"              // So we can display cur effect
+#include "effectmanager.h"              // So we can display cur effect
 #include "Bounce2.h"
 #include "freefonts.h"
 #include "colordata.h"
 #if ENABLE_AUDIO
 #include "soundanalyzer.h"
+extern int g_serialFPS;                       // Frames per sec reported on serial
 #endif
 #include <mutex>
+
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 double g_Brite;
 uint32_t g_Watts;  
@@ -47,8 +50,6 @@ uint32_t g_Watts;
     #define SCREEN_ROTATION U8G2_R2
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C * g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
 #endif
-
-extern DRAM_ATTR std::shared_ptr<LEDMatrixGFX> g_pStrands[NUM_CHANNELS];
 
 #if USE_LCD
     Adafruit_ILI9341 * g_pDisplay;
@@ -77,7 +78,8 @@ extern DRAM_ATTR bool g_bUpdateStarted;             // Has an OTA update started
 extern uint8_t g_Brightness;                           // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;                 // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;                    // Our global framerate
-extern volatile float gVU;
+extern volatile float gVU;                          // VU Ratio, 0-2
+extern volatile float gVURatioFade;                 // VU Ratio with decay
 extern DRAM_ATTR uint8_t giInfoPage;                // What page of screen we are showing
 extern DRAM_ATTR bool gbInfoPageDirty;              // Does display need to be erased?
 
@@ -86,6 +88,7 @@ DRAM_ATTR std::mutex Screen::_screenMutex;          // The storage for the mutex
 bool g_ShowFPS = true;                              // Indicates whether little lcd should show FPS
 #if ENABLE_AUDIO
 extern volatile float DRAM_ATTR gVURatio;           // Current VU as a ratio to its recent min and max
+
 #endif
 
 // UpdateScreen
@@ -121,11 +124,9 @@ void IRAM_ATTR UpdateScreen()
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
         Screen::setTextSize(Screen::SMALL);
 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
 
-        auto w = calculate_unscaled_power_mW( g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount() )/ 1000;
-
-        //snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, w);
+        //snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, w);
         Screen::setCursor(0, 0);
         Screen::println(szBuffer);
 
@@ -187,6 +188,8 @@ void IRAM_ATTR UpdateScreen()
         static auto sip        = WiFi.localIP().toString();
         static auto lastFPS    = g_FPS;
         static auto lastFullDraw = 0;
+        static auto lastAudio  = 0;
+        static auto lastSerial = 0;        
                auto yh = 1;                        // Start at top of screen
 
         if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
@@ -201,7 +204,7 @@ void IRAM_ATTR UpdateScreen()
                 Screen::fillRect(0, 0, Screen::screenWidth(), Screen::TopMargin, backColor);
                 Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), Screen::BottomMargin, backColor);
                 Screen::fillRect(0, Screen::TopMargin-1, Screen::screenWidth(), 1, BLUE16);
-                Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
+                Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin + 1, Screen::screenWidth(), 1, BLUE16);
 
 
                 lasteffect      = g_pEffectManager->GetCurrentEffectIndex();
@@ -215,13 +218,14 @@ void IRAM_ATTR UpdateScreen()
                                 to_string("/") + 
                                 to_string(g_pEffectManager->EffectCount());
                 Screen::drawString(sEffect.c_str(),yh);     
-                
                 yh += Screen::fontHeight();
                 // get effect name length and switch text size accordingly
                 int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
-                Screen::setTextSize((Screen::screenWidth() > 160) && (effectnamelen <= 18) ? Screen::MEDIUM : Screen::SMALL);
+                Screen::setTextSize(Screen::MEDIUM);
                 Screen::setTextColor(WHITE16, backColor);
                 Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
+                yh += Screen::fontHeight();
+                Screen::setTextSize(Screen::SMALL);
 
                 String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
                 sIP += " - NightDriverLED.com";
@@ -231,59 +235,36 @@ void IRAM_ATTR UpdateScreen()
             }
 
             #if ENABLE_AUDIO
-            if (g_ShowFPS)
-            {
-                char szBuffer[64];
-                snprintf(szBuffer, sizeof(szBuffer), "LED FPS: %2d  Audio FPS: %2d ", g_FPS, g_AudioFPS);
-                Screen::drawString(szBuffer, yh);
-                yh += Screen::fontHeight();
-                Screen::setTextSize(Screen::screenWidth() > 160 ? Screen::MEDIUM : Screen::SMALL);
-                Screen::setTextColor(WHITE16, backColor);
-                Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
-
-                Screen::setTextSize(Screen::TINY);
-                yh = Screen::screenHeight() - Screen::fontHeight() * 3 + 4; 
-                    
-                String sIP = WiFi.isConnected() ? "No Wifi" : WiFi.localIP().toString().c_str();
-                sIP += " - NightDriverLED.com";
-                Screen::setTextColor(YELLOW16, backColor);
-                Screen::drawString(sIP.c_str(), yh);
-                yh += Screen::fontHeight();
-
-                #if ENABLE_AUDIO
-                if (g_ShowFPS)
+                if (gbInfoPageDirty != false ||
+                    (g_ShowFPS && ( (lastFPS != g_FPS) || (lastAudio != g_AudioFPS) || (lastSerial != g_serialFPS) )) )
                 {
+                    lastFPS         = g_FPS;
+                    lastSerial      = g_serialFPS;
+                    lastAudio       = g_AudioFPS;
+                    Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
                     char szBuffer[64];
-                    snprintf(szBuffer, sizeof(szBuffer), "LED FPS: %2d  Audio FPS: %2d ", g_FPS, g_AudioFPS);
+                    yh = Screen::screenHeight() - Screen::fontHeight() - 3;
+                    snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Audio: %2d Serial:%2d ", g_FPS, g_AudioFPS, g_serialFPS);
+                    Screen::setTextColor(YELLOW16, backColor);
                     Screen::drawString(szBuffer, yh);
                     yh += Screen::fontHeight();
                 }
-                #endif
-
-                string s = "NightDriverLED.com";
-                Screen::setTextColor(GREEN16, backColor);
-                Screen::drawString(s.c_str(), Screen::screenHeight());
-
-                // Reset text color to white (no way to fetch original and save it that I could see)
-                Screen::setTextColor(WHITE16, backColor);
-            }
             #endif
-            
             gbInfoPageDirty = false;    
         }
 
         #if ENABLE_AUDIO
             
-            auto foo = GetSpectrumAnalyzer(CRGB::Red);
-
             // Draw the VU Meter and Spectrum every time.  yScale is the number of vertical pixels that would represent
             // a single LED on the LED matrix.  
 
+            static unsigned long lastDraw = millis();
+
             int   xHalf     = Screen::screenWidth() / 2 - 1;            // xHalf is half the screen width
-            float ySizeVU   = Screen::screenHeight() / 20;              // vu is 1/20th the screen height, height of each block
+            float ySizeVU   = Screen::screenHeight() / 16;              // vu is 1/20th the screen height, height of each block
             int   cPixels   = 16;
             float xSize     = xHalf / cPixels + 1;                          // xSize is count of pixels in each block
-            int   litBlocks = (gVURatio / 2.0f) * cPixels;                // litPixels is number that are lit
+            int   litBlocks = (gVURatioFade / 2.0f) * cPixels;                // litPixels is number that are lit
 
             for (int iPixel = 0; iPixel < cPixels; iPixel++)              // For each pixel
             {
@@ -299,14 +280,14 @@ void IRAM_ATTR UpdateScreen()
             {
                 CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
                 int bandWidth = Screen::screenWidth() / NUM_BANDS;
-                int bandHeight = Screen::screenHeight() - Screen::TopMargin - Screen::BottomMargin;
+                int bandHeight = Screen::screenHeight() - spectrumTop - Screen::BottomMargin;
                 auto color16 = Screen::to16bit(bandColor);
                 auto topSection = bandHeight - bandHeight * g_peak2Decay[iBand];
                 if (topSection > 0)
                     Screen::fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
                 auto val = min(1.0f, g_peak2Decay[iBand]);
                 assert(bandHeight * val <= bandHeight);
-                Screen::fillRect(iBand * bandWidth, spectrumTop + bandHeight - bandHeight * val, bandWidth - 1, bandHeight * val, color16);
+                Screen::fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
             }
         #endif
     }
@@ -333,7 +314,7 @@ void IRAM_ATTR UpdateScreen()
             int brite = 100;
             #endif
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, (int)brite);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024, (int)brite);
             Screen::drawString(szBuffer, 0, 0); // write something to the internal memory
 
             if (WiFi.isConnected() == false)
@@ -419,7 +400,6 @@ extern Bounce2::Button Button2;
 void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 {
     debugI(">> ScreenUpdateLoopEntry\n");
-    debugI("ScreenUpdateLoop started\n");
 
     #if USE_OLED
       g_pDisplay->setDisplayRotation(SCREEN_ROTATION);

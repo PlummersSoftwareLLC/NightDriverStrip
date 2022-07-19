@@ -35,8 +35,6 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#define  FASTLED_INTERNAL 1           // Suppress the FASTLED compilation banner
-#include "FastLED.h"                 
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
@@ -92,8 +90,8 @@ class PaletteEffect : public LEDStripEffect
     ~PaletteEffect()
     {
     }
-	
-	  virtual void Draw() 
+    
+      virtual void Draw() 
     {
         if (_bErase)
           setAllOnAllChannels(0,0,0);
@@ -115,7 +113,7 @@ class PaletteEffect : public LEDStripEffect
           for (int i = 0; i < _cLEDs; i+=_lightSize)
           {
             iColor = fmodf(iColor + _density, 256);
-            setPixels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 * _brightness, _blend), false);
+            setPixelsOnAllChannels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 * _brightness, _blend), false);
           }
         }
         else
@@ -133,14 +131,9 @@ class PaletteEffect : public LEDStripEffect
               if (index == 0)
               {
                   CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness, _blend);
-                  setPixels(i+_startIndex, _lightSize, c,false);
+                  setPixelsOnAllChannels(i+_startIndex, _lightSize, c,false);
               }
           }
         }
     }
-
-    virtual const char * FriendlyName() const
-    {
-        return "Palette Effect";
-    }    
 };

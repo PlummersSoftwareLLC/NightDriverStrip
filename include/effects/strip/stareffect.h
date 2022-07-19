@@ -120,32 +120,6 @@ class ColorStar : public MovingFadingColoredObject, public ObjectSize
     }
 };
 
-#if FALSE && NUM_FANS > 0
-class FanStar : public ColorStar
-{
-  public:
-
-    using ColorStar::ColorStar;
-
-    virtual void Update()
-    {
-        int bottom = (int) _iPos - (int) _iPos % FAN_SIZE;
-        int top    = bottom + FAN_SIZE;
-
-        _iPos += _velocity * g_AppTime.DeltaTime();
-
-        if (_iPos < bottom)
-            _iPos += FAN_SIZE;
-
-        if (_iPos >= top)
-            _iPos -= FAN_SIZE;
-
-        _velocity -= (2 * _velocity * g_AppTime.DeltaTime());
-        _baseColor = _baseColor.fadeToBlackBy(random(10)/100.0);
-    }
-};
-#endif
-
 class QuietStar : public RandomPaletteColorStar
 {
   public:
@@ -177,7 +151,7 @@ class MusicStar : public Star
     virtual float PreignitionTime() const      { return 0.0f; }
     virtual float IgnitionTime()    const      { return 0.25 ; }
     virtual float HoldTime()        const      { return 0.00f; }
-    virtual float FadeTime()        const      { return 0.75f;  }
+    virtual float FadeTime()        const      { return 1.75f;  }
 
 };
 float MusicStar::_baseHue = 0.0f;
@@ -358,6 +332,34 @@ class MusicPulseStar : public Star
     virtual double GetStarSize()    const { return 1 + _objectSize * gVURatio; }
 };
 
+/*
+template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
+{
+  protected:
+
+    uint16_t                        _maxSize;
+
+  public:
+
+    BeatStarterEffect<ObjectType>(uint16_t )
+
+    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    {
+        ObjectType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
+        // This always starts stars on even pixel boundaries so they look like the desired width if not moving
+        newstar._iPos = (int) randomDouble(0, _cLEDs-1-starWidth);
+        _allParticles.push_back(newstar);
+
+    }
+
+    virtual void Draw()
+    {
+        BeatEffectBase::Draw();
+    }
+};
+
+*/
+
 // StarryNightEffect template 
 //
 // Generates up to 
@@ -409,8 +411,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         LEDStripEffect::setAllOnAllChannels(_skyColor.r, _skyColor.g, _skyColor.b);
     }
 
-	virtual void Draw()
-	{
+    virtual void Draw()
+    {
         if (_blurFactor == 0)
         {
             Clear();
@@ -418,16 +420,16 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         else
         {
             //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-            //    blur1d(_GFX[channel]->GetLEDBuffer(), _cLEDs, _blurFactor * 255);
+            //    blur1d(_GFX[channel]->leds(), _cLEDs, _blurFactor * 255);
 
 
-            for (int j = 0; j < _cLEDs; j++)							// fade brightness all LEDs one step
+            for (int j = 0; j < _cLEDs; j++)                            // fade brightness all LEDs one step
             {
                 if (randomDouble(0, 10)>2) 
                 {
-                    CRGB c = getPixel(j);
+                    CRGB c = _GFX[0]->getPixel(j);
                     c.fadeToBlackBy(3);
-                    setPixel(j, c);
+                    setPixelOnAllChannels(j, c);
                 }
             }
             fadeAllChannelsToBlackBy(1);
@@ -445,8 +447,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
             if (_musicFactor != 1.0)
             {
-                //prob = prob * 0.5 + (prob * 0.5 * gVURatio);
-                prob = prob * (gVURatio - 1.0) * _musicFactor;
+                // 
+                prob = prob * (gVURatio - 0.5) * _musicFactor; 
             }   
 
             if (randomDouble(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
@@ -458,13 +460,14 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             }
         }
     }
+
     virtual void Update()
     {
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
         {
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            setPixels(fPos - i->_objectSize / 2.0, i->_objectSize, c);         
+            graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c);         
         }
 
         while (_allParticles.size() > 0 && _allParticles.front().Age() >= _allParticles.front().TotalLifetime())
@@ -504,27 +507,23 @@ class TwinkleStarEffect : public LEDStripEffect
 
 public:
 
-    TwinkleStarEffect() : LEDStripEffect("Double Palette Effect")
+    TwinkleStarEffect() : LEDStripEffect("Twinkle Star")
     {
 
     }
-	virtual const char * FriendlyName() const
-	{
-		return "Twinkle";
-	}
 
-    virtual bool Init(std::shared_ptr<LEDMatrixGFX> gfx[NUM_CHANNELS])
-	{
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    {
         LEDStripEffect::Init(gfx);
-		for (int i = 0; i < NUM_TWINKLES; i++)
-			buffer[i] = -1;      
-        return true;  	
-	}
+        for (int i = 0; i < NUM_TWINKLES; i++)
+            buffer[i] = -1;      
+        return true;    
+    }
 
-	virtual void Draw()
-	{
+    virtual void Draw()
+    {
 
-		// Init all the memory slots to -1 which means "empty slot"
+        // Init all the memory slots to -1 which means "empty slot"
 
 
         // Rotate the buffer
@@ -535,11 +534,11 @@ public:
         // If we had a valid pixel in slot 0, we can blank it now
 
         if (buffer[0] >= 0)
-            setPixel(buffer[0], 0, 0, 0);
+            setPixelsOnAllChannels(buffer[0], 0, 0, 0);
 
         // Pick a random pixel and put it in the TOP slot
         int iNew = (int) randomDouble(0, _cLEDs);
-        setPixel(iNew, RandomRainbowColor());
+        setPixelOnAllChannels(iNew, RandomRainbowColor());
         buffer[NUM_TWINKLES - 1] = iNew;
-	}
+    }
 };

@@ -43,7 +43,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
-#include <effects/effectmanager.h>
+#include <effectmanager.h>
 #include <Arduino.h>
 #include <vector>
 
@@ -51,7 +51,7 @@
 #include <ArduinoJson.h>
 
 
-extern std::unique_ptr<EffectManager> g_pEffectManager;
+extern std::unique_ptr<EffectManager<GFXBase>>g_pEffectManager;
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
 
