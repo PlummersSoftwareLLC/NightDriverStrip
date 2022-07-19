@@ -185,7 +185,7 @@ class LEDBuffer
             debugW("Data size mismatch");
             return false;
         }
-        if (length32 > STRAND_LEDS)
+        if (length32 > NUM_LEDS)
         {
             debugW("More data than we have LEDs\n");
             return false;

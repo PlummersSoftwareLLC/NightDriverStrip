@@ -30,11 +30,15 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                      // CONFIG and global headers
+
 #if ENABLE_AUDIO
+
 #include "soundanalyzer.h"
 #include <esp_task_wdt.h>
 
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
+extern uint32_t g_Watts; 
+extern double g_Brite;
 
 float SampleBuffer::_oldVU;
 float SampleBuffer::_oldPeakVU;
@@ -56,6 +60,7 @@ volatile float gPeakVU = MAX_VU;            // How high our peak VU scale is in 
 volatile float gMinVU = 0;                  // How low our peak VU scale is in live mode
 volatile unsigned long g_cSamples = 0;      // Total number of samples successfully collected
 int g_AudioFPS = 0;                         // Framerate of the audio sampler
+int g_serialFPS = 0;                        // How many serial packets are processed per second
 
 unsigned long g_lastPeak1Time[NUM_BANDS] = { 0 } ;
 float g_peak1Decay[NUM_BANDS] = { 0 };
@@ -66,7 +71,18 @@ float g_peak2DecayRate = 1.0f;
 // Depending on how many bands have been defined, one of these tables will contain the frequency
 // cutoffs for that "size" of a spectrum display.  
 
-#if NUM_BANDS == 16
+#if NUM_BANDS == 8
+    static int cutOffsBand [8] =
+    {
+        100, 250, 450, 565, 715, 900, 1125, 1500
+    };
+    static float scalarsBand[8] = 
+    {
+        0.1f, 0.2f, 0.3f, 0.3f, 0.4f, 0.5f, 0.6f, 0.75f
+    };
+#else
+    static_assert(NUM_BANDS == 16);
+
     const int cutOffsBand[16] =
     {
         250, 450, 565, 715, 900, 1125, 1400, 1750, 2250, 2800, 3150, 4000, 5000, 6400, 10500, 14000
@@ -88,16 +104,6 @@ float g_peak2DecayRate = 1.0f;
     #endif
 #endif
 
-#if NUM_BANDS == 5
-    static int cutOffsBand [5] =
-    {
-        100, 250, 450, 565, 715
-    };
-    static float scalarsBand[5] = 
-    {
-        0.1f, 0.2f, 0.3f, 0.3f, 0.4f
-    };
-#endif
 
 // BandCutoffTable
 //
@@ -113,9 +119,8 @@ const float * SampleBuffer::GetBandScalars(int bandCount)
     return scalarsBand;     
 }
 
-#if ENABLE_AUDIO
-    PeakData g_Peaks;
-#endif
+PeakData g_Peaks;
+
 
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
@@ -330,8 +335,6 @@ struct SerialData
     uint8_t tail;               // (0x0D)
 };
 
-int g_serialFPS = 0.0;
-
 void IRAM_ATTR AudioSerialTaskEntry(void *)
 {
 //  SoftwareSerial Serial64(SERIAL_PINRX, SERIAL_PINTX);
@@ -421,7 +424,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
     }
 }
 
-#endif
+#endif // EMABLE_AUDIOSERIAL
 
 #endif
+
 

@@ -120,32 +120,6 @@ class ColorStar : public MovingFadingColoredObject, public ObjectSize
     }
 };
 
-#if FALSE && NUM_FANS > 0
-class FanStar : public ColorStar
-{
-  public:
-
-    using ColorStar::ColorStar;
-
-    virtual void Update()
-    {
-        int bottom = (int) _iPos - (int) _iPos % FAN_SIZE;
-        int top    = bottom + FAN_SIZE;
-
-        _iPos += _velocity * g_AppTime.DeltaTime();
-
-        if (_iPos < bottom)
-            _iPos += FAN_SIZE;
-
-        if (_iPos >= top)
-            _iPos -= FAN_SIZE;
-
-        _velocity -= (2 * _velocity * g_AppTime.DeltaTime());
-        _baseColor = _baseColor.fadeToBlackBy(random(10)/100.0);
-    }
-};
-#endif
-
 class QuietStar : public RandomPaletteColorStar
 {
   public:
@@ -446,7 +420,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         else
         {
             //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-            //    blur1d(_GFX[channel]->GetLEDBuffer(), _cLEDs, _blurFactor * 255);
+            //    blur1d(_GFX[channel]->leds(), _cLEDs, _blurFactor * 255);
 
 
             for (int j = 0; j < _cLEDs; j++)                            // fade brightness all LEDs one step

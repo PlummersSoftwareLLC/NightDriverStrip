@@ -40,7 +40,6 @@
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
-#include "soundanalyzer.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
 #include "screen.h"
@@ -48,7 +47,7 @@
 #include "effectmanager.h"
 
 #if ENABLE_AUDIO
-
+#include "soundanalyzer.h"
 extern AppTime  g_AppTime;
 extern PeakData g_Peaks;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown

@@ -160,6 +160,18 @@ class LEDStripEffect
         }
     }
     
+    // ColorFraction
+    //
+    // Returns a fraction of a color; abstracts the fadeToBlack away so that we can later
+    // do better color correction as needed
+
+    static inline CRGB ColorFraction(const CRGB colorIn, float fraction) 
+    {
+        fraction = min(1.0f, fraction);
+        fraction = max(0.0f, fraction);
+        return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
+    }
+
     void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1) 
     {
         if (iStart + numToFill > _cLEDs)

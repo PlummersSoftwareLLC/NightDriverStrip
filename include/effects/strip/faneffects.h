@@ -36,16 +36,19 @@
 #include <errno.h>
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <math.h>
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
 #include "paletteeffect.h"
 #include "effectmanager.h"
+#include "gfxbase.h"
 
-extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 extern volatile float gVURatio;  
 extern volatile float gVURatioFade;
+
+using namespace std;
 
 // Simple definitions of what direction we're talking about
 
@@ -59,6 +62,39 @@ enum PixelOrder
   RightLeft   = 16
 };
 
+inline void RotateForward(int iStart, int length = FAN_SIZE, int count = 1)
+{
+    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + count], &FastLED.leds()[iStart + length]);
+}
+
+inline void RotateReverse(int iStart, int length = FAN_SIZE, int count = 1)
+{
+    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + length - count], &FastLED.leds()[iStart + length]);
+}
+
+// Rotate
+//
+// Rotate all the pixels in the buffer forward or back
+
+inline void RotateAll(bool bForward = true, int count = 1)
+{
+    if (bForward)
+        RotateForward(0, count);
+    else
+        RotateReverse(0, count);
+}
+
+// RotateFan
+//
+// Rotate one circular section within itself, like a single fan
+
+inline void RotateFan(int iFan, bool bForward = true, int count = 1)
+{
+    if (bForward)
+        RotateForward(iFan * FAN_SIZE, FAN_SIZE, count);
+    else
+        RotateReverse(iFan * FAN_SIZE, FAN_SIZE, count);
+}
 
 
 // BUGBUG (davepl) - Perhaps instead of a bunch of global functions these could be packaged
@@ -225,7 +261,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
   if (remaining > 0.0f && amtFirstPixel > 0.0f)
   {
     for (int i = 0; i < NUM_CHANNELS; i++)
-      FastLED[i][GetFanPixelOrder(iPos++, order)] += g_pEffectManager->ColorFraction(color, amtFirstPixel);
+      FastLED[i][GetFanPixelOrder(iPos++, order)] += LEDStripEffect::ColorFraction(color, amtFirstPixel);
     remaining -= amtFirstPixel;
   }
 
@@ -243,7 +279,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
   if (remaining > 0.0f)
   {
     for (int i = 0; i < NUM_CHANNELS; i++)
-      FastLED[i][GetFanPixelOrder(iPos, order)] +=  g_pEffectManager->ColorFraction(color, remaining);
+      FastLED[i][GetFanPixelOrder(iPos, order)] +=  LEDStripEffect::ColorFraction(color, remaining);
   }
 }
 
@@ -287,7 +323,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
     {
       if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
-      FastLED[i][bPos + iPos++] +=  g_pEffectManager->ColorFraction(color, amtFirstPixel);
+      FastLED[i][bPos + iPos++] +=  LEDStripEffect::ColorFraction(color, amtFirstPixel);
     }
     remaining -= amtFirstPixel;
   }
@@ -315,7 +351,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
     {
       if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;      
-      FastLED[i][bPos + iPos++] +=  g_pEffectManager->ColorFraction(color, remaining);
+      FastLED[i][bPos + iPos++] +=  LEDStripEffect::ColorFraction(color, remaining);
     }
   }
 }
@@ -372,7 +408,7 @@ class FanBeatEffect : public LEDStripEffect
         CRGB c = CHSV(random(0, 255), 255, 255);
         for (int i = NUM_FANS * FAN_SIZE; i < NUM_LEDS; i++)
         {
-           g_pEffectManager->graphics()->setPixel(i, c);
+           graphics()->setPixel(i, c);
         }
 
     }

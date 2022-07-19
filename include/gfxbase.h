@@ -209,7 +209,7 @@ public:
     //     |
     //    15 > 16 > 17 > 18 > 19
 
-    inline virtual uint16_t xy(uint8_t x, uint8_t y) const
+    inline virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         if (x & 0x01)
         {
@@ -655,7 +655,7 @@ public:
             osci[5] = osci[5] + 1; // .5
         for (int i = 0; i < 4; i++)
         {
-            p[i] = map8(sin8(osci[i]), 0, MATRIX_WIDTH - 1); // why? to keep the result in the range of 0-MATRIX_WIDTH (matrix size)
+            p[i] = map8(sin8(osci[i]), 0, std::min(255, MATRIX_WIDTH - 1)); // why? to keep the result in the range of 0-MATRIX_WIDTH (matrix size)
         }
     }
 

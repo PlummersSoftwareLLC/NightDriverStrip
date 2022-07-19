@@ -330,7 +330,7 @@ class ChannelBeatEffect : public BeatEffect
 
        
       //for (int i = 0; i < NUM_LEDS; i++)
-      //  _gfx[iNew]->GetLEDBuffer()[i] = c;
+      //  _gfx[iNew]->leds()[i] = c;
     }
 };
 

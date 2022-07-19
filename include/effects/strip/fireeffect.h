@@ -50,6 +50,7 @@ extern AppTime g_AppTime;
 extern volatile float gVURatio;
 extern volatile float gVURatioFade;
 
+
 class FireEffect : public LEDStripEffect
 {
   protected:
@@ -337,7 +338,7 @@ public:
         }
 
         //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-        //    blur1d(_GFX[channel]->GetLEDBuffer(), _cLEDs, 255);
+        //    blur1d(_GFX[channel]->leds(), _cLEDs, 255);
     }
 
     void setPixelWithMirror(int Pixel, CRGB temperature)

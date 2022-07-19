@@ -83,7 +83,7 @@ void processRemoteDebugCmd()
         debugI("Displaying statistics....");
 
         char szBuffer[256];
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024);
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
         debugI("%s", szBuffer);
 
 

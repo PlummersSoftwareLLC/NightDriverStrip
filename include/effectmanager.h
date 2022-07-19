@@ -43,7 +43,8 @@
 #include <math.h>
 #include "colorutils.h"
 #include "ledstripeffect.h"
-
+#include "effects/strip/misceffects.h"
+#include "effects/strip/fireeffect.h"
 #include "globals.h"
 #include "gfxbase.h"
 
@@ -468,55 +469,5 @@ public:
             g_Fader = 255; // No fade, not at start or end
         }
     }
-
-    // ColorFraction
-    //
-    // Returns a fraction of a color; abstracts the fadeToBlack away so that we can later
-    // do better color correction as needed
-
-    inline CRGB ColorFraction(const CRGB colorIn, float fraction)
-    {
-        fraction = min(1.0f, fraction);
-        fraction = max(0.0f, fraction);
-        return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
-    }
-
 };
 
-#ifdef FAN_SIZE
-
-inline void RotateForward(int iStart, int length = FAN_SIZE, int count = 1)
-{
-    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + count], &FastLED.leds()[iStart + length]);
-}
-
-inline void RotateReverse(int iStart, int length = FAN_SIZE, int count = 1)
-{
-    std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + length - count], &FastLED.leds()[iStart + length]);
-}
-
-// Rotate
-//
-// Rotate all the pixels in the buffer forward or back
-
-inline void RotateAll(bool bForward = true, int count = 1)
-{
-    if (bForward)
-        RotateForward(0, count);
-    else
-        RotateReverse(0, count);
-}
-
-// RotateFan
-//
-// Rotate one circular section within itself, like a single fan
-
-inline void RotateFan(int iFan, bool bForward = true, int count = 1)
-{
-    if (bForward)
-        RotateForward(iFan * FAN_SIZE, FAN_SIZE, count);
-    else
-        RotateReverse(iFan * FAN_SIZE, FAN_SIZE, count);
-}
-
-#endif

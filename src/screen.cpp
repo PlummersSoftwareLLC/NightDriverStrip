@@ -37,10 +37,9 @@
 #include "colordata.h"
 #if ENABLE_AUDIO
 #include "soundanalyzer.h"
+extern int g_serialFPS;                       // Frames per sec reported on serial
 #endif
 #include <mutex>
-
-extern int g_serialFPS;                       // Frames per sec reported on serial
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
@@ -125,9 +124,9 @@ void IRAM_ATTR UpdateScreen()
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
         Screen::setTextSize(Screen::SMALL);
 
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, ESP.getFreeHeap() / 1024);
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
 
-        //snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, chStatus, w);
+        //snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dW ", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, w);
         Screen::setCursor(0, 0);
         Screen::println(szBuffer);
 
@@ -235,20 +234,22 @@ void IRAM_ATTR UpdateScreen()
                 yh += Screen::fontHeight();
             }
 
-            if (gbInfoPageDirty != false ||
-                (g_ShowFPS && ( (lastFPS != g_FPS) || (lastAudio != g_AudioFPS) || (lastSerial != g_serialFPS) )) )
-            {
-                lastFPS         = g_FPS;
-                lastSerial      = g_serialFPS;
-                lastAudio       = g_AudioFPS;
-                Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
-                char szBuffer[64];
-                yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-                snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Audio: %2d Serial:%2d ", g_FPS, g_AudioFPS, g_serialFPS);
-                Screen::setTextColor(YELLOW16, backColor);
-                Screen::drawString(szBuffer, yh);
-                yh += Screen::fontHeight();
-            }
+            #if ENABLE_AUDIO
+                if (gbInfoPageDirty != false ||
+                    (g_ShowFPS && ( (lastFPS != g_FPS) || (lastAudio != g_AudioFPS) || (lastSerial != g_serialFPS) )) )
+                {
+                    lastFPS         = g_FPS;
+                    lastSerial      = g_serialFPS;
+                    lastAudio       = g_AudioFPS;
+                    Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
+                    char szBuffer[64];
+                    yh = Screen::screenHeight() - Screen::fontHeight() - 3;
+                    snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Audio: %2d Serial:%2d ", g_FPS, g_AudioFPS, g_serialFPS);
+                    Screen::setTextColor(YELLOW16, backColor);
+                    Screen::drawString(szBuffer, yh);
+                    yh += Screen::fontHeight();
+                }
+            #endif
             gbInfoPageDirty = false;    
         }
 
@@ -313,7 +314,7 @@ void IRAM_ATTR UpdateScreen()
             int brite = 100;
             #endif
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024, (int)brite);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK %03dB", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024, (int)brite);
             Screen::drawString(szBuffer, 0, 0); // write something to the internal memory
 
             if (WiFi.isConnected() == false)

@@ -93,7 +93,9 @@ using namespace std;
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
 #define MAX_VU MAX_ANALOG_IN
 
-#if M5STICKC || M5STICKCPLUS                              // The MAX9814 mic has different sensitivity than th M5's mic, so each needs its own value here
+ // The MAX9814 mic has different sensitivity than th M5's mic, so each needs its own value here
+
+#if (M5STICKC || M5STICKCPLUS)                           
     #define MIN_VU 128
 #else
     #define MIN_VU 512

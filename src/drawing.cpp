@@ -268,7 +268,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 for (int i  = 0; i < NUM_CHANNELS; i++)
                 {
                     LEDStripGFX * pStrip = (LEDStripGFX *)(*g_pEffectManager)[i].get();
-                    FastLED[i].setLeds(pStrip->GetLEDBuffer(), cPixelsDrawnThisFrame);
+                    FastLED[i].setLeds(pStrip->leds, cPixelsDrawnThisFrame);
                 }
 
                 //vTaskPrioritySet(g_taskDraw, DRAWING_PRIORITY_BOOST);
@@ -280,7 +280,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
                 g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->GetLEDBuffer(), cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
+                g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
 
                 
                 // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
@@ -298,7 +298,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
         #ifdef ONBOARD_LED_R
             #ifdef ENABLE_AUDIO
-                CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); )
+                CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); 
                 ledcWrite(1, 255 - c.r ); // write red component to channel 1, etc.
                 ledcWrite(2, 255 - c.g );
                 ledcWrite(3, 255 - c.b );
