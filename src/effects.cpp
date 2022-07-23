@@ -86,7 +86,7 @@ volatile long PatternSubscribers::cViews;
 //
 // Palettes that are referenced by effects need to be instantiated first
 
-CRGBPalette256 BlueColors_p =
+const CRGBPalette256 BlueColors_p =
 {
     CRGB::DarkBlue,
     CRGB::MediumBlue,
@@ -106,7 +106,7 @@ CRGBPalette256 BlueColors_p =
     CRGB::MediumBlue
 };
 
-CRGBPalette256 RedColors_p =
+const CRGBPalette256 RedColors_p =
 {
     CRGB::Red,
     CRGB::DarkRed,
@@ -129,7 +129,7 @@ CRGBPalette256 RedColors_p =
     CRGB::OrangeRed
 };
 
-CRGBPalette256 GreenColors_p =
+const CRGBPalette256 GreenColors_p =
 {
     CRGB::Green,
     CRGB::DarkGreen,
@@ -152,7 +152,7 @@ CRGBPalette256 GreenColors_p =
     CRGB::LimeGreen
 };
 
-CRGBPalette256 PurpleColors_p =
+const CRGBPalette256 PurpleColors_p =
 {
     CRGB::Purple,
     CRGB::Maroon,
@@ -175,7 +175,7 @@ CRGBPalette256 PurpleColors_p =
     CRGB::DarkViolet,
 };
 
-CRGBPalette256 RGBColors_p =
+const CRGBPalette256 RGBColors_p =
 {
     CRGB::Red,
     CRGB::Green,
@@ -195,7 +195,7 @@ CRGBPalette256 RGBColors_p =
     CRGB::Blue
 };
 
-CRGBPalette256 MagentaColors_p =
+const CRGBPalette256 MagentaColors_p =
 {
     CRGB::Pink,
     CRGB::DeepPink,
@@ -215,7 +215,7 @@ CRGBPalette256 MagentaColors_p =
     CRGB::Magenta
 };
 
-CRGBPalette256 spectrumBasicColors =
+const CRGBPalette256 spectrumBasicColors =
 {
     CRGB(0xFD0E35), // Red
     CRGB(0xFF8833), // Orange
@@ -235,7 +235,7 @@ CRGBPalette256 spectrumBasicColors =
     CRGB(0xDB91EF)  // Lilac
 };
 
-CRGBPalette256 USAColors_p =
+const CRGBPalette256 USAColors_p =
 {
     CRGB::Blue,
     CRGB::Blue,
@@ -259,13 +259,13 @@ CRGBPalette256 USAColors_p =
 //
 // The master effects table
 
-CRGBPalette256 rainbowPalette(RainbowColors_p);
-CRGBPalette256 blueSweep(CRGB::Blue, CRGB::Green);
+const CRGBPalette256 rainbowPalette(RainbowColors_p);
+const CRGBPalette256 blueSweep(CRGB::Blue, CRGB::Green);
 
-CRGBPalette256 BlueStripes(CRGB::White, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::White, CRGB::Black, CRGB::Black,
+const CRGBPalette256 BlueStripes(CRGB::White, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::White, CRGB::Black, CRGB::Black,
                            CRGB::White, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::White, CRGB::Black, CRGB::Black);
 
-CRGBPalette256 MagentaStripes(CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::White, CRGB::Black, CRGB::Black,
+const CRGBPalette256 MagentaStripes(CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::White, CRGB::Black, CRGB::Black,
                               CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::White, CRGB::Black, CRGB::Black);
 
 #if ENABLE_AUDIO
@@ -307,6 +307,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         
+        new PatternLife(),
         new PatternPongClock(),
         new SpectrumAnalyzerEffect("Spectrum", false, spectrumBasicColors, 100, 0, 2.0, 2.0),
         new SpectrumAnalyzerEffect("Spectrum USA", false, USAColors_p, 0),
@@ -320,7 +321,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new PatternCircuit(),
         new PatternCube(),
         new PatternSpiro(),
-        new PatternLife(),
         new PatternWave(),
         new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red)), 8),
         new PatternSwirl(),

@@ -89,7 +89,7 @@ CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 void LEDMatrixGFX::MatrixSwapBuffers()
 {
   backgroundLayer.swapBuffers(true);
-  titleLayer.swapBuffers(false);  
+  titleLayer.swapBuffers(true);  
 }
 
 void LEDMatrixGFX::PresentFrame()

@@ -76,7 +76,7 @@ public:
   uint8_t brightness;
 };
 
-#define CRC_LENGTH 128                           // Depth of loop check buffer
+#define CRC_LENGTH 256                           // Depth of loop check buffer
 
 class PatternLife : public LEDStripEffect 
 {
@@ -219,7 +219,7 @@ public:
         }
         else
         {
-            for (int i = 0; i < CRC_LENGTH / 2; i++)
+            for (int i = 0; i < CRC_LENGTH - 1; i++)
             {
                 if (checksums[i] == crc)
                 {

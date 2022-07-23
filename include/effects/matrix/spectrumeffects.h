@@ -186,6 +186,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     float _peak1DecayRate;
     float _peak2DecayRate;
 
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 45;
+    }
+    
     // DrawBand
     //
     // Draws the bar graph rectangle for a bar and then the white line on top of it
@@ -210,10 +215,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
     
-        uint16_t c = pGFXChannel->to16bit(baseColor);
+
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
-            pGFXChannel->drawFastHLine(xOffset, y, bandWidth, c);
-    
+            for (int x = xOffset; x < xOffset + bandWidth; x++)
+                graphics()->leds[graphics()->xy(x,y)] = baseColor;
+
         const int PeakFadeTime_ms = 1000;
 
         CRGB colorHighlight = CRGB(CRGB::White);
@@ -328,10 +334,7 @@ class WaveformEffect : public LEDStripEffect
     double                    _iPeakVUy = 0;
     unsigned long             _msPeakVU = 0;
 
-    double lastVU = 0;
-    const double VU_DECAY_PER_SECOND = 3.0;
-
-  public:
+ public:
     
     WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
         : LEDStripEffect(pszFriendlyName)
@@ -381,8 +384,8 @@ class WaveformEffect : public LEDStripEffect
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         
-        DrawSpike(63, lastVU/2.0);
-        DrawSpike(0, lastVU/2.0);
+        DrawSpike(63, gVURatio/2.0);
+        DrawSpike(0, gVURatio/2.0);
     }
 };
 
@@ -412,8 +415,8 @@ class GhostWave : public WaveformEffect
         }
     
         g->BlurFrame(24);
-        DrawSpike(MATRIX_WIDTH/2, gVURatioFade / 2.0);
-        DrawSpike(MATRIX_WIDTH/2-1, gVURatioFade / 2.0);
+        DrawSpike(MATRIX_WIDTH/2, gVURatio / 2.0);
+        DrawSpike(MATRIX_WIDTH/2-1, gVURatio / 2.0);
     }
 };
 
