@@ -190,7 +190,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     {
         return 45;
     }
-    
+
     // DrawBand
     //
     // Draws the bar graph rectangle for a bar and then the white line on top of it
@@ -334,7 +334,7 @@ class WaveformEffect : public LEDStripEffect
     double                    _iPeakVUy = 0;
     unsigned long             _msPeakVU = 0;
 
- public:
+  public:
     
     WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
         : LEDStripEffect(pszFriendlyName)
