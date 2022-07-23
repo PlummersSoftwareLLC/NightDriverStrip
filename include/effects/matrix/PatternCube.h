@@ -194,7 +194,7 @@ class PatternCube : public LEDStripEffect
     }
 
   public:
-    PatternCube() : LEDStripEffect("Cubes")
+    PatternCube() : LEDStripEffect("Dancing Cubes")
     {
       make(cubeWidth);
     }

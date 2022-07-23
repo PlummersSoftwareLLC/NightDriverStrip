@@ -470,10 +470,10 @@ class SampleBuffer
             i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
             i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
             i2s_config.dma_buf_count = 2;
-            // This assume pin27 as input since it's easy to mount a 4466 style board to it, change as needed
-            ESP_ERROR_CHECK( adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0) );
+            ESP_ERROR_CHECK( adc1_config_width(ADC_WIDTH_BIT_12) );
+            ESP_ERROR_CHECK( adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0) );
             ESP_ERROR_CHECK( i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config,  0, NULL) );
-            ESP_ERROR_CHECK( i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0) );        
+            ESP_ERROR_CHECK( i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL) );     
         #else
             i2s_config_t i2s_config;
             i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
@@ -485,11 +485,12 @@ class SampleBuffer
             i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
             i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
             i2s_config.dma_buf_count = 2;
-
-            ESP_ERROR_CHECK( adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0) );
-
+    
+            ESP_ERROR_CHECK( adc1_config_width(ADC_WIDTH_BIT_12) );
+            ESP_ERROR_CHECK( adc1_config_channel_atten(ADC1_CHANNEL_0,ADC_ATTEN_DB_0) );  
             ESP_ERROR_CHECK( i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config,  0, NULL) );
             ESP_ERROR_CHECK( i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL) );     
+
         #endif
         debugV("SamplerBufferInitI2S Complete\n");
     }
@@ -604,9 +605,13 @@ class SampleBuffer
             }
         }
 
+        // Print out the low 4 and high 4 bands so we can monitor levels in the debugger if needed
+        debugV("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf", 
+                _vPeaks[0], _vPeaks[1], _vPeaks[2], _vPeaks[3], _vPeaks[12], _vPeaks[13], _vPeaks[14], _vPeaks[15]);
+
         for (int i = 0; i < _BandCount; i++)
         {
-            _vPeaks[i] *= GetBandScalars(_BandCount)[i];
+                _vPeaks[i] *= GetBandScalars(_BandCount)[i];
         }
 
         // If you want the peaks to be a lot more prominent, you can exponentially raise the values

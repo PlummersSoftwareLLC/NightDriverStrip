@@ -125,33 +125,35 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
 
             LEDMatrixGFX::titleLayer.setFont(font3x5);
-            if (pMatrix->GetCaptionTransparency() > 0.01) 
+            if (pMatrix->GetCaptionTransparency() > 0.00) 
             {
+                uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
+                LEDMatrixGFX::titleLayer.setBrightness(brite);                // 255 would obscure it entirely
+                debugV("Caption: %d", brite);
+
                 rgb24 chromaKeyColor = rgb24(255,0,255);
                 rgb24 shadowColor = rgb24(0,0,0);
                 rgb24 titleColor = rgb24(255,255,255);
                 
                 LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
                 LEDMatrixGFX::titleLayer.enableChromaKey(true);
-
                 LEDMatrixGFX::titleLayer.setFont(font5x7);
                 LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
 
                 const size_t kCharWidth = 5;
                 const size_t kCharHeight = 7;
 
-                int y = MATRIX_HEIGHT - 2 - kCharHeight;
+                const auto caption = pMatrix->GetCaption();
 
-                int w = strlen(pMatrix->GetCaption()) * kCharWidth;
+                int y = MATRIX_HEIGHT - 2 - kCharHeight;
+                int w = strlen(caption) * kCharWidth;
                 int x = (MATRIX_WIDTH / 2) - (w / 2); 
 
-                LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, pMatrix->GetCaption());
-                LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, pMatrix->GetCaption());
-                LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, pMatrix->GetCaption());
-                LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, pMatrix->GetCaption());
-                LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  pMatrix->GetCaption());
-                
-                LEDMatrixGFX::titleLayer.setBrightness(pMatrix->GetCaptionTransparency() * 240);                // 255 would obscure it entirely
+                LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  caption);
             }
             else 
             {

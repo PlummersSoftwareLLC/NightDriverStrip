@@ -51,9 +51,9 @@ class LEDMatrixGFX : public GFXBase
 protected:
     const char *pszCaption = nullptr;
     unsigned long captionStartTime;
-    unsigned long captionDuration;
-    const unsigned long captionFadeInTime = 500;
-    const unsigned long captionFadeOutTime = 1000;
+    double captionDuration;
+    const double captionFadeInTime = 500;
+    const double captionFadeOutTime = 1000;
 
 public:
     typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;
@@ -88,7 +88,7 @@ public:
         // way to know when the last instance is being cleaned up.
     }
 
-    inline virtual uint16_t xy(uint8_t x, uint8_t y) const
+    inline virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         return y * MATRIX_WIDTH + x;    
     }
@@ -118,9 +118,9 @@ public:
             return elapsed / captionFadeInTime;
 
         if (elapsed > captionFadeInTime + captionDuration)
-            return 1 - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
+            return 1.0 - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
 
-        return 1;
+        return 1.0;
     }
 
     void SetCaption(const char *psz, uint32_t duration)
