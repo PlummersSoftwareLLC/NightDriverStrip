@@ -153,7 +153,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         EVERY_N_SECONDS(10)
         {
-            debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf",
+            debugV("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf",
                         ESP.getFreeHeap(), g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio);
         }
         g_Peaks = Analyzer.RunSamplerPass();

@@ -423,8 +423,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
-    #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
-
+    #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 0)
+    #define MILLIS_PER_FRAME        0
+    
     #if USE_PSRAM
         #define MAX_BUFFERS     99      // If PSRAM, limit the buffers to something practical and reasonable
     #else
@@ -1003,6 +1004,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef DEFAULT_EFFECT_INTERVAL
 #define DEFAULT_EFFECT_INTERVAL 1000*30
+#endif
+
+#ifndef MILLIS_PER_FRAME
+#define MILLIS_PER_FRAME 0
 #endif
 
 #ifndef LED_FAN_OFFSET_BU

@@ -24,7 +24,7 @@
 // Description:
 //
 //   Effect code ported from Aurora to Mesmerizer's draw routines
-//   and
+//   and added the cycle detection CRC stuff
 //
 // History:     Jun-25-2022         Davepl      Based on Aurora
 //
@@ -70,13 +70,13 @@
 class Cell 
 {
 public:
-  uint8_t alive : 3;
-  uint8_t prev  : 1;
-  uint8_t hue   : 8;  
+  uint8_t alive;
+  bool    prev;
+  uint8_t hue;  
   uint8_t brightness;
 };
 
-#define CRC_LENGTH 256                           // Depth of loop check buffer
+#define CRC_LENGTH 130                           // Depth of loop check buffer
 
 class PatternLife : public LEDStripEffect 
 {
@@ -92,7 +92,7 @@ private:
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 24;
+        return 11;
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               
@@ -110,11 +110,33 @@ private:
     
     // Seed: 92465, Generations: 1626
     //       130908,             3253
+    //         1576,             3125
+    //       275011              3461
+    //       291864              4006
+    //    692598154              3876
+    //    241590764              4808
+    //    701054810              3081
+    //   1824315566              3256
+    //    342432015              3035
+    //   1670458840              3108
+    //   1177135100              3243
+    //    281769225              4354
+    //   1918045960              3601
+    //   1548443429              3305
+    //   1038898468              3538
+    //   1791133398              3235
+    //   1550109533              3823
+    //   1060251497              4336
+    //    555109764              4470
+
+
+
     void randomFillWorld() 
     {
         // 130908 Loop
-        seed = millis();
-        debugW("Seeding Life: %lu", seed);
+        srand(millis());
+        seed = random();
+        debugV("Seeding Life: %lu", seed);
         srand(seed);
         for (int i = 0; i < MATRIX_WIDTH; i++) {
             for (int j = 0; j < MATRIX_HEIGHT; j++) {
@@ -170,12 +192,15 @@ public:
 
         // Display current generation
 
-        for (int i = 0; i < MATRIX_WIDTH; i++) {
-            for (int j = 0; j < MATRIX_HEIGHT; j++) {
-                if (world[i][j].brightness > 0)
-                    graphics->leds[graphics->xy(i, j)] += graphics->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
-                else
-                    graphics->leds[graphics->xy(i, j)] = CRGB::Black;
+        EVERY_N_MILLIS(MILLIS_PER_FRAME)
+        {
+            for (int i = 0; i < MATRIX_WIDTH; i++) {
+                for (int j = 0; j < MATRIX_HEIGHT; j++) {
+                    if (world[i][j].brightness > 0)
+                        graphics->leds[graphics->xy(i, j)] += graphics->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
+                    else
+                        graphics->leds[graphics->xy(i, j)] = CRGB::Black;
+                }
             }
         }
 
@@ -219,13 +244,15 @@ public:
         }
         else
         {
-            for (int i = 0; i < CRC_LENGTH - 1; i++)
+            for (int i = CRC_LENGTH - 2; i >= 0; i--)
             {
                 if (checksums[i] == crc)
                 {
                     bStuckInLoop = millis();
-                    debugI("Seed: %lu, Generations: %d, %s", seed, cGeneration, cGeneration > 3000 ? "<<<<<" : "");
+                    debugW("Seed: %10lu, Generations: %5d, %s", seed, cGeneration, cGeneration > 3000 ? "Y" : "N");
                 }
+                if (checksums[i] == 0xFFFFFFF)
+                    break;
             }
         }
 

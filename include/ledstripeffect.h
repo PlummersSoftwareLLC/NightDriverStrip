@@ -86,7 +86,7 @@ class LEDStripEffect
         }
         debugW("Get LED Count");
         _cLEDs = _GFX[0]->GetLEDCount();   
-        debugI("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
+        debugV("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
         return true;  
     }
     

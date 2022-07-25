@@ -343,12 +343,12 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     static uint64_t     _NextRunTime = millis();
                     if (millis() > _NextRunTime)
                     {
-                        debugI("Fetching YouTube Data...");
+                        debugV("Fetching YouTube Data...");
 
                         sight._debug = false;
                         if (sight.getData())
                         {
-                            debugI("Got YouTube Data...");
+                            debugV("Got YouTube Data...");
                             long result = atol(sight.channelStats.subscribers_count.c_str());
                             PatternSubscribers::cSubscribers = result;
                             _NextRunTime = millis() + SUB_CHECK_INTERVAL;
@@ -371,7 +371,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
             {
                 if (WiFi.isConnected())
                 {
-                    debugI("Refreshing Time from Server...");
+                    debugV("Refreshing Time from Server...");
                     digitalWrite(BUILTIN_LED_PIN, 1);
                     NTPTimeClient::UpdateClockFromWeb(&g_Udp);
                     digitalWrite(BUILTIN_LED_PIN, 0);
