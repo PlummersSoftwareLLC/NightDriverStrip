@@ -255,20 +255,10 @@ const CRGBPalette256 USAColors_p =
     CRGB::Red,
 };
 
-// AllEffects
-//
-// The master effects table
-
 const CRGBPalette256 rainbowPalette(RainbowColors_p);
-const CRGBPalette256 blueSweep(CRGB::Blue, CRGB::Green);
-
-const CRGBPalette256 BlueStripes(CRGB::White, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::White, CRGB::Black, CRGB::Black,
-                           CRGB::White, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::White, CRGB::Black, CRGB::Black);
-
-const CRGBPalette256 MagentaStripes(CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::White, CRGB::Black, CRGB::Black,
-                              CRGB::White, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::Magenta, CRGB::White, CRGB::Black, CRGB::Black);
 
 #if ENABLE_AUDIO
+
 // GetSpectrumAnalyzer
 //
 // A little factory that makes colored spectrum analyzers to be used by the remote control
@@ -291,7 +281,8 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 // AllEffects
 //
-// A list of internal effects, if any.
+// The master effects table
+
 DRAM_ATTR LEDStripEffect *AllEffects[] =
 {
 #if DEMO
@@ -401,11 +392,8 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 //        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::REDX, 50, true),
  //       new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR, 50, true),
 
-        // new PaletteSpinEffect("BlueStripeSpin", CRGBPalette256(blueSweep), false, 0, 0.1)
 
         // new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", BlueColors_p, 10.0, 1, LINEARBLEND, 2.0, 0.0, 0.0),        // Blue Sparkle
-
-        // new PaletteSpinEffect("CycleStripeSpin", CRGBPalette256(MagentaStripes), true),
 
         // new StarryNightEffect<Star>()
         /*

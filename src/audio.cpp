@@ -99,7 +99,7 @@ float g_peak2DecayRate = 1.0f;
             #if M5STICKC || M5STICKCPLUS
                 0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
             #else
-                0.12f, 0.18f, 0.20f, 0.25f, 0.35f, 0.35f, 0.45f, 0.55f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
+                0.18f, 0.25f, 0.25f, 0.30f, 0.35f, 0.35f, 0.45f, 0.55f, 0.5f, 0.5f, 0.5f, 0.6f, .6f, 0.4f, 0.4f, 0.8f
             #endif
         };
     #endif
@@ -153,7 +153,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         EVERY_N_SECONDS(10)
         {
-            debugV("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf",
+            debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf",
                         ESP.getFreeHeap(), g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio);
         }
         g_Peaks = Analyzer.RunSamplerPass();

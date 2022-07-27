@@ -86,14 +86,13 @@ CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 
 }
 
-void LEDMatrixGFX::MatrixSwapBuffers()
+void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
 {
-  backgroundLayer.swapBuffers(true);
-  titleLayer.swapBuffers(true);  
-}
+  // If an effect redraws itself entirely ever frame, it can skip saving the most recent buffer, so 
+  // can swap without waiting for a copy.
 
-void LEDMatrixGFX::PresentFrame()
-{
+  backgroundLayer.swapBuffers(bSwapBackground);
+  titleLayer.swapBuffers(bSwapTitle);  
 }
 
 #endif

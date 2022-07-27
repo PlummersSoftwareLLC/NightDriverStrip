@@ -191,6 +191,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return 45;
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return _fadeRate != 0;
+    }
+
     // DrawBand
     //
     // Draws the bar graph rectangle for a bar and then the white line on top of it
@@ -246,7 +251,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
                            bool                   bShowVU,
                            const CRGBPalette256   palette = spectrumBasicColors, 
-                           uint16_t           scrollSpeed = .2, 
+                           uint16_t           scrollSpeed = 0, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
@@ -308,13 +313,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
             if (pGFXChannel->IsPalettePaused())
             {
-                // Start at 32 because first two bands are usually too dark to use as bar colors.  This winds up selecting a number up
-                // to 192 and then adding 64 to it in order to skip those darker 0-64 colors
-                DrawBand(i, pGFXChannel->ColorFromCurrentPalette((::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 1892 + 76));
+                DrawBand(i, pGFXChannel->ColorFromCurrentPalette(::map(i, 0, NUM_BANDS, 0, 255)));
             }
             else
             {
-                DrawBand(i, ColorFromPalette(_palette, (::map(i, 0, NUM_BANDS, 0, 255))));
+                DrawBand(i, ColorFromPalette(_palette, 
+                                             (::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 255, 
+                                             255,
+                                             NOBLEND));
+
             }
         }
     }

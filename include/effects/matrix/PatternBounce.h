@@ -71,6 +71,14 @@ public:
     {
     }
 
+    // Bounce does not require doubvle buffer, which seems weird since it does not
+    // do a complete fill each frame?  But it works!
+    
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;
+    }
+
     virtual void Start()
     {
         unsigned int colorWidth = 256 / count;

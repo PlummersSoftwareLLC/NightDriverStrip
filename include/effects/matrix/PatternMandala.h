@@ -88,6 +88,11 @@ public:
         return 45;
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;
+    }
+
     virtual void Start()
     {
         // set to reasonable values to avoid a black out

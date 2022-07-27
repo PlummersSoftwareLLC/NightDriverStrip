@@ -412,6 +412,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
     
+    #define SHOW_FPS_ON_MATRIX      0
     #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
@@ -419,11 +420,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0  // Accept over the air flash updates
+    #define ENABLE_OTA              1  // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
-    #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 0)
+    #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60)
     #define MILLIS_PER_FRAME        0
     
     #if USE_PSRAM

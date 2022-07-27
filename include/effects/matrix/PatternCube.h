@@ -190,13 +190,18 @@ class PatternCube : public LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 45;
+        return 60;
     }
 
   public:
     PatternCube() : LEDStripEffect("Dancing Cubes")
     {
       make(cubeWidth);
+    }
+
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;
     }
 
     virtual void Draw()

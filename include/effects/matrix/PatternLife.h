@@ -64,14 +64,13 @@
 #include "globals.h"
 #include "ledstripeffect.h"
 #include "gfxbase.h"
-
-
+#include <bitset>
 
 class Cell 
 {
 public:
-  uint8_t alive;
-  bool    prev;
+  uint8_t alive : 1;
+  uint8_t prev  : 1;
   uint8_t hue;  
   uint8_t brightness;
 };
@@ -90,10 +89,6 @@ private:
     int cGeneration = 0;
     unsigned long seed;
 
-    virtual size_t DesiredFramesPerSecond() const
-    {
-        return 11;
-    }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               
     {
@@ -108,35 +103,57 @@ private:
         return true;
     }
     
-    // Seed: 92465, Generations: 1626
-    //       130908,             3253
-    //         1576,             3125
-    //       275011              3461
-    //       291864              4006
-    //    692598154              3876
-    //    241590764              4808
-    //    701054810              3081
-    //   1824315566              3256
-    //    342432015              3035
-    //   1670458840              3108
-    //   1177135100              3243
-    //    281769225              4354
-    //   1918045960              3601
-    //   1548443429              3305
-    //   1038898468              3538
-    //   1791133398              3235
-    //   1550109533              3823
-    //   1060251497              4336
-    //    555109764              4470
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;
+    }
 
+    // A table of seed vs generation count (in a comment).  These are seeds that net long
+    // runs of at leat 3000 generations.
+    //
+    // Seed: 92465, Generations: 1626
+
+    static constexpr long bakedInSeeds[] =
+    { 
+        130908,         // 3253
+        1576,           // 3125
+        275011,         // 3461
+        291864,         // 4006
+        692598154,      // 3876
+        241590764,      // 4808
+        701054810,      // 3081
+        1824315566,     // 3256
+        342432015,      // 3035
+        1670458840,     // 3108
+        1177135100,     // 3243
+        281769225,      // 4354
+        1918045960,     // 3601
+        1548443429,     // 3305
+        1038898468,     // 3538
+        1791133398,     // 3235
+        1550109533,     // 3823
+        1060251497,     // 4336
+        555109764,      // 4470
+    };
 
 
     void randomFillWorld() 
     {
-        // 130908 Loop
+        // Some fraction of the time we pick a pre-baked seed that we know lasts for a lot
+        // of generations.  Otherwise we pick a random seed and run with that.
+        
         srand(millis());
-        seed = random();
-        debugV("Seeding Life: %lu", seed);
+        if (random(0, 4) == 0)
+        {
+            seed = bakedInSeeds[random(ARRAYSIZE(bakedInSeeds))];
+            debugI("Prebaked Seed: %lu", seed);
+        }
+        else
+        {   
+            seed = random();
+            debugI("Randomized Seed: %lu", seed);
+        }
+
         srand(seed);
         for (int i = 0; i < MATRIX_WIDTH; i++) {
             for (int j = 0; j < MATRIX_HEIGHT; j++) {

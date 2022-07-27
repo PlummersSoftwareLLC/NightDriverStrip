@@ -105,7 +105,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     for (;;)
     {
         static uint64_t lastFrame = millis();
-        g_FPS = FPS(lastFrame, millis());
+        g_FPS = FPS(lastFrame, millis());           // Weighted: (g_FPS * 9 + FPS(lastFrame, millis())) / 10;
         lastFrame = millis();        
         
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
@@ -123,15 +123,17 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             EVERY_N_MILLIS(MILLIS_PER_FRAME)
             {
                 #if SHOW_FPS_ON_MATRIX
-                LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
-                LEDMatrixGFX::backgroundLayer.drawString(23, 5, rgb24(255,255,255), std::to_string(g_FPS).c_str());
+                    LEDMatrixGFX::backgroundLayer.setFont(gohufont11);
+                    // 3 is half char width at curret font size, 5 is half the height.
+                    string output = "FPS: " + std::to_string(g_FPS);
+                    LEDMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 -  (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255,255,255), rgb24(0,0,0), output.c_str());    
                 #endif
 
-                LEDMatrixGFX::MatrixSwapBuffers();
                 LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
+                LEDMatrixGFX::MatrixSwapBuffers(g_pEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
                 pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-
                 LEDMatrixGFX::titleLayer.setFont(font3x5);
+
                 if (pMatrix->GetCaptionTransparency() > 0.00) 
                 {
                     uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
