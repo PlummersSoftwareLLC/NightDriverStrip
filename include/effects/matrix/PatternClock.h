@@ -35,8 +35,6 @@
 #include "ledstripeffect.h"
 #include "gfxbase.h"
 
-extern DRAM_ATTR AppTime g_AppTime;                 // For the current time of day
-
 class PatternClock : public LEDStripEffect
 {
     // Radius is the lesser of the height and width so that the round clock can fit
@@ -74,11 +72,11 @@ class PatternClock : public LEDStripEffect
         g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius, WHITE16);
         g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, WHITE16);
         
-        // Darw the hour ticks around the outside of the clock every 30 degrees
+        // Draw the hour ticks around the outside of the clock every 30 degrees
 
         for (int z = 0; z < 360; z = z + 30)
         {
-            // Begin at 0° and stop at 360°
+            // Begin at 0° and stop before 360°
             float angle = z;
             angle = (angle / 57.29577951); // Convert degrees to radians
             int x2 = (MATRIX_CENTER_X + (sin(angle) * radius));
