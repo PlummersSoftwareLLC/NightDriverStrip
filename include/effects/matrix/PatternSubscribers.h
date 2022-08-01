@@ -47,11 +47,6 @@ class PatternSubscribers : public LEDStripEffect
   {
   }
 
-  virtual bool RequiresDoubleBuffering() const
-  {
-      return false;
-  }
-
   static volatile long cSubscribers;
   static volatile long cViews;
   static const char szChannelID[];

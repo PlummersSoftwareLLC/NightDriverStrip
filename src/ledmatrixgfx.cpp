@@ -48,10 +48,6 @@ uint8_t GFXBase::noise[MATRIX_WIDTH][MATRIX_HEIGHT];   // BUGBUG Could this go i
 uint8_t GFXBase::noisesmoothing;
 
 #if USEMATRIX
-Boid    * LEDMatrixGFX::boids;
-#endif
-
-#if USEMATRIX
 
   #include <SmartMatrix.h>
   #include "ledmatrixgfx.h"

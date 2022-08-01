@@ -127,6 +127,7 @@
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 #define NET_PRIORITY            tskIDLE_PRIORITY+2
+
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
 
@@ -1101,6 +1102,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define CAPTION_TIME 3000
 #endif
 
+#ifndef MATRIX_CENTER_X
+#define MATRIX_CENTER_X ((MATRIX_WIDTH + 1) / 2)
+#endif
+
+#ifndef MATRIX_CENTER_Y
+#define MATRIX_CENTER_Y ((MATRIX_HEIGHT + 1) / 2)
+#endif
+
 // gRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
@@ -1197,7 +1206,7 @@ inline void * PreferPSRAMAlloc(size_t s)
 {
     if (psramInit())
     {
-        Serial.printf("PSRAM Array Request for %u bytes\n", s);
+        debugV("PSRAM Array Request for %u bytes\n", s);
         return ps_malloc(s);
     }
     else

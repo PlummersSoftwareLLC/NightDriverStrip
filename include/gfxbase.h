@@ -1,4 +1,4 @@
-//+--------------------------------------------------------------------------
+    //+--------------------------------------------------------------------------
 //
 // File:        gfxbase.h
 //
@@ -102,14 +102,6 @@ protected:
 
     static const int HeatColorsPaletteIndex = 6;
     static const int RandomPaletteIndex = 9;
-    
-    static uint32_t noise_x;
-    static uint32_t noise_y;
-    static uint32_t noise_z;
-    static uint32_t noise_scale_x;
-    static uint32_t noise_scale_y;
-    static uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
-    static uint8_t  noisesmoothing;
 
     // This class parties right on the noise variables, but I don't want to encourage that by making them public.
     // THey should be turned into member variables, etc.
@@ -118,17 +110,38 @@ protected:
 
 public:
 
+    // Many of the Aurora effects need direct access to these from external classes
+
     CRGB * leds;
+    CRGB * leds2;
+    static uint32_t noise_x;
+    static uint32_t noise_y;
+    static uint32_t noise_z;
+    static uint32_t noise_scale_x;
+    static uint32_t noise_scale_y;
+    static uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
+    static uint8_t  noisesmoothing;
+
+    int8_t zD;
+    int8_t zF;
+    uint32_t* effectX = nullptr;
+    uint32_t* effectY = nullptr;
+    uint32_t* effectZ = nullptr;
+    uint32_t* effectScaleX = nullptr;
+    uint32_t* effectScaleY = nullptr;
+    uint8_t eNs_noisesmooth = 0;
+    bool eNs_isSetupped = false;
 
     GFXBase(int w, int h) : Adafruit_GFX(w, h),
                             _width(w),
                             _height(h)
     {
-        NoiseVariablesSetup();
+        leds2 = new CRGB[NUM_LEDS]();
     }
 
     virtual ~GFXBase()
     {
+        delete [] leds2;
     }
 
     inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
@@ -417,6 +430,8 @@ public:
         loadPalette(0);
         NoiseVariablesSetup();
         ResetOscillators();
+        FillNoise();
+
     }
 
     void CyclePalette(int offset = 1)
@@ -675,9 +690,6 @@ public:
     // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it arround.
 
     // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
-
-    #define MATRIX_CENTER_X ((MATRIX_WIDTH+1)/2)
-    #define MATRIX_CENTER_Y ((MATRIX_HEIGHT+1)/2)
 
     inline void Caleidoscope1()
     {
@@ -1098,8 +1110,8 @@ public:
     // write one pixel with the specified color from the current palette to coordinates
     /*
     void Pixel(int x, int y, uint8_t colorIndex) {
-      leds[XY(x, y)] = ColorFromCurrentPalette(colorIndex);
-      matrix.drawBackgroundPixelRGB888(x,y, leds[XY(x, y)]); // now draw it?
+      leds[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
+      matrix.drawBackgroundPixelRGB888(x,y, leds[xy(x, y)]); // now draw it?
     }
     */
 
@@ -1168,22 +1180,22 @@ public:
 
         // CRGB tmp = 0;
 
-        for (int y = 0; y < MATRIX_HEIGHT; y++)
+        for (int y = 1 /* BUGBUG depends on VU */; y < MATRIX_HEIGHT; y++)
         {
 
             // Shift Left: https://codedost.com/c/arraypointers-in-c/c-program-shift-elements-array-left-direction/
             // Computationally heavier but doesn't need an entire leds2 array
 
-            // tmp = leds[XY(0, y)];
+            // tmp = leds[xy(0, y)];
             // for (int m = 0; m < delta; m++)
             // {
             // Do this delta time for each row... computationally expensive potentially.
             // for(int x = 0; x < MATRIX_WIDTH; x++)
             //{
-            //     leds[XY(x, y)] = leds [XY(x+1, y)];
+            //     leds[xy(x, y)] = leds [xy(x+1, y)];
             // }
 
-            // leds[XY(MATRIX_WIDTH-1, y)] = tmp;
+            // leds[xy(MATRIX_WIDTH-1, y)] = tmp;
             //}
 
             // Shift
@@ -1204,7 +1216,7 @@ public:
         // write back to leds
         for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
           for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
-            leds[XY(x, y)] = leds2[XY(x, y)];
+            leds[xy(x, y)] = leds2[xy(x, y)];
           }
         }
         */
@@ -1222,7 +1234,7 @@ public:
             for (int m = 0; m < delta; m++) // moves
             {
                 // Do this delta time for each row... computationally expensive potentially.
-                for (int y = 0; y < MATRIX_HEIGHT; y++)
+                for (int y = 1 /* BUGBUG depends on VU */; y < MATRIX_HEIGHT; y++)
                 {
                     leds[xy(x, y)] = leds[xy(x, y + 1)];
                 }
@@ -1231,4 +1243,94 @@ public:
             }
         } // end column loop
     }     /// MoveY
+
+
+  void MoveFractionalNoiseX(uint8_t amt = 16) 
+  {
+    // move delta pixelwise
+    for (int y = 0; y < MATRIX_HEIGHT; y++) {
+      uint16_t amount = noise[0][y] * amt;
+      uint8_t delta = MATRIX_WIDTH - 1 - (amount / 256);
+
+      for (int x = 0; x < MATRIX_WIDTH - delta; x++) {
+        leds2[xy(x, y)] = leds[xy(x + delta, y)];
+      }
+      for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++) {
+        leds2[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
+      }
+    }
+
+    //move fractions
+    CRGB PixelA;
+    CRGB PixelB;
+
+    for (uint8_t y = 1 /* BUGBUG depends on VU */; y < MATRIX_HEIGHT; y++) {
+      uint16_t amount = noise[0][y] * amt;
+      uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
+      uint8_t fractions = amount - (delta * 256);
+
+      for (uint8_t x = 1; x < MATRIX_WIDTH; x++) {
+        PixelA = leds2[xy(x, y)];
+        PixelB = leds2[xy(x - 1, y)];
+
+        PixelA %= 255 - fractions;
+        PixelB %= fractions;
+
+        leds[xy(x, y)] = PixelA + PixelB;
+      }
+
+      PixelA = leds2[xy(0, y)];
+      PixelB = leds2[xy(MATRIX_WIDTH - 1, y)];
+
+      PixelA %= 255 - fractions;
+      PixelB %= fractions;
+
+      leds[xy(0, y)] = PixelA + PixelB;
+    }
+  }
+
+  void MoveFractionalNoiseY(uint8_t amt = 16) 
+  {
+    // move delta pixelwise
+    for (int x = 0; x < MATRIX_WIDTH; x++) {
+      uint16_t amount = noise[x][0] * amt;
+      uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
+
+      for (int y = 0; y < MATRIX_HEIGHT - delta; y++) {
+        leds2[xy(x, y)] = leds[xy(x, y + delta)];
+      }
+      for (int y = MATRIX_HEIGHT - delta; y < MATRIX_HEIGHT; y++) {
+        leds2[xy(x, y)] = leds[xy(x, y + delta - MATRIX_HEIGHT)];
+      }
+    }
+
+    //move fractions
+    CRGB PixelA;
+    CRGB PixelB;
+
+    for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+      uint16_t amount = noise[x][0] * amt;
+      uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
+      uint8_t fractions = amount - (delta * 256);
+
+      for (uint8_t y = 1; y < MATRIX_HEIGHT; y++) {
+        PixelA = leds2[xy(x, y)];
+        PixelB = leds2[xy(x, y - 1)];
+
+        PixelA %= 255 - fractions;
+        PixelB %= fractions;
+
+        leds[xy(x, y)] = PixelA + PixelB;
+      }
+
+      PixelA = leds2[xy(x, 0)];
+      PixelB = leds2[xy(x, MATRIX_HEIGHT - 1)];
+
+      PixelA %= 255 - fractions;
+      PixelB %= fractions;
+
+      leds[xy(x, 0)] = PixelA + PixelB;
+    }
+  }
+
 };

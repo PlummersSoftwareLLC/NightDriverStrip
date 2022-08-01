@@ -27,6 +27,7 @@
 //   and added the cycle detection CRC stuff
 //
 // History:     Jun-25-2022         Davepl      Based on Aurora
+//              Jul-08-2022         Davepl      Added loop checks
 //
 //---------------------------------------------------------------------------
 

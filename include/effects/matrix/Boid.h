@@ -2,7 +2,7 @@
 
 //+--------------------------------------------------------------------------
 //
-// File:        PatternSpiro.h
+// File:        Boids.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //

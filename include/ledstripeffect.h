@@ -40,6 +40,7 @@
 #include "ntptimeclient.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
+#include "ledmatrixgfx.h"
 #include "ledstripeffect.h"
 
 #include <deque>
@@ -79,12 +80,12 @@ class LEDStripEffect
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               // There are up to 8 channel in play per effect and when we
     {           
-        debugW("Init %s", _friendlyName.c_str());                                                    //   start up, we are given copies to their graphics interfaces
+        debugV("Init %s", _friendlyName.c_str());                                                    //   start up, we are given copies to their graphics interfaces
         for (int i = 0; i < NUM_CHANNELS; i++)                      //   so that we can call them directly later from other calls
         {
             _GFX[i] = gfx[i];    
         }
-        debugW("Get LED Count");
+        debugV("Get LED Count");
         _cLEDs = _GFX[0]->GetLEDCount();   
         debugV("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
         return true;  
@@ -95,6 +96,11 @@ class LEDStripEffect
         return _GFX[0];
     }
 
+    inline LEDMatrixGFX * mgraphics() const
+    {
+        return ((LEDMatrixGFX *)_GFX[0].get());
+    }
+    
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     

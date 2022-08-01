@@ -69,6 +69,10 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 #include "effects/matrix/PatternPongClock.h"
 #include "effects/matrix/PatternBounce.h"
 #include "effects/matrix/PatternMandala.h"
+#include "effects/matrix/PatternSpin.h"
+#include "effects/matrix/PatternFlowField.h"
+#include "effects/matrix/PatternMisc.h"
+#include "effects/matrix/PatternNoiseSmearing.h"
 #endif
 
 #ifdef USESTRIP
@@ -298,6 +302,20 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         
+        new PatternRainbowFlag(),
+        new PatternMultipleStream(),
+        new PatternMultipleStream2(),
+        new PatternMultipleStream3(),
+        new PatternMultipleStream4(),
+        new PatternMultipleStream5(),
+        new PatternMultipleStream8(),
+        new PatternPaletteSmear(),
+        new PatternMunch(),
+        new PatternInfinity(),
+        new PatternRose(),
+        new PatternPinwheel(),
+        new PatternSunburst(),
+        new PatternFlowField(),
         new PatternLife(),
         new PatternPongClock(),
         new SpectrumAnalyzerEffect("Spectrum", false, spectrumBasicColors, 100, 0, 2.0, 2.0),
