@@ -244,8 +244,9 @@ class CSPIFFSWebServer
                 request->beginChunkedResponse(pszType, [SPIFFSfile](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
                 {
                     auto localHandle = SPIFFSfile;
-                    Serial.printf("[HTTP]\t[%d]\tINDEX [%d]\tBUFFER_MAX_LENGTH [%d]\r\n", index, localHandle.size(), maxLen);
+                    Serial.printf("[HTTP]  [%6d]    INDEX [%6d]    BUFFER_MAX_LENGTH [%6d]\r\n", index, localHandle.size(), maxLen);
                     size_t len = localHandle.read(buffer, maxLen);
+                    Serial.printf(">> Succcessful read of %d\n", len);
                     if (len == 0)
                     {
                         Serial.printf("Closing [%d]\n", SPIFFSfile);
@@ -256,6 +257,7 @@ class CSPIFFSWebServer
             );
             request->send(response);
         });
+        
     }    
 
     void begin()
