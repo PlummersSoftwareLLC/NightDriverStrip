@@ -24,7 +24,7 @@
 //
 //   Effect code to draw an analog clock
 //
-// History:     Aug-01-2022         Davepl      Based on Aurora
+// History:     Aug-01-2022         Davepl      For David S.
 //
 //---------------------------------------------------------------------------
 
