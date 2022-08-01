@@ -128,7 +128,7 @@ PeakData g_Peaks;
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *)
 {
-    SoundAnalyzer Analyzer(INPUT_PIN);
+     SoundAnalyzer Analyzer(INPUT_PIN);
 
     debugI(">>> Sampler Task Started");
 

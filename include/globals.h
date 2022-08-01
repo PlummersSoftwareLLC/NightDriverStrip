@@ -121,12 +121,12 @@
 // We have a half-dozen workers and these are their relative priorities.  It might survive if all were set equal,
 // but I think drawing should be lower than audio so that a bad or greedy effect doesn't starve the audio system.
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+5      // Draw any available frames first
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+4      // ...then process and decompress incoming frames
-#define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+3      // If equal or lower than audio, will produce garbage on serial
-#define AUDIO_PRIORITY          tskIDLE_PRIORITY+2
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7      // Draw any available frames first
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6      // ...then process and decompress incoming frames
+#define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
+#define NET_PRIORITY            tskIDLE_PRIORITY+4
+#define AUDIO_PRIORITY          tskIDLE_PRIORITY+3
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
-#define NET_PRIORITY            tskIDLE_PRIORITY+2
 
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
@@ -142,6 +142,11 @@
 // #define DEBUG_CORE              1
 // #define SOCKET_CORE             1
 // #define REMOTE_CORE             1
+
+// Some "Reliability Rules"
+// Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
+// It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
+// 
 
 #define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
 #define NET_CORE                1
@@ -421,7 +426,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              1  // Accept over the air flash updates
+    #define ENABLE_OTA              0  // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
@@ -452,9 +457,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NOISE_FLOOR    100.0f
 
     #define TOGGLE_BUTTON_1 0
-
-    #define NUM_INFO_PAGES          2
-    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
+    #define USE_SCREEN      0
 
 #elif TTGO
 

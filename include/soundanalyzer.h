@@ -120,7 +120,7 @@ class PeakData
 {
   protected:
 
-   static float _Min[NUM_BANDS];
+    static float _Min[NUM_BANDS];
     static float _Max[NUM_BANDS];
     static float _Last[NUM_BANDS];
     static float _allBandsMax;
@@ -470,10 +470,12 @@ class SampleBuffer
             i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
             i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
             i2s_config.dma_buf_count = 2;
+            
             ESP_ERROR_CHECK( adc1_config_width(ADC_WIDTH_BIT_12) );
             ESP_ERROR_CHECK( adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0) );
             ESP_ERROR_CHECK( i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config,  0, NULL) );
             ESP_ERROR_CHECK( i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL) );     
+            
         #else
             i2s_config_t i2s_config;
             i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);

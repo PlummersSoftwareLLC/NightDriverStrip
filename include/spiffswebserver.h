@@ -244,20 +244,19 @@ class CSPIFFSWebServer
                 request->beginChunkedResponse(pszType, [SPIFFSfile](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
                 {
                     auto localHandle = SPIFFSfile;
-                    Serial.printf("[HTTP]  [%6d]    INDEX [%6d]    BUFFER_MAX_LENGTH [%6d]\r\n", index, localHandle.size(), maxLen);
+                    //Serial.printf("[HTTP]  [%6d]    INDEX [%6d]    BUFFER_MAX_LENGTH [%6d]\r\n", index, localHandle.size(), maxLen);
                     size_t len = localHandle.read(buffer, maxLen);
-                    Serial.printf(">> Succcessful read of %d\n", len);
+                    //Serial.printf(">> Succcessful read of %d\n", len);
                     if (len == 0)
                     {
-                        Serial.printf("Closing [%d]\n", SPIFFSfile);
-                        localHandle.close();
+                        //Serial.printf("Closing [%d]\n", SPIFFSfile);
+                        //localHandle.close();
                     }
                     return len;
                 }
             );
             request->send(response);
         });
-        
     }    
 
     void begin()
@@ -276,12 +275,14 @@ class CSPIFFSWebServer
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
 
         // Extra-large files must be manually served like this per Issue #770 in AsyncWebServer lib
-
-        ServeLargeStaticFile("/static/js/main.js", "text/javascript");
+        // As of now, though, the static files are small enough that the default serveStatic still works
+        //
+        //_server.serveStatic("/static/js/main.js", SPIFFS, "/static/js/main.js");
+        //ServeLargeStaticFile("/static/js/main.js", "text/javascript");
         //ServeLargeStaticFile("/static/js/main.js.LICENSE.txt", "text/plain");
         //ServeLargeStaticFile("/static/css/main.b4f33716.css", "text/css");
 
-        _server.serveStatic("/", SPIFFS, "/", "public, max-age=2").setDefaultFile("index.html");        // BUGBUG Fix lifetime to 86400 or something like that
+        _server.serveStatic("/", SPIFFS, "/", "public, max-age=86400").setDefaultFile("index.html");        // BUGBUG Fix lifetime to 86400 or something like that
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {
