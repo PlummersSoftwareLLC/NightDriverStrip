@@ -96,11 +96,12 @@ class LEDStripEffect
         return _GFX[0];
     }
 
+#if USE_MATRIX
     inline LEDMatrixGFX * mgraphics() const
     {
         return ((LEDMatrixGFX *)_GFX[0].get());
     }
-    
+#endif    
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
@@ -109,7 +110,7 @@ class LEDStripEffect
         return _friendlyName.c_str();
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramSPECTRUesPerSecond() const
     {
         return 31;
     }
