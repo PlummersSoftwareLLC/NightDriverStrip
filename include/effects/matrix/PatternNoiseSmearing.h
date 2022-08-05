@@ -63,199 +63,51 @@
 
 uint8_t patternNoiseSmearingHue = 0;
 
-class PatternMultipleStream : public LEDStripEffect 
+
+class PatternCurtain : public LEDStripEffect 
 {
 public:
-  PatternMultipleStream() : LEDStripEffect("MultiStream")
-  {
-  }
-
-  virtual void Start()
-  {
-    graphics()->Clear();
-  }
-
-  // this pattern draws two points to the screen based on sin/cos if a counter
-  // (comment out NoiseSmearWithRadius to see pattern of pixels)
-  // these pixels are smeared by a large radius, giving a lot of movement
-  // the image is dimmed before each drawing to not saturate the screen with color
-  // the smear has an offset so the pixels usually have a trail leading toward the upper left
-  virtual void Draw()
-  {
-    static unsigned long counter = 0;
-
-#if 0
-    // this counter lets put delays between each frame and still get the same animation
-    counter++;
-#else
-    // this counter updates in real time and can't be slowed down for debugging
-    counter = millis() / 10;
-#endif
-
-    uint8_t x1 = 4 + sin8(counter * 2) / 10;
-    uint8_t x2 = 8 + sin8(counter * 2) / 16;
-    uint8_t y2 = 8 + cos8((counter * 2) / 3) / 16;
-
-    graphics()->leds[graphics()->xy(x1, x2)] = graphics()->ColorFromCurrentPalette(patternNoiseSmearingHue);
-    graphics()->leds[graphics()->xy(x2, y2)] = graphics()->ColorFromCurrentPalette(patternNoiseSmearingHue + 128);
-
-    // Noise
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
-
-    graphics()->FillNoise();
-
-    graphics()->MoveX(8);
-    graphics()->MoveFractionalNoiseX(4);
-
-    graphics()->MoveY(8);
-    graphics()->MoveFractionalNoiseY(4);
-
-    patternNoiseSmearingHue++;
-  }
-};
-
-class PatternMultipleStream2 : public LEDStripEffect 
-{
-public:
-  PatternMultipleStream2() : LEDStripEffect("MultipleStream2")
+  PatternCurtain() : LEDStripEffect("Curtain")
   {
   }
 
   virtual void Draw()
   {
-    graphics()->DimAll(230);
-
-    uint8_t xx = 4 + sin8(millis() / 9) / 10;
-    uint8_t yy = 4 + cos8(millis() / 10) / 10;
-    graphics()->leds[graphics()->xy(xx, yy)] += graphics()->ColorFromCurrentPalette(patternNoiseSmearingHue);
-
-    xx = 8 + sin8(millis() / 10) / 16;
-    yy = 8 + cos8(millis() / 7) / 16;
-    graphics()->leds[graphics()->xy(xx, yy)] += graphics()->ColorFromCurrentPalette(patternNoiseSmearingHue + 80);
-
-    graphics()->leds[graphics()->xy(15, 15)] += graphics()->ColorFromCurrentPalette(patternNoiseSmearingHue + 160);
-
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
-    graphics()->noise_z += 1000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
-    graphics()->FillNoise();
-
-    graphics()->MoveX(3);
-    graphics()->MoveFractionalNoiseY();
-
-    graphics()->MoveY(3);
-    graphics()->MoveFractionalNoiseX();
-
-    patternNoiseSmearingHue++;
-  }
-};
-
-class PatternMultipleStream3 : public LEDStripEffect 
-{
-public:
-  PatternMultipleStream3() : LEDStripEffect("MultipleStream3")
-  {
-  }
-
-  virtual void Draw()
-  {
-    //CLS();
     graphics()->DimAll(235); 
+    graphics()->BlurFrame(50);
 
-    for (uint8_t i = 3; i < 32; i = i + 4) {
-      graphics()->leds[graphics()->xy(i, 15)] += graphics()->ColorFromCurrentPalette(i * 8);
+    // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
+
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+      graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
+
+    for (uint8_t i = 3; i < MATRIX_WIDTH - 3; i = i + 3) 
+    {
+      uint16_t color = graphics()->to16bit(graphics()->ColorFromCurrentPalette(i * 4));
+      graphics()->drawCircle(i, 2, 1, color);
+      graphics()->setPixel(i, 2, color);
     }
 
+     
     // Noise
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
-    graphics()->noise_z += 1000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
+    graphics()->noise_x += 3000;
+    graphics()->noise_y += 3000;
+    graphics()->noise_z += 3000;
+    graphics()->noise_scale_x = 2000 *(2.0 - gVURatio);
+    graphics()->noise_scale_y = 2000 *(2.0 - gVURatio);
     graphics()->FillNoise();
 
-    graphics()->MoveX(3);
-    graphics()->MoveFractionalNoiseY(4);
+    //graphics()->MoveX(3);
+    graphics()->MoveFractionalNoiseY(8);
 
     graphics()->MoveY(3);
-    graphics()->MoveFractionalNoiseX(4);
+    //graphics()->MoveFractionalNoiseX(8);
   }
 };
 
-class PatternMultipleStream4 : public LEDStripEffect 
-{
+class PatternGridLights : public LEDStripEffect {
 public:
-  PatternMultipleStream4() : LEDStripEffect("MultipleStream4")
-  {
-  }
-
-  virtual void Draw()
-  {
-    //CLS();
-    graphics()->DimAll(235); 
-
-    graphics()->leds[graphics()->xy(15, 15)] += graphics()->ColorFromCurrentPalette(patternNoiseSmearingHue);
-
-
-    // Noise
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
-    graphics()->FillNoise();
-
-    graphics()->MoveX(8);
-    graphics()->MoveFractionalNoiseX();
-
-    graphics()->MoveY(8);
-    graphics()->MoveFractionalNoiseY();
-
-    patternNoiseSmearingHue++;
-  }
-};
-
-class PatternMultipleStream5 : public LEDStripEffect 
-{
-public:
-  PatternMultipleStream5() : LEDStripEffect("MultipleStream5")
-  {
-  }
-
-  virtual void Draw()
-  {
-
-    //CLS();
-    graphics()->DimAll(235);
-
-
-    for (uint8_t i = 3; i < 32; i = i + 4) {
-      graphics()->leds[graphics()->xy(i, 31)] += graphics()->ColorFromCurrentPalette(i * 8);
-    }
-
-    // Noise
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
-    graphics()->noise_z += 1000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
-    graphics()->FillNoise();
-
-    graphics()->MoveX(3);
-    graphics()->MoveFractionalNoiseY(4);
-
-    graphics()->MoveY(4);
-    graphics()->MoveFractionalNoiseX(4);
-  }
-};
-
-class PatternMultipleStream8 : public LEDStripEffect {
-public:
-  PatternMultipleStream8() : LEDStripEffect("MultipleStream8")
+  PatternGridLights() : LEDStripEffect("Grid Lights")
   {
   }
 
@@ -263,11 +115,17 @@ public:
   {
     graphics()->DimAll(230); 
 
-    // draw grid of rainbow dots on top of the dimmed image
-    for (uint8_t y = 1; y < 32; y = y + 6) {
-      for (uint8_t x = 1; x < 32; x = x + 6) {
+    // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
 
-        graphics()->leds[graphics()->xy(x, y)] += graphics()->ColorFromCurrentPalette((x * y) / 4);
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+      graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
+
+    // draw grid of rainbow dots on top of the dimmed image
+    for (uint8_t y = 1; y < MATRIX_HEIGHT - 6; y = y + 6) 
+    {
+      for (uint8_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6) 
+      {
+        graphics()->leds[graphics()->xy(x, y)] += graphics()->ColorFromCurrentPalette((x * y) / 2);
       }
     }
 
@@ -296,29 +154,41 @@ public:
 
   virtual void Draw()
   {
-    graphics()->DimAll(170);
+    graphics()->DimAll(10);
    
     // draw a rainbow color palette
-    for (uint8_t y = 1; y < MATRIX_HEIGHT; y++) {
-      for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+    for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) 
+    {
+      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++) 
+      {
         graphics()->leds[graphics()->xy(x, y)] += graphics()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
+      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++) 
+      {
+        graphics()->leds[graphics()->xy(MATRIX_WIDTH - 1 - x, y)] += graphics()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
+      }
+
     }
  
-  
+    // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
+
     // Noise
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
+    graphics()->noise_x += 3000;
+    graphics()->noise_y += 3000;
     graphics()->noise_scale_x = 4000;
     graphics()->noise_scale_y = 4000;
  
     graphics()->FillNoise();
 
-    graphics()->MoveX(3);
-    //graphics()->MoveFractionalNoiseY(4);
+    graphics()->MoveX(6);
+    graphics()->MoveFractionalNoiseY(4);
 
-    graphics()->MoveY(3);
-    graphics()->MoveFractionalNoiseX(4);
+    graphics()->MoveY(12);
+    graphics()->MoveFractionalNoiseX(16);
+
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+      graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
+
   }
 };
 

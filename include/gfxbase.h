@@ -1177,56 +1177,21 @@ public:
     
     inline void MoveX(uint8_t delta)
     {
-
-        // CRGB tmp = 0;
-
-        for (int y = 1 /* BUGBUG depends on VU */; y < MATRIX_HEIGHT; y++)
+        for (int y = 0; y < MATRIX_HEIGHT; y++)
         {
-
-            // Shift Left: https://codedost.com/c/arraypointers-in-c/c-program-shift-elements-array-left-direction/
-            // Computationally heavier but doesn't need an entire leds2 array
-
-            // tmp = leds[xy(0, y)];
-            // for (int m = 0; m < delta; m++)
-            // {
-            // Do this delta time for each row... computationally expensive potentially.
-            // for(int x = 0; x < MATRIX_WIDTH; x++)
-            //{
-            //     leds[xy(x, y)] = leds [xy(x+1, y)];
-            // }
-
-            // leds[xy(MATRIX_WIDTH-1, y)] = tmp;
-            //}
-
-            // Shift
+            // First part
             for (int x = 0; x < MATRIX_WIDTH - delta; x++)  
-            {
                 leds[xy(x, y)] = leds[xy(x + delta, y)];
-            }
-
-            // Wrap around
+            // Wrap around to second part
             for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++)
-            {
                 leds[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
-            }
-
-        } // end row loop
-
-        /*
-        // write back to leds
-        for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
-          for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
-            leds[xy(x, y)] = leds2[xy(x, y)];
-          }
         }
-        */
     }
 
     // MoveY - Shifts the content on the matix up or down
     
     inline void MoveY(uint8_t delta)
     {
-
         CRGB tmp = 0;
         for (int x = 0; x < MATRIX_WIDTH; x++)
         {
@@ -1234,10 +1199,8 @@ public:
             for (int m = 0; m < delta; m++) // moves
             {
                 // Do this delta time for each row... computationally expensive potentially.
-                for (int y = 1 /* BUGBUG depends on VU */; y < MATRIX_HEIGHT; y++)
-                {
+                for (int y = 0; y < MATRIX_HEIGHT - 1; y++)
                     leds[xy(x, y)] = leds[xy(x, y + 1)];
-                }
 
                 leds[xy(x, MATRIX_HEIGHT - 1)] = tmp;
             }
@@ -1248,23 +1211,25 @@ public:
   void MoveFractionalNoiseX(uint8_t amt = 16) 
   {
     // move delta pixelwise
-    for (int y = 0; y < MATRIX_HEIGHT; y++) {
+    for (int y = 0; y < MATRIX_HEIGHT; y++) 
+    {
       uint16_t amount = noise[0][y] * amt;
       uint8_t delta = MATRIX_WIDTH - 1 - (amount / 256);
 
-      for (int x = 0; x < MATRIX_WIDTH - delta; x++) {
+      // Process up to the end less the dekta
+      for (int x = 0; x < MATRIX_WIDTH - delta; x++) 
         leds2[xy(x, y)] = leds[xy(x + delta, y)];
-      }
-      for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++) {
+
+      // Do the tail portion while wrapping around 
+      for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++) 
         leds2[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
-      }
     }
 
     //move fractions
     CRGB PixelA;
     CRGB PixelB;
 
-    for (uint8_t y = 1 /* BUGBUG depends on VU */; y < MATRIX_HEIGHT; y++) {
+    for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
       uint16_t amount = noise[0][y] * amt;
       uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
       uint8_t fractions = amount - (delta * 256);

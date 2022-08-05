@@ -235,7 +235,7 @@ class PeakData
 
 extern PeakData g_Peaks;
 const size_t    MAX_SAMPLES        = 256;
-const size_t    SAMPLING_FREQUENCY = 22050;
+const size_t    SAMPLING_FREQUENCY = 44100;
 
 extern PeakData g_Peaks;
 

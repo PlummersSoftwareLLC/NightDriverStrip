@@ -302,17 +302,14 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        
-        new PatternClock(),
-        new PatternRainbowFlag(),
-        new PatternMultipleStream(),
-        new PatternMultipleStream2(),
-        new PatternMultipleStream3(),
-        new PatternMultipleStream4(),
-        new PatternMultipleStream5(),
-        new PatternMultipleStream8(),
+
         new PatternPaletteSmear(),
+        new PatternCurtain(),
+        new PatternGridLights(),
+        new PatternRainbowFlag(),
         new PatternMunch(),
+        new PatternClock(),        
+
         new PatternInfinity(),
         new PatternRose(),
         new PatternPinwheel(),
