@@ -92,172 +92,167 @@ volatile long PatternSubscribers::cViews;
 // Palettes that are referenced by effects need to be instantiated first
 
 const CRGBPalette256 BlueColors_p =
-{
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue,
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue,
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue,
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue
-};
+    {
+        CRGB::DarkBlue,
+        CRGB::MediumBlue,
+        CRGB::Blue,
+        CRGB::MediumBlue,
+        CRGB::DarkBlue,
+        CRGB::MediumBlue,
+        CRGB::Blue,
+        CRGB::MediumBlue,
+        CRGB::DarkBlue,
+        CRGB::MediumBlue,
+        CRGB::Blue,
+        CRGB::MediumBlue,
+        CRGB::DarkBlue,
+        CRGB::MediumBlue,
+        CRGB::Blue,
+        CRGB::MediumBlue};
 
 const CRGBPalette256 RedColors_p =
-{
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
+    {
+        CRGB::Red,
+        CRGB::DarkRed,
+        CRGB::DarkRed,
+        CRGB::DarkRed,
 
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
+        CRGB::Red,
+        CRGB::DarkRed,
+        CRGB::DarkRed,
+        CRGB::DarkRed,
 
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
+        CRGB::Red,
+        CRGB::DarkRed,
+        CRGB::DarkRed,
+        CRGB::DarkRed,
 
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::OrangeRed
-};
+        CRGB::Red,
+        CRGB::DarkRed,
+        CRGB::DarkRed,
+        CRGB::OrangeRed};
 
 const CRGBPalette256 GreenColors_p =
-{
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
+    {
+        CRGB::Green,
+        CRGB::DarkGreen,
+        CRGB::DarkGreen,
+        CRGB::DarkGreen,
 
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
+        CRGB::Green,
+        CRGB::DarkGreen,
+        CRGB::DarkGreen,
+        CRGB::DarkGreen,
 
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
+        CRGB::Green,
+        CRGB::DarkGreen,
+        CRGB::DarkGreen,
+        CRGB::DarkGreen,
 
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::LimeGreen
-};
+        CRGB::Green,
+        CRGB::DarkGreen,
+        CRGB::DarkGreen,
+        CRGB::LimeGreen};
 
 const CRGBPalette256 PurpleColors_p =
-{
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
+    {
+        CRGB::Purple,
+        CRGB::Maroon,
+        CRGB::Violet,
+        CRGB::DarkViolet,
 
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
+        CRGB::Purple,
+        CRGB::Maroon,
+        CRGB::Violet,
+        CRGB::DarkViolet,
 
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
+        CRGB::Purple,
+        CRGB::Maroon,
+        CRGB::Violet,
+        CRGB::DarkViolet,
 
-    CRGB::Pink,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
+        CRGB::Pink,
+        CRGB::Maroon,
+        CRGB::Violet,
+        CRGB::DarkViolet,
 };
 
 const CRGBPalette256 RGBColors_p =
-{
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Blue
-};
+    {
+        CRGB::Red,
+        CRGB::Green,
+        CRGB::Blue,
+        CRGB::Red,
+        CRGB::Green,
+        CRGB::Blue,
+        CRGB::Red,
+        CRGB::Green,
+        CRGB::Blue,
+        CRGB::Red,
+        CRGB::Green,
+        CRGB::Blue,
+        CRGB::Red,
+        CRGB::Green,
+        CRGB::Blue,
+        CRGB::Blue};
 
 const CRGBPalette256 MagentaColors_p =
-{
-    CRGB::Pink,
-    CRGB::DeepPink,
-    CRGB::HotPink,
-    CRGB::LightPink,
-    CRGB::LightCoral,
-    CRGB::Purple,
-    CRGB::MediumPurple,
-    CRGB::Magenta,
-    CRGB::DarkMagenta,
-    CRGB::DarkSalmon,
-    CRGB::MediumVioletRed,
-    CRGB::Pink,
-    CRGB::DeepPink,
-    CRGB::HotPink,
-    CRGB::LightPink,
-    CRGB::Magenta
-};
+    {
+        CRGB::Pink,
+        CRGB::DeepPink,
+        CRGB::HotPink,
+        CRGB::LightPink,
+        CRGB::LightCoral,
+        CRGB::Purple,
+        CRGB::MediumPurple,
+        CRGB::Magenta,
+        CRGB::DarkMagenta,
+        CRGB::DarkSalmon,
+        CRGB::MediumVioletRed,
+        CRGB::Pink,
+        CRGB::DeepPink,
+        CRGB::HotPink,
+        CRGB::LightPink,
+        CRGB::Magenta};
 
 const CRGBPalette256 spectrumBasicColors =
-{
-    CRGB(0xFD0E35), // Red
-    CRGB(0xFF8833), // Orange
-    CRGB(0xFFEB00), // Middle Yellow
-    CRGB(0xAFE313), // Inchworm
-    CRGB(0x3AA655), // Green
-    CRGB(0x8DD9CC), // Middle Blue Green
-    CRGB(0x0066FF), // Blue III
-    CRGB(0xDB91EF), // Lilac
-    CRGB(0xFD0E35), // Red
-    CRGB(0xFF8833), // Orange
-    CRGB(0xFFEB00), // Middle Yellow
-    CRGB(0xAFE313), // Inchworm
-    CRGB(0x3AA655), // Green
-    CRGB(0x8DD9CC), // Middle Blue Green
-    CRGB(0x0066FF), // Blue III
-    CRGB(0xDB91EF)  // Lilac
+    {
+        CRGB(0xFD0E35), // Red
+        CRGB(0xFF8833), // Orange
+        CRGB(0xFFEB00), // Middle Yellow
+        CRGB(0xAFE313), // Inchworm
+        CRGB(0x3AA655), // Green
+        CRGB(0x8DD9CC), // Middle Blue Green
+        CRGB(0x0066FF), // Blue III
+        CRGB(0xDB91EF), // Lilac
+        CRGB(0xFD0E35), // Red
+        CRGB(0xFF8833), // Orange
+        CRGB(0xFFEB00), // Middle Yellow
+        CRGB(0xAFE313), // Inchworm
+        CRGB(0x3AA655), // Green
+        CRGB(0x8DD9CC), // Middle Blue Green
+        CRGB(0x0066FF), // Blue III
+        CRGB(0xDB91EF)  // Lilac
 };
 
 const CRGBPalette256 USAColors_p =
-{
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
+    {
+        CRGB::Blue,
+        CRGB::Blue,
+        CRGB::Blue,
+        CRGB::Blue,
+        CRGB::Blue,
+        CRGB::Red,
+        CRGB::White,
+        CRGB::Red,
+        CRGB::White,
+        CRGB::Red,
+        CRGB::White,
+        CRGB::Red,
+        CRGB::White,
+        CRGB::Red,
+        CRGB::White,
+        CRGB::Red,
 };
 
 const CRGBPalette256 rainbowPalette(RainbowColors_p);
@@ -271,12 +266,12 @@ const CRGBPalette256 rainbowPalette(RainbowColors_p);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
-    CHSV hueColor = rgb2hsv_approximate(color);
-    CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", CRGBPalette256(color, color2));
-    if (object->Init(g_pDevices))
-        return object;
-    throw std::runtime_error("Could not initialize new spectrum analyzer!");
+        CHSV hueColor = rgb2hsv_approximate(color);
+        CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
+        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", CRGBPalette256(color, color2));
+        if (object->Init(g_pDevices))
+                return object;
+        throw std::runtime_error("Could not initialize new spectrum analyzer!");
 }
 
 #endif
@@ -289,7 +284,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 // The master effects table
 
 DRAM_ATTR LEDStripEffect *AllEffects[] =
-{
+    {
 #if DEMO
 
         new RainbowFillEffect(6, 2),
@@ -297,7 +292,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif LANTERN
 
-        new LanternEffect(),  
+        new LanternEffect(),
 
 #elif MESMERIZER
 
@@ -308,7 +303,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new PatternGridLights(),
         new PatternRainbowFlag(),
         new PatternMunch(),
-        new PatternClock(),        
+        new PatternClock(),
 
         new PatternInfinity(),
         new PatternRose(),
@@ -336,41 +331,41 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new PatternMandala(),
 
 #elif UMBRELLA
- 
-        new FireEffect("Calm Fire",   NUM_LEDS, 2,  2,  75, 3, 10, true, false),
-        new FireEffect("Medium Fire", NUM_LEDS, 1,  5, 100, 3,  4, true, false),
+
+        new FireEffect("Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false),
+        new FireEffect("Medium Fire", NUM_LEDS, 1, 5, 100, 3, 4, true, false),
         new MusicalPaletteFire("Musical Red Fire", HeatColors_p, NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
         new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
         new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
         new MusicalPaletteFire("Musical Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
-        new MusicalPaletteFire("Blue Fire",   CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue),    NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Blue Fire",   CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue),    NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
         new MusicalPaletteFire("Musical Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
-        
-        new MusicalPaletteFire("Green Fire",  CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen),     NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Green Fire",  CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen),     NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+
+        new MusicalPaletteFire("Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
         new MusicalPaletteFire("Musical Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
-        
+
         new BouncingBallEffect(),
         new DoublePaletteEffect(),
 
-        new MeteorEffect( 4, 4, 10, 2.0, 2.0),
-        new MeteorEffect(10, 1, 20, 1.5, 1.5),        
+        new MeteorEffect(4, 4, 10, 2.0, 2.0),
+        new MeteorEffect(10, 1, 20, 1.5, 1.5),
         new MeteorEffect(25, 1, 40, 1.0, 1.0),
         new MeteorEffect(50, 1, 50, 0.5, 0.5),
 
-        new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
+        new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),       // Rainbow Twinkle
         new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),                                                     // RGB Music Blur - Can You Hear Me Knockin'
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0),                                                // Rainbow Music Star
         new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
-        new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
-        new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),        // Blue Sparkle
-        new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                                                           // Red Twinkle
-        new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
+        new StarryNightEffect<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),           // Green Twinkle
+        new StarryNightEffect<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                  // Blue Sparkle
+        new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                                                                 // Red Twinkle
+        new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                          // Lava Stars
 
-        new PaletteEffect(RainbowColors_p),                                                                                                                 
+        new PaletteEffect(RainbowColors_p),
         new PaletteEffect(RainbowColors_p, 1.0, 1.0),
         new PaletteEffect(RainbowColors_p, .25),
 
@@ -389,8 +384,8 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new ColorBeatOverRed("ColorBeatOverRed"),
 
         new FireFanEffect(NUM_LEDS, 1, 12, 210, 2, NUM_LEDS / 2, Sequential, false, true),
-//        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-//        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
+        //        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
+        //        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
 
         new ColorCycleEffect(BottomUp, 6),
         new ColorCycleEffect(BottomUp, 2),
@@ -404,11 +399,10 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new StarryNightEffect<LongLifeSparkleStar>("Red Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Red),         // Blue Sparkle
         new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Blue),       // Blue Sparkle
 
-//        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::GREENX, 50, true),
-//        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::BLUEX, 50, true),
-//        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::REDX, 50, true),
- //       new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR, 50, true),
-
+        //        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::GREENX, 50, true),
+        //        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::BLUEX, 50, true),
+        //        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::REDX, 50, true),
+        //       new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR, 50, true),
 
         // new StarryNightEffect<LongLifeSparkleStar>("Blue Sparkle Stars", BlueColors_p, 10.0, 1, LINEARBLEND, 2.0, 0.0, 0.0),        // Blue Sparkle
 
@@ -464,20 +458,18 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         new SpectrumAnalyzerEffect("Spectrum Standard", true, spectrumBasicColors),
         new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
-        new SpectrumAnalyzerEffect("Spectrum USA",  true, USAColors_p, 0),
+        new SpectrumAnalyzerEffect("Spectrum USA", true, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", &rainbowPalette, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade",  true, spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", true, spectrumBasicColors, 50, 70, -1.0, 3.0),
         new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
         new GhostWave("GhostWave Rainbow", &rainbowPalette),
-
-
 
 #elif ATOMLIGHT
         new ColorFillEffect(CRGB::White, 1),
         new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
         new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
-//        new HueFireFanEffect(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
-//        new HueFireFanEffect(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
+        //        new HueFireFanEffect(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
+        //        new HueFireFanEffect(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
         new RainbowFillEffect(60, 0),
         new ColorCycleEffect(Sequential),
         new PaletteEffect(RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0),
@@ -487,7 +479,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 4), // Blooming Little Rainbow Stars
         new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 20, 12, LINEARBLEND, 1.0, 0.0, 2), // Blooming Rainbow Stars
-//        new StarryNightEffect<FanStar>("FanStars", RainbowColors_p, 8.0, 1.0, LINEARBLEND, 80.0, 0, 2.0),
+                                                                                                                            //        new StarryNightEffect<FanStar>("FanStars", RainbowColors_p, 8.0, 1.0, LINEARBLEND, 80.0, 0, 2.0),
 
         new MeteorEffect(20, 1, 25, .15, .05),
         new MeteorEffect(12, 1, 25, .15, .08),
@@ -545,7 +537,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),       // Rainbow Twinkle
         new BouncingBallEffect(),
         new VUEffect()
-
 
 #elif RINGSET
         new MusicalInsulatorEffect2("Musical Effect 2"),
@@ -613,7 +604,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", MagentaColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
         new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", MagentaColors_p, 2, 12, LINEARBLEND, 1.0),                                                       // Blooming Rainbow Stars
         new StarryNightEffect<BubblyStar>("Neon Bars", MagentaColors_p, 0.5, 64, NOBLEND, 0),                                                                            // Neon Bars
-                                                                                                                                                                         
+
         new ClassicFireEffect(true),
 
 #elif LEDSTRIP
@@ -638,10 +629,10 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 void InitEffectsManager()
 {
-    g_pEffectManager = make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
+        g_pEffectManager = make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
 
-    if (false == g_pEffectManager->Init())
-        throw runtime_error("Could not initialize effect manager");
+        if (false == g_pEffectManager->Init())
+                throw runtime_error("Could not initialize effect manager");
 }
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
@@ -652,6 +643,6 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 uint16_t XY(uint8_t x, uint8_t y)
 {
-    // Have a drink on me!
-    return (*g_pEffectManager)[0].get()->xy(x, y);
+        // Have a drink on me!
+        return (*g_pEffectManager)[0].get()->xy(x, y);
 }
