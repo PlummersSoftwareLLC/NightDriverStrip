@@ -166,7 +166,7 @@ public:
     {
         debugW("Setting Global Color");
                 
-#if (USEMATRIX || SPECTRUM)
+#if (USEMATRIX)
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
         GFXBase * pMatrix = (*this)[0].get();
@@ -192,8 +192,8 @@ public:
     {
         _pRemoteEffect = nullptr;
 
-#if (USEMATRIX || SPECTRUM)        
-        GFXBase * pMatrix = (*this)[0].get();
+#if (USEMATRIX)        
+        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
         pMatrix->PausePalette(false);
 #endif        
     }
