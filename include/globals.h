@@ -453,8 +453,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    100.0f
+    #define NOISE_CUTOFF   1000
+    #define NOISE_FLOOR    1000.0f
 
     #define TOGGLE_BUTTON_1 0
     #define USE_SCREEN      0

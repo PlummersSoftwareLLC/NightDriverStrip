@@ -145,7 +145,6 @@ class MusicStar : public Star
     MusicStar(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 2.0, double starSize = 1)
       : Star(palette, blendType, maxSpeed, starSize)
     {        
-        _velocity = randomDouble(0, _maxSpeed * 2) - _maxSpeed;
     }
 
     virtual float PreignitionTime() const      { return 0.0f; }
@@ -453,6 +452,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
             if (randomDouble(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
             {
+                //Serial.printf("Creating star with speed = %lf and factor = %lfn", _maxSpeed, _musicFactor);
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                 // This always starts stars on even pixel boundaries so they look like the desired width if not moving
                 newstar._iPos = (int) randomDouble(0, _cLEDs-1-starWidth);
@@ -465,9 +465,10 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     {
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
         {
+            i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c);         
+            graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);         
         }
 
         while (_allParticles.size() > 0 && _allParticles.front().Age() >= _allParticles.front().TotalLifetime())
