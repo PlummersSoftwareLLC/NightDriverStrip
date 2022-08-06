@@ -110,7 +110,7 @@ class LEDStripEffect
         return _friendlyName.c_str();
     }
 
-    virtual size_t DesiredFramSPECTRUesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const
     {
         return 31;
     }
