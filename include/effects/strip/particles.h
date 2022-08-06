@@ -95,7 +95,7 @@ public:
 
     double                       _iPos;
 
-    MovingObject(double maxSpeed = 0.25) 
+    MovingObject(double maxSpeed = 0.25) : _maxSpeed(maxSpeed)
     {
         _velocity = randomDouble(0, _maxSpeed * 2) - _maxSpeed;
     }

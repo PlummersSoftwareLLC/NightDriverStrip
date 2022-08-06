@@ -108,11 +108,6 @@ protected:
 
     friend class PatternMandala;
 
-public:
-
-    // Many of the Aurora effects need direct access to these from external classes
-
-    CRGB * leds;
     CRGB * leds2;
     static uint32_t noise_x;
     static uint32_t noise_y;
@@ -121,6 +116,12 @@ public:
     static uint32_t noise_scale_y;
     static uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
     static uint8_t  noisesmoothing;
+
+public:
+
+    // Many of the Aurora effects need direct access to these from external classes
+
+    CRGB * leds;
 
     int8_t zD;
     int8_t zF;
@@ -1137,6 +1138,15 @@ public:
         noise_z = random16();
         noise_scale_x = 6000;
         noise_scale_y = 6000;
+    }
+
+    inline void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
+    {
+        noise_x += nx;
+        noise_y += ny;
+        noise_z += nx;
+        noise_scale_x = sx;
+        noise_scale_y = sy;
     }
 
     inline void FillNoise()

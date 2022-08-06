@@ -90,11 +90,7 @@ public:
 
      
     // Noise
-    graphics()->noise_x += 3000;
-    graphics()->noise_y += 3000;
-    graphics()->noise_z += 3000;
-    graphics()->noise_scale_x = 2000 *(2.0 - gVURatio);
-    graphics()->noise_scale_y = 2000 *(2.0 - gVURatio);
+    graphics()->SetNoise(3000, 3000, 3000, 2000 *(2.0 - gVURatio), 2000 *(2.0 - gVURatio));
     graphics()->FillNoise();
 
     //graphics()->MoveX(3);
@@ -130,11 +126,7 @@ public:
     }
 
     // Noise
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
-    graphics()->noise_z += 1000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
+    graphics()->SetNoise(1000, 1000, 1000, 4000, 4000);
     graphics()->FillNoise();
 
     graphics()->MoveX(3);
@@ -173,10 +165,7 @@ public:
     // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
 
     // Noise
-    graphics()->noise_x += 3000;
-    graphics()->noise_y += 3000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
+graphics()->SetNoise(3000, 3000, 0, 4000, 4000);
  
     graphics()->FillNoise();
 
@@ -228,10 +217,7 @@ public:
     }
 
     // Noise
-    graphics()->noise_x += 1000;
-    graphics()->noise_y += 1000;
-    graphics()->noise_scale_x = 4000;
-    graphics()->noise_scale_y = 4000;
+    graphics()->SetNoise(1000, 1000, 0, 4000, 4000);
     graphics()->FillNoise();
 
     graphics()->MoveX(8);

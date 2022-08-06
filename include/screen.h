@@ -74,7 +74,7 @@ class Screen
 #endif
 
 
-    static const int BottomMargin = 20;
+    static const int BottomMargin = 38;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
@@ -134,8 +134,11 @@ class Screen
     {
         #if USE_OLED
             return 12;
-        #elif USE_SCREEN
-            return g_pDisplay->fontHeight();
+        #elif USE_LCD
+            int16_t x1, y1;
+            uint16_t w, h;
+            g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
+            return w + 2;                                                   // One pixel above and below chars looks better
         #else
             return 1;
         #endif

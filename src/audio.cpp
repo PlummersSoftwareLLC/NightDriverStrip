@@ -83,7 +83,6 @@ float g_peak2DecayRate = 1.0f;
     };
 #else
     static_assert(NUM_BANDS == 16);
-
     const int cutOffsBand[16] =
     {
         25, 40, 63, 100, 160, 250, 400, 630, 1000, 1600, 2500, 4000, 6300, 10000, 16000, 20000
@@ -99,7 +98,7 @@ float g_peak2DecayRate = 1.0f;
             #if M5STICKC || M5STICKCPLUS
                 0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
             #else
-                0.18f, 0.25f, 0.25f, 0.30f, 0.35f, 0.35f, 0.45f, 0.55f, 0.5f, 0.5f, 0.5f, 0.6f, .6f, 1.0f, 2.0f, 0.5f
+                0.10f, 0.25f, 0.30f, 0.35f, 0.45f, 0.45f, 0.50f, 0.6f, 0.45f, 0.5f, 0.5f, 0.6f, .80f, 1.0f, 1.8, 0.75f
             #endif
         };
     #endif

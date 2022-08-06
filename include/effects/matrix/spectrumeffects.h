@@ -350,7 +350,7 @@ class WaveformEffect : public LEDStripEffect
         _increment = increment;
     }
 
-    void DrawSpike(int x, double v) 
+    void DrawSpike(int x, double v, bool bErase = true) 
     {
         auto g = g_pEffectManager->graphics();
 
@@ -377,8 +377,9 @@ class WaveformEffect : public LEDStripEffect
                 else
                     color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND); 
             }
-                
-            g->setPixel(x, y, color);
+
+            bErase ? g->setPixel(x, y, color) : g->drawPixel(x, y, color);
+            
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
 
@@ -411,7 +412,7 @@ class GhostWave : public WaveformEffect
     virtual void Draw()
     {
         auto g = g_pEffectManager->graphics();
-
+        g->DimAll(242);
         for (int y = 0; y < MATRIX_HEIGHT; y++)
         {
             for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
@@ -421,9 +422,9 @@ class GhostWave : public WaveformEffect
             }
         }
     
-        g->BlurFrame(24);
-        DrawSpike(MATRIX_WIDTH/2, gVURatio / 2.0);
-        DrawSpike(MATRIX_WIDTH/2-1, gVURatio / 2.0);
+        g->BlurFrame(16);
+        DrawSpike(MATRIX_WIDTH/2, gVURatio / 2.0, false);
+        DrawSpike(MATRIX_WIDTH/2-1, gVURatio / 2.0, false);
     }
 };
 
