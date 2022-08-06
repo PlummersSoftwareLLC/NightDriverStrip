@@ -221,7 +221,7 @@ void IRAM_ATTR UpdateScreen()
                 yh += Screen::fontHeight();
                 // get effect name length and switch text size accordingly
                 int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
-                Screen::setTextSize(Screen::MEDIUM);
+                Screen::setTextSize(Screen::SMALL);
                 Screen::setTextColor(WHITE16, backColor);
                 Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
                 yh += Screen::fontHeight();
@@ -244,7 +244,7 @@ void IRAM_ATTR UpdateScreen()
                     Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
                     char szBuffer[64];
                     yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-                    snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Audio: %2d Serial:%2d ", g_FPS, g_AudioFPS, g_serialFPS);
+                    snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_AudioFPS, g_serialFPS);
                     Screen::setTextColor(YELLOW16, backColor);
                     Screen::drawString(szBuffer, yh);
                     yh += Screen::fontHeight();

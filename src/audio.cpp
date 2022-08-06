@@ -379,7 +379,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         if (Serial2.availableForWrite())
         {
             Serial2.write((uint8_t *)&data, sizeof(data));
-            Serial2.flush(true);
+            //Serial2.flush(true);
             static int lastFrame = millis();
             g_serialFPS = FPS(lastFrame, millis());
             lastFrame = millis();
@@ -420,6 +420,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         auto elapsed = millis() - startTime;
         if (targetElapsed > elapsed)
             delay(targetElapsed - elapsed);
+        else    
+            delay(1);
     }
 }
 
