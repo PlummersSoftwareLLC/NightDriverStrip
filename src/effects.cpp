@@ -298,7 +298,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
 
-
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 10.0),                                                // Rainbow Music Star
 
         new SpectrumAnalyzerEffect("Spectrum", false, spectrumBasicColors, 100, 0, 2.0, 2.0),

@@ -101,7 +101,8 @@ class LEDStripEffect
     {
         return ((LEDMatrixGFX *)_GFX[0].get());
     }
-#endif    
+#endif 
+   
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
