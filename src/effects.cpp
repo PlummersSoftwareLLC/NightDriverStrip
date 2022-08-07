@@ -298,15 +298,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
 
-<<<<<<< HEAD
-        new PatternPaletteSmear(),
-        new PatternCurtain(),
-        new PatternGridLights(),
-        new PatternRainbowFlag(),
-        new PatternMunch(),
-        new PatternClock(),
-=======
->>>>>>> 13bbf74c53f0aee189d2e0d6562f8b1899ba4da0
 
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 10.0),                                                // Rainbow Music Star
 

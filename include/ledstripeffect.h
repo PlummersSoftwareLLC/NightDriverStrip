@@ -96,7 +96,7 @@ class LEDStripEffect
         return _GFX[0];
     }
 
-#if USE_MATRIX
+#if USEMATRIX
     inline LEDMatrixGFX * mgraphics() const
     {
         return ((LEDMatrixGFX *)_GFX[0].get());

@@ -69,8 +69,8 @@ class PatternClock : public LEDStripEffect
         // Draw the clock face, outer ring and inner dot where the hands mount
 
         g->Clear();
-        g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius, WHITE16);
-        g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, WHITE16);
+        g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius, GREEN16);
+        g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, GREEN16);
         
         // Draw the hour ticks around the outside of the clock every 30 degrees
 

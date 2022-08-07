@@ -63,7 +63,7 @@ void LEDMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
     matrix.addLayer(&titleLayer); 
-    matrix.begin(50000);
+    matrix.begin(100000);
 
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
     backgroundLayer.setFont(font5x7);
