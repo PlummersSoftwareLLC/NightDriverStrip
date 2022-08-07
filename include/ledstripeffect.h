@@ -96,12 +96,13 @@ class LEDStripEffect
         return _GFX[0];
     }
 
-#if USE_MATRIX
+#if USEMATRIX
     inline LEDMatrixGFX * mgraphics() const
     {
         return ((LEDMatrixGFX *)_GFX[0].get());
     }
-#endif    
+#endif 
+   
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
