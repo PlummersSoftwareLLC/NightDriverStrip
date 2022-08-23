@@ -184,10 +184,11 @@ public:
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
                        int sparking = 100,
+                       int sparks = 3,
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : FireEffect(ledCount, cellsPerLED, cooling, sparking, sparking, sparkHeight, reversed, mirrored),
+        : FireEffect(ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           _palette(palette)
     {
     }
