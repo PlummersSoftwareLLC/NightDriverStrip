@@ -148,9 +148,9 @@ class MusicStar : public Star
     }
 
     virtual float PreignitionTime() const      { return 0.0f; }
-    virtual float IgnitionTime()    const      { return 0.25 ; }
-    virtual float HoldTime()        const      { return 0.00f; }
-    virtual float FadeTime()        const      { return 1.75f;  }
+    virtual float IgnitionTime()    const      { return 0.0 ; }
+    virtual float HoldTime()        const      { return 0.0f; }
+    virtual float FadeTime()        const      { return 0.5f;  }
 
 };
 float MusicStar::_baseHue = 0.0f;

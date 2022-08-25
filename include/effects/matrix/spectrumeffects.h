@@ -391,7 +391,6 @@ class WaveformEffect : public LEDStripEffect
         
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
-        
         DrawSpike(63, gVURatio/2.0);
         DrawSpike(0, gVURatio/2.0);
     }
@@ -399,32 +398,31 @@ class WaveformEffect : public LEDStripEffect
 
 class GhostWave : public WaveformEffect
 {
-    double                    _iPeakVUy = 0;
-    unsigned long             _msPeakVU = 0;
+    uint8_t                   _blur     = 0;
+    bool                      _erase    = true;
 
   public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
-        : WaveformEffect(pszFriendlyName, pPalette, increment)
+    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true) 
+        : WaveformEffect(pszFriendlyName, pPalette, increment),
+          _blur(blur),
+          _erase(erase)
     {
     }
 
     virtual void Draw()
     {
         auto g = g_pEffectManager->graphics();
-        g->DimAll(242);
-        for (int y = 0; y < MATRIX_HEIGHT; y++)
-        {
-            for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
-            {
-                g->setPixel(x, y, g->getPixel(x+1, y));
-                g->setPixel(MATRIX_WIDTH-x-1, y, g->getPixel(MATRIX_WIDTH-x-2, y));
-            }
-        }
-    
-        g->BlurFrame(16);
-        DrawSpike(MATRIX_WIDTH/2, gVURatio / 2.0, false);
-        DrawSpike(MATRIX_WIDTH/2-1, gVURatio / 2.0, false);
+
+        int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
+
+        g->DimAll(250 - 20 * gVURatio);
+        g->MoveOutwardsX(top);
+
+        if (_blur)
+            g->BlurFrame(_blur);
+        DrawSpike(MATRIX_WIDTH/2, gVURatio / 2.0, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, gVURatio / 2.0, _erase);
     }
 };
 

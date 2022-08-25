@@ -430,7 +430,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
-    #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 0)
+    #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0
     
     #if USE_PSRAM

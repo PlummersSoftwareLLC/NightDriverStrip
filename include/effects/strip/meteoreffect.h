@@ -113,7 +113,7 @@ public:
         {
             if ((!meteorRandomDecay) || (randomDouble(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight 
             {
-                CRGB c = pGFX->getPixel(j, 0);
+                CRGB c = pGFX->getPixel(j);
                 c.fadeToBlackBy(meteorTrailDecay);
                 pGFX->setPixel(j, c);
             }
@@ -148,7 +148,8 @@ public:
 
             for (int j = 0; j < meteorSize; j++)                    // Draw the meteor head
             {
-                if ((iPos[i] - j <= pGFX->GetLEDCount()) && (iPos[i] - j >= 1)) 
+                int x = iPos[i] - j;
+                if ((x <= pGFX->GetLEDCount()) && (x >= 1)) 
                 {
                     CRGB rgb;
                     hue[i] = hue[i] + 0.025f;
@@ -156,7 +157,6 @@ public:
                         hue[i] -= 255.0f;
                     hsv.hue = hue[i];
                     hsv2rgb_rainbow(hsv, rgb);
-                    int x = iPos[i] - j;
                     CRGB c = pGFX->getPixel(x);
                     nblend(c, rgb , 75);
                     pGFX->setPixel(x, c);

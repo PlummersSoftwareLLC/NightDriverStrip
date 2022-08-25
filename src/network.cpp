@@ -214,6 +214,9 @@ bool ConnectToWiFi(uint cRetries)
         debugI("Web Server begin called!");
     #endif
 
+    #if USEMATRIX
+        //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+    #endif
 
     /*
     {

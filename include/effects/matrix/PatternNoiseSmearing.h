@@ -140,7 +140,7 @@ public:
 class PatternPaletteSmear : public LEDStripEffect 
 {
 public:
-  PatternPaletteSmear() : LEDStripEffect("PaletteSmear")
+  PatternPaletteSmear() : LEDStripEffect("Smear")
   {
   }
 

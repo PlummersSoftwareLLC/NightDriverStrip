@@ -139,7 +139,7 @@ private:
             {
                 if (randomDouble(0, 10)>5) 
                 {
-                    CRGB c = _GFX[0]->getPixel(j, 0);
+                    CRGB c = _GFX[0]->getPixel(j);
                     c.fadeToBlackBy(10);
                     setPixelsOnAllChannels(j, 1, c, false);
                 }

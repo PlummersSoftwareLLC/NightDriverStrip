@@ -1182,6 +1182,20 @@ public:
         }
     }
 
+    inline void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    {
+        for (int y = startY; y <= endY; y++)
+        {
+            for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
+            {
+                leds[xy(x, y)] = leds[xy(x + 1, y)];
+                leds[xy(MATRIX_WIDTH-x-1, y)] = leds[xy(MATRIX_WIDTH-x-2, y)];
+                //g->setPixel(x, y, g->getPixel(x+1, y));
+                //g->setPixel(MATRIX_WIDTH-x-1, y, g->getPixel(MATRIX_WIDTH-x-2, y));
+            }
+        }       
+    }
+
     // non leds2 memory version.
     // MoveX - Shift the content on the matrix left or right
     

@@ -47,6 +47,8 @@
 #include <memory>
 
 extern bool                      g_bUpdateStarted;
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
+
 
 // LEDStripEffect
 //
@@ -97,9 +99,9 @@ class LEDStripEffect
     }
 
 #if USEMATRIX
-    inline LEDMatrixGFX * mgraphics() const
+    static inline LEDMatrixGFX * mgraphics()
     {
-        return ((LEDMatrixGFX *)_GFX[0].get());
+        return ((LEDMatrixGFX *)g_pDevices[0].get());
     }
 #endif 
    
