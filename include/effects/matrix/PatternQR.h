@@ -76,10 +76,14 @@ public:
         qrcodeData = (uint8_t *) PreferPSRAMAlloc(qrcode_getBufferSize(qrVersion));
     }
 
+    virtual ~PatternQR()
+    {
+        free(qrcodeData);
+    }
+
     virtual void Start()
     {
         graphics()->fillScreen(BLACK16);
-        free(qrcodeData);
     }
 
     virtual void Draw()
@@ -99,7 +103,7 @@ public:
         int w = qrcode.size + borderSize * 2;
         int h = w;
 
-        graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, backgroundColor);
+        graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, graphics()->to16bit(CRGB::DarkBlue));
         graphics()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, foregroundColor);
 
         for (uint8_t y = 0; y < qrcode.size; y++) 
