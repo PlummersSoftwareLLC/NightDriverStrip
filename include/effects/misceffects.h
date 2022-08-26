@@ -295,6 +295,9 @@ class TwinkleEffect : public LEDStripEffect
 				size_t i = random(0, NUM_LEDS);
 				if (pPixels[i] != CRGB(0,0,0))
 					continue;
+				std::deque<size_t>::iterator found = find(litPixels.begin(), litPixels.end(), i);
+				if (litPixels.end() != found)
+					litPixels.erase(found);
 				iNew = i;
 				break;
 			}
