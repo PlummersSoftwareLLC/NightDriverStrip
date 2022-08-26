@@ -74,6 +74,7 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 #include "effects/matrix/PatternMisc.h"
 #include "effects/matrix/PatternNoiseSmearing.h"
 #include "effects/matrix/PatternClock.h"
+#include "effects/matrix/PatternQR.h"
 #endif
 
 #ifdef USESTRIP
@@ -297,7 +298,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-
+        new PatternQR(),
         new GhostWave("GhostWave", &rainbowPalette, 0, 24, false),
         new WaveformEffect("WaveIn", &rainbowPalette, 8),     
         new GhostWave("WaveOut", &rainbowPalette, 0, 0),
