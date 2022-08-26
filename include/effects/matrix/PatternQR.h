@@ -83,7 +83,7 @@ public:
 
     virtual void Start()
     {
-        graphics()->fillScreen(BLACK16);
+        graphics()->fillScreen(graphics()->to16bit(CRGB::DarkBlue));
     }
 
     virtual void Draw()
@@ -95,20 +95,20 @@ public:
         const int topMargin = 4;
         const int borderSize = 2;
         const uint16_t foregroundColor = WHITE16;
-        const uint16_t backgroundColor = graphics()->to16bit(CRGB::DarkBlue);
-
+        const uint16_t backgroundColor = graphics()->to16bit(CRGB(0,0,144));
+        const uint16_t borderColor = BLUE16;
         if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
           throw new runtime_error("Matrix can't hold the QR code height");
 
         int w = qrcode.size + borderSize * 2;
         int h = w;
 
-        graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, graphics()->to16bit(CRGB::DarkBlue));
-        graphics()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, foregroundColor);
+        graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, BLACK16);
+        graphics()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, borderColor);
 
         for (uint8_t y = 0; y < qrcode.size; y++) 
           for (uint8_t x = 0; x < qrcode.size; x++) 
-            graphics()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : backgroundColor));
+            graphics()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : BLACK16));
     }
 };
 

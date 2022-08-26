@@ -278,7 +278,7 @@ public:
         memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
     }
 
-    virtual void setPixel(int16_t x, int16_t y, uint16_t color)
+    virtual inline void setPixel(int16_t x, int16_t y, uint16_t color)
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
             leds[xy(x, y)] = from16Bit(color);
@@ -291,14 +291,14 @@ public:
     }
 
     // Adafruit_GFX overrride
-    virtual void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+    virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
     {
         for (int p = y; p < y + h; p++)
             setPixel(x, p, color);
     }
 
     // Adafruit_GFX overrride
-    virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+    virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     {
         for (int p = x; p < x + w; p++)
             setPixel(p, y, color);
