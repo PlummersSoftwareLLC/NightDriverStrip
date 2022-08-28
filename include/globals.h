@@ -1117,6 +1117,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 extern int g_AudioFPS;                         // Framerate of the audio sampler
 extern int g_serialFPS;                        // How many serial packets are processed per second
+extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: davepl - why are some DRAM?)
 
 // gRingSizeTable
 //
