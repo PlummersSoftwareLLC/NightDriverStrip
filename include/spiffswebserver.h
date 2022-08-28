@@ -135,16 +135,28 @@ class CSPIFFSWebServer
         j["LED_FPS"]               = g_FPS;
         j["SERIAL_FPS"]            = g_serialFPS;
         j["AUDIO_FPS"]             = g_AudioFPS;
+
+        j["HEAP_SIZE"]             = ESP.getHeapSize();
         j["HEAP_FREE"]             = ESP.getFreeHeap();
         j["HEAP_MIN"]              = ESP.getMinFreeHeap();
+
+        j["DMA_SIZE"]              = heap_caps_get_total_size(MALLOC_CAP_DMA);
+        j["DMA_FREE"]              = heap_caps_get_free_size(MALLOC_CAP_DMA);
+        j["DMA_MIN"]               = heap_caps_get_largest_free_block(MALLOC_CAP_DMA);
+
+        j["PSRAM_SIZE"]            = ESP.getPsramSize();
         j["PSRAM_FREE"]            = ESP.getFreePsram();
         j["PSRAM_MIN"]             = ESP.getMinFreePsram();
-        j["PSRAM_TOTAL"]           = ESP.getPsramSize();
+
         j["CHIP_MODEL"]            = ESP.getChipModel();
         j["CHIP_CORES"]            = ESP.getChipCores();
         j["CHIP_SPEED"]            = ESP.getCpuFreqMHz();
         j["PROG_SIZE"]             = ESP.getSketchSize();         
-    
+
+        j["CODE_SIZE"]             = ESP.getSketchSize();
+        j["CODE_FREE"]             = ESP.getFreeSketchSpace();
+        j["FLASH_SIZE"]            = ESP.getFlashChipSize();
+        
         response->addHeader("Access-Control-Allow-Origin", "*");
         response->setLength();
         pRequest->send(response);

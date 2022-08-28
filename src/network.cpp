@@ -386,8 +386,8 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
             lock_guard<mutex> guard(g_buffer_mutex);
 
-            if (!heap_caps_check_integrity_all(true))
-                debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
+            //if (!heap_caps_check_integrity_all(true))
+            //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
 
             for (int iChannel = 0, channelMask = 1; iChannel < NUM_CHANNELS; iChannel++, channelMask <<= 1)
             {

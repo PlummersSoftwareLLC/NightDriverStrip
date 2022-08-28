@@ -74,6 +74,7 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 #include "effects/matrix/PatternMisc.h"
 #include "effects/matrix/PatternNoiseSmearing.h"
 #include "effects/matrix/PatternClock.h"
+#include "effects/matrix/PatternQR.h"
 #endif
 
 #ifdef USESTRIP
