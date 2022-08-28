@@ -283,4 +283,53 @@ public:
 
     }
 };
+
+#include "qrcode.h"
+class PatternQR : public LEDStripEffect 
+{
+protected:
+      QRCode qrcode;
+      static constexpr int qrversion = 2;
+      uint8_t * qrdata = nullptr;
+
+public:
+    PatternQR() : LEDStripEffect("QR")
+    {
+        qrdata = (uint8_t *) PreferPSRAMAlloc(qrcode_getBufferSize(qrversion));
+        String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
+        qrcode_initText(&qrcode, qrdata, qrversion, ECC_LOW, sIP.c_str());      
+    }
+
+    ~PatternQR()
+    {
+        delete qrdata;
+    }
+
+    virtual void Start()
+    {
+      graphics()->fillScreen(BLACK16);
+    }
+
+    virtual void Draw()
+    {
+        debugW("QRCode size: %d", qrcode.size);
+
+        const int leftMargin = MATRIX_CENTER_X - qrcode.size / 2;
+        const int topMargin = 4;
+
+        if (topMargin + qrcode.size + 2 > MATRIX_HEIGHT)
+          throw new runtime_error("Matrix can't hold the QR code height");
+
+        graphics()->fillRect(leftMargin-1, topMargin-1, qrcode.size + 2, qrcode.size + 2, BLUE16);
+
+        for (uint8_t y = 0; y < qrcode.size; y++) 
+        {
+          for (uint8_t x = 0; x < qrcode.size; x++) 
+          {
+            graphics()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? BLACK16 : WHITE16));
+          }      
+        }
+    }
+};
+
 #endif

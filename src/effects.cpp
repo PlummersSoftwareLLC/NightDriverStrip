@@ -297,7 +297,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-
+        new PatternQR(),
         new GhostWave("GhostWave", &rainbowPalette, 0, 24, false),
         new WaveformEffect("WaveIn", &rainbowPalette, 8),     
         new GhostWave("WaveOut", &rainbowPalette, 0, 0),

@@ -121,6 +121,35 @@ class CSPIFFSWebServer
         pRequest->send(response);
     }
 
+    void GetStatistics(AsyncWebServerRequest * pRequest)
+    {
+        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+        AsyncJsonResponse * response;
+
+        debugI("GetStatistics");
+
+        response = new AsyncJsonResponse(false, jsonBufferSize);
+        response->addHeader("Server","NightDriverStrip");
+        auto j = response->getRoot();
+
+        j["LED_FPS"]               = g_FPS;
+        j["SERIAL_FPS"]            = g_serialFPS;
+        j["AUDIO_FPS"]             = g_AudioFPS;
+        j["HEAP_FREE"]             = ESP.getFreeHeap();
+        j["HEAP_MIN"]              = ESP.getMinFreeHeap();
+        j["PSRAM_FREE"]            = ESP.getFreePsram();
+        j["PSRAM_MIN"]             = ESP.getMinFreePsram();
+        j["PSRAM_TOTAL"]           = ESP.getPsramSize();
+        j["CHIP_MODEL"]            = ESP.getChipModel();
+        j["CHIP_CORES"]            = ESP.getChipCores();
+        j["CHIP_SPEED"]            = ESP.getCpuFreqMHz();
+        j["PROG_SIZE"]             = ESP.getSketchSize();         
+    
+        response->addHeader("Access-Control-Allow-Origin", "*");
+        response->setLength();
+        pRequest->send(response);
+    }    
+
     void SetSettings(AsyncWebServerRequest * pRequest)
     {
         debugI("SetSettings");
@@ -264,7 +293,7 @@ class CSPIFFSWebServer
         debugI("Connecting Web Endpoints");
         
         _server.on("/getEffectList",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetEffectListText(pRequest); });
-        
+        _server.on("/getStatistics",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetStatistics(pRequest); });
         _server.on("/nextEffect",            HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->NextEffect(pRequest); });
         _server.on("/previousEffect",        HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->PreviousEffect(pRequest); });
 
