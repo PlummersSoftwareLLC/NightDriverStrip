@@ -813,7 +813,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
 
-    #define DEFAULT_EFFECT_INTERVAL     (45*60*24)
+    #define DEFAULT_EFFECT_INTERVAL     (0)
 
     #define LED_PIN0          26
     #define NUM_CHANNELS      1

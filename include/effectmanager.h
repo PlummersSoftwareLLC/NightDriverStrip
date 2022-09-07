@@ -451,6 +451,12 @@ public:
             return;
         }
 
+        if (DEFAULT_EFFECT_INTERVAL == 0)
+        {
+            g_Fader = 255;
+            return;            
+        }
+
         int r = GetTimeRemainingForCurrentEffect();
         int e = GetTimeUsedByCurrentEffect();
 

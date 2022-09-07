@@ -139,8 +139,8 @@ class Screen
             uint16_t w, h;
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
-        #else
-            return 1;
+        #elif USE_SCREEN
+            return g_pDisplay->fontHeight();
         #endif
     }
 
