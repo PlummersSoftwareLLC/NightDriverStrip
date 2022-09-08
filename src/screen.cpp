@@ -122,7 +122,12 @@ void IRAM_ATTR UpdateScreen()
         cStatus++;
 
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
-        Screen::setTextSize(Screen::MEDIUM);
+#if M5STICKCPLUS
+                Screen::setTextSize(Screen::MEDIUM);
+#else
+                Screen::setTextSize(Screen::SMALL);
+#endif
+
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
 
@@ -197,15 +202,14 @@ void IRAM_ATTR UpdateScreen()
             lastFullDraw = millis();
             if (gbInfoPageDirty != false                                     ||
                 lasteffect      != g_pEffectManager->GetCurrentEffectIndex() || 
-                sip             != WiFi.localIP().toString()                 || 
-                (g_ShowFPS && (lastFPS != g_FPS))
+                sip             != WiFi.localIP().toString()               
             )
             {
+                gbInfoPageDirty = true;
                 Screen::fillRect(0, 0, Screen::screenWidth(), Screen::TopMargin, backColor);
                 Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), Screen::BottomMargin, backColor);
                 Screen::fillRect(0, Screen::TopMargin-1, Screen::screenWidth(), 1, BLUE16);
                 Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin + 1, Screen::screenWidth(), 1, BLUE16);
-
 
                 lasteffect      = g_pEffectManager->GetCurrentEffectIndex();
                 sip             = WiFi.localIP().toString();
@@ -221,14 +225,21 @@ void IRAM_ATTR UpdateScreen()
                 yh += Screen::fontHeight();
                 // get effect name length and switch text size accordingly
                 int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
+
+#if M5STICKCPLUS
                 Screen::setTextSize(Screen::MEDIUM);
+#else
+                Screen::setTextSize(Screen::SMALL);
+#endif
                 Screen::setTextColor(WHITE16, backColor);
                 Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
                 yh += Screen::fontHeight();
                 Screen::setTextSize(Screen::SMALL);
 
                 String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
+#if M5STICKCPLUS
                 sIP += " - NightDriverLED.com";
+#endif
                 Screen::setTextColor(YELLOW16, backColor);
                 Screen::drawString(sIP.c_str(), yh);
                 yh += Screen::fontHeight();

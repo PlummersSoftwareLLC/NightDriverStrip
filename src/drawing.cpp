@@ -290,7 +290,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 debugV("Back from FastLED::show");
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
-                g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+                g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
                 g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
 
                 

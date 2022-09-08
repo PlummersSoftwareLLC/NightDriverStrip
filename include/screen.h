@@ -70,11 +70,11 @@ class Screen
 #if M5STICKCPLUS
     static const int TopMargin = 37;  
 #else
-    static const int TopMargin = 21;  
+    static const int TopMargin = 28;  
 #endif
 
 
-    static const int BottomMargin = 38;
+    static const int BottomMargin = 12;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
