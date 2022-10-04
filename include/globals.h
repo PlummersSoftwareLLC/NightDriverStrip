@@ -66,6 +66,7 @@
 //              Mar-17-2022  v024       Davepl      Catchup clock to server when in future
 //              May-17-2022  v025       Davepl      After merge of RepsonsePacket into main
 //              May-24-2022  v026       Davepl      Adding BaseGFX/LEDMatrixGFX/LEDStripGFX
+//              Oct-01-2022  v027       Davepl      Mesmerizer integration and screen fixes
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -1095,7 +1096,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
     #elif defined(M5STACKCORE2)
-
+ARDUINO_HELTEC_WIFI_KIT_32
         #define  USE_TFT 1       
 
     #else                                                     // unsupported board defined in platformio
