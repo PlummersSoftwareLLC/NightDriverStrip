@@ -122,7 +122,7 @@ void IRAM_ATTR UpdateScreen()
         cStatus++;
 
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
-        Screen::setTextSize(Screen::SMALL);
+        Screen::setTextSize(Screen::MEDIUM);
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
 
@@ -221,7 +221,7 @@ void IRAM_ATTR UpdateScreen()
                 yh += Screen::fontHeight();
                 // get effect name length and switch text size accordingly
                 int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
-                Screen::setTextSize(Screen::SMALL);
+                Screen::setTextSize(Screen::MEDIUM);
                 Screen::setTextColor(WHITE16, backColor);
                 Screen::drawString(g_pEffectManager->GetCurrentEffectName(), yh);  
                 yh += Screen::fontHeight();

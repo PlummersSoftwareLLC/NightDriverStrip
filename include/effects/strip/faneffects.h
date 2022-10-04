@@ -562,11 +562,11 @@ class TapeReelEffect : public LEDStripEffect
     {
         for (int i = 0; i < NUM_FANS; i++)
         {
-          int pos = ReelPos[i];
+          float pos = ReelPos[i];
           DrawFanPixels(i * FAN_SIZE + pos,                                     1, CRGB::White);
-          DrawFanPixels(i * FAN_SIZE + ((pos + 1) % FAN_SIZE),                  1, CRGB::Blue);
-          DrawFanPixels(i * FAN_SIZE + ((pos + FAN_SIZE / 2) % FAN_SIZE),       1, CRGB::White);
-          DrawFanPixels(i * FAN_SIZE + ((pos + FAN_SIZE / 2 + 1) % FAN_SIZE),   1, CRGB::Blue);
+          DrawFanPixels(i * FAN_SIZE + fmod(pos + 1, FAN_SIZE),                  1, CRGB::Blue);
+          DrawFanPixels(i * FAN_SIZE + fmod(pos + FAN_SIZE / 2,  FAN_SIZE),       1, CRGB::White);
+          DrawFanPixels(i * FAN_SIZE + fmod(pos + FAN_SIZE / 2 + 1,  FAN_SIZE),   1, CRGB::Blue);
         }
     }
 
@@ -1143,9 +1143,9 @@ class MusicFireEffect : public FireFanEffect
 
       if (latch)
       {
-          if (gVURatio > 1.5)
+          if (gVURatio > 1.0)
           {
-            if (randomDouble(1.0, 3.0) < gVURatio)
+            if (randomDouble(0.0, 3.0) < gVURatio)
             {
               //Serial.printf("Beat at: %f\n", gVURatio - minVUSeen);
               latch = false;

@@ -429,9 +429,14 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif INSULATORS
 
-        new MoltenGlassOnVioletBkgnd("Molten Glass", RainbowColors_p),
-        new ColorBeatOverRed("ColorBeatOverRed"),
+        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
         new InsulatorSpectrumEffect("Spectrum Effect", RainbowColors_p),
+        new NewMoltenGlassOnVioletBkgnd("Molten Glass", RainbowColors_p),
+        new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
+        new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
+        new PaletteReelEffect("PaletteReelEffect"),
+        new ColorBeatOverRed("ColorBeatOverRed"),
+        new TapeReelEffect("TapeReelEffect"),
 
 // new SparklySpinningMusicEffect(RainbowColors_p),
 // new SparklySpinningMusicEffect("Blu Sprkl Spin", BlueColors_p),
