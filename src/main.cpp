@@ -170,6 +170,7 @@
 
 #include "colordata.h"                          // color palettes
 #include "drawing.h"                            // drawing code
+#include "taskmgr.h"                            // for cpu usage, etc
 
 #if ENABLE_REMOTE
     #include "remotecontrol.h" // Allows us to use a IR remote with it
@@ -190,6 +191,8 @@ TaskHandle_t g_taskAudio  = nullptr;
 TaskHandle_t g_taskNet    = nullptr;
 TaskHandle_t g_taskRemote = nullptr;
 TaskHandle_t g_taskSocket = nullptr;
+
+TaskManager g_TaskManager;
 
 //
 // Global Variables
@@ -479,7 +482,9 @@ Bounce2::Button Button2;
 // AudioSamplerTaskEntry        - Listens to room audio, creates spectrum analysis, beat detection, etc.
 
 void setup()
-{   
+{
+    g_TaskManager.begin();
+    
     // Initialize Serial output
     Serial.begin(115200);      
 

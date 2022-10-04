@@ -132,15 +132,15 @@ class Screen
 
     static uint16_t fontHeight()
     {
-        #if USE_OLED
-            return 12;
-        #elif USE_LCD
+        #if USE_LCD
             int16_t x1, y1;
             uint16_t w, h;
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
-        #elif USE_SCREEN
+        #elif OLED
             return g_pDisplay->fontHeight();
+        #else
+            return 1;
         #endif
     }
 
@@ -156,9 +156,8 @@ class Screen
         #elif USE_SCREEN
             return g_pDisplay->textWidth(psz);          
         #else 
-            return 1;
+            return 8 * strlen(psz);
         #endif
-
     }
 
     static uint16_t screenHeight()
@@ -168,7 +167,7 @@ class Screen
         #elif USE_SCREEN
             return g_pDisplay->height();
         #else
-            return 1;
+            return MATRIX_HEIGHT;
         #endif
     }
 

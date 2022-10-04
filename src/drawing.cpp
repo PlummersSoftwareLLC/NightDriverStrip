@@ -146,11 +146,11 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                     
                     LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
                     LEDMatrixGFX::titleLayer.enableChromaKey(true);
-                    LEDMatrixGFX::titleLayer.setFont(font5x7);
+                    LEDMatrixGFX::titleLayer.setFont(font6x10);
                     LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
 
-                    const size_t kCharWidth = 5;
-                    const size_t kCharHeight = 7;
+                    const size_t kCharWidth = 6;
+                    const size_t kCharHeight = 10;
 
                     const auto caption = pMatrix->GetCaption();
 
@@ -292,17 +292,16 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
                 g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
                 g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
-
-                
-                // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
-
-                delay(1);        
             }
             else
             {
                 debugV("Draw loop ended without a draw.");
             }
         }
+
+        // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
+
+        delay(1);
 
         // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
         // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.

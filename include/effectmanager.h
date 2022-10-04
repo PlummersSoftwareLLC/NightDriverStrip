@@ -451,7 +451,7 @@ public:
             return;
         }
 
-        if (DEFAULT_EFFECT_INTERVAL == 0)
+        if (_effectInterval == 0)
         {
             g_Fader = 255;
             return;            

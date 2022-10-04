@@ -58,6 +58,7 @@
 
 #ifndef PatternMandala_H
 #define PatternMandala_H
+#if     USEMATRIX
 
 #include "globals.h"
 #include "ledstripeffect.h"
@@ -158,4 +159,5 @@ public:
     }
 };
 
+#endif
 #endif

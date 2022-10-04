@@ -50,11 +50,13 @@
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
 
+#include "taskmgr.h"
 
 extern std::unique_ptr<EffectManager<GFXBase>>g_pEffectManager;
+extern TaskManager g_TaskManager;
+
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
-
 
 class CSPIFFSWebServer
 {
@@ -156,7 +158,11 @@ class CSPIFFSWebServer
         j["CODE_SIZE"]             = ESP.getSketchSize();
         j["CODE_FREE"]             = ESP.getFreeSketchSpace();
         j["FLASH_SIZE"]            = ESP.getFlashChipSize();
-        
+
+        j["CPU_USED"]              = g_TaskManager.GetCPUUsagePercent();
+        j["CPU_USED_CORE0"]        = g_TaskManager.GetCPUUsagePercent(0);
+        j["CPU_USED_CORE1"]        = g_TaskManager.GetCPUUsagePercent(1);
+
         response->addHeader("Access-Control-Allow-Origin", "*");
         response->setLength();
         pRequest->send(response);

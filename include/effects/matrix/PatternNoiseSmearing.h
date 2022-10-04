@@ -103,7 +103,7 @@ public:
 
 class PatternGridLights : public LEDStripEffect {
 public:
-  PatternGridLights() : LEDStripEffect("Grid Lights")
+  PatternGridLights() : LEDStripEffect("Grid Dots")
   {
   }
 

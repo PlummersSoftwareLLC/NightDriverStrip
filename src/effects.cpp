@@ -236,6 +236,27 @@ const CRGBPalette256 spectrumBasicColors =
         CRGB(0xDB91EF)  // Lilac
 };
 
+
+const CRGBPalette256 spectrumAltColors =
+{
+        CRGB::Red,
+        CRGB::OrangeRed,
+        CRGB::Orange,
+        CRGB::Green,
+        CRGB::ForestGreen,
+        CRGB::Cyan,
+        CRGB::Blue,
+        CRGB::Indigo,
+        CRGB::Red,
+        CRGB::OrangeRed,
+        CRGB::Orange,
+        CRGB::Green,
+        CRGB::ForestGreen,
+        CRGB::Cyan,
+        CRGB::Blue,
+        CRGB::Indigo,
+};
+
 const CRGBPalette256 USAColors_p =
     {
         CRGB::Blue,
@@ -289,7 +310,13 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #if DEMO
 
         new RainbowFillEffect(6, 2),
-        new ClassicFireEffect(),
+
+#elif CHIEFTAIN
+
+        new LanternEffect(),
+        new PaletteEffect(RainbowColors_p, 2.0f, 0.1, 0.0, 1.0, 0.0, LINEARBLEND, true, 1.0),
+        new RainbowFillEffect(10, 32),
+
 
 #elif LANTERN
 
@@ -304,7 +331,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new GhostWave("WaveOut", &rainbowPalette, 0, 0),
 
         new SpectrumAnalyzerEffect("Spectrum", false, spectrumBasicColors, 100, 0, 2.0, 2.0),
-        new SpectrumAnalyzerEffect("Spectrum USA", false, USAColors_p, 0),
+        new SpectrumAnalyzerEffect("USA", false, USAColors_p, 0),
         new SpectrumAnalyzerEffect("Spectrum++", false, spectrumBasicColors, 0, 70, -1.0, 3.0),
         new WaveformEffect("WaveForm", &rainbowPalette, 8),
         new GhostWave("GhostWave", &rainbowPalette),
@@ -322,7 +349,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new PatternAlienText(),
         new PatternCircuit(),
 
-        new StarryNightEffect<MusicStar>("Music Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 10.0),                                                // Rainbow Music Star
+        new StarryNightEffect<MusicStar>("Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 10.0),                                                // Rainbow Music Star
 
         new PatternPulsar(1.95, 1.95, 0.01),
         new PatternBounce(),
@@ -469,12 +496,15 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif SPECTRUM
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, spectrumBasicColors),
+        new GhostWave("GhostWave", &rainbowPalette, 0, 16, false, 40),
+
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, spectrumAltColors),
         new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
         new SpectrumAnalyzerEffect("Spectrum USA", true, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", &rainbowPalette, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", true, rainbowPalette, 50, 70, -1.0, 3.0),
         new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, rainbowPalette),
         new GhostWave("GhostWave Rainbow", &rainbowPalette),
 
 #elif ATOMLIGHT
@@ -621,7 +651,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new ClassicFireEffect(true),
 
 #elif LEDSTRIP
-        // new PaletteEffect(RainbowStripeColors_p, 8.0, .125, 0, 5, 1), // Rainbow palette
+
         new StatusEffect(CRGB::White)
 
 #elif HOODORNAMENT

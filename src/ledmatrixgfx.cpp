@@ -38,19 +38,20 @@ extern DRAM_ATTR AppTime g_AppTime;                        // Keeps track of fra
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
+
+#if USEMATRIX
+
 uint32_t GFXBase::noise_x;
 uint32_t GFXBase::noise_y;
 uint32_t GFXBase::noise_z;
 uint32_t GFXBase::noise_scale_x;
 uint32_t GFXBase::noise_scale_y;
 
-uint8_t GFXBase::noise[MATRIX_WIDTH][MATRIX_HEIGHT];   // BUGBUG Could this go in PSRAM if allocated instead?
+uint8_t GFXBase::noise[MATRIX_WIDTH][MATRIX_HEIGHT]; // BUGBUG Could this go in PSRAM if allocated instead?
 uint8_t GFXBase::noisesmoothing;
 
-#if USEMATRIX
-
-  #include <SmartMatrix.h>
-  #include "ledmatrixgfx.h"
+#include <SmartMatrix.h>
+#include "ledmatrixgfx.h"
     
 const rgb24 LEDMatrixGFX::defaultBackgroundColor = {0x40, 0, 0};    
 
@@ -66,7 +67,7 @@ void LEDMatrixGFX::StartMatrix()
     matrix.begin(100000);
 
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
-    backgroundLayer.setFont(font5x7);
+    backgroundLayer.setFont(font6x10);
     backgroundLayer.drawString(8, kMatrixHeight / 2 - 6, rgb24(255,255,255), "NightDriver");
     backgroundLayer.swapBuffers(false);    
 

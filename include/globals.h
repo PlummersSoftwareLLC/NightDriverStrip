@@ -120,6 +120,8 @@
 //
 // We have a half-dozen workers and these are their relative priorities.  It might survive if all were set equal,
 // but I think drawing should be lower than audio so that a bad or greedy effect doesn't starve the audio system.
+//
+// Idle tasks in taskmgr run at IDLE_PRIORITY+1 so you want to be at least +2 
 
 #define DRAWING_PRIORITY        tskIDLE_PRIORITY+7      // Draw any available frames first
 #define SOCKET_PRIORITY         tskIDLE_PRIORITY+6      // ...then process and decompress incoming frames
@@ -128,8 +130,8 @@
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+3
 #define SCREEN_PRIORITY         tskIDLE_PRIORITY+2
 
-#define DEBUG_PRIORITY          tskIDLE_PRIORITY+1
-#define REMOTE_PRIORITY         tskIDLE_PRIORITY+1
+#define DEBUG_PRIORITY          tskIDLE_PRIORITY+2      
+#define REMOTE_PRIORITY         tskIDLE_PRIORITY+2
 
 // If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1. 
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
@@ -149,7 +151,7 @@
 // 
 
 #define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
-#define NET_CORE                1
+#define NET_CORE                0
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        0
 #define SCREEN_CORE             0       
@@ -217,14 +219,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // to white, would overload a USB port.
 
     #define MATRIX_WIDTH            144
-    #define MATRIX_HEIGHT           1
+    #define MATRIX_HEIGHT           8
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
     #define NUM_RINGS               5
     #define RING_SIZE_0             24
     #define ENABLE_AUDIO            1
 
-    #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
+    #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
 
     // Once you have a working project, selectively enable various additional features by setting
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
@@ -401,7 +403,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RESERVE_MEMORY  150000
     #define IR_REMOTE_PIN   25                    
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
+    #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 8A supply
 
     #define NOISE_CUTOFF   75
     #define NOISE_FLOOR    200.0f
@@ -668,17 +670,45 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
+    #define LED_PIN0        5
 
-    #if M5STICKC || M5STICKCPLUS
-        #define LED_PIN0 26
-    #else
-        #define LED_PIN0 5
-    #endif
+    #define POWER_LIMIT_MW (300 * 1000)                 // Assumes 300W per 8M
+    #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
 
-    #define POWER_LIMIT_MW (100000)                 // 100W transformer for an 8M strip max
+    #define RING_SIZE_0 1 
+    #define RING_SIZE_1 2
+    #define RING_SIZE_2 4
+    #define RING_SIZE_3 8
+    #define RING_SIZE_4 16
 
-    #define DEFAULT_EFFECT_INTERVAL     (1000*60*60*24)
+#elif CHIEFTAIN
 
+    // The LED strips I use for Christmas lights under my eaves
+
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
+
+    #define NUM_CHANNELS    1
+    #define MATRIX_WIDTH    (12)   
+    #define MATRIX_HEIGHT   1
+    #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
+    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
+    #define ENABLE_REMOTE   0                     // IR Remote Control
+    #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
+    #define LED_PIN0        5
+
+    #define POWER_LIMIT_MW (4500)                 // Assumes modern USB3 powered port or supply
+
+    #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
+
+    #define RING_SIZE_0 1 
+    #define RING_SIZE_1 2
+    #define RING_SIZE_2 4
+    #define RING_SIZE_3 8
+    #define RING_SIZE_4 16
+    
 #elif BELT
 
     // I was asked to wear something sparkly once, so I made an LED belt...

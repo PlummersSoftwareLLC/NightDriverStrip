@@ -1251,11 +1251,12 @@ class RingTestEffect : public LEDStripEffect
 
 // Lantern - A candle-like effect that flickers in the center of an LED disc
 //           Inspired by a candle effect I saw done by carangil 
+
 class LanternParticle
 { 
     const int minPeturbation        = 1000;
-    const int maxPeterbation        = 12500;
-    const int perterbationIncrement = 10;
+    const int maxPeterbation        = 2500;
+    const int perterbationIncrement = 2;
     const int maxDeviation          = 35;
 
     int centerX = maxDeviation;
@@ -1275,7 +1276,11 @@ class LanternParticle
     {
         val = min(val, 255);
         val = max(val, 0);
-        return CRGB( val,  val*.25, val*.05);
+#ifdef LANTERN        
+        return CRGB( val,  val*.30, val*.05);
+#else
+        return LEDStripEffect::GetBlackBodyHeatColor(val/255.0f*.20 + 0.25);
+#endif
     }
 
   public:
@@ -1340,8 +1345,12 @@ class LanternParticle
 
         rotation += 0.0;
         
+#ifdef LANTERN
         float scalar = .75 + gVURatio / 2;
-        
+#else        
+        float scalar = 1.35;
+#endif
+
         // Draw four outer pixels in second ring outwards.  We draw 1.05 to take advantage of the non-linear red response in
         // the second pixels (when drawn at 5%, the red will show up more, depending on color correction).
 
@@ -1375,17 +1384,19 @@ class LanternEffect : public LEDStripEffect
   public:
 
     LanternEffect() : LEDStripEffect("LanternEffect")
-      {
-      }
+    {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const
+    {
+      return 24;
+    }
+
 
     virtual void Draw()
     {
-      EVERY_N_MILLISECONDS(10)
-      {
         setAllOnAllChannels(0,0,0);
         for (int i = 0; i < _maxParticles; i++)
           _particles[i].Draw();
-      }
-      delay(10);
     }
 };

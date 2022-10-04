@@ -144,6 +144,23 @@ class LEDStripEffect
         return colors[randomColorIndex];
     }
 
+    static CRGB GetBlackBodyHeatColor(float temp) 
+    {
+        temp = min(1.0f, temp);
+        uint8_t temperature = (uint8_t)(255 * temp);
+        uint8_t t192 = (uint8_t)((temperature / 255.0f) * 191);
+
+        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
+        heatramp <<= 2;
+
+        if (t192 > 0x80)
+            return CRGB(255, 255, heatramp);
+        else if (t192 > 0x40)
+            return CRGB(255, heatramp, 0);
+        else
+            return CRGB(heatramp, 0, 0);
+    }
+    
     static inline CRGB RandomSaturatedColor()
     {
         CRGB c;

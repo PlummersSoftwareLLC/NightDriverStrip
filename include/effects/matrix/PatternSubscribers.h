@@ -43,7 +43,7 @@ class PatternSubscribers : public LEDStripEffect
 
   public:
   
-  PatternSubscribers() : LEDStripEffect("Subscribers")
+  PatternSubscribers() : LEDStripEffect("Subs")
   {
   }
 

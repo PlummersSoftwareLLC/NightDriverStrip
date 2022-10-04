@@ -47,7 +47,7 @@ class PatternClock : public LEDStripEffect
 
   public:
 
-    PatternClock() : LEDStripEffect("PatternClock")
+    PatternClock() : LEDStripEffect("Clock")
     {
     }
 

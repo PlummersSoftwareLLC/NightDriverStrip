@@ -318,9 +318,9 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             else
             {
                 DrawBand(i, ColorFromPalette(_palette, 
-                                             (::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 255, 
+                                             (::map(i, 0, NUM_BANDS, 0, 255) + 0 * _colorOffset) % 255, 
                                              255,
-                                             NOBLEND));
+                                             LINEARBLEND));
 
             }
         }
@@ -352,6 +352,9 @@ class WaveformEffect : public LEDStripEffect
 
     void DrawSpike(int x, double v, bool bErase = true) 
     {
+        v = std::min(v, 1.0);
+        v = std::max(v, 0.0);
+
         auto g = g_pEffectManager->graphics();
 
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
@@ -400,13 +403,14 @@ class GhostWave : public WaveformEffect
 {
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
-
+    int                       _fade     = 0;
   public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true) 
+    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
         : WaveformEffect(pszFriendlyName, pPalette, increment),
           _blur(blur),
-          _erase(erase)
+          _erase(erase),
+          _fade(fade)
     {
     }
 
@@ -416,13 +420,15 @@ class GhostWave : public WaveformEffect
 
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
 
-        g->DimAll(250 - 20 * gVURatio);
+        g->DimAll(250 - _fade * gVURatio);
         g->MoveOutwardsX(top);
 
         if (_blur)
-            g->BlurFrame(_blur);
-        DrawSpike(MATRIX_WIDTH/2, gVURatio / 2.0, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, gVURatio / 2.0, _erase);
+            g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
+            
+        // Offsetting by 0.5, which is a very low ratio, helps keep the line thin when sound is low
+        DrawSpike(MATRIX_WIDTH/2, (gVURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, (gVURatio - 0.5) / 1.5, _erase);
     }
 };
 
