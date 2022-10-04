@@ -140,7 +140,7 @@ class Screen
         #elif OLED
             return g_pDisplay->fontHeight();
         #else
-            return 1;
+            return 12;                                                      // Some bogus reasonable default for those that don't support it
         #endif
     }
 
