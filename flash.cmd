@@ -12,6 +12,6 @@ start /b pio run -t nobuild -t upload --upload-port 192.168.8.15
 start /b pio run -t nobuild -t upload --upload-port 192.168.8.24
 start /b pio run -t nobuild -t upload --upload-port 192.168.8.26
 start /b pio run -t nobuild -t upload --upload-port 192.168.8.29
-start /b pio run -t nobuild -t upload --upload-port 192.168.8.175
+start /b pio run -t nobuild -t upload --upload-port 192.168.8.30
 
 

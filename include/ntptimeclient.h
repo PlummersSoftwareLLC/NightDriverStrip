@@ -93,7 +93,10 @@ class NTPTimeClient
         chNtpPacket[0] = 0b00011011;
 
         // Send the ntp packet.
-        IPAddress ipNtpServer(cszNTPServer);                                
+        IPAddress ipNtpServer(cszNTPServer);
+
+        while (pUDP->parsePacket() != 0)
+            pUDP->flush();
 
         pUDP->beginPacket(ipNtpServer, 123);
         pUDP->write((const uint8_t *)chNtpPacket, NTP_PACKET_LENGTH);
@@ -105,6 +108,7 @@ class NTPTimeClient
         int iPass = 0;
         while (!pUDP->parsePacket())
         {
+            pUDP->flush();
             delay(100);
             debugV(".");
             if (iPass++ > 100)

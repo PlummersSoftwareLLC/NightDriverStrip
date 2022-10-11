@@ -3,7 +3,7 @@
 //
 // File:        Globals.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -11,12 +11,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -28,7 +28,7 @@
 // History:     Apr-13-2019  Version    Davepl      Created for NightDriverStrip
 //              Dec-09-2019  v001       Davepl      Unified from multiple projects
 //
-//               First version with color to indicate status, including 
+//               First version with color to indicate status, including
 //               purple during flashing, red for no wifi, blue for no clock.
 //               And first version with flash version display on TFT.
 //
@@ -37,11 +37,11 @@
 //               Freed up more ram so we get 40 frames of 8x144 and tuned the
 //               task priorities so they're constantly processed and rev'd
 //               the UI to include a time range of buffer frames.  Also added
-//               partial draw support and variable framerate.  
+//               partial draw support and variable framerate.
 //
 //              Dec-16-2019  v003       Davepl      1st client using clockstream
 //              Dec-19-2019  v004       Davepl      1st client using 128-bit clock
-//              Dec-25-2019  v005       Davepl      Added PixelData64 
+//              Dec-25-2019  v005       Davepl      Added PixelData64
 //
 //                Made the clock timestamps full 64 bit and transmit same in new
 //                PIXELDATA64 command.  Idles in white now even without clock.
@@ -67,6 +67,8 @@
 //              May-17-2022  v025       Davepl      After merge of RepsonsePacket into main
 //              May-24-2022  v026       Davepl      Adding BaseGFX/LEDMatrixGFX/LEDStripGFX
 //              Oct-01-2022  v027       Davepl      Mesmerizer integration and screen fixes
+//              Oct-01-2022  v028       Davepl      Adjust buffer sizes due to lower mem free
+//              Oct-02-2022  v029       Davepl      Change WiFiUDP to use free/malloc
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -77,14 +79,14 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          26   // Update ONLY this to increment the version number
+#define FLASH_VERSION          29   // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
 #endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
-#define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic
+#define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic, clever person!
 #define FLASH_VERSION_NAME_X(x) "v"#x 
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
@@ -668,7 +670,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  150000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
