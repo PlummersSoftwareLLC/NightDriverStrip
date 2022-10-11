@@ -44,7 +44,7 @@ extern int g_serialFPS;                       // Frames per sec reported on seri
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 double g_Brite;
-uint32_t g_Watts;  
+uint32_t g_Watts;
 
 #if USE_OLED
     #define SCREEN_ROTATION U8G2_R2

@@ -42,6 +42,7 @@ extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
 extern uint32_t g_Watts; 
 extern double g_Brite;
 extern int g_serialFPS;                       // Frames per sec reported on serial
+extern uint32_t g_FreeDrawTime_ms;
 
 float SampleBuffer::_oldVU;
 float SampleBuffer::_oldPeakVU;
@@ -154,8 +155,9 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         EVERY_N_SECONDS(10)
         {
-            debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%",
-                   ESP.getFreeHeap(), g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1));
+            debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
+                    ESP.getFreeHeap(),
+                    g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), uint32_t g_FreeDrawTime_ms);
         }
         g_Peaks = Analyzer.RunSamplerPass();
         UpdatePeakData();        

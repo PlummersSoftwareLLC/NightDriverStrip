@@ -65,6 +65,7 @@ class PatternQR : public LEDStripEffect
 {
 protected:
 
+    String lastData;
     QRCode qrcode;
     uint8_t * qrcodeData = nullptr;
     const int qrVersion = 2;
@@ -89,26 +90,30 @@ public:
     virtual void Draw()
     {
         String sIP = WiFi.isConnected() ? "http://" + WiFi.localIP().toString() : "No Wifi";
-        qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW, sIP.c_str());  
+        if (sIP != lastData)
+        {
+            lastData = sIP;
+            qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW, sIP.c_str());  
 
-        const int leftMargin = MATRIX_CENTER_X - qrcode.size / 2;
-        const int topMargin = 4;
-        const int borderSize = 2;
-        const uint16_t foregroundColor = WHITE16;
-        const uint16_t backgroundColor = graphics()->to16bit(CRGB(0,0,144));
-        const uint16_t borderColor = BLUE16;
-        if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
-          throw new runtime_error("Matrix can't hold the QR code height");
+            const int leftMargin = MATRIX_CENTER_X - qrcode.size / 2;
+            const int topMargin = 4;
+            const int borderSize = 2;
+            const uint16_t foregroundColor = WHITE16;
+            const uint16_t backgroundColor = graphics()->to16bit(CRGB(0,0,144));
+            const uint16_t borderColor = BLUE16;
+            if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
+            throw new runtime_error("Matrix can't hold the QR code height");
 
-        int w = qrcode.size + borderSize * 2;
-        int h = w;
+            int w = qrcode.size + borderSize * 2;
+            int h = w;
 
-        graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, BLACK16);
-        graphics()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, borderColor);
+            graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, BLACK16);
+            graphics()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, borderColor);
 
-        for (uint8_t y = 0; y < qrcode.size; y++) 
-          for (uint8_t x = 0; x < qrcode.size; x++) 
-            graphics()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : BLACK16));
+            for (uint8_t y = 0; y < qrcode.size; y++) 
+            for (uint8_t x = 0; x < qrcode.size; x++) 
+                graphics()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : BLACK16));
+        }
     }
 };
 

@@ -53,6 +53,7 @@ extern std::mutex         g_buffer_mutex;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+uint32_t g_FreeDrawTime_ms;
 
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
@@ -328,7 +329,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
         double elapsed = g_AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
-            delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
+        {
+            g_FreeDrawTime_ms = (minimumFrameTime - elapsed) * MILLIS_PER_SECOND;
+            delay(g_FreeDrawTime_ms);
+        }
     #endif
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly, 
         // so we'll pause to share the CPU a bit once the update has begun
@@ -339,6 +343,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
         // whose time has come
 
-        delay(1);
+        yield();
     }
 }
