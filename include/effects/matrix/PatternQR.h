@@ -87,6 +87,11 @@ public:
         graphics()->fillScreen(graphics()->to16bit(CRGB::DarkBlue));
     }
 
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 20;
+    }
+
     virtual void Draw()
     {
         String sIP = WiFi.isConnected() ? "http://" + WiFi.localIP().toString() : "No Wifi";

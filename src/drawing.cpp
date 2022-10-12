@@ -300,10 +300,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             }
         }
 
-        // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
-
-        delay(1);
-
         // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
         // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
@@ -333,8 +329,13 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             g_FreeDrawTime_ms = (minimumFrameTime - elapsed) * MILLIS_PER_SECOND;
             delay(g_FreeDrawTime_ms);
         }
+        else
+        {
+            g_FreeDrawTime_ms = 0;
+        }
     #endif
-        // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly, 
+
+        // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
         // so we'll pause to share the CPU a bit once the update has begun
 
         if (g_bUpdateStarted)
