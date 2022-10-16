@@ -240,12 +240,13 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             }
             else if (g_pEffectManager->EffectCount() > 0)
             {
+                cPixelsDrawnThisFrame = NUM_LEDS;
+
                 // If we've never drawn from wifi before, now would also be a good time to local draw
                 if (g_msLastWifiDraw == 0 || (micros() - g_msLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))  
                 {
                     g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
                     g_pEffectManager->Update(); // Draw the current built in effect
-                    cPixelsDrawnThisFrame = NUM_LEDS;
 
                     #if USEMATRIX
                         if (g_pEffectManager->IsVUVisible())
@@ -320,6 +321,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 #endif
 
         // Delay enough to slow down to the desired framerate
+        // BUGBUG (davepl) This uses the current effect from the effects table, so its used even for wifi frames
 
     #if MILLIS_PER_FRAME == 0
         const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
