@@ -40,6 +40,8 @@
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
 
+using namespace std;
+
 //
 // Matrix Panel
 //
@@ -74,18 +76,15 @@ public:
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
     #endif
 
-    static Boid *boids;
+    unique_ptr<Boid []> boids = make_unique<Boid []>(MATRIX_WIDTH);
+    unique_ptr<uint8_t []> heat = make_unique<uint8_t []>(NUM_LEDS);
 
     LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
-        if (boids == nullptr)
-            boids = new Boid[MATRIX_WIDTH]();
     }
 
     ~LEDMatrixGFX()
     {
-        // We're going to leak the static instance of boids on exit because there's no cheap and easy
-        // way to know when the last instance is being cleaned up.
     }
 
     inline virtual uint16_t xy(uint16_t x, uint16_t y) const
@@ -134,8 +133,7 @@ public:
 
     static void StartMatrix();
     static CRGB *GetMatrixBackBuffer();
-    static void MatrixSwapBuffers();
-    static void PresentFrame();
+    static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
 
     SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
     {

@@ -58,6 +58,7 @@
 
 #ifndef PatternMandala_H
 #define PatternMandala_H
+#if     USEMATRIX
 
 #include "globals.h"
 #include "ledstripeffect.h"
@@ -87,6 +88,7 @@ public:
     {
         return 45;
     }
+
 
     virtual void Start()
     {
@@ -157,4 +159,5 @@ public:
     }
 };
 
+#endif
 #endif

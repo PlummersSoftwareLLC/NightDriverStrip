@@ -187,21 +187,21 @@ class RemoteControl
         uint result = results.value;
         _IR_Receive.resume();
 
-        debugI("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
+        debugV("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
 
         if (0xFFFFFFFF == result)
         {
-            debugI("Remote Repeat; lastResult == %08x\n", lastResult);
+            debugV("Remote Repeat; lastResult == %08x\n", lastResult);
             if (lastResult == IR_BMINUS)
             {
                 g_Brightness = std::max(MIN_BRIGHTNESS, g_Brightness - BRIGHTNESS_STEP);
-                debugI("Dimming to %d\n", g_Brightness);
+                debugV("Dimming to %d\n", g_Brightness);
                 return;
             }
             else if (lastResult == IR_BPLUS)
             {
                 g_Brightness = std::min(MAX_BRIGHTNESS, g_Brightness + BRIGHTNESS_STEP);
-                debugI("Brightening to %d\n", g_Brightness);
+                debugV("Brightening to %d\n", g_Brightness);
                 return;
             }
         }
@@ -212,7 +212,7 @@ class RemoteControl
 
         if (IR_ON == result)
         {
-            debugI("Turning ON via remote");
+            debugV("Turning ON via remote");
             g_pEffectManager->ClearRemoteColor();
             g_pEffectManager->SetInterval(0);
             g_pEffectManager->StartEffect();
@@ -254,7 +254,7 @@ class RemoteControl
         {
             if (RemoteColorCodes[i].code == result)
             {
-                debugI("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
+                debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
                 g_pEffectManager->SetGlobalColor(RemoteColorCodes[i].color);
                 return;
             }

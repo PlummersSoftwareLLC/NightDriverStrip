@@ -186,7 +186,7 @@ class BeatEffectBase2
             }
             else
             {
-              debugI("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
+              debugV("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
 
               HandleBeat(false, elapsed, maximum - minimum);
               _lastBeat = g_AppTime.CurrentTime();
@@ -320,7 +320,7 @@ class ChannelBeatEffect : public BeatEffect
       { 
         litArms.clear();
         setAllOnAllChannels(0,0,0);
-        debugI("No slot!\n");
+        debugV("No slot!\n");
         return;
       }
       

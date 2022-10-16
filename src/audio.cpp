@@ -35,7 +35,9 @@
 
 #include "soundanalyzer.h"
 #include <esp_task_wdt.h>
+#include "taskmgr.h"
 
+extern TaskManager g_TaskManager;
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
 extern uint32_t g_Watts; 
 extern double g_Brite;
@@ -83,10 +85,9 @@ float g_peak2DecayRate = 1.0f;
     };
 #else
     static_assert(NUM_BANDS == 16);
-
     const int cutOffsBand[16] =
     {
-        250, 450, 565, 715, 900, 1125, 1400, 1750, 2250, 2800, 3150, 4000, 5000, 6400, 10500, 14000
+        25,   100, 200, 300, 400, 630, 800, 1000, 1200, 1600, 2500, 4000, 6300, 8000, 10000, 12000
     };
     #if TTGO    
         const float scalarsBand[16] = 
@@ -99,7 +100,7 @@ float g_peak2DecayRate = 1.0f;
             #if M5STICKC || M5STICKCPLUS
                 0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
             #else
-                0.12f, 0.18f, 0.20f, 0.25f, 0.35f, 0.35f, 0.45f, 0.55f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
+                0.20f, 0.25f, 0.30f, 0.35f, 0.45f, 0.45f, 0.50f, 0.6f, 0.45f, 0.5f, 0.5f, 0.6f, .80f, 1.0f, 1.0, 0.75f
             #endif
         };
     #endif
@@ -128,7 +129,7 @@ PeakData g_Peaks;
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *)
 {
-    SoundAnalyzer Analyzer(INPUT_PIN);
+     SoundAnalyzer Analyzer(INPUT_PIN);
 
     debugI(">>> Sampler Task Started");
 
@@ -151,11 +152,6 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         lastFrame = millis();
 
-        EVERY_N_SECONDS(10)
-        {
-            debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf",
-                        ESP.getFreeHeap(), g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio);
-        }
         g_Peaks = Analyzer.RunSamplerPass();
         UpdatePeakData();        
         DecayPeaks();
@@ -380,7 +376,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         if (Serial2.availableForWrite())
         {
             Serial2.write((uint8_t *)&data, sizeof(data));
-            Serial2.flush(true);
+            //Serial2.flush(true);
             static int lastFrame = millis();
             g_serialFPS = FPS(lastFrame, millis());
             lastFrame = millis();
@@ -421,6 +417,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         auto elapsed = millis() - startTime;
         if (targetElapsed > elapsed)
             delay(targetElapsed - elapsed);
+        else    
+            delay(1);
     }
 }
 

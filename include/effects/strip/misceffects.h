@@ -197,16 +197,16 @@ class StatusEffect : public LEDStripEffect
     {
         CRGB color = _color;
 
-        if (g_bUpdateStarted)
-            color = CRGB::Purple;
-        else if (!WiFi.isConnected())
-            color = CRGB::Red;
-        else if (!NTPTimeClient::HasClockBeenSet())
-            color = CRGB::Green;
+    if (g_bUpdateStarted)
+      color = CRGB::Purple;
+    else if (!WiFi.isConnected())
+      color = CRGB::Red;
+    else if (!NTPTimeClient::HasClockBeenSet())
+      color = CRGB::Green;
 
-        if (_everyNth != 1)
-          fillSolidOnAllChannels(CRGB::Black);
-        fillSolidOnAllChannels(color, 0, 0, _everyNth);
+    if (_everyNth != 1)
+      fillSolidOnAllChannels(CRGB::Black);
+    fillSolidOnAllChannels(color, 0, 0, _everyNth);
     }
 };
 

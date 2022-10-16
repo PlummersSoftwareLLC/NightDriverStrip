@@ -40,12 +40,15 @@
 #include "ntptimeclient.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
+#include "ledmatrixgfx.h"
 #include "ledstripeffect.h"
 
 #include <deque>
 #include <memory>
 
 extern bool                      g_bUpdateStarted;
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
+
 
 // LEDStripEffect
 //
@@ -79,14 +82,14 @@ class LEDStripEffect
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               // There are up to 8 channel in play per effect and when we
     {           
-        debugW("Init %s", _friendlyName.c_str());                                                    //   start up, we are given copies to their graphics interfaces
+        debugV("Init %s", _friendlyName.c_str());                                                    //   start up, we are given copies to their graphics interfaces
         for (int i = 0; i < NUM_CHANNELS; i++)                      //   so that we can call them directly later from other calls
         {
             _GFX[i] = gfx[i];    
         }
-        debugW("Get LED Count");
+        debugV("Get LED Count");
         _cLEDs = _GFX[0]->GetLEDCount();   
-        debugI("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
+        debugV("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
         return true;  
     }
     
@@ -95,6 +98,13 @@ class LEDStripEffect
         return _GFX[0];
     }
 
+#if USEMATRIX
+    static inline LEDMatrixGFX * mgraphics()
+    {
+        return ((LEDMatrixGFX *)g_pDevices[0].get());
+    }
+#endif 
+   
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
@@ -108,6 +118,17 @@ class LEDStripEffect
         return 31;
     }
     
+    // RequiresDoubleBuffering
+    //
+    // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
+    // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
+    // and it can override this method and return false;
+    
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return true;
+    }
+
     static inline CRGB RandomRainbowColor()
     {
         static const CRGB colors[] =
@@ -123,6 +144,23 @@ class LEDStripEffect
         return colors[randomColorIndex];
     }
 
+    static CRGB GetBlackBodyHeatColor(float temp) 
+    {
+        temp = min(1.0f, temp);
+        uint8_t temperature = (uint8_t)(255 * temp);
+        uint8_t t192 = (uint8_t)((temperature / 255.0f) * 191);
+
+        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
+        heatramp <<= 2;
+
+        if (t192 > 0x80)
+            return CRGB(255, 255, heatramp);
+        else if (t192 > 0x40)
+            return CRGB(255, heatramp, 0);
+        else
+            return CRGB(heatramp, 0, 0);
+    }
+    
     static inline CRGB RandomSaturatedColor()
     {
         CRGB c;

@@ -183,9 +183,10 @@ bool ConnectToWiFi(uint cRetries)
 
     if (false == WiFi.isConnected())
     {
-        debugI("Giving up on WiFi\n");
+        debugW("Giving up on WiFi\n");
         return false;
     }
+    debugW("Received IP: %s", WiFi.localIP().toString().c_str());
 
     #if INCOMING_WIFI_ENABLED
     // Start listening for incoming data
@@ -210,10 +211,12 @@ bool ConnectToWiFi(uint cRetries)
     #if ENABLE_WEBSERVER
         debugI("Starting Web Server...");
         g_WebServer.begin();
-        debugI("Web Server Started!");
+        debugI("Web Server begin called!");
     #endif
 
-    debugI("Received IP: %s", WiFi.localIP().toString().c_str());
+    #if USEMATRIX
+        //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+    #endif
 
     /*
     {
@@ -383,8 +386,8 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
             lock_guard<mutex> guard(g_buffer_mutex);
 
-            if (!heap_caps_check_integrity_all(true))
-                debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
+            //if (!heap_caps_check_integrity_all(true))
+            //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
 
             for (int iChannel = 0, channelMask = 1; iChannel < NUM_CHANNELS; iChannel++, channelMask <<= 1)
             {

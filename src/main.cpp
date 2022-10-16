@@ -170,13 +170,19 @@
 
 #include "colordata.h"                          // color palettes
 #include "drawing.h"                            // drawing code
+#include "taskmgr.h"                            // for cpu usage, etc
 
 #if ENABLE_REMOTE
     #include "remotecontrol.h" // Allows us to use a IR remote with it
 #endif
 
-void IRAM_ATTR ScreenUpdateLoopEntry(void *);          
-
+void IRAM_ATTR ScreenUpdateLoopEntry(void *);
+extern uint32_t g_FreeDrawTime_ms;
+extern volatile float gPeakVU; // How high our peak VU scale is in live mode
+extern volatile float gMinVU;  // How low our peak VU scale is in live mode
+extern uint32_t g_Watts;
+extern double g_Brite;
+    
 //
 // Task Handles to our running threads
 //
@@ -190,6 +196,8 @@ TaskHandle_t g_taskAudio  = nullptr;
 TaskHandle_t g_taskNet    = nullptr;
 TaskHandle_t g_taskRemote = nullptr;
 TaskHandle_t g_taskSocket = nullptr;
+
+TaskManager g_TaskManager;
 
 //
 // Global Variables
@@ -343,12 +351,12 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     static uint64_t     _NextRunTime = millis();
                     if (millis() > _NextRunTime)
                     {
-                        debugI("Fetching YouTube Data...");
+                        debugV("Fetching YouTube Data...");
 
                         sight._debug = false;
                         if (sight.getData())
                         {
-                            debugI("Got YouTube Data...");
+                            debugV("Got YouTube Data...");
                             long result = atol(sight.channelStats.subscribers_count.c_str());
                             PatternSubscribers::cSubscribers = result;
                             _NextRunTime = millis() + SUB_CHECK_INTERVAL;
@@ -371,7 +379,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
             {
                 if (WiFi.isConnected())
                 {
-                    debugI("Refreshing Time from Server...");
+                    debugV("Refreshing Time from Server...");
                     digitalWrite(BUILTIN_LED_PIN, 1);
                     NTPTimeClient::UpdateClockFromWeb(&g_Udp);
                     digitalWrite(BUILTIN_LED_PIN, 0);
@@ -479,7 +487,9 @@ Bounce2::Button Button2;
 // AudioSamplerTaskEntry        - Listens to room audio, creates spectrum analysis, beat detection, etc.
 
 void setup()
-{   
+{
+    g_TaskManager.begin();
+    
     // Initialize Serial output
     Serial.begin(115200);      
 
@@ -818,10 +828,31 @@ void loop()
         #if ENABLE_OTA
             EVERY_N_MILLIS(10)
             {
-                if (WiFi.isConnected())         
-                    ArduinoOTA.handle();
+                try
+                {
+                    if (WiFi.isConnected())
+                        ArduinoOTA.handle();
+                }
+                catch(const std::exception& e)
+                {
+                    debugW("Exception in OTA code caught");
+                }
+                
             }
-        #endif 
+        #endif
+
+        EVERY_N_SECONDS(5)
+        {
+            #if ENABLE_AUDIO
+                debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
+                        ESP.getFreeHeap(),
+                        g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
+            #else
+            debugI("Mem: %u LargestBlk: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
+                   ESP.getFreeHeap(), ESP.getMaxAllocHeap(),
+                   g_FPS, g_Watts, g_Brite, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
+            #endif
+        }
 
         delay(10);        
     }

@@ -70,11 +70,11 @@ class Screen
 #if M5STICKCPLUS
     static const int TopMargin = 37;  
 #else
-    static const int TopMargin = 21;  
+    static const int TopMargin = 28;  
 #endif
 
 
-    static const int BottomMargin = 20;
+    static const int BottomMargin = 12;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
@@ -132,12 +132,15 @@ class Screen
 
     static uint16_t fontHeight()
     {
-        #if USE_OLED
-            return 12;
-        #elif USE_SCREEN
+        #if USE_LCD
+            int16_t x1, y1;
+            uint16_t w, h;
+            g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
+            return w + 2;                                                   // One pixel above and below chars looks better
+        #elif OLED
             return g_pDisplay->fontHeight();
         #else
-            return 1;
+            return 12;                                                      // Some bogus reasonable default for those that don't support it
         #endif
     }
 
@@ -153,9 +156,8 @@ class Screen
         #elif USE_SCREEN
             return g_pDisplay->textWidth(psz);          
         #else 
-            return 1;
+            return 8 * strlen(psz);
         #endif
-
     }
 
     static uint16_t screenHeight()
@@ -165,7 +167,7 @@ class Screen
         #elif USE_SCREEN
             return g_pDisplay->height();
         #else
-            return 1;
+            return MATRIX_HEIGHT;
         #endif
     }
 

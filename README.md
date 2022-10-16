@@ -156,6 +156,9 @@ Time to build the SPECTRUM config.  Assumes a clean build after everything has b
 - Mac Pro, 6 cores, 3.5 GHz, 64GB, 1TB SSD
 -> [davepl 09/19/2021] 48.42 seconds
 
+- Xeon Silver, 20 cores, 2.1GHz, 16GB VM
+-> [davepl 10/10/2022] 53.11 seconds
+
 - Raspberry Pi 4, 64-bit Ubuntu LTS, 4 core, 4GB
 -> [davepl 09/23/2021] 6 min 25 seconds
 

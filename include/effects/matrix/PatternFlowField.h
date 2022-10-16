@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        PatternSpiro.h
+// File:        PatternFlowField.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -25,7 +25,7 @@
 //
 //   Effect code ported from Aurora to Mesmerizer's draw routines
 //
-// History:     Jul-08-2022         Davepl      Based on Aurora
+// History:     Jul-27-2022         Davepl      Based on Aurora
 //
 //---------------------------------------------------------------------------
 
@@ -51,65 +51,84 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PatternBounce_H
-#define PatternBounce_H
+#ifndef PatternFlowField_H
+#define PatternFlowField_H
 
 #include "globals.h"
-#include "Vector.h"
-#include "Boid.h"
 
-class PatternBounce : public LEDStripEffect
+class PatternFlowField : public LEDStripEffect
 {
-private:
-    static const int count = MATRIX_WIDTH;
-    PVector gravity = PVector(0, 0.0125);
-
 public:
-    PatternBounce() : LEDStripEffect("Bounce")
+    PatternFlowField() : LEDStripEffect("FlowField")
     {
     }
+    uint16_t x;
+    uint16_t y;
+    uint16_t z;
+
+    uint16_t speed = 1;
+    uint16_t scale = 26;
+
+    static const int count = 40;
+
+    uint8_t hue = 0;
 
     virtual void Start()
     {
-        unsigned int colorWidth = 256 / count;
+        x = random16();
+        y = random16();
+        z = random16();
+
         for (int i = 0; i < count; i++)
         {
-            Boid boid = Boid(i, 0);
-            boid.velocity.x = 0;
-            boid.velocity.y = i * -0.01;
-            boid.colorIndex = colorWidth * i;
-            boid.maxforce = 10;
-            boid.maxspeed = 10;
-            mgraphics()->boids[i] = boid;
+            mgraphics()->boids[i] = Boid(random(MATRIX_WIDTH), 0);
         }
     }
 
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 16;
+    }
+    
     virtual void Draw()
     {
-        auto g = g_pEffectManager->graphics();
-        // dim all pixels on the display
+        graphics()->DimAll(240);
 
-        // Blue columns only, and skip the first row of each column if the VU meter is being shown so we don't blend it onto ourselves
-        g->blurColumns(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_pEffectManager->IsVUVisible() ? 1 : 0, 200);
-        g->DimAll(250);
+        // CRGB color = effects.ColorFromCurrentPalette(hue);
 
         for (int i = 0; i < count; i++)
         {
-            Boid boid = mgraphics()->boids[i];
-            boid.applyForce(gravity);
-            boid.update();
+            Boid *boid = &(mgraphics()->boids[i]);
 
-            g->setPixel(boid.location.x, boid.location.y, g->ColorFromCurrentPalette(boid.colorIndex));
+            int ioffset = scale * boid->location.x;
+            int joffset = scale * boid->location.y;
 
-            if (boid.location.y >= MATRIX_HEIGHT - 1)
+            uint8_t angle = inoise8(x + ioffset, y + joffset, z);
+
+            boid->velocity.x = (float)sin8(angle) * 0.0078125 - 1.0;
+            boid->velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);
+            boid->update();
+
+            graphics()->drawPixel(boid->location.x, boid->location.y, graphics()->ColorFromCurrentPalette(angle + hue)); // color
+
+            if (boid->location.x < 0 || boid->location.x >= MATRIX_WIDTH ||
+                boid->location.y < 0 || boid->location.y >= MATRIX_HEIGHT)
             {
-                boid.location.y = MATRIX_HEIGHT - 1;
-                boid.velocity.y *= -1.0;
+                boid->location.x = random(MATRIX_WIDTH);
+                boid->location.y = 0;
             }
-
-            mgraphics()->boids[i] = boid;
         }
+
+        EVERY_N_MILLIS(200)
+        {
+            hue++;
+        }
+
+        x += speed;
+        y += speed;
+        z += speed;
     }
 };
+
 
 #endif

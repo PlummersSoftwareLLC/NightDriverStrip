@@ -53,6 +53,7 @@ extern std::mutex         g_buffer_mutex;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+uint32_t g_FreeDrawTime_ms;
 
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
@@ -105,7 +106,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     for (;;)
     {
         static uint64_t lastFrame = millis();
-        g_FPS = FPS(lastFrame, millis());
+        g_FPS = FPS(lastFrame, millis());           // Weighted: (g_FPS * 9 + FPS(lastFrame, millis())) / 10;
         lastFrame = millis();        
         
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
@@ -120,47 +121,56 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
             static_assert( sizeof(CRGB) == sizeof(LEDMatrixGFX::SM_RGB), "Code assumes 24 bits in both places" );
 
-            LEDMatrixGFX::MatrixSwapBuffers();
-            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
-            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-
-            LEDMatrixGFX::titleLayer.setFont(font3x5);
-            if (pMatrix->GetCaptionTransparency() > 0.00) 
+            EVERY_N_MILLIS(MILLIS_PER_FRAME)
             {
-                uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
-                LEDMatrixGFX::titleLayer.setBrightness(brite);                // 255 would obscure it entirely
-                debugV("Caption: %d", brite);
+                #if SHOW_FPS_ON_MATRIX
+                    LEDMatrixGFX::backgroundLayer.setFont(gohufont11);
+                    // 3 is half char width at curret font size, 5 is half the height.
+                    string output = "FPS: " + std::to_string(g_FPS);
+                    LEDMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 -  (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255,255,255), rgb24(0,0,0), output.c_str());    
+                #endif
 
-                rgb24 chromaKeyColor = rgb24(255,0,255);
-                rgb24 shadowColor = rgb24(0,0,0);
-                rgb24 titleColor = rgb24(255,255,255);
-                
-                LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
-                LEDMatrixGFX::titleLayer.enableChromaKey(true);
-                LEDMatrixGFX::titleLayer.setFont(font5x7);
-                LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
+                LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
+                LEDMatrixGFX::MatrixSwapBuffers(g_pEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+                pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+                LEDMatrixGFX::titleLayer.setFont(font3x5);
 
-                const size_t kCharWidth = 5;
-                const size_t kCharHeight = 7;
+                if (pMatrix->GetCaptionTransparency() > 0.00) 
+                {
+                    uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
+                    LEDMatrixGFX::titleLayer.setBrightness(brite);                // 255 would obscure it entirely
+                    debugV("Caption: %d", brite);
 
-                const auto caption = pMatrix->GetCaption();
+                    rgb24 chromaKeyColor = rgb24(255,0,255);
+                    rgb24 shadowColor = rgb24(0,0,0);
+                    rgb24 titleColor = rgb24(255,255,255);
+                    
+                    LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
+                    LEDMatrixGFX::titleLayer.enableChromaKey(true);
+                    LEDMatrixGFX::titleLayer.setFont(font6x10);
+                    LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
 
-                int y = MATRIX_HEIGHT - 2 - kCharHeight;
-                int w = strlen(caption) * kCharWidth;
-                int x = (MATRIX_WIDTH / 2) - (w / 2); 
+                    const size_t kCharWidth = 6;
+                    const size_t kCharHeight = 10;
 
-                LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, caption);
-                LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, caption);
-                LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, caption);
-                LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, caption);
-                LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  caption);
+                    const auto caption = pMatrix->GetCaption();
+
+                    int y = MATRIX_HEIGHT - 2 - kCharHeight;
+                    int w = strlen(caption) * kCharWidth;
+                    int x = (MATRIX_WIDTH / 2) - (w / 2); 
+
+                    LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, caption);
+                    LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, caption);
+                    LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, caption);
+                    LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, caption);
+                    LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  caption);
+                }
+                else 
+                {
+                    LEDMatrixGFX::titleLayer.enableChromaKey(false);
+                    LEDMatrixGFX::titleLayer.setBrightness(0);
+                }   
             }
-            else 
-            {
-                LEDMatrixGFX::titleLayer.enableChromaKey(false);
-                LEDMatrixGFX::titleLayer.setBrightness(0);
-            }   
- 
         #endif
 
         if (WiFi.isConnected())
@@ -281,13 +291,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 debugV("Back from FastLED::show");
 
                 g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
-                g_Brite = 255.0 * 100.0 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+                g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
                 g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
-
-                
-                // If we draw, we delay at least a bit so that anything else on our core, like the TFT, can get more CPU and update.
-
-                delay(1);        
             }
             else
             {
@@ -316,12 +321,21 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
         // Delay enough to slow down to the desired framerate
 
+    #if MILLIS_PER_FRAME == 0
         const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
         double elapsed = g_AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
-            delay((minimumFrameTime-elapsed) * MILLIS_PER_SECOND);
+        {
+            g_FreeDrawTime_ms = (minimumFrameTime - elapsed) * MILLIS_PER_SECOND;
+            delay(g_FreeDrawTime_ms);
+        }
+        else
+        {
+            g_FreeDrawTime_ms = 0;
+        }
+    #endif
 
-        // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly, 
+        // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
         // so we'll pause to share the CPU a bit once the update has begun
 
         if (g_bUpdateStarted)
@@ -330,6 +344,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
         // whose time has come
 
-        delay(1);
+        yield();
     }
 }

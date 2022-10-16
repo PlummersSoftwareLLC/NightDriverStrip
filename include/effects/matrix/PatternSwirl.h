@@ -112,9 +112,6 @@ public:
         drawAt(ni, nj, graphics->ColorFromCurrentPalette(ms / 17));
         drawAt(i, nj, graphics->ColorFromCurrentPalette(ms / 37));
         drawAt(ni, j, graphics->ColorFromCurrentPalette(ms / 41));
-
-
-
     }
 };
 

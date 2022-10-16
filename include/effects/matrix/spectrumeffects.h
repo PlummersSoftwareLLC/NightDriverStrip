@@ -191,6 +191,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return 45;
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return _fadeRate != 0;
+    }
+
     // DrawBand
     //
     // Draws the bar graph rectangle for a bar and then the white line on top of it
@@ -246,7 +251,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
                            bool                   bShowVU,
                            const CRGBPalette256   palette = spectrumBasicColors, 
-                           uint16_t           scrollSpeed = .2, 
+                           uint16_t           scrollSpeed = 0, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
@@ -308,13 +313,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
             if (pGFXChannel->IsPalettePaused())
             {
-                // Start at 32 because first two bands are usually too dark to use as bar colors.  This winds up selecting a number up
-                // to 192 and then adding 64 to it in order to skip those darker 0-64 colors
-                DrawBand(i, pGFXChannel->ColorFromCurrentPalette((::map(i, 0, NUM_BANDS, 0, 255) + _colorOffset) % 1892 + 76));
+                DrawBand(i, pGFXChannel->ColorFromCurrentPalette(::map(i, 0, NUM_BANDS, 0, 255)));
             }
             else
             {
-                DrawBand(i, ColorFromPalette(_palette, (::map(i, 0, NUM_BANDS, 0, 255))));
+                DrawBand(i, ColorFromPalette(_palette, 
+                                             (::map(i, 0, NUM_BANDS, 0, 255) + 0 * _colorOffset) % 255, 
+                                             255,
+                                             LINEARBLEND));
+
             }
         }
     }
@@ -343,8 +350,11 @@ class WaveformEffect : public LEDStripEffect
         _increment = increment;
     }
 
-    void DrawSpike(int x, double v) 
+    void DrawSpike(int x, double v, bool bErase = true) 
     {
+        v = std::min(v, 1.0);
+        v = std::max(v, 0.0);
+
         auto g = g_pEffectManager->graphics();
 
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
@@ -370,8 +380,9 @@ class WaveformEffect : public LEDStripEffect
                 else
                     color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND); 
             }
-                
-            g->setPixel(x, y, color);
+
+            bErase ? g->setPixel(x, y, color) : g->drawPixel(x, y, color);
+            
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
 
@@ -383,7 +394,6 @@ class WaveformEffect : public LEDStripEffect
         
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
-        
         DrawSpike(63, gVURatio/2.0);
         DrawSpike(0, gVURatio/2.0);
     }
@@ -391,13 +401,16 @@ class WaveformEffect : public LEDStripEffect
 
 class GhostWave : public WaveformEffect
 {
-    double                    _iPeakVUy = 0;
-    unsigned long             _msPeakVU = 0;
-
+    uint8_t                   _blur     = 0;
+    bool                      _erase    = true;
+    int                       _fade     = 0;
   public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
-        : WaveformEffect(pszFriendlyName, pPalette, increment)
+    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
+        : WaveformEffect(pszFriendlyName, pPalette, increment),
+          _blur(blur),
+          _erase(erase),
+          _fade(fade)
     {
     }
 
@@ -405,18 +418,17 @@ class GhostWave : public WaveformEffect
     {
         auto g = g_pEffectManager->graphics();
 
-        for (int y = 0; y < MATRIX_HEIGHT; y++)
-        {
-            for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
-            {
-                g->setPixel(x, y, g->getPixel(x+1, y));
-                g->setPixel(MATRIX_WIDTH-x-1, y, g->getPixel(MATRIX_WIDTH-x-2, y));
-            }
-        }
-    
-        g->BlurFrame(24);
-        DrawSpike(MATRIX_WIDTH/2, gVURatio / 2.0);
-        DrawSpike(MATRIX_WIDTH/2-1, gVURatio / 2.0);
+        int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
+
+        g->DimAll(250 - _fade * gVURatio);
+        g->MoveOutwardsX(top);
+
+        if (_blur)
+            g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
+            
+        // Offsetting by 0.5, which is a very low ratio, helps keep the line thin when sound is low
+        DrawSpike(MATRIX_WIDTH/2, (gVURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, (gVURatio - 0.5) / 1.5, _erase);
     }
 };
 

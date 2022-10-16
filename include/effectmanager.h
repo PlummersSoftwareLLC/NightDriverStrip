@@ -166,7 +166,7 @@ public:
     {
         debugW("Setting Global Color");
                 
-#if (USEMATRIX || SPECTRUM)
+#if (USEMATRIX)
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
         GFXBase * pMatrix = (*this)[0].get();
@@ -192,8 +192,8 @@ public:
     {
         _pRemoteEffect = nullptr;
 
-#if (USEMATRIX || SPECTRUM)        
-        GFXBase * pMatrix = (*this)[0].get();
+#if (USEMATRIX)        
+        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
         pMatrix->PausePalette(false);
 #endif        
     }
@@ -271,13 +271,14 @@ public:
 
     uint GetInterval() const
     {
+        if (_effectInterval == 0)
+            return std::numeric_limits<uint>::max();
         return _effectInterval;
     }
 
     void SetInterval(uint interval)
     {
         _effectInterval = interval;
-        //_effectStartTime = millis();
     }
 
     const LEDStripEffect *const *EffectsList() const
@@ -331,9 +332,6 @@ public:
     {
         // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
 
-        if (GetInterval() == 0)
-            return std::numeric_limits<int>::max();
-
         if (GetTimeUsedByCurrentEffect() > GetInterval())
             return 0;
             
@@ -349,14 +347,14 @@ public:
     {
         // If interval is zero, the current effect never expires
         
-        if (GetInterval() == 0)
+        if (_effectInterval == 0)
             return;
 
         if (millis() - _effectStartTime >= GetInterval()) // See if its time for a new effect yet
         {
-            debugI("%ldms elapsed: Next Effect", millis() - _effectStartTime);
+            debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
-            debugI("Current Effect: %s", GetCurrentEffectName());
+            debugV("Current Effect: %s", GetCurrentEffectName());
         }
     }
 
@@ -451,6 +449,12 @@ public:
         {
             g_Fader = 255;
             return;
+        }
+
+        if (_effectInterval == 0)
+        {
+            g_Fader = 255;
+            return;            
         }
 
         int r = GetTimeRemainingForCurrentEffect();
