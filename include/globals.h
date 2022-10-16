@@ -454,7 +454,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define RESERVE_MEMORY  180000
-    #define IR_REMOTE_PIN   39                    
+    #define IR_REMOTE_PIN   39
+    #define INPUT_PIN       36
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
 
@@ -1179,6 +1180,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
 
 #if ENABLE_AUDIO
+#ifndef INPUT_PIN
 #if TTGO
 #define INPUT_PIN (36)   
 #elif M5STICKC || M5STICKCPLUS
@@ -1186,6 +1188,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #define IO_PIN (0)
 #else
 #define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+#endif
 #endif
 #endif
 
