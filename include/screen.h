@@ -139,6 +139,8 @@ class Screen
             return w + 2;                                                   // One pixel above and below chars looks better
         #elif OLED
             return g_pDisplay->fontHeight();
+        #elif USE_SCREEN
+            return g_pDisplay->fontHeight();
         #else
             return 12;                                                      // Some bogus reasonable default for those that don't support it
         #endif
@@ -148,13 +150,13 @@ class Screen
     {
         #if USE_OLED
             return g_pDisplay->getStrWidth(psz);
+        #elif USE_TFTSPI
+            return g_pDisplay->textWidth(psz);            
         #elif USE_LCD
             int16_t x1, y1;
             uint16_t w, h;
             g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
             return w;
-        #elif USE_SCREEN
-            return g_pDisplay->textWidth(psz);          
         #else 
             return 8 * strlen(psz);
         #endif

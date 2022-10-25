@@ -652,7 +652,7 @@ void setup()
         cBuffers = MAX_BUFFERS;
     }
 
-    debugI("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
+    debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
@@ -680,8 +680,6 @@ void setup()
     #endif
 
     #if USESTRIP
-
-
 
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_pDevices[0]->GetLEDCount());
@@ -848,8 +846,12 @@ void loop()
                         ESP.getFreeHeap(),
                         g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
             #else
-            debugI("Mem: %u LargestBlk: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
-                   ESP.getFreeHeap(), ESP.getMaxAllocHeap(),
+            debugI("IP: %s, Mem: %u LargestBlk: %u PSRAM Free: %u/%u Buffer: %d/%d LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
+                   WiFi.localIP().toString().c_str(),
+                   ESP.getFreeHeap(),
+                   ESP.getMaxAllocHeap(),
+                   ESP.getFreePsram(), ESP.getPsramSize(),
+                   g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(),
                    g_FPS, g_Watts, g_Brite, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
             #endif
         }

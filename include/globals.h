@@ -671,12 +671,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  130000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  140000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
 
-    #define POWER_LIMIT_MW (300 * 1000)                 // Assumes 300W per 8M
+    #define POWER_LIMIT_MW (100 * 1000)                 // Assumes 100W per 8M
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
 
     #define RING_SIZE_0 1 
@@ -684,7 +684,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RING_SIZE_2 4
     #define RING_SIZE_3 8
     #define RING_SIZE_4 16
-
+    
 #elif CHIEFTAIN
 
     // The LED strips I use for Christmas lights under my eaves
@@ -949,7 +949,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MAX_BUFFERS
-#define MAX_BUFFERS (99)            // SHould be enough for two seconds at 30fps
+#define MAX_BUFFERS (360)            // Just some reasonable guess, limiting it to 24 frames per second for 15 seconds
 #endif
 
 #ifndef ENABLE_WEBSERVER
@@ -1098,10 +1098,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif defined(M5STACKCORE2)
-ARDUINO_HELTEC_WIFI_KIT_32
-        #define  USE_TFT 1       
+    #elif defined(ESP32FEATHERTFT)
 
+        #define USE_TFTSPI 1                                  // Use TFT_eSPI
+
+    #elif defined(M5STACKCORE2)
+        ARDUINO_HELTEC_WIFI_KIT_32
+        #define  USE_TFT 1       
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
