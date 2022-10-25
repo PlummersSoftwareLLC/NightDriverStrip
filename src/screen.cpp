@@ -122,12 +122,7 @@ void IRAM_ATTR UpdateScreen()
         cStatus++;
 
         Screen::setTextColor(WHITE16, BLUE16);    // Second color is background color, giving us text overwrite
-#if M5STICKCPLUS
-                Screen::setTextSize(Screen::MEDIUM);
-#else
-                Screen::setTextSize(Screen::SMALL);
-#endif
-
+        Screen::setTextSize(Screen::SMALL);
 
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK ", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
 
@@ -165,9 +160,10 @@ void IRAM_ATTR UpdateScreen()
 
         if (Screen::screenHeight() >= lineHeight * 5 + Screen::fontHeight())
         {
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%d Brite:%0.2f%% ", 
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%d\nPOWR:%3.0f%% %uW ", 
                 ESP.getFreePsram(),
-                255.0f * 100 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW));
+                255.0f * 100 / calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW),
+                g_Watts);
 
             Screen::setCursor(0, lineHeight * 5);
             Screen::println(szBuffer);
