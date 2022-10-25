@@ -112,7 +112,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
         uint cPixelsDrawnThisFrame = 0;
- 
+        bool bDrawnFromWifi = false;
+
         double frameStartTime = g_AppTime.CurrentTime();
 
         #if USEMATRIX
@@ -174,16 +175,16 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #endif
 
         if (WiFi.isConnected())
-        {
+        {           
             timeval tv;
             gettimeofday(&tv, nullptr);
             double dClockTime = tv.tv_sec + tv.tv_usec / (double) MICROS_PER_SECOND;
-            
+
             std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
             for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
             {
-                // Pull buffers out of the queue.  Changint the 'while' to an 'if' would cause it to draw every frame if it got behind, but when
+                // Pull buffers out of the queue.  Changing the 'while' to an 'if' would cause it to draw every frame if it got behind, but when
                 // written as 'while' it will pull frames until it gets one that is current.
 
                 if (false == g_apBufferManager[iChannel]->IsEmpty())
@@ -205,6 +206,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                         g_AppTime.NewFrame();
                         g_msLastWifiDraw = micros();  
                         cPixelsDrawnThisFrame = pBuffer->Length();
+                        bDrawnFromWifi = true;
                         debugV("Calling LEDBuffer::Draw from wire with %d/%d pixels.", cPixelsDrawnThisFrame, NUM_LEDS);
                         pBuffer->DrawBuffer();
                     }
@@ -324,17 +326,20 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // BUGBUG (davepl) This uses the current effect from the effects table, so its used even for wifi frames
 
     #if MILLIS_PER_FRAME == 0
-        const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
-        double elapsed = g_AppTime.CurrentTime() - frameStartTime;
-        if (elapsed < minimumFrameTime)
+        if (!bDrawnFromWifi)
         {
-            g_FreeDrawTime_ms = (minimumFrameTime - elapsed) * MILLIS_PER_SECOND;
-            delay(g_FreeDrawTime_ms);
-        }
-        else
-        {
-            g_FreeDrawTime_ms = 0;
-        }
+            const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+            double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+            if (elapsed < minimumFrameTime)
+            {
+                g_FreeDrawTime_ms = (minimumFrameTime - elapsed) * MILLIS_PER_SECOND;
+                delay(g_FreeDrawTime_ms);
+            }
+            else
+            {
+                g_FreeDrawTime_ms = 0;
+            }
+        }    
     #endif
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
