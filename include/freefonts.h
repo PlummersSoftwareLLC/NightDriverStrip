@@ -39,9 +39,11 @@
 //
 //      tft.setFreeFont(NULL); // Set font to GLCD
 
-#if defined(M5STICKC) || defined(M5STICKCPLUS)
+#if defined(M5STICKC) || defined(M5STICKCPLUS) || defined (USE_TFTSPI)
 
+#ifndef LOAD_GFXFF
 #define LOAD_GFXFF
+#endif
 
 #ifdef LOAD_GFXFF // Only include the fonts if LOAD_GFXFF is defined in User_Setup.h
 

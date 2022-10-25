@@ -212,14 +212,13 @@ DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame time
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
 
 #ifdef USEMATRIX
-#include "ledmatrixgfx.h"
-#include <YouTubeSight.h>                       // For fetching YouTube sub count
-#include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-
+    #include "ledmatrixgfx.h"
+    #include <YouTubeSight.h>                       // For fetching YouTube sub count
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
 
 #ifdef USESTRIP
-#include "ledstripgfx.h"
+    #include "ledstripgfx.h"
 #endif
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
@@ -308,15 +307,15 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 // Data for Dave's Garage as an example,
 
 #if USEMATRIX
-const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
-const char PatternSubscribers::szChannelName1[] = "Daves Garage";
+    const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
+    const char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
-#define SUB_CHECK_INTERVAL 60000
-#define SUB_CHECK_ERROR_INTERVAL 10000
-#define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4" 
+    #define SUB_CHECK_INTERVAL 60000
+    #define SUB_CHECK_ERROR_INTERVAL 10000
+    #define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4" 
 
-WiFiClient http;
-YouTubeSight sight(CHANNEL_GUID, http);
+    WiFiClient http;
+    YouTubeSight sight(CHANNEL_GUID, http);
 #endif
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
@@ -395,18 +394,18 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 // Repeatedly calls the code to open up a socket and receive new connections
 
 #if INCOMING_WIFI_ENABLED
-void IRAM_ATTR SocketServerTaskEntry(void *)
-{
-    for (;;)
+    void IRAM_ATTR SocketServerTaskEntry(void *)
     {
-        if (WiFi.isConnected())
+        for (;;)
         {
-            g_SocketServer.ProcessIncomingConnectionsLoop();
-            debugW("Socket connection closed.  Retrying...\n");
+            if (WiFi.isConnected())
+            {
+                g_SocketServer.ProcessIncomingConnectionsLoop();
+                debugW("Socket connection closed.  Retrying...\n");
+            }
+            delay(500);
         }
-        delay(500);
     }
-}
 #endif
 
 
@@ -555,7 +554,7 @@ void setup()
 
     g_pDisplay->init();
     g_pDisplay->setRotation(1);
-    g_pDisplay->fillScreen(TFT_RED);
+    g_pDisplay->fillScreen(TFT_GREEN);
 #endif
 
 #if M5STICKC || M5STICKCPLUS
