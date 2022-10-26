@@ -105,9 +105,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     for (;;)
     {
-        static uint64_t lastFrame = millis();
-        g_FPS = FPS(lastFrame, millis());           // Weighted: (g_FPS * 9 + FPS(lastFrame, millis())) / 10;
-        lastFrame = millis();        
+        //static uint64_t lastFrame = millis();
+        //g_FPS = FPS(lastFrame, millis());           // Weighted: (g_FPS * 9 + FPS(lastFrame, millis())) / 10;
+        //lastFrame = millis();        
         
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
@@ -286,7 +286,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                     FastLED[i].setLeds(pStrip->leds, cPixelsDrawnThisFrame);
                 }
 
-                //vTaskPrioritySet(g_taskDraw, DRAWING_PRIORITY_BOOST);
                 int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
                 debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
                     cPixelsDrawnThisFrame, NUM_LEDS, brite, FastLED.getFPS());
@@ -326,7 +325,27 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // BUGBUG (davepl) This uses the current effect from the effects table, so its used even for wifi frames
 
     #if MILLIS_PER_FRAME == 0
-        if (!bDrawnFromWifi)
+    if (cPixelsDrawnThisFrame > 0)
+    {
+        if (bDrawnFromWifi)
+        {
+            if (!g_apBufferManager[0]->IsEmpty())
+            {
+                auto pOldestBuffer = g_apBufferManager[0]->PeekOldestBuffer();
+                double timeForNextDraw = pOldestBuffer->Seconds() + pOldestBuffer->MicroSeconds() / MICROS_PER_SECOND;
+                double usDelayAmount = timeForNextDraw - g_AppTime.CurrentTime();
+                if (usDelayAmount > 0)
+                {
+                    g_FreeDrawTime_ms = std::min(10.0, usDelayAmount * 1000);
+                    delay(g_FreeDrawTime_ms);
+                }
+                else
+                {
+                    g_FreeDrawTime_ms = 0;
+                }
+            }
+        }
+        else
         {
             const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
             double elapsed = g_AppTime.CurrentTime() - frameStartTime;
@@ -335,11 +354,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 g_FreeDrawTime_ms = (minimumFrameTime - elapsed) * MILLIS_PER_SECOND;
                 delay(g_FreeDrawTime_ms);
             }
-            else
-            {
-                g_FreeDrawTime_ms = 0;
-            }
-        }    
+        } 
+    }
     #endif
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
