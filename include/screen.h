@@ -300,7 +300,9 @@ class Screen
 
     static void drawRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
     {
-        g_pDisplay->drawRect(x, y, w, h, color);
+        #if USE_SCREEN
+            g_pDisplay->drawRect(x, y, w, h, color);
+        #endif
     }
 
     static void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
