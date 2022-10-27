@@ -53,7 +53,7 @@ extern std::mutex         g_buffer_mutex;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
-uint32_t g_FreeDrawTime_ms;
+double                    g_FreeDrawTime = 0.0;
 
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
@@ -66,7 +66,7 @@ void ShowTM1814();
 
 // DrawLoop
 //
-// Pull packets from the Wifi buffer if they've come due and draw them - if it's a few seconds without a WiFi frame,
+// Pull packets from the Wifi buffer if they've come due and draw them - if it-'s a few seconds without a WiFi frame,
 // we will draw the local effect instead
 
 DRAM_ATTR uint64_t g_msLastWifiDraw  = 0;
@@ -105,16 +105,11 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     for (;;)
     {
-        //static uint64_t lastFrame = millis();
-        //g_FPS = FPS(lastFrame, millis());           // Weighted: (g_FPS * 9 + FPS(lastFrame, millis())) / 10;
-        //lastFrame = millis();        
-        
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
         uint cPixelsDrawnThisFrame = 0;
-        bool bDrawnFromWifi = false;
-
-        double frameStartTime = g_AppTime.CurrentTime();
+        bool bDrawnFromWifi        = false;
+        double frameStartTime      = g_AppTime.CurrentTime();
 
         #if USEMATRIX
             // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
@@ -178,7 +173,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         {           
             timeval tv;
             gettimeofday(&tv, nullptr);
-            double dClockTime = tv.tv_sec + tv.tv_usec / (double) MICROS_PER_SECOND;
 
             std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
@@ -216,9 +210,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 {
                     auto pOldest = g_apBufferManager[iChannel]->PeekOldestBuffer();
                     auto pNewest = g_apBufferManager[iChannel]->PeekNewestBuffer();                    
-                    g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - dClockTime;
-                            g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - dClockTime;
-                    debugV("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", dClockTime, g_BufferAgeOldest, g_BufferAgeNewest);
+                    g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
+                    g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
+                    debugV("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", frameStartTime, g_BufferAgeOldest, g_BufferAgeNewest);
                 }
                 else
                 {
@@ -331,18 +325,22 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         {
             if (!g_apBufferManager[0]->IsEmpty())
             {
-                auto pOldestBuffer = g_apBufferManager[0]->PeekOldestBuffer();
-                double timeForNextDraw = pOldestBuffer->Seconds() + pOldestBuffer->MicroSeconds() / MICROS_PER_SECOND;
-                double usDelayAmount = timeForNextDraw - g_AppTime.CurrentTime();
-                if (usDelayAmount > 0)
+                if (g_BufferAgeOldest > 0)
                 {
-                    g_FreeDrawTime_ms = std::min(10.0, usDelayAmount * 1000);
-                    delay(g_FreeDrawTime_ms);
+                    // Cap the amount we wait at 0.05 seconds, ot about 20 times per secon, until we're
+                    // sure that we never "miss" a pending frame
+                    g_FreeDrawTime = std::min(0.05, g_BufferAgeOldest);
+                    delay(g_FreeDrawTime * MILLIS_PER_SECOND);
                 }
                 else
                 {
-                    g_FreeDrawTime_ms = 0;
+                    g_FreeDrawTime = 0;
                 }
+            }
+            else
+            {
+                // We drew a frame but none remain, so check back in a bit
+                delay(1);
             }
         }
         else
@@ -351,8 +349,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             double elapsed = g_AppTime.CurrentTime() - frameStartTime;
             if (elapsed < minimumFrameTime)
             {
-                g_FreeDrawTime_ms = (minimumFrameTime - elapsed) * MILLIS_PER_SECOND;
-                delay(g_FreeDrawTime_ms);
+                g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed) * MICROS_PER_SECOND);
+                delay(g_FreeDrawTime / 1000);
             }
         } 
     }

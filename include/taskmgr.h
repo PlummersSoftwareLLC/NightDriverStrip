@@ -24,10 +24,10 @@
 //
 //    Keeps track of CPU idle time and other stats.  Basic premise here
 //    is that it creates an idle task on each core that burn any cycles they
-//    can get.  They run at 1 more than the system idle task priority so as
+//    can get.  They run at 1 above the system's own idle task priority so as
 //    to not timeslice with them.
 //
-//    Since this totally starves the system idle tasks, the watchdog must
+//    Since this totally starves those system idle tasks, the watchdog must
 //    be turned off for them, which we do in begin().  We then turn the 
 //    watchdog on for our own idle tasks, and feed the watchdog in 
 //    ProcessIdleTime as we consume all available idle time.

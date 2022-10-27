@@ -177,7 +177,7 @@
 #endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern uint32_t g_FreeDrawTime_ms;
+extern double g_FreeDrawTime;
 extern volatile float gPeakVU; // How high our peak VU scale is in live mode
 extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
@@ -203,7 +203,12 @@ TaskManager g_TaskManager;
 // Global Variables
 //
 
+#ifdef SPECTRUM
 DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
+#else
+DRAM_ATTR uint8_t giInfoPage = 0;                   // Default to first page
+#endif
+
 DRAM_ATTR bool    gbInfoPageDirty = true;           // Does the display need to be erased?
 DRAM_ATTR WiFiUDP g_Udp;                            // UDP object used for NNTP, etc
 DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
@@ -632,7 +637,7 @@ void setup()
     #endif
 
     #if USE_PSRAM
-        uint32_t memtouse = ESP.getFreePsram();
+        uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
     #else
         uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
     #endif
@@ -841,17 +846,17 @@ void loop()
         EVERY_N_SECONDS(5)
         {
             #if ENABLE_AUDIO
-                debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
+                debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
                         ESP.getFreeHeap(),
-                        g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
+                        g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
             #else
-            debugI("IP: %s, Mem: %u LargestBlk: %u PSRAM Free: %u/%u Buffer: %d/%d LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
+            debugI("IP: %s, Mem: %u LargestBlk: %u PSRAM Free: %u/%u Buffer: %d/%d LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
                    WiFi.localIP().toString().c_str(),
                    ESP.getFreeHeap(),
                    ESP.getMaxAllocHeap(),
                    ESP.getFreePsram(), ESP.getPsramSize(),
                    g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(),
-                   g_FPS, g_Watts, g_Brite, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
+                   g_FPS, g_Watts, g_Brite, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
             #endif
         }
 

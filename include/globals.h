@@ -69,6 +69,7 @@
 //              Oct-01-2022  v027       Davepl      Mesmerizer integration and screen fixes
 //              Oct-01-2022  v028       Davepl      Adjust buffer sizes due to lower mem free
 //              Oct-02-2022  v029       Davepl      Change WiFiUDP to use free/malloc
+//              Oct-03-2o23  v030       Davepl      Smoother Draw and support for TFT S3 Feather
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -79,7 +80,7 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          29   // Update ONLY this to increment the version number
+#define FLASH_VERSION         30   // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -153,14 +154,28 @@
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 // 
 
-#define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
-#define NET_CORE                0
-#define AUDIO_CORE              0
-#define AUDIOSERIAL_CORE        0
-#define SCREEN_CORE             1
-#define DEBUG_CORE              0
-#define SOCKET_CORE             0
-#define REMOTE_CORE             0
+#ifdef USESTRIP
+    #define DRAWING_CORE            0       
+    #define NET_CORE                0
+    #define AUDIO_CORE              1
+    #define AUDIOSERIAL_CORE        1
+    #define SCREEN_CORE             1
+    #define DEBUG_CORE              1
+    #define SOCKET_CORE             1
+    #define REMOTE_CORE             1
+#endif
+
+#ifdef USEMATRIX
+    #define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
+    #define NET_CORE                0
+    #define AUDIO_CORE              0
+    #define AUDIOSERIAL_CORE        0
+    #define SCREEN_CORE             1
+    #define DEBUG_CORE              0
+    #define SOCKET_CORE             0
+    #define REMOTE_CORE             0
+#endif
+
 
 #define FASTLED_INTERNAL        1   // Suppresses the compilation banner from FastLED
 
@@ -668,7 +683,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
 
     #define NUM_CHANNELS    1
-    #define MATRIX_WIDTH    (8*144)   
+    #define MATRIX_WIDTH    (1*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define RESERVE_MEMORY  140000                // WiFi needs about 100K free to be able to (re)connect!
@@ -949,7 +964,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MAX_BUFFERS
-#define MAX_BUFFERS (360)            // Just some reasonable guess, limiting it to 24 frames per second for 15 seconds
+#define MAX_BUFFERS (999)            // Just some reasonable guess, limiting it to 24 frames per second for 15 seconds
 #endif
 
 #ifndef ENABLE_WEBSERVER
