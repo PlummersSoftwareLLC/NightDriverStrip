@@ -298,7 +298,7 @@ class Screen
         #endif
     }
 
-    static void drawRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+    static void drawRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t color)
     {
         #if USE_SCREEN
             g_pDisplay->drawRect(x, y, w, h, color);

@@ -114,11 +114,11 @@ void IRAM_ATTR UpdateScreen()
         if (giInfoPage == 0)
         {
             const int xMargin = 10;
-            const int yMargin = 12;
+            const int yMargin = 6;
 
             // Blue Theme
 
-            const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);
+            const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);  
             const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
             const uint16_t textColor = Screen::to16bit(CRGB::White);
 
@@ -149,7 +149,7 @@ void IRAM_ATTR UpdateScreen()
 
             if (WiFi.isConnected() == false)
             {
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "No Wifi Connection");
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "No Wifi");
             }
             else
             {
@@ -206,6 +206,38 @@ void IRAM_ATTR UpdateScreen()
                         g_Watts);
                 Screen::setCursor(xMargin + 0, yMargin + lineHeight * 6);
                 Screen::println(szBuffer);
+            }
+
+            if (Screen::screenHeight() >= lineHeight * 7 + Screen::fontHeight())
+            {
+                int top = yMargin + lineHeight * 7 + 1;
+                int height = lineHeight - 5;
+                int width = Screen::screenWidth() - xMargin * 2;
+                double ratio = (double) g_apBufferManager[0]->Depth() / (double) g_apBufferManager[0]->BufferCount();
+                ratio = std::min(1.0, ratio);
+                int filled = (width - 2) * ratio;
+
+                // Color bar red/yellow/green depending on buffer fill
+
+                uint16_t color = TFT_RED;           
+                if (ratio > 0.25)
+                {
+                    color = TFT_ORANGE;
+                    if (ratio > 0.5)
+                    {
+                        color = TFT_DARKGREEN;
+                        if (ratio > 0.92)
+                        {
+                            color = TFT_ORANGE;
+                            if (ratio > 0.96)
+                                color = TFT_RED;
+                        }
+                    }
+                }
+                
+                Screen::fillRect(xMargin+1, top+1, filled, height-2, color);
+                Screen::fillRect(xMargin+filled, top+1, width-filled, height-2, bkgndColor);
+                Screen::drawRect(xMargin, top, width,  height, TFT_WHITE);
             }
 
             Screen::drawRect(0, 0, TFT_HEIGHT, TFT_WIDTH, borderColor);

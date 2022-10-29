@@ -190,7 +190,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                     }
                     else
                     {
-                        // Chew through ALL frames older than now, ignoring them
+                        // Chew through ALL frames older than now, ignoring all but the last of them
                         while (!g_apBufferManager[iChannel]->IsEmpty() && g_apBufferManager[iChannel]->PeekOldestBuffer()->IsBufferOlderThan(tv))
                             pBuffer = g_apBufferManager[iChannel]->GetOldestBuffer();
                     }

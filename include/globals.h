@@ -127,8 +127,8 @@
 //
 // Idle tasks in taskmgr run at IDLE_PRIORITY+1 so you want to be at least +2 
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7      // Draw any available frames first
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6      // ...then process and decompress incoming frames
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6
 #define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
 #define NET_PRIORITY            tskIDLE_PRIORITY+4
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+3
@@ -161,7 +161,7 @@
     #define AUDIOSERIAL_CORE        0
     #define SCREEN_CORE             0
     #define DEBUG_CORE              0
-    #define SOCKET_CORE             0
+    #define SOCKET_CORE             1
     #define REMOTE_CORE             0
 #endif
 
@@ -948,7 +948,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
-#define TIME_CHECK_INTERVAL_MS (1000 * 60 * 1)   // 15 min - How often in ms we resync the clock from NTP
+#define TIME_CHECK_INTERVAL_MS (1000 * 60 * 5)   // How often in ms we resync the clock from NTP
 #define MIN_BRIGHTNESS  4                   
 #define MAX_BRIGHTNESS  255
 #define BRIGHTNESS_STEP 10          // Amount to step brightness on each remote control repeat 
