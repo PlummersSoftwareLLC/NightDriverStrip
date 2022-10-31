@@ -76,6 +76,276 @@ DRAM_ATTR double   g_BufferAgeNewest = 0;
 DRAM_ATTR uint8_t  g_Brightness      = 255;
 DRAM_ATTR uint8_t  g_Fader           = 255;
 
+// MatrixPreDraw
+//
+// Gets the matrix ready for the effect or wifi to render into
+
+void MatrixPreDraw()
+{
+     #if USEMATRIX
+        // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
+        // both 24-bits RGB triplets.  Or at least the same size!
+
+        static_assert( sizeof(CRGB) == sizeof(LEDMatrixGFX::SM_RGB), "Code assumes 24 bits in both places" );
+
+        EVERY_N_MILLIS(MILLIS_PER_FRAME)
+        {
+            #if SHOW_FPS_ON_MATRIX
+                LEDMatrixGFX::backgroundLayer.setFont(gohufont11);
+                // 3 is half char width at curret font size, 5 is half the height.
+                string output = "FPS: " + std::to_string(g_FPS);
+                LEDMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 -  (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255,255,255), rgb24(0,0,0), output.c_str());    
+            #endif
+
+            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
+            LEDMatrixGFX::MatrixSwapBuffers(g_pEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+            LEDMatrixGFX::titleLayer.setFont(font3x5);
+
+            if (pMatrix->GetCaptionTransparency() > 0.00) 
+            {
+                uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
+                LEDMatrixGFX::titleLayer.setBrightness(brite);                // 255 would obscure it entirely
+                debugV("Caption: %d", brite);
+
+                rgb24 chromaKeyColor = rgb24(255,0,255);
+                rgb24 shadowColor = rgb24(0,0,0);
+                rgb24 titleColor = rgb24(255,255,255);
+                
+                LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
+                LEDMatrixGFX::titleLayer.enableChromaKey(true);
+                LEDMatrixGFX::titleLayer.setFont(font6x10);
+                LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
+
+                const size_t kCharWidth = 6;
+                const size_t kCharHeight = 10;
+
+                const auto caption = pMatrix->GetCaption();
+
+                int y = MATRIX_HEIGHT - 2 - kCharHeight;
+                int w = strlen(caption) * kCharWidth;
+                int x = (MATRIX_WIDTH / 2) - (w / 2); 
+
+                LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, caption);
+                LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  caption);
+            }
+            else 
+            {
+                LEDMatrixGFX::titleLayer.enableChromaKey(false);
+                LEDMatrixGFX::titleLayer.setBrightness(0);
+            }   
+        }
+    #endif
+}
+
+// WiFiDraw
+//
+// Draws forom WiFi color data if available, returns pixels drawn this frame
+
+uint16_t WiFiDraw(double frameStartTime)        
+{
+    uint16_t pixelsDrawn = 0;
+
+    timeval tv;
+    gettimeofday(&tv, nullptr);
+
+    std::lock_guard<std::mutex> guard(g_buffer_mutex);
+
+    for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
+    {
+        // Pull buffers out of the queue.  Changing the 'while' to an 'if' would cause it to draw every frame if it got behind, but when
+        // written as 'while' it will pull frames until it gets one that is current.
+
+        if (false == g_apBufferManager[iChannel]->IsEmpty())
+        {
+            std::shared_ptr<LEDBuffer> pBuffer;
+            if (NTPTimeClient::HasClockBeenSet() == false)
+            {
+                pBuffer = g_apBufferManager[iChannel]->GetOldestBuffer();
+            }
+            else
+            {
+                // Chew through ALL frames older than now, ignoring all but the last of them
+                while (!g_apBufferManager[iChannel]->IsEmpty() && g_apBufferManager[iChannel]->PeekOldestBuffer()->IsBufferOlderThan(tv))
+                    pBuffer = g_apBufferManager[iChannel]->GetOldestBuffer();
+            }
+        
+            if (pBuffer)
+            {
+                g_AppTime.NewFrame();
+                g_msLastWifiDraw = micros();  
+                pixelsDrawn = pBuffer->Length();
+                debugV("Calling LEDBuffer::Draw from wire with %d/%d pixels.", pixelsDrawn, NUM_LEDS);
+                pBuffer->DrawBuffer();
+            }
+        }
+                        
+        if (false == g_apBufferManager[iChannel]->IsEmpty())
+        {
+            auto pOldest = g_apBufferManager[iChannel]->PeekOldestBuffer();
+            auto pNewest = g_apBufferManager[iChannel]->PeekNewestBuffer();                    
+            debugW("FOO");
+            g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
+            g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
+            debugV("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", frameStartTime, g_BufferAgeOldest, g_BufferAgeNewest);
+        }
+        else
+        {
+            g_BufferAgeNewest = g_BufferAgeOldest = 0;
+        }
+    }  
+    return pixelsDrawn;        
+}
+
+// LocalDraw
+// 
+// Draws from effets table rather than from WiFi data
+
+uint16_t LocalDraw()
+{
+    if (nullptr == g_pEffectManager)
+    {
+        debugW("Drawing before g_pEffectManager is ready, so delaying...");
+        delay(100);
+        return 0;
+    }
+    else if (g_pEffectManager->EffectCount() > 0)
+    {
+         // If we've never drawn from wifi before, now would also be a good time to local draw
+        if (g_msLastWifiDraw == 0 || (micros() - g_msLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))  
+        {
+            g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
+            g_pEffectManager->Update(); // Draw the current built in effect
+
+            #if USEMATRIX
+                if (g_pEffectManager->IsVUVisible())
+                    ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
+            #endif
+        }
+        else
+        {
+            debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros()-g_msLastWifiDraw) / (double) MICROS_PER_SECOND);
+        }
+        return NUM_LEDS;
+    }
+    return 0;
+}
+
+// ShowStrip
+//
+// ShowStrip sends the data to the LED strip.  If its fewer than the size of the strip, we only send that many.
+
+void ShowStrip(uint16_t numToShow)
+{
+    // If we've drawn anything from either source, we can now show it
+
+    if (FastLED.count() == 0)
+    {
+        debugW("Draw loop is drawing before LEDs are ready, so delaying 100ms...");
+        delay(100);
+    }
+    else
+    {
+        if (numToShow > 0)
+        {
+            debugV("Telling FastLED that we'll be drawing %d pixels\n", numToShow);
+            
+            for (int i  = 0; i < NUM_CHANNELS; i++)
+            {
+                LEDStripGFX * pStrip = (LEDStripGFX *)(*g_pEffectManager)[i].get();
+                FastLED[i].setLeds(pStrip->leds, numToShow);
+            }
+
+            int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
+            debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
+                numToShow, NUM_LEDS, brite, FastLED.getFPS());
+            FastLED.show((brite * g_Fader) / 256);
+            debugV("Back from FastLED::show");
+
+            g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
+            g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
+            g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, numToShow ) / 1000;    // 1000 for mw->W
+        }
+        else
+        {
+            debugV("Draw loop ended without a draw.");
+        }
+    }
+}
+
+// ShowOnboardLED
+//
+// If the board has an onboard LED, this will update it to show some activity from the draw
+
+void ShowOnboardLED()
+{
+    // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
+    // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
+
+    #ifdef ONBOARD_LED_R
+        #ifdef ENABLE_AUDIO
+            CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); 
+            ledcWrite(1, 255 - c.r ); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - c.g );
+            ledcWrite(3, 255 - c.b );
+        #else
+            int iLed = NUM_LEDS/2;
+            ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - graphics->leds[iLed].g );
+            ledcWrite(3, 255 - graphics->leds[iLed].b );
+        #endif
+    #endif
+}
+
+// DelayUntilNextFrame
+//
+// Waits patiently until its time to draw the next frame 
+
+void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+{
+    // Delay enough to slow down to the desired framerate
+    // BUGBUG (davepl) This uses the current effect from the effects table, so its used even for wifi frames
+
+    #if MILLIS_PER_FRAME == 0
+        if (localPixelsDrawn > 0)
+        {
+            const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+            double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+            if (elapsed < minimumFrameTime)
+            {
+                g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed) * MICROS_PER_SECOND);
+                delay(g_FreeDrawTime / 1000);
+            }
+        }
+        else if (wifiPixelsDrawn > 0)
+        {
+            if (!g_apBufferManager[0]->IsEmpty())
+            {
+                if (g_BufferAgeOldest > 0)
+                {
+                    // Cap the amount we wait at 0.05 seconds, ot about 20 times per secon, until we're
+                    // sure that we never "miss" a pending frame
+                    g_FreeDrawTime = std::min(0.05, g_BufferAgeOldest);
+                    delay(g_FreeDrawTime * MILLIS_PER_SECOND);
+                }
+                else
+                {
+                    g_FreeDrawTime = 0;
+                }
+            }
+        }
+        else
+        {
+            // Nothing drawn this pass - check back soon
+            delay(1);
+        }
+
+    #endif
+}
+
 // DrawLoopTaskEntry
 // 
 // Starting point for the draw code loop
@@ -107,254 +377,32 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     {
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
-        uint cPixelsDrawnThisFrame = 0;
-        bool bDrawnFromWifi        = false;
+        uint16_t localPixelsDrawn   = 0;
+        uint16_t wifiPixelsDrawn   = 0;
         double frameStartTime      = g_AppTime.CurrentTime();
 
         #if USEMATRIX
-            // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
-            // both 24-bits RGB triplets.  Or at least the same size!
-
-            static_assert( sizeof(CRGB) == sizeof(LEDMatrixGFX::SM_RGB), "Code assumes 24 bits in both places" );
-
-            EVERY_N_MILLIS(MILLIS_PER_FRAME)
-            {
-                #if SHOW_FPS_ON_MATRIX
-                    LEDMatrixGFX::backgroundLayer.setFont(gohufont11);
-                    // 3 is half char width at curret font size, 5 is half the height.
-                    string output = "FPS: " + std::to_string(g_FPS);
-                    LEDMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 -  (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255,255,255), rgb24(0,0,0), output.c_str());    
-                #endif
-
-                LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
-                LEDMatrixGFX::MatrixSwapBuffers(g_pEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
-                pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-                LEDMatrixGFX::titleLayer.setFont(font3x5);
-
-                if (pMatrix->GetCaptionTransparency() > 0.00) 
-                {
-                    uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
-                    LEDMatrixGFX::titleLayer.setBrightness(brite);                // 255 would obscure it entirely
-                    debugV("Caption: %d", brite);
-
-                    rgb24 chromaKeyColor = rgb24(255,0,255);
-                    rgb24 shadowColor = rgb24(0,0,0);
-                    rgb24 titleColor = rgb24(255,255,255);
-                    
-                    LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
-                    LEDMatrixGFX::titleLayer.enableChromaKey(true);
-                    LEDMatrixGFX::titleLayer.setFont(font6x10);
-                    LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
-
-                    const size_t kCharWidth = 6;
-                    const size_t kCharHeight = 10;
-
-                    const auto caption = pMatrix->GetCaption();
-
-                    int y = MATRIX_HEIGHT - 2 - kCharHeight;
-                    int w = strlen(caption) * kCharWidth;
-                    int x = (MATRIX_WIDTH / 2) - (w / 2); 
-
-                    LEDMatrixGFX::titleLayer.drawString(x-1, y,   shadowColor, caption);
-                    LEDMatrixGFX::titleLayer.drawString(x+1, y,   shadowColor, caption);
-                    LEDMatrixGFX::titleLayer.drawString(x,   y-1, shadowColor, caption);
-                    LEDMatrixGFX::titleLayer.drawString(x,   y+1, shadowColor, caption);
-                    LEDMatrixGFX::titleLayer.drawString(x,   y,   titleColor,  caption);
-                }
-                else 
-                {
-                    LEDMatrixGFX::titleLayer.enableChromaKey(false);
-                    LEDMatrixGFX::titleLayer.setBrightness(0);
-                }   
-            }
+            MatrixPreDraw();
         #endif
 
         if (WiFi.isConnected())
-        {           
-            timeval tv;
-            gettimeofday(&tv, nullptr);
-
-            std::lock_guard<std::mutex> guard(g_buffer_mutex);
-
-            for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-            {
-                // Pull buffers out of the queue.  Changing the 'while' to an 'if' would cause it to draw every frame if it got behind, but when
-                // written as 'while' it will pull frames until it gets one that is current.
-
-                if (false == g_apBufferManager[iChannel]->IsEmpty())
-                {
-                    std::shared_ptr<LEDBuffer> pBuffer;
-                    if (NTPTimeClient::HasClockBeenSet() == false)
-                    {
-                        pBuffer = g_apBufferManager[iChannel]->GetOldestBuffer();
-                    }
-                    else
-                    {
-                        // Chew through ALL frames older than now, ignoring all but the last of them
-                        while (!g_apBufferManager[iChannel]->IsEmpty() && g_apBufferManager[iChannel]->PeekOldestBuffer()->IsBufferOlderThan(tv))
-                            pBuffer = g_apBufferManager[iChannel]->GetOldestBuffer();
-                    }
-                
-                    if (pBuffer)
-                    {
-                        g_AppTime.NewFrame();
-                        g_msLastWifiDraw = micros();  
-                        cPixelsDrawnThisFrame = pBuffer->Length();
-                        bDrawnFromWifi = true;
-                        debugV("Calling LEDBuffer::Draw from wire with %d/%d pixels.", cPixelsDrawnThisFrame, NUM_LEDS);
-                        pBuffer->DrawBuffer();
-                    }
-                }
-                                
-                if (false == g_apBufferManager[iChannel]->IsEmpty())
-                {
-                    auto pOldest = g_apBufferManager[iChannel]->PeekOldestBuffer();
-                    auto pNewest = g_apBufferManager[iChannel]->PeekNewestBuffer();                    
-                    g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
-                    g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
-                    debugV("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", frameStartTime, g_BufferAgeOldest, g_BufferAgeNewest);
-                }
-                else
-                {
-                    g_BufferAgeNewest = g_BufferAgeOldest = 0;
-                }
-            }          
-        }
-        else
-        {
-            debugV("Not connected to WiFi so not checking for WiFi draw.");
-        }
+            wifiPixelsDrawn = WiFiDraw(frameStartTime);
 
         // If we didn't draw now, and it's been a while since we did, and we have at least one local effect, then draw the local effect instead
         
-        if (cPixelsDrawnThisFrame == 0)
-        {
-            if (nullptr == g_pEffectManager)
-            {
-                debugW("Drawing before g_pEffectManager is ready, so delaying...");
-                delay(100);
-            }
-            else if (g_pEffectManager->EffectCount() > 0)
-            {
-                cPixelsDrawnThisFrame = NUM_LEDS;
+        if (wifiPixelsDrawn == 0)
+            localPixelsDrawn = LocalDraw();
 
-                // If we've never drawn from wifi before, now would also be a good time to local draw
-                if (g_msLastWifiDraw == 0 || (micros() - g_msLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))  
-                {
-                    g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
-                    g_pEffectManager->Update(); // Draw the current built in effect
-
-                    #if USEMATRIX
-                        if (g_pEffectManager->IsVUVisible())
-                            ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
-                    #endif
-                }
-                else
-                {
-                    debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros()-g_msLastWifiDraw) / (double) MICROS_PER_SECOND);
-                }
-            }
-        }
-        else
-        {
-            debugV("Already drew from WiFi so not drawing locally this frame.");
-        }
-
-#if USESTRIP
-        // If we've drawn anything from either source, we can now show it
-
-        if (FastLED.count() == 0)
-        {
-            debugW("Draw loop is drawing before LEDs are ready, so delaying 100ms...");
-            delay(100);
-        }
-        else
-        {
-            if (cPixelsDrawnThisFrame > 0)
-            {
-                debugV("Telling FastLED that we'll be drawing %d pixels\n", cPixelsDrawnThisFrame);
-                
-                for (int i  = 0; i < NUM_CHANNELS; i++)
-                {
-                    LEDStripGFX * pStrip = (LEDStripGFX *)(*g_pEffectManager)[i].get();
-                    FastLED[i].setLeds(pStrip->leds, cPixelsDrawnThisFrame);
-                }
-
-                int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-                debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
-                    cPixelsDrawnThisFrame, NUM_LEDS, brite, FastLED.getFPS());
-                FastLED.show((brite * g_Fader) / 256);
-                debugV("Back from FastLED::show");
-
-                g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
-                g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
-                g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, cPixelsDrawnThisFrame ) / 1000;    // 1000 for mw->W
-            }
-            else
-            {
-                debugV("Draw loop ended without a draw.");
-            }
-        }
-
-        // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
-        // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
-
-        #ifdef ONBOARD_LED_R
-            #ifdef ENABLE_AUDIO
-                CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); 
-                ledcWrite(1, 255 - c.r ); // write red component to channel 1, etc.
-                ledcWrite(2, 255 - c.g );
-                ledcWrite(3, 255 - c.b );
-            #else
-                int iLed = NUM_LEDS/2;
-                ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
-                ledcWrite(2, 255 - graphics->leds[iLed].g );
-                ledcWrite(3, 255 - graphics->leds[iLed].b );
-            #endif
+        #if USESTRIP
+            if (wifiPixelsDrawn)
+                ShowStrip(wifiPixelsDrawn);
+            else if (localPixelsDrawn)
+                ShowStrip(localPixelsDrawn);
         #endif
 
-#endif
+        ShowOnboardLED();
 
-        // Delay enough to slow down to the desired framerate
-        // BUGBUG (davepl) This uses the current effect from the effects table, so its used even for wifi frames
-
-    #if MILLIS_PER_FRAME == 0
-    if (cPixelsDrawnThisFrame > 0)
-    {
-        if (bDrawnFromWifi)
-        {
-            if (!g_apBufferManager[0]->IsEmpty())
-            {
-                if (g_BufferAgeOldest > 0)
-                {
-                    // Cap the amount we wait at 0.05 seconds, ot about 20 times per secon, until we're
-                    // sure that we never "miss" a pending frame
-                    g_FreeDrawTime = std::min(0.05, g_BufferAgeOldest);
-                    delay(g_FreeDrawTime * MILLIS_PER_SECOND);
-                }
-                else
-                {
-                    g_FreeDrawTime = 0;
-                }
-            }
-            else
-            {
-                // We drew a frame but none remain, so check back in a bit
-                delay(1);
-            }
-        }
-        else
-        {
-            const double minimumFrameTime = 1.0/g_pEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
-            double elapsed = g_AppTime.CurrentTime() - frameStartTime;
-            if (elapsed < minimumFrameTime)
-            {
-                g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed) * MICROS_PER_SECOND);
-                delay(g_FreeDrawTime / 1000);
-            }
-        } 
-    }
-    #endif
+        DelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn);
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
         // so we'll pause to share the CPU a bit once the update has begun

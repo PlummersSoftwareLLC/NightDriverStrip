@@ -138,7 +138,7 @@ class Screen
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
         #elif USE_OLED || USE_TFTSPI
-            return g_pDisplay->fontHeight();
+            return g_pDisplay->getFontAscent();
         #elif USE_SCREEN
             return g_pDisplay->getFontAscent();
         #else
@@ -301,7 +301,7 @@ class Screen
 
     static void drawRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t color)
     {
-        #if USE_TFT || USE_OLED || USE_TFTSPI
+        #if USE_TFT || USE_TFTSPI
             g_pDisplay->drawRect(x, y, w, h, color);
         #elif USE_SCREEN
             g_pDisplay->drawFrame(x, y, w, h);
