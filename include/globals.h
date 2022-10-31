@@ -153,9 +153,12 @@
 // Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 // 
+// BUGBUG (Davepl) Be nice if this core mapping was constant, check to see if SOCKET_CORE
+// can be 1 for Mesmerizer, but need to test that
+
 
 #ifdef USESTRIP
-    #define DRAWING_CORE            1       
+    #define DRAWING_CORE            1     
     #define NET_CORE                0
     #define AUDIO_CORE              0
     #define AUDIOSERIAL_CORE        0
@@ -170,14 +173,14 @@
     #define NET_CORE                0
     #define AUDIO_CORE              0
     #define AUDIOSERIAL_CORE        0
-    #define SCREEN_CORE             1
+    #define SCREEN_CORE             0
     #define DEBUG_CORE              0
     #define SOCKET_CORE             0
     #define REMOTE_CORE             0
 #endif
 
 
-#define FASTLED_INTERNAL        1   // Suppresses the compilation banner from FastLED
+#define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -683,7 +686,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
 
     #define NUM_CHANNELS    1
-    #define MATRIX_WIDTH    (926)       // My naximum run, and about all you can do at 30fps  
+    #define MATRIX_WIDTH    (8*144)       // My naximum run, and about all you can do at 30fps  
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define RESERVE_MEMORY  140000                // WiFi needs about 100K free to be able to (re)connect!
