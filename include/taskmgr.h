@@ -166,7 +166,8 @@ public:
         xTaskCreatePinnedToCore(_taskIdle1.IdleTaskEntry, "Idle1", IDLE_STACK_SIZE, &_taskIdle1, tskIDLE_PRIORITY + 1, &_hIdle1, 1);
 
         // We need to turn off the watchdogs because our idle measurement tasks burn all of the idle time just
-        // to see how much there is (it's how they measure free CPU).
+        // to see how much there is (it's how they measure free CPU).  Thus, we starve the system's normal idle tasks
+        // and have to feed the watchdog on our own.
 
         esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));
         esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(1));

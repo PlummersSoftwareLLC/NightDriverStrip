@@ -51,7 +51,6 @@
 extern AppTime  g_AppTime;
 extern PeakData g_Peaks;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
-extern DRAM_ATTR bool gbInfoPageDirty;
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 

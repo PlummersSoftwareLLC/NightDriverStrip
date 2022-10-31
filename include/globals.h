@@ -70,6 +70,7 @@
 //              Oct-01-2022  v028       Davepl      Adjust buffer sizes due to lower mem free
 //              Oct-02-2022  v029       Davepl      Change WiFiUDP to use free/malloc
 //              Oct-03-2o23  v030       Davepl      Smoother Draw and support for TFT S3 Feather
+//              Oct-03-2o23  v031       Davepl      Screen cleanup, core assignments moved around
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -80,7 +81,7 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         30   // Update ONLY this to increment the version number
+#define FLASH_VERSION         31   // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -689,7 +690,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)       // My naximum run, and about all you can do at 30fps  
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  140000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  150000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5

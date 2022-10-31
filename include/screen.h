@@ -137,10 +137,10 @@ class Screen
             uint16_t w, h;
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
-        #elif OLED
+        #elif USE_OLED || USE_TFTSPI
             return g_pDisplay->fontHeight();
         #elif USE_SCREEN
-            return g_pDisplay->fontHeight();
+            return g_pDisplay->getFontAscent();
         #else
             return 12;                                                      // Some bogus reasonable default for those that don't support it
         #endif
@@ -164,6 +164,7 @@ class Screen
 
     static uint16_t screenHeight()
     {
+
         #if USE_OLED
             return g_pDisplay->getDisplayHeight();
         #elif USE_SCREEN
@@ -282,7 +283,7 @@ class Screen
 
     static void drawString(const char * pszText, uint16_t x, uint16_t y)
     {
-        #if USE_SCREEN
+        #if USE_TFT || USE_OLED
         setCursor(x, y);
         println(pszText);
         #endif
@@ -292,7 +293,7 @@ class Screen
 
     static void drawString(const char * pszText, uint16_t y)
     {
-        #if USE_SCREEN
+        #if USE_TFT || USE_OLED
         setCursor(screenWidth() / 2 - textWidth(pszText) / 2, y);
         println(pszText);
         #endif
@@ -300,19 +301,21 @@ class Screen
 
     static void drawRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t color)
     {
-        #if USE_SCREEN
+        #if USE_TFT || USE_OLED || USE_TFTSPI
             g_pDisplay->drawRect(x, y, w, h, color);
+        #elif USE_SCREEN
+            g_pDisplay->drawFrame(x, y, w, h);
         #endif
     }
 
     static void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
     {
-        #if USE_OLED
-            if (color != BLACK16)
+        #if USE_TFT || USE_OLED 
                 g_pDisplay->setDrawColor(color);
-                g_pDisplay->drawBox(x, y, w, h);
+        #elif USE_TFTSPI                
+            g_pDisplay->drawRect(x, y, w, h, color);
         #elif USE_SCREEN
-            g_pDisplay->fillRect(x, y, w, h, color);
+            g_pDisplay->drawBox(x, y, w, h);
         #endif
     }
 };

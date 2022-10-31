@@ -209,7 +209,6 @@ DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
 DRAM_ATTR uint8_t giInfoPage = 0;                   // Default to first page
 #endif
 
-DRAM_ATTR bool    gbInfoPageDirty = true;           // Does the display need to be erased?
 DRAM_ATTR WiFiUDP g_Udp;                            // UDP object used for NNTP, etc
 DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
 DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started?
@@ -535,13 +534,13 @@ void setup()
 
     #ifdef TOGGLE_BUTTON_1
         Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
-        Button1.interval(5);
+        Button1.interval(1);
         Button1.setPressedState(LOW);
     #endif
 
     #ifdef TOGGLE_BUTTON_2
         Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
-        Button2.interval(5);
+        Button2.interval(1);
         Button2.setPressedState(LOW);
     #endif
 
