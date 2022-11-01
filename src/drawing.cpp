@@ -46,6 +46,9 @@
 #include "ledmatrixgfx.h"
 #endif
 
+CRGB g_SinglePixel = CRGB::Blue;
+CLEDController * g_ledSinglePixel;
+
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
 // from the led buffer.  
 
@@ -276,33 +279,9 @@ void ShowStrip(uint16_t numToShow)
     }
 }
 
-// ShowOnboardLED
-//
-// If the board has an onboard LED, this will update it to show some activity from the draw
-
-void ShowOnboardLED()
-{
-    // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
-    // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
-
-    #ifdef ONBOARD_LED_R
-        #ifdef ENABLE_AUDIO
-            CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); 
-            ledcWrite(1, 255 - c.r ); // write red component to channel 1, etc.
-            ledcWrite(2, 255 - c.g );
-            ledcWrite(3, 255 - c.b );
-        #else
-            int iLed = NUM_LEDS/2;
-            ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
-            ledcWrite(2, 255 - graphics->leds[iLed].g );
-            ledcWrite(3, 255 - graphics->leds[iLed].b );
-        #endif
-    #endif
-}
-
 // DelayUntilNextFrame
 //
-// Waits patiently until its time to draw the next frame 
+// Waits patiently until its time to draw the next frame, up to one second max
 
 void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
@@ -317,7 +296,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
             if (elapsed < minimumFrameTime)
             {
                 g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed) * MICROS_PER_SECOND);
-                delay(g_FreeDrawTime / 1000);
+                delay(g_FreeDrawTime / MICROS_PER_MILLI);
             }
         }
         else if (wifiPixelsDrawn > 0)
@@ -346,9 +325,59 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
     #endif
 }
 
+// ShowOnboardLED
+//
+// If the board has an onboard LED, this will update it to show some activity from the draw
+
+void ShowOnboardRGBLED()
+{
+    // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
+    // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
+
+    #ifdef ONBOARD_LED_R
+        #ifdef ENABLE_AUDIO
+            CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255); 
+            ledcWrite(1, 255 - c.r ); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - c.g );
+            ledcWrite(3, 255 - c.b );
+        #else
+            int iLed = NUM_LEDS/2;
+            ledcWrite(1, 255 - graphics->leds[iLed].r ); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - graphics->leds[iLed].g );
+            ledcWrite(3, 255 - graphics->leds[iLed].b );
+        #endif
+    #endif
+}
+
+// PrepareOnboardPixel
+//
+// Do any setup required for the onboard pixel, if we have one
+
+void PrepareOnboardPixel()
+{
+    #ifdef ONBOARD_PIXEL_POWER
+        g_ledSinglePixel = &FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, 3*144);
+    #endif
+}
+
+void ShowOnboardPixel()
+{
+    // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
+    // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
+
+    #ifdef ONBOARD_PIXEL_POWER
+        // Turn on the power to the pixel
+        pinMode(ONBOARD_PIXEL_POWER, OUTPUT);
+        digitalWrite(ONBOARD_PIXEL_POWER, HIGH);
+        // Set the color to be the same as the first LED of Channel 0
+        g_SinglePixel = FastLED[0].leds()[0];
+        g_ledSinglePixel->show(&g_SinglePixel, 1, 255);     
+    #endif
+}
+
 // DrawLoopTaskEntry
 // 
-// Starting point for the draw code loop
+// Main draw loop entry point
 
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
@@ -356,6 +385,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     debugI(">> DrawLoopTaskEntry\n");
 
     // Initialize our graphics and the first effect
+
+    PrepareOnboardPixel();
 
     GFXBase * graphics = (GFXBase *)(*g_pEffectManager)[0].get();
     graphics->Setup();
@@ -378,8 +409,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
         
         uint16_t localPixelsDrawn   = 0;
-        uint16_t wifiPixelsDrawn   = 0;
-        double frameStartTime      = g_AppTime.CurrentTime();
+        uint16_t wifiPixelsDrawn    = 0;
+        double   frameStartTime     = g_AppTime.CurrentTime();
 
         #if USEMATRIX
             MatrixPreDraw();
@@ -400,7 +431,11 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 ShowStrip(localPixelsDrawn);
         #endif
 
-        ShowOnboardLED();
+        // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
+        // is on LED #0 of Channel #0.
+
+        ShowOnboardRGBLED();
+        ShowOnboardPixel();
 
         DelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn);
 

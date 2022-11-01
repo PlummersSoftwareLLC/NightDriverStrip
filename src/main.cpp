@@ -433,7 +433,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d", M5STICKC, USE_TFT, USE_OLED, USE_TFTSPI, USE_LCD);
+    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -562,7 +562,7 @@ void setup()
 #endif
 
 #if M5STICKC || M5STICKCPLUS
-    #if USE_TFT
+    #if USE_M5DISPLAY
         debugI("Intializizing TFT display\n");
         extern M5Display * g_pDisplay;
         M5.begin();
@@ -582,7 +582,9 @@ void setup()
 
     // Without these two magic lines, you get no picture, which is pretty annoying...
     
-    #define TFT_BL 5 // LED back-light
+    #ifndef TFT_BL
+      #define TFT_BL 5 // LED back-light
+    #endif
     pinMode(TFT_BL, OUTPUT); //initialize BL
 
     // We need-want hardware SPI, but the default constructor that lets us specify the pins we need

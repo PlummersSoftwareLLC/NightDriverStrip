@@ -55,7 +55,7 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C *g_pDisplay = new U8G2_SSD1306_128X64_NONAME
 Adafruit_ILI9341 *g_pDisplay;
 #endif
 
-#if USE_TFT
+#if USE_M5DISPLAY
 M5Display *g_pDisplay;
 #endif
 
@@ -120,8 +120,13 @@ void BasicInfoSummary(bool bRedraw)
 
     // bRedraw is set for full redraw, in which case we fill the screen
 
-    if (bRedraw)
-        Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
+    #if USE_OLED
+        if (bRedraw)
+            Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
+    #else
+        if (bRedraw)
+            Screen::fillRect(1, 1, Screen::screenWidth() - 2, Screen::screenHeight() - 2, bkgndColor);
+    #endif
 
     // Status line 1
 

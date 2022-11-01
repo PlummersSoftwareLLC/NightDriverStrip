@@ -1103,11 +1103,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #elif defined(M5STICKCPLUS)                               // screen definitions for m5stick-c-plus
 
-        #define USE_TFT 1                                     // enable the M5's LCD screen
+        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
     #elif defined(M5STICKC)                                   // screen definitions for m5stick-c (or m5stick-c plus)
 
-        #define USE_TFT 1                                     // enable the M5's LCD screen
+        #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
 
     #elif defined(WROVERKIT)
 
@@ -1123,7 +1123,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #elif defined(M5STACKCORE2)
         ARDUINO_HELTEC_WIFI_KIT_32
-        #define  USE_TFT 1       
+        #define  USE_M5DISPLAY 1       
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
@@ -1141,12 +1141,18 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TFT_MISO 25
 #endif
 
+#ifdef ESP32FEATHERTFT
+    #define ONBOARD_PIXEL_ORDER     EOrder::GRB
+    #define ONBOARD_PIXEL_POWER     34
+    #define ONBOARD_PIXEL_DATA      33
+#endif
+
 #ifndef USE_OLED                            
 #define USE_OLED 0
 #endif
 
-#ifndef USE_TFT                            
-#define USE_TFT 0
+#ifndef USE_M5DISPLAY                            
+#define USE_M5DISPLAY 0
 #endif
 
 #ifndef USE_LCD                            
@@ -1184,6 +1190,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 
 #define MICROS_PER_SECOND   1000000
 #define MILLIS_PER_SECOND   1000 
+#define MICROS_PER_MILLI    1000
 
 #ifndef M5STICKC
 #define M5STICKC 0
