@@ -29,7 +29,7 @@ jobs:
         pip install --upgrade platformio
     - name: Install dependencies
       run: | 
-        pio pkg install --no-save
+        pio pkg install -e all-deps --no-save
         pio pkg update --no-save
     - name: Copy secrets
       run: cp include/secrets.example.h include/secrets.h
