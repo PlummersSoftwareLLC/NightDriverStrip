@@ -69,8 +69,10 @@
 //              Oct-01-2022  v027       Davepl      Mesmerizer integration and screen fixes
 //              Oct-01-2022  v028       Davepl      Adjust buffer sizes due to lower mem free
 //              Oct-02-2022  v029       Davepl      Change WiFiUDP to use free/malloc
-//              Oct-03-2o23  v030       Davepl      Smoother Draw and support for TFT S3 Feather
-//              Oct-03-2o23  v031       Davepl      Screen cleanup, core assignments moved around
+//              Oct-03-2022  v030       Davepl      Smoother Draw and support for TFT S3 Feather
+//              Oct-30-2022  v031       Davepl      Screen cleanup, core assignments moved around
+//              Oct-30-2022  v032       Davepl      Better wait code, core assignments
+//
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -81,7 +83,7 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         31   // Update ONLY this to increment the version number
+#define FLASH_VERSION         32   // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -153,32 +155,15 @@
 // Some "Reliability Rules"
 // Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
-// 
-// BUGBUG (Davepl) Be nice if this core mapping was constant, check to see if SOCKET_CORE
-// can be 1 for Mesmerizer, but need to test that
 
-
-#ifdef USESTRIP
-    #define DRAWING_CORE            1     
-    #define NET_CORE                0
-    #define AUDIO_CORE              0
-    #define AUDIOSERIAL_CORE        0
-    #define SCREEN_CORE             0
-    #define DEBUG_CORE              0
-    #define SOCKET_CORE             1
-    #define REMOTE_CORE             0
-#endif
-
-#ifdef USEMATRIX
-    #define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
-    #define NET_CORE                0
-    #define AUDIO_CORE              0
-    #define AUDIOSERIAL_CORE        0
-    #define SCREEN_CORE             0
-    #define DEBUG_CORE              0
-    #define SOCKET_CORE             0
-    #define REMOTE_CORE             0
-#endif
+#define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
+#define NET_CORE                0
+#define AUDIO_CORE              0
+#define AUDIOSERIAL_CORE        0
+#define SCREEN_CORE             0
+#define DEBUG_CORE              0
+#define SOCKET_CORE             1
+#define REMOTE_CORE             0
 
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
@@ -690,12 +675,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)       // My naximum run, and about all you can do at 30fps  
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  160000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
 
-    #define POWER_LIMIT_MW (100 * 1000)                 // Assumes 100W per 8M
+    #define POWER_LIMIT_MW (NUM_LEDS/32 * 1000)        // Assumes 32mA per LED.  Make sure you have appropriate power!
+
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
 
     #define RING_SIZE_0 1 
@@ -968,7 +954,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MAX_BUFFERS
-#define MAX_BUFFERS (999)            // Just some reasonable guess, limiting it to 24 frames per second for 15 seconds
+#define MAX_BUFFERS (500)           // Just some reasonable guess, limiting it to 24 frames per second for 20 seconds
 #endif
 
 #ifndef ENABLE_WEBSERVER
@@ -1248,6 +1234,7 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 #endif
 
 #if USE_TFTSPI
+    #define DISABLE_ALL_LIBRARY_WARNINGS 1
     #include <TFT_eSPI.h>
     #include <SPI.h>
     extern TFT_eSPI * g_pDisplay;

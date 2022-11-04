@@ -185,7 +185,7 @@ class StatusEffect : public LEDStripEffect
 
   public:
     
-    StatusEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
+    StatusEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
       : LEDStripEffect("Status Fill"),
         _everyNth(everyNth),
         _color(color)
@@ -197,16 +197,16 @@ class StatusEffect : public LEDStripEffect
     {
         CRGB color = _color;
 
-    if (g_bUpdateStarted)
-      color = CRGB::Purple;
-    else if (!WiFi.isConnected())
-      color = CRGB::Red;
-    else if (!NTPTimeClient::HasClockBeenSet())
-      color = CRGB::Green;
+        if (g_bUpdateStarted)
+          color = CRGB::Purple;
+        else if (!WiFi.isConnected())
+          color = CRGB::Red;
+        else if (!NTPTimeClient::HasClockBeenSet())
+          color = CRGB::Green;
 
-    if (_everyNth != 1)
-      fillSolidOnAllChannels(CRGB::Black);
-    fillSolidOnAllChannels(color, 0, 0, _everyNth);
+        if (_everyNth != 1)
+          fillSolidOnAllChannels(CRGB::Black);
+        fillSolidOnAllChannels(color, 0, 0, _everyNth);
     }
 };
 
