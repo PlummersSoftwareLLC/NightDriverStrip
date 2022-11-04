@@ -61,7 +61,7 @@ class PatternClock : public LEDStripEffect
         struct tm *localTime;
         time( &currentTime );
         localTime = localtime( &currentTime );
-        localTime->tm_hour = (localTime->tm_hour+5)%24;           // BUGBUG: Hardcoded to PST for now
+        localTime->tm_hour = (localTime->tm_hour+19)%24;           // BUGBUG: Hardcoded to PST for now
         auto hours   = localTime->tm_hour;
         auto minutes = localTime->tm_min;
         auto seconds = localTime->tm_sec;

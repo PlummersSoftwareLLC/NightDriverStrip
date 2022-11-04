@@ -49,7 +49,7 @@
     #include <fonts/FreeMono9pt7b.h>
 #endif
 
-#if USE_TFT
+#if USE_M5DISPLAY
     extern M5Display * g_pDisplay;
 #endif
 
@@ -94,14 +94,7 @@ class Screen
         g_pDisplay->setCursor(0, 10);
         g_pDisplay->println(pszStatus);
         g_pDisplay->sendBuffer();
-    #elif USE_TFT
-        g_pDisplay->fillScreen(BLACK16);
-        g_pDisplay->setFreeFont(FF15);
-        g_pDisplay->setTextColor(0xFBE0);
-        auto xh = 10;
-        auto yh = 0; 
-        g_pDisplay->drawString(pszStatus, xh, yh);
-    #elif USE_TFTSPI
+    #elif USE_TFTSPI || USE_M5DISPLAY
         g_pDisplay->fillScreen(TFT_BLACK);
         g_pDisplay->setFreeFont(FF15);
         g_pDisplay->setTextColor(0xFBE0);
@@ -137,8 +130,12 @@ class Screen
             uint16_t w, h;
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
-        #elif OLED
+        #elif USE_OLED 
+            return g_pDisplay->getFontAscent();
+        #elif USE_TFTSPI || USE_M5DISPLAY
             return g_pDisplay->fontHeight();
+        #elif USE_SCREEN
+            return g_pDisplay->getFontAscent();
         #else
             return 12;                                                      // Some bogus reasonable default for those that don't support it
         #endif
@@ -148,13 +145,13 @@ class Screen
     {
         #if USE_OLED
             return g_pDisplay->getStrWidth(psz);
+        #elif USE_TFTSPI || USE_M5DISPLAY            
+            return g_pDisplay->textWidth(psz);            
         #elif USE_LCD
             int16_t x1, y1;
             uint16_t w, h;
             g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
             return w;
-        #elif USE_SCREEN
-            return g_pDisplay->textWidth(psz);          
         #else 
             return 8 * strlen(psz);
         #endif
@@ -162,6 +159,7 @@ class Screen
 
     static uint16_t screenHeight()
     {
+
         #if USE_OLED
             return g_pDisplay->getDisplayHeight();
         #elif USE_SCREEN
@@ -195,7 +193,7 @@ class Screen
 
     static void setTextSize(FONTSIZE size)
     {
-        #if USE_TFT
+        #if USE_M5DISPLAY
             switch(size)
             {
                 case BIG:
@@ -218,6 +216,7 @@ class Screen
         #endif
         
         #if USE_TFTSPI 
+
             switch(size)
             {
                 case BIG:
@@ -280,7 +279,7 @@ class Screen
 
     static void drawString(const char * pszText, uint16_t x, uint16_t y)
     {
-        #if USE_SCREEN
+        #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
         setCursor(x, y);
         println(pszText);
         #endif
@@ -290,20 +289,31 @@ class Screen
 
     static void drawString(const char * pszText, uint16_t y)
     {
-        #if USE_SCREEN
+        #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
         setCursor(screenWidth() / 2 - textWidth(pszText) / 2, y);
         println(pszText);
         #endif
     }
 
-    static void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+    static void drawRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t color)
     {
         #if USE_OLED
-            if (color != BLACK16)
-                g_pDisplay->setDrawColor(color);
-                g_pDisplay->drawBox(x, y, w, h);
+            g_pDisplay->drawBox(x, y, w, h);
+        #elif USE_M5DISPLAY || USE_TFTSPI 
+            g_pDisplay->drawRect(x, y, w, h, color);
         #elif USE_SCREEN
+            g_pDisplay->drawFrame(x, y, w, h);
+        #endif
+    }
+
+    static void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+    {
+        #if USE_M6DISPLAY || USE_OLED 
+            g_pDisplay->setDrawColor(color);
+        #elif USE_TFTSPI || USE_M5DISPLAY
             g_pDisplay->fillRect(x, y, w, h, color);
+        #elif USE_SCREEN
+            g_pDisplay->drawBox(x, y, w, h);
         #endif
     }
 };

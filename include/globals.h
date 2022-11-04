@@ -69,6 +69,8 @@
 //              Oct-01-2022  v027       Davepl      Mesmerizer integration and screen fixes
 //              Oct-01-2022  v028       Davepl      Adjust buffer sizes due to lower mem free
 //              Oct-02-2022  v029       Davepl      Change WiFiUDP to use free/malloc
+//              Oct-03-2o23  v030       Davepl      Smoother Draw and support for TFT S3 Feather
+//              Oct-03-2o23  v031       Davepl      Screen cleanup, core assignments moved around
 //---------------------------------------------------------------------------
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -79,7 +81,7 @@
 //
 // If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          29   // Update ONLY this to increment the version number
+#define FLASH_VERSION         31   // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -126,8 +128,8 @@
 //
 // Idle tasks in taskmgr run at IDLE_PRIORITY+1 so you want to be at least +2 
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7      // Draw any available frames first
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6      // ...then process and decompress incoming frames
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6
 #define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
 #define NET_PRIORITY            tskIDLE_PRIORITY+4
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+3
@@ -152,17 +154,34 @@
 // Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 // 
+// BUGBUG (Davepl) Be nice if this core mapping was constant, check to see if SOCKET_CORE
+// can be 1 for Mesmerizer, but need to test that
 
-#define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
-#define NET_CORE                0
-#define AUDIO_CORE              0
-#define AUDIOSERIAL_CORE        0
-#define SCREEN_CORE             0       
-#define DEBUG_CORE              0
-#define SOCKET_CORE             0
-#define REMOTE_CORE             0
 
-#define FASTLED_INTERNAL        1   // Suppresses the compilation banner from FastLED
+#ifdef USESTRIP
+    #define DRAWING_CORE            1     
+    #define NET_CORE                0
+    #define AUDIO_CORE              0
+    #define AUDIOSERIAL_CORE        0
+    #define SCREEN_CORE             0
+    #define DEBUG_CORE              0
+    #define SOCKET_CORE             1
+    #define REMOTE_CORE             0
+#endif
+
+#ifdef USEMATRIX
+    #define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
+    #define NET_CORE                0
+    #define AUDIO_CORE              0
+    #define AUDIOSERIAL_CORE        0
+    #define SCREEN_CORE             0
+    #define DEBUG_CORE              0
+    #define SOCKET_CORE             0
+    #define REMOTE_CORE             0
+#endif
+
+
+#define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -668,15 +687,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
 
     #define NUM_CHANNELS    1
-    #define MATRIX_WIDTH    (8*144)   
+    #define MATRIX_WIDTH    (8*144)       // My naximum run, and about all you can do at 30fps  
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  130000                // WiFi needs about 100K free to be able to (re)connect!
+    #define RESERVE_MEMORY  150000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
 
-    #define POWER_LIMIT_MW (300 * 1000)                 // Assumes 300W per 8M
+    #define POWER_LIMIT_MW (100 * 1000)                 // Assumes 100W per 8M
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
 
     #define RING_SIZE_0 1 
@@ -684,7 +703,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RING_SIZE_2 4
     #define RING_SIZE_3 8
     #define RING_SIZE_4 16
-
+    
 #elif CHIEFTAIN
 
     // The LED strips I use for Christmas lights under my eaves
@@ -933,7 +952,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
-#define TIME_CHECK_INTERVAL_MS (1000 * 60 * 1)   // 15 min - How often in ms we resync the clock from NTP
+#define TIME_CHECK_INTERVAL_MS (1000 * 60 * 5)   // How often in ms we resync the clock from NTP
 #define MIN_BRIGHTNESS  4                   
 #define MAX_BRIGHTNESS  255
 #define BRIGHTNESS_STEP 10          // Amount to step brightness on each remote control repeat 
@@ -949,7 +968,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MAX_BUFFERS
-#define MAX_BUFFERS (99)            // SHould be enough for two seconds at 30fps
+#define MAX_BUFFERS (999)            // Just some reasonable guess, limiting it to 24 frames per second for 15 seconds
 #endif
 
 #ifndef ENABLE_WEBSERVER
@@ -1084,11 +1103,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #elif defined(M5STICKCPLUS)                               // screen definitions for m5stick-c-plus
 
-        #define USE_TFT 1                                     // enable the M5's LCD screen
+        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
     #elif defined(M5STICKC)                                   // screen definitions for m5stick-c (or m5stick-c plus)
 
-        #define USE_TFT 1                                     // enable the M5's LCD screen
+        #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
 
     #elif defined(WROVERKIT)
 
@@ -1098,10 +1117,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif defined(M5STACKCORE2)
-ARDUINO_HELTEC_WIFI_KIT_32
-        #define  USE_TFT 1       
+    #elif defined(ESP32FEATHERTFT)
 
+        #define USE_TFTSPI 1                                  // Use TFT_eSPI
+
+    #elif defined(M5STACKCORE2)
+        ARDUINO_HELTEC_WIFI_KIT_32
+        #define  USE_M5DISPLAY 1       
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
@@ -1119,12 +1141,18 @@ ARDUINO_HELTEC_WIFI_KIT_32
     #define TFT_MISO 25
 #endif
 
+#ifdef ESP32FEATHERTFT
+    #define ONBOARD_PIXEL_ORDER     EOrder::GRB
+    #define ONBOARD_PIXEL_POWER     34
+    #define ONBOARD_PIXEL_DATA      33
+#endif
+
 #ifndef USE_OLED                            
 #define USE_OLED 0
 #endif
 
-#ifndef USE_TFT                            
-#define USE_TFT 0
+#ifndef USE_M5DISPLAY                            
+#define USE_M5DISPLAY 0
 #endif
 
 #ifndef USE_LCD                            
@@ -1162,6 +1190,7 @@ extern DRAM_ATTR const int gRingSizeTable[];
 
 #define MICROS_PER_SECOND   1000000
 #define MILLIS_PER_SECOND   1000 
+#define MICROS_PER_MILLI    1000
 
 #ifndef M5STICKC
 #define M5STICKC 0
