@@ -119,7 +119,7 @@ Note: Some defines are board specific, this is noted below.
 
 | Hardware Specific | Description | Supported Boards |
 | - | - | - |
-| USE_TFT                | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
+| USE_M5DISPLAY          | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
 | USE_OLED               | Enable stats display on built in OLED | Heltec Wifi Kit 32 |
 | USE_LCD                | Enable stats display on external ILI9341 LCD | Wrover32 |
 | USE_TFTSPI             | Enable stats display on external TTGO LCD | esp32dev |

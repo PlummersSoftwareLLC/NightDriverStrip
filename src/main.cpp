@@ -177,7 +177,7 @@
 #endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern uint32_t g_FreeDrawTime_ms;
+extern double g_FreeDrawTime;
 extern volatile float gPeakVU; // How high our peak VU scale is in live mode
 extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
@@ -203,8 +203,12 @@ TaskManager g_TaskManager;
 // Global Variables
 //
 
+#ifdef SPECTRUM
 DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
-DRAM_ATTR bool    gbInfoPageDirty = true;           // Does the display need to be erased?
+#else
+DRAM_ATTR uint8_t giInfoPage = 0;                   // Default to first page
+#endif
+
 DRAM_ATTR WiFiUDP g_Udp;                            // UDP object used for NNTP, etc
 DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
 DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started?
@@ -212,14 +216,13 @@ DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame time
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
 
 #ifdef USEMATRIX
-#include "ledmatrixgfx.h"
-#include <YouTubeSight.h>                       // For fetching YouTube sub count
-#include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-
+    #include "ledmatrixgfx.h"
+    #include <YouTubeSight.h>                       // For fetching YouTube sub count
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
 
 #ifdef USESTRIP
-#include "ledstripgfx.h"
+    #include "ledstripgfx.h"
 #endif
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
@@ -308,15 +311,15 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 // Data for Dave's Garage as an example,
 
 #if USEMATRIX
-const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
-const char PatternSubscribers::szChannelName1[] = "Daves Garage";
+    const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
+    const char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
-#define SUB_CHECK_INTERVAL 60000
-#define SUB_CHECK_ERROR_INTERVAL 10000
-#define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4" 
+    #define SUB_CHECK_INTERVAL 60000
+    #define SUB_CHECK_ERROR_INTERVAL 10000
+    #define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4" 
 
-WiFiClient http;
-YouTubeSight sight(CHANNEL_GUID, http);
+    WiFiClient http;
+    YouTubeSight sight(CHANNEL_GUID, http);
 #endif
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
@@ -395,18 +398,18 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 // Repeatedly calls the code to open up a socket and receive new connections
 
 #if INCOMING_WIFI_ENABLED
-void IRAM_ATTR SocketServerTaskEntry(void *)
-{
-    for (;;)
+    void IRAM_ATTR SocketServerTaskEntry(void *)
     {
-        if (WiFi.isConnected())
+        for (;;)
         {
-            g_SocketServer.ProcessIncomingConnectionsLoop();
-            debugW("Socket connection closed.  Retrying...\n");
+            if (WiFi.isConnected())
+            {
+                g_SocketServer.ProcessIncomingConnectionsLoop();
+                debugW("Socket connection closed.  Retrying...\n");
+            }
+            delay(500);
         }
-        delay(500);
     }
-}
 #endif
 
 
@@ -430,7 +433,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d", M5STICKC, USE_TFT, USE_OLED, USE_TFTSPI, USE_LCD);
+    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -531,13 +534,13 @@ void setup()
 
     #ifdef TOGGLE_BUTTON_1
         Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
-        Button1.interval(5);
+        Button1.interval(1);
         Button1.setPressedState(LOW);
     #endif
 
     #ifdef TOGGLE_BUTTON_2
         Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
-        Button2.interval(5);
+        Button2.interval(1);
         Button2.setPressedState(LOW);
     #endif
 
@@ -555,11 +558,11 @@ void setup()
 
     g_pDisplay->init();
     g_pDisplay->setRotation(1);
-    g_pDisplay->fillScreen(TFT_RED);
+    g_pDisplay->fillScreen(TFT_GREEN);
 #endif
 
 #if M5STICKC || M5STICKCPLUS
-    #if USE_TFT
+    #if USE_M5DISPLAY
         debugI("Intializizing TFT display\n");
         extern M5Display * g_pDisplay;
         M5.begin();
@@ -579,7 +582,9 @@ void setup()
 
     // Without these two magic lines, you get no picture, which is pretty annoying...
     
-    #define TFT_BL 5 // LED back-light
+    #ifndef TFT_BL
+      #define TFT_BL 5 // LED back-light
+    #endif
     pinMode(TFT_BL, OUTPUT); //initialize BL
 
     // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
@@ -633,7 +638,7 @@ void setup()
     #endif
 
     #if USE_PSRAM
-        uint32_t memtouse = ESP.getFreePsram();
+        uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
     #else
         uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
     #endif
@@ -652,7 +657,7 @@ void setup()
         cBuffers = MAX_BUFFERS;
     }
 
-    debugI("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
+    debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
@@ -680,8 +685,6 @@ void setup()
     #endif
 
     #if USESTRIP
-
-
 
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_pDevices[0]->GetLEDCount());
@@ -844,13 +847,17 @@ void loop()
         EVERY_N_SECONDS(5)
         {
             #if ENABLE_AUDIO
-                debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
+                debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
                         ESP.getFreeHeap(),
-                        g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
+                        g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
             #else
-            debugI("Mem: %u LargestBlk: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %dms",
-                   ESP.getFreeHeap(), ESP.getMaxAllocHeap(),
-                   g_FPS, g_Watts, g_Brite, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime_ms);
+            debugI("IP: %s, Mem: %u LargestBlk: %u PSRAM Free: %u/%u Buffer: %d/%d LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
+                   WiFi.localIP().toString().c_str(),
+                   ESP.getFreeHeap(),
+                   ESP.getMaxAllocHeap(),
+                   ESP.getFreePsram(), ESP.getPsramSize(),
+                   g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(),
+                   g_FPS, g_Watts, g_Brite, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
             #endif
         }
 
