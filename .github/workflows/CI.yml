@@ -40,8 +40,9 @@ jobs:
       run: pio run -e demo
     - name: Build heltecdemo
       run: pio run -e heltecdemo
-    - name: Build lantern
-      run: pio run -e lantern
+    # Uncomment the following two lines once platformio.ini includes a lantern env definition
+    # - name: Build lantern
+    #   run: pio run -e lantern
     - name: Build ledstrip
       run: pio run -e ledstrip
     - name: Build ledstrip_feather
