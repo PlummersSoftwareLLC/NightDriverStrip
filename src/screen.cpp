@@ -81,7 +81,7 @@ extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
 extern volatile float gVU;              // VU Ratio, 0-2
 extern volatile float gVURatioFade;     // VU Ratio with decay
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern double g_FreeDrawTime;      // Idle drawing time
+extern volatile double g_FreeDrawTime;           // Idle drawing time
 
 DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
 
@@ -238,7 +238,7 @@ void BasicInfoSummary(bool bRedraw)
             color = Screen::to16bit(CRGB::Orange);
             if (ratio > 0.5)
             {
-                color = Screen::to16bit(CRGB::DarkGreen);
+                color = Screen::to16bit(CRGB::Green);
                 if (ratio > 0.92)
                 {
                     color = Screen::to16bit(CRGB::Orange);

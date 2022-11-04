@@ -177,7 +177,7 @@
 #endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern double g_FreeDrawTime;
+extern volatile double g_FreeDrawTime;
 extern volatile float gPeakVU; // How high our peak VU scale is in live mode
 extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
