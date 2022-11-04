@@ -31,7 +31,7 @@
 #pragma once
 
 #include "globals.h"
-#include "ledmatrixgfx.h"
+#include "gfxbase.h"
 #include "freefonts.h"
 #include <mutex>
 
@@ -44,9 +44,12 @@
 
 #if USE_LCD
     extern Adafruit_ILI9341 * g_pDisplay;
+    #include <fonts/FreeMono18pt7b.h>
+    #include <fonts/FreeMono12pt7b.h>
+    #include <fonts/FreeMono9pt7b.h>
 #endif
 
-#if USE_TFT
+#if USE_M5DISPLAY
     extern M5Display * g_pDisplay;
 #endif
 
@@ -67,11 +70,11 @@ class Screen
 #if M5STICKCPLUS
     static const int TopMargin = 37;  
 #else
-    static const int TopMargin = 21;  
+    static const int TopMargin = 28;  
 #endif
 
 
-    static const int BottomMargin = 38;
+    static const int BottomMargin = 12;
 
     static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
@@ -91,14 +94,7 @@ class Screen
         g_pDisplay->setCursor(0, 10);
         g_pDisplay->println(pszStatus);
         g_pDisplay->sendBuffer();
-    #elif USE_TFT
-        g_pDisplay->fillScreen(BLACK16);
-        g_pDisplay->setFreeFont(FF15);
-        g_pDisplay->setTextColor(0xFBE0);
-        auto xh = 10;
-        auto yh = 0; 
-        g_pDisplay->drawString(pszStatus, xh, yh);
-    #elif USE_TFTSPI
+    #elif USE_TFTSPI || USE_M5DISPLAY
         g_pDisplay->fillScreen(TFT_BLACK);
         g_pDisplay->setFreeFont(FF15);
         g_pDisplay->setTextColor(0xFBE0);
@@ -106,12 +102,13 @@ class Screen
         auto yh = 0; 
         g_pDisplay->drawString(pszStatus, xh, yh);
     #elif USE_LCD
-        g_pDisplay->fillScreen(TFT_BLACK);
-        g_pDisplay->setFreeFont(FF15);
-        g_pDisplay->setTextColor(0xFBE0);
+        g_pDisplay->fillScreen(BLUE16);
+        g_pDisplay->setFont(FM9);
+        g_pDisplay->setTextColor(WHITE16);
         auto xh = 10;
         auto yh = 0; 
-        g_pDisplay->drawString(pszStatus, xh, yh);
+        g_pDisplay->setCursor(xh, yh);
+        g_pDisplay->print(pszStatus);
     #endif
     }
 
@@ -128,12 +125,19 @@ class Screen
 
     static uint16_t fontHeight()
     {
-        #if USE_OLED
-            return 12;
-        #elif USE_SCREEN
+        #if USE_LCD
+            int16_t x1, y1;
+            uint16_t w, h;
+            g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
+            return w + 2;                                                   // One pixel above and below chars looks better
+        #elif USE_OLED 
+            return g_pDisplay->getFontAscent();
+        #elif USE_TFTSPI || USE_M5DISPLAY
             return g_pDisplay->fontHeight();
+        #elif USE_SCREEN
+            return g_pDisplay->getFontAscent();
         #else
-            return 1;
+            return 12;                                                      // Some bogus reasonable default for those that don't support it
         #endif
     }
 
@@ -141,22 +145,27 @@ class Screen
     {
         #if USE_OLED
             return g_pDisplay->getStrWidth(psz);
-        #elif USE_SCREEN
-            return g_pDisplay->textWidth(psz);
+        #elif USE_TFTSPI || USE_M5DISPLAY            
+            return g_pDisplay->textWidth(psz);            
+        #elif USE_LCD
+            int16_t x1, y1;
+            uint16_t w, h;
+            g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
+            return w;
         #else 
-            return 1;
+            return 8 * strlen(psz);
         #endif
-
     }
 
     static uint16_t screenHeight()
     {
+
         #if USE_OLED
             return g_pDisplay->getDisplayHeight();
         #elif USE_SCREEN
             return g_pDisplay->height();
         #else
-            return 1;
+            return MATRIX_HEIGHT;
         #endif
     }
 
@@ -184,7 +193,7 @@ class Screen
 
     static void setTextSize(FONTSIZE size)
     {
-        #if USE_TFT
+        #if USE_M5DISPLAY
             switch(size)
             {
                 case BIG:
@@ -200,13 +209,14 @@ class Screen
                     g_pDisplay->setTextSize(1);
                     break;                
                 default:
-                    g_pDisplay->setTextFont(screenWidth() > 160 ? 2 : 1);
+                    g_pDisplay->setTextFont(1);
                     g_pDisplay->setTextSize(1);
                     break;
             }
         #endif
         
-        #if USE_TFTSPI
+        #if USE_TFTSPI 
+
             switch(size)
             {
                 case BIG:
@@ -232,16 +242,16 @@ class Screen
             switch(size)
             {
                 case BIG:
-                    g_pDisplay->setFreeFont(FF17);
+                    g_pDisplay->setFont(&FreeMono18pt7b);
                     break;
                 case MEDIUM:
-                    g_pDisplay->setFreeFont(FF16);
+                    g_pDisplay->setFont(&FreeMono12pt7b);
                     break;
                 case TINY:
-                    g_pLCCD->setFreeFont(FF1);
+                    g_pDisplay->setFont(&FreeMono9pt7b);
                     break;                
                 default:
-                    g_pDisplay->setFreeFont(FF15);
+                    g_pDisplay->setFont(&FreeMono9pt7b);
                     break;
             }
         #endif
@@ -269,7 +279,7 @@ class Screen
 
     static void drawString(const char * pszText, uint16_t x, uint16_t y)
     {
-        #if USE_SCREEN
+        #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
         setCursor(x, y);
         println(pszText);
         #endif
@@ -279,20 +289,31 @@ class Screen
 
     static void drawString(const char * pszText, uint16_t y)
     {
-        #if USE_SCREEN
+        #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
         setCursor(screenWidth() / 2 - textWidth(pszText) / 2, y);
         println(pszText);
         #endif
     }
 
-    static void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+    static void drawRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t color)
     {
         #if USE_OLED
-            if (color != BLACK16)
-                g_pDisplay->setDrawColor(color);
-                g_pDisplay->drawBox(x, y, w, h);
+            g_pDisplay->drawBox(x, y, w, h);
+        #elif USE_M5DISPLAY || USE_TFTSPI 
+            g_pDisplay->drawRect(x, y, w, h, color);
         #elif USE_SCREEN
+            g_pDisplay->drawFrame(x, y, w, h);
+        #endif
+    }
+
+    static void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+    {
+        #if USE_M6DISPLAY || USE_OLED 
+            g_pDisplay->setDrawColor(color);
+        #elif USE_TFTSPI || USE_M5DISPLAY
             g_pDisplay->fillRect(x, y, w, h, color);
+        #elif USE_SCREEN
+            g_pDisplay->drawBox(x, y, w, h);
         #endif
     }
 };

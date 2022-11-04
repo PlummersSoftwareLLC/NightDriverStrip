@@ -15,7 +15,7 @@ To add new effects, you derive from `LEDStripEffect` (or an existing effect clas
 
 There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`.  Effects are not notified when they go active or not, they're just asked to draw when needed.
 
-Each channel of LEDs has an `LEDMatrixGfx` instance associated with it.  `_GFX[0]` is the `LEDMatrixGfx` associated with `LED_PIN0`, and so on.  You can get the LED buffer of Pin0 by calling `_GFX[0]->GetLEDBuffer()`, and it will contain `_GFX[0]->GetLEDCount` pixels.  You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
+Each channel of LEDs has an `LEDStripGfx` instance associated with it.  `_GFX[0]` is the `LEDStripGfx` associated with `LED_PIN0`, and so on.  You can get the LED buffer of Pin0 by calling `_GFX[0]->leds()`, and it will contain `_GFX[0]->GetLEDCount` pixels.  You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
 
 The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32.  It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs.  If working correctly it should draw a scrolling rainbow palette on your LED strip.
 
@@ -119,7 +119,7 @@ Note: Some defines are board specific, this is noted below.
 
 | Hardware Specific | Description | Supported Boards |
 | - | - | - |
-| USE_TFT                | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
+| USE_M5DISPLAY          | Enable stats display on built in LCD | M5Stick-C and M5Stick-C Plus |
 | USE_OLED               | Enable stats display on built in OLED | Heltec Wifi Kit 32 |
 | USE_LCD                | Enable stats display on external ILI9341 LCD | Wrover32 |
 | USE_TFTSPI             | Enable stats display on external TTGO LCD | esp32dev |
@@ -155,6 +155,9 @@ Time to build the SPECTRUM config.  Assumes a clean build after everything has b
 
 - Mac Pro, 6 cores, 3.5 GHz, 64GB, 1TB SSD
 -> [davepl 09/19/2021] 48.42 seconds
+
+- Xeon Silver, 20 cores, 2.1GHz, 16GB VM
+-> [davepl 10/10/2022] 53.11 seconds
 
 - Raspberry Pi 4, 64-bit Ubuntu LTS, 4 core, 4GB
 -> [davepl 09/23/2021] 6 min 25 seconds

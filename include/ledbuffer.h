@@ -37,7 +37,7 @@
 #include <memory>
 #include <iostream>
 
-#include "ledmatrixgfx.h"
+#include "gfxbase.h"
 
 using namespace std;
 
@@ -100,7 +100,7 @@ class LEDBuffer
 {
   public:
   
-     std::shared_ptr<LEDMatrixGFX> _pStrand;
+     std::shared_ptr<GFXBase> _pStrand;
 
   private:
     
@@ -111,13 +111,20 @@ class LEDBuffer
    
   public:
 
-    explicit LEDBuffer(std::shared_ptr<LEDMatrixGFX> pStrand) : 
+    explicit LEDBuffer(std::shared_ptr<GFXBase> pStrand) : 
                  _pStrand(pStrand),
                  _pixelCount(0),
                  _timeStampMicroseconds(0),
                  _timeStampSeconds(0)
     {
-        _leds = make_unique<CRGB []>(NUM_LEDS);
+        #if USE_PSRAM
+            //psram_allocator<CRGB []> alloc = psram_allocator<CRGB []>();
+            // _leds = psram_allocator<CRGB>().allocate(NUM_LEDS);
+            _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
+        #else
+            _leds = make_unique<CRGB []>(NUM_LEDS);
+        #endif
+
 
         for (int i = 0; i < ARRAYSIZE(_leds); i++)
             _leds[i] = CRGB::Yellow;
@@ -178,7 +185,7 @@ class LEDBuffer
             debugW("Data size mismatch");
             return false;
         }
-        if (length32 > STRAND_LEDS)
+        if (length32 > NUM_LEDS)
         {
             debugW("More data than we have LEDs\n");
             return false;
@@ -197,17 +204,7 @@ class LEDBuffer
     {
         _timeStampMicroseconds = 0;
         _timeStampSeconds      = 0;
-        
-        int iPixel = 0; 
-        for (int i = 0; i < _pStrand->width() * _pStrand->height(); i++)
-        {
-            int x = iPixel % _pStrand->width();
-            int y = iPixel / _pStrand->width();
-            _pStrand->drawPixel(x, y, _leds[iPixel]);
-            iPixel++;
-            if (iPixel >= _pixelCount)
-                break;
-        }
+        _pStrand->fillLeds(_leds.get());
     }
 };
 
@@ -221,13 +218,13 @@ class LEDBufferManager
 {
     const std::unique_ptr<shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
     std::shared_ptr<LEDBuffer>                      _pLastBufferAdded;   // Keeps track of the MRU buffer
-    size_t                                     _iNextBuffer;        // Head pointer index
-    size_t                                     _iLastBuffer;        // Tail pointer index
-    uint32_t                                   _cBuffers;           // Number of buffers
+    size_t                                          _iNextBuffer;        // Head pointer index
+    size_t                                          _iLastBuffer;        // Tail pointer index
+    uint32_t                                        _cBuffers;           // Number of buffers
    
   public:
 
-    LEDBufferManager(uint32_t cBuffers, std::shared_ptr<LEDMatrixGFX> pGFX)
+    LEDBufferManager(uint32_t cBuffers, std::shared_ptr<GFXBase> pGFX)
      : _ppBuffers(std::make_unique<std::shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
        _iNextBuffer(0),
        _iLastBuffer(0),

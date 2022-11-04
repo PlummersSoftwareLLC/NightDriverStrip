@@ -4,7 +4,7 @@
 //
 // File:        NTPTimeClient.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -12,12 +12,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -33,211 +33,111 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#define fastled_internal 1
-#include "globals.h"
-#include "FastLED.h"
-#include "Adafruit_GFX.h"
-#include <SPI.h>
-#include "Adafruit_ILI9341.h"
-#include "pixeltypes.h"
-#include <string>
-#include <stdexcept>
+#include "gfxbase.h"
 
-// 5:6:5 Color definitions
-#define BLACK16 0x0000
-#define BLUE16 0x001F
-#define RED16 0xF800
-#define GREEN16 0x07E0
-#define CYAN16 0x07FF
-#define MAGENTA16 0xF81F
-#define YELLOW16 0xFFE0
-#define WHITE16 0xFFFF
+#if USEMATRIX
+#include <SmartMatrix.h>
+#include "effects/matrix/Boid.h"
+#include "effects/matrix/Vector.h"
 
-#include "screen.h"
+using namespace std;
 
-//     FastLED.addLeds<WS2812B, LED_PIN, GRB>(_pLEDs, w * h);
+//
+// Matrix Panel
+//
 
+#define COLOR_DEPTH 24 // known working: 24, 48 - If the sketch uses type `rgb24` directly, COLOR_DEPTH must be 24
 
-class LEDMatrixGFX : public Adafruit_GFX
+class LEDMatrixGFX : public GFXBase
 {
-  friend class LEDStripEffect;                                          // I might a shower after this lifetime first, but it needs access to the pixels to do its job, so BUGBUG expose this more nicely
-
-private:
-  CRGB *_pLEDs;
-  size_t _width;
-  size_t _height;
+protected:
+    const char *pszCaption = nullptr;
+    unsigned long captionStartTime;
+    double captionDuration;
+    const double captionFadeInTime = 500;
+    const double captionFadeOutTime = 1000;
 
 public:
-  LEDMatrixGFX(size_t w, size_t h)
-      : Adafruit_GFX((int)w, (int)h),
-        _width(w),
-        _height(h)
-  {
-    _pLEDs = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
-    if(!_pLEDs)
+    typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;
+    static const uint8_t kMatrixWidth = MATRIX_WIDTH;                                   // known working: 32, 64, 96, 128
+    static const uint8_t kMatrixHeight = MATRIX_HEIGHT;                                 // known working: 16, 32, 48, 64
+    static const uint8_t kRefreshDepth = COLOR_DEPTH;                                   // known working: 24, 36, 48
+    static const uint8_t kDmaBufferRows = 4;                                            // known working: 2-4, use 2 to save memory, more to keep from dropping frames and automatically lowering refresh rate
+    static const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;                // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
+    static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING); // see http://docs.pixelmatix.com/SmartMatrix for options
+    static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
+    static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
+    static const rgb24 defaultBackgroundColor;
+
+    #if USEMATRIX
+    static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
+    static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
+    static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
+    static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
+    #endif
+
+    unique_ptr<Boid []> boids = make_unique<Boid []>(MATRIX_WIDTH);
+    unique_ptr<uint8_t []> heat = make_unique<uint8_t []>(NUM_LEDS);
+
+    LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
-      throw std::runtime_error("Unable to allocate LEDs in LEDMatrixGFX");
     }
-  }
 
-  ~LEDMatrixGFX()
-  {
-    free(_pLEDs);
-    _pLEDs = nullptr;
-  }
-
-  CRGB * GetLEDBuffer() const
-  {
-    return _pLEDs;
-  }
-
-  size_t GetLEDCount() const
-  {
-    return _width * _height;
-  }
-
-  static const uint8_t gamma5[];
-  static const uint8_t gamma6[];
-
-  inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
-  {
-    uint8_t r = gamma5[color >> 11];
-    uint8_t g = gamma6[(color >> 5) & 0x3F];
-    uint8_t b = gamma5[color & 0x1F];
-
-    return CRGB(r, g, b);
-  }
-
-  static inline uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) // Convert RGB -> 16bit 5:6:5
-  {
-    return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
-  }
-
-  static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
-  {
-    return ((rgb.r / 8) << 11) | ((rgb.g / 4) << 5) | (rgb.b / 8);
-  }
-
-  static inline uint16_t to16bit(CRGB::HTMLColorCode code) // Convert HtmlColorCode -> 16 bit 5:6:5
-  {
-    return to16bit(CRGB(code));
-  }
-
-  inline uint16_t getPixelIndex(int16_t x, int16_t y) const
-  {
-    if (x & 0x01)
+    ~LEDMatrixGFX()
     {
-      // Odd rows run backwards
-      uint8_t reverseY = (_height - 1) - y;
-      return (x * _height) + reverseY;
     }
-    else
+
+    inline virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
-      // Even rows run forwards
-      return (x * _height) + y;
+        return y * MATRIX_WIDTH + x;    
     }
-  }
 
-  inline CRGB getPixel(int16_t x) const
-  {
-    if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
-      return _pLEDs[x];
-    else
+    inline void setLeds(CRGB *pLeds)
     {
-      throw std::runtime_error("Invalid index in getPixel: " + x);
-      return CRGB::Black;
+        leds = pLeds;
     }
-    
-  }
 
-  inline CRGB getPixel(int16_t x, int16_t y) const
-  {
-    if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
-      return _pLEDs[getPixelIndex(x, y)];
-    else
+    const char *GetCaption()
     {
-      char szBuffer[80];
-      snprintf(szBuffer, 80, "Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
-      throw std::runtime_error(szBuffer);
+        return pszCaption;
     }
-  }
 
-  inline virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
-  {
-    if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
-      _pLEDs[getPixelIndex(x, y)] = from16Bit(color);
-  }
+    double GetCaptionTransparency()
+    {
+        unsigned long now = millis();
+        if (pszCaption == nullptr)
+            return 0;
 
-  inline virtual void drawPixel(int16_t x, int16_t y, CRGB color)
-  {
-    if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
-      _pLEDs[getPixelIndex(x, y)] = color;
-  }
+        if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
+            return 0;
 
-  inline virtual void drawPixel(int x, CRGB color)
-  {
-    if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
-      _pLEDs[x] = color;
-  }
+        double elapsed = now - captionStartTime;
 
-  inline void setPixels(float fPos, float count, CRGB c, bool bMerge = false) const
-	{		
-		float frac1 = fPos - floor(fPos);							// eg:   3.25 becomes 0.25
-		float frac2 = fPos + count - floor(fPos + count);			// eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
+        if (elapsed < captionFadeInTime)
+            return elapsed / captionFadeInTime;
 
-		/*
-			Starting at 3.25, draw for 1.5:
-			We start at pixel 3.
-			We fill pixel with .75 worth of color
-			We advance to next pixel
-			
-			We fill one pixel and advance to next pixel
+        if (elapsed > captionFadeInTime + captionDuration)
+            return 1.0 - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
 
-			We are now at pixel 5, frac2 = .75
-			We fill pixel with .75 worth of color
-		*/
+        return 1.0;
+    }
 
-		uint8_t fade1 = (std::max(frac1, 1.0f-count)) * 255;					// Fraction is how far past pixel boundary we are (up to our total size) so larger fraction is more dimming
-		uint8_t fade2 = (1.0 - frac2) * 255;		// Fraction is how far we are poking into this pixel, so larger fraction is less dimming
-		CRGB c1 = c;
-		CRGB c2 = c;
-		c1 = c1.fadeToBlackBy(fade1);
-		c2 = c2.fadeToBlackBy(fade2);
+    void SetCaption(const char *psz, uint32_t duration)
+    {
+        captionDuration = duration;
+        pszCaption = psz;
+        captionStartTime = millis();
+    }
 
-		float p = fPos;
-		if (p >= 0 && p < GetLEDCount())
-			for (int i = 0; i < NUM_CHANNELS; i++)
-					_pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c1 : c1;  
-		p=fPos+(1.0 - frac1);
-		count -= (1.0 - frac1);
+    // Matrix interop
 
-		// Middle (body) pixels
+    static void StartMatrix();
+    static CRGB *GetMatrixBackBuffer();
+    static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
 
-		while (count >= 1)
-		{
-			if (p >= 0 && p < GetLEDCount())
-					for (int i = 0; i < NUM_CHANNELS; i++)
-						_pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c : c;  
-			count--;
-			p++;
-		};
-
-		// Final pixel, if in bounds
-		if (count > 0)
-			if (p >= 0 && p < GetLEDCount())
-				for (int i = 0; i < NUM_CHANNELS; i++)
-    				_pLEDs[(int)p] = bMerge ? _pLEDs[(int)p]  + c2 : c2;  
-	}
-
-    
-  inline uint16_t xy( uint8_t x, uint8_t y)
-  {
-      if( x >= MATRIX_WIDTH || x < 0) 
-        return 0;
-      if( y >= MATRIX_HEIGHT || y < 0) 
-        return 0;  
-    
-      return (y * MATRIX_WIDTH) + x; // everything offset by one to capute out of bounds stuff - never displayed by ShowFrame()
-  }
-  
+    SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
+    {
+        return backgroundLayer;
+    }
 };
+#endif

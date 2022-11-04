@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        main.cpp
+// File:        main.cpp  
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -154,13 +154,6 @@
 // If the Atomi TM1814 lights are being used, we include the NeoPixelBus code
 // to drive them, but otherwise we do not use or include NeoPixelBus
 
-#if ATOMISTRING
-#include <NeoPixelBus.h>
-#include <NeoPixelAnimator.h>
-#include <SPI.h> 
-#include <SD.h>
-#endif
-
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
 
 #include "ntptimeclient.h"                      // setting the system clock from ntp
@@ -177,13 +170,19 @@
 
 #include "colordata.h"                          // color palettes
 #include "drawing.h"                            // drawing code
+#include "taskmgr.h"                            // for cpu usage, etc
 
 #if ENABLE_REMOTE
     #include "remotecontrol.h" // Allows us to use a IR remote with it
 #endif
 
-void IRAM_ATTR ScreenUpdateLoopEntry(void *);          
-
+void IRAM_ATTR ScreenUpdateLoopEntry(void *);
+extern volatile double g_FreeDrawTime;
+extern volatile float gPeakVU; // How high our peak VU scale is in live mode
+extern volatile float gMinVU;  // How low our peak VU scale is in live mode
+extern uint32_t g_Watts;
+extern double g_Brite;
+    
 //
 // Task Handles to our running threads
 //
@@ -198,23 +197,39 @@ TaskHandle_t g_taskNet    = nullptr;
 TaskHandle_t g_taskRemote = nullptr;
 TaskHandle_t g_taskSocket = nullptr;
 
+TaskManager g_TaskManager;
+
 //
 // Global Variables
 //
 
+#ifdef SPECTRUM
 DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
-DRAM_ATTR bool    gbInfoPageDirty = true;           // Does the display need to be erased?
+#else
+DRAM_ATTR uint8_t giInfoPage = 0;                   // Default to first page
+#endif
+
 DRAM_ATTR WiFiUDP g_Udp;                            // UDP object used for NNTP, etc
 DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
 DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started?
 DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
 
-DRAM_ATTR std::shared_ptr<LEDMatrixGFX>     g_pStrands[NUM_CHANNELS];            // Each LED strip gets its own channel
-DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];     // Each channel has its own buffer
-DRAM_ATTR std::unique_ptr<EffectManager>    g_pEffectManager;                    // The one and only global effect manager
+#ifdef USEMATRIX
+    #include "ledmatrixgfx.h"
+    #include <YouTubeSight.h>                       // For fetching YouTube sub count
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
+#endif
+
+#ifdef USESTRIP
+    #include "ledstripgfx.h"
+#endif
+
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
+
+DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
-DRAM_ATTR RemoteDebug Debug;                                                // Instance of our telnet debug server
+DRAM_ATTR RemoteDebug Debug;                                                     // Instance of our telnet debug server
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
@@ -236,6 +251,7 @@ DRAM_ATTR const int gRingSizeTable[MAX_RINGS] =
 //
 
 extern DRAM_ATTR LEDStripEffect * AllEffects[];      // Main table of internal events in effects.cpp
+extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 
 //
 // Optional Components
@@ -246,7 +262,7 @@ extern DRAM_ATTR LEDStripEffect * AllEffects[];      // Main table of internal e
 #endif
 
 #if INCOMING_WIFI_ENABLED
-    DRAM_ATTR SocketServer g_SocketServer(49152, STRAND_LEDS);  // $C000 is free RAM on the C64, fwiw!
+    DRAM_ATTR SocketServer g_SocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
 #endif
 
 #if ENABLE_REMOTE
@@ -292,6 +308,20 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 // Pumps the various network loops and sets the time periodically, as well as reconnecting
 // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
 
+// Data for Dave's Garage as an example,
+
+#if USEMATRIX
+    const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
+    const char PatternSubscribers::szChannelName1[] = "Daves Garage";
+
+    #define SUB_CHECK_INTERVAL 60000
+    #define SUB_CHECK_ERROR_INTERVAL 10000
+    #define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4" 
+
+    WiFiClient http;
+    YouTubeSight sight(CHANNEL_GUID, http);
+#endif
+
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
     debugI(">> NetworkHandlingLoopEntry\n");
@@ -310,9 +340,39 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     #if WAIT_FOR_WIFI
                         debugE("Rebooting in 5 seconds due to no Wifi available.");
                         delay(5000);
-                        DelayedReboot("Rebooting due to no Wifi available.");
+                        throw new std::runtime_error("Rebooting due to no Wifi available.");
                     #endif
                 }
+            }
+            EVERY_N_SECONDS(60)
+            {
+                // Get Subscriber Count
+
+                if (WiFi.isConnected())
+                {
+                    #if USEMATRIX
+                    static uint64_t     _NextRunTime = millis();
+                    if (millis() > _NextRunTime)
+                    {
+                        debugV("Fetching YouTube Data...");
+
+                        sight._debug = false;
+                        if (sight.getData())
+                        {
+                            debugV("Got YouTube Data...");
+                            long result = atol(sight.channelStats.subscribers_count.c_str());
+                            PatternSubscribers::cSubscribers = result;
+                            _NextRunTime = millis() + SUB_CHECK_INTERVAL;
+                            PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
+                        }
+                        else
+                        {
+                            debugW("YouTubeSight Subscriber API failed\n");
+                            _NextRunTime = millis() + SUB_CHECK_ERROR_INTERVAL;
+                        }
+                    }
+                    #endif
+                }                
             }
         #endif
 
@@ -322,7 +382,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
             {
                 if (WiFi.isConnected())
                 {
-                    debugI("Refreshing Time from Server...");
+                    debugV("Refreshing Time from Server...");
                     digitalWrite(BUILTIN_LED_PIN, 1);
                     NTPTimeClient::UpdateClockFromWeb(&g_Udp);
                     digitalWrite(BUILTIN_LED_PIN, 0);
@@ -338,16 +398,18 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 // Repeatedly calls the code to open up a socket and receive new connections
 
 #if INCOMING_WIFI_ENABLED
-void IRAM_ATTR SocketServerTaskEntry(void *)
-{
-    for (;;)
+    void IRAM_ATTR SocketServerTaskEntry(void *)
     {
-        if (WiFi.isConnected())
-            g_SocketServer.ProcessIncomingConnectionsLoop();
-        debugW("Socket connection closed.  Retrying...\n");
-        delay(500);
+        for (;;)
+        {
+            if (WiFi.isConnected())
+            {
+                g_SocketServer.ProcessIncomingConnectionsLoop();
+                debugW("Socket connection closed.  Retrying...\n");
+            }
+            delay(500);
+        }
     }
-}
 #endif
 
 
@@ -371,7 +433,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_TFT: %d, USE_OLED: %d, USE_TFTSPI: %d", M5STICKC, USE_TFT, USE_OLED, USE_TFTSPI);
+    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -428,7 +490,9 @@ Bounce2::Button Button2;
 // AudioSamplerTaskEntry        - Listens to room audio, creates spectrum analysis, beat detection, etc.
 
 void setup()
-{   
+{
+    g_TaskManager.begin();
+    
     // Initialize Serial output
     Serial.begin(115200);      
 
@@ -470,13 +534,13 @@ void setup()
 
     #ifdef TOGGLE_BUTTON_1
         Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
-        Button1.interval(5);
+        Button1.interval(1);
         Button1.setPressedState(LOW);
     #endif
 
     #ifdef TOGGLE_BUTTON_2
         Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
-        Button2.interval(5);
+        Button2.interval(1);
         Button2.setPressedState(LOW);
     #endif
 
@@ -491,13 +555,14 @@ void setup()
 #if USE_TFTSPI
     debugI("Initializing TFTSPI");
     extern TFT_eSPI * g_pDisplay;
+
     g_pDisplay->init();
     g_pDisplay->setRotation(1);
-    g_pDisplay->fillScreen(TFT_BLACK);
+    g_pDisplay->fillScreen(TFT_GREEN);
 #endif
 
 #if M5STICKC || M5STICKCPLUS
-    #if USE_TFT
+    #if USE_M5DISPLAY
         debugI("Intializizing TFT display\n");
         extern M5Display * g_pDisplay;
         M5.begin();
@@ -514,6 +579,13 @@ void setup()
 #if USE_LCD
     extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
+
+    // Without these two magic lines, you get no picture, which is pretty annoying...
+    
+    #ifndef TFT_BL
+      #define TFT_BL 5 // LED back-light
+    #endif
+    pinMode(TFT_BL, OUTPUT); //initialize BL
 
     // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
     // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
@@ -552,22 +624,32 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    for (int i = 0; i < NUM_CHANNELS; i++)
-        g_pStrands[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+    #ifdef USESTRIP
+        for (int i = 0; i < NUM_CHANNELS; i++)
+            g_pDevices[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+    #endif
+
+    #if USEMATRIX
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            g_pDevices[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i]->loadPalette(0);
+        }
+    #endif
 
     #if USE_PSRAM
-        uint32_t memtouse = ESP.getFreePsram();
+        uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
     #else
         uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
     #endif
 
-    uint32_t memtoalloc = (NUM_CHANNELS * ((sizeof(LEDBuffer) + STRAND_LEDS * sizeof(CRGB))));
+    uint32_t memtoalloc = (NUM_CHANNELS * ((sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB))));
     uint32_t cBuffers = memtouse / memtoalloc;
 
     if (cBuffers < MIN_BUFFERS)
     {
         debugI("Not enough memory, could only allocate %d buffers and need %d\n", cBuffers, MIN_BUFFERS);
-        DelayedReboot("Could not allocate all buffers");
+        throw std::runtime_error("Could not allocate all buffers");
     }
     if (cBuffers > MAX_BUFFERS)
     {
@@ -575,10 +657,10 @@ void setup()
         cBuffers = MAX_BUFFERS;
     }
 
-    debugI("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc);
+    debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pStrands[iChannel]);
+        g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
 
     // Initialize all of the built in effects
 
@@ -587,88 +669,98 @@ void setup()
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
 
-#if ATOMISTRING
-    strip.Begin();
-    strip.SetPixelSettings(NeoTm1814Settings(165,165,165,165));
-    strip.Show();
-    pinMode(LED_PIN0, OUTPUT);
-#endif
+    #if USEMATRIX
+        LEDMatrixGFX::StartMatrix();
+    #endif
 
-#if STRAND
-    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount()); // Neopixel strand uses RGB color order, others are all GRB
-    //FastLED.addLeds<AtomiController, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
-#elif NUM_CHANNELS == 1
-    debugI("Adding %d LEDs to FastLED.", g_pStrands[0]->GetLEDCount());
-    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), 3*144);
-    FastLED[0].setLeds(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
-    FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
-    pinMode(LED_PIN0, OUTPUT);
-#endif
+        // Onboard PWM LED 
 
-#if NUM_CHANNELS >= 2
-    FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_pStrands[0]->GetLEDBuffer(), g_pStrands[0]->GetLEDCount());
-    pinMode(LED_PIN0, OUTPUT);
+    #ifdef ONBOARD_LED_R
+        ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
+        ledcAttachPin(ONBOARD_LED_G,  2);
+        ledcAttachPin(ONBOARD_LED_B,  3);
+        ledcSetup(1, 12000, 8);             // 12 kHz PWM, 8-bit resolution
+        ledcSetup(2, 12000, 8);
+        ledcSetup(3, 12000, 8);
+    #endif
 
-    FastLED.addLeds<WS2812B, LED_PIN1, COLOR_ORDER>(g_pStrands[1]->GetLEDBuffer(), g_pStrands[1]->GetLEDCount());
-    pinMode(LED_PIN1, OUTPUT);
-#endif
+    #if USESTRIP
 
-#if NUM_CHANNELS >= 3
-    FastLED.addLeds<WS2812B, LED_PIN2, COLOR_ORDER>(g_pStrands[2]->GetLEDBuffer(), g_pStrands[2]->GetLEDCount());
-    pinMode(LED_PIN2, OUTPUT);
-#endif
+        #if NUM_CHANNELS == 1
+            debugI("Adding %d LEDs to FastLED.", g_pDevices[0]->GetLEDCount());
+            
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, 3*144);
+            FastLED[0].setLeds(((LEDStripGFX *)g_pDevices[0].get())->leds, g_pDevices[0]->GetLEDCount());   
+            FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
+            pinMode(LED_PIN0, OUTPUT);
+        #endif
 
-#if NUM_CHANNELS >= 4
-    FastLED.addLeds<WS2812B, LED_PIN3, COLOR_ORDER>(g_pStrands[3]->GetLEDBuffer(), g_pStrands[3]->GetLEDCount());
-    pinMode(LED_PIN3, OUTPUT);
-#endif
+        #if NUM_CHANNELS >= 2
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, ((LEDStripGFX *)g_pDevices[0].get())->GetLEDCount());
+            pinMode(LED_PIN0, OUTPUT);
 
-#if NUM_CHANNELS >= 5
-    FastLED.addLeds<WS2812B, LED_PIN4, COLOR_ORDER>(g_pStrands[4]->GetLEDBuffer(), g_pStrands[4]->GetLEDCount());
-    pinMode(LED_PIN4, OUTPUT);
-#endif
+            FastLED.addLeds<WS2812B, LED_PIN1, COLOR_ORDER>(g_pDevices[1]->leds, g_pDevices[1]->GetLEDCount());
+            pinMode(LED_PIN1, OUTPUT);
+        #endif
 
-#if NUM_CHANNELS >= 6
-    FastLED.addLeds<WS2812B, LED_PIN5, COLOR_ORDER>(g_pStrands[5]->GetLEDBuffer(), g_pStrands[5]->GetLEDCount());
-    pinMode(LED_PIN5, OUTPUT);
-#endif
+        #if NUM_CHANNELS >= 3
+            FastLED.addLeds<WS2812B, LED_PIN2, COLOR_ORDER>(g_pDevices[2]->leds, g_pDevices[2]->GetLEDCount());
+            pinMode(LED_PIN2, OUTPUT);
+        #endif
 
-#if NUM_CHANNELS >= 7
-    FastLED.addLeds<WS2812B, LED_PIN6, COLOR_ORDER>(g_pStrands[6]->GetLEDBuffer(), g_pStrands[6]->GetLEDCount());
-    pinMode(LED_PIN6, OUTPUT);
-#endif
+        #if NUM_CHANNELS >= 4
+            FastLED.addLeds<WS2812B, LED_PIN3, COLOR_ORDER>(g_pDevices[3]->leds, g_pDevices[3]->GetLEDCount());
+            pinMode(LED_PIN3, OUTPUT);
+        #endif
 
-#if NUM_CHANNELS >= 8
-    FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_pStrands[7]->GetLEDBuffer(), g_pStrands[7]->GetLEDCount());
-    pinMode(LED_PIN7, OUTPUT);
-#endif
+        #if NUM_CHANNELS >= 5
+            FastLED.addLeds<WS2812B, LED_PIN4, COLOR_ORDER>(g_pDevices[4]->leds, g_pDevices[4]->GetLEDCount());
+            pinMode(LED_PIN4, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 6
+            FastLED.addLeds<WS2812B, LED_PIN5, COLOR_ORDER>(g_pDevices[5]->leds, g_pDevices[5]->GetLEDCount());
+            pinMode(LED_PIN5, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 7
+            FastLED.addLeds<WS2812B, LED_PIN6, COLOR_ORDER>(g_pDevices[6]->leds, g_pDevices[6]->GetLEDCount());
+            pinMode(LED_PIN6, OUTPUT);
+        #endif
+
+        #if NUM_CHANNELS >= 8
+            FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_pDevices[7]->leds, g_pDevices[7]->GetLEDCount());
+            pinMode(LED_PIN7, OUTPUT);
+        #endif
+           
+            //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
+            //digitalWrite(35, 0);
+
+        #ifdef POWER_LIMIT_MW
+            set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
+            #ifdef LED_BUILTIN
+                set_max_power_indicator_LED(LED_BUILTIN);
+            #endif
+        #endif
+
+            g_Brightness = 255;
+            
+        #if ATOMLIGHT
+            pinMode(4, INPUT);
+            pinMode(12, INPUT);
+            pinMode(13, INPUT);
+            pinMode(14, INPUT);
+            pinMode(15, INPUT);
+        #endif
+    #endif
+
 
     pinMode(BUILTIN_LED_PIN, OUTPUT);
-    
+
     // Microphone stuff
-#if ENABLE_AUDIO    
-    pinMode(INPUT_PIN, INPUT);
-#endif
-    
-    //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
-    //digitalWrite(35, 0);
-
-#ifdef POWER_LIMIT_MW
-    set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
-    #ifdef LED_BUILTIN
-        set_max_power_indicator_LED(LED_BUILTIN);
+    #if ENABLE_AUDIO    
+        pinMode(INPUT_PIN, INPUT);
     #endif
-#endif
-
-    g_Brightness = 255;
-    
-#if ATOMLIGHT
-    pinMode(4, INPUT);
-    pinMode(12, INPUT);
-    pinMode(13, INPUT);
-    pinMode(14, INPUT);
-    pinMode(15, INPUT);
-#endif
 
     debugI("Initializing effects manager...");
     InitEffectsManager();
@@ -694,7 +786,7 @@ void setup()
 
     // Init the zlib compression
 
-    debugI("Initializing compression...");
+    debugV("Initializing compression...");
     uzlib_init();
     CheckHeap();
 
@@ -717,6 +809,12 @@ void setup()
     CheckHeap();
 #endif
 
+#if ENABLE_AUDIOSERIAL
+    // The audio sampler task might as well be on a different core from the LED stuff
+    xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &g_taskAudio, AUDIOSERIAL_CORE);
+    CheckHeap();
+#endif
+
     debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
     CheckHeap();
 }
@@ -733,10 +831,35 @@ void loop()
         #if ENABLE_OTA
             EVERY_N_MILLIS(10)
             {
-                if (WiFi.isConnected())         
-                    ArduinoOTA.handle();
+                try
+                {
+                    if (WiFi.isConnected())
+                        ArduinoOTA.handle();
+                }
+                catch(const std::exception& e)
+                {
+                    debugW("Exception in OTA code caught");
+                }
+                
             }
-        #endif 
+        #endif
+
+        EVERY_N_SECONDS(5)
+        {
+            #if ENABLE_AUDIO
+                debugI("Mem: %u LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
+                        ESP.getFreeHeap(),
+                        g_FPS, g_Watts, g_Brite, g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            #else
+            debugI("IP: %s, Mem: %u LargestBlk: %u PSRAM Free: %u/%u Buffer: %d/%d LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
+                   WiFi.localIP().toString().c_str(),
+                   ESP.getFreeHeap(),
+                   ESP.getMaxAllocHeap(),
+                   ESP.getFreePsram(), ESP.getPsramSize(),
+                   g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(),
+                   g_FPS, g_Watts, g_Brite, g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            #endif
+        }
 
         delay(10);        
     }

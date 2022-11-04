@@ -28,5 +28,4 @@
 //
 //---------------------------------------------------------------------------
 
-void DrawPlaceholderDisplay();
 void IRAM_ATTR DrawLoopTaskEntry(void *);

@@ -28,13 +28,14 @@
 //
 //---------------------------------------------------------------------------
 
-
 #include "globals.h"
 #include "network.h"
 #include "ledbuffer.h"
 #include "spiffswebserver.h"
 #include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
 
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
@@ -55,10 +56,11 @@ extern double   g_BufferAgeOldest;
 extern double   g_BufferAgeNewest;
 extern uint32_t g_FPS;
 
-extern volatile float gVURatio;		  // Current VU as a ratio to its recent min and max
-extern volatile float gVU;			  // Instantaneous read of VU value
-extern volatile float gPeakVU;		  // How high our peak VU scale is in live mode
-extern volatile float gMinVU;	
+extern volatile float gVURatioFade;
+extern volatile float gVURatio;       // Current VU as a ratio to its recent min and max
+extern volatile float gVU;            // Instantaneous read of VU value
+extern volatile float gPeakVU;        // How high our peak VU scale is in live mode
+extern volatile float gMinVU;   
 
 // processRemoteDebugCmd
 // 
@@ -81,7 +83,7 @@ void processRemoteDebugCmd()
         debugI("Displaying statistics....");
 
         char szBuffer[256];
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, STRAND_LEDS, ESP.getFreeHeap() / 1024);
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
         debugI("%s", szBuffer);
 
 
@@ -125,7 +127,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 {
     debugI(">> RemoteLoopEntry\n");
 
-	g_RemoteControl.begin();
+    g_RemoteControl.begin();
     while (true)
     {
         g_RemoteControl.handle();
@@ -140,6 +142,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 //
 // BUGBUG I'm guessing this is exposed in all builds so anyone can call it and it just returns false if wifi
 // isn't being used, but do we need that?  If no one really needs to call it put the whole thing in the ifdef
+
+#define WIFI_RETRIES 5
 
 bool ConnectToWiFi(uint cRetries)
 {
@@ -161,7 +165,7 @@ bool ConnectToWiFi(uint cRetries)
         //WiFi.disconnect();
         WiFi.begin(cszSSID, cszPassword);
 
-        for (uint i = 0; i < 10; i++)
+        for (uint i = 0; i < WIFI_RETRIES; i++)
         {
             if (WiFi.isConnected())
             {
@@ -181,18 +185,19 @@ bool ConnectToWiFi(uint cRetries)
 
     if (false == WiFi.isConnected())
     {
-        debugI("Giving up on WiFi\n");
+        debugW("Giving up on WiFi\n");
         return false;
     }
+    debugW("Received IP: %s", WiFi.localIP().toString().c_str());
 
     #if INCOMING_WIFI_ENABLED
-    // Start listening for incoming data
-    debugI("Starting/restarting Socket Server...");
-    g_SocketServer.release();
-    if (false == g_SocketServer.begin())
-        throw runtime_error("Could not start socket server!");
+        // Start listening for incoming data
+        debugI("Starting/restarting Socket Server...");
+        g_SocketServer.release();
+        if (false == g_SocketServer.begin())
+            throw runtime_error("Could not start socket server!");
 
-    debugI("Socket server started.");
+        debugI("Socket server started.");
     #endif
 
     #if ENABLE_OTA
@@ -201,17 +206,55 @@ bool ConnectToWiFi(uint cRetries)
     #endif
 
     #if ENABLE_NTP
-    debugI("Setting Clock...");
-    NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+        debugI("Setting Clock...");
+        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
     #endif
 
     #if ENABLE_WEBSERVER
         debugI("Starting Web Server...");
         g_WebServer.begin();
-        debugI("Web Server Started!");
+        debugI("Web Server begin called!");
     #endif
 
-    debugI("Received IP: %s", WiFi.localIP().toString().c_str());
+    #if USEMATRIX
+        //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+    #endif
+
+    /*
+    {
+        WiFiClientSecure secClient;
+
+        secClient.setInsecure();
+
+        Serial.println("\nStarting secure connection to server...");
+        uint32_t start = millis();
+        int r = secClient.connect("google.com", 443, 5000);
+        Serial.printf("Connection took: %lums\n", millis()-start);
+        if(!r) 
+        {
+            Serial.println("Connection failed!");
+        } 
+        else 
+        {
+            Serial.println("Connected!  Sending GET!");
+            secClient.println("GET https://www.google.com/search?q=tsla+stock+quote HTTP/1.0");
+            secClient.println("Host: www.google.com");
+            secClient.println("Connection: close");
+            secClient.println();
+            
+            while (secClient.connected()) 
+            {
+                String line = secClient.readStringUntil('\n');
+                secClient.printf("Data: %s", line.c_str());
+                if (line == "\r") {
+                    Serial.println("headers received");
+                    break;
+                }
+            }
+        }
+        secClient.stop();
+    }
+    */
 
     return true;
 }
@@ -329,9 +372,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
 
-            double dServer = seconds + (micros / (double) MICROS_PER_SECOND);
-            double delta = abs(dServer - AppTime::CurrentTime());
-           
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
                    channel16, 
                    length32, 
@@ -348,8 +388,8 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
             lock_guard<mutex> guard(g_buffer_mutex);
 
-            if (!heap_caps_check_integrity_all(true))
-                debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
+            //if (!heap_caps_check_integrity_all(true))
+            //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
 
             for (int iChannel = 0, channelMask = 1; iChannel < NUM_CHANNELS; iChannel++, channelMask <<= 1)
             {
@@ -406,20 +446,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             {
                 debugW("Nonzero channel for clock not currently supported, but received: %d\n", channel16);
             }
-
-            uint64_t seconds      = ULONGFromMemory(&payloadData[4]);
-            uint64_t micros       = ULONGFromMemory(&payloadData[12]);
-            
-            timeval tvNew;
-            tvNew.tv_sec = seconds;
-            tvNew.tv_usec = micros;
-            
-            timeval tvOld;
-            gettimeofday(&tvOld, nullptr);
-            
-            double dOld = tvOld.tv_sec + (tvOld.tv_usec / (double) MICROS_PER_SECOND);
-            double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
-            auto   delta = abs(dNew - dOld);
 
             return true;
         }
