@@ -32,6 +32,7 @@ jobs:
         pio platform install espressif32 --with-package framework-arduinoespressif32 --with-package tool-esptoolpy
         pio lib -e all-deps install --no-save
         mv .pio/libdeps/all-deps/* lib/
+        pio pkg update
     - name: Copy secrets
       run: cp include/secrets.example.h include/secrets.h
     - name: Build chieftain
