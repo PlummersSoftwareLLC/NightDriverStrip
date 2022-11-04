@@ -29,8 +29,8 @@ jobs:
         pip install --upgrade platformio
     - name: Install dependencies
       run: | 
-        pio pkg install
-        pio pkg update
+        pio pkg install --no-save
+        pio pkg update --no-save
     - name: Copy secrets
       run: cp include/secrets.example.h include/secrets.h
     - name: Build chieftain
