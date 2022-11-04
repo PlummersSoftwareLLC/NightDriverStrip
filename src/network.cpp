@@ -143,6 +143,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 // BUGBUG I'm guessing this is exposed in all builds so anyone can call it and it just returns false if wifi
 // isn't being used, but do we need that?  If no one really needs to call it put the whole thing in the ifdef
 
+#define WIFI_RETRIES 5
+
 bool ConnectToWiFi(uint cRetries)
 {
     #if !ENABLE_WIFI
@@ -163,7 +165,7 @@ bool ConnectToWiFi(uint cRetries)
         //WiFi.disconnect();
         WiFi.begin(cszSSID, cszPassword);
 
-        for (uint i = 0; i < 10; i++)
+        for (uint i = 0; i < WIFI_RETRIES; i++)
         {
             if (WiFi.isConnected())
             {
@@ -189,13 +191,13 @@ bool ConnectToWiFi(uint cRetries)
     debugW("Received IP: %s", WiFi.localIP().toString().c_str());
 
     #if INCOMING_WIFI_ENABLED
-    // Start listening for incoming data
-    debugI("Starting/restarting Socket Server...");
-    g_SocketServer.release();
-    if (false == g_SocketServer.begin())
-        throw runtime_error("Could not start socket server!");
+        // Start listening for incoming data
+        debugI("Starting/restarting Socket Server...");
+        g_SocketServer.release();
+        if (false == g_SocketServer.begin())
+            throw runtime_error("Could not start socket server!");
 
-    debugI("Socket server started.");
+        debugI("Socket server started.");
     #endif
 
     #if ENABLE_OTA
@@ -204,8 +206,8 @@ bool ConnectToWiFi(uint cRetries)
     #endif
 
     #if ENABLE_NTP
-    debugI("Setting Clock...");
-    NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+        debugI("Setting Clock...");
+        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
     #endif
 
     #if ENABLE_WEBSERVER

@@ -25,6 +25,7 @@
 //    Main draw loop and rendering code
 //
 // History:     May-11-2021         Davepl      Commented
+//              Nov-02-2022         Davepl      Broke up into multiple functions
 //
 //---------------------------------------------------------------------------
 
@@ -43,6 +44,7 @@
 #endif
 
 #ifdef USEMATRIX
+#include "ledstripgfx.h"
 #include "ledmatrixgfx.h"
 #endif
 
@@ -56,7 +58,7 @@ extern std::mutex         g_buffer_mutex;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
-double                    g_FreeDrawTime = 0.0;
+double volatile           g_FreeDrawTime = 0.0;
 
 extern uint32_t           g_FPS;
 extern AppTime            g_AppTime;
@@ -99,6 +101,8 @@ void MatrixPreDraw()
                 string output = "FPS: " + std::to_string(g_FPS);
                 LEDMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 -  (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255,255,255), rgb24(0,0,0), output.c_str());    
             #endif
+
+            GFXBase * graphics = (GFXBase *)(*g_pEffectManager)[0].get();
 
             LEDMatrixGFX * pMatrix = (LEDMatrixGFX *) graphics;
             LEDMatrixGFX::MatrixSwapBuffers(g_pEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
@@ -148,7 +152,7 @@ void MatrixPreDraw()
 //
 // Draws forom WiFi color data if available, returns pixels drawn this frame
 
-uint16_t WiFiDraw(double frameStartTime)        
+uint16_t WiFiDraw()        
 {
     uint16_t pixelsDrawn = 0;
 
@@ -190,10 +194,8 @@ uint16_t WiFiDraw(double frameStartTime)
         {
             auto pOldest = g_apBufferManager[iChannel]->PeekOldestBuffer();
             auto pNewest = g_apBufferManager[iChannel]->PeekNewestBuffer();                    
-            debugW("FOO");
-            g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
-            g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - frameStartTime;
-            debugV("Clock: %+04.2lf, Oldest: %+04.2lf, Newest: %+04.2lf", frameStartTime, g_BufferAgeOldest, g_BufferAgeNewest);
+            g_BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            g_BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
         }
         else
         {
@@ -209,6 +211,8 @@ uint16_t WiFiDraw(double frameStartTime)
 
 uint16_t LocalDraw()
 {
+    GFXBase * graphics = (GFXBase *)(*g_pEffectManager)[0].get();
+    
     if (nullptr == g_pEffectManager)
     {
         debugW("Drawing before g_pEffectManager is ready, so delaying...");
@@ -224,6 +228,7 @@ uint16_t LocalDraw()
             g_pEffectManager->Update(); // Draw the current built in effect
 
             #if USEMATRIX
+                auto spectrum = GetSpectrumAnalyzer(0);
                 if (g_pEffectManager->IsVUVisible())
                     ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
             #endif
@@ -262,13 +267,9 @@ void ShowStrip(uint16_t numToShow)
                 FastLED[i].setLeds(pStrip->leds, numToShow);
             }
 
-            int brite = calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW);
-            debugV("Calling FastLED::show for %d/%d total at brightness of %d/255 on strip at %d FPS", 
-                numToShow, NUM_LEDS, brite, FastLED.getFPS());
-            FastLED.show((brite * g_Fader) / 256);
-            debugV("Back from FastLED::show");
+            FastLED.show(g_Fader);
 
-            g_FPS = FastLED.getFPS(); //     1.0/elapsed;    
+            g_FPS = FastLED.getFPS(); 
             g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
             g_Watts = calculate_unscaled_power_mW( ((LEDStripGFX *)(*g_pEffectManager)[0].get())->leds, numToShow ) / 1000;    // 1000 for mw->W
         }
@@ -295,30 +296,33 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
             double elapsed = g_AppTime.CurrentTime() - frameStartTime;
             if (elapsed < minimumFrameTime)
             {
-                g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed) * MICROS_PER_SECOND);
-                delay(g_FreeDrawTime / MICROS_PER_MILLI);
+                g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed));
+                delay(g_FreeDrawTime * MILLIS_PER_SECOND);
             }
         }
         else if (wifiPixelsDrawn > 0)
         {
-            if (!g_apBufferManager[0]->IsEmpty())
+            // Sleep up to 1/20th second, depending on how far away the next frame we need to service is
+
+            double t = 0.05;         
+            for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
             {
-                if (g_BufferAgeOldest > 0)
-                {
-                    // Cap the amount we wait at 0.05 seconds, ot about 20 times per secon, until we're
-                    // sure that we never "miss" a pending frame
-                    g_FreeDrawTime = std::min(0.05, g_BufferAgeOldest);
-                    delay(g_FreeDrawTime * MILLIS_PER_SECOND);
-                }
-                else
-                {
-                    g_FreeDrawTime = 0;
-                }
+                auto pOldest = g_apBufferManager[iChannel]->PeekOldestBuffer();
+                if (pOldest)
+                    t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
             }
+
+            g_FreeDrawTime = t;
+            if (g_FreeDrawTime > 0.0)
+                delay(g_FreeDrawTime * MILLIS_PER_SECOND);
+            else
+                g_FreeDrawTime = 0.0;
+
         }
         else
         {
             // Nothing drawn this pass - check back soon
+            g_FreeDrawTime = .001;
             delay(1);
         }
 
@@ -356,7 +360,9 @@ void ShowOnboardRGBLED()
 void PrepareOnboardPixel()
 {
     #ifdef ONBOARD_PIXEL_POWER
-        g_ledSinglePixel = &FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, 3*144);
+        g_ledSinglePixel = &FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(&g_SinglePixel, 1);
+        pinMode(ONBOARD_PIXEL_POWER, OUTPUT);
+        digitalWrite(ONBOARD_PIXEL_POWER, HIGH);
     #endif
 }
 
@@ -366,12 +372,7 @@ void ShowOnboardPixel()
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
     #ifdef ONBOARD_PIXEL_POWER
-        // Turn on the power to the pixel
-        pinMode(ONBOARD_PIXEL_POWER, OUTPUT);
-        digitalWrite(ONBOARD_PIXEL_POWER, HIGH);
-        // Set the color to be the same as the first LED of Channel 0
         g_SinglePixel = FastLED[0].leds()[0];
-        g_ledSinglePixel->show(&g_SinglePixel, 1, 255);     
     #endif
 }
 
@@ -417,7 +418,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #endif
 
         if (WiFi.isConnected())
-            wifiPixelsDrawn = WiFiDraw(frameStartTime);
+            wifiPixelsDrawn = WiFiDraw();
 
         // If we didn't draw now, and it's been a while since we did, and we have at least one local effect, then draw the local effect instead
         
@@ -434,8 +435,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
         // is on LED #0 of Channel #0.
 
-        ShowOnboardRGBLED();
         ShowOnboardPixel();
+        ShowOnboardRGBLED();
 
         DelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn);
 
