@@ -182,7 +182,7 @@ extern volatile float gPeakVU; // How high our peak VU scale is in live mode
 extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
 extern double g_Brite;
-    
+
 //
 // Task Handles to our running threads
 //
@@ -733,9 +733,6 @@ void setup()
             pinMode(LED_PIN7, OUTPUT);
         #endif
            
-            //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
-            //digitalWrite(35, 0);
-
         #ifdef POWER_LIMIT_MW
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
             #ifdef LED_BUILTIN

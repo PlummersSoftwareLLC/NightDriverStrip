@@ -458,7 +458,7 @@ class SampleBuffer
             i2s_set_pin(I2S_NUM_0, &pin_config);
             i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
-        #elif TTGO || MESMERIZER
+        #elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
 
             i2s_config_t i2s_config;
             i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);

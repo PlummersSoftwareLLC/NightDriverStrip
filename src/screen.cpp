@@ -364,14 +364,15 @@ void CurrentEffectSummary(bool bRedraw)
         Screen::fillRect(xHalf + iPixel * xSize, Screen::TopMargin, xSize - 1, ySizeVU, color16);
     }
 
-    // Draw the spectrum
+    // Draw the spectrum analyzer bars
 
     int spectrumTop = Screen::TopMargin + ySizeVU + 1; // Start at the bottom of the VU meter
+    int bandHeight = Screen::screenHeight() - spectrumTop - Screen::BottomMargin;
+
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
     {
         CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
         int bandWidth = Screen::screenWidth() / NUM_BANDS;
-        int bandHeight = Screen::screenHeight() - spectrumTop - Screen::BottomMargin;
         auto color16 = Screen::to16bit(bandColor);
         auto topSection = bandHeight - bandHeight * g_peak2Decay[iBand];
         if (topSection > 0)
@@ -380,6 +381,11 @@ void CurrentEffectSummary(bool bRedraw)
         assert(bandHeight * val <= bandHeight);
         Screen::fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }
+    
+    // Draw horizontal lines so the bars look like they are made of segments
+
+    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += 5)
+        Screen::drawLine(0, iLine, Screen::screenWidth(), iLine, BLACK16);
 #endif
 }
 

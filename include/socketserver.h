@@ -59,18 +59,20 @@ bool ProcessIncomingData(uint8_t * payloadData, size_t payloadLength);          
 // Response data sent back to server ever time we receive a packet
 struct SocketResponse
 {
-    uint32_t size;              // 4
-    uint32_t flashVersion;      // 4
-    double   currentClock;      // 8
-    double   oldestPacket;      // 8
-    double   newestPacket;      // 8
-    double   brightness;        // 8
-    double   wifiSignal;        // 8
-    uint32_t bufferSize;        // 4
-    uint32_t bufferPos;         // 4
-    uint32_t fpsDrawing;        // 4    
-    uint32_t watts;             // 4
+    uint32_t    size;              // 4
+    uint32_t    flashVersion;      // 4
+    double      currentClock;      // 8
+    double      oldestPacket;      // 8
+    double      newestPacket;      // 8
+    double      brightness;        // 8
+    double      wifiSignal;        // 8
+    uint32_t    bufferSize;        // 4
+    uint32_t    bufferPos;         // 4
+    uint32_t    fpsDrawing;        // 4    
+    uint32_t    watts;             // 4
 };
+
+static_assert(sizeof(double) == 8);
 
 // Two things must be true for this to work and interop with the C# side:  doubles must be 8 bytes, not the default
 // of 4 for Arduino.  So that must be set in 'platformio.ini', and you must ensure that you align things such that
@@ -352,41 +354,7 @@ public:
                 // Read the rest of the data
                 uint16_t command16   = WORDFromMemory(&_pBuffer.get()[0]);
 
-                if (command16 == WIFI_COMMAND_VU)
-                {
-                    if (false == ReadUntilNBytesReceived(new_socket, WIFI_COMMAND_VU_SIZE))
-                    {
-                        debugW("Error in getting data for VU command\n");
-                        close(new_socket);
-                        ResetReadBuffer();
-                        return false;
-                    }
-                    if (true == ProcessIncomingData(_pBuffer.get(), WIFI_COMMAND_VU_SIZE))
-                    {
-                        assert(WIFI_COMMAND_VU_SIZE == _cbReceived);
-                        ResetReadBuffer();
-                    }
-                    else
-                        return false;
-                }
-                else if (command16 == WIFI_COMMAND_CLOCK)
-                {
-                    if (false == ReadUntilNBytesReceived(new_socket, WIFI_COMMAND_CLOCK_SIZE))
-                    {
-                        debugW("Error in getting data for CLOCK command\n");
-                        close(new_socket);
-                        ResetReadBuffer();
-                        return false;
-                    }
-                    if (true == ProcessIncomingData(_pBuffer.get(), WIFI_COMMAND_CLOCK_SIZE))
-                    {
-                        assert(_cbReceived == WIFI_COMMAND_CLOCK_SIZE);
-                        ResetReadBuffer();
-                    }
-                    else
-                        return false;   
-                }
-                else if (command16 == WIFI_COMMAND_PIXELDATA64)
+                if (command16 == WIFI_COMMAND_PIXELDATA64)
                 {
                     // We know it's pixel data, so we do some validation before calling Process.
 
@@ -395,7 +363,7 @@ public:
                     uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
                     uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
 
-                    debugV("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
+                    debugW("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
 
                     size_t totalExpected = EXPANDED_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
                     if (totalExpected > EXPECTED_EXPANDED_PACKET_SIZE)

@@ -159,7 +159,7 @@ uint16_t WiFiDraw()
     timeval tv;
     gettimeofday(&tv, nullptr);
 
-    std::lock_guard<std::mutex> guard(g_buffer_mutex);
+    lock_guard<mutex> guard(g_buffer_mutex);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
     {
@@ -207,7 +207,7 @@ uint16_t WiFiDraw()
 
 // LocalDraw
 // 
-// Draws from effets table rather than from WiFi data
+// Draws from effets table rather than from WiFi data.  Returns the number of LEDs rendered.
 
 uint16_t LocalDraw()
 {
@@ -232,12 +232,17 @@ uint16_t LocalDraw()
                 if (g_pEffectManager->IsVUVisible())
                     ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
             #endif
+            return NUM_LEDS;
         }
         else
         {
             debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros()-g_msLastWifiDraw) / (double) MICROS_PER_SECOND);
+            // It's important to return 0 when you do not draw so that the caller knows we did not
+            // render any pixels, and we can/should wait until the next frame.  Otherwise the caller might
+            // draw the strip needlessly, which can take significant time.
+            return 0;
         }
-        return NUM_LEDS;
+        
     }
     return 0;
 }
