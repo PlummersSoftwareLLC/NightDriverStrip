@@ -406,6 +406,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                             debugV("Updating existing buffer");
                             if (!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
                                 return false;
+                            g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                             bDone = true;
                         }
                     }
@@ -415,6 +416,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                         auto pNewBuffer = g_apBufferManager[iChannel]->GetNewBuffer();
                         if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                             return false;
+                        g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                     }
                 }
             }
@@ -423,6 +425,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
         case WIFI_COMMAND_VU:
         {
+            debugW("Deprecated WIFI_COMMAND_VU received.");
             uint32_t vu32 = payloadData[5] << 24 | payloadData[4] << 16 | payloadData[3] << 8 | payloadData[2];
             debugV("Incoming VU: %u", vu32);
             return true;
@@ -434,6 +437,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
         case WIFI_COMMAND_CLOCK:
         {
+            debugW("Deprecated WIFI_COMMAND_CLOCK received.");
             if (payloadLength != WIFI_COMMAND_CLOCK_SIZE)
             {
                 debugW("Incorrect packet size for clock command received.  Expected %d and got %d\n", WIFI_COMMAND_CLOCK_SIZE, payloadLength);

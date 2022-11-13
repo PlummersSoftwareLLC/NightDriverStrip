@@ -557,7 +557,7 @@ void setup()
     extern TFT_eSPI * g_pDisplay;
 
     g_pDisplay->init();
-    g_pDisplay->setRotation(1);
+    g_pDisplay->setRotation(3);
     g_pDisplay->fillScreen(TFT_GREEN);
 #endif
 
