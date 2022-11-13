@@ -173,9 +173,10 @@ void BasicInfoSummary(bool bRedraw)
 
     // Data Status Line 4
 
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf", 
-        g_BufferAgeOldest, 
-        g_BufferAgeNewest);
+    snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+06.2lf-%+06.2lf", 
+        min(99.99, g_BufferAgeOldest), 
+        min(99.99, g_BufferAgeNewest)
+    );
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
     Screen::println(szBuffer);
 
