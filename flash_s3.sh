@@ -1,7 +1,7 @@
 
-pio run -t nobuild -t upload --upload-port 192.168.8.4   &
+pio run -t nobuild -t upload --upload-port 192.168.8.36   &
 pio run -t nobuild -t upload --upload-port 192.168.8.5   &
-pio run -t nobuild -t upload --upload-port 192.168.8.6   &
+pio run -t nobuild -t upload --upload-port 192.168.8.37   &
 pio run -t nobuild -t upload --upload-port 192.168.8.31  &
 pio run -t nobuild -t upload --upload-port 192.168.8.70  &
 pio run -t nobuild -t upload --upload-port 192.168.8.26  &

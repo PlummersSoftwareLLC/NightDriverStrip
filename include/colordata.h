@@ -35,5 +35,4 @@ extern const CRGBPalette256 vuPaletteGreen;
 extern const CRGBPalette256 vuPaletteBlue;    
 extern const CRGBPalette256 spectrumBasicColors;
 extern const CRGBPalette256 bluesky_pal;
-
-extern TProgmemRGBGradientPalette_byte vu_gpGreen[];
+extern const TProgmemRGBGradientPalette_byte vu_gpGreen[];

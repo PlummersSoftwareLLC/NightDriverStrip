@@ -111,6 +111,17 @@ void processRemoteDebugCmd()
         debugI("%s", szBuffer);
         #endif
 
+        // Print out a buffer log with timestamps and deltas 
+        
+        for (size_t i = 0; i < g_apBufferManager[0]->Depth(); i++)
+        {
+            auto pBufferManager = g_apBufferManager[0].get();
+            std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
+            double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
+            debugI("%s", szBuffer);
+        }
+
     }
 }
 

@@ -155,6 +155,7 @@
 // to drive them, but otherwise we do not use or include NeoPixelBus
 
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
+#include <ESPmDNS.h>
 
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "socketserver.h"                       // our socket server for incoming
@@ -326,6 +327,10 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
     debugI(">> NetworkHandlingLoopEntry\n");
 
+    if(!MDNS.begin("esp32")) {
+        Serial.println("Error starting mDNS");
+        return;
+    }
     for (;;)
     {
         /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart

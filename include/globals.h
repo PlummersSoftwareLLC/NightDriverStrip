@@ -73,6 +73,7 @@
 //              Oct-30-2022  v031       Davepl      Screen cleanup, core assignments moved around
 //              Oct-30-2022  v032       Davepl      Better wait code, core assignments
 //              Oct-30-2022  v033       Davepl      Fixed mistiming bug when no draw was ready
+//              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //
 //---------------------------------------------------------------------------
 
@@ -82,9 +83,9 @@
 // FLASH_VERSION==20
 // FLASH_VERSION_NAME=="v020"
 //
-// If you know a cleaner way, please improve this!
+// BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         33    // Update ONLY this to increment the version number
+#define FLASH_VERSION         34    // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -157,18 +158,16 @@
 // Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 
-#define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
+#define DRAWING_CORE            1      // Must be core 1 or it doesn't run with SmartMatrix
 #define NET_CORE                0
-#define AUDIO_CORE              0
+#define AUDIO_CORE              1
 #define AUDIOSERIAL_CORE        0
 #define SCREEN_CORE             0
 #define DEBUG_CORE              0
-#define SOCKET_CORE             1
+#define SOCKET_CORE             0
 #define REMOTE_CORE             0
 
-
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
-
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <Arduino.h>
@@ -461,7 +460,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   39
     #define INPUT_PIN       36
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW  (5 * 5 * 1000 *)         // Expects at least a 5V, 5A supply
+    #define POWER_LIMIT_MW  (5 * 8 * 1000)         // Expects at least a 5V, 8A supply
 
     #define NOISE_CUTOFF   1000
     #define NOISE_FLOOR    1000.0f

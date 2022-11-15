@@ -53,7 +53,8 @@ extern double g_BufferAgeOldest;
 // I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
 // with make_shared<> so I had to provide this allocator instead.
 //
-// When enabled, this puts all of the LEDBuffers in PSRAM.
+// When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
+// of them is still in base ram.
 
 template <typename T>
 class psram_allocator
@@ -354,6 +355,15 @@ class LEDBufferManager
             return nullptr; 
         return _ppBuffers[_iLastBuffer];
     }
+
+    const std::shared_ptr<LEDBuffer> operator[](size_t index) const
+    {
+        if (IsEmpty())
+            return nullptr; 
+        size_t i = (_iLastBuffer + index) % _cBuffers;
+        return _ppBuffers[i];
+    }
+
 };
 
 
