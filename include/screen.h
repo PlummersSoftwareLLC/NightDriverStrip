@@ -308,19 +308,19 @@ class Screen
 
     static void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
     {
-        #if USE_M5DISPLAY || USE_OLED || USE_TFTSPI
+        #if USE_M5DISPLAY || USE_TFTSPI
             g_pDisplay->fillRect(x, y, w, h, color);
-        #elif USE_SCREEN
+        #elif USE_SCREEN || USE_OLED
             g_pDisplay->drawBox(x, y, w, h);
         #endif
     }
 
     static void drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t color)
     {
-        #if USE_M5DISPLAY || USE_OLED 
+        #if USE_M5DISPLAY || USE_TFTSPI
             g_pDisplay->drawLine(x0, y0, x1, y1, color);
-        #elif USE_TFTSPI || USE_M5DISPLAY
-            // BUGBUG (todo)
+        #elif USE_OLED 
+            g_pDisplay->drawLine(x0, y0, x1, y1);
         #elif USE_SCREEN
             // BUGBUG (todo)
         #endif
