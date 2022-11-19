@@ -561,6 +561,9 @@ void setup()
     debugI("Initializing TFTSPI");
     extern TFT_eSPI * g_pDisplay;
 
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, 128);
+
     g_pDisplay->init();
     g_pDisplay->setRotation(3);
     g_pDisplay->fillScreen(TFT_GREEN);

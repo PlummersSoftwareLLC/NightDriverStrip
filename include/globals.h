@@ -466,7 +466,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NOISE_FLOOR    1000.0f
 
     #define TOGGLE_BUTTON_1 0
-    #define USE_SCREEN      0
 
 #elif TTGO
 
@@ -679,7 +678,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
 
-    #define POWER_LIMIT_MW (300 * 1000)           // 300W - modify to suit your supply and setup
+    #define POWER_LIMIT_MW (5000)                
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
 

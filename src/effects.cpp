@@ -652,7 +652,8 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif LEDSTRIP
 
-        new StatusEffect(CRGB::White)
+        //new StatusEffect(CRGB::White)
+        new PaletteEffect(RainbowColors_p)
 
 #elif HOODORNAMENT
 

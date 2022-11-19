@@ -22,7 +22,10 @@
 //
 // Description:
 //
-//    Generalizes drawing to various different screens
+//    Generalizes drawing to various different screens.  For example,
+//    drawing a line accepts a color in some cases, but not others, and
+//    it depends on what display you are compiling for.  This is a bit
+//    of an abstraction layer on those various devices.
 //
 // History:     Dec-10-2022         Davepl      Created
 //
