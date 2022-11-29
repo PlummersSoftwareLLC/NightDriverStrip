@@ -154,6 +154,29 @@ class MusicStar : public Star
 
 };
 float MusicStar::_baseHue = 0.0f;
+
+
+class MusicPulseStar : public Star
+{
+    public:
+
+    MusicPulseStar(const CRGBPalette256 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 0.0, double size = 0.0)
+      : Star(palette, blendType, maxSpeed, size)
+    {
+
+    }
+
+    virtual ~MusicPulseStar()
+    {
+    }
+
+    virtual float PreignitionTime() const { return 0.00f;  }
+    virtual float IgnitionTime()    const { return 0.00f; }
+    virtual float HoldTime()        const { return 1.00f;  }
+    virtual float FadeTime()        const { return 2.00f; } 
+    virtual double GetStarSize()    const { return 1 + _objectSize * gVURatio; }
+};
+
 #endif
 
 class BubblyStar : public Star
@@ -310,26 +333,7 @@ class HotWhiteStar : public Star
     }      
 };
 
-class MusicPulseStar : public Star
-{
-    public:
 
-    MusicPulseStar(const CRGBPalette256 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 0.0, double size = 0.0)
-      : Star(palette, blendType, maxSpeed, size)
-    {
-
-    }
-
-    virtual ~MusicPulseStar()
-    {
-    }
-
-    virtual float PreignitionTime() const { return 0.00f;  }
-    virtual float IgnitionTime()    const { return 0.00f; }
-    virtual float HoldTime()        const { return 1.00f;  }
-    virtual float FadeTime()        const { return 2.00f; } 
-    virtual double GetStarSize()    const { return 1 + _objectSize * gVURatio; }
-};
 
 /*
 template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
@@ -444,11 +448,13 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         {
             float prob = _newStarProbability;
 
+#if ENABLE_AUDIO
             if (_musicFactor != 1.0)
             {
                 // 
                 prob = prob * (gVURatio - 0.5) * _musicFactor; 
-            }   
+            }
+#endif
 
             if (randomDouble(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
             {

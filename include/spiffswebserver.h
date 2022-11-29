@@ -137,8 +137,12 @@ class CSPIFFSWebServer
         auto j = response->getRoot();
 
         j["LED_FPS"]               = g_FPS;
+#if ENABLE_AUDIOSERIAL
         j["SERIAL_FPS"]            = g_serialFPS;
+#endif
+#if ENABLE_AUDIO
         j["AUDIO_FPS"]             = g_AudioFPS;
+#endif
 
         j["HEAP_SIZE"]             = ESP.getHeapSize();
         j["HEAP_FREE"]             = ESP.getFreeHeap();

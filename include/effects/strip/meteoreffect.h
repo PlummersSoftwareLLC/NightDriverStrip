@@ -131,8 +131,10 @@ public:
         for (int i = 0; i < meteorCount; i++)
         {
             float spd = speed[i];
+#if ENABLE_AUDIO
             if (gVURatio > 1.0)
                 spd *= gVURatio;
+#endif
 
             iPos[i] = (bLeft[i]) ? iPos[i]-spd : iPos[i]+spd;
             if (iPos[i]< meteorSize)
