@@ -330,9 +330,9 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
         new GhostWave("WaveOut", &RainbowColors_p, 0, 0),
 
-        new SpectrumAnalyzerEffect("Spectrum",   false, spectrumBasicColors, 100, 0, 2.0, 2.0),
-        new SpectrumAnalyzerEffect("USA",        false, USAColors_p,         0),
-        new SpectrumAnalyzerEffect("Spectrum++", false, spectrumBasicColors, 0, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum",   false, NUM_BANDS, spectrumBasicColors, 100, 0, 2.0, 2.0),
+        new SpectrumAnalyzerEffect("USA",        false, NUM_BANDS, USAColors_p,         0),
+        new SpectrumAnalyzerEffect("Spectrum++", false, NUM_BANDS, spectrumBasicColors, 0, 70, -1.0, 3.0),
         new WaveformEffect("WaveForm", &RainbowColors_p, 8),
         new GhostWave("GhostWave", &RainbowColors_p, 0, 0,  false),
 
