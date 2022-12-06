@@ -84,7 +84,7 @@ float g_peak2DecayRate = 1.0f;
         0.1f, 0.2f, 0.3f, 0.3f, 0.4f, 0.5f, 0.6f, 0.75f
     };
 #else
-    static_assert(NUM_BANDS == 16);
+    static_assert(NUM_BANDS <= 16);
     const int cutOffsBand[16] =
     {
         25,   100, 200, 300, 400, 630, 800, 1000, 1200, 1600, 2500, 4000, 6300, 8000, 10000, 12000

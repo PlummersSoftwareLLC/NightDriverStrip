@@ -57,12 +57,12 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual ParticleSystemEffect<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
-    const CRGBPalette256 & _Palette;
+    const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
     
   public:
 
-    InsulatorSpectrumEffect(const char * pszName, const CRGBPalette256 & Palette)
+    InsulatorSpectrumEffect(const char * pszName, const CRGBPalette16 & Palette)
       : LEDStripEffect(pszName),
         BeatEffectBase(0.25, 1.75, .25),
         ParticleSystemEffect<SpinningPaletteRingParticle>(pszName),
@@ -180,8 +180,9 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     uint8_t   _colorOffset;
     uint16_t  _scrollSpeed;
     uint8_t   _fadeRate;
+    uint8_t   _numBars;
 
-    CRGBPalette256 _palette;
+    const CRGBPalette16 _palette;
     float _peak1DecayRate;
     float _peak2DecayRate;
 
@@ -195,18 +196,60 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return _fadeRate != 0;
     }
 
-    // DrawBand
+    // DrawBar
     //
-    // Draws the bar graph rectangle for a bar and then the white line on top of it
+    // Draws the bar graph rectangle for a bar and then the white line on top of it.  Interpolates odd bars when you
+    // have twice as many bars as bands.
 
-    void DrawBand(uint8_t iBand, CRGB baseColor)
+    void DrawBar(const uint8_t iBar, CRGB baseColor)
     {
         auto pGFXChannel = _GFX[0];
+        int value, value2;
 
-        int value  = g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-        int value2 = g_peak2Decay[iBand] *  pGFXChannel->height();
+        static_assert(!(NUM_BANDS & 1));     // We assume an even number of bars because we peek ahead from an odd one below
 
-        debugV("Band: %d, Value: %f\n", iBand, g_peak1Decay[iBand] );
+        int iBand = ::map(iBar, 0, _numBars, 0, NUM_BANDS);
+        int iNextBand = (iBand + 1) % NUM_BANDS;
+
+        if (_numBars >= NUM_BANDS * 4)
+        {
+            // Interpolate across four bars
+
+            if (iBar % 4 == 0)
+            {
+                value  = g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
+                value2 = g_peak2Decay[iBand] *  pGFXChannel->height();            
+            }
+            else if (iBar % 4 == 1)
+            {
+                value  = (g_peak1Decay[iBand] * 3 + g_peak1Decay[iNextBand] * 1 ) / 4 * (pGFXChannel->height() - 1);
+                value2 = (g_peak2Decay[iBand] * 3 + g_peak2Decay[iNextBand] * 1 ) / 4 *  pGFXChannel->height();            
+            }
+            else if (iBar % 4 == 2)
+            {
+                value  = (g_peak1Decay[iBand] * 2 + g_peak1Decay[iNextBand] * 2 ) / 4 * (pGFXChannel->height() - 1);
+                value2 = (g_peak2Decay[iBand] * 2 + g_peak2Decay[iNextBand] * 2 ) / 4 *  pGFXChannel->height();            
+            }
+            else if (iBar % 4 == 3)
+            {
+                value  = (g_peak1Decay[iBand] * 1 + g_peak1Decay[iNextBand] * 3) / 4 * (pGFXChannel->height() - 1);
+                value2 = (g_peak2Decay[iBand] * 1 + g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();            
+            }
+        }
+        else if (_numBars > NUM_BANDS && (iBar % 2 == 1))
+        {   
+            // For odd bars, average the bars to the left and right of this one 
+            value  = ((g_peak1Decay[iBand] + g_peak1Decay[iNextBand]) / 2) * (pGFXChannel->height() - 1);
+            value2 = ((g_peak2Decay[iBand] + g_peak2Decay[iNextBand]) / 2) *  pGFXChannel->height();            
+        }
+        else
+        {
+            // One to one case
+            value  = g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
+            value2 = g_peak2Decay[iBand] *  pGFXChannel->height();            
+        }
+
+        debugV("Band: %d, Value: %f\n", iBar, g_peak1Decay[iBar] );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
@@ -214,16 +257,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         if (value2 > pGFXChannel->height())
             value2 = pGFXChannel->height();
 
-        int bandWidth = pGFXChannel->width() / NUM_BANDS;
-        int xOffset   = iBand * bandWidth;
+        int barWidth  = pGFXChannel->width() / _numBars;
+        int xOffset   = iBar * barWidth;
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
     
-
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
-            for (int x = xOffset; x < xOffset + bandWidth; x++)
-                graphics()->leds[graphics()->xy(x,y)] = baseColor;
-
+            for (int x = xOffset; x < xOffset + barWidth; x++)
+                graphics()->setPixel(x, y, baseColor);
+        
         const int PeakFadeTime_ms = 1000;
 
         CRGB colorHighlight = CRGB(CRGB::White);
@@ -242,20 +284,22 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         // if decay rate is less than zero we interpret that here to mean "don't draw it at all".  
 
         if (_peak1DecayRate >= 0.0f)
-            pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + bandWidth - 1, max(0, yOffset-1), colorHighlight);
+            pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
     }
 
   public:
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
                            bool                   bShowVU,
-                           const CRGBPalette256   palette = spectrumBasicColors, 
+                           int                    cNumBars = 16,
+                           const CRGBPalette16  & palette = spectrumBasicColors, 
                            uint16_t           scrollSpeed = 0, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
         : LEDStripEffect(pszFriendlyName),
           _bShowVU(bShowVU),
+          _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
           _fadeRate(fadeRate),
@@ -266,13 +310,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     }
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
-                           bool                   bShowVU,    
+                           bool                   bShowVU, 
+                           int                    cNumBars,
                            CRGB                 baseColor, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 2.0,
                            float           peak2DecayRate = 2.0)
         : LEDStripEffect(pszFriendlyName), 
           _bShowVU(bShowVU),        
+          _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(0), 
           _fadeRate(fadeRate),
@@ -306,21 +352,18 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         if (_bShowVU)
             DrawVUMeter(pGFXChannel, 0);
         
-        for (int i = 0; i < NUM_BANDS; i++)
+        for (int i = 0; i < _numBars; i++)
         {
             // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one
-
             if (pGFXChannel->IsPalettePaused())
             {
-                DrawBand(i, pGFXChannel->ColorFromCurrentPalette(::map(i, 0, NUM_BANDS, 0, 255)));
+                int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
+                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 255, 255, NOBLEND));
             }
             else
             {
-                DrawBand(i, ColorFromPalette(_palette, 
-                                             (::map(i, 0, NUM_BANDS, 0, 255) + 0 * _colorOffset) % 255, 
-                                             255,
-                                             LINEARBLEND));
-
+                int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
+                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, NOBLEND));
             }
         }
     }
@@ -334,15 +377,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 class WaveformEffect : public LEDStripEffect
 {
   protected:
-    const CRGBPalette256 *    _pPalette = nullptr;
-    uint8_t                   _iColorOffset = 0;
-    uint8_t                   _increment = 0;
-    double                    _iPeakVUy = 0;
-    unsigned long             _msPeakVU = 0;
+    const TProgmemRGBPalette16 * _pPalette = nullptr;
+    uint8_t                      _iColorOffset = 0;
+    uint8_t                      _increment = 0;
+    double                       _iPeakVUy = 0;
+    unsigned long                _msPeakVU = 0;
 
   public:
     
-    WaveformEffect(const char * pszFriendlyName, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0) 
+    WaveformEffect(const char * pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
         : LEDStripEffect(pszFriendlyName)
     {
         _pPalette = pPalette;
@@ -405,7 +448,7 @@ class GhostWave : public WaveformEffect
     int                       _fade     = 0;
   public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette256 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
+    GhostWave(const char * pszFriendlyName = nullptr, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
         : WaveformEffect(pszFriendlyName, pPalette, increment),
           _blur(blur),
           _erase(erase),

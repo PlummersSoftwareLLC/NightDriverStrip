@@ -72,6 +72,8 @@
 //              Oct-03-2022  v030       Davepl      Smoother Draw and support for TFT S3 Feather
 //              Oct-30-2022  v031       Davepl      Screen cleanup, core assignments moved around
 //              Oct-30-2022  v032       Davepl      Better wait code, core assignments
+//              Oct-30-2022  v033       Davepl      Fixed mistiming bug when no draw was ready
+//              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //
 //---------------------------------------------------------------------------
 
@@ -81,9 +83,9 @@
 // FLASH_VERSION==20
 // FLASH_VERSION_NAME=="v020"
 //
-// If you know a cleaner way, please improve this!
+// BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         32   // Update ONLY this to increment the version number
+#define FLASH_VERSION         34    // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -156,18 +158,16 @@
 // Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 
-#define DRAWING_CORE            1       // Must be core 1 or it doesn't run with SmartMatrix
+#define DRAWING_CORE            1      // Must be core 1 or it doesn't run with SmartMatrix
 #define NET_CORE                0
-#define AUDIO_CORE              0
+#define AUDIO_CORE              1
 #define AUDIOSERIAL_CORE        0
 #define SCREEN_CORE             0
 #define DEBUG_CORE              0
-#define SOCKET_CORE             1
+#define SOCKET_CORE             0
 #define REMOTE_CORE             0
 
-
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
-
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <Arduino.h>
@@ -383,21 +383,24 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It displays a spectrum analyzer and music visualizer
 
     #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
-    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0  // Accept over the air flash updates
+    #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     
-    #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
-    #define MAX_BUFFERS     20
+    #if SPECTRUM_WROVER_KIT
+        #define LED_PIN0        5
+    #else
+        #define LED_PIN0        26
+    #endif
 
-    #define LED_PIN0        26
     #define NUM_CHANNELS    1
     #define RING_SIZE_0     24    
     #define BONUS_PIXELS    0
@@ -405,21 +408,23 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   16
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       16
+    #define NUM_BANDS       12
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define RESERVE_MEMORY  150000
-    #define IR_REMOTE_PIN   25                    
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 8A supply
+    #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
     #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
+    #define NOISE_FLOOR    100.0f
 
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #define NUM_INFO_PAGES          2
-    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
+    #ifdef SPECTRUM_WROVER_KIT
+    #else 
+        #define NUM_INFO_PAGES          2
+        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
+    #endif
 
 #elif MESMERIZER
 
@@ -442,12 +447,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0
     
-    #if USE_PSRAM
-        #define MAX_BUFFERS     99      // If PSRAM, limit the buffers to something practical and reasonable
-    #else
-        #define MAX_BUFFERS     20
-    #endif
-
     #define NUM_CHANNELS    1
     #define RING_SIZE_0     24    
     #define BONUS_PIXELS    0
@@ -461,13 +460,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   39
     #define INPUT_PIN       36
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
+    #define POWER_LIMIT_MW  (5 * 8 * 1000)         // Expects at least a 5V, 8A supply
 
     #define NOISE_CUTOFF   1000
     #define NOISE_FLOOR    1000.0f
 
     #define TOGGLE_BUTTON_1 0
-    #define USE_SCREEN      0
 
 #elif TTGO
 
@@ -680,7 +678,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
 
-    #define POWER_LIMIT_MW (NUM_LEDS/32 * 1000)        // Assumes 32mA per LED.  Make sure you have appropriate power!
+    #define POWER_LIMIT_MW (INT_MAX)              // Unlimited power for long strips, up to you to limit here or supply enough!
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
 
@@ -979,9 +977,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifdef ENABLE_AUDIO
-#ifndef NUM_BANDS              // How many bands in the spectrum analyzer
-#define NUM_BANDS 16
-#endif
+    #ifndef NUM_BANDS              // How many bands in the spectrum analyzer
+        #define NUM_BANDS 16
+    #endif
 #endif
 
 #ifndef LED_PIN0                // Which pin the LEDs are connected to
@@ -1095,15 +1093,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
 
+    #elif defined(ESP32FEATHERTFT) || defined(PANLEE)
+
+        #define USE_TFTSPI 1                                  // Use TFT_eSPI
+
     #elif defined(WROVERKIT)
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard
 
     #elif defined(TTGO)
-
-        #define USE_TFTSPI 1                                  // Use TFT_eSPI
-
-    #elif defined(ESP32FEATHERTFT)
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
@@ -1207,6 +1205,11 @@ extern DRAM_ATTR const int gRingSizeTable[];
 #endif
 #endif
 
+#ifndef IR_REMOTE_PIN
+#define IR_REMOTE_PIN   25                    
+#endif
+
+
 // Custom WiFi Commands
 //
 // A Wifi packet can contain color data or potentially other info, like a clock.  Or it could be
@@ -1214,9 +1217,9 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // stats and clock are handy for debugging!
 
 #define WIFI_COMMAND_PIXELDATA   0             // Wifi command contains color data for the strip
-#define WIFI_COMMAND_VU          1             // Wifi command to set the current VU reading
-#define WIFI_COMMAND_CLOCK       2             // Wifi command telling us current time at the server
-#define WIFI_COMMAND_PIXELDATA64 3             // Wifi command with color data and 64-bit clock vals
+#define WIFI_COMMAND_VU          1             // Wifi command to set the current VU reading (DEPRECATED)
+#define WIFI_COMMAND_CLOCK       2             // Wifi command telling us current time at the server (DEPRECATED)
+#define WIFI_COMMAND_PIXELDATA64 3             // Wifi command with color data and 64-bit clock vals 
 #define WIFI_COMMAND_STATS       4             // Wifi command to request stats from chip back to server
 #define WIFI_COMMAND_REBOOT      5             // Wifi command to reboot the client chip (that's us!)
 #define WIFI_COMMAND_VU_SIZE     16

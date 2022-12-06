@@ -155,6 +155,7 @@
 // to drive them, but otherwise we do not use or include NeoPixelBus
 
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
+#include <ESPmDNS.h>
 
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "socketserver.h"                       // our socket server for incoming
@@ -182,7 +183,7 @@ extern volatile float gPeakVU; // How high our peak VU scale is in live mode
 extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
 extern double g_Brite;
-    
+
 //
 // Task Handles to our running threads
 //
@@ -326,6 +327,10 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
     debugI(">> NetworkHandlingLoopEntry\n");
 
+    if(!MDNS.begin("esp32")) {
+        Serial.println("Error starting mDNS");
+    }
+    
     for (;;)
     {
         /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
@@ -556,8 +561,11 @@ void setup()
     debugI("Initializing TFTSPI");
     extern TFT_eSPI * g_pDisplay;
 
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, 128);
+
     g_pDisplay->init();
-    g_pDisplay->setRotation(1);
+    g_pDisplay->setRotation(3);
     g_pDisplay->fillScreen(TFT_GREEN);
 #endif
 
@@ -733,9 +741,6 @@ void setup()
             pinMode(LED_PIN7, OUTPUT);
         #endif
            
-            //pinMode(35, OUTPUT); // Provide an extra ground to be used by the mic module
-            //digitalWrite(35, 0);
-
         #ifdef POWER_LIMIT_MW
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
             #ifdef LED_BUILTIN

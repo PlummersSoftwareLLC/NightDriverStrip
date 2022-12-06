@@ -63,11 +63,11 @@ class PaletteEffect : public LEDStripEffect
   public:
 
     PaletteEffect(const CRGBPalette256 & palette, 
-                  float density = 4.0,                
-                  float paletteSpeed = 0.25, 
-                  float ledsPerSecond = 0.1, 
+                  float density = 1.0,                
+                  float paletteSpeed = 1, 
+                  float ledsPerSecond = 0, 
                   float lightSize = 1, 
-                  float gapSize = 0,
+                  float gapSize = 1,
                   TBlendType blend = LINEARBLEND, 
                   bool  bErase = true,
                   float brightness = 1.0)
