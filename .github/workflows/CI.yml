@@ -50,6 +50,8 @@ jobs:
       run: pio run -e m5plusdemo
     - name: Build mesmerizer
       run: pio run -e mesmerizer
+    - name: Build panlee
+      run: pio run -e panlee
     - name: Build spectrum
       run: pio run -e spectrum
     - name: Build umbrella
