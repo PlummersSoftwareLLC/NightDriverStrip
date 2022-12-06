@@ -269,6 +269,8 @@ class TwinkleEffect : public LEDStripEffect
                 size_t i = random(0, NUM_LEDS);
                 if (_GFX[0]->getPixel(i) != CRGB(0,0,0))
                     continue;
+                if (litPixels.end() != find(litPixels.begin(), litPixels.end(), i))
+                    continue;
                 iNew = i;
                 break;
             }

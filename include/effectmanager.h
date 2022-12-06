@@ -178,8 +178,11 @@ public:
         if (color == CRGB(CRGB::White))
             effect = make_shared<ColorFillEffect>(CRGB::White, 1);
         else
+#if ENABLE_AUDIO
             effect = make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-        
+#else
+            effect = make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+#endif
         if (effect->Init(g_pDevices))
         {
             _pRemoteEffect = effect;
