@@ -103,7 +103,7 @@ using namespace std;
 #endif
 
 #ifndef GAINDAMPEN
-#define GAINDAMPEN  1                                     // How slowly brackets narrow in for spectrum bands
+#define GAINDAMPEN  0                                     // How slowly brackets narrow in for spectrum bands
 #define GAINDAMPENMIN 1000                                //   We want the quiet part to adjust quite slowly
 #endif
 
@@ -259,6 +259,15 @@ inline void DecayPeaks()
       g_peak1Decay[iBand] -= min(decayAmount1, g_peak1Decay[iBand]);    
       g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);    
   }
+
+  /* Manual smoothing if desired
+  
+  for (int iBand = 1; iBand < NUM_BANDS - 1; iBand+=2)
+  {
+    g_peak1Decay[iBand] = (g_peak1Decay[iBand-1] + g_peak1Decay[iBand+1]) / 2;
+    g_peak2Decay[iBand] = (g_peak2Decay[iBand-1] + g_peak2Decay[iBand+1]) / 2;
+  }
+  */
 }
  
 // Update the local band peaks from the global sound data.  If we establish a new peak in any band, 
@@ -603,7 +612,7 @@ class SampleBuffer
                 if (iBand > _BandCount-1)
                     iBand = _BandCount-1;
                 if (_vReal[i] > _vPeaks[iBand])
-                    _vPeaks[iBand] = _vReal[i];
+                    _vPeaks[iBand] += _vReal[i];
             }
         }
 

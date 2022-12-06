@@ -393,7 +393,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     
-    #define DEFAULT_EFFECT_INTERVAL     (60*60*24)
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
     #if SPECTRUM_WROVER_KIT
         #define LED_PIN0        5
@@ -408,7 +408,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   16
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       16
+    #define NUM_BANDS       12
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define RESERVE_MEMORY  150000
     #define LED_FAN_OFFSET_BU 6
@@ -678,7 +678,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
 
-    #define POWER_LIMIT_MW (5000)                
+    #define POWER_LIMIT_MW (INT_MAX)              // Unlimited power for long strips, up to you to limit here or supply enough!
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)    
 
@@ -977,9 +977,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifdef ENABLE_AUDIO
-#ifndef NUM_BANDS              // How many bands in the spectrum analyzer
-#define NUM_BANDS 16
-#endif
+    #ifndef NUM_BANDS              // How many bands in the spectrum analyzer
+        #define NUM_BANDS 16
+    #endif
 #endif
 
 #ifndef LED_PIN0                // Which pin the LEDs are connected to
@@ -1093,15 +1093,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
 
+    #elif defined(ESP32FEATHERTFT) || defined(PANLEE)
+
+        #define USE_TFTSPI 1                                  // Use TFT_eSPI
+
     #elif defined(WROVERKIT)
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard
 
     #elif defined(TTGO)
-
-        #define USE_TFTSPI 1                                  // Use TFT_eSPI
-
-    #elif defined(ESP32FEATHERTFT)
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 

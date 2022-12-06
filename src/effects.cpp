@@ -216,8 +216,8 @@ const CRGBPalette256 MagentaColors_p =
         CRGB::LightPink,
         CRGB::Magenta};
 
-const CRGBPalette256 spectrumBasicColors =
-    {
+const CRGBPalette16 spectrumBasicColors =
+{
         CRGB(0xFD0E35), // Red
         CRGB(0xFF8833), // Orange
         CRGB(0xFFEB00), // Middle Yellow
@@ -237,7 +237,7 @@ const CRGBPalette256 spectrumBasicColors =
 };
 
 
-const CRGBPalette256 spectrumAltColors =
+const CRGBPalette16 spectrumAltColors =
 {
         CRGB::Red,
         CRGB::OrangeRed,
@@ -257,7 +257,7 @@ const CRGBPalette256 spectrumAltColors =
         CRGB::Indigo,
 };
 
-const CRGBPalette256 USAColors_p =
+const CRGBPalette16 USAColors_p =
     {
         CRGB::Blue,
         CRGB::Blue,
@@ -496,16 +496,20 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif SPECTRUM
 
-        new GhostWave("GhostWave", &rainbowPalette, 0, 16, false, 40),
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, spectrumAltColors),
-        new GhostWave("GhostWave One", new CRGBPalette256(CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red)), 4),
-        new SpectrumAnalyzerEffect("Spectrum USA", true, USAColors_p, 0),
-        new GhostWave("GhostWave Rainbow", &rainbowPalette, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, rainbowPalette, 50, 70, -1.0, 3.0),
-        new GhostWave("GhostWave Blue", new CRGBPalette256(CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White)), 0),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, rainbowPalette),
-        new GhostWave("GhostWave Rainbow", &rainbowPalette),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 48, CRGB(0,0,4)),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors),
+        new GhostWave("GhostWave", new CRGBPalette16(RainbowColors_p), 0, 16, false, 40),
+        new SpectrumAnalyzerEffect("Spectrum USA", true, 16, USAColors_p, 0),
+        new GhostWave("GhostWave Rainbow", new CRGBPalette16(RainbowColors_p), 8),
+        new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 3.0),
+        new GhostWave("GhostWave Blue", new CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White), 0),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, RainbowColors_p),
+        new GhostWave("GhostWave One", new CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red), 4),
+
+        //new GhostWave("GhostWave Rainbow", &rainbowPalette),
 
 #elif ATOMLIGHT
         new ColorFillEffect(CRGB::White, 1),
@@ -652,8 +656,8 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif LEDSTRIP
 
-        //new StatusEffect(CRGB::White)
-        new PaletteEffect(RainbowColors_p)
+        new StatusEffect(CRGB::White)
+        //new PaletteEffect(RainbowColors_p)
 
 #elif HOODORNAMENT
 

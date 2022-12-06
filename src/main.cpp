@@ -329,8 +329,8 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 
     if(!MDNS.begin("esp32")) {
         Serial.println("Error starting mDNS");
-        return;
     }
+    
     for (;;)
     {
         /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
