@@ -182,7 +182,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     uint8_t   _fadeRate;
     uint8_t   _numBars;
 
-    CRGBPalette16 _palette;
+    const CRGBPalette16 _palette;
     float _peak1DecayRate;
     float _peak2DecayRate;
 
@@ -377,15 +377,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 class WaveformEffect : public LEDStripEffect
 {
   protected:
-    const CRGBPalette16 *    _pPalette = nullptr;
-    uint8_t                   _iColorOffset = 0;
-    uint8_t                   _increment = 0;
-    double                    _iPeakVUy = 0;
-    unsigned long             _msPeakVU = 0;
+    const TProgmemRGBPalette16 * _pPalette = nullptr;
+    uint8_t                      _iColorOffset = 0;
+    uint8_t                      _increment = 0;
+    double                       _iPeakVUy = 0;
+    unsigned long                _msPeakVU = 0;
 
   public:
     
-    WaveformEffect(const char * pszFriendlyName, const CRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
+    WaveformEffect(const char * pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
         : LEDStripEffect(pszFriendlyName)
     {
         _pPalette = pPalette;
@@ -448,7 +448,7 @@ class GhostWave : public WaveformEffect
     int                       _fade     = 0;
   public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const CRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
+    GhostWave(const char * pszFriendlyName = nullptr, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
         : WaveformEffect(pszFriendlyName, pPalette, increment),
           _blur(blur),
           _erase(erase),

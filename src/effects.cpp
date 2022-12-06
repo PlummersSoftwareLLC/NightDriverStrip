@@ -277,7 +277,7 @@ const CRGBPalette16 USAColors_p =
         CRGB::Red,
 };
 
-const CRGBPalette256 rainbowPalette(RainbowColors_p);
+const CRGBPalette16 rainbowPalette(RainbowColors_p);
 
 #if ENABLE_AUDIO
 
@@ -325,16 +325,16 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MESMERIZER
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new PatternQR(),
-        new GhostWave("GhostWave", &rainbowPalette, 0, 24, false),
-        new WaveformEffect("WaveIn", &rainbowPalette, 8),     
-        new GhostWave("WaveOut", &rainbowPalette, 0, 0),
+        new PatternQR(),           
+        new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
+        new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
+        new GhostWave("WaveOut", &RainbowColors_p, 0, 0),
 
-        new SpectrumAnalyzerEffect("Spectrum", false, spectrumBasicColors, 100, 0, 2.0, 2.0),
-        new SpectrumAnalyzerEffect("USA", false, USAColors_p, 0),
+        new SpectrumAnalyzerEffect("Spectrum",   false, spectrumBasicColors, 100, 0, 2.0, 2.0),
+        new SpectrumAnalyzerEffect("USA",        false, USAColors_p,         0),
         new SpectrumAnalyzerEffect("Spectrum++", false, spectrumBasicColors, 0, 70, -1.0, 3.0),
-        new WaveformEffect("WaveForm", &rainbowPalette, 8),
-        new GhostWave("GhostWave", &rainbowPalette),
+        new WaveformEffect("WaveForm", &RainbowColors_p, 8),
+        new GhostWave("GhostWave", &RainbowColors_p, 0, 0,  false),
 
         new PatternRose(),
         new PatternPinwheel(),
@@ -363,8 +363,8 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new PatternPaletteSmear(),
         new PatternCurtain(),
         new PatternGridLights(),
-        new PatternMunch(),
-
+        new PatternMunch()
+        
 #elif UMBRELLA
 
         new FireEffect("Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false),
