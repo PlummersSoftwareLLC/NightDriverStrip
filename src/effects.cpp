@@ -91,6 +91,9 @@ volatile long PatternSubscribers::cViews;
 // Palettes
 //
 // Palettes that are referenced by effects need to be instantiated first
+ 
+const TProgmemRGBPalette16 BlueColors1_p = { CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White };
+const TProgmemRGBPalette16 GhostWaveColors1_p = { CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red };
 
 const CRGBPalette256 BlueColors_p =
     {
@@ -501,13 +504,13 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors),
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors),
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors),
-        new GhostWave("GhostWave", new CRGBPalette16(RainbowColors_p), 0, 16, false, 40),
+        new GhostWave("GhostWave", &RainbowColors_p, 0, 16, false, 40),
         new SpectrumAnalyzerEffect("Spectrum USA", true, 16, USAColors_p, 0),
-        new GhostWave("GhostWave Rainbow", new CRGBPalette16(RainbowColors_p), 8),
+        new GhostWave("GhostWave Rainbow", &RainbowColors_p, 8),
         new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 3.0),
-        new GhostWave("GhostWave Blue", new CRGBPalette16(CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White), 0),
+        new GhostWave("GhostWave Blue", &BlueColors1_p , 0),
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, RainbowColors_p),
-        new GhostWave("GhostWave One", new CRGBPalette16(CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red), 4),
+        new GhostWave("GhostWave One", &GhostWaveColors1_p , 4),
 
         //new GhostWave("GhostWave Rainbow", &rainbowPalette),
 
