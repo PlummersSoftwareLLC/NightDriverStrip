@@ -1,9 +1,9 @@
 # NightDriverStrip
 ![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
 
-<img src="assets/NightDriverLogo-small.png" width="400" />
+![CI](https://raw.githubusercontent.com/PlummersSoftwareLLC/NightDriverStrip/main/assets/NightDriverLogo-small.png =x400)
 
-_Davepl, 9/19/2021_
+Davepl, 9/19/2021_
 
 - See [Discussions](http://github.com/PlummersSoftwareLLC/NightDriverStrip/discussions) for questions and comments.
 - See source code and [COPYING.txt](COPYING.txt) for detailed technical and licensing information including versions.
@@ -21,6 +21,7 @@ The simplest configuration, `DEMO`, assumes you have a single meter strip of 144
 
 ## Getting Started
 I recommend you do the following:
+
 - Copy include/secrets.example.h to include/secrets.h; Set your WiFi SSID and password in include/secrets.h.
 - Build the source code.  In particular, build the `DEMO` configuration. Some pointers on what's needed to do this can be found [below](#build-pointers).
 - Upload the resultant binary to the ESP32
@@ -31,24 +32,26 @@ I recommend you do the following:
 - Connect to the ESP32's web user interface with a browser to its IP address
 
 ## Wifi Setup
-Ensure your WiFi SSID and password are set in include/secrets.h.<br/>
+Ensure your WiFi SSID and password are set in include/secrets.h.  
 Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
 
- - enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
+- enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
+
 ```C++
 #define ENABLE_WIFI 1
 ```
 
 ## Webserver Setup
-To use the built-in webserver, you will need to build and upload the SPIFFS image to your board's flash using platformio. <br/>
-You can do this using the platformio user interface, or using the pio command line tool 
+To use the built-in webserver, you will need to build and upload the SPIFFS image to your board's flash using platformio.  
+You can do this using the platformio user interface, or using the pio command line tool.
 
-```
+```console
 pio run --target buildfs --environment <project name>
 pio run --target uploadfs --environment <project name>
 ```
 
 ## Sample Parts (Plummer's Software LLC Amazon Affiliate Links)
+
 - BTF-Lighting WS2812B Strip, 144 pixels per meter, white: https://amzn.to/3CtZW2g
 - BTF-Lighting WS2812B Strip, 144 pixels per meter, black: https://amzn.to/39ljqcO
 - MakerFocus ESP32 Module with 8M Flash (not PSRAM) and built-in blue OLED: https://amzn.to/3ApdF9H
@@ -93,22 +96,24 @@ Add whatever you want and/or need to make your LED dreams come true.  Fix my blu
 The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
 
 When either the IDE or Core are installed, NightDriverStrip can be built from a command shell by entering the project/repository directory and issuing the following command:
-```
+
+```console
 pio run
 ```
 
 This will build the DEMO config.
 
 Note that the repository CI builds both the DEMO and SPECTRUM configurations. This can be done locally using this command:
-```
+
+```console
 pio run -e demo -e spectrum
 ```
 
 ## Feature Defines
 These defines enable the major features of NightDriverStrip. Define them in platformio.ini's build_flags or in globals.h.
-Note: Some defines are board specific, this is noted below. 
+Note: Some defines are board specific, this is noted below.
 
-| Feature Define | Description | 
+| Feature Define | Description |  
 | - | - |
 | ENABLE_WIFI            | Connect to WiFi |
 | INCOMING_WIFI_ENABLED  | Accepting incoming color data and commands |
@@ -127,10 +132,13 @@ Note: Some defines are board specific, this is noted below.
 | ENABLE_REMOTE          | IR Remote Control | Requires IR Hardware |
 
 example in platformio.ini
-```
+
+```INI
 build_flags   = -DUSE_SCREEN=1
 ```
+
 example in globals.h:
+
 ```C++
 #define ENABLE_WIFI 1
 ```
@@ -138,7 +146,7 @@ example in globals.h:
 ## Time It Takes To Build This Project
 Time to build the SPECTRUM config.  Assumes a clean build after everything has been installed and downloaded.
 
-- AMD 3970 32-cores, 128GB, RAID SSD 
+- AMD 3970 32-cores, 128GB, RAID SSD
 -> [davepl 09/19/2021] 12.93 seconds (Running Under WSL)
 
 - AMD 5950X 16-cores, 64GB, SSD
