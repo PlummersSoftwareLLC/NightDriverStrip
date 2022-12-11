@@ -1,0 +1,11 @@
+# MD013/line-length - Line length
+MD013: false
+
+# MD022/blanks-around-headings/blanks-around-headers: Headings should be surrounded by blank lines
+MD022: false
+
+# MD034/no-bare-urls
+MD034: false
+
+# MD041/first-line-heading/first-line-h1 - First line in a file should be a top-level heading
+MD041: false
