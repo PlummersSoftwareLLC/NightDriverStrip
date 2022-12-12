@@ -67,6 +67,7 @@ extern volatile float gMinVU;
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
+#if ENABLE_WIFI
 void processRemoteDebugCmd() 
 {
     String str = Debug.getLastCommand();
@@ -124,6 +125,7 @@ void processRemoteDebugCmd()
 
     }
 }
+#endif
 
 // RemoteLoopEntry
 //
@@ -150,18 +152,18 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 // ConnectToWiFi
 //
 // Connect to the pre-configured WiFi network.  
-//
-// BUGBUG I'm guessing this is exposed in all builds so anyone can call it and it just returns false if wifi
-// isn't being used, but do we need that?  If no one really needs to call it put the whole thing in the ifdef
 
+#if ENABLE_WIFI
 #define WIFI_RETRIES 5
 
 bool ConnectToWiFi(uint cRetries)
 {
-    #if !ENABLE_WIFI
-        return false;
-    #endif
-
+    // Already connected, Go no further.
+    if (WiFi.isConnected())
+    {
+            return true;
+    }
+    
     debugI("Setting host name to %s...", cszHostname);
 
 #if USE_WIFI_MANAGER
@@ -189,11 +191,12 @@ bool ConnectToWiFi(uint cRetries)
             }
         }
 
-        if (WiFi.isConnected())
+        if (WiFi.isConnected()) {
             break;
+        } 
     }
 #endif
-
+    // Additional Services onwwards reliant on network so close if not up.
     if (false == WiFi.isConnected())
     {
         debugW("Giving up on WiFi\n");
@@ -269,6 +272,7 @@ bool ConnectToWiFi(uint cRetries)
 
     return true;
 }
+#endif
 
 // SetupOTA
 //
