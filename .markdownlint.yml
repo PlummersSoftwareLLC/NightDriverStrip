@@ -4,8 +4,14 @@ MD013: false
 # MD022/blanks-around-headings/blanks-around-headers: Headings should be surrounded by blank lines
 MD022: false
 
+# MD033/no-inline-html
+MD033: false
+
 # MD034/no-bare-urls
 MD034: false
+
+# MD036/no-emphasis-as-heading
+MD036: false
 
 # MD041/first-line-heading/first-line-h1 - First line in a file should be a top-level heading
 MD041: false

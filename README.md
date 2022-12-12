@@ -1,9 +1,9 @@
 # NightDriverStrip
 ![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
 
-![CI](https://raw.githubusercontent.com/PlummersSoftwareLLC/NightDriverStrip/main/assets/NightDriverLogo-small.png =x400)
+<img src="assets/NightDriverLogo-small.png" width="400" />
 
-Davepl, 9/19/2021_
+_Davepl, 9/19/2021_
 
 - See [Discussions](http://github.com/PlummersSoftwareLLC/NightDriverStrip/discussions) for questions and comments.
 - See source code and [COPYING.txt](COPYING.txt) for detailed technical and licensing information including versions.
