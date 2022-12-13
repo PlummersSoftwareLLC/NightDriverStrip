@@ -52,7 +52,7 @@ extern "C"
 #define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header 
 bool ProcessIncomingData(uint8_t * payloadData, size_t payloadLength);              // In main file
 
-#if INCOMING_WIFI_ENABLED
+#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
 
 // SocketResponse
 //
