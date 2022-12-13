@@ -1,14 +1,18 @@
 # NightDriverStrip
+
 ![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
 
+<!-- markdownlint-disable MD033 /no-inline-html -->
 <img src="assets/NightDriverLogo-small.png" width="400" />
 
+<!-- markdownlint-disable MD036 /no-emphasis-as-heading -->
 _Davepl, 9/19/2021_
 
 - See [Discussions](http://github.com/PlummersSoftwareLLC/NightDriverStrip/discussions) for questions and comments.
 - See source code and [COPYING.txt](COPYING.txt) for detailed technical and licensing information including versions.
 
 ## What NightDriverStrip is
+
 NightDriverStrip is a source code package for building a flash program that you upload to the [ESP32 microcontroller](https://en.wikipedia.org/wiki/ESP32).  It can drive up to 8 channels of WS2812B style LEDs connected to the chip pins and display fancy colors and patterns and designs on them.  There are numerous effects built in that can be configured to be shown on the LED strip, including audio/music/beat-reactive effects for modules equipped with a microphone.  It can also optionally receive color data for the LEDs in a simple LZ-compressed (or noncompressed) format over a TCP/IP socket that is opened by default on port 49152.  The ESP32 keeps its clock in sync using NTP.
 
 To add new effects, you derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`.  Add your class to the `AllEffects` table in `effects.cpp` (under your build configuration section, like `DEMO`).  Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet.  Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately.  Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
@@ -20,7 +24,9 @@ Each channel of LEDs has an `LEDStripGfx` instance associated with it.  `_GFX[0]
 The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32.  It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs.  If working correctly it should draw a scrolling rainbow palette on your LED strip.
 
 ## Getting Started
+
 I recommend you do the following:
+
 - Copy include/secrets.example.h to include/secrets.h; Set your WiFi SSID and password in include/secrets.h.
 - Build the source code.  In particular, build the `DEMO` configuration. Some pointers on what's needed to do this can be found [below](#build-pointers).
 - Upload the resultant binary to the ESP32
@@ -31,35 +37,40 @@ I recommend you do the following:
 - Connect to the ESP32's web user interface with a browser to its IP address
 
 ## Wifi Setup
+
 Ensure your WiFi SSID and password are set in include/secrets.h.<br/>
 Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
 
- - enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
+- enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
+
 ```C++
 #define ENABLE_WIFI 1
 ```
 
 ## Webserver Setup
-To use the built-in webserver, you will need to build and upload the SPIFFS image to your board's flash using platformio. <br/>
-You can do this using the platformio user interface, or using the pio command line tool 
 
-```
+To use the built-in webserver, you will need to build and upload the SPIFFS image to your board's flash using platformio. <br/>
+You can do this using the platformio user interface, or using the pio command line tool
+
+```ShellConsole
 pio run --target buildfs --environment <project name>
 pio run --target uploadfs --environment <project name>
 ```
 
 ## Sample Parts (Plummer's Software LLC Amazon Affiliate Links)
-- BTF-Lighting WS2812B Strip, 144 pixels per meter, white: https://amzn.to/3CtZW2g
-- BTF-Lighting WS2812B Strip, 144 pixels per meter, black: https://amzn.to/39ljqcO
-- MakerFocus ESP32 Module with 8M Flash (not PSRAM) and built-in blue OLED: https://amzn.to/3ApdF9H
-- M5StickCPlus ESP32 Module with built-in LCD, Mic, buttons, battery, PSRAM, and more:  https://amzn.to/3CrvCFh
-- 16x16 LED Matrix panels (3 per Spectrum Analyzer) https://amzn.to/3ABs5DK
-- Infinity Mirror for use with the MAGICMIRROR config: https://amzn.to/3lEZo2D
-- Super-handy breakout board for ESP32-DevKitC: https://amzn.to/3nKX7Wt
+
+- BTF-Lighting WS2812B Strip, 144 pixels per meter, white: [Amazon.com](https://amzn.to/3CtZW2g), [Amazon.co.uk](https://amzn.eu/d/aA6adTO)
+- BTF-Lighting WS2812B Strip, 144 pixels per meter, black: [Amazon.com](https://amzn.to/39ljqcO), [Amazon.co.uk](https://amzn.eu/d/1N2Wa0J)
+- MakerFocus ESP32 Module with 8M Flash (not PSRAM) and built-in blue OLED: [Amazon](https://amzn.to/3ApdF9H), [Amazon.co.uk](https://amzn.eu/d/cNiR9UM)
+- M5StickCPlus ESP32 Module with built-in LCD, Mic, buttons, battery, PSRAM, and more:  [Amazon.com](https://amzn.to/3CrvCFh), [Amazon.co.uk](https://amzn.eu/d/canmbd7)
+- 16x16 LED Matrix panels (3 per Spectrum Analyzer) [Amazon.com](https://amzn.to/3ABs5DK)
+- Infinity Mirror for use with the MAGICMIRROR config: [Amazon.com](https://amzn.to/3lEZo2D)
+- Super-handy breakout board for ESP32-DevKitC: [Amazon.com](https://amzn.to/3nKX7Wt), [Amazon.co.uk](https://amzn.eu/d/7PF6jQY)
 
 Full Disclosure: As an Amazon Associate, PlummersSoftwareLLC earns commission from qualifying purchases.  It's not added to the purchase price, and does not increase your cost at all.  Plus, all 2021 profits from the Dave's Garage Channel, which includes these sales, will go to the UW Autism Center.
 
 ## Bonus Exercise
+
 Write something simple to send color data to the socket.  The format is very basic: which channel, how many LEDs you're drawing, when to draw it, and the color data itself.  You can send uncompressed data with a zero timestamp as long as you send the correct header before your data, which is very simple.  Data with a zero timestamp will just be drawn immediately with no buffering.
 
 | BYTES | FUNCTION | |
@@ -74,9 +85,11 @@ Write something simple to send color data to the socket.  The format is very bas
 If built with `ENABLE_WIFI` and `INCOMING_WIFI_ENABLED`, if the chip is able to get a WiFi connection and DHCP address it will open a socket on port 49152 and wait for packets formed as described above.
 
 ## Super Bonus Exercise
+
 Generate a series of 24 frames per second (or 30 if under 500 LEDs) and set the timestamp to "Now" plus 1/2 a second.  Send them to the chip over WiFi and they will be drawn 1/2 second from now in a steady stream as the timestamps you gave each packet come due.
 
 ## Contributing, and the BlinkenPerBit Metric
+
 Rather than produce a complex set of guidelines, here's what I hope open-source collaboration will bring to the project: that folks will add important features and fix defects and shortcomings in the code.  When they're adding features, they'll do it in a way consistent with the way things are done in the existing code.  They resist the urge to rearchitect and rewrite everything in their own image and instead put their efforts towards maximizing functional improvement while reducing source code thrash and change.
 
 Let's consider the inconsistent naming, which should be fixed.  Some is camelCase, some is pszHungarian, and so on, depending on the source. I'd prefer it were all updated to a single standard TBD.  Until the TBD is determined, I lean towards [the Win32 standard](https://docs.microsoft.com/en-us/windows/win32/stg/coding-style-conventions?redirectedfrom=MSDN).  
@@ -90,25 +103,29 @@ A lifetime of coding has taught me to err on the side of simplicity, so please d
 Add whatever you want and/or need to make your LED dreams come true.  Fix my blunders.  Fill in the obvious gaps in my knowledge.  Whatever has the most blinken for the fewest bits get my vote.  You only get so much additional cool blinken for every byte of code and program.  That return is measured in BlinkenPerBit, the amount of blinking awesomeness the code adds divided by the impact on the source (and binary).
 
 ## Build Pointers
+
 The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
 
 When either the IDE or Core are installed, NightDriverStrip can be built from a command shell by entering the project/repository directory and issuing the following command:
-```
+
+```ShellConsole
 pio run
 ```
 
 This will build the DEMO config.
 
 Note that the repository CI builds both the DEMO and SPECTRUM configurations. This can be done locally using this command:
-```
+
+```ShellConsole
 pio run -e demo -e spectrum
 ```
 
 ## Feature Defines
-These defines enable the major features of NightDriverStrip. Define them in platformio.ini's build_flags or in globals.h.
-Note: Some defines are board specific, this is noted below. 
 
-| Feature Define | Description | 
+These defines enable the major features of NightDriverStrip. Define them in platformio.ini's build_flags or in globals.h.
+Note: Some defines are board specific, this is noted below.
+
+| Feature Define | Description |
 | - | - |
 | ENABLE_WIFI            | Connect to WiFi |
 | INCOMING_WIFI_ENABLED  | Accepting incoming color data and commands |
@@ -127,18 +144,22 @@ Note: Some defines are board specific, this is noted below.
 | ENABLE_REMOTE          | IR Remote Control | Requires IR Hardware |
 
 example in platformio.ini
-```
+
+```INI
 build_flags   = -DUSE_SCREEN=1
 ```
+
 example in globals.h:
+
 ```C++
 #define ENABLE_WIFI 1
 ```
 
 ## Time It Takes To Build This Project
+
 Time to build the SPECTRUM config.  Assumes a clean build after everything has been installed and downloaded.
 
-- AMD 3970 32-cores, 128GB, RAID SSD 
+- AMD 3970 32-cores, 128GB, RAID SSD
 -> [davepl 09/19/2021] 12.93 seconds (Running Under WSL)
 
 - AMD 5950X 16-cores, 64GB, SSD
