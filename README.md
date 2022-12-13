@@ -59,13 +59,13 @@ pio run --target uploadfs --environment <project name>
 
 ## Sample Parts (Plummer's Software LLC Amazon Affiliate Links)
 
-- BTF-Lighting WS2812B Strip, 144 pixels per meter, white: [Amazon.com](https://amzn.to/3CtZW2g), [Amazon.co.uk](https://amzn.eu/d/aA6adTO)
-- BTF-Lighting WS2812B Strip, 144 pixels per meter, black: [Amazon.com](https://amzn.to/39ljqcO), [Amazon.co.uk](https://amzn.eu/d/1N2Wa0J)
-- MakerFocus ESP32 Module with 8M Flash (not PSRAM) and built-in blue OLED: [Amazon](https://amzn.to/3ApdF9H), [Amazon.co.uk](https://amzn.eu/d/cNiR9UM)
-- M5StickCPlus ESP32 Module with built-in LCD, Mic, buttons, battery, PSRAM, and more:  [Amazon.com](https://amzn.to/3CrvCFh), [Amazon.co.uk](https://amzn.eu/d/canmbd7)
+- BTF-Lighting WS2812B Strip, 144 pixels per meter, white: [Amazon.com](https://amzn.to/3CtZW2g)
+- BTF-Lighting WS2812B Strip, 144 pixels per meter, black: [Amazon.com](https://amzn.to/39ljqcO)
+- MakerFocus ESP32 Module with 8M Flash (not PSRAM) and built-in blue OLED: [Amazon](https://amzn.to/3ApdF9H)
+- M5StickCPlus ESP32 Module with built-in LCD, Mic, buttons, battery, PSRAM, and more:  [Amazon.com](https://amzn.to/3CrvCFh)
 - 16x16 LED Matrix panels (3 per Spectrum Analyzer) [Amazon.com](https://amzn.to/3ABs5DK)
 - Infinity Mirror for use with the MAGICMIRROR config: [Amazon.com](https://amzn.to/3lEZo2D)
-- Super-handy breakout board for ESP32-DevKitC: [Amazon.com](https://amzn.to/3nKX7Wt), [Amazon.co.uk](https://amzn.eu/d/7PF6jQY)
+- Super-handy breakout board for ESP32-DevKitC: [Amazon.com](https://amzn.to/3nKX7Wt)
 
 Full Disclosure: As an Amazon Associate, PlummersSoftwareLLC earns commission from qualifying purchases.  It's not added to the purchase price, and does not increase your cost at all.  Plus, all 2021 profits from the Dave's Garage Channel, which includes these sales, will go to the UW Autism Center.
 
