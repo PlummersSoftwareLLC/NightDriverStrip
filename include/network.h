@@ -37,12 +37,12 @@
     extern bool g_bUpdateStarted;
     extern WiFiUDP g_Udp;
     #if INCOMING_WIFI_ENABLED
-      extern SocketServer g_SocketServer;
+        extern SocketServer g_SocketServer;
     #endif
     void processRemoteDebugCmd();
 
     #if ENABLE_REMOTE
-      extern RemoteControl g_RemoteControl;
+        extern RemoteControl g_RemoteControl;
     #endif
 
     bool ConnectToWiFi(uint cRetries);
