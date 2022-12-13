@@ -385,18 +385,10 @@ class SampleBuffer
 
     void FFT()
     {
-        #if SHOW_FFT_TIMING
-        unsigned long fftStart = millis();
-        #endif
-
         _FFT.Windowing(_vReal, _MaxSamples, FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
-        _FFT.Compute(_vReal, _vImaginary, _MaxSamples, FFT_FORWARD);            // REVIEW(davepl)
-        _FFT.ComplexToMagnitude(_vReal, _vImaginary, _MaxSamples);              // This and MajorPeak may only actually need _MaxSamples/2
-        _FFT.MajorPeak(_vReal, _MaxSamples, _SamplingFrequency);                //   but I can't tell, and it was no perf win when I tried it.
-
-        #if SHOW_FFT_TIMING
-        debugV("FFT took %ld ms at %d FPS", millis() - fftStart, FPS(fftStart, millis()));
-        #endif
+        _FFT.Compute(_vReal, _vImaginary, _MaxSamples, FFT_FORWARD);                 // REVIEW(davepl)
+        _FFT.ComplexToMagnitude(_vReal, _vImaginary, _MaxSamples);                   // This and MajorPeak may only actually need _MaxSamples/2
+        _FFT.MajorPeak(_vReal, _MaxSamples, _SamplingFrequency);                     //   but I can't tell, and it was no perf win when I tried it.
     }
     
     inline bool IsBufferFull() const __attribute__((always_inline))
