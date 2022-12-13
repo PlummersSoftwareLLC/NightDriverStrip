@@ -68,63 +68,63 @@ extern volatile float gMinVU;
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
 #if ENABLE_WIFI
-void processRemoteDebugCmd() 
-{
-    String str = Debug.getLastCommand();
-    if (str.equalsIgnoreCase("clock"))
+    void processRemoteDebugCmd() 
     {
-        debugI("Refreshing Time from Server...");
-
-        digitalWrite(BUILTIN_LED_PIN, 1);
-        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-        digitalWrite(BUILTIN_LED_PIN, 0);
-    }
-    else if (str.equalsIgnoreCase("stats"))
-    {
-        debugI("Displaying statistics....");
-
-        char szBuffer[256];
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
-        debugI("%s", szBuffer);
-
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s\n", 
-                                                String(WiFi.RSSI()).substring(1).c_str(), 
-                                                WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-        debugI("%s", szBuffer);
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
-        debugI("%s", szBuffer);
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_BufferAgeOldest, g_BufferAgeNewest);
-        debugI("%s", szBuffer);
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
-        debugI("%s", szBuffer);
-
-        #if ENABLE_AUDIO
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
-            debugI("%s", szBuffer);
-        #endif
-
-        #if INCOMING_WIFI_ENABLED
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
-        debugI("%s", szBuffer);
-        #endif
-
-        // Print out a buffer log with timestamps and deltas 
-        
-        for (size_t i = 0; i < g_apBufferManager[0]->Depth(); i++)
+        String str = Debug.getLastCommand();
+        if (str.equalsIgnoreCase("clock"))
         {
-            auto pBufferManager = g_apBufferManager[0].get();
-            std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
-            double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
-            debugI("%s", szBuffer);
-        }
+            debugI("Refreshing Time from Server...");
 
+            digitalWrite(BUILTIN_LED_PIN, 1);
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+            digitalWrite(BUILTIN_LED_PIN, 0);
+        }
+        else if (str.equalsIgnoreCase("stats"))
+        {
+            debugI("Displaying statistics....");
+
+            char szBuffer[256];
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugI("%s", szBuffer);
+
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s\n", 
+                                                    String(WiFi.RSSI()).substring(1).c_str(), 
+                                                    WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            debugI("%s", szBuffer);
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
+            debugI("%s", szBuffer);
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_BufferAgeOldest, g_BufferAgeNewest);
+            debugI("%s", szBuffer);
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
+            debugI("%s", szBuffer);
+
+            #if ENABLE_AUDIO
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
+                debugI("%s", szBuffer);
+            #endif
+
+            #if INCOMING_WIFI_ENABLED
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
+            debugI("%s", szBuffer);
+            #endif
+
+            // Print out a buffer log with timestamps and deltas 
+            
+            for (size_t i = 0; i < g_apBufferManager[0]->Depth(); i++)
+            {
+                auto pBufferManager = g_apBufferManager[0].get();
+                std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
+                double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
+                debugI("%s", szBuffer);
+            }
+
+        }
     }
-}
 #endif
 
 // RemoteLoopEntry
