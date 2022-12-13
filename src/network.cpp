@@ -154,124 +154,126 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 // Connect to the pre-configured WiFi network.  
 
 #if ENABLE_WIFI
-#define WIFI_RETRIES 5
 
-bool ConnectToWiFi(uint cRetries)
-{
-    // Already connected, Go no further.
-    if (WiFi.isConnected())
+    #define WIFI_RETRIES 5
+
+    bool ConnectToWiFi(uint cRetries)
     {
+        // Already connected, Go no further.
+        if (WiFi.isConnected())
+        {
             return true;
-    }
-    
-    debugI("Setting host name to %s...", cszHostname);
-
-#if USE_WIFI_MANAGER
-    g_WifiManager.setDebugOutput(true);
-    g_WifiManager.autoConnect("NightDriverWiFi");
-#else
-    for (uint iPass = 0; iPass < cRetries; iPass++)
-    {
-        Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-            iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
-
-        //WiFi.disconnect();
-        WiFi.begin(cszSSID, cszPassword);
-
-        for (uint i = 0; i < WIFI_RETRIES; i++)
-        {
-            if (WiFi.isConnected())
-            {
-                Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
-                break;
-            }
-            else
-            {
-                delay(1000);
-            }
         }
+        
+        debugI("Setting host name to %s...", cszHostname);
 
-        if (WiFi.isConnected()) {
-            break;
-        } 
-    }
-#endif
-    // Additional Services onwwards reliant on network so close if not up.
-    if (false == WiFi.isConnected())
-    {
-        debugW("Giving up on WiFi\n");
-        return false;
-    }
-    debugW("Received IP: %s", WiFi.localIP().toString().c_str());
-
-    #if INCOMING_WIFI_ENABLED
-        // Start listening for incoming data
-        debugI("Starting/restarting Socket Server...");
-        g_SocketServer.release();
-        if (false == g_SocketServer.begin())
-            throw runtime_error("Could not start socket server!");
-
-        debugI("Socket server started.");
-    #endif
-
-    #if ENABLE_OTA
-        debugI("Publishing OTA...");
-        SetupOTA(cszHostname);
-    #endif
-
-    #if ENABLE_NTP
-        debugI("Setting Clock...");
-        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-    #endif
-
-    #if ENABLE_WEBSERVER
-        debugI("Starting Web Server...");
-        g_WebServer.begin();
-        debugI("Web Server begin called!");
-    #endif
-
-    #if USEMATRIX
-        //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
-    #endif
-
-    /*
-    {
-        WiFiClientSecure secClient;
-
-        secClient.setInsecure();
-
-        Serial.println("\nStarting secure connection to server...");
-        uint32_t start = millis();
-        int r = secClient.connect("google.com", 443, 5000);
-        Serial.printf("Connection took: %lums\n", millis()-start);
-        if(!r) 
+    #if USE_WIFI_MANAGER
+        g_WifiManager.setDebugOutput(true);
+        g_WifiManager.autoConnect("NightDriverWiFi");
+    #else
+        for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            Serial.println("Connection failed!");
-        } 
-        else 
-        {
-            Serial.println("Connected!  Sending GET!");
-            secClient.println("GET https://www.google.com/search?q=tsla+stock+quote HTTP/1.0");
-            secClient.println("Host: www.google.com");
-            secClient.println("Connection: close");
-            secClient.println();
-            
-            while (secClient.connected()) 
+            Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+
+            //WiFi.disconnect();
+            WiFi.begin(cszSSID, cszPassword);
+
+            for (uint i = 0; i < WIFI_RETRIES; i++)
             {
-                String line = secClient.readStringUntil('\n');
-                secClient.printf("Data: %s", line.c_str());
-                if (line == "\r") {
-                    Serial.println("headers received");
+                if (WiFi.isConnected())
+                {
+                    Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
                     break;
                 }
+                else
+                {
+                    delay(1000);
+                }
             }
-        }
-        secClient.stop();
-    }
-    */
 
-    return true;
-}
+            if (WiFi.isConnected()) {
+                break;
+            } 
+        }
+    #endif
+        // Additional Services onwwards reliant on network so close if not up.
+        if (false == WiFi.isConnected())
+        {
+            debugW("Giving up on WiFi\n");
+            return false;
+        }
+        debugW("Received IP: %s", WiFi.localIP().toString().c_str());
+
+        #if INCOMING_WIFI_ENABLED
+            // Start listening for incoming data
+            debugI("Starting/restarting Socket Server...");
+            g_SocketServer.release();
+            if (false == g_SocketServer.begin())
+                throw runtime_error("Could not start socket server!");
+
+            debugI("Socket server started.");
+        #endif
+
+        #if ENABLE_OTA
+            debugI("Publishing OTA...");
+            SetupOTA(cszHostname);
+        #endif
+
+        #if ENABLE_NTP
+            debugI("Setting Clock...");
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+        #endif
+
+        #if ENABLE_WEBSERVER
+            debugI("Starting Web Server...");
+            g_WebServer.begin();
+            debugI("Web Server begin called!");
+        #endif
+
+        #if USEMATRIX
+            //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+        #endif
+
+        /*
+        {
+            WiFiClientSecure secClient;
+
+            secClient.setInsecure();
+
+            Serial.println("\nStarting secure connection to server...");
+            uint32_t start = millis();
+            int r = secClient.connect("google.com", 443, 5000);
+            Serial.printf("Connection took: %lums\n", millis()-start);
+            if(!r) 
+            {
+                Serial.println("Connection failed!");
+            } 
+            else 
+            {
+                Serial.println("Connected!  Sending GET!");
+                secClient.println("GET https://www.google.com/search?q=tsla+stock+quote HTTP/1.0");
+                secClient.println("Host: www.google.com");
+                secClient.println("Connection: close");
+                secClient.println();
+                
+                while (secClient.connected()) 
+                {
+                    String line = secClient.readStringUntil('\n');
+                    secClient.printf("Data: %s", line.c_str());
+                    if (line == "\r") {
+                        Serial.println("headers received");
+                        break;
+                    }
+                }
+            }
+            secClient.stop();
+        }
+        */
+
+        return true;
+    }
+    
 #endif
 
 // SetupOTA
