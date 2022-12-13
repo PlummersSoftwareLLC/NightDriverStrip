@@ -414,8 +414,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    100.0f
+    #define NOISE_CUTOFF   20
+    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
@@ -434,13 +434,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     
     #define SHOW_FPS_ON_MATRIX      0
     #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0  // Accept over the air flash updates
+    #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 

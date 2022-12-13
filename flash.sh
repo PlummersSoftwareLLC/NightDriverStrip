@@ -1,4 +1,9 @@
-; pio run -t nobuild -t upload --upload-port 192.168.8.15  &
-; pio run -t nobuild -t upload --upload-port 192.168.8.8   &
-; pio run -t nobuild -t upload --upload-port 192.168.8.9   &
-; pio run -t nobuild -t upload --upload-port 192.168.8.10  &
+#!/bin/bash
+
+set -e
+platformio run -e demo
+platformio run -e ledstrip
+platformio run -e ledstrip_feather
+platformio run -e spectrum
+platformio run -e mesmerizer
+

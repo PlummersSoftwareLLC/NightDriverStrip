@@ -293,7 +293,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", CRGBPalette256(color, color2));
+        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 12, CRGBPalette16(color, color2));
         if (object->Init(g_pDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer!");
@@ -499,15 +499,18 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif SPECTRUM
 
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors, 0, 0, 0.5,  1.5),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 0.25,  1.25),
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 48, CRGB(0,0,4)),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors, 0, 0, 1.0, 1.0),
+
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
+        
         new GhostWave("GhostWave", &RainbowColors_p, 0, 16, false, 40),
         new SpectrumAnalyzerEffect("Spectrum USA", true, 16, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", &RainbowColors_p, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 2.0),
         new GhostWave("GhostWave Blue", &BlueColors1_p , 0),
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, RainbowColors_p),
         new GhostWave("GhostWave One", &GhostWaveColors1_p , 4),
@@ -660,8 +663,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif LEDSTRIP
 
         new StatusEffect(CRGB::White)
-        //new PaletteEffect(RainbowColors_p)
-
+        
 #elif HOODORNAMENT
 
         new RainbowFillEffect(24, 0),

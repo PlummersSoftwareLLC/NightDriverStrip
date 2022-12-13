@@ -306,7 +306,8 @@ class SampleBuffer
     static float      _oldVU;
     static float      _oldPeakVU;
     static float      _oldMinVU;
-    
+    int               _cutOffsBand[NUM_BANDS];
+
     // BucketFrequency
     //
     // Return the frequency corresponding to the Nth sample bucket.  Skips the first two 
@@ -326,7 +327,15 @@ class SampleBuffer
     // Depending on how many bands we have, returns the cutoffs of where those bands are in the spectrum
 
     const int * BandCutoffTable(int bandCount);             
-    const float * GetBandScalars(int bandCount);
+    void  CalculateBandCutoffs(double lowFreq, double highFreq);
+
+    double GetBandScalar(int i) 
+    {                                   //  Red   Org   Yel  Grn  Cyn   Blu  Prp   Org   Yel   Grn   Cyn  Blue
+        static const double Scalars12[12] = { 0.25, 0.70, 1.2, 1.1, 0.70, 0.5, 0.47, 0.68, 0.77, 0.75, 0.5, 0.72 };
+
+        double result = (NUM_BANDS == 12) ? Scalars12[i] : mapDouble(i, 0, _BandCount, 0.75, 1.0);
+        return result;
+    }
 
   public:
 
@@ -352,6 +361,8 @@ class SampleBuffer
 #if USE_I2S
         SampleBufferInitI2S();
 #endif
+
+        CalculateBandCutoffs(200.0, SAMPLING_FREQUENCY/2.0);
 
         Reset();
     }
@@ -385,10 +396,10 @@ class SampleBuffer
 
     void FFT()
     {
-        _FFT.Windowing(_vReal, _MaxSamples, FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
-        _FFT.Compute(_vReal, _vImaginary, _MaxSamples, FFT_FORWARD);                 // REVIEW(davepl)
-        _FFT.ComplexToMagnitude(_vReal, _vImaginary, _MaxSamples);                   // This and MajorPeak may only actually need _MaxSamples/2
-        _FFT.MajorPeak(_vReal, _MaxSamples, _SamplingFrequency);                     //   but I can't tell, and it was no perf win when I tried it.
+        arduinoFFT _FFT(_vReal, _vImaginary, _MaxSamples, _SamplingFrequency);
+        _FFT.DCRemoval();
+        _FFT.Compute(FFT_FORWARD);                
+        _FFT.ComplexToMagnitude();                   
     }
     
     inline bool IsBufferFull() const __attribute__((always_inline))
@@ -590,19 +601,21 @@ class SampleBuffer
             // If it's above the noise floor, figure out which band this belongs to and
             // if it's a new peak for that band, record that fact
 
+            int freq = BucketFrequency(i);
+            int iBand = 0;
+            while (iBand < _BandCount - 1)
+            {
+                if (freq < BandCutoffTable(_BandCount)[iBand])
+                    break;
+                iBand++;
+            }
+            if (iBand > _BandCount-1)
+                iBand = _BandCount-1;
+
+            _vReal[i] *= GetBandScalar(iBand);
+
             if (_vReal[i] > NOISE_CUTOFF)
             {
-                int freq = BucketFrequency(i);
-
-                int iBand = 0;
-                while (iBand < _BandCount - 1)
-                {
-                    if (freq < BandCutoffTable(_BandCount)[iBand])
-                        break;
-                    iBand++;
-                }
-                if (iBand > _BandCount-1)
-                    iBand = _BandCount-1;
                 if (_vReal[i] > _vPeaks[iBand])
                     _vPeaks[iBand] += _vReal[i];
             }
@@ -612,10 +625,10 @@ class SampleBuffer
         debugV("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf", 
                 _vPeaks[0], _vPeaks[1], _vPeaks[2], _vPeaks[3], _vPeaks[12], _vPeaks[13], _vPeaks[14], _vPeaks[15]);
 
-        for (int i = 0; i < _BandCount; i++)
-        {
-                _vPeaks[i] *= GetBandScalars(_BandCount)[i];
-        }
+//        for (int i = 0; i < _BandCount; i++)
+//        {
+//            _vPeaks[i] *= GetBandScalar(i);
+//        }
 
         // If you want the peaks to be a lot more prominent, you can exponentially raise the values
         // and then they'll be scaled back down linearly, but you'd have to adjust allBandsPeak 
