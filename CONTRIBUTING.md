@@ -1,4 +1,4 @@
-# Contributor Contributing Notes
+# Contributing Guidelines
 
 ## To Fork or Not To Fork?
 
