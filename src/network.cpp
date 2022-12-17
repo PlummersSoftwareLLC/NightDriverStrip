@@ -67,63 +67,65 @@ extern volatile float gMinVU;
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
-void processRemoteDebugCmd() 
-{
-    String str = Debug.getLastCommand();
-    if (str.equalsIgnoreCase("clock"))
+#if ENABLE_WIFI
+    void processRemoteDebugCmd() 
     {
-        debugI("Refreshing Time from Server...");
-
-        digitalWrite(BUILTIN_LED_PIN, 1);
-        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-        digitalWrite(BUILTIN_LED_PIN, 0);
-    }
-    else if (str.equalsIgnoreCase("stats"))
-    {
-        debugI("Displaying statistics....");
-
-        char szBuffer[256];
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
-        debugI("%s", szBuffer);
-
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s\n", 
-                                                String(WiFi.RSSI()).substring(1).c_str(), 
-                                                WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-        debugI("%s", szBuffer);
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
-        debugI("%s", szBuffer);
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_BufferAgeOldest, g_BufferAgeNewest);
-        debugI("%s", szBuffer);
-
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
-        debugI("%s", szBuffer);
-
-        #if ENABLE_AUDIO
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
-            debugI("%s", szBuffer);
-        #endif
-
-        #if INCOMING_WIFI_ENABLED
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
-        debugI("%s", szBuffer);
-        #endif
-
-        // Print out a buffer log with timestamps and deltas 
-        
-        for (size_t i = 0; i < g_apBufferManager[0]->Depth(); i++)
+        String str = Debug.getLastCommand();
+        if (str.equalsIgnoreCase("clock"))
         {
-            auto pBufferManager = g_apBufferManager[0].get();
-            std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
-            double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
-            debugI("%s", szBuffer);
-        }
+            debugI("Refreshing Time from Server...");
 
+            digitalWrite(BUILTIN_LED_PIN, 1);
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+            digitalWrite(BUILTIN_LED_PIN, 0);
+        }
+        else if (str.equalsIgnoreCase("stats"))
+        {
+            debugI("Displaying statistics....");
+
+            char szBuffer[256];
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugI("%s", szBuffer);
+
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s\n", 
+                                                    String(WiFi.RSSI()).substring(1).c_str(), 
+                                                    WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            debugI("%s", szBuffer);
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
+            debugI("%s", szBuffer);
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_BufferAgeOldest, g_BufferAgeNewest);
+            debugI("%s", szBuffer);
+
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
+            debugI("%s", szBuffer);
+
+            #if ENABLE_AUDIO
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
+                debugI("%s", szBuffer);
+            #endif
+
+            #if INCOMING_WIFI_ENABLED
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
+            debugI("%s", szBuffer);
+            #endif
+
+            // Print out a buffer log with timestamps and deltas 
+            
+            for (size_t i = 0; i < g_apBufferManager[0]->Depth(); i++)
+            {
+                auto pBufferManager = g_apBufferManager[0].get();
+                std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
+                double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
+                debugI("%s", szBuffer);
+            }
+
+        }
     }
-}
+#endif
 
 // RemoteLoopEntry
 //
@@ -150,125 +152,129 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 // ConnectToWiFi
 //
 // Connect to the pre-configured WiFi network.  
-//
-// BUGBUG I'm guessing this is exposed in all builds so anyone can call it and it just returns false if wifi
-// isn't being used, but do we need that?  If no one really needs to call it put the whole thing in the ifdef
 
-#define WIFI_RETRIES 5
+#if ENABLE_WIFI
 
-bool ConnectToWiFi(uint cRetries)
-{
-    #if !ENABLE_WIFI
-        return false;
-    #endif
+    #define WIFI_RETRIES 5
 
-    debugI("Setting host name to %s...", cszHostname);
-
-#if USE_WIFI_MANAGER
-    g_WifiManager.setDebugOutput(true);
-    g_WifiManager.autoConnect("NightDriverWiFi");
-#else
-    for (uint iPass = 0; iPass < cRetries; iPass++)
+    bool ConnectToWiFi(uint cRetries)
     {
-        Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-            iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
-
-        //WiFi.disconnect();
-        WiFi.begin(cszSSID, cszPassword);
-
-        for (uint i = 0; i < WIFI_RETRIES; i++)
-        {
-            if (WiFi.isConnected())
-            {
-                Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
-                break;
-            }
-            else
-            {
-                delay(1000);
-            }
-        }
-
+        // Already connected, Go no further.
         if (WiFi.isConnected())
-            break;
-    }
-#endif
-
-    if (false == WiFi.isConnected())
-    {
-        debugW("Giving up on WiFi\n");
-        return false;
-    }
-    debugW("Received IP: %s", WiFi.localIP().toString().c_str());
-
-    #if INCOMING_WIFI_ENABLED
-        // Start listening for incoming data
-        debugI("Starting/restarting Socket Server...");
-        g_SocketServer.release();
-        if (false == g_SocketServer.begin())
-            throw runtime_error("Could not start socket server!");
-
-        debugI("Socket server started.");
-    #endif
-
-    #if ENABLE_OTA
-        debugI("Publishing OTA...");
-        SetupOTA(cszHostname);
-    #endif
-
-    #if ENABLE_NTP
-        debugI("Setting Clock...");
-        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-    #endif
-
-    #if ENABLE_WEBSERVER
-        debugI("Starting Web Server...");
-        g_WebServer.begin();
-        debugI("Web Server begin called!");
-    #endif
-
-    #if USEMATRIX
-        //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
-    #endif
-
-    /*
-    {
-        WiFiClientSecure secClient;
-
-        secClient.setInsecure();
-
-        Serial.println("\nStarting secure connection to server...");
-        uint32_t start = millis();
-        int r = secClient.connect("google.com", 443, 5000);
-        Serial.printf("Connection took: %lums\n", millis()-start);
-        if(!r) 
         {
-            Serial.println("Connection failed!");
-        } 
-        else 
+            return true;
+        }
+        
+        debugI("Setting host name to %s...", cszHostname);
+
+    #if USE_WIFI_MANAGER
+        g_WifiManager.setDebugOutput(true);
+        g_WifiManager.autoConnect("NightDriverWiFi");
+    #else
+        for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            Serial.println("Connected!  Sending GET!");
-            secClient.println("GET https://www.google.com/search?q=tsla+stock+quote HTTP/1.0");
-            secClient.println("Host: www.google.com");
-            secClient.println("Connection: close");
-            secClient.println();
-            
-            while (secClient.connected()) 
+            Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+
+            //WiFi.disconnect();
+            WiFi.begin(cszSSID, cszPassword);
+
+            for (uint i = 0; i < WIFI_RETRIES; i++)
             {
-                String line = secClient.readStringUntil('\n');
-                secClient.printf("Data: %s", line.c_str());
-                if (line == "\r") {
-                    Serial.println("headers received");
+                if (WiFi.isConnected())
+                {
+                    Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
                     break;
                 }
+                else
+                {
+                    delay(1000);
+                }
             }
-        }
-        secClient.stop();
-    }
-    */
 
-    return true;
-}
+            if (WiFi.isConnected()) {
+                break;
+            } 
+        }
+    #endif
+        // Additional Services onwwards reliant on network so close if not up.
+        if (false == WiFi.isConnected())
+        {
+            debugW("Giving up on WiFi\n");
+            return false;
+        }
+        debugW("Received IP: %s", WiFi.localIP().toString().c_str());
+
+        #if INCOMING_WIFI_ENABLED
+            // Start listening for incoming data
+            debugI("Starting/restarting Socket Server...");
+            g_SocketServer.release();
+            if (false == g_SocketServer.begin())
+                throw runtime_error("Could not start socket server!");
+
+            debugI("Socket server started.");
+        #endif
+
+        #if ENABLE_OTA
+            debugI("Publishing OTA...");
+            SetupOTA(cszHostname);
+        #endif
+
+        #if ENABLE_NTP
+            debugI("Setting Clock...");
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+        #endif
+
+        #if ENABLE_WEBSERVER
+            debugI("Starting Web Server...");
+            g_WebServer.begin();
+            debugI("Web Server begin called!");
+        #endif
+
+        #if USEMATRIX
+            //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+        #endif
+
+        /*
+        {
+            WiFiClientSecure secClient;
+
+            secClient.setInsecure();
+
+            Serial.println("\nStarting secure connection to server...");
+            uint32_t start = millis();
+            int r = secClient.connect("google.com", 443, 5000);
+            Serial.printf("Connection took: %lums\n", millis()-start);
+            if(!r) 
+            {
+                Serial.println("Connection failed!");
+            } 
+            else 
+            {
+                Serial.println("Connected!  Sending GET!");
+                secClient.println("GET https://www.google.com/search?q=tsla+stock+quote HTTP/1.0");
+                secClient.println("Host: www.google.com");
+                secClient.println("Connection: close");
+                secClient.println();
+                
+                while (secClient.connected()) 
+                {
+                    String line = secClient.readStringUntil('\n');
+                    secClient.printf("Data: %s", line.c_str());
+                    if (line == "\r") {
+                        Serial.println("headers received");
+                        break;
+                    }
+                }
+            }
+            secClient.stop();
+        }
+        */
+
+        return true;
+    }
+    
+#endif
 
 // SetupOTA
 //
