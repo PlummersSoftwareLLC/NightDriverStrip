@@ -180,11 +180,11 @@ class CSPIFFSWebServer
 
         // Look for the parameter by name
         const char * pszEffectInterval = "effectInterval";
-        if (pRequest->hasParam(pszEffectInterval, true, false))
+        if (pRequest->hasParam(pszEffectInterval))
         {
             debugI("found EffectInterval");
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszEffectInterval, true, false);
+            AsyncWebParameter * param = pRequest->getParam(pszEffectInterval);
             size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
             g_pEffectManager->SetInterval(effectInterval);
         }       
@@ -212,11 +212,11 @@ class CSPIFFSWebServer
         */
 
         const char * pszCurrentEffectIndex = "currentEffectIndex";
-        if (pRequest->hasParam(pszCurrentEffectIndex, true))
+        if (pRequest->hasParam(pszCurrentEffectIndex))
         {
             debugV("currentEffectIndex param found");
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszCurrentEffectIndex, true);
+            AsyncWebParameter * param = pRequest->getParam(pszCurrentEffectIndex);
             size_t currentEffectIndex = strtoul(param->value().c_str(), NULL, 10);  
             g_pEffectManager->SetCurrentEffectIndex(currentEffectIndex);
         }
@@ -230,10 +230,10 @@ class CSPIFFSWebServer
 
         // Look for the parameter by name
         const char * pszEffectIndex = "effectIndex";
-        if (pRequest->hasParam(pszEffectIndex, true))
+        if (pRequest->hasParam(pszEffectIndex))
         {
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszEffectIndex, true);
+            AsyncWebParameter * param = pRequest->getParam(pszEffectIndex);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
             g_pEffectManager->EnableEffect(effectIndex);
         }
@@ -247,10 +247,10 @@ class CSPIFFSWebServer
 
         // Look for the parameter by name
         const char * pszEffectIndex = "effectIndex";
-        if (pRequest->hasParam(pszEffectIndex, true))
+        if (pRequest->hasParam(pszEffectIndex))
         {
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszEffectIndex, true);
+            AsyncWebParameter * param = pRequest->getParam(pszEffectIndex);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
             g_pEffectManager->DisableEffect(effectIndex);
             debugV("Disabled Effect %d", effectIndex);
