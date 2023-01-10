@@ -64,6 +64,7 @@ using namespace std;
 
 void InitEffectsManager();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
+std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 // EffectManager
 //
@@ -165,10 +166,11 @@ public:
     void SetGlobalColor(CRGB color)
     {
         debugW("Setting Global Color");
-                
-#if (USEMATRIX)
+
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
+
+#if (USEMATRIX)
         GFXBase * pMatrix = (*this)[0].get();
         pMatrix->setPalette(CRGBPalette16(oldColor, color));
         pMatrix->PausePalette(true);
@@ -178,11 +180,17 @@ public:
         if (color == CRGB(CRGB::White))
             effect = make_shared<ColorFillEffect>(CRGB::White, 1);
         else
-#if ENABLE_AUDIO
-            effect = make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-#else
-            effect = make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-#endif
+
+        #if ENABLE_AUDIO
+            #if SPECTRUM
+                    effect = GetSpectrumAnalyzer(color, oldColor);
+            #else
+                    effect = make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+            #endif            
+        #else
+                    effect = make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+        #endif
+
         if (effect->Init(g_pDevices))
         {
             _pRemoteEffect = effect;
