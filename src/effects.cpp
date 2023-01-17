@@ -37,7 +37,6 @@
 #include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
-#include "effects/strip/laserline.h"
 
 #if ENABLE_AUDIO
 #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
@@ -97,7 +96,7 @@ const TProgmemRGBPalette16 BlueColors1_p = { CRGB::DarkBlue, CRGB::Blue, CRGB::B
 const TProgmemRGBPalette16 GhostWaveColors1_p = { CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red };
 
 const CRGBPalette256 BlueColors_p =
-    {
+{
         CRGB::DarkBlue,
         CRGB::MediumBlue,
         CRGB::Blue,
@@ -113,10 +112,11 @@ const CRGBPalette256 BlueColors_p =
         CRGB::DarkBlue,
         CRGB::MediumBlue,
         CRGB::Blue,
-        CRGB::MediumBlue};
+        CRGB::MediumBlue
+};
 
 const CRGBPalette256 RedColors_p =
-    {
+{
         CRGB::Red,
         CRGB::DarkRed,
         CRGB::DarkRed,
@@ -135,10 +135,11 @@ const CRGBPalette256 RedColors_p =
         CRGB::Red,
         CRGB::DarkRed,
         CRGB::DarkRed,
-        CRGB::OrangeRed};
+        CRGB::OrangeRed
+};
 
 const CRGBPalette256 GreenColors_p =
-    {
+{
         CRGB::Green,
         CRGB::DarkGreen,
         CRGB::DarkGreen,
@@ -157,10 +158,11 @@ const CRGBPalette256 GreenColors_p =
         CRGB::Green,
         CRGB::DarkGreen,
         CRGB::DarkGreen,
-        CRGB::LimeGreen};
+        CRGB::LimeGreen
+};
 
 const CRGBPalette256 PurpleColors_p =
-    {
+{
         CRGB::Purple,
         CRGB::Maroon,
         CRGB::Violet,
@@ -183,7 +185,7 @@ const CRGBPalette256 PurpleColors_p =
 };
 
 const CRGBPalette256 RGBColors_p =
-    {
+{
         CRGB::Red,
         CRGB::Green,
         CRGB::Blue,
@@ -199,10 +201,11 @@ const CRGBPalette256 RGBColors_p =
         CRGB::Red,
         CRGB::Green,
         CRGB::Blue,
-        CRGB::Blue};
+        CRGB::Blue
+};
 
 const CRGBPalette256 MagentaColors_p =
-    {
+{
         CRGB::Pink,
         CRGB::DeepPink,
         CRGB::HotPink,
@@ -262,7 +265,7 @@ const CRGBPalette16 spectrumAltColors =
 };
 
 const CRGBPalette16 USAColors_p =
-    {
+{
         CRGB::Blue,
         CRGB::Blue,
         CRGB::Blue,
@@ -506,10 +509,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MAGICMIRROR
 
         new MoltenGlassOnVioletBkgnd("MoltenGlass", RainbowColors_p),
-
-#elif LASERLINE 
-
-        new LaserLineEffect(1000.0, 30.0),
 
 #elif SPECTRUM
 
