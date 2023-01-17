@@ -103,7 +103,7 @@ using namespace std;
 #endif
 
 #ifndef GAINDAMPEN
-#define GAINDAMPEN 0       // How slowly brackets narrow in for spectrum bands
+#define GAINDAMPEN 10       // How slowly brackets narrow in for spectrum bands
 #define GAINDAMPENMIN 1000 //   We want the quiet part to adjust quite slowly
 #endif
 
@@ -111,8 +111,8 @@ using namespace std;
 #define VUDAMPEN 0 // How slowly VU reacts
 #endif
 
-#define VUDAMPENMIN 5 // How slowly VU min creeps up to test noise floor
-#define VUDAMPENMAX 5 // How slowly VU max drops down to test noise ceiling
+#define VUDAMPENMIN 1 // How slowly VU min creeps up to test noise floor
+#define VUDAMPENMAX 1 // How slowly VU max drops down to test noise ceiling
 
 #define MS_PER_SECOND 1000
 

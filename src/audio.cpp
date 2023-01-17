@@ -274,15 +274,6 @@ public:
             close(new_socket);
             return false;
         }
-        /*
-        int flag = 1;
-        if (setsockopt(new_socket,IPPROTO_TCP,TCP_NODELAY,&flag,sizeof(flag)) < 0)
-        {
-            debugW("Unable to set TCP_NODELAY on socket!");
-            close(new_socket);
-            return false;
-        }
-        */
         Serial.println("Accepted new VICE Client!");
         return new_socket;
     }
