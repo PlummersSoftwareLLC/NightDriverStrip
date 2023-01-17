@@ -37,6 +37,7 @@
 #include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
+#include "effects/strip/laserline.h"
 
 #if ENABLE_AUDIO
 #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
@@ -505,6 +506,10 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif MAGICMIRROR
 
         new MoltenGlassOnVioletBkgnd("MoltenGlass", RainbowColors_p),
+
+#elif LASERLINE 
+
+        new LaserLineEffect(1000.0, 30.0),
 
 #elif SPECTRUM
 
