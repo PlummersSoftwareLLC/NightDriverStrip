@@ -159,6 +159,7 @@ public:
 
     void begin()
     {
+        Serial.printf("Replacing Idle Tasks with TaskManager...\n");
         // The idle tasks get created with a priority just ABOVE idle so that they steal idle time but nothing else.  They then
         // measure how much time is "wasted" at that lower priority and deem it to have been free CPU
 

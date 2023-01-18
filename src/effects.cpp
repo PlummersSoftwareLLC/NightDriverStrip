@@ -37,6 +37,8 @@
 #include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
+#include "effects/strip/laserline.h"
+
 
 #if ENABLE_AUDIO
 #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
@@ -322,10 +324,14 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 // The master effects table
 
 DRAM_ATTR LEDStripEffect *AllEffects[] =
-    {
+{
 #if DEMO
 
         new RainbowFillEffect(6, 2),
+
+#elif LASERLINE
+
+        new LaserLineEffect(500, 20),
 
 #elif CHIEFTAIN
 
@@ -689,12 +695,19 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 };
 
+// If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to 
+// add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
+// one effect even if it's the Status effect.
+
+static_assert(ARRAYSIZE(AllEffects) > 0);
+
 // InitEffectsManager
 //
 // Initializes the effect manager.  Reboots on failure, since it's not optional
 
 void InitEffectsManager()
 {
+        debugW("InitEffectsManager...");
         g_pEffectManager = make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
 
         if (false == g_pEffectManager->Init())

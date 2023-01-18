@@ -97,6 +97,7 @@ class LaserLineEffect : public BeatEffectBase2, public LEDStripEffect
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
     {
+        debugW("Initialized LaserLine Effect");
         _gfx = gfx[0];
         if (!LEDStripEffect::Init(gfx))
             return false;

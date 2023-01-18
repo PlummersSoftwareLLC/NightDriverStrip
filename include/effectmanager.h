@@ -49,9 +49,9 @@
 #include "gfxbase.h"
 
 #include "ledmatrixgfx.h"
-//#include "effects/strip/misceffects.h"
-//#include "effects/strip/fireeffect.h"
-//#include "effects/strip/bouncingballeffect.h"
+// #include "effects/strip/misceffects.h"
+// #include "effects/strip/fireeffect.h"
+// #include "effects/strip/bouncingballeffect.h"
 
 #define MAX_EFFECTS 32
 
@@ -86,7 +86,7 @@ class EffectManager
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> *_gfx;
-    std::shared_ptr<LEDStripEffect> _pRemoteEffect;
+    std::shared_ptr<LEDStripEffect> _pRemoteEffect = nullptr;
 
 public:
     static const uint csFadeButtonSpeed = 15 * 1000;
@@ -171,7 +171,7 @@ public:
         lastManualColor = color;
 
 #if (USEMATRIX)
-        GFXBase * pMatrix = (*this)[0].get();
+        GFXBase *pMatrix = (*this)[0].get();
         pMatrix->setPalette(CRGBPalette16(oldColor, color));
         pMatrix->PausePalette(true);
 #else
@@ -181,15 +181,15 @@ public:
             effect = make_shared<ColorFillEffect>(CRGB::White, 1);
         else
 
-        #if ENABLE_AUDIO
-            #if SPECTRUM
-                    effect = GetSpectrumAnalyzer(color, oldColor);
-            #else
-                    effect = make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-            #endif            
-        #else
-                    effect = make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-        #endif
+#if ENABLE_AUDIO
+#if SPECTRUM
+            effect = GetSpectrumAnalyzer(color, oldColor);
+#else
+            effect = make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+#endif
+#else
+            effect = make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+#endif
 
         if (effect->Init(g_pDevices))
         {
@@ -203,19 +203,19 @@ public:
     {
         _pRemoteEffect = nullptr;
 
-#if (USEMATRIX)        
-        LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+#if (USEMATRIX)
+        LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
         pMatrix->PausePalette(false);
-#endif        
+#endif
     }
 
     void StartEffect()
     {
-        #if USEMATRIX
-            LEDMatrixGFX * pMatrix = (LEDMatrixGFX *)(*this)[0].get();
-            pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 3000);
-            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        #endif
+#if USEMATRIX
+        LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+        pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 3000);
+        pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+#endif
 
         if (_pRemoteEffect)
             _pRemoteEffect->Start();
@@ -224,7 +224,7 @@ public:
 
         _effectStartTime = millis();
     }
-   
+
     void EnableEffect(size_t i)
     {
         if (i >= _cEffects)
@@ -345,7 +345,7 @@ public:
 
         if (GetTimeUsedByCurrentEffect() > GetInterval())
             return 0;
-            
+
         return GetInterval() - GetTimeUsedByCurrentEffect();
     }
 
@@ -357,7 +357,7 @@ public:
     void CheckEffectTimerExpired()
     {
         // If interval is zero, the current effect never expires
-        
+
         if (_effectInterval == 0)
             return;
 
@@ -452,7 +452,7 @@ public:
         {
             _ppEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
         }
-        
+
         // If we do indeed have multiple effects (BUGBUG what if only a single enabled?) then we
         // fade in and out at the appropriate time based on the time remaining/used by the effect
 
@@ -465,7 +465,7 @@ public:
         if (_effectInterval == 0)
         {
             g_Fader = 255;
-            return;            
+            return;
         }
 
         int r = GetTimeRemainingForCurrentEffect();
@@ -485,4 +485,3 @@ public:
         }
     }
 };
-
