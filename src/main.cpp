@@ -328,10 +328,12 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
     debugI(">> NetworkHandlingLoopEntry\n");
 
+#if ENABLE_WIFI
     if(!MDNS.begin("esp32")) {
         Serial.println("Error starting mDNS");
     }
-    
+#endif
+
     for (;;)
     {
         /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
@@ -394,7 +396,8 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     digitalWrite(BUILTIN_LED_PIN, 0);
                 }
             }
-        #endif            
+        #endif     
+
         delay(10);
     }
 }
@@ -497,10 +500,10 @@ Bounce2::Button Button2;
 
 void setup()
 {
-    g_TaskManager.begin();
-    
     // Initialize Serial output
     Serial.begin(115200);      
+
+    g_TaskManager.begin();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to ERROR level  
 
@@ -686,7 +689,7 @@ void setup()
 
         // Onboard PWM LED 
 
-    #ifdef ONBOARD_LED_R
+    #if ONBOARD_LED_R
         ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
         ledcAttachPin(ONBOARD_LED_G,  2);
         ledcAttachPin(ONBOARD_LED_B,  3);

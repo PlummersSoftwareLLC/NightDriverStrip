@@ -414,8 +414,52 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    100.0f
+    #define NOISE_CUTOFF   20
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
+
+    #ifdef SPECTRUM_WROVER_KIT
+    #else 
+        #define NUM_INFO_PAGES          2
+        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
+    #endif
+
+#elif LASERLINE
+
+    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
+    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
+    // It displays a spectrum analyzer and music visualizer
+
+    #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption   
+    #define ENABLE_WIFI             0   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+    #define ENABLE_NTP              0   // Set the clock from the web
+    #define ENABLE_OTA              0   // Accept over the air flash updates
+    #define ENABLE_REMOTE           0   // IR Remote Control
+    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
+
+    #define NUM_CHANNELS    1
+    #define RING_SIZE_0     24    
+    #define BONUS_PIXELS    0
+    #define MATRIX_WIDTH    700
+    #define MATRIX_HEIGHT   1
+    #define NUM_FANS        MATRIX_WIDTH
+    #define FAN_SIZE        MATRIX_HEIGHT
+    #define NUM_BANDS       12
+    #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define RESERVE_MEMORY  150000
+    #define LED_FAN_OFFSET_BU 6
+    #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
+
+    #define NOISE_CUTOFF   20
+    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
@@ -434,13 +478,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     
     #define SHOW_FPS_ON_MATRIX      0
     #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0  // Accept over the air flash updates
+    #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
