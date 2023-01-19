@@ -82,8 +82,6 @@ static_assert(sizeof(double) == 8);
 static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and double size" );            
 
 extern AppTime g_AppTime;
-extern double g_BufferAgeNewest;
-extern double g_BufferAgeOldest;
 extern std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern uint32_t g_FPS;
 extern double g_Brite;
@@ -408,8 +406,8 @@ public:
                                         .size = sizeof(SocketResponse),
                                         .flashVersion = FLASH_VERSION,
                                         .currentClock = g_AppTime.CurrentTime(),
-                                        .oldestPacket = g_BufferAgeOldest,
-                                        .newestPacket = g_BufferAgeNewest,
+                                        .oldestPacket = g_apBufferManager[0]->AgeOfOldestBuffer(),
+                                        .newestPacket = g_apBufferManager[0]->AgeOfNewestBuffer(),
                                         .brightness   = g_Brite,
                                         .wifiSignal   = (double) WiFi.RSSI(),
                                         .bufferSize   = g_apBufferManager[0]->BufferCount(),

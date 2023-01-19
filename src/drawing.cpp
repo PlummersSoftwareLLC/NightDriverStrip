@@ -75,9 +75,6 @@ void ShowTM1814();
 // we will draw the local effect instead
 
 DRAM_ATTR uint64_t g_usLastWifiDraw = 0;
-DRAM_ATTR double g_BufferAgeOldest = 0;
-DRAM_ATTR double g_BufferAgeNewest = 0;
-
 DRAM_ATTR uint8_t g_Brightness = 255;
 DRAM_ATTR uint8_t g_Fader = 255;
 
@@ -194,7 +191,6 @@ uint16_t WiFiDraw()
                 pixelsDrawn += pBuffer->Length();
             }
         }
-        g_apBufferManager[iChannel]->UpdateOldestAndNewest();
     }
     debugV("WifIDraw claims to have drawn %d pixels", pixelsDrawn);
     return pixelsDrawn;

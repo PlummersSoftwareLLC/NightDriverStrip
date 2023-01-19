@@ -72,8 +72,6 @@ TFT_eSPI *g_pDisplay = new TFT_eSPI();
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 
 extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
-extern double g_BufferAgeOldest;        // Age of oldest frame in WiFi buffer
-extern double g_BufferAgeNewest;        // Age of newest frame in WiFi buffer
 extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
 extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
@@ -174,8 +172,8 @@ void BasicInfoSummary(bool bRedraw)
     // Data Status Line 4
 
     snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+06.2lf-%+06.2lf", 
-        min(99.99, g_BufferAgeOldest), 
-        min(99.99, g_BufferAgeNewest)
+        min(99.99, g_apBufferManager[0]->AgeOfOldestBuffer()), 
+        min(99.99, g_apBufferManager[0]->AgeOfNewestBuffer())
     );
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
     Screen::println(szBuffer);
@@ -197,24 +195,25 @@ void BasicInfoSummary(bool bRedraw)
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 3);
     Screen::println(szBuffer);
 
-    // PSRAM Info Line 6 - only if display tall enough
+    // LED Power Info Line 6 - only if display tall enough
 
     if (Screen::screenHeight() >= lineHeight * 5 + Screen::fontHeight())
-    {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%dK/%dK\n", 
-            ESP.getFreePsram() / 1024, 
-            ESP.getPsramSize() / 1024);
-        Screen::setCursor(xMargin + 0, yMargin + lineHeight * 5);
-        Screen::println(szBuffer);
-    }
-
-    // LED Power Info Line 7 - only if display tall enough
-
-    if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
     {
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "POWR:%3.0lf%% %4uW\n",
                 g_Brite,
                 g_Watts);
+        Screen::setCursor(xMargin + 0, yMargin + lineHeight * 5);
+        Screen::println(szBuffer);
+    }
+
+
+    // PSRAM Info Line 7 - only if display tall enough
+
+    if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
+    {
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%dK/%dK\n", 
+            ESP.getFreePsram() / 1024, 
+            ESP.getPsramSize() / 1024);
         Screen::setCursor(xMargin + 0, yMargin + lineHeight * 6);
         Screen::println(szBuffer);
     }

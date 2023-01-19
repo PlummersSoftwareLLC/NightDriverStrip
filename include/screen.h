@@ -134,7 +134,7 @@ class Screen
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
         #elif USE_OLED 
-            return g_pDisplay->getFontAscent();
+            return g_pDisplay->getFontAscent() + 1;
         #elif USE_TFTSPI || USE_M5DISPLAY
             return g_pDisplay->fontHeight();
         #elif USE_SCREEN

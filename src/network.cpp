@@ -52,8 +52,6 @@ std::mutex g_buffer_mutex;
 // This is where we can add our own custom debugger commands
 
 extern AppTime  g_AppTime;
-extern double   g_BufferAgeOldest;
-extern double   g_BufferAgeNewest;
 extern uint32_t g_FPS;
 
 extern volatile float gVURatioFade;
@@ -96,7 +94,7 @@ extern volatile float gMinVU;
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
             debugI("%s", szBuffer);
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_BufferAgeOldest, g_BufferAgeNewest);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_apBufferManager[0]->AgeOfOldestBuffer(), g_apBufferManager[0]->AgeOfNewestBuffer());
             debugI("%s", szBuffer);
 
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
@@ -423,7 +421,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                             debugV("Updating existing buffer");
                             if (!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
                                 return false;
-                            g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                             bDone = true;
                         }
                     }
@@ -433,41 +430,9 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                         auto pNewBuffer = g_apBufferManager[iChannel]->GetNewBuffer();
                         if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                             return false;
-                        g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                     }
                 }
             }
-            return true;
-        }
-
-        case WIFI_COMMAND_VU:
-        {
-            debugW("Deprecated WIFI_COMMAND_VU received.");
-            uint32_t vu32 = payloadData[5] << 24 | payloadData[4] << 16 | payloadData[3] << 8 | payloadData[2];
-            debugV("Incoming VU: %u", vu32);
-            return true;
-        }
-
-        // WIFI_COMMAND_CLOCK
-        //
-        // Allows the server to send its current timeofday clock; if it's newer than our clock, we update ours
-
-        case WIFI_COMMAND_CLOCK:
-        {
-            debugW("Deprecated WIFI_COMMAND_CLOCK received.");
-            if (payloadLength != WIFI_COMMAND_CLOCK_SIZE)
-            {
-                debugW("Incorrect packet size for clock command received.  Expected %d and got %d\n", WIFI_COMMAND_CLOCK_SIZE, payloadLength);
-                return false;
-            }
-
-            uint16_t channel16    = payloadData[3]  << 8  | payloadData[2];
-
-            if (channel16 != 0)
-            {
-                debugW("Nonzero channel for clock not currently supported, but received: %d\n", channel16);
-            }
-
             return true;
         }
 
