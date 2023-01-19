@@ -236,7 +236,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
                 value2 = (g_peak2Decay[iBand] * 1 + g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();            
             }
         }
-        else if (_numBars > NUM_BANDS && (iBar % 2 == 1))
+        else if ((_numBars > NUM_BANDS) && (iBar % 2 == 1))
         {   
             // For odd bars, average the bars to the left and right of this one 
             value  = ((g_peak1Decay[iBand] + g_peak1Decay[iNextBand]) / 2) * (pGFXChannel->height() - 1);
@@ -291,12 +291,12 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
                            bool                   bShowVU,
-                           int                    cNumBars = 16,
+                           int                    cNumBars = 12,
                            const CRGBPalette16  & palette = spectrumBasicColors, 
                            uint16_t           scrollSpeed = 0, 
                            uint8_t               fadeRate = 0,
-                           float           peak1DecayRate = 2.0,
-                           float           peak2DecayRate = 2.0)
+                           float           peak1DecayRate = 1.0,
+                           float           peak2DecayRate = 1.0)
         : LEDStripEffect(pszFriendlyName),
           _bShowVU(bShowVU),
           _numBars(cNumBars),
@@ -311,11 +311,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
                            bool                   bShowVU, 
-                           int                    cNumBars,
-                           CRGB                 baseColor, 
+                           int                    cNumBars = 12,
+                           CRGB                 baseColor = CRGB::Red, 
                            uint8_t               fadeRate = 0,
-                           float           peak1DecayRate = 2.0,
-                           float           peak2DecayRate = 2.0)
+                           float           peak1DecayRate = 1.0,
+                           float           peak2DecayRate = 1.0)
         : LEDStripEffect(pszFriendlyName), 
           _bShowVU(bShowVU),        
           _numBars(cNumBars),
@@ -331,6 +331,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     virtual void Draw()
     {
+        // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
+
+        g_peak1DecayRate = _peak1DecayRate;
+        g_peak2DecayRate = _peak2DecayRate;
+
         auto pGFXChannel = _GFX[0].get();
 
         if (_scrollSpeed > 0)

@@ -68,44 +68,8 @@ int g_serialFPS = 0;                        // How many serial packets are proce
 unsigned long g_lastPeak1Time[NUM_BANDS] = { 0 } ;
 float g_peak1Decay[NUM_BANDS] = { 0 };
 float g_peak2Decay[NUM_BANDS] = { 0 };
-float g_peak1DecayRate = 1.0f;
-float g_peak2DecayRate = 1.0f;
-
-// Depending on how many bands have been defined, one of these tables will contain the frequency
-// cutoffs for that "size" of a spectrum display.  
-
-#if NUM_BANDS == 8
-    static int cutOffsBand [8] =
-    {
-        100, 250, 450, 565, 715, 900, 1125, 1500
-    };
-    static float scalarsBand[8] = 
-    {
-        0.1f, 0.2f, 0.3f, 0.3f, 0.4f, 0.5f, 0.6f, 0.75f
-    };
-#else
-    static_assert(NUM_BANDS <= 16);
-    const int cutOffsBand[16] =
-    {
-        25,   100, 200, 300, 400, 630, 800, 1000, 1200, 1600, 2500, 4000, 6300, 8000, 10000, 12000
-    };
-    #if TTGO    
-        const float scalarsBand[16] = 
-        {
-            0.05f, 0.15f, 0.2f, 0.225f, 0.25f, 0.3f, 0.35f, 0.4f, 0.425f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 1.0f
-        };
-    #else
-        const float scalarsBand[16] = 
-        {
-            #if M5STICKC || M5STICKCPLUS
-                0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.7f, 0.8f, 0.8f, 0.9f, 1.0f, 0.75f
-            #else
-                0.20f, 0.25f, 0.30f, 0.35f, 0.45f, 0.45f, 0.50f, 0.6f, 0.45f, 0.5f, 0.5f, 0.6f, .80f, 1.0f, 1.0, 0.75f
-            #endif
-        };
-    #endif
-#endif
-
+float g_peak1DecayRate = 1.25f;
+float g_peak2DecayRate = 1.25f;
 
 // BandCutoffTable
 //
@@ -113,12 +77,25 @@ float g_peak2DecayRate = 1.0f;
 
 const int * SampleBuffer::BandCutoffTable(int bandCount)                
 {
-    return cutOffsBand;
+    return _cutOffsBand;
 }
 
-const float * SampleBuffer::GetBandScalars(int bandCount)
+// 
+// Calculate a logrithmic scale for the bands like you would find on a graphic equalizer display
+//
+
+void SampleBuffer::CalculateBandCutoffs(double lowFreq, double highFreq)
 {
-    return scalarsBand;     
+   // The difference between each adjacent pair of cutoffs is equal to the geometric mean of the two frequencies.
+
+   double df = pow(highFreq / lowFreq, 1.0 / (NUM_BANDS - 1) );
+
+   for (int i = 0; i < NUM_BANDS; i++) 
+   {
+       _cutOffsBand[i] = (int) lowFreq;
+       lowFreq *= df;
+       Serial.printf("Band %d: %i\n", i, _cutOffsBand[i]);
+   }
 }
 
 PeakData g_Peaks;
@@ -297,15 +274,6 @@ public:
             close(new_socket);
             return false;
         }
-        /*
-        int flag = 1;
-        if (setsockopt(new_socket,IPPROTO_TCP,TCP_NODELAY,&flag,sizeof(flag)) < 0)
-        {
-            debugW("Unable to set TCP_NODELAY on socket!");
-            close(new_socket);
-            return false;
-        }
-        */
         Serial.println("Accepted new VICE Client!");
         return new_socket;
     }
@@ -367,8 +335,9 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
 
         for (int i = 0; i < 8; i++)
         {
-            uint8_t low   = g_peak2Decay[i*2] * MAXPET;
-            uint8_t high  = g_peak2Decay[i*2+1] * MAXPET;
+            int iBand = map(i, 0, 7, 0, NUM_BANDS-2);
+            uint8_t low   = g_peak2Decay[iBand] * MAXPET;
+            uint8_t high  = g_peak2Decay[iBand+1] * MAXPET;
             data.peaks[i] = (high << 4) + low;
         }
 

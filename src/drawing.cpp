@@ -339,8 +339,8 @@ void ShowOnboardRGBLED()
     // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
-#ifdef ONBOARD_LED_R
-#ifdef ENABLE_AUDIO
+#if ONBOARD_LED_R
+#if ENABLE_AUDIO
     CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255);
     ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
     ledcWrite(2, 255 - c.g);
@@ -384,7 +384,7 @@ void ShowOnboardPixel()
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
 
-    debugI(">> DrawLoopTaskEntry\n");
+    debugW(">> DrawLoopTaskEntry\n");
 
     // Initialize our graphics and the first effect
 
@@ -405,6 +405,8 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     g_pEffectManager->StartEffect();
 
     // Run the draw loop
+
+    debugW("Entering main draw loop!");
 
     for (;;)
     {

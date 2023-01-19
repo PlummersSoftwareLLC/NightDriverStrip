@@ -37,6 +37,8 @@
 #include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
+#include "effects/strip/laserline.h"
+
 
 #if ENABLE_AUDIO
 #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
@@ -96,7 +98,7 @@ const TProgmemRGBPalette16 BlueColors1_p = { CRGB::DarkBlue, CRGB::Blue, CRGB::B
 const TProgmemRGBPalette16 GhostWaveColors1_p = { CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red };
 
 const CRGBPalette256 BlueColors_p =
-    {
+{
         CRGB::DarkBlue,
         CRGB::MediumBlue,
         CRGB::Blue,
@@ -112,10 +114,11 @@ const CRGBPalette256 BlueColors_p =
         CRGB::DarkBlue,
         CRGB::MediumBlue,
         CRGB::Blue,
-        CRGB::MediumBlue};
+        CRGB::MediumBlue
+};
 
 const CRGBPalette256 RedColors_p =
-    {
+{
         CRGB::Red,
         CRGB::DarkRed,
         CRGB::DarkRed,
@@ -134,10 +137,11 @@ const CRGBPalette256 RedColors_p =
         CRGB::Red,
         CRGB::DarkRed,
         CRGB::DarkRed,
-        CRGB::OrangeRed};
+        CRGB::OrangeRed
+};
 
 const CRGBPalette256 GreenColors_p =
-    {
+{
         CRGB::Green,
         CRGB::DarkGreen,
         CRGB::DarkGreen,
@@ -156,10 +160,11 @@ const CRGBPalette256 GreenColors_p =
         CRGB::Green,
         CRGB::DarkGreen,
         CRGB::DarkGreen,
-        CRGB::LimeGreen};
+        CRGB::LimeGreen
+};
 
 const CRGBPalette256 PurpleColors_p =
-    {
+{
         CRGB::Purple,
         CRGB::Maroon,
         CRGB::Violet,
@@ -182,7 +187,7 @@ const CRGBPalette256 PurpleColors_p =
 };
 
 const CRGBPalette256 RGBColors_p =
-    {
+{
         CRGB::Red,
         CRGB::Green,
         CRGB::Blue,
@@ -198,10 +203,11 @@ const CRGBPalette256 RGBColors_p =
         CRGB::Red,
         CRGB::Green,
         CRGB::Blue,
-        CRGB::Blue};
+        CRGB::Blue
+};
 
 const CRGBPalette256 MagentaColors_p =
-    {
+{
         CRGB::Pink,
         CRGB::DeepPink,
         CRGB::HotPink,
@@ -261,7 +267,7 @@ const CRGBPalette16 spectrumAltColors =
 };
 
 const CRGBPalette16 USAColors_p =
-    {
+{
         CRGB::Blue,
         CRGB::Blue,
         CRGB::Blue,
@@ -289,14 +295,23 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 // A little factory that makes colored spectrum analyzers to be used by the remote control
 // colored buttons
 
+std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
+{
+        CHSV hueColor = rgb2hsv_approximate(color1);
+        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
+        if (object->Init(g_pDevices))
+                return object;
+        throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
+}
+
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", CRGBPalette256(color, color2));
+        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
         if (object->Init(g_pDevices))
                 return object;
-        throw std::runtime_error("Could not initialize new spectrum analyzer!");
+        throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
 }
 
 #endif
@@ -309,10 +324,14 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 // The master effects table
 
 DRAM_ATTR LEDStripEffect *AllEffects[] =
-    {
+{
 #if DEMO
 
         new RainbowFillEffect(6, 2),
+
+#elif LASERLINE
+
+        new LaserLineEffect(500, 20),
 
 #elif CHIEFTAIN
 
@@ -499,15 +518,18 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif SPECTRUM
 
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors, 0, 0, 0.5,  1.5),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 0.25,  1.25),
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 48, CRGB(0,0,4)),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors, 0, 0, 1.0, 1.0),
+
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
+        
         new GhostWave("GhostWave", &RainbowColors_p, 0, 16, false, 40),
         new SpectrumAnalyzerEffect("Spectrum USA", true, 16, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", &RainbowColors_p, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 2.0),
         new GhostWave("GhostWave Blue", &BlueColors1_p , 0),
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, RainbowColors_p),
         new GhostWave("GhostWave One", &GhostWaveColors1_p , 4),
@@ -660,8 +682,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif LEDSTRIP
 
         new StatusEffect(CRGB::White)
-        //new PaletteEffect(RainbowColors_p)
-
+        
 #elif HOODORNAMENT
 
         new RainbowFillEffect(24, 0),
@@ -674,12 +695,19 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 };
 
+// If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to 
+// add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
+// one effect even if it's the Status effect.
+
+static_assert(ARRAYSIZE(AllEffects) > 0);
+
 // InitEffectsManager
 //
 // Initializes the effect manager.  Reboots on failure, since it's not optional
 
 void InitEffectsManager()
 {
+        debugW("InitEffectsManager...");
         g_pEffectManager = make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
 
         if (false == g_pEffectManager->Init())
