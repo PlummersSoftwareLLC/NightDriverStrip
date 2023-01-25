@@ -3,6 +3,8 @@ const MainApp = withStyles(mainAppStyle)(props => {
     const [drawerOpened, setDrawerOpened] = React.useState(false);
     const [mode, setMode] = React.useState('dark');
     const [stats, setStats] = React.useState(true);
+    const [designer, setDesigner] = React.useState(false);
+    const [config, setConfig] = React.useState(false);
 
     return <ThemeProvider theme={mode == "dark" ? darkTheme : lightTheme}>
         <CssBaseline />
@@ -41,18 +43,17 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 </div>
                 <Divider/>
                 <List>
-                    <ListItem>
-                        <ListItemIcon><IconButton onClick={() => setStats(!stats)}><Icon>area_chart</Icon></IconButton></ListItemIcon>
-                        <ListItemText primary="Statistics"/>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemIcon><IconButton><Icon>design_services</Icon></IconButton></ListItemIcon>
-                        <ListItemText primary="Effects Designer"/>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemIcon><IconButton><Icon>settings</Icon></IconButton></ListItemIcon>
-                        <ListItemText primary="Settings"/>
-                    </ListItem>
+                    {
+                        [{caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
+                         {caption:"Effects Designer", flag: designer, setter: setDesigner, icon: "design_services"},
+                         {caption:"Settings", flag: config, setter: setConfig, icon: "settings"}].map(item => 
+                        <ListItem key={item.caption}>
+                            <ListItemIcon><IconButton onClick={() => item.setter(!item.flag)}>
+                                <Icon className={item.flag && classes.optionSelected}>{item.icon}</Icon>
+                            </IconButton></ListItemIcon>
+                            <ListItemText primary={item.caption}/>
+                        </ListItem>)
+                    }
                 </List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>

@@ -5,5 +5,4 @@ src/uzlib/src/*.o
 .history
 include/secrets.h
 lib/*
-
-data/node_modules
+site/node_modules

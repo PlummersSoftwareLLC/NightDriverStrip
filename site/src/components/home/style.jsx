@@ -71,5 +71,8 @@ const mainAppStyle = theme => ({
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
       })
+    },
+    optionSelected: {
+      color: "aquamarine"
     }
   });
