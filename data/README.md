@@ -9,7 +9,7 @@ In order to locally develop this site, you need to have the following requiremen
 - nodejs v16+
 - npm latest
 
-With the requirements filled, open a bash terminal, go to the data folder and type `npm install`.
+With the requirements filled, open a bash terminal, go to the data folder and type `npm install`
 
 Once this is finished, please run `npm run start` to have the site available for testing.
 
