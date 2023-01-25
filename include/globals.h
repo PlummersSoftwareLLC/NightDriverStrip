@@ -239,9 +239,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
     #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_NTP              0   // Set the clock from the web
+    #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
     #if M5STICKC || M5STICKCPLUS
@@ -255,7 +255,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
     // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
 
-    #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
 #elif LANTERN 
 

@@ -14,3 +14,6 @@ With the requirements filled, open a bash terminal, go to the site folder and ty
 Once this is finished, please run `npm run start` to have the site available for testing.
 
 If you make code changes, you will need to reatart the `npm run start` command. If you are developing and wish to see your changes live without needing to kill and restart the server, you can simply type `npm run rebuild`, and this will re-compile after a file has been modified. Please note that if you add new files/folders, you will need to restart the `npm run rebuild` command.
+
+<img src="../assets/dark.PNG" width="400" />
+<img src="../assets/light.PNG" width="400" />
