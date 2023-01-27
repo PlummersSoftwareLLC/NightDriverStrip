@@ -58,6 +58,7 @@ extern std::mutex g_buffer_mutex;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
 double volatile g_FreeDrawTime = 0.0;
 
 extern uint32_t g_FPS;
