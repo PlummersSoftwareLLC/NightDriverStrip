@@ -51,7 +51,7 @@ using namespace std;
 class LEDMatrixGFX : public GFXBase
 {
 protected:
-    const char *pszCaption = nullptr;
+    String pszCaption = nullptr;
     unsigned long captionStartTime;
     double captionDuration;
     const double captionFadeInTime = 500;
@@ -97,7 +97,7 @@ public:
         leds = pLeds;
     }
 
-    const char *GetCaption()
+    const String GetCaption()
     {
         return pszCaption;
     }
@@ -122,7 +122,7 @@ public:
         return 1.0;
     }
 
-    void SetCaption(const char *psz, uint32_t duration)
+    void SetCaption(const String har *psz, uint32_t duration)
     {
         captionDuration = duration;
         pszCaption = psz;

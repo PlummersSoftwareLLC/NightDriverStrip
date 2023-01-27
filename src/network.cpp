@@ -278,7 +278,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 //
 // Set up the over-the-air programming info so that we can be flashed over WiFi
 
-void SetupOTA(const char *pszHostname)
+void SetupOTA(const String pszHostname)
 {
 #if ENABLE_OTA
     ArduinoOTA.setRebootOnSuccess(true);

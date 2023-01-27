@@ -37,7 +37,7 @@
 #include <esp_task_wdt.h>
 #include "taskmgr.h"
 
-extern TaskManager g_TaskManager;
+extern NightDriverTaskManager g_TaskManager;
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
 extern uint32_t g_Watts; 
 extern double g_Brite;

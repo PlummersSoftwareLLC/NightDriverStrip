@@ -317,7 +317,7 @@ public:
         return _ppEffects[_iCurrentEffect];
     }
 
-    const char *GetCurrentEffectName() const
+    const String GetCurrentEffectName() const
     {
         if (_pRemoteEffect)
             return _pRemoteEffect->FriendlyName();

@@ -48,7 +48,7 @@
 #endif
 extern DRAM_ATTR AppTime g_AppTime;
 
-class SimpleInsulatorBeatEffect : public BeatEffectBase
+class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
   protected:
 
@@ -56,8 +56,8 @@ class SimpleInsulatorBeatEffect : public BeatEffectBase
 
     virtual void Draw()
     {
-        BeatEffectBase::Draw();
-        LEDStripEffect::fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
+        BeatEffectBase::ProcessAudio();
+        fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
@@ -81,13 +81,13 @@ class SimpleInsulatorBeatEffect : public BeatEffectBase
 
     using BeatEffectBase::BeatEffectBase;
  
-    SimpleInsulatorBeatEffect(const char * pszName) 
+    SimpleInsulatorBeatEffect(const String pszName) 
       : LEDStripEffect(pszName), BeatEffectBase(1.0, 1.0, 0.01)
     {
     }
 };
 
-class SimpleInsulatorBeatEffect2 : public BeatEffectBase
+class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 {
   protected:
 
@@ -95,7 +95,7 @@ class SimpleInsulatorBeatEffect2 : public BeatEffectBase
 
     virtual void Draw()
     {
-        BeatEffectBase::Draw();
+        BeatEffectBase::ProcessAudio();
         fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
     }
 
@@ -118,8 +118,7 @@ class SimpleInsulatorBeatEffect2 : public BeatEffectBase
 
   public:
  
-    SimpleInsulatorBeatEffect2(const char * pszName) 
-      : LEDStripEffect(pszName), BeatEffectBase()
+    SimpleInsulatorBeatEffect2(const String pszName) : LEDStripEffect(pszName), BeatEffectBase()
     {
     }
 };

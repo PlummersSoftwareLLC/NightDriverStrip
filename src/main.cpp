@@ -188,17 +188,7 @@ extern double g_Brite;
 // Task Handles to our running threads
 //
 
-TaskHandle_t g_taskScreen = nullptr;
-TaskHandle_t g_taskSync   = nullptr;
-TaskHandle_t g_taskWeb    = nullptr;
-TaskHandle_t g_taskDraw   = nullptr;
-TaskHandle_t g_taskDebug  = nullptr;
-TaskHandle_t g_taskAudio  = nullptr;
-TaskHandle_t g_taskNet    = nullptr;
-TaskHandle_t g_taskRemote = nullptr;
-TaskHandle_t g_taskSocket = nullptr;
-
-TaskManager g_TaskManager;
+NightDriverTaskManager g_TaskManager;
 
 //
 // Global Variables
@@ -304,7 +294,6 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
     }    
 }
 #endif
-
 // NetworkHandlingLoopEntry
 //
 // Pumps the various network loops and sets the time periodically, as well as reconnecting
@@ -521,7 +510,7 @@ void setup()
 
     #if ENABLE_WIFI
         debugI("Starting DebugLoopTaskEntry");
-        xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &g_taskDebug, DEBUG_CORE);
+        g_TaskManager.StartDebugThread();
         CheckHeap();
     #endif
 
@@ -777,12 +766,12 @@ void setup()
     InitEffectsManager();
 
 #if USE_SCREEN
-    xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", STACK_SIZE, nullptr, SCREEN_PRIORITY, &g_taskScreen, SCREEN_CORE);
+    g_TaskManager.StartScreenThread();
 #endif
 
     debugI("Launching Drawing:");
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
-    xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &g_taskDraw, DRAWING_CORE);
+    g_TaskManager.StartDrawThread();
     CheckHeap();
 
 #if ENABLE_WIFI && WAIT_FOR_WIFI
@@ -803,26 +792,26 @@ void setup()
 
 #if ENABLE_REMOTE
     // Start Remote Control
-    xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &g_taskRemote, REMOTE_CORE);
+    g_TaskManager.StartRemoteThread();
     CheckHeap();
 #endif
 
-    xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &g_taskSync, NET_CORE);
+    g_TaskManager.StartNetworkThread();
     CheckHeap();
 
 #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
-    xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", STACK_SIZE, nullptr, SOCKET_PRIORITY, &g_taskSocket, SOCKET_CORE);
+    g_TaskManager.StartSocketThread();
 #endif
 
 #if ENABLE_AUDIO
     // The audio sampler task might as well be on a different core from the LED stuff
-    xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &g_taskAudio, AUDIO_CORE);
+    g_TaskManager.StartAudioThread();
     CheckHeap();
 #endif
 
 #if ENABLE_AUDIOSERIAL
     // The audio sampler task might as well be on a different core from the LED stuff
-    xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &g_taskAudio, AUDIOSERIAL_CORE);
+    
     CheckHeap();
 #endif
 

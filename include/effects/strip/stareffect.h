@@ -324,7 +324,7 @@ class HotWhiteStar : public Star
     virtual float HoldTime()        const { return 0.00f;  }
     virtual float FadeTime()        const { return 2.00f;  }  
 
-    virtual CRGB Render(TBlendType blend)
+    virtual CRGB RenderColor(TBlendType blend)
     {
         if (Age() < IgnitionTime() + HoldTime())
             return CRGB::White;
@@ -383,7 +383,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
   public:
 
 
-    StarryNightEffect<StarType>(const char * pszName,
+    StarryNightEffect<StarType>(const String pszName,
                                 const CRGBPalette256& palette, 
                                 float probability = 1.0, 
                                 float starSize = 1.0, 

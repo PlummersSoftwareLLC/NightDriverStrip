@@ -306,7 +306,7 @@ void CurrentEffectSummary(bool bRedraw)
             Screen::drawString(sEffect.c_str(), yh);
             yh += Screen::fontHeight();
             // get effect name length and switch text size accordingly
-            int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
+            int effectnamelen = g_pEffectManager->GetCurrentEffectName().length();
 
 #if M5STICKCPLUS
             Screen::setTextSize(Screen::MEDIUM);

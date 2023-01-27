@@ -677,7 +677,7 @@ class PaletteSpinEffect : public LEDStripEffect
     int   ColorOffset[NUM_FANS] = { 0 };
   public:
 
-    PaletteSpinEffect(const char * pszName, const CRGBPalette256 & palette, bool bReplace, double sparkleChance = 0.0) 
+    PaletteSpinEffect(const String pszName, const CRGBPalette256 & palette, bool bReplace, double sparkleChance = 0.0) 
       : LEDStripEffect(pszName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
     {
 

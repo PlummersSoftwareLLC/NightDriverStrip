@@ -178,3 +178,89 @@ public:
 
 };
 
+// NightDriverTaskManager
+// 
+// A superclass of the base TaskManager that knows how to start and track the tasks specific to this project
+
+void IRAM_ATTR ScreenUpdateLoopEntry(void *);
+void IRAM_ATTR AudioSerialTaskEntry(void *);
+void IRAM_ATTR DrawLoopTaskEntry(void *);
+void IRAM_ATTR AudioSamplerTaskEntry(void *);
+void IRAM_ATTR NetworkHandlingLoopEntry(void *);
+void IRAM_ATTR DebugLoopTaskEntry(void *);
+void IRAM_ATTR SocketServerTaskEntry(void *);
+void IRAM_ATTR RemoteLoopEntry(void *);
+
+class NightDriverTaskManager : public TaskManager
+{
+private:
+
+    TaskHandle_t _taskScreen = nullptr;
+    TaskHandle_t _taskSync   = nullptr;
+    TaskHandle_t _taskDraw   = nullptr;
+    TaskHandle_t _taskDebug  = nullptr;
+    TaskHandle_t _taskAudio  = nullptr;
+    TaskHandle_t _taskNet    = nullptr;
+    TaskHandle_t _taskRemote = nullptr;
+    TaskHandle_t _taskSocket = nullptr;
+    TaskHandle_t _taskSerial = nullptr;
+
+public:
+
+    void StartScreenThread()
+    {
+        xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
+    }
+
+    void StartSerialThread()
+    {
+        #if ENABLE_SERIAL
+            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);    
+        #endif
+    }
+    
+
+    void StartDrawThread()
+    {
+        xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);    
+    }
+
+    void StartAudioThread()
+    {
+        #if ENABLE_AUDIO
+            xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
+        #endif
+    }
+    
+
+    
+    void StartNetworkThread()
+    {
+        #if ENABLE_WIFI
+            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);    
+        #endif
+    }
+
+    void StartDebugThread()
+    {
+        #if ENABLE_WIFI
+            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);    
+        #endif
+    }
+    
+    void StartSocketThread()
+    {
+        #if ENABLE_WIFI
+            xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
+        #endif
+    }
+
+    void StartRemoteThread()
+    {
+        #if ENABLE_WIFI
+            xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
+        #endif
+    }
+};
+
+

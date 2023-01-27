@@ -46,7 +46,7 @@
     #endif
 
     bool ConnectToWiFi(uint cRetries);
-    void SetupOTA(const char *pszHostname);
+    void SetupOTA(const String pszHostname);
 
     // Static Helpers
     //

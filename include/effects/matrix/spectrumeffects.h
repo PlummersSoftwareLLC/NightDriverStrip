@@ -54,7 +54,7 @@ extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the disp
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 
-class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual ParticleSystemEffect<SpinningPaletteRingParticle>
+class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
@@ -62,10 +62,10 @@ class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual Pa
     
   public:
 
-    InsulatorSpectrumEffect(const char * pszName, const CRGBPalette16 & Palette)
-      : LEDStripEffect(pszName),
+    InsulatorSpectrumEffect(const String pszName, const CRGBPalette16 & Palette) : 
+        LEDStripEffect(pszName),
         BeatEffectBase(0.25, 1.75, .25),
-        ParticleSystemEffect<SpinningPaletteRingParticle>(pszName),
+        ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
     }
@@ -80,8 +80,8 @@ class InsulatorSpectrumEffect : public virtual BeatEffectBase, public virtual Pa
             DrawRingPixels(0, FAN_SIZE * g_Peaks[band], color, NUM_FANS-1-band, 0);
         }
 
-        BeatEffectBase::Draw();
-        ParticleSystemEffect<SpinningPaletteRingParticle>::Draw();        
+        ProcessAudio();
+        ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);        
       
         fadeAllChannelsToBlackBy(min(255.0,2000 * g_AppTime.DeltaTime()));
         delay(30);
@@ -390,7 +390,7 @@ class WaveformEffect : public LEDStripEffect
 
   public:
     
-    WaveformEffect(const char * pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
+    WaveformEffect(const String pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
         : LEDStripEffect(pszFriendlyName)
     {
         _pPalette = pPalette;
@@ -453,7 +453,7 @@ class GhostWave : public WaveformEffect
     int                       _fade     = 0;
   public:
 
-    GhostWave(const char * pszFriendlyName = nullptr, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
+    GhostWave(const String pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
         : WaveformEffect(pszFriendlyName, pPalette, increment),
           _blur(blur),
           _erase(erase),

@@ -52,8 +52,8 @@
 
 #include "taskmgr.h"
 
-extern std::unique_ptr<EffectManager<GFXBase>>g_pEffectManager;
-extern TaskManager g_TaskManager;
+extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+extern NightDriverTaskManager g_TaskManager;
 
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
@@ -179,7 +179,7 @@ class CSPIFFSWebServer
         debugI("SetSettings");
 
         // Look for the parameter by name
-        const char * pszEffectInterval = "effectInterval";
+        const String pszEffectInterval = "effectInterval";
         if (pRequest->hasParam(pszEffectInterval, true, false))
         {
             debugI("found EffectInterval");
@@ -211,7 +211,7 @@ class CSPIFFSWebServer
         }   
         */
 
-        const char * pszCurrentEffectIndex = "currentEffectIndex";
+        const String pszCurrentEffectIndex = "currentEffectIndex";
         if (pRequest->hasParam(pszCurrentEffectIndex, true))
         {
             debugV("currentEffectIndex param found");
@@ -229,7 +229,7 @@ class CSPIFFSWebServer
         debugI("EnableEffect");
 
         // Look for the parameter by name
-        const char * pszEffectIndex = "effectIndex";
+        const String pszEffectIndex = "effectIndex";
         if (pRequest->hasParam(pszEffectIndex, true))
         {
             // If found, parse it and pass it off to the EffectManager, who will validate it
@@ -246,7 +246,7 @@ class CSPIFFSWebServer
         debugI("DisableEffect");
 
         // Look for the parameter by name
-        const char * pszEffectIndex = "effectIndex";
+        const String pszEffectIndex = "effectIndex";
         if (pRequest->hasParam(pszEffectIndex, true))
         {
             // If found, parse it and pass it off to the EffectManager, who will validate it

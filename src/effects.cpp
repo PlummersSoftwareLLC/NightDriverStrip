@@ -39,6 +39,7 @@
 #include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
 
+#include "effects/matrix/PatternClock.h"        // No matrix dependencies
 
 #if ENABLE_AUDIO
 #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
@@ -75,7 +76,7 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 #include "effects/matrix/PatternFlowField.h"
 #include "effects/matrix/PatternMisc.h"
 #include "effects/matrix/PatternNoiseSmearing.h"
-#include "effects/matrix/PatternClock.h"
+
 #include "effects/matrix/PatternQR.h"
 #endif
 

@@ -79,7 +79,7 @@ class FireEffect : public LEDStripEffect
 
   public:
 
-    FireEffect(const char * pszName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
+    FireEffect(const String pszName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
         : LEDStripEffect(pszName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
@@ -196,7 +196,7 @@ class PaletteFlameEffect : public FireEffect
     CRGBPalette256 _palette;
 
 public:
-    PaletteFlameEffect(const char *pszName,
+    PaletteFlameEffect(const String pszName,
                        const CRGBPalette256 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -227,7 +227,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected virtual BeatEffe
 {
   public:
 
-    MusicalPaletteFire(const char *pszName,
+    MusicalPaletteFire(const String pszName,
                        const CRGBPalette256 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
