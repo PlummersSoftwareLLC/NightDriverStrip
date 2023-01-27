@@ -1,19 +1,7 @@
-const Stat = withStyles(statStyle)(props => {
-const { classes, name, value } = props;
-return <Box className={classes.root}>
-    <Typography variant="h7">{name}</Typography>
-    <List>
-        {Object.entries(value).map(entry=><ListItem key={entry[0]}>
-            <Typography variant="subtitle1">{entry[0]}</Typography>:
-            <Typography variant="subtitle2">{entry[1]}</Typography>
-        </ListItem>)}
-    </List>
-</Box>});
-
-
 const StatsPanel = withStyles(statsStyle)(props => {
-const { classes } = props;
-const [statisics, setStatistics] = React.useState({
+const { classes, siteConfig } = props;
+const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
+const [statistics, setStatistics] = React.useState({
     FPS:{
         LED_FPS:25,
         SERIAL_FPS: 15,
@@ -53,6 +41,15 @@ const [statisics, setStatistics] = React.useState({
 });
 
 return <Box className={classes.root}>
-    {Object.entries(statisics).map(entry=><Stat key={entry[0]} name={entry[0]} value={entry[1]} />)}
+    {Object.entries(statistics)
+        //    .filter((_val,idx)=>idx===0)
+           .map(entry=><AreaStat
+                key={entry[0]}
+                name={entry[0]}
+                rawvalue={entry[1]}
+                statsRefreshRate={statsRefreshRate.value}
+                statsAnimateChange={ statsAnimateChange.value }
+                maxSamples={ maxSamples.value }
+                ignored={[Object.keys(entry[1])[0]]}/>)}
 </Box>});
 

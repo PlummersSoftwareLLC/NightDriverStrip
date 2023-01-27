@@ -5,7 +5,31 @@ const MainApp = withStyles(mainAppStyle)(props => {
     const [stats, setStats] = React.useState(true);
     const [designer, setDesigner] = React.useState(false);
     const [config, setConfig] = React.useState(false);
+    const [statsRefreshRate, setStatsRefreshRate ] = React.useState(3);
+    const [maxSamples, setMaxSamples ] = React.useState(50);
+    const [animateChart, setAnimateChart ] = React.useState(false);
 
+    const siteConfig = {
+        statsRefreshRate: {
+            name: "Refresh rate",
+            value: statsRefreshRate,
+            setter: setStatsRefreshRate,
+            type: "int"
+        },
+        statsAnimateChange: {
+            name: "Animate chart changes",
+            value: animateChart,
+            setter: setAnimateChart,
+            type: "boolean"
+        },
+        maxSamples: {
+            name: "Number of chart points",
+            value: maxSamples,
+            setter: setMaxSamples,
+            type: "int"
+        }
+    };
+    
     return <ThemeProvider theme={mode == "dark" ? darkTheme : lightTheme}>
         <CssBaseline />
         <Box className={classes.root}>
@@ -49,7 +73,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                          {caption:"Settings", flag: config, setter: setConfig, icon: "settings"}].map(item => 
                         <ListItem key={item.caption}>
                             <ListItemIcon><IconButton onClick={() => item.setter(!item.flag)}>
-                                <Icon className={item.flag && classes.optionSelected}>{item.icon}</Icon>
+                                <Icon className={item.flag && (item.icon !== "settings") && classes.optionSelected}>{item.icon}</Icon>
                             </IconButton></ListItemIcon>
                             <ListItemText primary={item.caption}/>
                         </ListItem>)
@@ -57,7 +81,8 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 </List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                {stats && <StatsPanel/>}
+                {stats && <StatsPanel siteConfig={siteConfig}/>}
+                {config && <ConfigDialog siteConfig={siteConfig} onClose={()=>setConfig(false)} />}
             </Box>
         </Box>
     </ThemeProvider>;

@@ -165,7 +165,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             return true;
         }
         
-        debugI("Setting host name to %s...", cszHostname);
+        debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
 
     #if USE_WIFI_MANAGER
         g_WifiManager.setDebugOutput(true);

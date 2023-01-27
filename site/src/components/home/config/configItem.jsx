@@ -1,0 +1,61 @@
+function getConfigValue(value, type) {
+    switch (type) {
+        case "int":
+            return parseInt(value)
+        case "float":
+            return parseFloat(value)
+        default:
+            return value;
+    }
+}
+
+const ConfigItem = withStyles(configStyle)(props => {
+    const { name, value, configItemUpdated, datatype, classes } = props;
+    const [ editing, setEditing] = React.useState(false);
+    const [ configValue, setConfigValue] = React.useState(value);
+
+    if (datatype === "boolean") {
+        return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
+            <FormControlLabel
+                className={classes.cblabel}
+                label={name} 
+                labelPlacement="start"
+                control={<Checkbox 
+                    defaultChecked={value}
+                    onChange={event => {
+                        setConfigValue(event.target.checked);
+                        configItemUpdated(event.target.checked);
+                    }} />} />
+        </ListItem>;
+    }
+
+    return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
+                {!editing && <ListItemText className={ classes.configDisplay }
+                    primary={name}
+                    secondary={configValue}/>}
+                {editing && <TextField label={name} 
+                                       variant="outlined"
+                                       defaultValue={value}
+                                       onChange={event => setConfigValue(getConfigValue(event.target.value),datatype) } />}
+                    <Box className={classes.saveIcons}>
+                        {editing && <IconButton color="primary" 
+                                            aria-label="Save" 
+                                            component="label"
+                                            onClick={_evt => {
+                                                configItemUpdated(configValue)
+                                                setEditing(false);
+                                            }}>
+                                    <Icon>save</Icon>
+                                </IconButton>}
+                        {editing && <IconButton color="primary" 
+                                                aria-label="Cancel" 
+                                                component="label"
+                                                onClick={_evt => {
+                                                    setConfigValue(value);
+                                                    setEditing(false);
+                                                }}>
+                                        <Icon>cancel</Icon>
+                                    </IconButton>}
+                    </Box>
+            </ListItem>;
+});
