@@ -8,9 +8,11 @@
     },
     "scripts": {
         "buildhtml": "cp ./src/index.html ../data/index.html",
-        "buildjsx": "(cat ./src/modules/modules.jsx && find ./src/theme -type f -name '*.jsx' -exec cat {} \\;&& find ./src/components -type f -name 'style.jsx' -exec cat {} \\; && find ./src/components -type f -name '*.jsx' | grep -v style.jsx | xargs cat && cat ./src/main.jsx) > ../data/main.jsx",
+        "buildjsx": "(echo \"const httpPrefix='';\" && cat ./src/modules/modules.jsx && find ./src/theme -type f -name '*.jsx' -exec cat {} \\;&& find ./src/components -type f -name 'style.jsx' -exec cat {} \\; && find ./src/components -type f -name '*.jsx' | grep -v style.jsx | xargs cat && cat ./src/main.jsx) > ../data/main.jsx",
+        "buildlocaljsx": "(cat ./src/espaddr.jsx && cat ./src/modules/modules.jsx && find ./src/theme -type f -name '*.jsx' -exec cat {} \\;&& find ./src/components -type f -name 'style.jsx' -exec cat {} \\; && find ./src/components -type f -name '*.jsx' | grep -v style.jsx | xargs cat && cat ./src/main.jsx) > ../data/main.jsx",
         "build": "npm run buildjsx && npm run buildhtml",
-        "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src 'npm run build'",
+        "buildlocal": "npm run buildlocaljsx && npm run buildhtml",
+        "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src 'npm run buildlocal'",
         "start": "npm run build && node ./node_modules/serve/build/main.js ../data"
     }
 }

@@ -25,35 +25,48 @@ const rainbow = (numOfSteps, step) => {
     return (c);
 }
 
+const getStatTooltip = (data, classes) => {
+    return <div className={classes.tooltipContent}>
+        <div className={classes.tooltipHeader}>{data.labelFormatter(data.label)}</div>
+        <ul className={classes.threads}>
+            {data.payload
+                 .sort((a,b) => a.value === b.value ? 0 : (a.value < b.value || -1))
+                 .map(stat => <div key={stat.name} className={classes.thread}>
+                <div className={classes.threadName} style={{color:stat.fill === "black" ? "lightgreen" : stat.fill}}>{stat.name}</div>
+                <div className={classes.threadValue}>{stat.value.toFixed(2)}<div className={classes.threadSummary}>
+                    ({(stat.value/data.payload.reduce((ret,stat) => ret + stat.value,0)*100).toFixed(2)}%)
+                    </div></div>
+            </div>)}
+        </ul>
+    </div>
+}
+
 const AreaStat = withStyles(chartStyle)(props => {
-    const { classes, name, rawvalue, ignored, statsRefreshRate, statsAnimateChange, maxSamples } = props;
-    const value = Object.entries(rawvalue)
+    const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, registerStatCallback, headerField } = props;
+    const [value, setValue] = React.useState(Object.entries(rawvalue)
                         .filter(entry=>!ignored.includes(entry[0]))
-                        .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{});
+                        .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{}));
     const [lastStates, setLastStates] = React.useState([Object.entries(value)
                                              .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]);
-    const [ timer, setTimer ] = React.useState(undefined);
-    const [ refreshRate, setRefreshRate ] = React.useState(statsRefreshRate);
-
-    if (!timer || (refreshRate !== statsRefreshRate)) {
-        if (timer) {
-            clearInterval(timer);
-        }
-        setRefreshRate(statsRefreshRate);
-
-        setTimer(setInterval(() => setLastStates((prevState)=>[...prevState,Object.entries(value)
-                    .reduce((ret,stat)=>{ret[stat[0]]=stat[1]*(Math.random()); return ret},{ts: new Date().getTime()})]
-                    .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true)),statsRefreshRate*1000));
-    }
+    
+    registerStatCallback && registerStatCallback(name, value => {
+        setValue(value);
+        setLastStates([...lastStates,Object.entries(value)
+            .filter(entry=>!ignored.includes(entry[0]))
+            .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]
+            .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true));
+    });
 
     return <Box className={classes.root}>
         <Box className={classes.header}>
-            <Typography variant="h7">{name}</Typography>
+            <Typography variant="h7">{name} {headerField && value[headerField] !== undefined && (`${headerField}: ${value[headerField]}`)}</Typography>
             <List className={classes.stats}>
-                {Object.entries(rawvalue).map(entry=>
+                {Object.entries(value)
+                        .filter(entry=>!ignored.includes(entry[0]))
+                        .map(entry=>
                     <ListItem className={classes.stats} key={entry[0]}>
                         <Typography variant="littleHeader">{entry[0]}</Typography>:
-                        <Typography variant="littleValue" >{entry[1]}</Typography>
+                        <Typography variant="littleValue" >{entry[1] !== undefined && !Number.isInteger(entry[1]) ? entry[1].toFixed(2) : entry[1]}</Typography>
                     </ListItem>)}
             </List>
         </Box>
@@ -69,8 +82,7 @@ const AreaStat = withStyles(chartStyle)(props => {
                        color='black'
                        tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
                 <YAxis hide={true}></YAxis>
-                <Tooltip className="tooltip"
-                         content={"tips"}
+                <Tooltip content={data => getStatTooltip(data, classes)}
                          labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>
                 {Object.keys(value).map((line,idx,arr) => <Area
                                     key={line}

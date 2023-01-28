@@ -708,6 +708,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The LED strips I use for Christmas lights under my eaves
 
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects

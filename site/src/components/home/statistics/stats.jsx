@@ -1,55 +1,105 @@
-const StatsPanel = withStyles(statsStyle)(props => {
-const { classes, siteConfig } = props;
-const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
-const [statistics, setStatistics] = React.useState({
-    FPS:{
-        LED_FPS:25,
-        SERIAL_FPS: 15,
-        AUDIO_FPS: 23
-    },
-    HEAP:{
-        HEAP_SIZE:9000,
-        HEAP_FREE:4096,
-        HEAP_MIN:2048
-    },
-    DMA: {
-        DMA_SIZE: 1034,
-        DMA_FREE: 1034,
-        DMA_MIN: 1034
-    },
-    PSRAM: {
-        PSRAM_SIZE: 2354,
-        PSRAM_FREE: 2354,
-        PSRAM_MIN: 2354
-    },
-    CHIP: {
-        CHIP_MODEL: "ESP32-S2FH4",
-        CHIP_CORES: "2",
-        CHIP_SPEED: "80",
-        PROG_SIZE: "2048",
-    },
-    CODE: {
-        CODE_SIZE: 4096,
-        CODE_FREE: 4096,
-        FLASH_SIZE: 4096,
-    },
-    CPU: {
-        CPU_USED: .8,
-        CPU_USED_CORE0: .35,
-        CPU_USED_CORE1: .45
-    }
-});
+var statsCallbacks = {};
 
-return <Box className={classes.root}>
-    {Object.entries(statistics)
-        //    .filter((_val,idx)=>idx===0)
-           .map(entry=><AreaStat
-                key={entry[0]}
-                name={entry[0]}
-                rawvalue={entry[1]}
-                statsRefreshRate={statsRefreshRate.value}
-                statsAnimateChange={ statsAnimateChange.value }
-                maxSamples={ maxSamples.value }
-                ignored={[Object.keys(entry[1])[0]]}/>)}
-</Box>});
+const StatsPanel = withStyles(statsStyle)(props => {
+    const { classes, siteConfig } = props;
+    const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
+    const [ statistics, setStatistics] = React.useState(undefined);
+    const [ timer, setTimer ] = React.useState(undefined);
+    const [ refreshRate, setRefreshRate ] = React.useState(statsRefreshRate);
+
+    const registerStatCallback = (name,callback) => statsCallbacks = {...statsCallbacks,[name]:callback};
+    const getStats = () => {
+        return fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/getStatistics`)
+            .then(resp => resp.json())
+            .then(stats => {return {
+                FPS:{
+                    LED:stats.LED_FPS,
+                    SERIAL:stats.SERIAL_FPS,
+                    AUDIO:stats.AUDIO_FPS
+                },
+                HEAP:{
+                    USED:stats.HEAP_SIZE-stats.HEAP_FREE,
+                    FREE:stats.HEAP_FREE,
+                    MIN:stats.HEAP_MIN
+                },
+                DMA: {
+                    USED: stats.DMA_SIZE - stats.DMA_FREE,
+                    FREE: stats.DMA_FREE,
+                    MIN: stats.DMA_MIN
+                },
+                PSRAM: {
+                    USED: stats.PSRAM_SIZE - stats.PSRAM_FREE,
+                    FREE: stats.PSRAM_FREE,
+                    MIN: stats.PSRAM_MIN
+                },
+                CHIP: {
+                    MODEL: stats.CHIP_MODEL,
+                    CORES: stats.CHIP_CORES,
+                    SPEED: stats.CHIP_SPEED,
+                    PROG_SIZE: stats.PROG_SIZE
+                },
+                CODE: {
+                    SIZE: stats.CODE_SIZE,
+                    FREE: stats.CODE_FREE,
+                    FLASH_SIZE: stats.FLASH_SIZE,
+                },
+                CPU: {
+                    CORE0: stats.CPU_USED_CORE0,
+                    CORE1: stats.CPU_USED_CORE1,
+                    IDLE: ((200.0 - stats.CPU_USED_CORE0 - stats.CPU_USED_CORE1)/200)*100.0,
+                }
+            }});
+    }    
+
+    if (statistics && (!timer || (refreshRate.value !== statsRefreshRate.value))) {
+        if (timer) {
+            clearInterval(timer);
+        }
+        setRefreshRate(statsRefreshRate);
+
+        setTimer(setInterval(() => getStats().then(stats => Object.entries(statistics).forEach(stat => statsCallbacks[stat[0]](stats[stat[0]]))),statsRefreshRate.value*1000));
+    }
+
+    !statistics && getStats().then(stats => {
+        const updatedStats = {
+            FPS:stats.FPS, 
+            HEAP:stats.HEAP,
+            DMA: stats.DMA,
+            PSRAM: stats.PSRAM,
+            CPU: stats.CPU
+        };
+        setStatistics(updatedStats);
+        setTimer(setInterval(() => getStats().then(stats => Object.entries(updatedStats).forEach(stat => statsCallbacks[stat[0]](stats[stat[0]]))),statsRefreshRate.value*1000));
+    });
+
+    const getIgnored = (name) => {
+        if ((name === "DMA") ||
+            (name === "PSRAM") || 
+            (name === "HEAP")) {
+            return ["MIN"];
+        }
+        return [];
+    };
+
+    const getHeaderField = (name) => {
+        if ((name === "DMA") ||
+            (name === "DPSRAM") || 
+            (name === "HEAP")) {
+            return "MIN";
+        }
+    };
+
+    return statistics && <Box className={classes.root}>
+        {Object.entries(statistics)
+            .map(entry=><AreaStat
+                    key={entry[0]}
+                    name={entry[0]}
+                    registerStatCallback={registerStatCallback}
+                    rawvalue={entry[1]}
+                    statsAnimateChange={ statsAnimateChange.value }
+                    maxSamples={ maxSamples.value }
+                    headerField={getHeaderField(entry[0])}
+                    ignored={getIgnored(entry[0])}/>)}
+    </Box>
+});
 
