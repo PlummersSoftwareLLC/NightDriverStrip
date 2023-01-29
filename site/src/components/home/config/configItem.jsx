@@ -34,8 +34,10 @@ const ConfigItem = withStyles(configStyle)(props => {
                     secondary={configValue}/>}
                 {editing && <TextField label={name} 
                                        variant="outlined"
+                                       type={["int","float"].includes(datatype) ? "number" : "text"}
+                                       pattern={datatype === "int" ? "^[0-9]+$" : (datatype === "float" ? "^[0-9]+[.0-9]*$" : ".*")}
                                        defaultValue={value}
-                                       onChange={event => setConfigValue(getConfigValue(event.target.value),datatype) } />}
+                                       onChange={event => setConfigValue(getConfigValue(event.target.value,datatype)) } />}
                     <Box className={classes.saveIcons}>
                         {editing && <IconButton color="primary" 
                                             aria-label="Save" 
