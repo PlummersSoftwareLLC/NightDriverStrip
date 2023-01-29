@@ -31,7 +31,7 @@
 
 #include "globals.h"                      // CONFIG and global headers
 #include "soundanalyzer.h"
-
+#include "network.h"
 #if ENABLE_AUDIO
 
 #include <esp_task_wdt.h>
