@@ -5,12 +5,10 @@ const AreaStat = withStyles(chartStyle)(props => {
                         .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{}));
     const [lastStates, setLastStates] = React.useState([value ? Object.entries(value)
                                              .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()}):[]]);
-    const [ hasCallbacks, gotCallbacks ] = React.useState(false);
     const getValue = (value) => value !== undefined && !Number.isInteger(value) ? (isNaN(value) ? value : value.toFixed(2)) : value;
     const theme = useTheme();
 
-    if (!hasCallbacks) {
-        gotCallbacks(true);
+    React.useEffect(() => {
         registerStatCallback && registerStatCallback(name, (value) => {
             setValue(value);
             setLastStates(prevState => value === undefined ? prevState : [...prevState,Object.entries(value)
@@ -18,7 +16,9 @@ const AreaStat = withStyles(chartStyle)(props => {
                 .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]
                 .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true));
         });
-    }
+
+        return () => registerStatCallback(name,undefined);
+    },[maxSamples,registerStatCallback]);
 
     const getFillColor = ({step, isIdle}) => {
         if (isIdle) {
