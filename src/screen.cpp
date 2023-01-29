@@ -323,15 +323,15 @@ void CurrentEffectSummary(bool bRedraw)
         }
 
 #if ENABLE_AUDIO
-        if ((g_ShowFPS && ((lastFPS != g_FPS) || (lastAudio != g_Analyzer.g_AudioFPS) || (lastSerial != g_Analyzer.g_serialFPS))))
+        if ((g_ShowFPS && ((lastFPS != g_FPS) || (lastAudio != g_Analyzer._AudioFPS) || (lastSerial != g_Analyzer._serialFPS))))
         {
             lastFPS = g_FPS;
-            lastSerial = g_Analyzer.g_serialFPS;
-            lastAudio = g_Analyzer.g_AudioFPS;
+            lastSerial = g_Analyzer._serialFPS;
+            lastAudio = g_Analyzer._AudioFPS;
             Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
             char szBuffer[64];
             yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-            snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer.g_AudioFPS, g_Analyzer.g_serialFPS);
+            snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
             Screen::setTextColor(YELLOW16, backColor);
             Screen::drawString(szBuffer, yh);
             yh += Screen::fontHeight();
@@ -350,7 +350,7 @@ void CurrentEffectSummary(bool bRedraw)
     float ySizeVU = Screen::screenHeight() / 16; // vu is 1/20th the screen height, height of each block
     int cPixels = 16;
     float xSize = xHalf / cPixels + 1;               // xSize is count of pixels in each block
-    int litBlocks = (g_Analyzer.gVURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
+    int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
 
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
     {

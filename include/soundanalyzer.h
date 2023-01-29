@@ -62,14 +62,14 @@
 
 struct AudioVariables
 {
-        float         gVURatio = 1.0;                       // Current VU as a ratio to its recent min and max
-        float         gVURatioFade = 1.0;                   // Same as gVURatio but with a slow decay
-        float         gVU = 0;                              // Instantaneous read of VU value
-        float         gPeakVU = MAX_VU;                     // How high our peak VU scale is in live mode
-        float         gMinVU = 0;                           // How low our peak VU scale is in live mode
-        unsigned long g_cSamples = 0;                       // Total number of samples successfully collected
-        int           g_AudioFPS = 0;                       // Framerate of the audio sampler
-        int           g_serialFPS = 0;                      // How many serial packets are processed per second
+        float         _VURatio     = 1.0;                    // Current VU as a ratio to its recent min and max
+        float         _VURatioFade = 1.0;                    // Same as gVURatio but with a slow decay
+        float         _VU          = 0.0;                    // Instantaneous read of VU value
+        float         _PeakVU      = MAX_VU;                 // How high our peak VU scale is in live mode
+        float         _MinVU       = 0.0;                    // How low our peak VU scale is in live mode
+        unsigned long _cSamples    = 0U;                     // Total number of samples successfully collected
+        int           _AudioFPS    = 0;                      // Framerate of the audio sampler
+        int           _serialFPS   = 0;                      // How many serial packets are processed per second
 };
 
 #if !ENABLE_AUDIO
@@ -454,7 +454,7 @@ struct AudioVariables
                 _vReal[_cSamples] = analogRead(_InputPin);
                 _vImaginary[_cSamples] = 0;
                 _cSamples++;
-                g_cSamples++;
+                _cSamples++;
 
                 if (_cSamples % 16 == 0)
                     delay(1);
@@ -539,7 +539,7 @@ struct AudioVariables
             debugV("All Bands Peak: %f", allBandsPeak);
             allBandsPeak = max(NOISE_FLOOR, allBandsPeak);
 
-            auto multiplier = mapDouble(gVURatio, 0.0, 2.0, 1.5, 1.0);
+            auto multiplier = mapDouble(_VURatio, 0.0, 2.0, 1.5, 1.0);
             allBandsPeak *= multiplier;
 
             for (int i = 0; i < _BandCount; i++)
@@ -553,34 +553,34 @@ struct AudioVariables
             debugV("AverageSumL: %f", averageSum);
 
             if (newval > _oldVU)
-                gVU = newval;
+                _VU = newval;
             else
-                gVU = (_oldVU * VUDAMPEN + newval) / (VUDAMPEN + 1);
+                _VU = (_oldVU * VUDAMPEN + newval) / (VUDAMPEN + 1);
 
-            _oldVU = gVU;
+            _oldVU = _VU;
 
-            debugV("PEAK: %lf, VU: %f", samplesPeak, gVU);
+            debugV("PEAK: %lf, VU: %f", samplesPeak, _VU);
 
             // If we crest above the max VU, update the max VU up to that.  Otherwise drift it towards the new value.
 
-            if (gVU > gPeakVU)
-                gPeakVU = gVU;
+            if (_VU > _PeakVU)
+                _PeakVU = _VU;
             else
-                gPeakVU = (_oldPeakVU * VUDAMPENMAX + gVU) / (VUDAMPENMAX + 1);
-            _oldPeakVU = gPeakVU;
+                _PeakVU = (_oldPeakVU * VUDAMPENMAX + _VU) / (VUDAMPENMAX + 1);
+            _oldPeakVU = _PeakVU;
 
             // If we dip below the min VU, update the min VU down to that.  Otherwise drift it towards the new value.
 
-            if (gVU < gMinVU)
-                gMinVU = gVU;
+            if (_VU < _MinVU)
+                _MinVU = _VU;
             else
-                gMinVU = (_oldMinVU * VUDAMPENMIN + gVU) / (VUDAMPENMIN + 1);
-            _oldMinVU = gMinVU;
+                _MinVU = (_oldMinVU * VUDAMPENMIN + _VU) / (VUDAMPENMIN + 1);
+            _oldMinVU = _MinVU;
 
             EVERY_N_MILLISECONDS(100)
             {
                 auto peaks = GetPeakData();
-                debugV("Audio Data -- Sum: %0.2f, gMinVU: %f0.2, gPeakVU: %f0.2, gVU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, gMinVU, gPeakVU, gVU, peaks[0], peaks[1], peaks[2], peaks[3]);
+                debugV("Audio Data -- Sum: %0.2f, gMinVU: %f0.2, gPeakVU: %f0.2, gVU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
             }
 
             return GetBandPeaks();

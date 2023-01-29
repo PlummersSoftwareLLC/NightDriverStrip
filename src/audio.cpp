@@ -64,19 +64,19 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
     for (;;)
     {
         static uint64_t lastFrame = millis();
-        g_Analyzer.g_AudioFPS = FPS(lastFrame, millis());
+        g_Analyzer._AudioFPS = FPS(lastFrame, millis());
         static double lastVU = 0.0;
 
         // VURatio with a fadeout
 
         constexpr auto VU_DECAY_PER_SECOND = 3.0;
-        if (g_Analyzer.gVURatio > lastVU)
-            lastVU = g_Analyzer.gVURatio;
+        if (g_Analyzer._VURatio > lastVU)
+            lastVU = g_Analyzer._VURatio;
         else
             lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
         lastVU = std::max(lastVU, 0.0);
         lastVU = std::min(lastVU, 2.0);
-        g_Analyzer.gVURatioFade = lastVU;
+        g_Analyzer._VURatioFade = lastVU;
 
         lastFrame = millis();
 
@@ -86,7 +86,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         // Instantaneous VURatio
 
-        g_Analyzer.gVURatio = (g_Analyzer.gPeakVU == g_Analyzer.gMinVU) ? 0.0 : (g_Analyzer.gVU-g_Analyzer.gMinVU) / std::max(g_Analyzer.gPeakVU - g_Analyzer.gMinVU, (float) MIN_VU) * 2.0f;
+        g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ? 0.0 : (g_Analyzer._VU-g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
 
         // Delay enough time to yield 25ms total used this frame, which will net 40FPS exactly (as long as the CPU keeps up)
 
@@ -278,7 +278,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             
         const int MAXPET = 16;                                      // Highest value that the PET can display in a bar
         data.header[0] = ((3 << 4) + 15);
-        data.vu = mapDouble(g_Analyzer.gVURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
+        data.vu = mapDouble(g_Analyzer._VURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
 
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display
@@ -297,7 +297,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             Serial2.write((uint8_t *)&data, sizeof(data));
             //Serial2.flush(true);
             static int lastFrame = millis();
-            g_Analyzer.g_serialFPS = FPS(lastFrame, millis());
+            g_Analyzer._serialFPS = FPS(lastFrame, millis());
             lastFrame = millis();
         }
 

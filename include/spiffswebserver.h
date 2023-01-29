@@ -137,10 +137,10 @@ class CSPIFFSWebServer
 
         j["LED_FPS"]               = g_FPS;
 #if ENABLE_AUDIOSERIAL
-        j["SERIAL_FPS"]            = g_Analyzer.g_serialFPS;
+        j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
 #endif
 #if ENABLE_AUDIO
-        j["AUDIO_FPS"]             = g_Analyzer.g_AudioFPS;
+        j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
 #endif
 
         j["HEAP_SIZE"]             = ESP.getHeapSize();

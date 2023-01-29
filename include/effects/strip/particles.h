@@ -419,7 +419,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
         } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
         _iLastInsulator = iInsulator;
 
-        CRGB c = CHSV(beatsin8(4), 255, 127.5*g_Analyzer.gVURatio);
+        CRGB c = CHSV(beatsin8(4), 255, 127.5*g_Analyzer._VURatio);
         CRGB r = RandomSaturatedColor();
         LightInsulator(bMajor ? - 1: iInsulator, 0, bMajor ? r : c, bMajor);
       }
@@ -431,9 +431,9 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
       //  
       setAllOnAllChannels(0,0,0);
       
-      uint8_t v = 16  * g_Analyzer.gVURatio;
+      uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(24), 255, v));
-      _baseColor.fadeToBlackBy(8 * g_Analyzer.gVURatio);
+      _baseColor.fadeToBlackBy(8 * g_Analyzer._VURatio);
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
       BeatEffectBase::ProcessAudio();
       ParticleSystem<RingParticle>::Render(_GFX);
@@ -482,7 +482,7 @@ class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase2, 
       // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
       // pass and rely on the fade effects of the particles to blend the 
 
-      float amount = g_Analyzer.gVU / MAX_VU;
+      float amount = g_Analyzer._VU / MAX_VU;
 
       _baseColor = CRGB(500 * amount, 0, 0);
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
@@ -758,7 +758,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
       // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
       // pass and rely on the fade effects of the particles to blend the 
 
-      uint8_t v = 16  * g_Analyzer.gVURatio;
+      uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));   
       _baseColor.fadeToBlackBy((min(255.0,1000 * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
@@ -828,7 +828,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
       // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
       // pass and rely on the fade effects of the particles to blend the 
 
-       uint8_t v = 16  * g_Analyzer.gVURatio;
+       uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));   
       _baseColor.fadeToBlackBy((min(255.0,1000 * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
@@ -870,7 +870,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
       // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
       // pass and rely on the fade effects of the particles to blend the 
 
-      uint8_t v = 32  * g_Analyzer.gVURatio;
+      uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
       _baseColor.fadeToBlackBy((min(255.0,2500 * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
@@ -912,7 +912,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
       // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
       // pass and rely on the fade effects of the particles to blend the 
 
-      uint8_t v = 32  * g_Analyzer.gVURatio;
+      uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
       _baseColor.fadeToBlackBy((min(255.0,1000 * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);

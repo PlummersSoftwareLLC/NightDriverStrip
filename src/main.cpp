@@ -849,7 +849,7 @@ void loop()
                         WLtoString(WiFi.status()), WiFi.localIP().toString().c_str(), // Wifi
                         ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                         g_FPS, g_Watts, g_Brite, // LED
-                        g_Analyzer.g_AudioFPS, g_Analyzer.g_serialFPS, g_Analyzer.gPeakVU, g_Analyzer.gMinVU, g_Analyzer.gVURatio, // Audio
+                        g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
                         g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                         g_FreeDrawTime);
             #elif ENABLE_AUDIO // Implied !ENABLE_WIFI from 1st condition

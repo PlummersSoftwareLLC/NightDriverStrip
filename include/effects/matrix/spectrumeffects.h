@@ -77,7 +77,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         {
             CRGB color = ColorFromPalette(_Palette, ::map(band, 0, min(NUM_BANDS, NUM_FANS), 0, 255) + beatsin8(1) );
             color = color.fadeToBlackBy(255 - 255 * peaks[band]);
-            color = color.fadeToBlackBy((2.0 - g_Analyzer.gVURatio) * 228);
+            color = color.fadeToBlackBy((2.0 - g_Analyzer._VURatio) * 228);
             DrawRingPixels(0, FAN_SIZE * peaks[band], color, NUM_FANS-1-band, 0);
         }
 
@@ -99,7 +99,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         
 
         // REVIEW(davepl) This might look interesting if it didn't erase...
-        bool bFlash = g_Analyzer.gVURatio > 1.99 && span > 1.9 && elapsed > 0.25;
+        bool bFlash = g_Analyzer._VURatio > 1.99 && span > 1.9 && elapsed > 0.25;
 
         _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
     }
@@ -149,7 +149,7 @@ class VUMeterEffect
         }
 
         int xHalf = pGFXChannel->width()/2-1;
-        int bars  = g_Analyzer.gVURatioFade / 2.0 * xHalf; // map(g_Analyzer.gVU, 0, MAX_VU/8, 1, xHalf);
+        int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; // map(g_Analyzer.gVU, 0, MAX_VU/8, 1, xHalf);
         bars = min(bars, xHalf);
 
         if (bars > iPeakVUy)
@@ -442,8 +442,8 @@ class WaveformEffect : public LEDStripEffect
         
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
-        DrawSpike(63, g_Analyzer.gVURatio/2.0);
-        DrawSpike(0, g_Analyzer.gVURatio/2.0);
+        DrawSpike(63, g_Analyzer._VURatio/2.0);
+        DrawSpike(0, g_Analyzer._VURatio/2.0);
     }
 };
 
@@ -468,15 +468,15 @@ class GhostWave : public WaveformEffect
 
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
 
-        g->DimAll(250 - _fade * g_Analyzer.gVURatio);
+        g->DimAll(250 - _fade * g_Analyzer._VURatio);
         g->MoveOutwardsX(top);
 
         if (_blur)
             g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
             
         // Offsetting by 0.5, which is a very low ratio, helps keep the line thin when sound is low
-        DrawSpike(MATRIX_WIDTH/2, (g_Analyzer.gVURatio - 0.5) / 1.5, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, (g_Analyzer.gVURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2, (g_Analyzer._VURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, (g_Analyzer._VURatio - 0.5) / 1.5, _erase);
     }
 };
 

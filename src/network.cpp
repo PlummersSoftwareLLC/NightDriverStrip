@@ -95,7 +95,7 @@ extern uint32_t g_FPS;
             debugI("%s", szBuffer);
 
             #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer.gVU: %.2f, g_Analyzer.gMinVU: %.2f, g_Analyzer.g_Analyzer.gPeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.gVU, g_Analyzer.gMinVU, g_Analyzer.gPeakVU, g_Analyzer.gVURatio);
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer.gVU: %.2f, g_Analyzer.gMinVU: %.2f, g_Analyzer.g_Analyzer.gPeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
                 debugI("%s", szBuffer);
             #endif
 

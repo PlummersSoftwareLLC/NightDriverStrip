@@ -389,12 +389,12 @@ class FanBeatEffect : public LEDStripEffect
 
     void OnBeat()
     {
-        int passes = random(1, mapDouble(g_Analyzer.gVURatio, 1.0, 2.0, 1, 3));
-        passes = g_Analyzer.gVURatio;
+        int passes = random(1, mapDouble(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
+        passes = g_Analyzer._VURatio;
         for (int iPass = 0; iPass < passes; iPass++)
         {
           int iFan = random(0, NUM_FANS);
-          int passes = random(1, g_Analyzer.gVURatio);
+          int passes = random(1, g_Analyzer._VURatio);
           CRGB c = CHSV(random(0, 255), 255, 255);
 
           for (int iPass = 0; iPass < passes; iPass++)
@@ -418,21 +418,21 @@ class FanBeatEffect : public LEDStripEffect
 
         if (latch)
         {
-          if (g_Analyzer.gVURatio < minVUSeen)
-            minVUSeen = g_Analyzer.gVURatio;
+          if (g_Analyzer._VURatio < minVUSeen)
+            minVUSeen = g_Analyzer._VURatio;
         }
 
-        if (g_Analyzer.gVURatio < 0.25)             // Crossing center going up
+        if (g_Analyzer._VURatio < 0.25)             // Crossing center going up
         {
           latch = true;
-          minVUSeen = g_Analyzer.gVURatio;
+          minVUSeen = g_Analyzer._VURatio;
         }
 
         if (latch)
         {
-            if (g_Analyzer.gVURatio > 1.5)
+            if (g_Analyzer._VURatio > 1.5)
             {
-              if (randomDouble(1.0, 3.0) < g_Analyzer.gVURatio)
+              if (randomDouble(1.0, 3.0) < g_Analyzer._VURatio)
               {
                 //Serial.printf("Beat at: %f\n", g_Analyzer.gVURatio - minVUSeen);
                 latch = false;
@@ -586,7 +586,7 @@ class PaletteReelEffect : public LEDStripEffect
       {
         for (int i = 0; i < NUM_FANS; i++)
         {
-          if (random(0, 100) < 50 * g_Analyzer.gVURatio)              // 40% Chance of attempting to do something
+          if (random(0, 100) < 50 * g_Analyzer._VURatio)              // 40% Chance of attempting to do something
           {
             int action = random(0, 3);          // Generate a random outcome
             if (action == 0 || action == 3)                     
@@ -595,7 +595,7 @@ class PaletteReelEffect : public LEDStripEffect
             }
             else if (action == 1)
             {
-              if (g_Analyzer.gVURatio > 0.5)
+              if (g_Analyzer._VURatio > 0.5)
               {
                 if (ReelDir[i] == 0)
                 {
@@ -610,7 +610,7 @@ class PaletteReelEffect : public LEDStripEffect
             }
             else if (action == 2)
             {
-              if (g_Analyzer.gVURatio > 0.5)
+              if (g_Analyzer._VURatio > 0.5)
               {
                 if (ReelDir[i] == 0)              // 2 -> Spin Forwards, or accel if already doing so
                 {
@@ -631,7 +631,7 @@ class PaletteReelEffect : public LEDStripEffect
       {
         for (int i = 0; i < NUM_FANS; i++)
         {
-          ReelPos[i] = (ReelPos[i] + ReelDir[i] * (2 + g_Analyzer.gVURatio));
+          ReelPos[i] = (ReelPos[i] + ReelDir[i] * (2 + g_Analyzer._VURatio));
           if (ReelPos[i] < 0)
             ReelPos[i] += FAN_SIZE;
           if (ReelPos[i] >= FAN_SIZE)
@@ -1036,7 +1036,7 @@ class FireFanEffect : public LEDStripEffect
         {
           for (int i = 0 ; i < Sparks; i++)
           {
-              if (random(255) < Sparking / 4 + Sparking * (g_Analyzer.gVURatio / 2.0) * 0.5)
+              if (random(255) < Sparking / 4 + Sparking * (g_Analyzer._VURatio / 2.0) * 0.5)
               // if (random(255) < Sparking / 4)
               {
                   int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
@@ -1129,25 +1129,25 @@ class MusicFireEffect : public FireFanEffect
 
       if (latch)
       {
-        if (g_Analyzer.gVURatio < minVUSeen)
-          minVUSeen = g_Analyzer.gVURatio;
+        if (g_Analyzer._VURatio < minVUSeen)
+          minVUSeen = g_Analyzer._VURatio;
       }
 
-      if (g_Analyzer.gVURatio < 0.25)             // We've seen a "low" value, so set the latch
+      if (g_Analyzer._VURatio < 0.25)             // We've seen a "low" value, so set the latch
       {
         latch = true;
-        minVUSeen = g_Analyzer.gVURatio;
+        minVUSeen = g_Analyzer._VURatio;
       }
 
       if (latch)
       {
-          if (g_Analyzer.gVURatio > 1.0)
+          if (g_Analyzer._VURatio > 1.0)
           {
-            if (randomDouble(0.0, 3.0) < g_Analyzer.gVURatio)
+            if (randomDouble(0.0, 3.0) < g_Analyzer._VURatio)
             {
               //Serial.printf("Beat at: %f\n", g_Analyzer.gVURatio - minVUSeen);
               latch = false;
-              OnBeat(g_Analyzer.gVURatio - minVUSeen);
+              OnBeat(g_Analyzer._VURatio - minVUSeen);
             }
           }
       }
@@ -1170,7 +1170,7 @@ class MusicFireEffect : public FireFanEffect
     virtual void Draw()
     {
         // Cycle the color (used by multicoor mode only)
-        _colorOffset = fmod(_colorOffset + 16 * g_Analyzer.gVURatio, 240); //  * _intensityAdjust.GetValue(), 240);
+        _colorOffset = fmod(_colorOffset + 16 * g_Analyzer._VURatio, 240); //  * _intensityAdjust.GetValue(), 240);
 
         FastLED.clear(false);
         DrawFire(Sequential);

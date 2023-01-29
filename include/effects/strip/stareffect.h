@@ -174,7 +174,7 @@ class MusicPulseStar : public Star
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 1.00f;  }
     virtual float FadeTime()        const { return 2.00f; } 
-    virtual double GetStarSize()    const { return 1 + _objectSize * g_Analyzer.gVURatio; }
+    virtual double GetStarSize()    const { return 1 + _objectSize * g_Analyzer._VURatio; }
 };
 
 #endif
@@ -452,7 +452,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             if (_musicFactor != 1.0)
             {
                 // 
-                prob = prob * (g_Analyzer.gVURatio - 0.5) * _musicFactor; 
+                prob = prob * (g_Analyzer._VURatio - 0.5) * _musicFactor; 
             }
 #endif
 
