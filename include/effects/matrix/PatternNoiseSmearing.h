@@ -90,7 +90,7 @@ public:
 
      
     // Noise
-    graphics()->SetNoise(3000, 3000, 3000, 2000 *(2.0 - gVURatio), 2000 *(2.0 - gVURatio));
+    graphics()->SetNoise(3000, 3000, 3000, 2000 *(2.0 - g_Analyzer._VURatio), 2000 *(2.0 - g_Analyzer._VURatio));
     graphics()->FillNoise();
 
     //graphics()->MoveX(3);

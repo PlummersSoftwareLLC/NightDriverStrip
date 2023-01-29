@@ -73,7 +73,8 @@
 //              Oct-30-2022  v031       Davepl      Screen cleanup, core assignments moved around
 //              Oct-30-2022  v032       Davepl      Better wait code, core assignments
 //              Oct-30-2022  v033       Davepl      Fixed mistiming bug when no draw was ready
-//              Nov-15-2022  v034       Davepl      Fixed buffer full condition
+//              Nov-15-2022  v034       Davepl      Fixed buffer full condition\
+//              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //
 //---------------------------------------------------------------------------
 
@@ -231,7 +232,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_CHANNELS            1
     #define NUM_RINGS               5
     #define RING_SIZE_0             24
-    #define ENABLE_AUDIO            1
+    #define ENABLE_AUDIO            0
 
     #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
 
@@ -1205,8 +1206,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 // Common globals
 
-extern int g_AudioFPS;                         // Framerate of the audio sampler
-extern int g_serialFPS;                        // How many serial packets are processed per second
 extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: davepl - why are some DRAM?)
 
 // gRingSizeTable

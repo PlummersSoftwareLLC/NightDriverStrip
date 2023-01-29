@@ -97,7 +97,7 @@ protected:
     CRGBPalette16 currentPalette;
     CRGBPalette16 targetPalette;
     uint lastSecond = 99;
-    char *currentPaletteName;
+    String currentPaletteName;
     bool palettePaused = false;
 
     static const int HeatColorsPaletteIndex = 6;
@@ -536,7 +536,7 @@ public:
     {
         currentPalette = palette;
         targetPalette = palette;
-        currentPaletteName = (char *)"Custom";
+        currentPaletteName = "Custom";
     }
 
     void loadPalette(int index)
@@ -552,48 +552,48 @@ public:
         {
         case 0:
             targetPalette = RainbowColors_p;
-            currentPaletteName = (char *)"Rainbow";
+            currentPaletteName = "Rainbow";
             break;
             // case 1:
             //   targetPalette = RainbowStripeColors_p;
-            //   currentPaletteName = (char *)"RainbowStripe";
+            //   currentPaletteName = "RainbowStripe";
             //   break;
         case 1:
             targetPalette = OceanColors_p;
-            currentPaletteName = (char *)"Ocean";
+            currentPaletteName = "Ocean";
             break;
         case 2:
             targetPalette = CloudColors_p;
-            currentPaletteName = (char *)"Cloud";
+            currentPaletteName = "Cloud";
             break;
         case 3:
             targetPalette = ForestColors_p;
-            currentPaletteName = (char *)"Forest";
+            currentPaletteName = "Forest";
             break;
         case 4:
             targetPalette = PartyColors_p;
-            currentPaletteName = (char *)"Party";
+            currentPaletteName = "Party";
             break;
         case 5:
             setupGrayscalePalette();
-            currentPaletteName = (char *)"Grey";
+            currentPaletteName = "Grey";
             break;
         case HeatColorsPaletteIndex:
             targetPalette = HeatColors_p;
-            currentPaletteName = (char *)"Heat";
+            currentPaletteName = "Heat";
             break;
         case 7:
             targetPalette = LavaColors_p;
-            currentPaletteName = (char *)"Lava";
+            currentPaletteName = "Lava";
             break;
         case 8:
             setupIcePalette();
-            currentPaletteName = (char *)"Ice";
+            currentPaletteName = "Ice";
             break;
         case RandomPaletteIndex:
             loadPalette(random(0, paletteCount - 1));
             paletteIndex = RandomPaletteIndex;
-            currentPaletteName = (char *)"Random";
+            currentPaletteName = "Random";
             break;
         }
         currentPalette = targetPalette;

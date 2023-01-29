@@ -29,24 +29,25 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"
+#include <globals.h>
+#include <mutex>
+#include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
+
 #include "effectmanager.h"
 #include "ledbuffer.h"
 #include "ntptimeclient.h"
 #include "remotecontrol.h"
-#include <mutex>
-#include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
 #include "ntptimeclient.h"
-#include "effects/matrix/spectrumeffects.h"
 
-#ifdef USESTRIP
+#if USESTRIP || USEMATRIX
 #include "ledstripgfx.h"
 #endif
 
-#ifdef USEMATRIX
-#include "ledstripgfx.h"
+#if USEMATRIX
 #include "ledmatrixgfx.h"
 #endif
+
+#include "effects/matrix/spectrumeffects.h"
 
 CRGB g_SinglePixel = CRGB::Blue;
 CLEDController *g_ledSinglePixel;
@@ -58,6 +59,7 @@ extern std::mutex g_buffer_mutex;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+
 double volatile g_FreeDrawTime = 0.0;
 
 extern uint32_t g_FPS;
@@ -75,9 +77,6 @@ void ShowTM1814();
 // we will draw the local effect instead
 
 DRAM_ATTR uint64_t g_usLastWifiDraw = 0;
-DRAM_ATTR double g_BufferAgeOldest = 0;
-DRAM_ATTR double g_BufferAgeNewest = 0;
-
 DRAM_ATTR uint8_t g_Brightness = 255;
 DRAM_ATTR uint8_t g_Fader = 255;
 
@@ -131,14 +130,15 @@ void MatrixPreDraw()
             const auto caption = pMatrix->GetCaption();
 
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
-            int w = strlen(caption) * kCharWidth;
+            int w = caption.length() * kCharWidth;
             int x = (MATRIX_WIDTH / 2) - (w / 2);
 
-            LEDMatrixGFX::titleLayer.drawString(x - 1, y, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x + 1, y, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x, y - 1, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x, y + 1, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x, y, titleColor, caption);
+            auto szCaption = caption.c_str();
+            LEDMatrixGFX::titleLayer.drawString(x - 1, y, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x + 1, y, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x, y - 1, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x, y + 1, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x, y, titleColor, szCaption);
         }
         else
         {
@@ -155,7 +155,7 @@ void MatrixPreDraw()
 
 uint16_t WiFiDraw()
 {
-    lock_guard<mutex> guard(g_buffer_mutex);
+    std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
     uint16_t pixelsDrawn = 0;
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
@@ -194,7 +194,6 @@ uint16_t WiFiDraw()
                 pixelsDrawn += pBuffer->Length();
             }
         }
-        g_apBufferManager[iChannel]->UpdateOldestAndNewest();
     }
     debugV("WifIDraw claims to have drawn %d pixels", pixelsDrawn);
     return pixelsDrawn;
@@ -339,19 +338,19 @@ void ShowOnboardRGBLED()
     // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
-#if ONBOARD_LED_R
-#if ENABLE_AUDIO
-    CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255);
-    ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
-    ledcWrite(2, 255 - c.g);
-    ledcWrite(3, 255 - c.b);
-#else
-    int iLed = NUM_LEDS / 2;
-    ledcWrite(1, 255 - graphics->leds[iLed].r); // write red component to channel 1, etc.
-    ledcWrite(2, 255 - graphics->leds[iLed].g);
-    ledcWrite(3, 255 - graphics->leds[iLed].b);
-#endif
-#endif
+    #if ONBOARD_LED_R
+        #if ENABLE_AUDIO
+            CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer._VURatioFade / 2.0 * 255);
+            ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - c.g);
+            ledcWrite(3, 255 - c.b);
+        #else
+            int iLed = NUM_LEDS / 2;
+            ledcWrite(1, 255 - graphics->leds[iLed].r); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - graphics->leds[iLed].g);
+            ledcWrite(3, 255 - graphics->leds[iLed].b);
+        #endif
+    #endif
 }
 
 // PrepareOnboardPixel

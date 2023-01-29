@@ -53,7 +53,7 @@ class PatternClock : public LEDStripEffect
 
     virtual void Draw()
     {
-        auto g = mgraphics();
+        auto g = graphics();
 
         // Get the hours, minutes, and seconds of hte current time
 

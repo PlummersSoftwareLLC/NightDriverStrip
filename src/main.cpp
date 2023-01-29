@@ -150,18 +150,16 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                            // CONFIG and global headers
+#include "soundanalyzer.h"                      // for audio sound processing
+#include "effectmanager.h"                      // For g_EffectManagerf
 
 // If the Atomi TM1814 lights are being used, we include the NeoPixelBus code
 // to drive them, but otherwise we do not use or include NeoPixelBus
 
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
 #include <ESPmDNS.h>
-
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "socketserver.h"                       // our socket server for incoming
-#if ENABLE_AUDIO
-    #include "soundanalyzer.h"                  // for audio sound processing
-#endif
 #include "network.h"                            // For WiFi credentials
 #include "ledbuffer.h"
 #include "Bounce2.h"                            // For Bounce button class
@@ -179,8 +177,6 @@
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;
-extern volatile float gPeakVU; // How high our peak VU scale is in live mode
-extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
 extern double g_Brite;
 
@@ -188,17 +184,7 @@ extern double g_Brite;
 // Task Handles to our running threads
 //
 
-TaskHandle_t g_taskScreen = nullptr;
-TaskHandle_t g_taskSync   = nullptr;
-TaskHandle_t g_taskWeb    = nullptr;
-TaskHandle_t g_taskDraw   = nullptr;
-TaskHandle_t g_taskDebug  = nullptr;
-TaskHandle_t g_taskAudio  = nullptr;
-TaskHandle_t g_taskNet    = nullptr;
-TaskHandle_t g_taskRemote = nullptr;
-TaskHandle_t g_taskSocket = nullptr;
-
-TaskManager g_TaskManager;
+NightDriverTaskManager g_TaskManager;
 
 //
 // Global Variables
@@ -229,7 +215,7 @@ DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
 
 DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
-DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                     // Instance of our telnet debug server
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
@@ -430,7 +416,7 @@ inline void CheckHeap()
 {
     if (false == heap_caps_check_integrity_all(true))
     {
-        throw runtime_error("Heap FAILED checks!");
+        throw std::runtime_error("Heap FAILED checks!");
     }
 }
 
@@ -521,7 +507,7 @@ void setup()
 
     #if ENABLE_WIFI
         debugI("Starting DebugLoopTaskEntry");
-        xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &g_taskDebug, DEBUG_CORE);
+        g_TaskManager.StartDebugThread();
         CheckHeap();
     #endif
 
@@ -640,13 +626,13 @@ void setup()
 
     #ifdef USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
-            g_pDevices[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
     #endif
 
     #if USEMATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_pDevices[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             g_pDevices[i]->loadPalette(0);
         }
     #endif
@@ -674,7 +660,7 @@ void setup()
     debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
+        g_apBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
 
     // Initialize all of the built in effects
 
@@ -777,12 +763,12 @@ void setup()
     InitEffectsManager();
 
 #if USE_SCREEN
-    xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", STACK_SIZE, nullptr, SCREEN_PRIORITY, &g_taskScreen, SCREEN_CORE);
+    g_TaskManager.StartScreenThread();
 #endif
 
     debugI("Launching Drawing:");
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
-    xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &g_taskDraw, DRAWING_CORE);
+    g_TaskManager.StartDrawThread();
     CheckHeap();
 
 #if ENABLE_WIFI && WAIT_FOR_WIFI
@@ -790,7 +776,7 @@ void setup()
     if (false == ConnectToWiFi(99))
     {
         debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
-        throw runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
+        throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
     }
     Debug.setSerialEnabled(true);
 #endif
@@ -803,26 +789,26 @@ void setup()
 
 #if ENABLE_REMOTE
     // Start Remote Control
-    xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &g_taskRemote, REMOTE_CORE);
+    g_TaskManager.StartRemoteThread();
     CheckHeap();
 #endif
 
-    xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &g_taskSync, NET_CORE);
+    g_TaskManager.StartNetworkThread();
     CheckHeap();
 
 #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
-    xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", STACK_SIZE, nullptr, SOCKET_PRIORITY, &g_taskSocket, SOCKET_CORE);
+    g_TaskManager.StartSocketThread();
 #endif
 
 #if ENABLE_AUDIO
     // The audio sampler task might as well be on a different core from the LED stuff
-    xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &g_taskAudio, AUDIO_CORE);
+    g_TaskManager.StartAudioThread();
     CheckHeap();
 #endif
 
 #if ENABLE_AUDIOSERIAL
     // The audio sampler task might as well be on a different core from the LED stuff
-    xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &g_taskAudio, AUDIOSERIAL_CORE);
+    
     CheckHeap();
 #endif
 
@@ -862,7 +848,7 @@ void loop()
                         WLtoString(WiFi.status()), WiFi.localIP().toString().c_str(), // Wifi
                         ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                         g_FPS, g_Watts, g_Brite, // LED
-                        g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, // Audio
+                        g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
                         g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                         g_FreeDrawTime);
             #elif ENABLE_AUDIO // Implied !ENABLE_WIFI from 1st condition
@@ -870,7 +856,7 @@ void loop()
                     ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                     g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), // Buffer
                     g_FPS, g_Watts, g_Brite, // LED
-                    g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, // Audio
+                    g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
                     g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                     g_FreeDrawTime);
             #elif ENABLE_WIFI // Implied !ENABLE_AUDIO from 1st condition

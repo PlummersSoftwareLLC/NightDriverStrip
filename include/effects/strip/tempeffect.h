@@ -38,26 +38,26 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include "colorutils.h"
+
 #include "globals.h"
+#include "soundanalyzer.h"
+#include "colorutils.h"
 #include "ledstripeffect.h" 
 #include "faneffects.h"
 #include "musiceffect.h"
-#if ENABLE_AUDIO
-#include "soundanalyzer.h"
-#endif
+
 extern DRAM_ATTR AppTime g_AppTime;
 
-class SimpleInsulatorBeatEffect : public BeatEffectBase
+class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
   protected:
 
-    deque<int> _lit;
+    std::deque<int> _lit;
 
     virtual void Draw()
     {
-        BeatEffectBase::Draw();
-        LEDStripEffect::fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
+        BeatEffectBase::ProcessAudio();
+        fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
@@ -81,21 +81,21 @@ class SimpleInsulatorBeatEffect : public BeatEffectBase
 
     using BeatEffectBase::BeatEffectBase;
  
-    SimpleInsulatorBeatEffect(const char * pszName) 
+    SimpleInsulatorBeatEffect(const String pszName) 
       : LEDStripEffect(pszName), BeatEffectBase(1.0, 1.0, 0.01)
     {
     }
 };
 
-class SimpleInsulatorBeatEffect2 : public BeatEffectBase
+class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 {
   protected:
 
-    deque<int> _lit;
+    std::deque<int> _lit;
 
     virtual void Draw()
     {
-        BeatEffectBase::Draw();
+        BeatEffectBase::ProcessAudio();
         fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
     }
 
@@ -118,8 +118,7 @@ class SimpleInsulatorBeatEffect2 : public BeatEffectBase
 
   public:
  
-    SimpleInsulatorBeatEffect2(const char * pszName) 
-      : LEDStripEffect(pszName), BeatEffectBase()
+    SimpleInsulatorBeatEffect2(const String pszName) : LEDStripEffect(pszName), BeatEffectBase()
     {
     }
 };
@@ -152,7 +151,7 @@ class VUInsulatorsEffect : public LEDStripEffect
         DrawVUPixels(iPeakVUy, fade, vu_gpGreen);
       }
 
-      int bars = ::map(gVU, gMinVU, 150.0, 1, _cLEDs - 1);
+      int bars = ::map(g_Analyzer._VU, g_Analyzer._MinVU, 150.0, 1, _cLEDs - 1);
       if (bars >= iPeakVUy)
       {
         msPeakVU = millis();

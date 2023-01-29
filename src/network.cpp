@@ -28,14 +28,20 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"
-#include "network.h"
-#include "ledbuffer.h"
-#include "spiffswebserver.h"
 #include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+
+#include "globals.h"
+#include "soundanalyzer.h"
+#include "network.h"
+#include "ledbuffer.h"
+#include "spiffswebserver.h"
+
+#if ENABLE_REMOTE
+#include "remotecontrol.h"
+#endif
 
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
@@ -52,15 +58,7 @@ std::mutex g_buffer_mutex;
 // This is where we can add our own custom debugger commands
 
 extern AppTime  g_AppTime;
-extern double   g_BufferAgeOldest;
-extern double   g_BufferAgeNewest;
 extern uint32_t g_FPS;
-
-extern volatile float gVURatioFade;
-extern volatile float gVURatio;       // Current VU as a ratio to its recent min and max
-extern volatile float gVU;            // Instantaneous read of VU value
-extern volatile float gPeakVU;        // How high our peak VU scale is in live mode
-extern volatile float gMinVU;   
 
 // processRemoteDebugCmd
 // 
@@ -96,18 +94,18 @@ extern volatile float gMinVU;
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
             debugI("%s", szBuffer);
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_BufferAgeOldest, g_BufferAgeNewest);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_apBufferManager[0]->AgeOfOldestBuffer(), g_apBufferManager[0]->AgeOfNewestBuffer());
             debugI("%s", szBuffer);
 
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
             debugI("%s", szBuffer);
 
             #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
                 debugI("%s", szBuffer);
             #endif
 
-            #if INCOMING_WIFI_ENABLED
+            #if INCOMING_WIFI_ENABLEDgVUR
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             debugI("%s", szBuffer);
             #endif
@@ -210,7 +208,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugI("Starting/restarting Socket Server...");
             g_SocketServer.release();
             if (false == g_SocketServer.begin())
-                throw runtime_error("Could not start socket server!");
+                throw std::runtime_error("Could not start socket server!");
 
             debugI("Socket server started.");
         #endif
@@ -280,7 +278,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 //
 // Set up the over-the-air programming info so that we can be flashed over WiFi
 
-void SetupOTA(const char *pszHostname)
+void SetupOTA(const String pszHostname)
 {
 #if ENABLE_OTA
     ArduinoOTA.setRebootOnSuccess(true);
@@ -288,7 +286,7 @@ void SetupOTA(const char *pszHostname)
     if (nullptr == pszHostname)
         ArduinoOTA.setMdnsEnabled(false);
     else
-        ArduinoOTA.setHostname(pszHostname);
+        ArduinoOTA.setHostname(pszHostname.c_str());
 
     ArduinoOTA
         .onStart([]() {
@@ -353,7 +351,7 @@ void SetupOTA(const char *pszHostname)
             {
                 debugW("End Failed");
             }
-            throw runtime_error("OTA Flash update failed.");
+            throw std::runtime_error("OTA Flash update failed.");
         });
 
     ArduinoOTA.begin();
@@ -403,7 +401,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             // Go through the channel mask to see which bits are set in the channel16 specifier, and send the data to each and every
             // channel that matches the mask.  So if the send channel 7, that means the lowest 3 channels will be set.
 
-            lock_guard<mutex> guard(g_buffer_mutex);
+            std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
             //if (!heap_caps_check_integrity_all(true))
             //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
@@ -423,7 +421,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                             debugV("Updating existing buffer");
                             if (!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
                                 return false;
-                            g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                             bDone = true;
                         }
                     }
@@ -433,41 +430,9 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                         auto pNewBuffer = g_apBufferManager[iChannel]->GetNewBuffer();
                         if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                             return false;
-                        g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                     }
                 }
             }
-            return true;
-        }
-
-        case WIFI_COMMAND_VU:
-        {
-            debugW("Deprecated WIFI_COMMAND_VU received.");
-            uint32_t vu32 = payloadData[5] << 24 | payloadData[4] << 16 | payloadData[3] << 8 | payloadData[2];
-            debugV("Incoming VU: %u", vu32);
-            return true;
-        }
-
-        // WIFI_COMMAND_CLOCK
-        //
-        // Allows the server to send its current timeofday clock; if it's newer than our clock, we update ours
-
-        case WIFI_COMMAND_CLOCK:
-        {
-            debugW("Deprecated WIFI_COMMAND_CLOCK received.");
-            if (payloadLength != WIFI_COMMAND_CLOCK_SIZE)
-            {
-                debugW("Incorrect packet size for clock command received.  Expected %d and got %d\n", WIFI_COMMAND_CLOCK_SIZE, payloadLength);
-                return false;
-            }
-
-            uint16_t channel16    = payloadData[3]  << 8  | payloadData[2];
-
-            if (channel16 != 0)
-            {
-                debugW("Nonzero channel for clock not currently supported, but received: %d\n", channel16);
-            }
-
             return true;
         }
 

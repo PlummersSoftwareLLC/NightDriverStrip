@@ -88,7 +88,7 @@ class Screen
     // 
     // Display a single string of text on the TFT screen, useful during boot for status, etc.
 
-    static void IRAM_ATTR ScreenStatus(const char *pszStatus)
+    static void IRAM_ATTR ScreenStatus(const String pszStatus)
     {
     #if USE_OLED 
         g_pDisplay->clear();
@@ -134,7 +134,7 @@ class Screen
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
         #elif USE_OLED 
-            return g_pDisplay->getFontAscent();
+            return g_pDisplay->getFontAscent() + 1;
         #elif USE_TFTSPI || USE_M5DISPLAY
             return g_pDisplay->fontHeight();
         #elif USE_SCREEN
@@ -144,7 +144,7 @@ class Screen
         #endif
     }
 
-    static uint16_t textWidth(const char * psz)
+    static uint16_t textWidth(const String psz)
     {
         #if USE_OLED
             return g_pDisplay->getStrWidth(psz);
@@ -156,7 +156,7 @@ class Screen
             g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
             return w;
         #else 
-            return 8 * strlen(psz);
+            return 8 * psz.length();
         #endif
     }
 
@@ -280,21 +280,28 @@ class Screen
         #endif
     }
 
-    static void drawString(const char * pszText, uint16_t x, uint16_t y)
+    static void println(const String pszText)
+    {
+        #if USE_SCREEN
+            g_pDisplay->println(pszText.c_str());
+        #endif
+    }
+
+    static void drawString(const String pszText, uint16_t x, uint16_t y)
     {
         #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
         setCursor(x, y);
-        println(pszText);
+        println(pszText.c_str());
         #endif
     }
 
     // drawString with no x component assumed you want it centered on the display
 
-    static void drawString(const char * pszText, uint16_t y)
+    static void drawString(const String pszText, uint16_t y)
     {
         #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
         setCursor(screenWidth() / 2 - textWidth(pszText) / 2, y);
-        println(pszText);
+        println(pszText.c_str());
         #endif
     }
 

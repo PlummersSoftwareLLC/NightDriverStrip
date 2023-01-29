@@ -29,19 +29,22 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "globals.h"
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
 #include <limits>
+
+#include "globals.h"
+#include "soundanalyzer.h"
+#include "effectmanager.h"
+#include "gfxbase.h"
 #include "pixeltypes.h"
 
-#include "effectmanager.h"
+
+extern DRAM_ATTR uint8_t g_Brightness;
+extern DRAM_ATTR uint8_t g_Fader;
 
 #if ENABLE_REMOTE
-
-//extern RemoteDebug Debug;
-extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
 #define key24  true
 #define key44  false
@@ -167,12 +170,14 @@ class RemoteControl
 
     bool begin()
     {
+        debugW("Remote Control Decoding Started");
         _IR_Receive.enableIRIn();
         return true;
     }
 
     void end()
     {
+        debugW("Remote Control Decoding Stopped");
         _IR_Receive.disableIRIn(); 
     }
 
@@ -182,12 +187,14 @@ class RemoteControl
         static uint lastResult = 0;
 
         if (!_IR_Receive.decode(&results))
+        {
             return;
+        }
 
         uint result = results.value;
         _IR_Receive.resume();
 
-        debugV("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
+        debugW("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
 
         if (0xFFFFFFFF == result)
         {

@@ -38,19 +38,15 @@
 #include <math.h>
 #include <memory>
 #include <algorithm>
+
+#include "soundanalyzer.h"
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h"
-
-#ifdef ENABLE_AUDIO
 #include "musiceffect.h"
-#endif
+#include "effectmanager.h"
 
 extern AppTime g_AppTime;
-extern volatile float gVURatio;
-extern volatile float gVURatioFade;
-
-
 class FireEffect : public LEDStripEffect
 {
   protected:
@@ -79,7 +75,7 @@ class FireEffect : public LEDStripEffect
 
   public:
 
-    FireEffect(const char * pszName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
+    FireEffect(const String pszName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
         : LEDStripEffect(pszName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
@@ -196,7 +192,7 @@ class PaletteFlameEffect : public FireEffect
     CRGBPalette256 _palette;
 
 public:
-    PaletteFlameEffect(const char *pszName,
+    PaletteFlameEffect(const String pszName,
                        const CRGBPalette256 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -227,7 +223,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected virtual BeatEffe
 {
   public:
 
-    MusicalPaletteFire(const char *pszName,
+    MusicalPaletteFire(const String pszName,
                        const CRGBPalette256 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -253,7 +249,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected virtual BeatEffe
         }
         else
         {
-            GenerateSparks(gVURatio * 50);
+            GenerateSparks(g_Analyzer._VURatio * 50);
         }
     }
 
@@ -469,7 +465,7 @@ public:
         {
             for (int k = _cLEDs - 1; k >= 3; k--)
             {
-                float amount = 0.2f + gVURatio; // MIN(0.85f, _Drift * deltaTime);
+                float amount = 0.2f + g_Analyzer._VURatio; // MIN(0.85f, _Drift * deltaTime);
                 float c0 = 1.0f - amount;
                 float c1 = amount * 0.33;
                 float c2 = amount * 0.33;

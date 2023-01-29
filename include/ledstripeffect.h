@@ -70,7 +70,7 @@ class LEDStripEffect
 
   public:
 
-    LEDStripEffect(const char * pszName)
+    LEDStripEffect(const String pszName)
     {
         if (pszName)
             _friendlyName = pszName;
@@ -108,9 +108,9 @@ class LEDStripEffect
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
-    virtual const char *FriendlyName() const
+    virtual const String FriendlyName() const
     {
-        return _friendlyName.c_str();
+        return _friendlyName;
     }
 
     virtual size_t DesiredFramesPerSecond() const

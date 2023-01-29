@@ -37,13 +37,13 @@
 #include <vector>
 #include <math.h>
 #include <deque>
-#include "colorutils.h"
+
 #include "globals.h"
-#include "ledstripeffect.h"
-#if ENABLE_AUDIO
 #include "soundanalyzer.h"
-#endif
+#include "colorutils.h"
+#include "ledstripeffect.h"
 #include "particles.h"
+
 extern AppTime g_AppTime;
 
 const int cMaxNewStarsPerFrame = 144;
@@ -174,7 +174,7 @@ class MusicPulseStar : public Star
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 1.00f;  }
     virtual float FadeTime()        const { return 2.00f; } 
-    virtual double GetStarSize()    const { return 1 + _objectSize * gVURatio; }
+    virtual double GetStarSize()    const { return 1 + _objectSize * g_Analyzer._VURatio; }
 };
 
 #endif
@@ -324,7 +324,7 @@ class HotWhiteStar : public Star
     virtual float HoldTime()        const { return 0.00f;  }
     virtual float FadeTime()        const { return 2.00f;  }  
 
-    virtual CRGB Render(TBlendType blend)
+    virtual CRGB RenderColor(TBlendType blend)
     {
         if (Age() < IgnitionTime() + HoldTime())
             return CRGB::White;
@@ -383,7 +383,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
   public:
 
 
-    StarryNightEffect<StarType>(const char * pszName,
+    StarryNightEffect<StarType>(const String pszName,
                                 const CRGBPalette256& palette, 
                                 float probability = 1.0, 
                                 float starSize = 1.0, 
@@ -448,13 +448,13 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         {
             float prob = _newStarProbability;
 
-#if ENABLE_AUDIO
-            if (_musicFactor != 1.0)
-            {
-                // 
-                prob = prob * (gVURatio - 0.5) * _musicFactor; 
-            }
-#endif
+            #if ENABLE_AUDIO
+                if (_musicFactor != 1.0)
+                {
+                    // 
+                    prob = prob * (g_Analyzer._VURatio - 0.5) * _musicFactor; 
+                }
+            #endif
 
             if (randomDouble(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
             {
