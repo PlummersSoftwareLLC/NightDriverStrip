@@ -27,7 +27,13 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-//#include "remotecontrol.h"
+#include "globals.h"
+#include "soundanalyzer.h"
+#include "effectmanager.h"
+#if ENABLE_REMOTE
+#include "remotecontrol.h"
+#endif
+
 #include "socketserver.h"
 #include "ntptimeclient.h"
 #include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
@@ -46,7 +52,7 @@
     #endif
 
     bool ConnectToWiFi(uint cRetries);
-    void SetupOTA(const char *pszHostname);
+    void SetupOTA(const String pszHostname);
 
     // Static Helpers
     //

@@ -125,6 +125,90 @@ extern uint32_t g_FPS;
     }
 #endif
 
+// SetupOTA
+//
+// Set up the over-the-air programming info so that we can be flashed over WiFi
+
+void SetupOTA(const String pszHostname)
+{
+#if ENABLE_OTA
+    ArduinoOTA.setRebootOnSuccess(true);
+
+    if (nullptr == pszHostname)
+        ArduinoOTA.setMdnsEnabled(false);
+    else
+        ArduinoOTA.setHostname(pszHostname.c_str());
+
+    ArduinoOTA
+        .onStart([]() {
+            g_bUpdateStarted = true;
+
+            String type;
+            if (ArduinoOTA.getCommand() == U_FLASH)
+                type = "sketch";
+            else // U_SPIFFS
+                type = "filesystem";
+
+            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+            debugI("Stopping SPIFFS");
+            #if ENABLE_WEBSEVER
+            SPIFFS.end();
+            #endif
+            
+            debugI("Stopping IR remote");
+            #if ENABLE_REMOTE            
+            g_RemoteControl.end();
+            #endif        
+            
+            debugI("Start updating from OTA ");
+            debugI("%s", type.c_str());
+        })
+        .onEnd([]() {
+            debugI("\nEnd OTA");
+        })
+        .onProgress([](unsigned int progress, unsigned int total) 
+        {
+            static uint last_time = millis();
+            if (millis() - last_time > 1000)
+            {
+                last_time = millis();
+                debugI("Progress: %u%%\r", (progress / (total / 100)));
+            }
+            else
+            {
+                debugV("Progress: %u%%\r", (progress / (total / 100)));
+            }
+            
+        })
+        .onError([](ota_error_t error) {
+            debugW("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR)
+            {
+                debugW("Auth Failed");
+            }
+            else if (error == OTA_BEGIN_ERROR)
+            {
+                debugW("Begin Failed");
+            }
+            else if (error == OTA_CONNECT_ERROR)
+            {
+                debugW("Connect Failed");
+            }
+            else if (error == OTA_RECEIVE_ERROR)
+            {
+                debugW("Receive Failed");
+            }
+            else if (error == OTA_END_ERROR)
+            {
+                debugW("End Failed");
+            }
+            throw std::runtime_error("OTA Flash update failed.");
+        });
+
+    ArduinoOTA.begin();
+#endif
+}
+
 // RemoteLoopEntry
 //
 // If enabled, this is the main thread loop for the remote control.  It is intialized and then
@@ -215,7 +299,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_OTA
             debugI("Publishing OTA...");
-            SetupOTA(cszHostname);
+            SetupOTA(String(cszHostname));
         #endif
 
         #if ENABLE_NTP
@@ -274,89 +358,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     
 #endif
 
-// SetupOTA
-//
-// Set up the over-the-air programming info so that we can be flashed over WiFi
 
-void SetupOTA(const String pszHostname)
-{
-#if ENABLE_OTA
-    ArduinoOTA.setRebootOnSuccess(true);
-
-    if (nullptr == pszHostname)
-        ArduinoOTA.setMdnsEnabled(false);
-    else
-        ArduinoOTA.setHostname(pszHostname.c_str());
-
-    ArduinoOTA
-        .onStart([]() {
-            g_bUpdateStarted = true;
-
-            String type;
-            if (ArduinoOTA.getCommand() == U_FLASH)
-                type = "sketch";
-            else // U_SPIFFS
-                type = "filesystem";
-
-            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-            debugI("Stopping SPIFFS");
-            #if ENABLE_WEBSEVER
-            SPIFFS.end();
-            #endif
-            
-            debugI("Stopping IR remote");
-            #if ENABLE_REMOTE            
-            g_RemoteControl.end();
-            #endif        
-            
-            debugI("Start updating from OTA ");
-            debugI("%s", type.c_str());
-        })
-        .onEnd([]() {
-            debugI("\nEnd OTA");
-        })
-        .onProgress([](unsigned int progress, unsigned int total) 
-        {
-            static uint last_time = millis();
-            if (millis() - last_time > 1000)
-            {
-                last_time = millis();
-                debugI("Progress: %u%%\r", (progress / (total / 100)));
-            }
-            else
-            {
-                debugV("Progress: %u%%\r", (progress / (total / 100)));
-            }
-            
-        })
-        .onError([](ota_error_t error) {
-            debugW("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR)
-            {
-                debugW("Auth Failed");
-            }
-            else if (error == OTA_BEGIN_ERROR)
-            {
-                debugW("Begin Failed");
-            }
-            else if (error == OTA_CONNECT_ERROR)
-            {
-                debugW("Connect Failed");
-            }
-            else if (error == OTA_RECEIVE_ERROR)
-            {
-                debugW("Receive Failed");
-            }
-            else if (error == OTA_END_ERROR)
-            {
-                debugW("End Failed");
-            }
-            throw std::runtime_error("OTA Flash update failed.");
-        });
-
-    ArduinoOTA.begin();
-#endif
-}
 
 // ProcessIncomingData
 //

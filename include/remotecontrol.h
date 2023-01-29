@@ -269,4 +269,6 @@ class RemoteControl
     }
 };
 
+extern RemoteControl g_RemoteControl;
+
 #endif

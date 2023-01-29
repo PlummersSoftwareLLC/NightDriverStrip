@@ -45,7 +45,7 @@
 #include <driver/adc.h>
 #include <driver/adc_deprecated.h>
 
-#include "network.h"
+extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
 #define SUPERSAMPLES 2                                      // How many supersamples to take
 #define SAMPLE_BITS 12                                      // Sample resolution (0-4095)
