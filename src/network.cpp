@@ -54,12 +54,6 @@ std::mutex g_buffer_mutex;
 extern AppTime  g_AppTime;
 extern uint32_t g_FPS;
 
-extern volatile float gVURatioFade;
-extern volatile float gVURatio;       // Current VU as a ratio to its recent min and max
-extern volatile float gVU;            // Instantaneous read of VU value
-extern volatile float gPeakVU;        // How high our peak VU scale is in live mode
-extern volatile float gMinVU;   
-
 // processRemoteDebugCmd
 // 
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls
@@ -101,7 +95,7 @@ extern volatile float gMinVU;
             debugI("%s", szBuffer);
 
             #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer.gVU: %.2f, g_Analyzer.gMinVU: %.2f, g_Analyzer.g_Analyzer.gPeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.gVU, g_Analyzer.gMinVU, g_Analyzer.gPeakVU, g_Analyzer.gVURatio);
                 debugI("%s", szBuffer);
             #endif
 
@@ -208,7 +202,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugI("Starting/restarting Socket Server...");
             g_SocketServer.release();
             if (false == g_SocketServer.begin())
-                throw runtime_error("Could not start socket server!");
+                throw std::runtime_error("Could not start socket server!");
 
             debugI("Socket server started.");
         #endif
@@ -401,7 +395,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             // Go through the channel mask to see which bits are set in the channel16 specifier, and send the data to each and every
             // channel that matches the mask.  So if the send channel 7, that means the lowest 3 channels will be set.
 
-            lock_guard<mutex> guard(g_buffer_mutex);
+            std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
             //if (!heap_caps_check_integrity_all(true))
             //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");

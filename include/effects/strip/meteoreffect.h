@@ -49,11 +49,11 @@ extern AppTime g_AppTime;
 
 class MeteorChannel
 {
-    vector<float> hue;
-    vector<float> iPos;
-    vector<bool>  bLeft;
-    vector<float> speed;
-    vector<double> lastBeat;
+    std::vector<float> hue;
+    std::vector<float> iPos;
+    std::vector<bool>  bLeft;
+    std::vector<float> speed;
+    std::vector<double> lastBeat;
 
 public:
 
@@ -132,8 +132,8 @@ public:
         {
             float spd = speed[i];
 #if ENABLE_AUDIO
-            if (gVURatio > 1.0)
-                spd *= gVURatio;
+            if (g_Analyzer.gVURatio > 1.0)
+                spd *= g_Analyzer.gVURatio;
 #endif
 
             iPos[i] = (bLeft[i]) ? iPos[i]-spd : iPos[i]+spd;

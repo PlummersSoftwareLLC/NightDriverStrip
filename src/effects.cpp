@@ -299,7 +299,7 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
         CHSV hueColor = rgb2hsv_approximate(color1);
-        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
         if (object->Init(g_pDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
@@ -309,7 +309,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
         if (object->Init(g_pDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -709,10 +709,10 @@ static_assert(ARRAYSIZE(AllEffects) > 0);
 void InitEffectsManager()
 {
         debugW("InitEffectsManager...");
-        g_pEffectManager = make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
+        g_pEffectManager = std::make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
 
         if (false == g_pEffectManager->Init())
-                throw runtime_error("Could not initialize effect manager");
+                throw std::runtime_error("Could not initialize effect manager");
 }
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;

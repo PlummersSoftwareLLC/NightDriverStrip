@@ -40,8 +40,6 @@
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
 
-using namespace std;
-
 //
 // Matrix Panel
 //

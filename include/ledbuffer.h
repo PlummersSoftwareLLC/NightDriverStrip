@@ -39,8 +39,6 @@
 #include "gfxbase.h"
 #include "globals.h"
 
-using namespace std;
-
 extern DRAM_ATTR AppTime g_AppTime;                       
 
 #ifdef USE_PSRAM
@@ -125,7 +123,7 @@ class LEDBuffer
             // _leds = psram_allocator<CRGB>().allocate(NUM_LEDS);
             _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
         #else
-            _leds = make_unique<CRGB []>(NUM_LEDS);
+            _leds = std::make_unique<CRGB []>(NUM_LEDS);
         #endif
 
 
@@ -219,13 +217,13 @@ class LEDBuffer
 
 class LEDBufferManager
 {
-    const std::unique_ptr<shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
-    std::shared_ptr<LEDBuffer>                      _pLastBufferAdded;   // Keeps track of the MRU buffer
-    size_t                                          _iNextBuffer;        // Head pointer index
-    size_t                                          _iLastBuffer;        // Tail pointer index
-    uint32_t                                        _cBuffers;           // Number of buffers
-    double                                          _BufferAgeOldest = 0;
-    double                                          _BufferAgeNewest = 0;
+    const std::unique_ptr<std::shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
+    std::shared_ptr<LEDBuffer>                           _pLastBufferAdded;   // Keeps track of the MRU buffer
+    size_t                                               _iNextBuffer;        // Head pointer index
+    size_t                                               _iLastBuffer;        // Tail pointer index
+    uint32_t                                             _cBuffers;           // Number of buffers
+    double                                               _BufferAgeOldest = 0;
+    double                                               _BufferAgeNewest = 0;
    
   public:
 

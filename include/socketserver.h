@@ -111,7 +111,7 @@ public:
         _server_fd(0),
         _cbReceived(0)
     {
-        _abOutputBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+        _abOutputBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -129,7 +129,7 @@ public:
 
     bool begin()
     {
-        _pBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+        _pBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
 
         _cbReceived = 0;
         

@@ -40,7 +40,6 @@
 #include "ledstripeffect.h"
 
 extern AppTime g_AppTime;
-using namespace std;
 
 // BouncingBallEffect
 //
@@ -73,12 +72,12 @@ private:
     double StartHeight = 1;
     double ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
     
-    vector<double> ClockTimeSinceLastBounce;
-    vector<double> TimeSinceLastBounce;
-    vector<double> Height;
-    vector<double> ImpactVelocity;
-    vector<double> Dampening;
-    vector<CRGB> Colors;
+    std::vector<double> ClockTimeSinceLastBounce;
+    std::vector<double> TimeSinceLastBounce;
+    std::vector<double> Height;
+    std::vector<double> ImpactVelocity;
+    std::vector<double> Dampening;
+    std::vector<CRGB>   Colors;
     
   public:
 

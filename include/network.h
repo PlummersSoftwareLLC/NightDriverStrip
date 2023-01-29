@@ -41,10 +41,6 @@
     #endif
     void processRemoteDebugCmd();
 
-    #if ENABLE_REMOTE
-        extern RemoteControl g_RemoteControl;
-    #endif
-
     bool ConnectToWiFi(uint cRetries);
     void SetupOTA(const String pszHostname);
 

@@ -34,14 +34,16 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 #include <limits>
-#include "pixeltypes.h"
 
+#include "soundanalyzer.h"
+#include "gfxbase.h"
+#include "pixeltypes.h"
 #include "effectmanager.h"
 
-#if ENABLE_REMOTE
+extern DRAM_ATTR uint8_t g_Brightness;
+extern DRAM_ATTR uint8_t g_Fader;
 
-//extern RemoteDebug Debug;
-extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+#if ENABLE_REMOTE
 
 #define key24  true
 #define key44  false

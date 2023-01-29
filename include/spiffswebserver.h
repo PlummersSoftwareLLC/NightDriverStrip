@@ -43,22 +43,21 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
-#include <effectmanager.h>
 #include <Arduino.h>
 #include <vector>
-
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
 
+#include "effectmanager.h"
+#include "gfxbase.h"
 #include "taskmgr.h"
 
-extern std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
-extern NightDriverTaskManager g_TaskManager;
+#if ENABLE_AUDIO
+#include "soundanalyzer.h"
+#endif
 
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
-
-using namespace fs;
 
 class CSPIFFSWebServer
 {
@@ -138,10 +137,10 @@ class CSPIFFSWebServer
 
         j["LED_FPS"]               = g_FPS;
 #if ENABLE_AUDIOSERIAL
-        j["SERIAL_FPS"]            = g_serialFPS;
+        j["SERIAL_FPS"]            = g_Analyzer.g_serialFPS;
 #endif
 #if ENABLE_AUDIO
-        j["AUDIO_FPS"]             = g_AudioFPS;
+        j["AUDIO_FPS"]             = g_Analyzer.g_AudioFPS;
 #endif
 
         j["HEAP_SIZE"]             = ESP.getHeapSize();

@@ -36,6 +36,9 @@
 #include <vector>
 #include <deque>
 #include <math.h>
+
+#include "soundanalyzer.h"
+#include "effectmanager.h"
 #include "colorutils.h"
 #include "globals.h"
 #include "ledstripeffect.h" 
@@ -43,9 +46,6 @@
 #include "gfxbase.h"
 
 extern DRAM_ATTR AppTime g_AppTime;
-extern volatile float gVURatioFade;
-extern volatile float gVURatio;                 // Current VU as a ratio to its recent min and max
-extern volatile float gVU;                      // Instantaneous read of VU value
 
 // BeatEffectBase
 //
@@ -84,7 +84,7 @@ class BeatEffectBase
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        debugV("BEAT: [%s], gVURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", gVURatio, g_AppTime.CurrentTime() - _lastBeat, gVURatio - _lowestSeen);
+        debugV("BEAT: [%s], g_Analyzer.gVURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", g_Analyzer.gVURatio, g_AppTime.CurrentTime() - _lastBeat, g_Analyzer.gVURatio - _lowestSeen);
     }
 
     double SecondsSinceLastBeat()
@@ -106,19 +106,19 @@ class BeatEffectBase
         if (elapsed < _minElapsed)                      // Too soon since last beat to even consider another.  
           return;
 
-        if (gVURatio < _lowestSeen)
-            _lowestSeen = gVURatio;
+        if (g_Analyzer.gVURatio < _lowestSeen)
+            _lowestSeen = g_Analyzer.gVURatio;
 
-        if (gVURatio < _lowLatch)                       // If we dip below the low latch, we're latched (armed)
+        if (g_Analyzer.gVURatio < _lowLatch)                       // If we dip below the low latch, we're latched (armed)
             _latched = true;                            //   to trigger a beat if we then go above the high latch
 
-        if (_latched && gVURatio >= _highLatch)
+        if (_latched && g_Analyzer.gVURatio >= _highLatch)
         {
             // When we crest above the high latch point while latched (ie: we see a high value aftering confirming
             // that we've seen a low one) we know it's a round trip on the VU meter and so we call that a beat.  We
             // call the client handler and then reset the latch, then record now as the last beat time.
 
-            HandleBeat(elapsed > 1.0, elapsed, gVURatio - _lowestSeen);
+            HandleBeat(elapsed > 1.0, elapsed, g_Analyzer.gVURatio - _lowestSeen);
             _lastBeat = g_AppTime.CurrentTime();
             _latched = false;
             _lowestSeen = 2.0;
@@ -167,7 +167,7 @@ class BeatEffectBase2
         debugV("BeatEffectBase2::Draw");
         double elapsed = SecondsSinceLastBeat();
     
-        _samples.push_back(gVURatio);
+        _samples.push_back(g_Analyzer.gVURatio);
         double minimum = *min_element(_samples.begin(), _samples.end());
         double maximum = *max_element(_samples.begin(), _samples.end());
 
@@ -215,23 +215,23 @@ class BeatEffect
 
         if (latch)
         {
-          if (gVURatio < minVUSeen)
-            minVUSeen = gVURatio;
+          if (g_Analyzer.gVURatio < minVUSeen)
+            minVUSeen = g_Analyzer.gVURatio;
         }
 
-        if (gVURatio < 0.5)             // Crossing center going down
+        if (g_Analyzer.gVURatio < 0.5)             // Crossing center going down
         {
           latch = true;
-          minVUSeen = gVURatio;
+          minVUSeen = g_Analyzer.gVURatio;
         }
 
         if (latch)
         {
-            if (gVURatio > 1.75)      // Going back up
+            if (g_Analyzer.gVURatio > 1.75)      // Going back up
             {
                 latch = false;
                 OnBeat();
-                debugV("Beat: %f, %f\n", gVURatio, gVU);
+                debugV("Beat: %f, %f\n", g_Analyzer.gVURatio, g_Analyzer.gVU);
             }
         }
       
@@ -253,7 +253,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
     {
         ProcessAudio();
 
-        CRGB c = CRGB::Blue * gVURatio * g_AppTime.DeltaTime() * 0.75;
+        CRGB c = CRGB::Blue * g_Analyzer.gVURatio * g_AppTime.DeltaTime() * 0.75;
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
         fadeAllChannelsToBlackBy(min(255.0,1000 * g_AppTime.DeltaTime()));

@@ -52,7 +52,7 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
   protected:
 
-    deque<int> _lit;
+    std::deque<int> _lit;
 
     virtual void Draw()
     {
@@ -91,7 +91,7 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 {
   protected:
 
-    deque<int> _lit;
+    std::deque<int> _lit;
 
     virtual void Draw()
     {
@@ -151,7 +151,7 @@ class VUInsulatorsEffect : public LEDStripEffect
         DrawVUPixels(iPeakVUy, fade, vu_gpGreen);
       }
 
-      int bars = ::map(gVU, gMinVU, 150.0, 1, _cLEDs - 1);
+      int bars = ::map(g_Analyzer.gVU, g_Analyzer.gMinVU, 150.0, 1, _cLEDs - 1);
       if (bars >= iPeakVUy)
       {
         msPeakVU = millis();

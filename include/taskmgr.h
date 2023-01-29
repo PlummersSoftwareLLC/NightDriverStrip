@@ -263,4 +263,5 @@ public:
     }
 };
 
+extern NightDriverTaskManager g_TaskManager;
 

@@ -29,24 +29,25 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"
+#include <globals.h>
+#include <mutex>
+#include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
+
 #include "effectmanager.h"
 #include "ledbuffer.h"
 #include "ntptimeclient.h"
 #include "remotecontrol.h"
-#include <mutex>
-#include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
 #include "ntptimeclient.h"
-#include "effects/matrix/spectrumeffects.h"
 
-#ifdef USESTRIP
+#if USESTRIP || USEMATRIX
 #include "ledstripgfx.h"
 #endif
 
-#ifdef USEMATRIX
-#include "ledstripgfx.h"
+#if USEMATRIX
 #include "ledmatrixgfx.h"
 #endif
+
+#include "effects/matrix/spectrumeffects.h"
 
 CRGB g_SinglePixel = CRGB::Blue;
 CLEDController *g_ledSinglePixel;
@@ -153,7 +154,7 @@ void MatrixPreDraw()
 
 uint16_t WiFiDraw()
 {
-    lock_guard<mutex> guard(g_buffer_mutex);
+    std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
     uint16_t pixelsDrawn = 0;
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
@@ -338,7 +339,7 @@ void ShowOnboardRGBLED()
 
 #if ONBOARD_LED_R
 #if ENABLE_AUDIO
-    CRGB c = ColorFromPalette(HeatColors_p, gVURatioFade / 2.0 * 255);
+    CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer.gVURatioFade / 2.0 * 255);
     ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
     ledcWrite(2, 255 - c.g);
     ledcWrite(3, 255 - c.b);

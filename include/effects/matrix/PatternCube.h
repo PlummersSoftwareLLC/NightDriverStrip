@@ -65,8 +65,8 @@
 #include "gfxbase.h"
 #include "Geometry.h"
 
-extern volatile float gVURatioFade;
-extern volatile float gVURatio;         
+extern volatile float g_Analyzer.gVURatioFade;
+extern volatile float g_Analyzer.gVURatio;         
 
 class PatternCube : public LEDStripEffect
 {

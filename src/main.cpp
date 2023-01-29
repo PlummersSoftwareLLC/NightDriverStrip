@@ -179,8 +179,6 @@
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;
-extern volatile float gPeakVU; // How high our peak VU scale is in live mode
-extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
 extern double g_Brite;
 
@@ -219,7 +217,7 @@ DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
 
 DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
-DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                     // Instance of our telnet debug server
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
@@ -419,7 +417,7 @@ inline void CheckHeap()
 {
     if (false == heap_caps_check_integrity_all(true))
     {
-        throw runtime_error("Heap FAILED checks!");
+        throw std::runtime_error("Heap FAILED checks!");
     }
 }
 
@@ -629,13 +627,13 @@ void setup()
 
     #ifdef USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
-            g_pDevices[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
     #endif
 
     #if USEMATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_pDevices[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             g_pDevices[i]->loadPalette(0);
         }
     #endif
@@ -663,7 +661,7 @@ void setup()
     debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
+        g_apBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
 
     // Initialize all of the built in effects
 
@@ -851,7 +849,7 @@ void loop()
                         WLtoString(WiFi.status()), WiFi.localIP().toString().c_str(), // Wifi
                         ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                         g_FPS, g_Watts, g_Brite, // LED
-                        g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, // Audio
+                        g_Analyzer.g_AudioFPS, g_Analyzer.g_serialFPS, g_Analyzer.gPeakVU, g_Analyzer.gMinVU, g_Analyzer.gVURatio, // Audio
                         g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                         g_FreeDrawTime);
             #elif ENABLE_AUDIO // Implied !ENABLE_WIFI from 1st condition
@@ -859,7 +857,7 @@ void loop()
                     ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                     g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), // Buffer
                     g_FPS, g_Watts, g_Brite, // LED
-                    g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, // Audio
+                    g_Analyzer.g_AudioFPS, g_Analyzer.g_serialFPS, g_Analyzer.gPeakVU, g_Analyzer.gMinVU, g_Analyzer.gVURatio, // Audio
                     g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                     g_FreeDrawTime);
             #elif ENABLE_WIFI // Implied !ENABLE_AUDIO from 1st condition

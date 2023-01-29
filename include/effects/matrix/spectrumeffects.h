@@ -49,7 +49,6 @@
 #if ENABLE_AUDIO
 #include "soundanalyzer.h"
 extern AppTime  g_AppTime;
-extern PeakData g_Peaks;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
@@ -72,12 +71,14 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
 
     virtual void Draw()
     {
-        //fillSolidOnAllChannels(CRGB::Black);
-        for (int band = 0; band < min(NUM_BANDS, NUM_FANS); band++) {
+        auto peaks = g_Analyzer.GetPeakData();
+
+        for (int band = 0; band < min(NUM_BANDS, NUM_FANS); band++) 
+        {
             CRGB color = ColorFromPalette(_Palette, ::map(band, 0, min(NUM_BANDS, NUM_FANS), 0, 255) + beatsin8(1) );
-            color = color.fadeToBlackBy(255 - 255 * g_Peaks[band]);
-            color = color.fadeToBlackBy((2.0 - gVURatio) * 228);
-            DrawRingPixels(0, FAN_SIZE * g_Peaks[band], color, NUM_FANS-1-band, 0);
+            color = color.fadeToBlackBy(255 - 255 * peaks[band]);
+            color = color.fadeToBlackBy((2.0 - g_Analyzer.gVURatio) * 228);
+            DrawRingPixels(0, FAN_SIZE * peaks[band], color, NUM_FANS-1-band, 0);
         }
 
         ProcessAudio();
@@ -98,7 +99,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         
 
         // REVIEW(davepl) This might look interesting if it didn't erase...
-        bool bFlash = gVURatio > 1.99 && span > 1.9 && elapsed > 0.25;
+        bool bFlash = g_Analyzer.gVURatio > 1.99 && span > 1.9 && elapsed > 0.25;
 
         _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
     }
@@ -148,7 +149,7 @@ class VUMeterEffect
         }
 
         int xHalf = pGFXChannel->width()/2-1;
-        int bars  = gVURatioFade / 2.0 * xHalf; // map(gVU, 0, MAX_VU/8, 1, xHalf);
+        int bars  = g_Analyzer.gVURatioFade / 2.0 * xHalf; // map(g_Analyzer.gVU, 0, MAX_VU/8, 1, xHalf);
         bars = min(bars, xHalf);
 
         if (bars > iPeakVUy)
@@ -217,39 +218,39 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
             if (iBar % 4 == 0)
             {
-                value  = g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-                value2 = g_peak2Decay[iBand] *  pGFXChannel->height();            
+                value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
+                value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();            
             }
             else if (iBar % 4 == 1)
             {
-                value  = (g_peak1Decay[iBand] * 3 + g_peak1Decay[iNextBand] * 1 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_peak2Decay[iBand] * 3 + g_peak2Decay[iNextBand] * 1 ) / 4 *  pGFXChannel->height();            
+                value  = (g_Analyzer.g_peak1Decay[iBand] * 3 + g_Analyzer.g_peak1Decay[iNextBand] * 1 ) / 4 * (pGFXChannel->height() - 1);
+                value2 = (g_Analyzer.g_peak2Decay[iBand] * 3 + g_Analyzer.g_peak2Decay[iNextBand] * 1 ) / 4 *  pGFXChannel->height();            
             }
             else if (iBar % 4 == 2)
             {
-                value  = (g_peak1Decay[iBand] * 2 + g_peak1Decay[iNextBand] * 2 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_peak2Decay[iBand] * 2 + g_peak2Decay[iNextBand] * 2 ) / 4 *  pGFXChannel->height();            
+                value  = (g_Analyzer.g_peak1Decay[iBand] * 2 + g_Analyzer.g_peak1Decay[iNextBand] * 2 ) / 4 * (pGFXChannel->height() - 1);
+                value2 = (g_Analyzer.g_peak2Decay[iBand] * 2 + g_Analyzer.g_peak2Decay[iNextBand] * 2 ) / 4 *  pGFXChannel->height();            
             }
             else if (iBar % 4 == 3)
             {
-                value  = (g_peak1Decay[iBand] * 1 + g_peak1Decay[iNextBand] * 3) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_peak2Decay[iBand] * 1 + g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();            
+                value  = (g_Analyzer.g_peak1Decay[iBand] * 1 + g_Analyzer.g_peak1Decay[iNextBand] * 3) / 4 * (pGFXChannel->height() - 1);
+                value2 = (g_Analyzer.g_peak2Decay[iBand] * 1 + g_Analyzer.g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();            
             }
         }
         else if ((_numBars > NUM_BANDS) && (iBar % 2 == 1))
         {   
             // For odd bars, average the bars to the left and right of this one 
-            value  = ((g_peak1Decay[iBand] + g_peak1Decay[iNextBand]) / 2) * (pGFXChannel->height() - 1);
-            value2 = ((g_peak2Decay[iBand] + g_peak2Decay[iNextBand]) / 2) *  pGFXChannel->height();            
+            value  = ((g_Analyzer.g_peak1Decay[iBand] + g_Analyzer.g_peak1Decay[iNextBand]) / 2) * (pGFXChannel->height() - 1);
+            value2 = ((g_Analyzer.g_peak2Decay[iBand] + g_Analyzer.g_peak2Decay[iNextBand]) / 2) *  pGFXChannel->height();            
         }
         else
         {
             // One to one case
-            value  = g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-            value2 = g_peak2Decay[iBand] *  pGFXChannel->height();            
+            value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
+            value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();            
         }
 
-        debugV("Band: %d, Value: %f\n", iBar, g_peak1Decay[iBar] );
+        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer.g_peak1Decay[iBar] );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
@@ -269,7 +270,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         const int PeakFadeTime_ms = 1000;
 
         CRGB colorHighlight = CRGB(CRGB::White);
-        unsigned long msPeakAge = millis() - g_lastPeak1Time[iBand];
+        unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
         if (msPeakAge > PeakFadeTime_ms)
             msPeakAge = PeakFadeTime_ms;
         
@@ -333,8 +334,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     {
         // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
 
-        g_peak1DecayRate = _peak1DecayRate;
-        g_peak2DecayRate = _peak2DecayRate;
+        g_Analyzer.g_peak1DecayRate = _peak1DecayRate;
+        g_Analyzer.g_peak2DecayRate = _peak2DecayRate;
 
         auto pGFXChannel = _GFX[0].get();
 
@@ -441,8 +442,8 @@ class WaveformEffect : public LEDStripEffect
         
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
-        DrawSpike(63, gVURatio/2.0);
-        DrawSpike(0, gVURatio/2.0);
+        DrawSpike(63, g_Analyzer.gVURatio/2.0);
+        DrawSpike(0, g_Analyzer.gVURatio/2.0);
     }
 };
 
@@ -467,15 +468,15 @@ class GhostWave : public WaveformEffect
 
         int top = g_pEffectManager->IsVUVisible() ? 1 : 0;
 
-        g->DimAll(250 - _fade * gVURatio);
+        g->DimAll(250 - _fade * g_Analyzer.gVURatio);
         g->MoveOutwardsX(top);
 
         if (_blur)
             g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
             
         // Offsetting by 0.5, which is a very low ratio, helps keep the line thin when sound is low
-        DrawSpike(MATRIX_WIDTH/2, (gVURatio - 0.5) / 1.5, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, (gVURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2, (g_Analyzer.gVURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, (g_Analyzer.gVURatio - 0.5) / 1.5, _erase);
     }
 };
 

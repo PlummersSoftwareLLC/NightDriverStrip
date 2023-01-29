@@ -41,48 +41,27 @@
 #include <algorithm>
 #include <math.h>
 #include <arduinoFFT.h>
-#include "globals.h"
-#include "network.h"
-
 #include <driver/i2s.h>
 #include <driver/adc.h>
 #include <driver/adc_deprecated.h>
 
+#include "network.h"
+
 #if !ENABLE_AUDIO
-#error You must have ENABLE_AUDIO set true to include this header file, as it relies on audio hardware
+    #error You must have ENABLE_AUDIO set true to include this header file, as it relies on audio hardware
 #endif
+
+#define EXAMPLE_I2S_NUM (I2S_NUM_0)                                                    
+#define EXAMPLE_I2S_SAMPLE_BITS (I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_STAND_MSB)
+#define EXAMPLE_I2S_BUF_DEBUG (0)                                                               // enable display buffer for debug
+#define EXAMPLE_I2S_READ_LEN (MAX_SAMPLES)                                                      // I2S read buffer length
+#define EXAMPLE_I2S_FORMAT (I2S_CHANNEL_FMT_RIGHT_LEFT)                                         // I2S data format
+#define EXAMPLE_I2S_CHANNEL_NUM ((EXAMPLE_I2S_FORMAT < I2S_CHANNEL_FMT_ONLY_RIGHT) ? (2) : (1)) // I2S channel number
+#define I2S_ADC_UNIT ADC_UNIT_1                                                                 // I2S built-in ADC unit
+#define I2S_ADC_CHANNEL ADC1_CHANNEL_0                                                          // I2S built-in ADC channel
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 void IRAM_ATTR AudioSerialTaskEntry(void *);
-
-extern float gScaler;                     // Instantaneous read of LED display vertical scaling
-extern float gLogScale;                   // How exponential the peaks are made to be
-extern volatile float gVURatio;           // Current VU as a ratio to its recent min and max
-extern volatile float gVURatioFade;
-extern volatile float gVU;                // Instantaneous read of VU value
-extern volatile float gPeakVU;            // How high our peak VU scale is in live mode
-extern volatile float gMinVU;             // How low our peak VU scale is in live mode
-extern volatile unsigned long g_cSamples; // Total number of samples successfully collected
-extern int g_AudioFPS;                    // Framerate of the audio sampler
-extern unsigned long g_lastPeak1Time[NUM_BANDS];
-extern float g_peak1Decay[NUM_BANDS];
-extern float g_peak2Decay[NUM_BANDS];
-extern float g_peak1DecayRate;
-extern float g_peak2DecayRate;
-#if !ENABLE_AUDIO
-extern volatile float gVURatio;
-#endif
-
-#if ENABLE_AUDIO
-
-#if ENABLE_WEBSERVER
-#include "spiffswebserver.h" // Handle web server requests
-extern CSPIFFSWebServer g_WebServer;
-#endif
-
-#define USE_I2S 1
-
-using namespace std;
 
 // PeakData class
 //
@@ -97,24 +76,28 @@ using namespace std;
 // The MAX9814 mic has different sensitivity than th M5's mic, so each needs its own value here
 
 #if (M5STICKC || M5STICKCPLUS)
-#define MIN_VU 128
+    #define MIN_VU 128
 #else
-#define MIN_VU 512
+    #define MIN_VU 512
 #endif
 
 #ifndef GAINDAMPEN
-#define GAINDAMPEN 10       // How slowly brackets narrow in for spectrum bands
-#define GAINDAMPENMIN 1000 //   We want the quiet part to adjust quite slowly
+    #define GAINDAMPEN 10       // How slowly brackets narrow in for spectrum bands
+    #define GAINDAMPENMIN 1000 //   We want the quiet part to adjust quite slowly
 #endif
 
 #ifndef VUDAMPEN
-#define VUDAMPEN 0 // How slowly VU reacts
+    #define VUDAMPEN 0 // How slowly VU reacts
 #endif
 
 #define VUDAMPENMIN 1 // How slowly VU min creeps up to test noise floor
 #define VUDAMPENMAX 1 // How slowly VU max drops down to test noise ceiling
 
 #define MS_PER_SECOND 1000
+
+// PeakData
+//
+// Keeps track of a set of peaks for a sample pass
 
 class PeakData
 {
@@ -231,80 +214,32 @@ public:
     }
 };
 
-extern PeakData g_Peaks;
-const size_t MAX_SAMPLES = 256;
-const size_t SAMPLING_FREQUENCY = 24000;
-
-extern PeakData g_Peaks;
-
-// DecayPeaks
+// SoundAnalyzer
 //
-// Every so many ms we decay the peaks by a given amount
+// The SoundAnalyzer class uses I2S to read samples from the microphone and then runs an FFT on the
+// results to generate the peaks in each band, as well as tracking an overall VU and VU ratio, the
+// latter being the ratio of the current VU to the trailing min and max VU.
 
-inline void DecayPeaks()
+class SoundAnalyzer
 {
-    // REVIEW(davepl) Can be updated to use the frame timers from g_AppTime
+    const size_t MAX_SAMPLES = 256;
+    const size_t SAMPLING_FREQUENCY = 24000;
 
-    static unsigned long lastDecay = 0;
-    float seconds = (millis() - lastDecay) / (float)MS_PER_SECOND;
-    lastDecay = millis();
-
-    float decayAmount1 = std::max(0.0f, seconds * g_peak1DecayRate);
-    float decayAmount2 = std::max(0.0f, seconds * g_peak2DecayRate);
-
-    for (int iBand = 0; iBand < NUM_BANDS; iBand++)
-    {
-        g_peak1Decay[iBand] -= min(decayAmount1, g_peak1Decay[iBand]);
-        g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);
-    }
-
-    /* Manual smoothing if desired
-
-    for (int iBand = 1; iBand < NUM_BANDS - 1; iBand+=2)
-    {
-      g_peak1Decay[iBand] = (g_peak1Decay[iBand-1] + g_peak1Decay[iBand+1]) / 2;
-      g_peak2Decay[iBand] = (g_peak2Decay[iBand-1] + g_peak2Decay[iBand+1]) / 2;
-    }
-    */
-}
-
-// Update the local band peaks from the global sound data.  If we establish a new peak in any band,
-// we reset the peak timestamp on that band
-
-inline void UpdatePeakData()
-{
-    for (int i = 0; i < NUM_BANDS; i++)
-    {
-        if (g_Peaks[i] > g_peak1Decay[i])
-        {
-            g_peak1Decay[i] = g_Peaks[i];
-            g_lastPeak1Time[i] = millis();
-        }
-        if (g_Peaks[i] > g_peak2Decay[i])
-        {
-            g_peak2Decay[i] = g_Peaks[i];
-        }
-    }
-}
-
-// SampleBuffer
-//
-// Contains the actual samples; This used to be fairly complicated and used frequent IRQs
-// until I switched to I2S, which made things a lot simpler
-
-class SampleBuffer
-{
-private:
     arduinoFFT _FFT;           // Perhaps could be static, but might have state info, so one per buffer
     size_t _MaxSamples;        // Number of samples we will take, must be a power of 2
     size_t _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
     size_t _BandCount;
-    float *_vPeaks;
+    float * _vPeaks;
     int _InputPin;
     static float _oldVU;
     static float _oldPeakVU;
     static float _oldMinVU;
     int _cutOffsBand[NUM_BANDS];
+
+    unsigned int _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
+    uint8_t _inputPin; // Which hardware pin do we actually sample audio from?
+
+    PeakData g_Peaks;
 
     // BucketFrequency
     //
@@ -320,13 +255,6 @@ private:
         return iOffset * (_SamplingFrequency / 2) / (_MaxSamples / 2);
     }
 
-    // BandCutoffTable
-    //
-    // Depending on how many bands we have, returns the cutoffs of where those bands are in the spectrum
-
-    const int *BandCutoffTable(int bandCount);
-    void CalculateBandCutoffs(double lowFreq, double highFreq);
-
     double GetBandScalar(int i)
     { //  Red   Org   Yel  Grn  Cyn   Blu  Prp   Org   Yel   Grn   Cyn  Blue
         static const double Scalars12[12] = {0.25, 0.70, 1.2, 1.1, 0.70, 0.5, 0.47, 0.68, 0.77, 0.75, 0.5, 0.72};
@@ -335,40 +263,9 @@ private:
         return result;
     }
 
-public:
     volatile int _cSamples;
     double *_vReal;
     double *_vImaginary;
-
-    SampleBuffer(size_t MaxSamples, size_t BandCount, size_t SamplingFrequency, int InputPin)
-    {
-        _BandCount = BandCount;
-        _SamplingFrequency = SamplingFrequency;
-        _MaxSamples = MaxSamples;
-        _InputPin = InputPin;
-
-        _vReal = (double *)malloc(MaxSamples * sizeof(_vReal[0]));
-        _vImaginary = (double *)malloc(MaxSamples * sizeof(_vImaginary[0]));
-        _vPeaks = (float *)malloc(BandCount * sizeof(_vPeaks[0]));
-
-        _oldVU = 0.0f;
-        _oldPeakVU = 0.0f;
-        _oldMinVU = 0.0f;
-
-#if USE_I2S
-        SampleBufferInitI2S();
-#endif
-
-        CalculateBandCutoffs(200.0, SAMPLING_FREQUENCY / 2.0);
-
-        Reset();
-    }
-    ~SampleBuffer()
-    {
-        free(_vReal);
-        free(_vImaginary);
-        free(_vPeaks);
-    }
 
     // SampleBuffer::Reset
     //
@@ -404,29 +301,6 @@ public:
         return (_cSamples >= _MaxSamples);
     }
 
-#if USE_I2S
-
-// SampleBuffferInitI2S
-//
-// Do the initial setup required if we're going to capture the audio with I2S
-
-// i2s number
-#define EXAMPLE_I2S_NUM (I2S_NUM_0)
-// i2s sample rate
-#define EXAMPLE_I2S_SAMPLE_BITS (I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_STAND_MSB)
-// enable display buffer for debug
-#define EXAMPLE_I2S_BUF_DEBUG (0)
-// I2S read buffer length
-#define EXAMPLE_I2S_READ_LEN (MAX_SAMPLES)
-// I2S data format
-#define EXAMPLE_I2S_FORMAT (I2S_CHANNEL_FMT_RIGHT_LEFT)
-// I2S channel number
-#define EXAMPLE_I2S_CHANNEL_NUM ((EXAMPLE_I2S_FORMAT < I2S_CHANNEL_FMT_ONLY_RIGHT) ? (2) : (1))
-// I2S built-in ADC unit
-#define I2S_ADC_UNIT ADC_UNIT_1
-// I2S built-in ADC channel
-#define I2S_ADC_CHANNEL ADC1_CHANNEL_0
-
     // flash record size, for recording 5 second
     void SampleBufferInitI2S()
     {
@@ -434,75 +308,77 @@ public:
 
         debugV("Begin SamplerBufferInitI2S...");
 
-#if M5STICKC || M5STICKCPLUS
+        #if M5STICKC || M5STICKCPLUS
 
-        i2s_config_t i2s_config =
-        {
-            .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
-            .sample_rate = SAMPLING_FREQUENCY,
-            .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // is fixed at 12bit, stereo, MSB
-            .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT,
-#if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 1, 0)
-            .communication_format = I2S_COMM_FORMAT_STAND_I2S, // Set the format of the communication.
-#else
-            .communication_format = I2S_COMM_FORMAT_I2S,
-#endif
-            .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-            .dma_buf_count = 2,
-            .dma_buf_len = 256,
-        };
+            i2s_config_t i2s_config =
+            {
+                .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
+                .sample_rate = SAMPLING_FREQUENCY,
+                .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // is fixed at 12bit, stereo, MSB
+                .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT,
+                #if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 1, 0)
+                    .communication_format = I2S_COMM_FORMAT_STAND_I2S, // Set the format of the communication.
+                #else
+                    .communication_format = I2S_COMM_FORMAT_I2S,
+                #endif
+                .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+                .dma_buf_count = 2,
+                .dma_buf_len = 256,
+            };
 
-        i2s_pin_config_t pin_config;
+            i2s_pin_config_t pin_config;
 
-#if (ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 3, 0))
-        pin_config.mck_io_num = I2S_PIN_NO_CHANGE;
-#endif
+            #if (ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(4, 3, 0))
+                pin_config.mck_io_num = I2S_PIN_NO_CHANGE;
+            #endif
 
-        pin_config.bck_io_num = I2S_PIN_NO_CHANGE;
-        pin_config.ws_io_num = IO_PIN;
-        pin_config.data_out_num = I2S_PIN_NO_CHANGE;
-        pin_config.data_in_num = INPUT_PIN;
+            pin_config.bck_io_num = I2S_PIN_NO_CHANGE;
+            pin_config.ws_io_num = IO_PIN;
+            pin_config.data_out_num = I2S_PIN_NO_CHANGE;
+            pin_config.data_in_num = INPUT_PIN;
 
-        i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
-        i2s_set_pin(I2S_NUM_0, &pin_config);
-        i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
+            i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
+            i2s_set_pin(I2S_NUM_0, &pin_config);
+            i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
-#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
+        #elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
 
-        i2s_config_t i2s_config;
-        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
-        i2s_config.sample_rate = SAMPLING_FREQUENCY;
-        i2s_config.dma_buf_len = MAX_SAMPLES;
-        i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
-        i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
-        i2s_config.use_apll = false,
-        i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
-        i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
-        i2s_config.dma_buf_count = 2;
+            i2s_config_t i2s_config;
+            i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
+            i2s_config.sample_rate = SAMPLING_FREQUENCY;
+            i2s_config.dma_buf_len = MAX_SAMPLES;
+            i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
+            i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
+            i2s_config.use_apll = false,
+            i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
+            i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
+            i2s_config.dma_buf_count = 2;
 
-        ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
-        ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
-        ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
+            ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
+            ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
+            ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
+            ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
 
-#else
-        i2s_config_t i2s_config;
-        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
-        i2s_config.sample_rate = SAMPLING_FREQUENCY;
-        i2s_config.dma_buf_len = MAX_SAMPLES;
-        i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
-        i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
-        i2s_config.use_apll = false,
-        i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
-        i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
-        i2s_config.dma_buf_count = 2;
+        #else
 
-        ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
-        ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
-        ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
+            i2s_config_t i2s_config;
+            i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
+            i2s_config.sample_rate = SAMPLING_FREQUENCY;
+            i2s_config.dma_buf_len = MAX_SAMPLES;
+            i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
+            i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
+            i2s_config.use_apll = false,
+            i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
+            i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
+            i2s_config.dma_buf_count = 2;
 
-#endif
+            ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
+            ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
+            ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
+            ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
+
+        #endif
+
         debugV("SamplerBufferInitI2S Complete\n");
     }
 
@@ -517,14 +393,14 @@ public:
         }
         size_t bytesRead = 0;
 
-#if M5STICKC || M5STICKCPLUS
-        // REVIEW(davepl) - If I do not indicate one less byte of length, i2s_read will corrupt the heap
-        ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)byteBuffer, sizeof(byteBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
-#else
-        ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
-        ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)byteBuffer, sizeof(byteBuffer), &bytesRead, portMAX_DELAY));
-        ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
-#endif
+        #if M5STICKC || M5STICKCPLUS
+            // REVIEW(davepl) - If I do not indicate one less byte of length, i2s_read will corrupt the heap
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)byteBuffer, sizeof(byteBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
+        #else
+            ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
+            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)byteBuffer, sizeof(byteBuffer), &bytesRead, portMAX_DELAY));
+            ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
+        #endif
 
         _cSamples = _MaxSamples;
         if (bytesRead != sizeof(byteBuffer))
@@ -535,14 +411,13 @@ public:
 
         for (int i = 0; i < ARRAYSIZE(byteBuffer); i++)
         {
-#if M5STICKC || M5STICKCPLUS
-            _vReal[i] = ::map(byteBuffer[i], INT16_MIN, INT16_MAX, 0, MAX_VU);
-#else
-            _vReal[i] = byteBuffer[i];
-#endif
+            #if M5STICKC || M5STICKCPLUS
+                _vReal[i] = ::map(byteBuffer[i], INT16_MIN, INT16_MAX, 0, MAX_VU);
+            #else
+                _vReal[i] = byteBuffer[i];
+            #endif
         }
     }
-#endif
 
     // SampleBuffer::AcquireSampleAnalogRead
     //
@@ -576,9 +451,9 @@ public:
 
     PeakData ProcessPeaks()
     {
-#ifndef NOISE_CUTOFF
-#define NOISE_CUTOFF 50
-#endif
+        #ifndef NOISE_CUTOFF
+            #define NOISE_CUTOFF 50
+        #endif
 
         // Find the peak and the average
 
@@ -681,10 +556,43 @@ public:
 
         EVERY_N_MILLISECONDS(100)
         {
-            debugV("Audio Data -- Sum: %0.2f, gMinVU: %f0.2, gPeakVU: %f0.2, gVU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, gMinVU, gPeakVU, gVU, g_Peaks[0], g_Peaks[1], g_Peaks[2], g_Peaks[3]);
+            auto peaks = GetPeakData();
+            debugV("Audio Data -- Sum: %0.2f, gMinVU: %f0.2, gPeakVU: %f0.2, gVU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, gMinVU, gPeakVU, gVU, peaks[0], peaks[1], peaks[2], peaks[3]);
         }
 
         return GetBandPeaks();
+    }
+
+    // 
+    // Calculate a logrithmic scale for the bands like you would find on a graphic equalizer display
+    //
+
+    void CalculateBandCutoffs(double lowFreq, double highFreq)
+    {
+        // The difference between each adjacent pair of cutoffs is equal to the geometric mean of the two frequencies.
+
+        double df = pow(highFreq / lowFreq, 1.0 / (NUM_BANDS - 1) );
+
+        for (int i = 0; i < NUM_BANDS; i++) 
+        {
+            _cutOffsBand[i] = (int) lowFreq;
+            lowFreq *= df;
+            Serial.printf("Band %d: %i\n", i, _cutOffsBand[i]);
+        }
+    }
+
+    PeakData GetSamplePassPeaks()
+    {
+        return g_Peaks;
+    }
+
+    // BandCutoffTable
+    //
+    // Depending on how many bands we have, returns the cutoffs of where those bands are in the spectrum
+
+    const int * BandCutoffTable(int bandCount)                
+    {
+        return _cutOffsBand;
     }
 
     // SampleBuffer::GetBandPeaks
@@ -696,41 +604,123 @@ public:
     {
         return PeakData(_vPeaks);
     }
-};
-
-// SoundAnalyzer
-//
-// The SoundAnalyzer class uses I2S to read samples from the microphone and then runs an FFT on the
-// results to generate the peaks in each band, as well as tracking an overall VU and VU ratio, the
-// latter being the ratio of the current VU to the trailing min and max VU.
-
-class SoundAnalyzer
-{
-private:
-    SampleBuffer _buffer; // A front buffer and a back buffer
-    unsigned int _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
-    uint8_t _inputPin; // Which hardware pin do we actually sample audio from?
 
 public:
+
     SoundAnalyzer(uint8_t inputPin)
-        : _buffer(MAX_SAMPLES, NUM_BANDS, SAMPLING_FREQUENCY, INPUT_PIN),
-          _sampling_period_us(PERIOD_FROM_FREQ(SAMPLING_FREQUENCY)),
+        : _sampling_period_us(PERIOD_FROM_FREQ(SAMPLING_FREQUENCY)),
           _inputPin(inputPin)
     {
+        _BandCount = NUM_BANDS;
+        _SamplingFrequency = SAMPLING_FREQUENCY;
+        _MaxSamples = MAX_SAMPLES;
+        _InputPin = INPUT_PIN;
+
+        _vReal = (double *)malloc(_MaxSamples * sizeof(_vReal[0]));
+        _vImaginary = (double *)malloc(_MaxSamples * sizeof(_vImaginary[0]));
+        _vPeaks = (float *)malloc(_BandCount * sizeof(_vPeaks[0]));
+
+        _oldVU = 0.0f;
+        _oldPeakVU = 0.0f;
+        _oldMinVU = 0.0f;
+
+        SampleBufferInitI2S();
+        CalculateBandCutoffs(200.0, SAMPLING_FREQUENCY / 2.0);
+        Reset();
     }
 
+    ~SoundAnalyzer()
+    {
+        free(_vReal);
+        free(_vImaginary);
+        free(_vPeaks);
+    }
+
+    float         gVURatio = 1.0;              // Current VU as a ratio to its recent min and max
+    float         gVURatioFade = 1.0;          // Same as gVURatio but with a slow decay
+    float         gVU = 0;                     // Instantaneous read of VU value
+    float         gPeakVU = MAX_VU;            // How high our peak VU scale is in live mode
+    float         gMinVU = 0;                  // How low our peak VU scale is in live mode
+    unsigned long g_cSamples = 0;      // Total number of samples successfully collected
+    int           g_AudioFPS = 0;                // Framerate of the audio sampler
+    int           g_serialFPS = 0;               // How many serial packets are processed per second
+
+    unsigned long g_lastPeak1Time[NUM_BANDS] = { 0 } ;
+    float         g_peak1Decay[NUM_BANDS] = { 0 };
+    float         g_peak2Decay[NUM_BANDS] = { 0 };
+    float         g_peak1DecayRate = 1.25f;
+    float         g_peak2DecayRate = 1.25f;
+
+
+    // DecayPeaks
+    //
+    // Every so many ms we decay the peaks by a given amount
+
+    inline void DecayPeaks()
+    {
+        // REVIEW(davepl) Can be updated to use the frame timers from g_AppTime
+
+        static unsigned long lastDecay = 0;
+        float seconds = (millis() - lastDecay) / (float)MS_PER_SECOND;
+        lastDecay = millis();
+
+        float decayAmount1 = std::max(0.0f, seconds * g_peak1DecayRate);
+        float decayAmount2 = std::max(0.0f, seconds * g_peak2DecayRate);
+
+        for (int iBand = 0; iBand < NUM_BANDS; iBand++)
+        {
+            g_peak1Decay[iBand] -= min(decayAmount1, g_peak1Decay[iBand]);
+            g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);
+        }
+
+        /* Manual smoothing if desired
+
+        for (int iBand = 1; iBand < NUM_BANDS - 1; iBand+=2)
+        {
+            g_peak1Decay[iBand] = (g_peak1Decay[iBand-1] + g_peak1Decay[iBand+1]) / 2;
+            g_peak2Decay[iBand] = (g_peak2Decay[iBand-1] + g_peak2Decay[iBand+1]) / 2;
+        }
+        */
+    }
+
+    // Update the local band peaks from the global sound data.  If we establish a new peak in any band,
+    // we reset the peak timestamp on that band
+
+    inline void UpdatePeakData()
+    {
+        for (int i = 0; i < NUM_BANDS; i++)
+        {
+            if (g_Peaks[i] > g_peak1Decay[i])
+            {
+                g_peak1Decay[i] = g_Peaks[i];
+                g_lastPeak1Time[i] = millis();
+            }
+            if (g_Peaks[i] > g_peak2Decay[i])
+            {
+                g_peak2Decay[i] = g_Peaks[i];
+            }
+        }
+    }
+
+    inline PeakData GetPeakData()
+    {
+        return g_Peaks;
+    }
     //
     // RunSamplerPass
     //
 
-    PeakData RunSamplerPass()
+    inline void RunSamplerPass()
     {
-        _buffer.Reset();
-        _buffer.FillBufferI2S();
-        _buffer.FFT();
+        Reset();
+        FillBufferI2S();
+        FFT();
 
-        return _buffer.ProcessPeaks();
+        g_Peaks = ProcessPeaks();
     }
 };
 
-#endif // ENABLE_AUDIO
+extern SoundAnalyzer g_Analyzer;
+
+
+
