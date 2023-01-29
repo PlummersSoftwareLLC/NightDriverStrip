@@ -299,7 +299,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_OTA
             debugI("Publishing OTA...");
-            SetupOTA(cszHostname);
+            SetupOTA(String(cszHostname));
         #endif
 
         #if ENABLE_NTP
