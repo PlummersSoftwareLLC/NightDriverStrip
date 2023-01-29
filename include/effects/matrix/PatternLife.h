@@ -67,6 +67,11 @@
 #include "gfxbase.h"
 #include <bitset>
 
+extern "C" 
+{
+    #include "uzlib/src/uzlib.h"
+}
+
 class Cell 
 {
 public:
