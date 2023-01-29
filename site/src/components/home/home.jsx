@@ -29,7 +29,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
             type: "int"
         }
     };
-    
+
     return <ThemeProvider theme={mode == "dark" ? darkTheme : lightTheme}>
         <CssBaseline />
         <Box className={classes.root}>
@@ -66,23 +66,21 @@ const MainApp = withStyles(mainAppStyle)(props => {
                     </IconButton>
                 </div>
                 <Divider/>
-                <List>
-                    {
-                        [{caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                         {caption:"Effects Designer", flag: designer, setter: setDesigner, icon: "design_services"},
-                         {caption:"Settings", flag: config, setter: setConfig, icon: "settings"}].map(item => 
-                        <ListItem key={item.caption}>
-                            <ListItemIcon><IconButton onClick={() => item.setter(!item.flag)}>
-                                <Icon className={item.flag && (item.icon !== "settings") && classes.optionSelected}>{item.icon}</Icon>
-                            </IconButton></ListItemIcon>
-                            <ListItemText primary={item.caption}/>
-                        </ListItem>)
-                    }
-                </List>
+                <List>{
+                    [{caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
+                     {caption:"Effects Designer", flag: designer, setter: setDesigner, icon: "design_services"},
+                     {caption:"Settings", flag: config, setter: setConfig, icon: "settings"}].map(item => 
+                    <ListItem key={item.caption}>
+                        <ListItemIcon><IconButton onClick={() => item.setter(prevValue => !prevValue)}>
+                            <Icon className={item.flag && (item.icon !== "settings") && classes.optionSelected}>{item.icon}</Icon>
+                        </IconButton></ListItemIcon>
+                        <ListItemText primary={item.caption}/>
+                    </ListItem>)
+                }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                {stats && <StatsPanel siteConfig={siteConfig}/>}
-                {config && <ConfigDialog siteConfig={siteConfig} onClose={()=>setConfig(false)} />}
+                <StatsPanel siteConfig={siteConfig} open={stats} />
+                <ConfigDialog siteConfig={siteConfig} open={config} onClose={() => {setConfig(false)}} />
             </Box>
         </Box>
     </ThemeProvider>;

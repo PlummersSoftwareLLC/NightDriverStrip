@@ -1,56 +1,41 @@
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
 const ConfigDialog = withStyles(configStyle)(props => {
-  const [open, setOpen] = React.useState(true);
-  const { classes, onClose, siteConfig } = props;
-
-  const handleClose = () => {
-    setOpen(false);
-    onClose && onClose();
-  };
-
+  const { classes, open, onClose, siteConfig } = props;
   return (
-    <div>
-      <Dialog
-        fullScreen
-        open={open}
-        onClose={handleClose}
-        TransitionComponent={Transition}
-      >
-        <AppBar sx={{ position: 'relative' }}>
-          <Toolbar>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={handleClose}
-              aria-label="close"
-            >
-              <Icon>close</Icon>
-            </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-              Configuration
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <List className={classes.configBar}>
-          <ListItem>
-            <List>
+    <Dialog
+      fullScreen
+      open={open}
+      onClose={() => onClose && onClose()}>
+      <AppBar sx={{ position: 'relative' }}>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={()=>onClose && onClose()}
+            aria-label="close">
+            <Icon>close</Icon>
+          </IconButton>
+          <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
+            Configuration
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <List className={classes.configBar}>
+        <ListItem>
+          <List>
             <ListItemText primary="Site Configuration"/>
-                <List>
-                    {Object.values(siteConfig).map(entry => <ConfigItem 
-                                               name={entry.name}
-                                               key={entry.name}
-                                               datatype={entry.type}
-                                               value={entry.value}
-                                               configItemUpdated={entry.setter} />)}
-                </List>
+            <List>
+                {Object.entries(siteConfig).map(entry => <ConfigItem 
+                                            name={entry[1].name}
+                                            key={entry[1].name}
+                                            datatype={entry[1].type}
+                                            value={entry[1].value}
+                                            configItemUpdated={value => entry[1].setter(value)} 
+                                            />)}
             </List>
-          </ListItem>
-          <Divider />
-        </List>
-      </Dialog>
-    </div>
+          </List>
+        </ListItem>
+        <Divider />
+      </List>
+    </Dialog>
   );
 });

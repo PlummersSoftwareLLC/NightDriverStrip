@@ -16,5 +16,8 @@ const configStyle = theme => ({
     },
     cblabel: {
         "margin-left": "initial"
+    },
+    hidden: {
+        display: "none"
     }
 });

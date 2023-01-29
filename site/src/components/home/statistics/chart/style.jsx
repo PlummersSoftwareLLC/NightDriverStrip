@@ -18,18 +18,17 @@ const chartStyle = theme => ({
         "display": "flex",
         "flex-direction": "row",
         "flex-wrap": "nowrap",
-        "justify-content": "flex-start",
+        "justify-content": "center",
         "align-items": "center",
         "padding": "0px"
     },
     stat: {
         "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "flex-start",
-        "align-items": "center",
         "padding": "0px",
-        "column-gap": "3px"
+        "flex-wrap": "nowrap",
+        "align-items": "center",
+        "flex-direction": "row",
+        "justify-content": "center"
     },
     tooltipContent: {
         "display": "flex",

@@ -1,18 +1,17 @@
-function getConfigValue(value, type) {
-    switch (type) {
-        case "int":
-            return parseInt(value)
-        case "float":
-            return parseFloat(value)
-        default:
-            return value;
-    }
-}
-
 const ConfigItem = withStyles(configStyle)(props => {
     const { name, value, configItemUpdated, datatype, classes } = props;
     const [ editing, setEditing] = React.useState(false);
     const [ configValue, setConfigValue] = React.useState(value);
+    const getConfigValue = (value, type) => {
+        switch (type) {
+            case "int":
+                return parseInt(value)
+            case "float":
+                return parseFloat(value)
+            default:
+                return value;
+        }
+    }   
 
     if (datatype === "boolean") {
         return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
