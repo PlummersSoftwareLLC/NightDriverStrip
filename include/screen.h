@@ -147,7 +147,7 @@ class Screen
     static uint16_t textWidth(const String psz)
     {
         #if USE_OLED
-            return g_pDisplay->getStrWidth(psz);
+            return g_pDisplay->getStrWidth(psz.c_str());
         #elif USE_TFTSPI || USE_M5DISPLAY            
             return g_pDisplay->textWidth(psz);            
         #elif USE_LCD
