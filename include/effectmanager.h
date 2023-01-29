@@ -45,7 +45,7 @@
 #include "colorutils.h"
 #include "ledstripeffect.h"
 #include "effects/strip/misceffects.h"
-//#include "effects/strip/fireeffect.h"
+#include "effects/strip/fireeffect.h"
 #include "gfxbase.h"
 #include "ledmatrixgfx.h"
 #include "globals.h"

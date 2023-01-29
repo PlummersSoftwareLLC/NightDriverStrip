@@ -280,7 +280,7 @@ void SetupOTA(const String pszHostname)
     if (nullptr == pszHostname)
         ArduinoOTA.setMdnsEnabled(false);
     else
-        ArduinoOTA.setHostname(pszHostname);
+        ArduinoOTA.setHostname(pszHostname.c_str());
 
     ArduinoOTA
         .onStart([]() {
@@ -345,7 +345,7 @@ void SetupOTA(const String pszHostname)
             {
                 debugW("End Failed");
             }
-            throw runtime_error("OTA Flash update failed.");
+            throw std::runtime_error("OTA Flash update failed.");
         });
 
     ArduinoOTA.begin();

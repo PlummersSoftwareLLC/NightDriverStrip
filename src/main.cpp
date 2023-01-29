@@ -777,7 +777,7 @@ void setup()
     if (false == ConnectToWiFi(99))
     {
         debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
-        throw runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
+        throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
     }
     Debug.setSerialEnabled(true);
 #endif

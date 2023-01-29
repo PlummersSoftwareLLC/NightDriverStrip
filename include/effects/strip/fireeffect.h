@@ -44,6 +44,7 @@
 #include "globals.h"
 #include "ledstripeffect.h"
 #include "musiceffect.h"
+#include "effectmanager.h"
 
 extern AppTime g_AppTime;
 class FireEffect : public LEDStripEffect
