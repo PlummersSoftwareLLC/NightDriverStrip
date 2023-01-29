@@ -28,6 +28,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                           // CONFIG and global headers
+#include "soundanalyzer.h"                              
 #include "effectmanager.h"                     // manages all of the effects
 #include "effects/strip/fireeffect.h"          // fire effects
 #include "effects/strip/paletteeffect.h"       // palette effects

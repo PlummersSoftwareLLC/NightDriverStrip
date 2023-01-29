@@ -232,7 +232,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_CHANNELS            1
     #define NUM_RINGS               5
     #define RING_SIZE_0             24
-    #define ENABLE_AUDIO            1
+    #define ENABLE_AUDIO            0
 
     #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
 

@@ -38,13 +38,14 @@
 #include <vector>
 #include <math.h>
 #include <deque>
-#include "colorutils.h"
+
 #include "globals.h"
+#include "soundanalyzer.h"
+#include "colorutils.h"
 #include "ledstripeffect.h"
 #include "faneffects.h"
 
 #if ENABLE_AUDIO
-#include "soundanalyzer.h"
 #include "musiceffect.h"
 #endif
 

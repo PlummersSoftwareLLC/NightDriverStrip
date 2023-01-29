@@ -29,16 +29,15 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h" // CONFIG and global headers
+#include "soundanalyzer.h"
+#include "effectmanager.h" // So we can display cur effect
+
 #include "gfxbase.h"
 #include "ledbuffer.h"     // For g_apBufferManager type
-#include "effectmanager.h" // So we can display cur effect
 #include "Bounce2.h"
 #include "freefonts.h"
 #include "colordata.h"
 
-#if ENABLE_AUDIO
-    #include "soundanalyzer.h"
-#endif
 
 #include <mutex>
 

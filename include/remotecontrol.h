@@ -29,16 +29,17 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "globals.h"
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
 #include <limits>
 
+#include "globals.h"
 #include "soundanalyzer.h"
+#include "effectmanager.h"
 #include "gfxbase.h"
 #include "pixeltypes.h"
-#include "effectmanager.h"
+
 
 extern DRAM_ATTR uint8_t g_Brightness;
 extern DRAM_ATTR uint8_t g_Fader;

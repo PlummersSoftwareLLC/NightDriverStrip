@@ -130,14 +130,15 @@ void MatrixPreDraw()
             const auto caption = pMatrix->GetCaption();
 
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
-            int w = strlen(caption) * kCharWidth;
+            int w = caption.length() * kCharWidth;
             int x = (MATRIX_WIDTH / 2) - (w / 2);
 
-            LEDMatrixGFX::titleLayer.drawString(x - 1, y, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x + 1, y, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x, y - 1, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x, y + 1, shadowColor, caption);
-            LEDMatrixGFX::titleLayer.drawString(x, y, titleColor, caption);
+            auto szCaption = caption.c_str();
+            LEDMatrixGFX::titleLayer.drawString(x - 1, y, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x + 1, y, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x, y - 1, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x, y + 1, shadowColor, szCaption);
+            LEDMatrixGFX::titleLayer.drawString(x, y, titleColor, szCaption);
         }
         else
         {
@@ -337,19 +338,19 @@ void ShowOnboardRGBLED()
     // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
-#if ONBOARD_LED_R
-#if ENABLE_AUDIO
-    CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer.gVURatioFade / 2.0 * 255);
-    ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
-    ledcWrite(2, 255 - c.g);
-    ledcWrite(3, 255 - c.b);
-#else
-    int iLed = NUM_LEDS / 2;
-    ledcWrite(1, 255 - graphics->leds[iLed].r); // write red component to channel 1, etc.
-    ledcWrite(2, 255 - graphics->leds[iLed].g);
-    ledcWrite(3, 255 - graphics->leds[iLed].b);
-#endif
-#endif
+    #if ONBOARD_LED_R
+        #if ENABLE_AUDIO
+            CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer._VURatioFade / 2.0 * 255);
+            ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - c.g);
+            ledcWrite(3, 255 - c.b);
+        #else
+            int iLed = NUM_LEDS / 2;
+            ledcWrite(1, 255 - graphics->leds[iLed].r); // write red component to channel 1, etc.
+            ledcWrite(2, 255 - graphics->leds[iLed].g);
+            ledcWrite(3, 255 - graphics->leds[iLed].b);
+        #endif
+    #endif
 }
 
 // PrepareOnboardPixel

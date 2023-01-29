@@ -51,6 +51,7 @@
 #define SAMPLE_BITS 12                                      // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES)   // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
 #define MAX_VU MAX_ANALOG_IN
+#define MS_PER_SECOND 1000
 
 // These are the audio variables that are referenced by many audio effects.  In order to allow non-audio code to reference them too without
 // including all the audio code (such as logging code, etc), we put the publicly exposed variables into a structure, and then the SoundAnalyzer
@@ -62,22 +63,22 @@
 
 struct AudioVariables
 {
-        float         _VURatio     = 1.0;                    // Current VU as a ratio to its recent min and max
-        float         _VURatioFade = 1.0;                    // Same as gVURatio but with a slow decay
-        float         _VU          = 0.0;                    // Instantaneous read of VU value
-        float         _PeakVU      = MAX_VU;                 // How high our peak VU scale is in live mode
-        float         _MinVU       = 0.0;                    // How low our peak VU scale is in live mode
-        unsigned long _cSamples    = 0U;                     // Total number of samples successfully collected
-        int           _AudioFPS    = 0;                      // Framerate of the audio sampler
-        int           _serialFPS   = 0;                      // How many serial packets are processed per second
+    float         _VURatio     = 1.0;                    // Current VU as a ratio to its recent min and max
+    float         _VURatioFade = 1.0;                    // Same as gVURatio but with a slow decay
+    float         _VU          = 0.0;                    // Instantaneous read of VU value
+    float         _PeakVU      = MAX_VU;                 // How high our peak VU scale is in live mode
+    float         _MinVU       = 0.0;                    // How low our peak VU scale is in live mode
+    unsigned long _cSamples    = 0U;                     // Total number of samples successfully collected
+    int           _AudioFPS    = 0;                      // Framerate of the audio sampler
+    int           _serialFPS   = 0;                      // How many serial packets are processed per second
 };
 
 #if !ENABLE_AUDIO
-    struct SoundAnalyzer : public AudioVariables            // Non-audio case.  Inherits only the AudioVariables so that any project can
-    {                                                       //   reference them in g_Analyzer
+    class SoundAnalyzer : public AudioVariables          // Non-audio case.  Inherits only the AudioVariables so that any project can
+    {                                                    //   reference them in g_Analyzer
     };
 
-#else                                                       // Audio case
+#else                                                    // Audio case
         
     #define EXAMPLE_I2S_NUM (I2S_NUM_0)                                                    
     #define EXAMPLE_I2S_SAMPLE_BITS (I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_STAND_MSB)
@@ -116,7 +117,6 @@ struct AudioVariables
     #define VUDAMPENMIN 1 // How slowly VU min creeps up to test noise floor
     #define VUDAMPENMAX 1 // How slowly VU max drops down to test noise ceiling
 
-    #define MS_PER_SECOND 1000
 
     // PeakData
     //
@@ -580,7 +580,7 @@ struct AudioVariables
             EVERY_N_MILLISECONDS(100)
             {
                 auto peaks = GetPeakData();
-                debugV("Audio Data -- Sum: %0.2f, gMinVU: %f0.2, gPeakVU: %f0.2, gVU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
+                debugV("Audio Data -- Sum: %0.2f, _MinVU: %f0.2, _PeakVU: %f0.2, _VU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
             }
 
             return GetBandPeaks();

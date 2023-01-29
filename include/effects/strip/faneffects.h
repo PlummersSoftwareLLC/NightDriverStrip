@@ -39,11 +39,11 @@
 #include <memory>
 #include <math.h>
 
-#include "soundanalyzer.h"
 #include "globals.h"
+#include "soundanalyzer.h"
+#include "effectmanager.h"
 #include "colorutils.h"
 #include "gfxbase.h"
-#include "effectmanager.h"
 #include "ledstripeffect.h"
 #include "paletteeffect.h"
 
@@ -434,7 +434,6 @@ class FanBeatEffect : public LEDStripEffect
             {
               if (randomDouble(1.0, 3.0) < g_Analyzer._VURatio)
               {
-                //Serial.printf("Beat at: %f\n", g_Analyzer.gVURatio - minVUSeen);
                 latch = false;
                 OnBeat();
               }
@@ -1344,7 +1343,7 @@ class LanternParticle
         rotation += 0.0;
         
 #ifdef LANTERN
-        float scalar = .75 + g_Analyzer.gVURatio / 2;
+        float scalar = .75 + g_Analyzer._VURatio / 2;
 #else        
         float scalar = 1.35;
 #endif

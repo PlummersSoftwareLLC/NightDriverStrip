@@ -30,10 +30,10 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                      // CONFIG and global headers
+#include "soundanalyzer.h"
 
 #if ENABLE_AUDIO
 
-#include "soundanalyzer.h"
 #include <esp_task_wdt.h>
 #include "taskmgr.h"
 

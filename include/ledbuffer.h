@@ -240,7 +240,7 @@ class LEDBufferManager
         for (int i = 0; i < _cBuffers; i++)
         {
             #if USE_PSRAM
-                _ppBuffers[i] = allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
+                _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
             #else
                 _ppBuffers[i] = std::make_shared<LEDBuffer>(pGFX);
             #endif

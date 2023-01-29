@@ -61,12 +61,10 @@
 #define PatternCube_H
 
 #include "globals.h"
+#include "soundanalyzer.h"
 #include "ledstripeffect.h"
 #include "gfxbase.h"
 #include "Geometry.h"
-
-extern volatile float g_Analyzer.gVURatioFade;
-extern volatile float g_Analyzer.gVURatio;         
 
 class PatternCube : public LEDStripEffect
 {

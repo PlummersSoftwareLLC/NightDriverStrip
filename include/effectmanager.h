@@ -42,13 +42,15 @@
 #include <vector>
 #include <math.h>
 
-#include "colorutils.h"
+#include "globals.h"
+#include "soundanalyzer.h"
 #include "ledstripeffect.h"
+#include "effectmanager.h"
+#include "colorutils.h"
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
 #include "gfxbase.h"
 #include "ledmatrixgfx.h"
-#include "globals.h"
 
 #define MAX_EFFECTS 32
 
@@ -178,9 +180,9 @@ public:
 
             #if ENABLE_AUDIO
                 #if SPECTRUM
-                        effect = GetSpectrumAnalyzer(color, oldColor);
+                    effect = GetSpectrumAnalyzer(color, oldColor);
                 #else
-                        effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
             #else
                 effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);

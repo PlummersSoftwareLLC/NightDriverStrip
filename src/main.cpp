@@ -150,18 +150,16 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"                            // CONFIG and global headers
+#include "soundanalyzer.h"                      // for audio sound processing
+#include "effectmanager.h"                      // For g_EffectManagerf
 
 // If the Atomi TM1814 lights are being used, we include the NeoPixelBus code
 // to drive them, but otherwise we do not use or include NeoPixelBus
 
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
 #include <ESPmDNS.h>
-
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "socketserver.h"                       // our socket server for incoming
-#if ENABLE_AUDIO
-    #include "soundanalyzer.h"                  // for audio sound processing
-#endif
 #include "network.h"                            // For WiFi credentials
 #include "ledbuffer.h"
 #include "Bounce2.h"                            // For Bounce button class
@@ -857,7 +855,7 @@ void loop()
                     ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                     g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), // Buffer
                     g_FPS, g_Watts, g_Brite, // LED
-                    g_Analyzer.g_AudioFPS, g_Analyzer.g_serialFPS, g_Analyzer.gPeakVU, g_Analyzer.gMinVU, g_Analyzer.gVURatio, // Audio
+                    g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
                     g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                     g_FreeDrawTime);
             #elif ENABLE_WIFI // Implied !ENABLE_AUDIO from 1st condition

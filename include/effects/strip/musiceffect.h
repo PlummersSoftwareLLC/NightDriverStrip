@@ -37,10 +37,10 @@
 #include <deque>
 #include <math.h>
 
+#include "globals.h"
 #include "soundanalyzer.h"
 #include "effectmanager.h"
 #include "colorutils.h"
-#include "globals.h"
 #include "ledstripeffect.h" 
 #include "faneffects.h"
 #include "gfxbase.h"
@@ -84,7 +84,7 @@ class BeatEffectBase
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        debugV("BEAT: [%s], g_Analyzer.gVURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", g_Analyzer._VURatio, g_AppTime.CurrentTime() - _lastBeat, g_Analyzer._VURatio - _lowestSeen);
+        debugV("BEAT: [%s], g_Analyzer._VURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", g_Analyzer._VURatio, g_AppTime.CurrentTime() - _lastBeat, g_Analyzer._VURatio - _lowestSeen);
     }
 
     double SecondsSinceLastBeat()

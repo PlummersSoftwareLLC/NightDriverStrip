@@ -51,10 +51,12 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PatternFlowField_H
-#define PatternFlowField_H
+#pragma once
 
 #include "globals.h"
+#include "ledstripeffect.h"
+
+#if USEMATRIX
 
 class PatternFlowField : public LEDStripEffect
 {

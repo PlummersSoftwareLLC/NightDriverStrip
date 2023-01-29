@@ -48,13 +48,11 @@
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
 
+#include "soundanalyzer.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
 #include "taskmgr.h"
 
-#if ENABLE_AUDIO
-#include "soundanalyzer.h"
-#endif
 
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
@@ -136,12 +134,8 @@ class CSPIFFSWebServer
         auto j = response->getRoot();
 
         j["LED_FPS"]               = g_FPS;
-#if ENABLE_AUDIOSERIAL
         j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
-#endif
-#if ENABLE_AUDIO
         j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
-#endif
 
         j["HEAP_SIZE"]             = ESP.getHeapSize();
         j["HEAP_FREE"]             = ESP.getFreeHeap();
@@ -283,7 +277,7 @@ class CSPIFFSWebServer
        _server.on(pszName, HTTP_GET, [pszName, pszType](AsyncWebServerRequest *request)
         {
             Serial.printf("GET for: %s\n", pszName);
-            File SPIFFSfile = SPIFFS.open(pszName, FILE_READ);
+            fs::File SPIFFSfile = SPIFFS.open(pszName, FILE_READ);
             if (SPIFFSfile)
             {
                 Serial.printf("[HTTP]\tOpening [%d]\r\n", SPIFFSfile);

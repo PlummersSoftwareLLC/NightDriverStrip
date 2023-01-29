@@ -156,7 +156,7 @@ class Screen
             g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
             return w;
         #else 
-            return 8 * strlen(psz);
+            return 8 * psz.length();
         #endif
     }
 

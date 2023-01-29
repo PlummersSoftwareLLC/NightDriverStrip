@@ -36,6 +36,7 @@
 #include "gfxbase.h"
 
 #if USEMATRIX
+
 #include <SmartMatrix.h>
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
@@ -49,7 +50,7 @@
 class LEDMatrixGFX : public GFXBase
 {
 protected:
-    String pszCaption = nullptr;
+    String pszCaption;
     unsigned long captionStartTime;
     double captionDuration;
     const double captionFadeInTime = 500;
@@ -74,8 +75,8 @@ public:
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
     #endif
 
-    unique_ptr<Boid []> boids = make_unique<Boid []>(MATRIX_WIDTH);
-    unique_ptr<uint8_t []> heat = make_unique<uint8_t []>(NUM_LEDS);
+    std::unique_ptr<Boid []> boids = std::make_unique<Boid []>(MATRIX_WIDTH);
+    std::unique_ptr<uint8_t []> heat = std::make_unique<uint8_t []>(NUM_LEDS);
 
     LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
@@ -120,7 +121,7 @@ public:
         return 1.0;
     }
 
-    void SetCaption(const String har *psz, uint32_t duration)
+    void SetCaption(const String psz, uint32_t duration)
     {
         captionDuration = duration;
         pszCaption = psz;

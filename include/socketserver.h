@@ -323,7 +323,7 @@ public:
                 // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
                 
                 #if USE_PSRAM
-                    std::unique_ptr<uint8_t []> _abTempBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
                     memcpy(_abTempBuffer.get(), _pBuffer.get(), EXPECTED_EXPANDED_PACKET_SIZE);
                     auto pSourceBuffer = &_abTempBuffer[COMPRESSED_DATA_HEADER_SIZE];
                 #else

@@ -36,13 +36,13 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include "colorutils.h"
+
 #include "globals.h"
+#include "soundanalyzer.h"
+#include "colorutils.h"
 #include "ledstripeffect.h"
 #include "gfxbase.h"
-#if ENABLE_AUDIO
-#include "soundanalyzer.h"
-#endif
+
 
 
 extern AppTime g_AppTime;

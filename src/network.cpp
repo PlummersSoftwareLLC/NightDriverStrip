@@ -28,14 +28,20 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"
-#include "network.h"
-#include "ledbuffer.h"
-#include "spiffswebserver.h"
 #include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+
+#include "globals.h"
+#include "soundanalyzer.h"
+#include "network.h"
+#include "ledbuffer.h"
+#include "spiffswebserver.h"
+
+#if ENABLE_REMOTE
+#include "remotecontrol.h"
+#endif
 
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
@@ -95,11 +101,11 @@ extern uint32_t g_FPS;
             debugI("%s", szBuffer);
 
             #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer.gVU: %.2f, g_Analyzer.gMinVU: %.2f, g_Analyzer.g_Analyzer.gPeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
                 debugI("%s", szBuffer);
             #endif
 
-            #if INCOMING_WIFI_ENABLED
+            #if INCOMING_WIFI_ENABLEDgVUR
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             debugI("%s", szBuffer);
             #endif

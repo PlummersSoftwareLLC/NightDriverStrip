@@ -137,7 +137,7 @@ class PatternPulsar : public BeatEffectBase2, public LEDStripEffect
         int step = -1;
     };
 
-    vector<PulsePop> _pops;
+    std::vector<PulsePop> _pops;
 
     float fadeRate = 0.9;
     int diff;

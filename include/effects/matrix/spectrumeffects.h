@@ -37,21 +37,22 @@
 #include <vector>
 #include <math.h>
 #include <deque>
-#include "colorutils.h"
+
 #include "globals.h"
+#include "soundanalyzer.h"
+#include "effectmanager.h"
+#include "colorutils.h"
 #include "ledstripeffect.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
 #include "screen.h"
 #include "gfxbase.h"
-#include "effectmanager.h"
 
-#if ENABLE_AUDIO
-#include "soundanalyzer.h"
 extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
+#if ENABLE_AUDIO
 
 class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
@@ -149,7 +150,7 @@ class VUMeterEffect
         }
 
         int xHalf = pGFXChannel->width()/2-1;
-        int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; // map(g_Analyzer.gVU, 0, MAX_VU/8, 1, xHalf);
+        int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; // map(g_Analyzer._VU, 0, MAX_VU/8, 1, xHalf);
         bars = min(bars, xHalf);
 
         if (bars > iPeakVUy)

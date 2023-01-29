@@ -27,7 +27,7 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "remotecontrol.h"
+//#include "remotecontrol.h"
 #include "socketserver.h"
 #include "ntptimeclient.h"
 #include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
