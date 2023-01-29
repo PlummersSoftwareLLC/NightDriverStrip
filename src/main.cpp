@@ -290,6 +290,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
     }    
 }
 #endif
+
 // NetworkHandlingLoopEntry
 //
 // Pumps the various network loops and sets the time periodically, as well as reconnecting
