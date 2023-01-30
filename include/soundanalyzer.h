@@ -241,7 +241,6 @@ struct AudioVariables
         const size_t MAX_SAMPLES = 256;
         const size_t SAMPLING_FREQUENCY = 24000;
 
-        arduinoFFT _FFT;           // Perhaps could be static, but might have state info, so one per buffer
         size_t _MaxSamples;        // Number of samples we will take, must be a power of 2
         size_t _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
         size_t _BandCount;

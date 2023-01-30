@@ -1504,16 +1504,16 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
     return bOK;
 }
 
+// 16-bit (5:6:5) color definitions for common colors
 
-// 5:6:5 Color definitions
-#define BLACK16 0x0000
-#define BLUE16 0x001F
-#define RED16 0xF800
-#define GREEN16 0x07E0
-#define CYAN16 0x07FF
-#define MAGENTA16 0xF81F
-#define YELLOW16 0xFFE0
-#define WHITE16 0xFFFF
+#define BLACK16     0x0000
+#define BLUE16      0x001F
+#define RED16       0xF800
+#define GREEN16     0x07E0
+#define CYAN16      0x07FF
+#define MAGENTA16   0xF81F
+#define YELLOW16    0xFFE0
+#define WHITE16     0xFFFF
 
 // Main includes 
 
