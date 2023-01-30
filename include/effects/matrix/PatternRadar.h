@@ -54,10 +54,6 @@
 #ifndef PatternRadar_H
 #define PatternRadar_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternRadar : public LEDStripEffect
 {
 private:

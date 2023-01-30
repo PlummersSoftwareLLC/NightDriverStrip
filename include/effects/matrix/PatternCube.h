@@ -60,10 +60,6 @@
 #ifndef PatternCube_H
 #define PatternCube_H
 
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
 #include "Geometry.h"
 
 class PatternCube : public LEDStripEffect

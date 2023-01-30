@@ -60,10 +60,6 @@
 #ifndef PatternSpiro_H
 #define PatternSpiro_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternSpiro : public LEDStripEffect
 {
 private:

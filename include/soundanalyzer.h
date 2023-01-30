@@ -33,17 +33,10 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <deque>
-#include <algorithm>
-#include <math.h>
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
 #include <driver/adc.h>
-#include <driver/adc_deprecated.h>
+//#include <driver/adc_deprecated.h>
 
 extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
@@ -245,10 +238,13 @@ struct AudioVariables
 
     class SoundAnalyzer : public AudioVariables
     {
-        const size_t MAX_SAMPLES = 256;
-        const size_t SAMPLING_FREQUENCY = 24000;
+        const size_t MAX_SAMPLES = 512;
 
-        arduinoFFT _FFT;           // Perhaps could be static, but might have state info, so one per buffer
+        // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
+        // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
+
+        const size_t SAMPLING_FREQUENCY = 24000;        
+
         size_t _MaxSamples;        // Number of samples we will take, must be a power of 2
         size_t _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
         size_t _BandCount;
@@ -314,9 +310,7 @@ struct AudioVariables
         void FFT()
         {
             arduinoFFT _FFT(_vReal, _vImaginary, _MaxSamples, _SamplingFrequency);
-            _FFT.DCRemoval();
             _FFT.Compute(FFT_FORWARD);
-            _FFT.ComplexToMagnitude();
         }
 
         inline bool IsBufferFull() const __attribute__((always_inline))
@@ -440,31 +434,6 @@ struct AudioVariables
                     _vReal[i] = byteBuffer[i];
                 #endif
             }
-        }
-
-        // SampleBuffer::AcquireSampleAnalogRead
-        //
-        // IRQ calls here through the IRQ stub
-
-        void AcquireSampleAnalogRead()
-        {
-            if (false == IsBufferFull())
-            {
-                //_vReal[_cSamples] = adcEnd(_InputPin);
-                _vReal[_cSamples] = analogRead(_InputPin);
-                _vImaginary[_cSamples] = 0;
-                _cSamples++;
-                _cSamples++;
-
-                if (_cSamples % 16 == 0)
-                    delay(1);
-            }
-        }
-
-        void FillBufferAnalogRead()
-        {
-            while (false == IsBufferFull())
-                AcquireSampleAnalogRead();
         }
 
         // SampleBuffer::ProcessPeaks

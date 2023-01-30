@@ -27,9 +27,8 @@
 // History:     Jul-14-2021         Davepl      Split off from main.cpp
 //---------------------------------------------------------------------------
 
-#include "globals.h"                           // CONFIG and global headers
-#include "soundanalyzer.h"                              
-#include "effectmanager.h"                     // manages all of the effects
+#include "globals.h"
+
 #include "effects/strip/fireeffect.h"          // fire effects
 #include "effects/strip/paletteeffect.h"       // palette effects
 #include "effects/strip/doublepaletteeffect.h" // double palette effect
@@ -39,15 +38,14 @@
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
-
-#include "effects/matrix/PatternClock.h"        // No matrix dependencies
+#include "effects/matrix/PatternClock.h"       // No matrix dependencies
 
 #if ENABLE_AUDIO
-#include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
-#include "effects/strip/musiceffect.h"      // Music based effects
+#include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
+#include "effects/strip/musiceffect.h"         // Music based effects
 #endif
 
-#ifdef FAN_SIZE
+#if FAN_SIZE
 #include "effects/strip/faneffects.h" // Fan-based effects
 #endif
 
@@ -55,30 +53,27 @@
 // Externals
 //
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
-
 #if USEMATRIX
-#include "ledmatrixgfx.h"
-#include "effects/matrix/PatternSerendipity.h"
-#include "effects/matrix/PatternSwirl.h"
-#include "effects/matrix/PatternPulse.h"
-#include "effects/matrix/PatternWave.h"
-#include "effects/matrix/PatternLife.h"
-#include "effects/matrix/PatternSpiro.h"
-#include "effects/matrix/PatternCube.h"
-#include "effects/matrix/PatternCircuit.h"
-#include "effects/matrix/PatternSubscribers.h"
-#include "effects/matrix/PatternAlienText.h"
-#include "effects/matrix/PatternRadar.h"
-#include "effects/matrix/PatternPongClock.h"
-#include "effects/matrix/PatternBounce.h"
-#include "effects/matrix/PatternMandala.h"
-#include "effects/matrix/PatternSpin.h"
-#include "effects/matrix/PatternFlowField.h"
-#include "effects/matrix/PatternMisc.h"
-#include "effects/matrix/PatternNoiseSmearing.h"
-
-#include "effects/matrix/PatternQR.h"
+        #include "ledmatrixgfx.h"
+        #include "effects/matrix/PatternSerendipity.h"
+        #include "effects/matrix/PatternSwirl.h"
+        #include "effects/matrix/PatternPulse.h"
+        #include "effects/matrix/PatternWave.h"
+        #include "effects/matrix/PatternLife.h"
+        #include "effects/matrix/PatternSpiro.h"
+        #include "effects/matrix/PatternCube.h"
+        #include "effects/matrix/PatternCircuit.h"
+        #include "effects/matrix/PatternSubscribers.h"
+        #include "effects/matrix/PatternAlienText.h"
+        #include "effects/matrix/PatternRadar.h"
+        #include "effects/matrix/PatternPongClock.h"
+        #include "effects/matrix/PatternBounce.h"
+        #include "effects/matrix/PatternMandala.h"
+        #include "effects/matrix/PatternSpin.h"
+        #include "effects/matrix/PatternFlowField.h"
+        #include "effects/matrix/PatternMisc.h"
+        #include "effects/matrix/PatternNoiseSmearing.h"
+        #include "effects/matrix/PatternQR.h"
 #endif
 
 #ifdef USESTRIP
@@ -88,8 +83,8 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 
 #if USEMATRIX
-volatile long PatternSubscribers::cSubscribers;
-volatile long PatternSubscribers::cViews;
+        volatile long PatternSubscribers::cSubscribers;
+        volatile long PatternSubscribers::cViews;
 #endif
 
 // Palettes

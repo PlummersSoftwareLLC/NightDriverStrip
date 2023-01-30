@@ -30,6 +30,9 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// Note: This code might be modfified from teh original, but is based entirely on it.
+
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>

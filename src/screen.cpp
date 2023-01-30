@@ -28,18 +28,8 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-#include "globals.h" // CONFIG and global headers
-#include "soundanalyzer.h"
-#include "effectmanager.h" // So we can display cur effect
 
-#include "gfxbase.h"
-#include "ledbuffer.h"     // For g_apBufferManager type
-#include "Bounce2.h"
-#include "freefonts.h"
-#include "colordata.h"
-
-
-#include <mutex>
+#include "globals.h"
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
@@ -62,7 +52,7 @@ M5Display *g_pDisplay;
 #if USE_TFTSPI
 #include <TFT_eSPI.h>
 #include <SPI.h>
-TFT_eSPI *g_pDisplay = new TFT_eSPI();
+std::unique_ptr<TFT_eSPI> g_pDisplay = std::make_unique<TFT_eSPI>();
 #endif
 
 //
@@ -122,16 +112,16 @@ void BasicInfoSummary(bool bRedraw)
 
     // Status line 1
 
-    char szBuffer[256];
-    static const char szStatus[] = "|/-\\";
+    static const String szStatus("|/-\\");
     static int cStatus = 0;
-    int c2 = cStatus % strlen(szStatus);
+    int c2 = cStatus % szStatus.length();
     char chStatus = szStatus[c2];
     cStatus++;
 
     Screen::setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
     Screen::setTextSize(Screen::SMALL);
 
+    char szBuffer[256];
     snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
     Screen::setCursor(xMargin, yMargin);
     Screen::println(szBuffer);
@@ -330,7 +320,7 @@ void CurrentEffectSummary(bool bRedraw)
             Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
             char szBuffer[64];
             yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-            snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
             Screen::setTextColor(YELLOW16, backColor);
             Screen::drawString(szBuffer, yh);
             yh += Screen::fontHeight();

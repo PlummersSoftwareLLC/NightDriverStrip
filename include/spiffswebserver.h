@@ -44,15 +44,8 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <Arduino.h>
-#include <vector>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
-
-#include "soundanalyzer.h"
-#include "effectmanager.h"
-#include "gfxbase.h"
-#include "taskmgr.h"
-
 
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
@@ -74,11 +67,11 @@ class CSPIFFSWebServer
     //
     // Sends an empty OK/200 response; normally used to finish up things that don't return anything, like "NextEffect"
 
-    void AddCORSHeaderAndSendOKResponse(AsyncWebServerRequest * pRequest, const char * pszText = nullptr)
+    void AddCORSHeaderAndSendOKResponse(AsyncWebServerRequest * pRequest, const char * strText = nullptr)
     {
-        AsyncWebServerResponse * pResponse = (pszText == nullptr) ? 
+        AsyncWebServerResponse * pResponse = (strText == nullptr) ? 
                                                     pRequest->beginResponse(200) :
-                                                    pRequest->beginResponse(200, "text/json",  pszText);    
+                                                    pRequest->beginResponse(200, "text/json",  strText);    
         pResponse->addHeader("Access-Control-Allow-Origin", "*");
         pRequest->send(pResponse);      
     }
@@ -87,13 +80,13 @@ class CSPIFFSWebServer
     {
         static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
         bool bufferOverflow;
-        AsyncJsonResponse * response;
+        std::unique_ptr<AsyncJsonResponse> response;
 
         debugI("GetEffectListText");
 
         do {
             bufferOverflow = false;
-            response = new AsyncJsonResponse(false, jsonBufferSize);
+            response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
             response->addHeader("Server","NightDriverStrip");
             auto j = response->getRoot();
 
@@ -109,7 +102,6 @@ class CSPIFFSWebServer
 
                 if (!j["Effects"].add(effectDoc)) {
                     bufferOverflow = true;
-                    delete response;
                     jsonBufferSize += JSON_BUFFER_INCREMENT;
                     debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
                     break;
@@ -119,17 +111,16 @@ class CSPIFFSWebServer
 
         response->addHeader("Access-Control-Allow-Origin", "*");
         response->setLength();
-        pRequest->send(response);
+        pRequest->send(response.get());
     }
 
     void GetStatistics(AsyncWebServerRequest * pRequest)
     {
         static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-        AsyncJsonResponse * response;
 
         debugI("GetStatistics");
 
-        response = new AsyncJsonResponse(false, jsonBufferSize);
+        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
         response->addHeader("Server","NightDriverStrip");
         auto j = response->getRoot();
 
@@ -164,7 +155,7 @@ class CSPIFFSWebServer
 
         response->addHeader("Access-Control-Allow-Origin", "*");
         response->setLength();
-        pRequest->send(response);
+        pRequest->send(response.get());
     }    
 
     void SetSettings(AsyncWebServerRequest * pRequest)
@@ -172,12 +163,12 @@ class CSPIFFSWebServer
         debugI("SetSettings");
 
         // Look for the parameter by name
-        const String pszEffectInterval = "effectInterval";
-        if (pRequest->hasParam(pszEffectInterval, true, false))
+        const String strEffectInterval = "effectInterval";
+        if (pRequest->hasParam(strEffectInterval, true, false))
         {
             debugI("found EffectInterval");
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszEffectInterval, true, false);
+            AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
             size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
             g_pEffectManager->SetInterval(effectInterval);
         }       
@@ -204,12 +195,12 @@ class CSPIFFSWebServer
         }   
         */
 
-        const String pszCurrentEffectIndex = "currentEffectIndex";
-        if (pRequest->hasParam(pszCurrentEffectIndex, true))
+        const String strCurrentEffectIndex = "currentEffectIndex";
+        if (pRequest->hasParam(strCurrentEffectIndex, true))
         {
             debugV("currentEffectIndex param found");
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszCurrentEffectIndex, true);
+            AsyncWebParameter * param = pRequest->getParam(strCurrentEffectIndex, true);
             size_t currentEffectIndex = strtoul(param->value().c_str(), NULL, 10);  
             g_pEffectManager->SetCurrentEffectIndex(currentEffectIndex);
         }
@@ -222,11 +213,11 @@ class CSPIFFSWebServer
         debugI("EnableEffect");
 
         // Look for the parameter by name
-        const String pszEffectIndex = "effectIndex";
-        if (pRequest->hasParam(pszEffectIndex, true))
+        const String strEffectIndex = "effectIndex";
+        if (pRequest->hasParam(strEffectIndex, true))
         {
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszEffectIndex, true);
+            AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
             g_pEffectManager->EnableEffect(effectIndex);
         }
@@ -239,11 +230,11 @@ class CSPIFFSWebServer
         debugI("DisableEffect");
 
         // Look for the parameter by name
-        const String pszEffectIndex = "effectIndex";
-        if (pRequest->hasParam(pszEffectIndex, true))
+        const String strEffectIndex = "effectIndex";
+        if (pRequest->hasParam(strEffectIndex, true))
         {
             // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(pszEffectIndex, true);
+            AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
             g_pEffectManager->DisableEffect(effectIndex);
             debugV("Disabled Effect %d", effectIndex);
@@ -272,12 +263,12 @@ class CSPIFFSWebServer
     // the entire thing in RAM, and it chokes.  So, for files that are too large to serve from RAM, 
     // I use this function.  It registers a file-specific handler and then does chunk based IO.
     
-    void ServeLargeStaticFile(const char pszName[], const char pszType[])
+    void ServeLargeStaticFile(const char strName[], const char strType[])
     {
-       _server.on(pszName, HTTP_GET, [pszName, pszType](AsyncWebServerRequest *request)
+       _server.on(strName, HTTP_GET, [strName, strType](AsyncWebServerRequest *request)
         {
-            Serial.printf("GET for: %s\n", pszName);
-            fs::File SPIFFSfile = SPIFFS.open(pszName, FILE_READ);
+            Serial.printf("GET for: %s\n", strName);
+            fs::File SPIFFSfile = SPIFFS.open(strName, FILE_READ);
             if (SPIFFSfile)
             {
                 Serial.printf("[HTTP]\tOpening [%d]\r\n", SPIFFSfile);
@@ -287,7 +278,7 @@ class CSPIFFSWebServer
                 Serial.printf("[HTTP]\tSPIFFS File DOESN'T exists [%d] <<< ERROR !!!\r\n", SPIFFSfile);
             }
             AsyncWebServerResponse *response = 
-                request->beginChunkedResponse(pszType, [SPIFFSfile](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
+                request->beginChunkedResponse(strType, [SPIFFSfile](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
                 {
                     auto localHandle = SPIFFSfile;
                     //Serial.printf("[HTTP]  [%6d]    INDEX [%6d]    BUFFER_MAX_LENGTH [%6d]\r\n", index, localHandle.size(), maxLen);

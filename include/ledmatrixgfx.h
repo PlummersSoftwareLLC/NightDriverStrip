@@ -33,7 +33,6 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "gfxbase.h"
 
 #if USEMATRIX
 
@@ -50,7 +49,7 @@
 class LEDMatrixGFX : public GFXBase
 {
 protected:
-    String pszCaption;
+    String strCaption;
     unsigned long captionStartTime;
     double captionDuration;
     const double captionFadeInTime = 500;
@@ -96,15 +95,15 @@ public:
         leds = pLeds;
     }
 
-    const String GetCaption()
+    const String & GetCaption()
     {
-        return pszCaption;
+        return strCaption;
     }
 
     double GetCaptionTransparency()
     {
         unsigned long now = millis();
-        if (pszCaption == nullptr)
+        if (strCaption == nullptr)
             return 0;
 
         if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
@@ -121,10 +120,10 @@ public:
         return 1.0;
     }
 
-    void SetCaption(const String psz, uint32_t duration)
+    void SetCaption(const String & str, uint32_t duration)
     {
         captionDuration = duration;
-        pszCaption = psz;
+        strCaption = str;
         captionStartTime = millis();
     }
 

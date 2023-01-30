@@ -32,11 +32,6 @@
 #ifndef PatternSub_H
 #define PatternSub_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-#include "ledmatrixgfx.h"
-
 class PatternSubscribers : public LEDStripEffect
 {
   private:

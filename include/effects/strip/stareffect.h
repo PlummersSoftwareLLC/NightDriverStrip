@@ -31,17 +31,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <deque>
-
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "colorutils.h"
-#include "ledstripeffect.h"
 #include "particles.h"
 
 extern AppTime g_AppTime;
@@ -383,7 +372,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
   public:
 
 
-    StarryNightEffect<StarType>(const String pszName,
+    StarryNightEffect<StarType>(const String & strName,
                                 const CRGBPalette256& palette, 
                                 float probability = 1.0, 
                                 float starSize = 1.0, 
@@ -392,7 +381,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                                 double blurFactor = 0.0,
                                 double musicFactor = 1.0,
                                 CRGB skyColor = CRGB::Black)
-      : LEDStripEffect(pszName),
+      : LEDStripEffect(strName),
         _palette(palette),
         _newStarProbability(probability),
         _starSize(starSize),

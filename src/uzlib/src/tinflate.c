@@ -32,6 +32,8 @@
  *    any source distribution.
  */
 
+// Note: This code might be modfified from teh original tinflate, but is based entirely on it.
+
 #include <assert.h>
 #include "tinf.h"
 

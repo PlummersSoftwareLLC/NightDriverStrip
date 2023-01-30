@@ -31,20 +31,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-#if ENABLE_AUDIO
-#include "soundanalyzer.h"
-#endif
-
-
 extern AppTime g_AppTime;
 
 class MeteorChannel

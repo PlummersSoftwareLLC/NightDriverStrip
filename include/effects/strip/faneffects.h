@@ -32,21 +32,7 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <math.h>
-
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "effectmanager.h"
-#include "colorutils.h"
-#include "gfxbase.h"
-#include "ledstripeffect.h"
 #include "paletteeffect.h"
-
 
 // Simple definitions of what direction we're talking about
 
@@ -674,8 +660,8 @@ class PaletteSpinEffect : public LEDStripEffect
     int   ColorOffset[NUM_FANS] = { 0 };
   public:
 
-    PaletteSpinEffect(const String pszName, const CRGBPalette256 & palette, bool bReplace, double sparkleChance = 0.0) 
-      : LEDStripEffect(pszName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
+    PaletteSpinEffect(const String & strName, const CRGBPalette256 & palette, bool bReplace, double sparkleChance = 0.0) 
+      : LEDStripEffect(strName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
     {
 
     }
@@ -1273,7 +1259,7 @@ class LanternParticle
     {
         val = min(val, 255);
         val = max(val, 0);
-#ifdef LANTERN        
+#if LANTERN        
         return CRGB( val,  val*.30, val*.05);
 #else
         return LEDStripEffect::GetBlackBodyHeatColor(val/255.0f*.20 + 0.25);

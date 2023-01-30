@@ -53,9 +53,6 @@
 
 #pragma once
 
-#include "globals.h"
-#include "ledstripeffect.h"
-
 #if USEMATRIX
 
 class PatternFlowField : public LEDStripEffect

@@ -58,10 +58,6 @@
 #ifndef PatternCircuit_H
 #define PatternCircuit_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternCircuit : public LEDStripEffect
 {
 private:

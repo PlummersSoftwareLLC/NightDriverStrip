@@ -36,8 +36,6 @@
 #include <pixeltypes.h>
 #include <memory>
 #include <iostream>
-#include "gfxbase.h"
-#include "globals.h"
 
 extern DRAM_ATTR AppTime g_AppTime;                       
 

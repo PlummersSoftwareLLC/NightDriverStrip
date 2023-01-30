@@ -66,10 +66,10 @@
 
 #pragma once
 
-#include "globals.h"
 #include "Vector.h"
 
-class Boid {
+class Boid 
+{
   public:
 
     PVector location;

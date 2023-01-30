@@ -42,15 +42,8 @@
 #include <vector>
 #include <math.h>
 
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "ledstripeffect.h"
-#include "effectmanager.h"
-#include "colorutils.h"
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
-#include "gfxbase.h"
-#include "ledmatrixgfx.h"
 
 #define MAX_EFFECTS 32
 
@@ -82,7 +75,7 @@ class EffectManager
     CRGB lastManualColor = CRGB::Red;
 
     std::unique_ptr<bool[]> _abEffectEnabled;
-    std::shared_ptr<GFXTYPE> *_gfx;
+    std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _pRemoteEffect = nullptr;
 
 public:
@@ -314,7 +307,7 @@ public:
         return _ppEffects[_iCurrentEffect];
     }
 
-    const String GetCurrentEffectName() const
+    const String & GetCurrentEffectName() const
     {
         if (_pRemoteEffect)
             return _pRemoteEffect->FriendlyName();

@@ -13,7 +13,7 @@
 //   
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    MERHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
 //   
 //    You should have received a copy of the GNU General Public License
@@ -30,20 +30,7 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <deque>
-#include <math.h>
-
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "effectmanager.h"
-#include "colorutils.h"
-#include "ledstripeffect.h" 
 #include "faneffects.h"
-#include "gfxbase.h"
 
 extern DRAM_ATTR AppTime g_AppTime;
 
@@ -307,8 +294,8 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
 
   public:
   
-    SimpleColorBeat(const String pszName)
-      : BeatEffectBase(1.0, 1.0, 0.25), LEDStripEffect(pszName)
+    SimpleColorBeat(const String & strName)
+      : BeatEffectBase(1.0, 1.0, 0.25), LEDStripEffect(strName)
     {
     }
 

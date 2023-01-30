@@ -56,8 +56,6 @@
 #ifndef Vector_H
 #define Vector_H
 
-#include "globals.h"
-
 template <class T>
 class Vector2 {
 public:

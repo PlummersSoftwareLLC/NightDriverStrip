@@ -31,22 +31,9 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <deque>
 
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "effectmanager.h"
-#include "colorutils.h"
-#include "ledstripeffect.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
-#include "screen.h"
-#include "gfxbase.h"
 
 extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
@@ -62,8 +49,8 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     
   public:
 
-    InsulatorSpectrumEffect(const String pszName, const CRGBPalette16 & Palette) : 
-        LEDStripEffect(pszName),
+    InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) : 
+        LEDStripEffect(strName),
         BeatEffectBase(0.25, 1.75, .25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -190,7 +177,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 45;
+        return 60;
     }
 
     virtual bool RequiresDoubleBuffering() const
@@ -392,7 +379,7 @@ class WaveformEffect : public LEDStripEffect
 
   public:
     
-    WaveformEffect(const String pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
+    WaveformEffect(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
         : LEDStripEffect(pszFriendlyName)
     {
         _pPalette = pPalette;
@@ -455,7 +442,7 @@ class GhostWave : public WaveformEffect
     int                       _fade     = 0;
   public:
 
-    GhostWave(const String pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
+    GhostWave(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
         : WaveformEffect(pszFriendlyName, pPalette, increment),
           _blur(blur),
           _erase(erase),

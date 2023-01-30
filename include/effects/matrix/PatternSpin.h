@@ -54,8 +54,6 @@
 #ifndef PatternSpin_H
 #define PatternSpin_H
 
-#include "globals.h"
-
 class PatternSpin : public LEDStripEffect
 {
 public:

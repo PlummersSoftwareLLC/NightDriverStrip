@@ -73,10 +73,34 @@
 //              Oct-30-2022  v031       Davepl      Screen cleanup, core assignments moved around
 //              Oct-30-2022  v032       Davepl      Better wait code, core assignments
 //              Oct-30-2022  v033       Davepl      Fixed mistiming bug when no draw was ready
-//              Nov-15-2022  v034       Davepl      Fixed buffer full condition\
+//              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
+//              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
 //
 //---------------------------------------------------------------------------
+
+#include <inttypes.h>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <sstream>
+#include <sys/time.h>
+#include <exception>
+#include <mutex>
+#include <vector>
+#include <errno.h>
+#include <math.h>
+#include <deque>
+#include <algorithm>
+
+#include <Arduino.h>
+
+#define FASTLED_INTERNAL 1               // Suppresses build banners
+#include <FastLED.h>
+
+#include <WiFi.h>
+
+#include "RemoteDebug.h"
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
 // value.  So if version = 020, 
@@ -86,7 +110,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         34    // Update ONLY this to increment the version number
+#define FLASH_VERSION         36    // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -170,22 +194,9 @@
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-#include <Arduino.h>
 
-#include <iostream>
-#include <memory>
-#include <string>
 
-#include <FastLED.h>                // FastLED for the LED panels
-#include <pixeltypes.h>             // Handy color and hue stuff
-#include <WiFi.h>
 
-#include <sys/time.h>
-#include <exception>
-#include "RemoteDebug.h"
-
-#include<sstream>
 
 // I don't know why to_string is missing, but it seems to be a compiler/cygwin
 // issue. If this turns into a redefinition at some point because the real one
@@ -413,7 +424,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define RESERVE_MEMORY  150000
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
+    #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
     #define NOISE_CUTOFF   20
     #define NOISE_FLOOR    200.0f
@@ -1236,16 +1247,18 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
 
 #if ENABLE_AUDIO
-#ifndef INPUT_PIN
-#if TTGO
-#define INPUT_PIN (36)   
-#elif M5STICKC || M5STICKCPLUS
-#define INPUT_PIN (34)   
-#define IO_PIN (0)
+    #ifndef INPUT_PIN
+        #if TTGO
+            #define INPUT_PIN (36)   
+        #elif M5STICKC || M5STICKCPLUS
+            #define INPUT_PIN (34)   
+            #define IO_PIN (0)
+        #else
+            #define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+        #endif
+    #endif
 #else
-#define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
-#endif
-#endif
+    #define INPUT_PIN 0              
 #endif
 
 #ifndef IR_REMOTE_PIN
@@ -1283,7 +1296,7 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
     #include <TFT_eSPI.h>
     #include <SPI.h>
-    extern TFT_eSPI * g_pDisplay;
+    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 #endif
 
 
@@ -1490,3 +1503,52 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
     }
     return bOK;
 }
+
+// 16-bit (5:6:5) color definitions for common colors
+
+#define BLACK16     0x0000
+#define BLUE16      0x001F
+#define RED16       0xF800
+#define GREEN16     0x07E0
+#define CYAN16      0x07FF
+#define MAGENTA16   0xF81F
+#define YELLOW16    0xFFE0
+#define WHITE16     0xFFFF
+
+// Main includes 
+
+#include "gfxbase.h"                            // GFXBase drawing interface
+#include "screen.h"                             // LCD/TFT/OLED handling
+#include "socketserver.h"                       // Incoming WiFi data connections
+#include "soundanalyzer.h"                      // for audio sound processing
+#include "ledstripgfx.h"                        // Essential drawing code for strips
+#include "ledmatrixgfx.h"                       // For drawing to HUB75 matrices
+#include "ledstripeffect.h"                     // Defines base led effect classes
+#include "ntptimeclient.h"                      // setting the system clock from ntp
+#include "effectmanager.h"                      // For g_EffectManagerf
+#include "network.h"                            // Networking 
+#include "ledbuffer.h"                          // Buffer manager for strip
+#include "Bounce2.h"                            // For Bounce button class
+#include "colordata.h"                          // color palettes
+#include "drawing.h"                            // drawing code
+#include "taskmgr.h"                            // for cpu usage, etc
+
+// Conditional includes depending on which project is being build
+
+#if USEMATRIX
+    #include <YouTubeSight.h>                       // For fetching YouTube sub count
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
+#endif
+
+#if USE_SCREEN
+    #include "freefonts.h"
+#endif
+
+#if ENABLE_WIFI && ENABLE_WEBSERVER
+    #include "spiffswebserver.h"
+#endif
+
+#if ENABLE_REMOTE
+    #include "remotecontrol.h"
+#endif
+

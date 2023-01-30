@@ -31,18 +31,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <memory>
-#include <algorithm>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
-
-
 class SnakeEffect : public LEDStripEffect
 {
   protected:
@@ -67,8 +55,8 @@ class SnakeEffect : public LEDStripEffect
 
   public:
 
-    SnakeEffect(const char * pszName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : LEDStripEffect(pszName),
+    SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
+        : LEDStripEffect(strName),
           LEDCount(ledCount),
           SnakeSpeed(snakeSpeed)
     {
