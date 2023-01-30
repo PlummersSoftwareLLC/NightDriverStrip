@@ -17,25 +17,13 @@ const StatsPanel = withStyles(statsStyle)(props => {
                             .then(stats => {
                                 setAbortControler(undefined); 
                                 return {
-                                    Package: {
-                                        CHIP: {
+                                    NightDriver: {
+                                        FPS:{
                                             stat:{
-                                                MODEL: stats.CHIP_MODEL,
-                                                CORES: stats.CHIP_CORES,
-                                                SPEED: stats.CHIP_SPEED,
-                                                PROG_SIZE: stats.PROG_SIZE
-                                            },
-                                            static: true,
-                                            headerFields: ["MODEL"]
-                                        },
-                                        CODE: {
-                                            stat:{
-                                                SIZE: stats.CODE_SIZE,
-                                                FREE: stats.CODE_FREE,
-                                                FLASH_SIZE: stats.FLASH_SIZE
-                                            },
-                                            static: true,
-                                            headerFields: ["SIZE"]
+                                                LED:stats.LED_FPS,
+                                                SERIAL:stats.SERIAL_FPS,
+                                                AUDIO:stats.AUDIO_FPS
+                                            }
                                         },
                                     },
                                     CPU:{
@@ -50,15 +38,6 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                             ignored: ["USED"],
                                             headerFields: ["USED"]
                                         }
-                                    },
-                                    NightDriver: {
-                                        FPS:{
-                                            stat:{
-                                                LED:stats.LED_FPS,
-                                                SERIAL:stats.SERIAL_FPS,
-                                                AUDIO:stats.AUDIO_FPS
-                                            }
-                                        },
                                     },
                                     Memory: {
                                         HEAP:{
@@ -94,7 +73,28 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                             headerFields: ["SIZE","MIN"],
                                             ignored:["SIZE","MIN"]
                                         },
-                                    }
+                                    },
+                                    Package: {
+                                        CHIP: {
+                                            stat:{
+                                                MODEL: stats.CHIP_MODEL,
+                                                CORES: stats.CHIP_CORES,
+                                                SPEED: stats.CHIP_SPEED,
+                                                PROG_SIZE: stats.PROG_SIZE
+                                            },
+                                            static: true,
+                                            headerFields: ["MODEL"]
+                                        },
+                                        CODE: {
+                                            stat:{
+                                                SIZE: stats.CODE_SIZE,
+                                                FREE: stats.CODE_FREE,
+                                                FLASH_SIZE: stats.FLASH_SIZE
+                                            },
+                                            static: true,
+                                            headerFields: ["SIZE"]
+                                        },
+                                    },
                                 };
                             });
     useEffect(() => {

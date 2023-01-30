@@ -21,7 +21,8 @@ const statsStyle = theme => ({
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "space-between",
-        "align-items": "flex-start"
+        "align-items": "flex-start",
+        "column-gap": "5px"
     },
     hidden: {
         display: "none"

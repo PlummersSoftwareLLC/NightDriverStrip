@@ -1,5 +1,4 @@
-const httpPrefix='';
-const { useState, useEffect, useMemo, useRef } = window.React;
+const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
@@ -189,7 +188,8 @@ const mainAppStyle = theme => ({
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "space-between",
-        "align-items": "flex-start"
+        "align-items": "flex-start",
+        "column-gap": "5px"
     },
     hidden: {
         display: "none"
@@ -213,7 +213,7 @@ const statStyle = theme => ({
 const staticStatStyle = theme => ({
     root: {
         "display": "flex",
-        "flex-direction": "row",
+        "flex-direction": "column",
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "space-between",
@@ -616,14 +616,19 @@ const ConfigDialog = withStyles(configStyle)(props => {
 
     return <Box className={classes.root}>
         <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
-        {detail && <List>
+        {detail ? <List>
             {Object.entries(stat.stat)
                    .map(entry=>
                 <ListItem key={entry[0]}>
                     <Typography variant="littleHeader">{entry[0]}</Typography>:
                     <Typography className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>
                 </ListItem>)}
-        </List>}
+        </List>:
+        <List>
+        {Object.entries(stat.stat)
+               .filter(entry => stat.headerFields.includes(entry[0]))
+               .map(entry=><Typography className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>)}
+    </List>}
     </Box>
 });const AreaStat = withStyles(areaChartStyle)(props => {
     const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
@@ -746,25 +751,13 @@ const ConfigDialog = withStyles(configStyle)(props => {
                             .then(stats => {
                                 setAbortControler(undefined); 
                                 return {
-                                    Package: {
-                                        CHIP: {
+                                    NightDriver: {
+                                        FPS:{
                                             stat:{
-                                                MODEL: stats.CHIP_MODEL,
-                                                CORES: stats.CHIP_CORES,
-                                                SPEED: stats.CHIP_SPEED,
-                                                PROG_SIZE: stats.PROG_SIZE
-                                            },
-                                            static: true,
-                                            headerFields: ["MODEL"]
-                                        },
-                                        CODE: {
-                                            stat:{
-                                                SIZE: stats.CODE_SIZE,
-                                                FREE: stats.CODE_FREE,
-                                                FLASH_SIZE: stats.FLASH_SIZE
-                                            },
-                                            static: true,
-                                            headerFields: ["SIZE"]
+                                                LED:stats.LED_FPS,
+                                                SERIAL:stats.SERIAL_FPS,
+                                                AUDIO:stats.AUDIO_FPS
+                                            }
                                         },
                                     },
                                     CPU:{
@@ -779,15 +772,6 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                             ignored: ["USED"],
                                             headerFields: ["USED"]
                                         }
-                                    },
-                                    NightDriver: {
-                                        FPS:{
-                                            stat:{
-                                                LED:stats.LED_FPS,
-                                                SERIAL:stats.SERIAL_FPS,
-                                                AUDIO:stats.AUDIO_FPS
-                                            }
-                                        },
                                     },
                                     Memory: {
                                         HEAP:{
@@ -823,7 +807,28 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                             headerFields: ["SIZE","MIN"],
                                             ignored:["SIZE","MIN"]
                                         },
-                                    }
+                                    },
+                                    Package: {
+                                        CHIP: {
+                                            stat:{
+                                                MODEL: stats.CHIP_MODEL,
+                                                CORES: stats.CHIP_CORES,
+                                                SPEED: stats.CHIP_SPEED,
+                                                PROG_SIZE: stats.PROG_SIZE
+                                            },
+                                            static: true,
+                                            headerFields: ["MODEL"]
+                                        },
+                                        CODE: {
+                                            stat:{
+                                                SIZE: stats.CODE_SIZE,
+                                                FREE: stats.CODE_FREE,
+                                                FLASH_SIZE: stats.FLASH_SIZE
+                                            },
+                                            static: true,
+                                            headerFields: ["SIZE"]
+                                        },
+                                    },
                                 };
                             });
     useEffect(() => {
