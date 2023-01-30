@@ -1,13 +1,13 @@
 const MainApp = withStyles(mainAppStyle)(props => {
     const { classes } = props;
-    const [drawerOpened, setDrawerOpened] = React.useState(false);
-    const [mode, setMode] = React.useState('dark');
-    const [stats, setStats] = React.useState(true);
-    const [designer, setDesigner] = React.useState(false);
-    const [config, setConfig] = React.useState(false);
-    const [statsRefreshRate, setStatsRefreshRate ] = React.useState(3);
-    const [maxSamples, setMaxSamples ] = React.useState(50);
-    const [animateChart, setAnimateChart ] = React.useState(false);
+    const [drawerOpened, setDrawerOpened] = useState(false);
+    const [mode, setMode] = useState('dark');
+    const [stats, setStats] = useState(true);
+    const [designer, setDesigner] = useState(false);
+    const [config, setConfig] = useState(false);
+    const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
+    const [maxSamples, setMaxSamples ] = useState(50);
+    const [animateChart, setAnimateChart ] = useState(false);
 
     const siteConfig = {
         statsRefreshRate: {

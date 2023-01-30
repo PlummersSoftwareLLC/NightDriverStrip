@@ -1,11 +1,15 @@
-const chartStyle = theme => ({
-    root: {
+const barChartStyle = theme => ({
+    summary: {
         "display": "flex",
         "flex-direction": "column",
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "flex-start",
-        "align-items": "stretch"
+        "align-items": "center"
+    },
+    minimized: {
+        "margin-top":"-20px",
+        "margin-right": "-25px"
     },
     header: {
         "display": "flex",

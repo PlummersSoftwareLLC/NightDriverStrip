@@ -1,7 +1,7 @@
 const ConfigItem = withStyles(configStyle)(props => {
     const { name, value, configItemUpdated, datatype, classes } = props;
-    const [ editing, setEditing] = React.useState(false);
-    const [ configValue, setConfigValue] = React.useState(value);
+    const [ editing, setEditing] = useState(false);
+    const [ configValue, setConfigValue] = useState(value);
     const getConfigValue = (value, type) => {
         switch (type) {
             case "int":

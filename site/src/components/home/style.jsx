@@ -19,6 +19,14 @@ const mainAppStyle = theme => ({
         duration: theme.transitions.duration.enteringScreen,
       }),
     },
+    categoryStats: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "wrap",
+        "align-content": "flex-start",
+        "justify-content": "center",
+        "align-items": "center"
+    },
     toolbarTitle: {
       "flex-grow": 1
     },

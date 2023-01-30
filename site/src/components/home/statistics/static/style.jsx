@@ -4,7 +4,10 @@ const staticStatStyle = theme => ({
         "flex-direction": "row",
         "flex-wrap": "wrap",
         "align-content": "flex-start",
-        "justify-content": "flex-start",
+        "justify-content": "space-between",
         "align-items": "flex-start"
+    },
+    attribute: {
+        "color": theme.palette.text.secondary
     }
 });

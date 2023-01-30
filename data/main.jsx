@@ -1,10 +1,10 @@
-const httpPrefix="http://192.168.1.143";const { useState } = window.React;
+const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
 const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme } = window.MaterialUI;
 
-const { AreaChart, Area, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } = window.Recharts;
+const { AreaChart, BarChart, Area, Bar, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } = window.Recharts;
 
 const typography={
   littleHeader: {
@@ -20,8 +20,21 @@ const typography={
 const lightTheme = createTheme({
     palette: {
       mode: 'light',
-      type: 'light'
-    },
+      type: 'light',
+      taskManager: {
+        strokeColor: '#90ff91',
+        MemoryColor: '#0002ff',
+        idleColor: 'black',
+        color1: '#58be59db',
+        color2: '#58be59a1',
+        color3: '#58be596b',
+        color4: '#58be5921',
+        bcolor1: '#189cdbff',
+        bcolor2: '#189cdba1',
+        bcolor3: '#189cdb66',
+        bcolor4: '#189cdb38',
+      }
+      },
     typography
 });
 
@@ -65,6 +78,14 @@ const mainAppStyle = theme => ({
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.enteringScreen,
       }),
+    },
+    categoryStats: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "wrap",
+        "align-content": "flex-start",
+        "justify-content": "center",
+        "align-items": "center"
     },
     toolbarTitle: {
       "flex-grow": 1
@@ -154,6 +175,22 @@ const mainAppStyle = theme => ({
         "justify-content": "flex-start",
         "align-items": "flex-start"
     },
+    chartArea: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "wrap",
+        "align-content": "flex-start",
+        "justify-content": "flex-start",
+        "align-items": "flex-start"
+    },
+    categoryStats:{
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "wrap",
+        "align-content": "flex-start",
+        "justify-content": "space-between",
+        "align-items": "flex-start"
+    },
     hidden: {
         display: "none"
     },
@@ -164,15 +201,13 @@ const mainAppStyle = theme => ({
         "align-content": "flex-start",
         "justify-content": "center",
         "align-items": "center"
-    },
-    categoryStats: {
-        "display": "flex"
     }
 });
 
 const statStyle = theme => ({
     root: {
-      display: 'flex'
+      display: 'flex',
+      "flex-direction": "column"
     }
 });
 const staticStatStyle = theme => ({
@@ -181,11 +216,14 @@ const staticStatStyle = theme => ({
         "flex-direction": "row",
         "flex-wrap": "wrap",
         "align-content": "flex-start",
-        "justify-content": "flex-start",
+        "justify-content": "space-between",
         "align-items": "flex-start"
+    },
+    attribute: {
+        "color": theme.palette.text.secondary
     }
 });
-const chartStyle = theme => ({
+const areaChartStyle = theme => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
@@ -193,6 +231,117 @@ const chartStyle = theme => ({
         "align-content": "flex-start",
         "justify-content": "flex-start",
         "align-items": "stretch"
+    },
+    header: {
+        "display": "flex",
+        "flex-direction": "column",
+        "flex-wrap": "nowrap",
+        "justify-content": "center",
+        "align-items": "stretch"
+    },
+    headerLine: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "justify-content": "space-between",
+        "align-items": "center",
+        "width": "100%",
+        "color": theme.palette.text.primary
+    },
+    headerField: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "justify-content": "center",
+        "align-items": "center",
+        "width": "inherit",
+        "color": theme.palette.text.secondary
+    },
+    stats: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "justify-content": "center",
+        "align-items": "center",
+        "padding": "0px",
+        "color": theme.palette.text.secondary
+    },
+    stat: {
+        "display": "flex",
+        "padding": "0px",
+        "flex-wrap": "nowrap",
+        "align-items": "center",
+        "flex-direction": "row",
+        "justify-content": "center"
+    },
+    tooltipContent: {
+        "display": "flex",
+        "flex-direction": "column",
+        "flex-wrap": "nowrap",
+        "align-content": "center",
+        "justify-content": "center",
+        "align-items": "stretch",
+        "background-color": "black",
+        "padding": "5px"
+    },
+    tooltipHeader: {
+        "font-size": "medium",
+        "display": "flex",
+        "flex-direction": "column",
+        "flex-wrap": "nowrap",
+        "align-content": "center",
+        "align-items": "center",
+        "justify-content": "center",
+        "border-bottom": "solid 1px"
+    },
+    threads: {
+        "margin": "0px",
+        "padding": "0px",
+        "display": "flex",
+        "flex-direction": "column",
+        "flex-wrap": "nowrap",
+        "align-content": "center",
+        "justify-content": "center",
+        "align-items": "stretch",
+        "font-size": "small",
+    },
+    thread: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "align-content": "center",
+        "justify-content": "space-between",
+        "align-items": "center",
+        "column-gap": "5px",
+    },
+    threadValue: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "align-content": "center",
+        "justify-content": "center",
+        "align-items": "center",
+        "font-size": "smaller",
+        "color": "aquamarine",
+        "column-gap": "3px"
+    },
+    threadSummary: {
+        "font-size": "x-small",
+        "color": "aqua"
+    }
+});
+const barChartStyle = theme => ({
+    summary: {
+        "display": "flex",
+        "flex-direction": "column",
+        "flex-wrap": "wrap",
+        "align-content": "flex-start",
+        "justify-content": "flex-start",
+        "align-items": "center"
+    },
+    minimized: {
+        "margin-top":"-20px",
+        "margin-right": "-25px"
     },
     header: {
         "display": "flex",
@@ -275,14 +424,14 @@ const chartStyle = theme => ({
 });
 const MainApp = withStyles(mainAppStyle)(props => {
     const { classes } = props;
-    const [drawerOpened, setDrawerOpened] = React.useState(false);
-    const [mode, setMode] = React.useState('dark');
-    const [stats, setStats] = React.useState(true);
-    const [designer, setDesigner] = React.useState(false);
-    const [config, setConfig] = React.useState(false);
-    const [statsRefreshRate, setStatsRefreshRate ] = React.useState(3);
-    const [maxSamples, setMaxSamples ] = React.useState(50);
-    const [animateChart, setAnimateChart ] = React.useState(false);
+    const [drawerOpened, setDrawerOpened] = useState(false);
+    const [mode, setMode] = useState('dark');
+    const [stats, setStats] = useState(true);
+    const [designer, setDesigner] = useState(false);
+    const [config, setConfig] = useState(false);
+    const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
+    const [maxSamples, setMaxSamples ] = useState(50);
+    const [animateChart, setAnimateChart ] = useState(false);
 
     const siteConfig = {
         statsRefreshRate: {
@@ -362,8 +511,8 @@ const MainApp = withStyles(mainAppStyle)(props => {
 });
 const ConfigItem = withStyles(configStyle)(props => {
     const { name, value, configItemUpdated, datatype, classes } = props;
-    const [ editing, setEditing] = React.useState(false);
-    const [ configValue, setConfigValue] = React.useState(value);
+    const [ editing, setEditing] = useState(false);
+    const [ configValue, setConfigValue] = useState(value);
     const getConfigValue = (value, type) => {
         switch (type) {
             case "int":
@@ -396,8 +545,10 @@ const ConfigItem = withStyles(configStyle)(props => {
                     secondary={configValue}/>}
                 {editing && <TextField label={name} 
                                        variant="outlined"
+                                       type={["int","float"].includes(datatype) ? "number" : "text"}
+                                       pattern={datatype === "int" ? "^[0-9]+$" : (datatype === "float" ? "^[0-9]+[.0-9]*$" : ".*")}
                                        defaultValue={value}
-                                       onChange={event => setConfigValue(getConfigValue(event.target.value),datatype) } />}
+                                       onChange={event => setConfigValue(getConfigValue(event.target.value,datatype)) } />}
                     <Box className={classes.saveIcons}>
                         {editing && <IconButton color="primary" 
                                             aria-label="Save" 
@@ -460,47 +611,43 @@ const ConfigDialog = withStyles(configStyle)(props => {
       </List>
     </Dialog>
   );
-});const StaticStatsPanel = withStyles(statsStyle)(props => {
+});const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
 
     return <Box className={classes.root}>
-        <Typography variant={detail ? "h4" : "h7"}>{name}</Typography>
+        <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
         {detail && <List>
             {Object.entries(stat.stat)
                    .map(entry=>
                 <ListItem key={entry[0]}>
                     <Typography variant="littleHeader">{entry[0]}</Typography>:
-                    <Typography variant="littleValue" >{entry[1]}</Typography>
+                    <Typography className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>
                 </ListItem>)}
         </List>}
     </Box>
-});const AreaStat = withStyles(chartStyle)(props => {
-    const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, registerStatCallback, headerField , idleField, category, detail } = props;
-    const [value, setValue] = React.useState(Object.entries(rawvalue)
+});const AreaStat = withStyles(areaChartStyle)(props => {
+    const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
+    const getChartValues = (value) => Object.entries(value)
                         .filter(entry=>!ignored.includes(entry[0]))
-                        .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{}));
-    const [lastStates, setLastStates] = React.useState([value ? Object.entries(value)
-                                             .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()}):[]]);
-    const [ hasCallbacks, gotCallbacks ] = React.useState(false);
+                        .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{});
+    const [lastStates, setLastStates] = useState([Object.entries(getChartValues(rawvalue))
+        .filter(entry=>!ignored.includes(entry[0]))
+        .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})] );
     const getValue = (value) => value !== undefined && !Number.isInteger(value) ? (isNaN(value) ? value : value.toFixed(2)) : value;
     const theme = useTheme();
 
-    if (!hasCallbacks) {
-        gotCallbacks(true);
-        registerStatCallback && registerStatCallback(name, (value) => {
-            setValue(value);
-            setLastStates(prevState => value === undefined ? prevState : [...prevState,Object.entries(value)
-                .filter(entry=>!ignored.includes(entry[0]))
-                .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]
-                .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true));
-        });
-    }
-
+    useMemo(()=>{
+        setLastStates(lastStates === undefined ? [Object.entries(getChartValues(rawvalue))] : [...lastStates,Object.entries(getChartValues(rawvalue))
+            .filter(entry=>!ignored.includes(entry[0]))
+            .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]
+            .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true));
+    },[rawvalue]);
+    
     const getFillColor = ({step, isIdle}) => {
         if (isIdle) {
             return theme.palette.taskManager.idleColor;
         }
-        return (theme.palette.taskManager[`(${category === "Memory" ? "b" : ""})color${step+1}`]);
+        return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
     }
 
     const getStatTooltip = (data, classes) => {
@@ -526,7 +673,9 @@ const ConfigDialog = withStyles(configStyle)(props => {
 
     return <Box className={classes.root}>
         {detail && <Box className={classes.header}>
-            <Typography variant="h7">{name} {headerField && rawvalue[headerField] !== undefined && (`${headerField}: ${rawvalue[headerField]}`)}</Typography>
+            <Typography className={classes.headerLine} variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
+                <Typography key={headerField} className={classes.headerField} variant="subtitle2">{`${headerField}: ${rawvalue[headerField]}`}</Typography>)}
+            </Typography>
             <List className={classes.stats}>
                 {Object.entries(rawvalue)
                         .filter(entry=>!ignored.includes(entry[0]))
@@ -541,10 +690,9 @@ const ConfigDialog = withStyles(configStyle)(props => {
             data={lastStates}
             height={detail ? 300 : 80}
             width={detail ? 500 : 200}
-            className="chart"
             stackOffset="expand">
             <defs>
-                {Object.entries(value)
+                {Object.entries(getChartValues(rawvalue))
                        .filter(entry => entry[1] !== undefined)
                        .map((entry,idx,arr) => <linearGradient key={`color${entry[0]}`} id={`color${entry[0]}`} x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor={getFillColor({numOfSteps: arr.length, step: idx, isIdle: entry[0] === idleField})} stopOpacity={0.8}/>
@@ -559,9 +707,9 @@ const ConfigDialog = withStyles(configStyle)(props => {
             <CartesianGrid strokeDasharray="3 3"/>
             <Tooltip content={data => getStatTooltip(data, classes)}
                      labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>
-            {Object.entries(value)
+            {Object.entries(getChartValues(rawvalue))
                     .filter(entry => entry[1] !== undefined)
-                    .sort((a,b) => sortStats({name:a[0],value:a[1]},{name:b[0],value:b[1]}))
+                    .sort((a,b) => sortStats({name:a[0],chartValue:a[1]},{name:b[0],chartValue:b[1]}))
                     .map((entry) => 
                             <Area
                                 key={entry[0]}
@@ -582,12 +730,11 @@ const ConfigDialog = withStyles(configStyle)(props => {
     const StatsPanel = withStyles(statsStyle)(props => {
     const { classes, siteConfig, open } = props;
     const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
-    const [ statistics, setStatistics] = React.useState(undefined);
-    const [ timer, setTimer ] = React.useState(undefined);
-    const [ statsCallbacks, setStatsCallbacks ] = React.useState({});
-    const [ lastRefreshDate, setLastRefreshDate] = React.useState(undefined);
-    const [ abortControler, setAbortControler ] = React.useState(undefined);
-    const [ openedCategories, setOpenedCategories ] = React.useState({
+    const [ statistics, setStatistics] = useState(undefined);
+    const [ timer, setTimer ] = useState(undefined);
+    const [ lastRefreshDate, setLastRefreshDate] = useState(undefined);
+    const [ abortControler, setAbortControler ] = useState(undefined);
+    const [ openedCategories, setOpenedCategories ] = useState({
         Package:false,
         CPU: false,
         Memory: false,
@@ -608,8 +755,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                 PROG_SIZE: stats.PROG_SIZE
                                             },
                                             static: true,
-                                            ignored:["MODEL"],
-                                            headerField: "MODEL"
+                                            headerFields: ["MODEL"]
                                         },
                                         CODE: {
                                             stat:{
@@ -617,7 +763,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                 FREE: stats.CODE_FREE,
                                                 FLASH_SIZE: stats.FLASH_SIZE
                                             },
-                                            static: true
+                                            static: true,
+                                            headerFields: ["SIZE"]
                                         },
                                     },
                                     CPU:{
@@ -629,8 +776,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                 USED: stats.CPU_USED
                                             },
                                             idleField: "IDLE",
-                                            ignored: "USED",
-                                            headerField: "USED"
+                                            ignored: ["USED"],
+                                            headerFields: ["USED"]
                                         }
                                     },
                                     NightDriver: {
@@ -651,8 +798,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                 SIZE: stats.HEAP_SIZE
                                             },
                                             idleField: "FREE",
-                                            headerField: ["SIZE"],
-                                            ignored:["SIZE"]
+                                            headerFields: ["SIZE","MIN"],
+                                            ignored:["SIZE","MIN"]
                                         },
                                         DMA: {
                                             stat:{
@@ -662,8 +809,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                 SIZE: stats.DMA_SIZE
                                             },
                                             idleField: "FREE",
-                                            headerField: ["SIZE"],
-                                            ignored:["SIZE"]
+                                            headerFields: ["SIZE","MIN"],
+                                            ignored:["SIZE","MIN"]
                                         },
                                         PSRAM: {
                                             stat:{
@@ -673,27 +820,21 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                 SIZE: stats.PSRAM_SIZE
                                             },
                                             idleField: "FREE",
-                                            headerField: ["SIZE"],
-                                            ignored:["SIZE"]
+                                            headerFields: ["SIZE","MIN"],
+                                            ignored:["SIZE","MIN"]
                                         },
                                     }
                                 };
                             });
-
-    React.useEffect(() => {
+    useEffect(() => {
         if (abortControler) {
             abortControler.abort();
         }
         const aborter = new AbortController();
         setAbortControler(aborter);
 
-        getStats(aborter).then(stats => setStatistics(_prevStats => {
-            Object.entries(stats)
-                  .forEach(category => Object.entries(category[1])
-                    .filter(stat => statsCallbacks[stat[0]])
-                    .forEach(stat => statsCallbacks[stat[0]](stat[1].stat)));
-            return stats;
-        })).catch(console.error);
+        getStats(aborter).then(setStatistics)
+                         .catch(console.error);
 
         if (timer) {
             clearTimeout(timer);
@@ -722,38 +863,102 @@ const ConfigDialog = withStyles(configStyle)(props => {
     <Box className={`${classes.root} ${!open && classes.hidden}`}>
         {Object.entries(statistics).map(category => 
         <Box key={category[0]}>
-            <Box className={classes.statCatergoryHeader}>
+            <Box className={classes.statCatergoryHeader} key="header">
                 <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>{openedCategories[category[0]] ? "menu" : "expand"}</Icon></IconButton>
                 <Typography variant="h5">{category[0]}</Typography>
             </Box>
+            <Box className={classes.categoryStats}>
             {Object.entries(category[1])
                .filter(entry=> entry[1].static) 
                .map(entry=>  
                 <StaticStatsPanel
-                    key={entry[0]}
+                    key={`static-${entry[0]}`}
                     detail={openedCategories[category[0]]}
                     name={entry[0]}
                     stat={entry[1]}/>)}
-            <Box className={classes.categoryStats}>
-                {Object.entries(category[1])
-                    .filter(entry=> !entry[1].static) 
-                    .map(entry=>  
-                        <AreaStat
-                            key={entry[0]}
-                            name={entry[0]}
-                            category={category[0]}
-                            detail={openedCategories[category[0]]}
-                            registerStatCallback={(name,callback) => name !== undefined && callback !== undefined && setStatsCallbacks(prevStats => {return {...prevStats||{},[name]:callback}})}
-                            rawvalue={entry[1].stat}
-                            statsAnimateChange={ statsAnimateChange.value }
-                            maxSamples={ maxSamples.value }
-                            idleField={ category[1][entry[0]].idleField }
-                            headerField={ category[1][entry[0]].headerField }
-                            ignored={ category[1][entry[0]].ignored || [] } />)}
+                <Box className={classes.categoryStats} key="charts">
+                    {Object.entries(category[1])
+                        .filter(entry=> !entry[1].static) 
+                        .map(entry=>  
+                            <Box key={`chart-${entry[0]}`} className={classes.chartArea}>
+                                {category[1][entry[0]].idleField && <BarStat
+                                    key={`Bar-${entry[0]}`}
+                                    name={entry[0]}
+                                    className={entry[0]}
+                                    category={category[0]}
+                                    detail={openedCategories[category[0]]}
+                                    rawvalue={entry[1].stat}
+                                    idleField={ category[1][entry[0]].idleField }
+                                    statsAnimateChange={ statsAnimateChange.value }
+                                    headerFields={ category[1][entry[0]].headerFields }
+                                    ignored={ category[1][entry[0]].ignored || [] } />}
+                                <AreaStat
+                                    key={`Area-${entry[0]}`}
+                                    name={entry[0]}
+                                    category={category[0]}
+                                    detail={openedCategories[category[0]]}
+                                    statsAnimateChange={ statsAnimateChange.value }
+                                    rawvalue={entry[1].stat}
+                                    maxSamples={ maxSamples.value }
+                                    idleField={ category[1][entry[0]].idleField }
+                                    headerFields={ category[1][entry[0]].headerFields }
+                                    ignored={ category[1][entry[0]].ignored || [] } />
+                            </Box>)}
+                </Box>
             </Box>
         </Box>)}
     </Box>
 });
 
-ReactDOM.createRoot(document.getElementById("root"))
+const BarStat = withStyles(barChartStyle)(props => {
+    const { classes, name, rawvalue, ignored, statsAnimateChange , idleField, category, detail } = props;
+    const theme = useTheme();
+
+    const getFillColor = ({step, isIdle}) => {
+        if (isIdle) {
+            return theme.palette.taskManager.idleColor;
+        }
+        return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
+    }
+
+    return (
+    <Box className={`${classes.summary} ${!detail && classes.minimized}`}>
+        <BarChart
+            height={detail ? 300 : 80}
+            width={detail ? 150 : 100}
+            data={[Object.entries(rawvalue)
+                .filter(entry=>!["name",...ignored].includes(entry[0]))
+                .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{name:name})]}
+            margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5}}>
+            <XAxis hide={true} dataKey="name" />
+            <YAxis hide={true} />
+            {Object.keys(rawvalue)
+                    .filter(field => !ignored.includes(field))
+                    .sort(sortStats)
+                    .map((field,idx) => <Bar dataKey={field} 
+                                                key={field}
+                                                stackId="a" 
+                                                fill={getFillColor({step: idx, isIdle: field === idleField})} 
+                                                isAnimationActive={statsAnimateChange}
+                                                type="monotone"
+                                                fillOpacity={1}/>)
+            }
+        </BarChart>
+        <Typography variant="summary">{(Object.entries(rawvalue)
+                                             .filter(entry => ![idleField,...ignored].includes(entry[0]))
+                                             .reduce((ret,stat)=>ret+stat[1],0.0)/
+                                       Object.entries(rawvalue)
+                                             .filter(entry => !ignored.includes(entry[0]))
+                                             .reduce((ret,stat)=>ret+stat[1],0.0)*100).toFixed(0)}%</Typography>
+    </Box>)
+
+    function sortStats(a, b) {
+        return a === idleField && b !== idleField ? 1 : (a !== idleField && b === idleField ? -1 : a.localeCompare(b));
+    }
+});
+    ReactDOM.createRoot(document.getElementById("root"))
         .render(<MainApp/>);

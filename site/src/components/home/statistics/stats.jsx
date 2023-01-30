@@ -1,12 +1,11 @@
 const StatsPanel = withStyles(statsStyle)(props => {
     const { classes, siteConfig, open } = props;
     const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
-    const [ statistics, setStatistics] = React.useState(undefined);
-    const [ timer, setTimer ] = React.useState(undefined);
-    const [ statsCallbacks, setStatsCallbacks ] = React.useState({});
-    const [ lastRefreshDate, setLastRefreshDate] = React.useState(undefined);
-    const [ abortControler, setAbortControler ] = React.useState(undefined);
-    const [ openedCategories, setOpenedCategories ] = React.useState({
+    const [ statistics, setStatistics] = useState(undefined);
+    const [ timer, setTimer ] = useState(undefined);
+    const [ lastRefreshDate, setLastRefreshDate] = useState(undefined);
+    const [ abortControler, setAbortControler ] = useState(undefined);
+    const [ openedCategories, setOpenedCategories ] = useState({
         Package:false,
         CPU: false,
         Memory: false,
@@ -27,8 +26,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                                 PROG_SIZE: stats.PROG_SIZE
                                             },
                                             static: true,
-                                            ignored:["MODEL"],
-                                            headerField: "MODEL"
+                                            headerFields: ["MODEL"]
                                         },
                                         CODE: {
                                             stat:{
@@ -36,7 +34,8 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                                 FREE: stats.CODE_FREE,
                                                 FLASH_SIZE: stats.FLASH_SIZE
                                             },
-                                            static: true
+                                            static: true,
+                                            headerFields: ["SIZE"]
                                         },
                                     },
                                     CPU:{
@@ -48,8 +47,8 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                                 USED: stats.CPU_USED
                                             },
                                             idleField: "IDLE",
-                                            ignored: "USED",
-                                            headerField: "USED"
+                                            ignored: ["USED"],
+                                            headerFields: ["USED"]
                                         }
                                     },
                                     NightDriver: {
@@ -70,8 +69,8 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                                 SIZE: stats.HEAP_SIZE
                                             },
                                             idleField: "FREE",
-                                            headerField: ["SIZE"],
-                                            ignored:["SIZE"]
+                                            headerFields: ["SIZE","MIN"],
+                                            ignored:["SIZE","MIN"]
                                         },
                                         DMA: {
                                             stat:{
@@ -81,8 +80,8 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                                 SIZE: stats.DMA_SIZE
                                             },
                                             idleField: "FREE",
-                                            headerField: ["SIZE"],
-                                            ignored:["SIZE"]
+                                            headerFields: ["SIZE","MIN"],
+                                            ignored:["SIZE","MIN"]
                                         },
                                         PSRAM: {
                                             stat:{
@@ -92,27 +91,21 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                                 SIZE: stats.PSRAM_SIZE
                                             },
                                             idleField: "FREE",
-                                            headerField: ["SIZE"],
-                                            ignored:["SIZE"]
+                                            headerFields: ["SIZE","MIN"],
+                                            ignored:["SIZE","MIN"]
                                         },
                                     }
                                 };
                             });
-
-    React.useEffect(() => {
+    useEffect(() => {
         if (abortControler) {
             abortControler.abort();
         }
         const aborter = new AbortController();
         setAbortControler(aborter);
 
-        getStats(aborter).then(stats => setStatistics(_prevStats => {
-            Object.entries(stats)
-                  .forEach(category => Object.entries(category[1])
-                    .filter(stat => statsCallbacks[stat[0]])
-                    .forEach(stat => statsCallbacks[stat[0]](stat[1].stat)));
-            return stats;
-        })).catch(console.error);
+        getStats(aborter).then(setStatistics)
+                         .catch(console.error);
 
         if (timer) {
             clearTimeout(timer);
@@ -141,34 +134,48 @@ const StatsPanel = withStyles(statsStyle)(props => {
     <Box className={`${classes.root} ${!open && classes.hidden}`}>
         {Object.entries(statistics).map(category => 
         <Box key={category[0]}>
-            <Box className={classes.statCatergoryHeader}>
+            <Box className={classes.statCatergoryHeader} key="header">
                 <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>{openedCategories[category[0]] ? "menu" : "expand"}</Icon></IconButton>
                 <Typography variant="h5">{category[0]}</Typography>
             </Box>
+            <Box className={classes.categoryStats}>
             {Object.entries(category[1])
                .filter(entry=> entry[1].static) 
                .map(entry=>  
                 <StaticStatsPanel
-                    key={entry[0]}
+                    key={`static-${entry[0]}`}
                     detail={openedCategories[category[0]]}
                     name={entry[0]}
                     stat={entry[1]}/>)}
-            <Box className={classes.categoryStats}>
-                {Object.entries(category[1])
-                    .filter(entry=> !entry[1].static) 
-                    .map(entry=>  
-                        <AreaStat
-                            key={entry[0]}
-                            name={entry[0]}
-                            category={category[0]}
-                            detail={openedCategories[category[0]]}
-                            registerStatCallback={(name,callback) => name !== undefined && callback !== undefined && setStatsCallbacks(prevStats => {return {...prevStats||{},[name]:callback}})}
-                            rawvalue={entry[1].stat}
-                            statsAnimateChange={ statsAnimateChange.value }
-                            maxSamples={ maxSamples.value }
-                            idleField={ category[1][entry[0]].idleField }
-                            headerField={ category[1][entry[0]].headerField }
-                            ignored={ category[1][entry[0]].ignored || [] } />)}
+                <Box className={classes.categoryStats} key="charts">
+                    {Object.entries(category[1])
+                        .filter(entry=> !entry[1].static) 
+                        .map(entry=>  
+                            <Box key={`chart-${entry[0]}`} className={classes.chartArea}>
+                                {category[1][entry[0]].idleField && <BarStat
+                                    key={`Bar-${entry[0]}`}
+                                    name={entry[0]}
+                                    className={entry[0]}
+                                    category={category[0]}
+                                    detail={openedCategories[category[0]]}
+                                    rawvalue={entry[1].stat}
+                                    idleField={ category[1][entry[0]].idleField }
+                                    statsAnimateChange={ statsAnimateChange.value }
+                                    headerFields={ category[1][entry[0]].headerFields }
+                                    ignored={ category[1][entry[0]].ignored || [] } />}
+                                <AreaStat
+                                    key={`Area-${entry[0]}`}
+                                    name={entry[0]}
+                                    category={category[0]}
+                                    detail={openedCategories[category[0]]}
+                                    statsAnimateChange={ statsAnimateChange.value }
+                                    rawvalue={entry[1].stat}
+                                    maxSamples={ maxSamples.value }
+                                    idleField={ category[1][entry[0]].idleField }
+                                    headerFields={ category[1][entry[0]].headerFields }
+                                    ignored={ category[1][entry[0]].ignored || [] } />
+                            </Box>)}
+                </Box>
             </Box>
         </Box>)}
     </Box>
