@@ -79,16 +79,23 @@
 //
 //---------------------------------------------------------------------------
 
-#include <Arduino.h>
-#include <FastLED.h>
 #include <inttypes.h>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <WiFi.h>
 #include <sstream>
 #include <sys/time.h>
 #include <exception>
+#include <mutex>
+#include <vector>
+#include <errno.h>
+#include <math.h>
+#include <deque>
+#include <algorithm>
+
+#include <Arduino.h>
+#include <FastLED.h>
+#include <WiFi.h>
 
 #include "RemoteDebug.h"
 
@@ -1237,16 +1244,18 @@ extern DRAM_ATTR const int gRingSizeTable[];
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
 
 #if ENABLE_AUDIO
-#ifndef INPUT_PIN
-#if TTGO
-#define INPUT_PIN (36)   
-#elif M5STICKC || M5STICKCPLUS
-#define INPUT_PIN (34)   
-#define IO_PIN (0)
+    #ifndef INPUT_PIN
+        #if TTGO
+            #define INPUT_PIN (36)   
+        #elif M5STICKC || M5STICKCPLUS
+            #define INPUT_PIN (34)   
+            #define IO_PIN (0)
+        #else
+            #define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+        #endif
+    #endif
 #else
-#define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
-#endif
-#endif
+    #define INPUT_PIN 0              
 #endif
 
 #ifndef IR_REMOTE_PIN
@@ -1505,13 +1514,14 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 
 
 #include "gfxbase.h"                            // GFXBase drawing interface
+#include "screen.h"                             // LCD/TFT/OLED handling
 #include "socketserver.h"                       // Incoming WiFi data connections
 #include "soundanalyzer.h"                      // for audio sound processing
 #include "ledstripeffect.h"                     // Defines base led effect classes
 #include "ledstripgfx.h"                        // Essential drawing code for strips
+#include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "effectmanager.h"                      // For g_EffectManagerf
 #include "network.h"                            // Networking 
-#include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "ledbuffer.h"                          // Buffer manager for strip
 #include "Bounce2.h"                            // For Bounce button class
 #include "colordata.h"                          // color palettes
@@ -1519,7 +1529,6 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 #include "taskmgr.h"                            // for cpu usage, etc
 
 #if USE_SCREEN
-    #include "screen.h"
     #include "freefonts.h"
 #endif
 

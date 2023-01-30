@@ -42,7 +42,6 @@
 #include <vector>
 #include <math.h>
 
-#include "ntptimeclient.h"
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
 

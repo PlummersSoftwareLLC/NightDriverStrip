@@ -33,12 +33,6 @@
 
 #if ENABLE_AUDIO
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-
 extern DRAM_ATTR AppTime g_AppTime;
 
 class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase

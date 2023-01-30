@@ -30,13 +30,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <deque>
-#include <memory>
 
 extern bool                      g_bUpdateStarted;
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];

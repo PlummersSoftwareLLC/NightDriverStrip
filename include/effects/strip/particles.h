@@ -32,13 +32,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <deque>
-
 extern AppTime g_AppTime;
 
 // Lifespan

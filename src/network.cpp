@@ -28,10 +28,10 @@
 //
 //---------------------------------------------------------------------------
 
-#include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+
 #include "globals.h"
 
 #if ENABLE_WEBSERVER

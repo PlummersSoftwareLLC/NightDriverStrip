@@ -31,12 +31,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <deque>
 
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"

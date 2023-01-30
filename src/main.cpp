@@ -149,9 +149,19 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
 #include <ESPmDNS.h>
+
+#include <SPI.h>
+
+#define HSPI_MISO   27
+#define HSPI_MOSI   26    // This is the only IO pin used in this code (master out, slave in)
+#define HSPI_SCLK   25
+#define HSPI_SS     32
+#define FASTLED_ALL_PINS_HARDWARE_SPI
+#define FASTLED_ESP32_SPI_BUS HSPI
+
+#include "globals.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;

@@ -28,7 +28,7 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-#include <mutex>
+
 #include "globals.h"
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;

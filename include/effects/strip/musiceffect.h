@@ -30,13 +30,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <deque>
-#include <math.h>
-
 #include "faneffects.h"
 
 extern DRAM_ATTR AppTime g_AppTime;

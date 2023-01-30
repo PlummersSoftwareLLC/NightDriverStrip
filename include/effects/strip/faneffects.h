@@ -32,13 +32,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <math.h>
-
 #include "paletteeffect.h"
 
 // Simple definitions of what direction we're talking about

@@ -44,15 +44,8 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <Arduino.h>
-#include <vector>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
-
-#include "soundanalyzer.h"
-#include "effectmanager.h"
-#include "gfxbase.h"
-#include "taskmgr.h"
-
 
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048

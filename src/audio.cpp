@@ -33,7 +33,11 @@
 // The SoundAnalyzer is present even when Audio is not defined, but it then a mere stub class
 // with a few stats fields. In the Audio case, it's the full class
 
-SoundAnalyzer g_Analyzer(INPUT_PIN);
+#if ENABLE_AUDIO
+    SoundAnalyzer g_Analyzer(INPUT_PIN);                    // Dummy stub class in non-audio case
+#else
+    SoundAnalyzer g_Analyzer;                               // Real AudioAnalyzer in audio case
+#endif
 
 #if ENABLE_AUDIO
 

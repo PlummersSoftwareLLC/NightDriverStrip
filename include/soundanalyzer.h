@@ -33,13 +33,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <deque>
-#include <algorithm>
-#include <math.h>
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
 #include <driver/adc.h>

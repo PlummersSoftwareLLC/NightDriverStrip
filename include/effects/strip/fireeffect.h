@@ -31,13 +31,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include <memory>
-#include <algorithm>
 
 #include "musiceffect.h"
 
