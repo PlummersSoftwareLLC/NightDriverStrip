@@ -359,6 +359,9 @@ const barChartStyle = theme => ({
         "align-items": "center",
         "padding": "0px"
     },
+    pct: {
+        "color":theme.palette.text.secondary
+    },
     stat: {
         "display": "flex",
         "padding": "0px",
@@ -628,7 +631,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
         <List>
         {Object.entries(stat.stat)
                .filter(entry => stat.headerFields.includes(entry[0]))
-               .map(entry=><Typography className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>)}
+               .map(entry=><Typography key={entry[0]} className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>)}
     </List>}
     </Box>
 });const AreaStat = withStyles(areaChartStyle)(props => {
@@ -954,7 +957,7 @@ const BarStat = withStyles(barChartStyle)(props => {
                                                 fillOpacity={1}/>)
             }
         </BarChart>
-        <Typography variant="summary">{(Object.entries(rawvalue)
+        <Typography className={classes.pct} variant="summary">{(Object.entries(rawvalue)
                                              .filter(entry => ![idleField,...ignored].includes(entry[0]))
                                              .reduce((ret,stat)=>ret+stat[1],0.0)/
                                        Object.entries(rawvalue)

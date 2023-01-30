@@ -26,6 +26,9 @@ const barChartStyle = theme => ({
         "align-items": "center",
         "padding": "0px"
     },
+    pct: {
+        "color":theme.palette.text.secondary
+    },
     stat: {
         "display": "flex",
         "padding": "0px",

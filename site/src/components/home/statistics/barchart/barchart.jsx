@@ -36,7 +36,7 @@ const BarStat = withStyles(barChartStyle)(props => {
                                                 fillOpacity={1}/>)
             }
         </BarChart>
-        <Typography variant="summary">{(Object.entries(rawvalue)
+        <Typography className={classes.pct} variant="summary">{(Object.entries(rawvalue)
                                              .filter(entry => ![idleField,...ignored].includes(entry[0]))
                                              .reduce((ret,stat)=>ret+stat[1],0.0)/
                                        Object.entries(rawvalue)
