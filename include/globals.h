@@ -94,7 +94,10 @@
 #include <algorithm>
 
 #include <Arduino.h>
+
+#define FASTLED_INTERNAL 1               // Suppresses build banners
 #include <FastLED.h>
+
 #include <WiFi.h>
 
 #include "RemoteDebug.h"
@@ -1512,13 +1515,15 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 #define YELLOW16 0xFFE0
 #define WHITE16 0xFFFF
 
+// Main includes 
 
 #include "gfxbase.h"                            // GFXBase drawing interface
 #include "screen.h"                             // LCD/TFT/OLED handling
 #include "socketserver.h"                       // Incoming WiFi data connections
 #include "soundanalyzer.h"                      // for audio sound processing
-#include "ledstripeffect.h"                     // Defines base led effect classes
 #include "ledstripgfx.h"                        // Essential drawing code for strips
+#include "ledmatrixgfx.h"                       // For drawing to HUB75 matrices
+#include "ledstripeffect.h"                     // Defines base led effect classes
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "effectmanager.h"                      // For g_EffectManagerf
 #include "network.h"                            // Networking 
@@ -1528,22 +1533,19 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 #include "drawing.h"                            // drawing code
 #include "taskmgr.h"                            // for cpu usage, etc
 
+// Conditional includes depending on which project is being build
+
+#if USEMATRIX
+    #include <YouTubeSight.h>                       // For fetching YouTube sub count
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
+#endif
+
 #if USE_SCREEN
     #include "freefonts.h"
 #endif
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER
     #include "spiffswebserver.h"
-#endif
-
-#if USEMATRIX
-    #include "ledmatrixgfx.h"
-    #include <YouTubeSight.h>                       // For fetching YouTube sub count
-    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-#endif
-
-#if USESTRIP
-    #include "ledstripgfx.h"
 #endif
 
 #if ENABLE_REMOTE

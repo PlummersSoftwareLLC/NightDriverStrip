@@ -36,7 +36,7 @@
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
 #include <driver/adc.h>
-#include <driver/adc_deprecated.h>
+//#include <driver/adc_deprecated.h>
 
 extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
