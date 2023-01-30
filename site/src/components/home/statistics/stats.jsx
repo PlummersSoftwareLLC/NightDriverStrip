@@ -117,12 +117,8 @@ const StatsPanel = withStyles(statsStyle)(props => {
         }
 
         return () => {
-            if (timer) {
-                clearTimeout(timer);
-            }
-            if (abortControler) {
-                abortControler.abort();
-            }
+            timer && clearTimeout(timer);
+            abortControler && abortControler.abort();
         }
     },[statsRefreshRate.value, lastRefreshDate, open]);
 

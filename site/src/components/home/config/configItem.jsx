@@ -12,7 +12,6 @@ const ConfigItem = withStyles(configStyle)(props => {
                 return value;
         }
     }
-    const theme = useTheme();
 
     if (datatype === "boolean") {
         return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>

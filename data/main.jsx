@@ -512,7 +512,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
             </AppBar>
             <Drawer variant="permanent" 
                     classes={{paper: [classes.drawer, !drawerOpened && classes.drawerClosed].join(" ")}}>
-                <div className={classes.drawerHeader}>
+                <Box className={classes.drawerHeader}>
                     <Box className={classes.displayMode}>
                         <IconButton onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
                         <ListItemText primary={(mode === "dark" ? "Dark" : "Light") + " mode"}/>
@@ -520,7 +520,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                     <IconButton onClick={()=>setDrawerOpened(!drawerOpened)}>
                         <Icon>chevron_left</Icon>
                     </IconButton>
-                </div>
+                </Box>
                 <Divider/>
                 <List>{
                     [{caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
@@ -555,7 +555,6 @@ const ConfigItem = withStyles(configStyle)(props => {
                 return value;
         }
     }
-    const theme = useTheme();
 
     if (datatype === "boolean") {
         return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
@@ -646,7 +645,6 @@ const ConfigDialog = withStyles(configStyle)(props => {
   );
 });const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
-    const theme = useTheme();
 
     return <Box className={classes.root}>
         <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
@@ -885,12 +883,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
         }
 
         return () => {
-            if (timer) {
-                clearTimeout(timer);
-            }
-            if (abortControler) {
-                abortControler.abort();
-            }
+            timer && clearTimeout(timer);
+            abortControler && abortControler.abort();
         }
     },[statsRefreshRate.value, lastRefreshDate, open]);
 

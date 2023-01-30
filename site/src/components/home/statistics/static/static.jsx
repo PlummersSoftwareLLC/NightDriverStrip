@@ -1,6 +1,5 @@
 const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
-    const theme = useTheme();
 
     return <Box className={classes.root}>
         <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>

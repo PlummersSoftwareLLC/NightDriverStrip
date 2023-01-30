@@ -56,7 +56,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
             </AppBar>
             <Drawer variant="permanent" 
                     classes={{paper: [classes.drawer, !drawerOpened && classes.drawerClosed].join(" ")}}>
-                <div className={classes.drawerHeader}>
+                <Box className={classes.drawerHeader}>
                     <Box className={classes.displayMode}>
                         <IconButton onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
                         <ListItemText primary={(mode === "dark" ? "Dark" : "Light") + " mode"}/>
@@ -64,7 +64,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                     <IconButton onClick={()=>setDrawerOpened(!drawerOpened)}>
                         <Icon>chevron_left</Icon>
                     </IconButton>
-                </div>
+                </Box>
                 <Divider/>
                 <List>{
                     [{caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
