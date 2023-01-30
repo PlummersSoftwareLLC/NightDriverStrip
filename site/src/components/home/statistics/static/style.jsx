@@ -6,8 +6,5 @@ const staticStatStyle = theme => ({
         "align-content": "flex-start",
         "justify-content": "space-between",
         "align-items": "flex-start"
-    },
-    attribute: {
-        "color": theme.palette.text.secondary
     }
 });

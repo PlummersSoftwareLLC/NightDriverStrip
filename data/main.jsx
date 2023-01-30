@@ -1,5 +1,4 @@
-const httpPrefix='';
-const { useState, useEffect, useMemo, useRef } = window.React;
+const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
@@ -7,14 +6,21 @@ const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme } = wi
 
 const { AreaChart, BarChart, Area, Bar, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } = window.Recharts;
 
-const typography={
+const pannelText= {
+  fontFamily: ["Roboto", "Helvetica", "Arial", "sans-serif"].join(", ")
+};
+
+const commonTypography={
   littleHeader: {
-    color: 'red'
+      fontWeight: 500,
+      fontSize: "1.25rem",
+      lineHeight: 1.6,
+      letterSpacing: "0.0075em",
   },
   littleValue: {
     lineHeight: 1.0,
     fontSize: "3.75rem",
-    fontWeight: 100
+    fontWeight: 300
   }
 };
     
@@ -35,8 +41,8 @@ const lightTheme = createTheme({
         bcolor3: '#189cdb66',
         bcolor4: '#189cdb38',
       }
-      },
-    typography
+    },
+  typography: commonTypography
 });
 
 const darkTheme = createTheme({
@@ -55,9 +61,15 @@ const darkTheme = createTheme({
       bcolor2: '#189cdba1',
       bcolor3: '#189cdb66',
       bcolor4: '#189cdb38',
-    }
+    },
+    text: {
+      primary: "#97ea44",
+      secondary: "aquamarine",
+      attribute: "aqua",
+      icon: "aquamarine"
+    },
   },
-  typography
+  typography: commonTypography
 });
 const drawerWidth = 240;
 
@@ -173,13 +185,23 @@ const mainAppStyle = theme => ({
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "flex-start",
-        "align-items": "flex-start"
+        "align-items": "flex-start",
+        columnGap: "10px",
+        rowGap: "10px"
     },
     chartArea: {
         "display": "flex",
         "flex-direction": "row",
         "flex-wrap": "wrap",
         "align-content": "flex-start",
+        "justify-content": "flex-start",
+        "align-items": "flex-start"
+    },
+    chartHeader: {
+        "display": "flex",
+        "flex-direction": "column",
+        "flex-wrap": "wrap",
+        "align-content": "center",
         "justify-content": "flex-start",
         "align-items": "flex-start"
     },
@@ -190,7 +212,12 @@ const mainAppStyle = theme => ({
         "align-content": "flex-start",
         "justify-content": "space-between",
         "align-items": "flex-start",
-        "column-gap": "5px"
+        "column-gap": "5px",
+        margin: "10px"
+    },
+    category:{
+        border: "green solid 2px",
+        borderRadius: "15px",
     },
     hidden: {
         display: "none"
@@ -201,7 +228,8 @@ const mainAppStyle = theme => ({
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "center",
-        "align-items": "center"
+        "align-items": "center",
+        borderBottom: "green solid 1px"
     }
 });
 
@@ -219,9 +247,6 @@ const staticStatStyle = theme => ({
         "align-content": "flex-start",
         "justify-content": "space-between",
         "align-items": "flex-start"
-    },
-    attribute: {
-        "color": theme.palette.text.secondary
     }
 });
 const areaChartStyle = theme => ({
@@ -340,16 +365,21 @@ const barChartStyle = theme => ({
         "justify-content": "flex-start",
         "align-items": "center"
     },
-    minimized: {
-        "margin-top":"-20px",
-        "margin-right": "-25px"
-    },
     header: {
         "display": "flex",
         "flex-direction": "column",
         "flex-wrap": "nowrap",
         "justify-content": "center",
         "align-items": "stretch"
+    },
+    headerLine: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "justify-content": "space-between",
+        "align-items": "center",
+        "width": "100%",
+        "color": theme.palette.text.primary
     },
     stats: {
         "display": "flex",
@@ -358,9 +388,6 @@ const barChartStyle = theme => ({
         "justify-content": "center",
         "align-items": "center",
         "padding": "0px"
-    },
-    pct: {
-        "color":theme.palette.text.secondary
     },
     stat: {
         "display": "flex",
@@ -507,7 +534,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats} />
+                <StatsPanel siteConfig={siteConfig} open={stats}/>
                 <ConfigDialog siteConfig={siteConfig} open={config} onClose={() => {setConfig(false)}} />
             </Box>
         </Box>
@@ -526,7 +553,8 @@ const ConfigItem = withStyles(configStyle)(props => {
             default:
                 return value;
         }
-    }   
+    }
+    const theme = useTheme();
 
     if (datatype === "boolean") {
         return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
@@ -563,7 +591,7 @@ const ConfigItem = withStyles(configStyle)(props => {
                                             }}>
                                     <Icon>save</Icon>
                                 </IconButton>}
-                        {editing && <IconButton color="primary" 
+                        {editing && <IconButton color="secondary" 
                                                 aria-label="Cancel" 
                                                 component="label"
                                                 onClick={_evt => {
@@ -617,6 +645,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
   );
 });const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
+    const theme = useTheme();
 
     return <Box className={classes.root}>
         <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
@@ -624,14 +653,14 @@ const ConfigDialog = withStyles(configStyle)(props => {
             {Object.entries(stat.stat)
                    .map(entry=>
                 <ListItem key={entry[0]}>
-                    <Typography variant="littleHeader">{entry[0]}</Typography>:
-                    <Typography className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>
+                    <Typography variant="little" color="textSecondary">{entry[0]}</Typography>:
+                    <Typography variant="little" color="textAttribute">{entry[1]}</Typography>
                 </ListItem>)}
         </List>:
         <List>
         {Object.entries(stat.stat)
                .filter(entry => stat.headerFields.includes(entry[0]))
-               .map(entry=><Typography key={entry[0]} className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>)}
+               .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
     </List>}
     </Box>
 });const AreaStat = withStyles(areaChartStyle)(props => {
@@ -714,8 +743,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
                    tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
             <YAxis hide={true}></YAxis>
             <CartesianGrid strokeDasharray="3 3"/>
-            <Tooltip content={data => getStatTooltip(data, classes)}
-                     labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>
+            {detail && <Tooltip content={data => getStatTooltip(data, classes)}
+                     labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>}
             {Object.entries(getChartValues(rawvalue))
                     .filter(entry => entry[1] !== undefined)
                     .sort((a,b) => sortStats({name:a[0],chartValue:a[1]},{name:b[0],chartValue:b[1]}))
@@ -871,7 +900,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
     return statistics && 
     <Box className={`${classes.root} ${!open && classes.hidden}`}>
         {Object.entries(statistics).map(category => 
-        <Box key={category[0]}>
+        <Box key={category[0]} className={classes.category}>
             <Box className={classes.statCatergoryHeader} key="header">
                 <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>{openedCategories[category[0]] ? "menu" : "expand"}</Icon></IconButton>
                 <Typography variant="h5">{category[0]}</Typography>
@@ -879,7 +908,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
             <Box className={classes.categoryStats}>
             {Object.entries(category[1])
                .filter(entry=> entry[1].static) 
-               .map(entry=>  
+               .map(entry=>
                 <StaticStatsPanel
                     key={`static-${entry[0]}`}
                     detail={openedCategories[category[0]]}
@@ -888,30 +917,34 @@ const ConfigDialog = withStyles(configStyle)(props => {
                 <Box className={classes.categoryStats} key="charts">
                     {Object.entries(category[1])
                         .filter(entry=> !entry[1].static) 
-                        .map(entry=>  
-                            <Box key={`chart-${entry[0]}`} className={classes.chartArea}>
-                                {category[1][entry[0]].idleField && <BarStat
-                                    key={`Bar-${entry[0]}`}
-                                    name={entry[0]}
-                                    className={entry[0]}
-                                    category={category[0]}
-                                    detail={openedCategories[category[0]]}
-                                    rawvalue={entry[1].stat}
-                                    idleField={ category[1][entry[0]].idleField }
-                                    statsAnimateChange={ statsAnimateChange.value }
-                                    headerFields={ category[1][entry[0]].headerFields }
-                                    ignored={ category[1][entry[0]].ignored || [] } />}
-                                <AreaStat
-                                    key={`Area-${entry[0]}`}
-                                    name={entry[0]}
-                                    category={category[0]}
-                                    detail={openedCategories[category[0]]}
-                                    statsAnimateChange={ statsAnimateChange.value }
-                                    rawvalue={entry[1].stat}
-                                    maxSamples={ maxSamples.value }
-                                    idleField={ category[1][entry[0]].idleField }
-                                    headerFields={ category[1][entry[0]].headerFields }
-                                    ignored={ category[1][entry[0]].ignored || [] } />
+                        .map((entry,_idx,arr)=>  
+                            <Box key={`chart-${entry[0]}`}>
+                                {!openedCategories[category[0]] && arr.length > 1 && 
+                                <Box className={classes.chartHeader}><Typography variant="littleHeader">{entry[0]}</Typography></Box>}
+                                <Box className={classes.chartArea}>
+                                    {category[1][entry[0]].idleField && <BarStat
+                                        key={`Bar-${entry[0]}`}
+                                        name={entry[0]}
+                                        className={entry[0]}
+                                        category={category[0]}
+                                        detail={openedCategories[category[0]]}
+                                        rawvalue={entry[1].stat}
+                                        idleField={ category[1][entry[0]].idleField }
+                                        statsAnimateChange={ statsAnimateChange.value }
+                                        headerFields={ category[1][entry[0]].headerFields }
+                                        ignored={ category[1][entry[0]].ignored || [] } />}
+                                    <AreaStat
+                                        key={`Area-${entry[0]}`}
+                                        name={entry[0]}
+                                        category={category[0]}
+                                        detail={openedCategories[category[0]]}
+                                        statsAnimateChange={ statsAnimateChange.value }
+                                        rawvalue={entry[1].stat}
+                                        maxSamples={ maxSamples.value }
+                                        idleField={ category[1][entry[0]].idleField }
+                                        headerFields={ category[1][entry[0]].headerFields }
+                                        ignored={ category[1][entry[0]].ignored || [] } />
+                                </Box>
                             </Box>)}
                 </Box>
             </Box>
@@ -931,18 +964,13 @@ const BarStat = withStyles(barChartStyle)(props => {
     }
 
     return (
-    <Box className={`${classes.summary} ${!detail && classes.minimized}`}>
+    <Box className={classes.summary}>
         <BarChart
-            height={detail ? 300 : 80}
-            width={detail ? 150 : 100}
+            height={detail ? 300 : 70}
+            width={detail ? 150 : 75}
             data={[Object.entries(rawvalue)
                 .filter(entry=>!["name",...ignored].includes(entry[0]))
-                .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{name:name})]}
-            margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5}}>
+                .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{name:name})]}>
             <XAxis hide={true} dataKey="name" />
             <YAxis hide={true} />
             {Object.keys(rawvalue)
@@ -957,7 +985,7 @@ const BarStat = withStyles(barChartStyle)(props => {
                                                 fillOpacity={1}/>)
             }
         </BarChart>
-        <Typography className={classes.pct} variant="summary">{(Object.entries(rawvalue)
+        <Typography variant="summary">{(Object.entries(rawvalue)
                                              .filter(entry => ![idleField,...ignored].includes(entry[0]))
                                              .reduce((ret,stat)=>ret+stat[1],0.0)/
                                        Object.entries(rawvalue)

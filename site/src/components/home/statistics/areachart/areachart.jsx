@@ -78,8 +78,8 @@ const AreaStat = withStyles(areaChartStyle)(props => {
                    tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
             <YAxis hide={true}></YAxis>
             <CartesianGrid strokeDasharray="3 3"/>
-            <Tooltip content={data => getStatTooltip(data, classes)}
-                     labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>
+            {detail && <Tooltip content={data => getStatTooltip(data, classes)}
+                     labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>}
             {Object.entries(getChartValues(rawvalue))
                     .filter(entry => entry[1] !== undefined)
                     .sort((a,b) => sortStats({name:a[0],chartValue:a[1]},{name:b[0],chartValue:b[1]}))

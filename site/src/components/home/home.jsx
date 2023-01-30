@@ -79,7 +79,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats} />
+                <StatsPanel siteConfig={siteConfig} open={stats}/>
                 <ConfigDialog siteConfig={siteConfig} open={config} onClose={() => {setConfig(false)}} />
             </Box>
         </Box>

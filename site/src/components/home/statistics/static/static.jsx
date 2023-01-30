@@ -1,5 +1,6 @@
 const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
+    const theme = useTheme();
 
     return <Box className={classes.root}>
         <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
@@ -7,14 +8,14 @@ const StaticStatsPanel = withStyles(staticStatStyle)(props => {
             {Object.entries(stat.stat)
                    .map(entry=>
                 <ListItem key={entry[0]}>
-                    <Typography variant="littleHeader">{entry[0]}</Typography>:
-                    <Typography className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>
+                    <Typography variant="little" color="textSecondary">{entry[0]}</Typography>:
+                    <Typography variant="little" color="textAttribute">{entry[1]}</Typography>
                 </ListItem>)}
         </List>:
         <List>
         {Object.entries(stat.stat)
                .filter(entry => stat.headerFields.includes(entry[0]))
-               .map(entry=><Typography key={entry[0]} className={classes.attribute} variant="littleValue" >{entry[1]}</Typography>)}
+               .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
     </List>}
     </Box>
 });

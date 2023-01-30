@@ -1,11 +1,18 @@
-const typography={
+const pannelText= {
+  fontFamily: ["Roboto", "Helvetica", "Arial", "sans-serif"].join(", ")
+};
+
+const commonTypography={
   littleHeader: {
-    color: 'red'
+      fontWeight: 500,
+      fontSize: "1.25rem",
+      lineHeight: 1.6,
+      letterSpacing: "0.0075em",
   },
   littleValue: {
     lineHeight: 1.0,
     fontSize: "3.75rem",
-    fontWeight: 100
+    fontWeight: 300
   }
 };
     
@@ -26,8 +33,8 @@ const lightTheme = createTheme({
         bcolor3: '#189cdb66',
         bcolor4: '#189cdb38',
       }
-      },
-    typography
+    },
+  typography: commonTypography
 });
 
 const darkTheme = createTheme({
@@ -46,7 +53,13 @@ const darkTheme = createTheme({
       bcolor2: '#189cdba1',
       bcolor3: '#189cdb66',
       bcolor4: '#189cdb38',
-    }
+    },
+    text: {
+      primary: "#97ea44",
+      secondary: "aquamarine",
+      attribute: "aqua",
+      icon: "aquamarine"
+    },
   },
-  typography
+  typography: commonTypography
 });

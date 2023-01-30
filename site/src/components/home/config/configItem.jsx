@@ -11,7 +11,8 @@ const ConfigItem = withStyles(configStyle)(props => {
             default:
                 return value;
         }
-    }   
+    }
+    const theme = useTheme();
 
     if (datatype === "boolean") {
         return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
@@ -48,7 +49,7 @@ const ConfigItem = withStyles(configStyle)(props => {
                                             }}>
                                     <Icon>save</Icon>
                                 </IconButton>}
-                        {editing && <IconButton color="primary" 
+                        {editing && <IconButton color="secondary" 
                                                 aria-label="Cancel" 
                                                 component="label"
                                                 onClick={_evt => {

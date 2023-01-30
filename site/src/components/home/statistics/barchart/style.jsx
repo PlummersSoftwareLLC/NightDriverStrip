@@ -7,16 +7,21 @@ const barChartStyle = theme => ({
         "justify-content": "flex-start",
         "align-items": "center"
     },
-    minimized: {
-        "margin-top":"-20px",
-        "margin-right": "-25px"
-    },
     header: {
         "display": "flex",
         "flex-direction": "column",
         "flex-wrap": "nowrap",
         "justify-content": "center",
         "align-items": "stretch"
+    },
+    headerLine: {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "justify-content": "space-between",
+        "align-items": "center",
+        "width": "100%",
+        "color": theme.palette.text.primary
     },
     stats: {
         "display": "flex",
@@ -25,9 +30,6 @@ const barChartStyle = theme => ({
         "justify-content": "center",
         "align-items": "center",
         "padding": "0px"
-    },
-    pct: {
-        "color":theme.palette.text.secondary
     },
     stat: {
         "display": "flex",

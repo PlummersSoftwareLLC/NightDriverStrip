@@ -10,18 +10,13 @@ const BarStat = withStyles(barChartStyle)(props => {
     }
 
     return (
-    <Box className={`${classes.summary} ${!detail && classes.minimized}`}>
+    <Box className={classes.summary}>
         <BarChart
-            height={detail ? 300 : 80}
-            width={detail ? 150 : 100}
+            height={detail ? 300 : 70}
+            width={detail ? 150 : 75}
             data={[Object.entries(rawvalue)
                 .filter(entry=>!["name",...ignored].includes(entry[0]))
-                .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{name:name})]}
-            margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5}}>
+                .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{name:name})]}>
             <XAxis hide={true} dataKey="name" />
             <YAxis hide={true} />
             {Object.keys(rawvalue)
@@ -36,7 +31,7 @@ const BarStat = withStyles(barChartStyle)(props => {
                                                 fillOpacity={1}/>)
             }
         </BarChart>
-        <Typography className={classes.pct} variant="summary">{(Object.entries(rawvalue)
+        <Typography variant="summary">{(Object.entries(rawvalue)
                                              .filter(entry => ![idleField,...ignored].includes(entry[0]))
                                              .reduce((ret,stat)=>ret+stat[1],0.0)/
                                        Object.entries(rawvalue)
