@@ -177,7 +177,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 45;
+        return 60;
     }
 
     virtual bool RequiresDoubleBuffering() const

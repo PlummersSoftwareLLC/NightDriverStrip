@@ -667,9 +667,8 @@ void setup()
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_pDevices[0]->GetLEDCount());
             
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, 3*144);
-            FastLED[0].setLeds(((LEDStripGFX *)g_pDevices[0].get())->leds, g_pDevices[0]->GetLEDCount());   
-            FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, g_pDevices[0]->GetLEDCount());
+            FastLED.setMaxRefreshRate(100, false); 
             pinMode(LED_PIN0, OUTPUT);
         #endif
 

@@ -238,8 +238,12 @@ struct AudioVariables
 
     class SoundAnalyzer : public AudioVariables
     {
-        const size_t MAX_SAMPLES = 256;
-        const size_t SAMPLING_FREQUENCY = 24000;
+        const size_t MAX_SAMPLES = 512;
+
+        // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
+        // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
+
+        const size_t SAMPLING_FREQUENCY = 24000;        
 
         size_t _MaxSamples;        // Number of samples we will take, must be a power of 2
         size_t _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
@@ -306,9 +310,7 @@ struct AudioVariables
         void FFT()
         {
             arduinoFFT _FFT(_vReal, _vImaginary, _MaxSamples, _SamplingFrequency);
-            _FFT.DCRemoval();
             _FFT.Compute(FFT_FORWARD);
-            _FFT.ComplexToMagnitude();
         }
 
         inline bool IsBufferFull() const __attribute__((always_inline))
@@ -432,31 +434,6 @@ struct AudioVariables
                     _vReal[i] = byteBuffer[i];
                 #endif
             }
-        }
-
-        // SampleBuffer::AcquireSampleAnalogRead
-        //
-        // IRQ calls here through the IRQ stub
-
-        void AcquireSampleAnalogRead()
-        {
-            if (false == IsBufferFull())
-            {
-                //_vReal[_cSamples] = adcEnd(_InputPin);
-                _vReal[_cSamples] = analogRead(_InputPin);
-                _vImaginary[_cSamples] = 0;
-                _cSamples++;
-                _cSamples++;
-
-                if (_cSamples % 16 == 0)
-                    delay(1);
-            }
-        }
-
-        void FillBufferAnalogRead()
-        {
-            while (false == IsBufferFull())
-                AcquireSampleAnalogRead();
         }
 
         // SampleBuffer::ProcessPeaks

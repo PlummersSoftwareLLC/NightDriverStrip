@@ -424,7 +424,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define RESERVE_MEMORY  150000
     #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
+    #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
     #define NOISE_CUTOFF   20
     #define NOISE_FLOOR    200.0f
