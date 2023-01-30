@@ -185,7 +185,7 @@ const mainAppStyle = theme => ({
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "flex-start",
-        "align-items": "flex-start",
+        "align-items": "stretch",
         columnGap: "10px",
         rowGap: "10px"
     },
@@ -213,7 +213,6 @@ const mainAppStyle = theme => ({
         "justify-content": "space-between",
         "align-items": "flex-start",
         "column-gap": "5px",
-        margin: "10px"
     },
     category:{
         border: "green solid 2px",
@@ -246,7 +245,9 @@ const staticStatStyle = theme => ({
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "space-between",
-        "align-items": "flex-start"
+        "align-items": "flex-start",
+        "margin-left": "5px",
+        "margin-right": "5px"
     }
 });
 const areaChartStyle = theme => ({

@@ -13,6 +13,6 @@
         "build": "npm run buildjsx && npm run buildhtml",
         "buildlocal": "npm run buildlocaljsx && npm run buildhtml",
         "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src 'npm run buildlocal'",
-        "start": "npm run build && node ./node_modules/serve/build/main.js ../data"
+        "start": "npm run buildlocal && node ./node_modules/serve/build/main.js ../data"
     }
 }

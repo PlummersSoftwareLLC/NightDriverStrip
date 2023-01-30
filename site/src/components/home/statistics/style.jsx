@@ -5,7 +5,7 @@ const statsStyle = theme => ({
         "flex-wrap": "wrap",
         "align-content": "flex-start",
         "justify-content": "flex-start",
-        "align-items": "flex-start",
+        "align-items": "stretch",
         columnGap: "10px",
         rowGap: "10px"
     },
@@ -33,7 +33,6 @@ const statsStyle = theme => ({
         "justify-content": "space-between",
         "align-items": "flex-start",
         "column-gap": "5px",
-        margin: "10px"
     },
     category:{
         border: "green solid 2px",
