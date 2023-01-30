@@ -37,10 +37,6 @@
 #include <vector>
 #include <math.h>
 
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
-
 // SimpleRainbowTestEffect
 //
 // Fills the spokes with a rainbow palette, skipping dots as specified

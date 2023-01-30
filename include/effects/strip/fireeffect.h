@@ -39,12 +39,7 @@
 #include <memory>
 #include <algorithm>
 
-#include "soundanalyzer.h"
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
 #include "musiceffect.h"
-#include "effectmanager.h"
 
 extern AppTime g_AppTime;
 class FireEffect : public LEDStripEffect
@@ -75,8 +70,8 @@ class FireEffect : public LEDStripEffect
 
   public:
 
-    FireEffect(const String pszName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
-        : LEDStripEffect(pszName),
+    FireEffect(const String & strName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
+        : LEDStripEffect(strName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
           Cooling(cooling),
@@ -192,7 +187,7 @@ class PaletteFlameEffect : public FireEffect
     CRGBPalette256 _palette;
 
 public:
-    PaletteFlameEffect(const String pszName,
+    PaletteFlameEffect(const String & strName,
                        const CRGBPalette256 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -202,7 +197,7 @@ public:
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : FireEffect(pszName,ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+        : FireEffect(strName,ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           _palette(palette)
     {
     }
@@ -218,12 +213,12 @@ public:
     }
 };
 
-#ifdef ENABLE_AUDIO
-class MusicalPaletteFire : public PaletteFlameEffect, protected virtual BeatEffectBase2
+#if ENABLE_AUDIO
+class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase2
 {
   public:
 
-    MusicalPaletteFire(const String pszName,
+    MusicalPaletteFire(const String & strName,
                        const CRGBPalette256 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -234,7 +229,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected virtual BeatEffe
                        bool reversed = false,
                        bool mirrored = false)
         :   BeatEffectBase2(1.00, 0.01),
-            PaletteFlameEffect(pszName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
+            PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
           
     {
     }

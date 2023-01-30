@@ -39,13 +39,6 @@
 #include <vector>
 #include <math.h>
 
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "colorutils.h"
-#include "ledstripeffect.h" 
-#include "faneffects.h"
-#include "musiceffect.h"
-
 extern DRAM_ATTR AppTime g_AppTime;
 
 class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
@@ -81,8 +74,8 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 
     using BeatEffectBase::BeatEffectBase;
  
-    SimpleInsulatorBeatEffect(const String pszName) 
-      : LEDStripEffect(pszName), BeatEffectBase(1.0, 1.0, 0.01)
+    SimpleInsulatorBeatEffect(const String & strName) 
+      : LEDStripEffect(strName), BeatEffectBase(1.0, 1.0, 0.01)
     {
     }
 };
@@ -118,7 +111,7 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 
   public:
  
-    SimpleInsulatorBeatEffect2(const String pszName) : LEDStripEffect(pszName), BeatEffectBase()
+    SimpleInsulatorBeatEffect2(const String & strName) : LEDStripEffect(strName), BeatEffectBase()
     {
     }
 };

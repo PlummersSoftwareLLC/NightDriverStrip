@@ -73,10 +73,24 @@
 //              Oct-30-2022  v031       Davepl      Screen cleanup, core assignments moved around
 //              Oct-30-2022  v032       Davepl      Better wait code, core assignments
 //              Oct-30-2022  v033       Davepl      Fixed mistiming bug when no draw was ready
-//              Nov-15-2022  v034       Davepl      Fixed buffer full condition\
+//              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
+//              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
 //
 //---------------------------------------------------------------------------
+
+#include <Arduino.h>
+#include <FastLED.h>
+#include <inttypes.h>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <WiFi.h>
+#include <sstream>
+#include <sys/time.h>
+#include <exception>
+
+#include "RemoteDebug.h"
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
 // value.  So if version = 020, 
@@ -86,7 +100,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         34    // Update ONLY this to increment the version number
+#define FLASH_VERSION         36    // Update ONLY this to increment the version number
 
 #ifndef USEMATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
@@ -170,22 +184,9 @@
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-#include <Arduino.h>
 
-#include <iostream>
-#include <memory>
-#include <string>
 
-#include <FastLED.h>                // FastLED for the LED panels
-#include <pixeltypes.h>             // Handy color and hue stuff
-#include <WiFi.h>
 
-#include <sys/time.h>
-#include <exception>
-#include "RemoteDebug.h"
-
-#include<sstream>
 
 // I don't know why to_string is missing, but it seems to be a compiler/cygwin
 // issue. If this turns into a redefinition at some point because the real one
@@ -1283,7 +1284,7 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
     #include <TFT_eSPI.h>
     #include <SPI.h>
-    extern TFT_eSPI * g_pDisplay;
+    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 #endif
 
 
@@ -1490,3 +1491,53 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
     }
     return bOK;
 }
+
+
+// 5:6:5 Color definitions
+#define BLACK16 0x0000
+#define BLUE16 0x001F
+#define RED16 0xF800
+#define GREEN16 0x07E0
+#define CYAN16 0x07FF
+#define MAGENTA16 0xF81F
+#define YELLOW16 0xFFE0
+#define WHITE16 0xFFFF
+
+
+#include "gfxbase.h"                            // GFXBase drawing interface
+#include "socketserver.h"                       // Incoming WiFi data connections
+#include "soundanalyzer.h"                      // for audio sound processing
+#include "ledstripeffect.h"                     // Defines base led effect classes
+#include "ledstripgfx.h"                        // Essential drawing code for strips
+#include "effectmanager.h"                      // For g_EffectManagerf
+#include "network.h"                            // Networking 
+#include "ntptimeclient.h"                      // setting the system clock from ntp
+#include "ledbuffer.h"                          // Buffer manager for strip
+#include "Bounce2.h"                            // For Bounce button class
+#include "colordata.h"                          // color palettes
+#include "drawing.h"                            // drawing code
+#include "taskmgr.h"                            // for cpu usage, etc
+
+#if USE_SCREEN
+    #include "screen.h"
+    #include "freefonts.h"
+#endif
+
+#if ENABLE_WIFI && ENABLE_WEBSERVER
+    #include "spiffswebserver.h"
+#endif
+
+#if USEMATRIX
+    #include "ledmatrixgfx.h"
+    #include <YouTubeSight.h>                       // For fetching YouTube sub count
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
+#endif
+
+#if USESTRIP
+    #include "ledstripgfx.h"
+#endif
+
+#if ENABLE_REMOTE
+    #include "remotecontrol.h"
+#endif
+

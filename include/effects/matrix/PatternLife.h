@@ -62,9 +62,6 @@
 #ifndef PatternLife_H
 #define PatternLife_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
 #include <bitset>
 
 extern "C" 

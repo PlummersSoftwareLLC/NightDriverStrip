@@ -58,9 +58,6 @@
 #ifndef PatternNoiseSmearing_H
 #define PatternNoiseSmearing_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-
 uint8_t patternNoiseSmearingHue = 0;
 
 

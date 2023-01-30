@@ -58,10 +58,6 @@
 #ifndef PatternWave_H
 #define PatternWave_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternWave : public LEDStripEffect 
 {
 private:

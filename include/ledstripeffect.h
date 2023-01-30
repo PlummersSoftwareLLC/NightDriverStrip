@@ -35,14 +35,6 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include "globals.h"
-#include "colorutils.h"
-#include "ntptimeclient.h"
-#include "effectmanager.h"
-#include "gfxbase.h"
-#include "ledmatrixgfx.h"
-#include "ledstripeffect.h"
-
 #include <deque>
 #include <memory>
 
@@ -70,10 +62,10 @@ class LEDStripEffect
 
   public:
 
-    LEDStripEffect(const String pszName)
+    LEDStripEffect(const String & strName)
     {
-        if (pszName)
-            _friendlyName = pszName;
+        if (strName)
+            _friendlyName = strName;
     }
 
     virtual ~LEDStripEffect()
@@ -108,7 +100,7 @@ class LEDStripEffect
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
-    virtual const String FriendlyName() const
+    virtual const String & FriendlyName() const
     {
         return _friendlyName;
     }

@@ -58,10 +58,6 @@
 #ifndef PatternPulse_H
 #define PatternPulse_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternPulse : public LEDStripEffect
 {
   private:

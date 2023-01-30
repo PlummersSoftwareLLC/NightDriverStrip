@@ -16,7 +16,7 @@ _(This is an exact copy of the equally-named section of [README.md](README.md))_
 
 Rather than produce a complex set of guidelines, here's what I hope open-source collaboration will bring to the project: that folks will add important features and fix defects and shortcomings in the code.  When they're adding features, they'll do it in a way consistent with the way things are done in the existing code.  They resist the urge to rearchitect and rewrite everything in their own image and instead put their efforts towards maximizing functional improvement while reducing source code thrash and change.
 
-Let's consider the inconsistent naming, which should be fixed.  Some is camelCase, some is pszHungarian, and so on, depending on the source. I'd prefer it were all updated to a single standard TBD.  Until the TBD is determined, I lean towards [the Win32 standard](https://docs.microsoft.com/en-us/windows/win32/stg/coding-style-conventions?redirectedfrom=MSDN).  
+Let's consider the inconsistent naming, which should be fixed.  Some is camelCase, some is strHungarian, and so on, depending on the source. I'd prefer it were all updated to a single standard TBD.  Until the TBD is determined, I lean towards [the Win32 standard](https://docs.microsoft.com/en-us/windows/win32/stg/coding-style-conventions?redirectedfrom=MSDN).  
 
 When working in a function, work in the style of the function.  When working on a class, work in the style of the class.  When working on a file, work in the style of the file.  If those are inconsistent, do whatever minimizes changes.  Stylistic changes should only be introduced after discussion in the group, and generally should entain owning that style change across the entire project.
 

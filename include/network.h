@@ -27,32 +27,21 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "globals.h"
-#include "soundanalyzer.h"
-#include "effectmanager.h"
-#if ENABLE_REMOTE
-#include "remotecontrol.h"
-#endif
-
-#include "socketserver.h"
-#include "ntptimeclient.h"
 #include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
+
+#if INCOMING_WIFI_ENABLED
+    #include "socketserver.h"
+    extern SocketServer g_SocketServer;
+#endif
 
 #if ENABLE_WIFI
     extern uint8_t g_Brightness;
     extern bool g_bUpdateStarted;
     extern WiFiUDP g_Udp;
-    #if INCOMING_WIFI_ENABLED
-        extern SocketServer g_SocketServer;
-    #endif
     void processRemoteDebugCmd();
 
-    #if ENABLE_REMOTE
-        extern RemoteControl g_RemoteControl;
-    #endif
-
     bool ConnectToWiFi(uint cRetries);
-    void SetupOTA(const String pszHostname);
+    void SetupOTA(const String & strHostname);
 
     // Static Helpers
     //

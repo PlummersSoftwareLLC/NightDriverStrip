@@ -29,13 +29,16 @@
 //              
 //---------------------------------------------------------------------------
 
-#include "globals.h"                      // CONFIG and global headers
-#include "soundanalyzer.h"
-#include "network.h"
+#include "globals.h"
+// The SoundAnalyzer is present even when Audio is not defined, but it then a mere stub class
+// with a few stats fields. In the Audio case, it's the full class
+
+SoundAnalyzer g_Analyzer(INPUT_PIN);
+
 #if ENABLE_AUDIO
 
 #include <esp_task_wdt.h>
-#include "taskmgr.h"
+
 
 extern NightDriverTaskManager g_TaskManager;
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
@@ -51,8 +54,6 @@ float PeakData::_Min[NUM_BANDS] = { 0.0 };
 float PeakData::_Max[NUM_BANDS] = { 0.0 }; 
 float PeakData::_Last[NUM_BANDS] = { 0.0 }; 
 float PeakData::_allBandsMax = 1.0;
-
-SoundAnalyzer g_Analyzer(INPUT_PIN);
 
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.

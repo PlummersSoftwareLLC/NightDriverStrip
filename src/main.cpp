@@ -149,31 +149,9 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"                            // CONFIG and global headers
-#include "soundanalyzer.h"                      // for audio sound processing
-#include "effectmanager.h"                      // For g_EffectManagerf
-
-// If the Atomi TM1814 lights are being used, we include the NeoPixelBus code
-// to drive them, but otherwise we do not use or include NeoPixelBus
-
+#include "globals.h"
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
 #include <ESPmDNS.h>
-#include "ntptimeclient.h"                      // setting the system clock from ntp
-#include "socketserver.h"                       // our socket server for incoming
-#include "network.h"                            // For WiFi credentials
-#include "ledbuffer.h"
-#include "Bounce2.h"                            // For Bounce button class
-#if ENABLE_WEBSERVER
-    #include "spiffswebserver.h"                // handle web server requests
-#endif
-
-#include "colordata.h"                          // color palettes
-#include "drawing.h"                            // drawing code
-#include "taskmgr.h"                            // for cpu usage, etc
-
-#if ENABLE_REMOTE
-    #include "remotecontrol.h" // Allows us to use a IR remote with it
-#endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;
@@ -190,7 +168,7 @@ NightDriverTaskManager g_TaskManager;
 // Global Variables
 //
 
-#ifdef SPECTRUM
+#if SPECTRUM
 DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
 #else
 DRAM_ATTR uint8_t giInfoPage = 0;                   // Default to first page
@@ -201,16 +179,6 @@ DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
 DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started?
 DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
-
-#ifdef USEMATRIX
-    #include "ledmatrixgfx.h"
-    #include <YouTubeSight.h>                       // For fetching YouTube sub count
-    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-#endif
-
-#ifdef USESTRIP
-    #include "ledstripgfx.h"
-#endif
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
 
@@ -551,7 +519,7 @@ void setup()
 
 #if USE_TFTSPI
     debugI("Initializing TFTSPI");
-    extern TFT_eSPI * g_pDisplay;
+    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, 128);
@@ -590,9 +558,9 @@ void setup()
     // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
     // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
 
-    SPIClass * hspi = new SPIClass(HSPI);
+    SPIClass * hspi = new SPIClass(HSPI);               // BUGBUG (Davepl) who frees this?
     hspi->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
-    g_pDisplay = new Adafruit_ILI9341(hspi, TFT_DC, TFT_CS, TFT_RST);
+    g_pDisplay = std::make_unique<Adafruit_ILI9341>(hspi, TFT_DC, TFT_CS, TFT_RST);
     g_pDisplay->begin();
     g_pDisplay->fillScreen(BLUE16);
     g_pDisplay->setRotation(1);

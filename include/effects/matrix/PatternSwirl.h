@@ -57,10 +57,6 @@
 
 #ifndef PatternSwirl_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternSwirl : public LEDStripEffect
 {
 private:

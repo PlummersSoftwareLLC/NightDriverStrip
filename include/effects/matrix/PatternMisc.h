@@ -56,7 +56,6 @@
 #ifndef PatternMisc_H
 #define PatternMisc_H
 
-#include "globals.h"
 #include "Geometry.h"
 
 class PatternSunburst : public LEDStripEffect 

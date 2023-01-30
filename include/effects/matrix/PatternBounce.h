@@ -54,7 +54,6 @@
 #ifndef PatternBounce_H
 #define PatternBounce_H
 
-#include "globals.h"
 #include "Vector.h"
 #include "Boid.h"
 

@@ -35,10 +35,6 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "paletteeffect.h"
 
 extern AppTime g_AppTime;
 

@@ -32,15 +32,10 @@
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-
 #include "globals.h"
-#include "soundanalyzer.h"
-#include "network.h"
-#include "ledbuffer.h"
-#include "spiffswebserver.h"
 
-#if ENABLE_REMOTE
-#include "remotecontrol.h"
+#if ENABLE_WEBSERVER
+    extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
 #endif
 
 #if USE_WIFI_MANAGER
@@ -49,7 +44,6 @@ DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 #endif
 
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
-extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
 
 std::mutex g_buffer_mutex;
 
@@ -129,15 +123,15 @@ extern uint32_t g_FPS;
 //
 // Set up the over-the-air programming info so that we can be flashed over WiFi
 
-void SetupOTA(const String pszHostname)
+void SetupOTA(const String & strHostname)
 {
 #if ENABLE_OTA
     ArduinoOTA.setRebootOnSuccess(true);
 
-    if (nullptr == pszHostname)
+    if (strHostname.isEmpty())
         ArduinoOTA.setMdnsEnabled(false);
     else
-        ArduinoOTA.setHostname(pszHostname.c_str());
+        ArduinoOTA.setHostname(strHostname.c_str());
 
     ArduinoOTA
         .onStart([]() {

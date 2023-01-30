@@ -35,14 +35,8 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "colordata.h"
-
 
 extern AppTime g_AppTime;
-
 
 class PaletteEffect : public LEDStripEffect
 {

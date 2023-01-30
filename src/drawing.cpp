@@ -29,24 +29,9 @@
 //
 //---------------------------------------------------------------------------
 
-#include <globals.h>
 #include <mutex>
 #include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
-
-#include "effectmanager.h"
-#include "ledbuffer.h"
-#include "ntptimeclient.h"
-#include "remotecontrol.h"
-#include "ntptimeclient.h"
-
-#if USESTRIP || USEMATRIX
-#include "ledstripgfx.h"
-#endif
-
-#if USEMATRIX
-#include "ledmatrixgfx.h"
-#endif
-
+#include "globals.h"
 #include "effects/matrix/spectrumeffects.h"
 
 CRGB g_SinglePixel = CRGB::Blue;
