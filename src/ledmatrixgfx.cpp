@@ -33,8 +33,8 @@
 #include "effects/matrix/Vector.h"
 
 extern DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
 
 #if USEMATRIX
@@ -75,7 +75,7 @@ void LEDMatrixGFX::StartMatrix()
 CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 {
     for (int i = 0; i < NUM_CHANNELS; i++)
-      g_pDevices[i]->UpdatePaletteCycle();
+      g_aptrDevices[i]->UpdatePaletteCycle();
 
     return (CRGB *) backgroundLayer.getRealBackBuffer();
 

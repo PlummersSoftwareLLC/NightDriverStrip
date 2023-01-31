@@ -80,7 +80,7 @@
 #include "ledstripgfx.h"
 #endif
 
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 #if USEMATRIX
         volatile long PatternSubscribers::cSubscribers;
@@ -296,7 +296,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
         CHSV hueColor = rgb2hsv_approximate(color1);
         auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
-        if (object->Init(g_pDevices))
+        if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
 }
@@ -306,7 +306,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
         auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
-        if (object->Init(g_pDevices))
+        if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
 }
@@ -316,11 +316,11 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-// AllEffects
+// g_apEffects
 //
 // The master effects table
 
-DRAM_ATTR LEDStripEffect *AllEffects[] =
+DRAM_ATTR LEDStripEffect *g_apEffects[] =
 {
 #if DEMO
 
@@ -696,7 +696,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 // add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
 // one effect even if it's the Status effect.
 
-static_assert(ARRAYSIZE(AllEffects) > 0);
+static_assert(ARRAYSIZE(g_apEffects) > 0);
 
 // InitEffectsManager
 //
@@ -705,13 +705,13 @@ static_assert(ARRAYSIZE(AllEffects) > 0);
 void InitEffectsManager()
 {
         debugW("InitEffectsManager...");
-        g_pEffectManager = std::make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
+        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(g_apEffects, ARRAYSIZE(g_apEffects), g_aptrDevices);
 
-        if (false == g_pEffectManager->Init())
+        if (false == g_aptrEffectManager->Init())
                 throw std::runtime_error("Could not initialize effect manager");
 }
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
 // any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
@@ -720,5 +720,5 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 uint16_t XY(uint8_t x, uint8_t y)
 {
         // Have a drink on me!
-        return (*g_pEffectManager)[0].get()->xy(x, y);
+        return (*g_aptrEffectManager)[0].get()->xy(x, y);
 }

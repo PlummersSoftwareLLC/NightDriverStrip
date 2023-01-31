@@ -1219,12 +1219,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: davepl - why are some DRAM?)
 
-// gRingSizeTable
+// g_aRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
 // into rings of 30, 20, and 10, you'd have (NUM_RINGS = 3) and this table would contain (30, 20, 10).
 
-extern DRAM_ATTR const int gRingSizeTable[];
+extern DRAM_ATTR const int g_aRingSizeTable[];
 
 #define MICROS_PER_SECOND   1000000
 #define MILLIS_PER_SECOND   1000 

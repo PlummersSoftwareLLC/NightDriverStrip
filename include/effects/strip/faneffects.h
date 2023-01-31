@@ -163,7 +163,7 @@ inline void ClearFanPixels(float fPos, float count, PixelOrder order = Sequentia
 
 inline int GetRingSize(int iRing)
 {
-  return gRingSizeTable[iRing];
+  return g_aRingSizeTable[iRing];
 }
 
 // GetFanIndex
@@ -278,7 +278,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
     // bPos will be the start of this ring (relative to NUM_LEDS)
     int bPos = 0;
     for (int i = 0; i < iRing; i++)
-        bPos += gRingSizeTable[i];
+        bPos += g_aRingSizeTable[i];
     bPos += iInsulator * FAN_SIZE;
 
   if (bPos + fPos + count > NUM_LEDS + 1)         // +1 because we work in the 0..1.0 range when drawing
@@ -342,7 +342,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
 
 inline void FillRingPixels(CRGB color, int iInsulator, int iRing)
 {
-    DrawRingPixels(0, gRingSizeTable[iRing], color, iInsulator, iRing);
+    DrawRingPixels(0, g_aRingSizeTable[iRing], color, iInsulator, iRing);
 }
 
 class EmptyEffect : public LEDStripEffect

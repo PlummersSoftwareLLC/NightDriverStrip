@@ -124,7 +124,7 @@ class PatternPongClock : public LEDStripEffect
 
     virtual void Draw()
     {
-        auto g = g_pEffectManager->graphics();
+        auto g = g_aptrEffectManager->graphics();
 
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);

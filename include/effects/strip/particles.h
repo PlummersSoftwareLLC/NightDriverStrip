@@ -542,9 +542,9 @@ class SpinningPaletteRingParticle : public FadingObject
 
         _start = iInsulator * FAN_SIZE;     // Move to correct insulator
         for (int i = 0; i < iRing; i++)     // Move to ring within the insulator
-          _start += gRingSizeTable[i];        
+          _start += g_aRingSizeTable[i];        
 
-        _length = gRingSizeTable[iRing];    // Length is size of this particular ring
+        _length = g_aRingSizeTable[iRing];    // Length is size of this particular ring
     }
 
     virtual void Render(const std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS])
