@@ -426,7 +426,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif TTGO
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", 12, true, spectrumBasicColors, 50, 70, -1.0, 3.0),
 
 #elif WROVERKIT
 
@@ -498,7 +498,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         new SparklySpinningMusicEffect("SparklySpinningMusical", RainbowColors_p),
         new ColorBeatOverRed("ColorBeatOnRedBkgnd"),
-        new ColorBeatWithFlash("ColorBeatWithFlash"),
         new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
 
@@ -543,8 +542,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new ColorCycleEffect(Sequential),
         new PaletteEffect(RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0),
         new BouncingBallEffect(3, true, true, 1),
-
-        new ChannelBeatEffect("ChannelBeat"),
 
         new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 4), // Blooming Little Rainbow Stars
         new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 20, 12, LINEARBLEND, 1.0, 0.0, 2), // Blooming Rainbow Stars
@@ -684,9 +681,13 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         new RainbowFillEffect(24, 0),
         new RainbowFillEffect(32, 1),
-        new SimpleRainbowTestEffect(8, 1),  // Rainbow palette simple test of walking pixels
-        new PaletteEffect(MagentaColors_p), // Rainbow palette
+        new SimpleRainbowTestEffect(8, 1),              // Rainbow palette simple test of walking pixels
+        new PaletteEffect(MagentaColors_p),             // Rainbow palette
         new DoublePaletteEffect(),
+
+#else                                                                   
+
+        new RainbowFillEffect(6, 2),                    // Simple effect if not otherwise defined above
 
 #endif
 
