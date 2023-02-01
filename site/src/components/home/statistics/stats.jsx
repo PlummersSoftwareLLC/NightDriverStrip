@@ -101,28 +101,32 @@ const StatsPanel = withStyles(statsStyle)(props => {
         if (abortControler) {
             abortControler.abort();
         }
-        const aborter = new AbortController();
-        setAbortControler(aborter);
 
-        getStats(aborter).then(setStatistics)
-                         .catch(console.error);
-
-        if (timer) {
-            clearTimeout(timer);
-            setTimer(undefined);
-        }
-
-        if (statsRefreshRate.value && open) {
-            setTimer(setTimeout(() => setLastRefreshDate(Date.now()),statsRefreshRate.value*1000));
-        }
-
-        return () => {
-            timer && clearTimeout(timer);
-            abortControler && abortControler.abort();
+        if (open) {
+            const aborter = new AbortController();
+            setAbortControler(aborter);
+    
+            getStats(aborter)
+                .then(setStatistics)
+                .catch(console.error);
+    
+            if (timer) {
+                clearTimeout(timer);
+                setTimer(undefined);
+            }
+    
+            if (statsRefreshRate.value && open) {
+                setTimer(setTimeout(() => setLastRefreshDate(Date.now()),statsRefreshRate.value*1000));
+            }
+    
+            return () => {
+                timer && clearTimeout(timer);
+                abortControler && abortControler.abort();
+            }
         }
     },[statsRefreshRate.value, lastRefreshDate, open]);
 
-    if (!statistics) {
+    if (!statistics && open) {
         return <Box>Loading...</Box>
     }
 

@@ -2,8 +2,8 @@ const MainApp = withStyles(mainAppStyle)(props => {
     const { classes } = props;
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [mode, setMode] = useState('dark');
-    const [stats, setStats] = useState(true);
-    const [designer, setDesigner] = useState(false);
+    const [stats, setStats] = useState(false);
+    const [designer, setDesigner] = useState(true);
     const [config, setConfig] = useState(false);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
@@ -48,9 +48,9 @@ const MainApp = withStyles(mainAppStyle)(props => {
                         Night Driver Strip
                     </Typography>
                     <IconButton>
-                    <Badge aria-label="Alerts" badgeContent={4} color="secondary">
-                        <Icon>notifications</Icon>
-                    </Badge>
+                        <Badge aria-label="Alerts" badgeContent={4} color="secondary">
+                            <Icon>notifications</Icon>
+                        </Badge>
                     </IconButton>
                 </Toolbar>
             </AppBar>
@@ -79,7 +79,8 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats}/>
+                <StatsPanel siteConfig={siteConfig} open={stats}/> 
+                <DesignerPanel siteConfig={siteConfig} open={designer}/>
                 <ConfigDialog siteConfig={siteConfig} open={config} onClose={() => {setConfig(false)}} />
             </Box>
         </Box>

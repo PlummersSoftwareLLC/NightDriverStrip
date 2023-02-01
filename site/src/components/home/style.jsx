@@ -65,12 +65,15 @@ const mainAppStyle = theme => ({
       "align-items": "center"
     },
     content: {
-      flexGrow: 1,
       padding: theme.spacing.unit * 10,
       transition: theme.transitions.create('padding-left', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
-      })
+      }),
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      rowGap: "10px"
     },
     contentShrinked: {
       "padding-left": drawerWidth + 10,

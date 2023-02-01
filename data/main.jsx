@@ -138,12 +138,15 @@ const mainAppStyle = theme => ({
       "align-items": "center"
     },
     content: {
-      flexGrow: 1,
       padding: theme.spacing.unit * 10,
       transition: theme.transitions.create('padding-left', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
-      })
+      }),
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      rowGap: "10px"
     },
     contentShrinked: {
       "padding-left": drawerWidth + 10,
@@ -177,6 +180,45 @@ const mainAppStyle = theme => ({
     },
     hidden: {
         display: "none"
+    }
+});const designStyle = theme => ({
+    root: {
+        "display": "flex",
+        "flex-direction": "column",
+        border: "green solid 2px",
+        borderRadius: "15px",
+        padding: "10px",
+    },
+    hidden: {
+        display: "none"
+    },
+    effectsHeader: {
+        display: "flex",
+        flexDirection: "row",
+        borderBottom: "green solid 1px",
+        columnGap: "5px",
+    },
+    effectsHeaderValue: {
+        display: "flex",
+        flexDirection: "row",
+        columnGap: "3px",
+        alignItems: "center",
+    },
+    effect: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    timeremaining: {
+        width: "50px"
+    },
+    effectAttribute: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    unselected: {
+        opacity: "30%"
     }
 });const statsStyle = theme => ({
     root: {
@@ -458,8 +500,8 @@ const MainApp = withStyles(mainAppStyle)(props => {
     const { classes } = props;
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [mode, setMode] = useState('dark');
-    const [stats, setStats] = useState(true);
-    const [designer, setDesigner] = useState(false);
+    const [stats, setStats] = useState(false);
+    const [designer, setDesigner] = useState(true);
     const [config, setConfig] = useState(false);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
@@ -504,9 +546,9 @@ const MainApp = withStyles(mainAppStyle)(props => {
                         Night Driver Strip
                     </Typography>
                     <IconButton>
-                    <Badge aria-label="Alerts" badgeContent={4} color="secondary">
-                        <Icon>notifications</Icon>
-                    </Badge>
+                        <Badge aria-label="Alerts" badgeContent={4} color="secondary">
+                            <Icon>notifications</Icon>
+                        </Badge>
                     </IconButton>
                 </Toolbar>
             </AppBar>
@@ -535,7 +577,8 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats}/>
+                <StatsPanel siteConfig={siteConfig} open={stats}/> 
+                <DesignerPanel siteConfig={siteConfig} open={designer}/>
                 <ConfigDialog siteConfig={siteConfig} open={config} onClose={() => {setConfig(false)}} />
             </Box>
         </Box>
@@ -643,6 +686,135 @@ const ConfigDialog = withStyles(configStyle)(props => {
       </List>
     </Dialog>
   );
+});const DesignerPanel = withStyles(designStyle)(props => {
+    const { classes, siteConfig, open } = props;
+    const [ effects, setEffects ] = useState(undefined);
+    const [ abortControler, setAbortControler ] = useState(undefined);
+    const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
+    const [ editing, setEditing ] = useState(false);
+    const [ pendingInterval, setPendingInterval ] = useState(undefined);
+    const [ timeRemaining, setTimeRemaining ] = useState(undefined);
+
+    useEffect(() => {
+        if (abortControler) {
+            abortControler.abort();
+        }
+
+        if (open) {
+            const aborter = new AbortController();
+            setAbortControler(aborter);
+    
+            fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
+                .then(resp => resp.json())
+                .then(setEffects)
+                .catch(console.error);
+    
+            return () => {
+                abortControler && abortControler.abort();
+            }
+        }
+    },[open,nextRefreshDate]);
+
+    useEffect(() => {
+        if (effects) {
+            const timeReference = Date.now()+effects.millisecondsRemaining;
+            var requestSent = false;
+            const interval = setInterval(()=>{
+                const remaining = timeReference-Date.now();
+                if (remaining >= 0) {
+                    setTimeRemaining(remaining);
+                }
+                if ((remaining <= 100) && !requestSent) {
+                    setNextRefreshDate(Date.now());
+                    requestSent=true;
+                }
+            },50);
+            return ()=>clearInterval(interval);
+        }
+    },[effects]);
+
+    const navigate = (up)=>{
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
+        .then(setNextRefreshDate(Date.now()))
+        .catch(console.error);
+    }
+
+    const navigateTo = (idx)=>{
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
+        .then(setNextRefreshDate(Date.now()))
+        .catch(console.error);
+    }
+
+    const updatePendingInterval = (interval)=>{
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,{method:"POST", body: new URLSearchParams({effectInterval:interval})})
+        .then(setNextRefreshDate(Date.now()))
+        .catch(console.error);
+    }
+
+    const effectEnable = (idx,enable)=>{
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
+        .then(setNextRefreshDate(Date.now()))
+        .catch(console.error);
+    }
+
+    if (!effects && open){
+        return <Box>Loading....</Box>;
+    }
+
+    return effects && <Box className={`${classes.root} ${!open && classes.hidden}`}>
+        <Box className={classes.effectsHeader}>
+            {editing ? 
+            <Box className={classes.effectsHeaderValue}>
+                <TextField label="Interval ms" 
+                           variant="outlined"
+                           type="number"
+                           defaultValue={effects.effectInterval}
+                           onChange={event => setPendingInterval(event.target.value) } />
+                <Box className={classes.saveIcons}>
+                    <IconButton color="primary" 
+                                aria-label="Save" 
+                                component="label"
+                                onClick={_evt => {
+                                    updatePendingInterval(pendingInterval);
+                                    setEditing(false);
+                                }}>
+                        <Icon>save</Icon>
+                    </IconButton>
+                    <IconButton color="secondary" 
+                                aria-label="Cancel" 
+                                component="label"
+                                onClick={_evt => {
+                                    setEditing(false);
+                                }}>
+                        <Icon>cancel</Icon>
+                    </IconButton>
+                </Box>
+            </Box>:
+            <Box className={classes.effectsHeaderValue}>
+                <Typography variant="little" color="textSecondary">Interval</Typography>:
+                <Typography variant="little" color="textAttribute">{effects.effectInterval}</Typography>
+                <IconButton onClick={()=>setEditing(true)}><Icon>edit</Icon></IconButton>
+            </Box>}
+            <Box className={classes.effectsHeaderValue}>
+                <Typography variant="little" color="textSecondary">Time Remaining</Typography>:
+                <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
+            </Box>
+            {(effects.Effects.length > 1) && <Box>
+                <IconButton onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
+                <IconButton onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
+            </Box>}
+        </Box>
+        {effects.Effects.map((effect,idx) => 
+            <Box key={`effect-${idx}`} className={classes.effect}>
+                {(idx === effects.currentEffect) ?
+                effects.Effects.length > 1 && <Icon>arrow_right_alt</Icon>:
+                <IconButton onClick={()=>navigateTo(idx)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
+                <Box className={classes.effectAttribute}>
+                    <IconButton onClick={()=>effectEnable(idx,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
+                    <Box className={!effect.enabled && classes.unselected}>{effect.name}</Box>
+                </Box>
+            </Box>)}
+    </Box>
 });const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
 
@@ -867,28 +1039,32 @@ const ConfigDialog = withStyles(configStyle)(props => {
         if (abortControler) {
             abortControler.abort();
         }
-        const aborter = new AbortController();
-        setAbortControler(aborter);
 
-        getStats(aborter).then(setStatistics)
-                         .catch(console.error);
-
-        if (timer) {
-            clearTimeout(timer);
-            setTimer(undefined);
-        }
-
-        if (statsRefreshRate.value && open) {
-            setTimer(setTimeout(() => setLastRefreshDate(Date.now()),statsRefreshRate.value*1000));
-        }
-
-        return () => {
-            timer && clearTimeout(timer);
-            abortControler && abortControler.abort();
+        if (open) {
+            const aborter = new AbortController();
+            setAbortControler(aborter);
+    
+            getStats(aborter)
+                .then(setStatistics)
+                .catch(console.error);
+    
+            if (timer) {
+                clearTimeout(timer);
+                setTimer(undefined);
+            }
+    
+            if (statsRefreshRate.value && open) {
+                setTimer(setTimeout(() => setLastRefreshDate(Date.now()),statsRefreshRate.value*1000));
+            }
+    
+            return () => {
+                timer && clearTimeout(timer);
+                abortControler && abortControler.abort();
+            }
         }
     },[statsRefreshRate.value, lastRefreshDate, open]);
 
-    if (!statistics) {
+    if (!statistics && open) {
         return <Box>Loading...</Box>
     }
 
