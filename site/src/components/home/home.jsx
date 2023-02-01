@@ -8,6 +8,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
     const [animateChart, setAnimateChart ] = useState(false);
+    const [notifications, setNotifications] = useState([]);
 
     const siteConfig = {
         statsRefreshRate: {
@@ -30,6 +31,14 @@ const MainApp = withStyles(mainAppStyle)(props => {
         }
     };
 
+    const addNotification = (level,type,target,notification) => {
+        setNotifications(prevNotifs => {
+            const group = prevNotifs.find(notif=>(notif.level === level) && (notif.type == type) && (notif.target === target)) || {level,type,target,notifications:[]};
+            group.notifications.push({date:new Date(),notification});
+            return [...prevNotifs.filter(notif => notif !== group), group];
+        });
+    };
+
     return <ThemeProvider theme={mode == "dark" ? darkTheme : lightTheme}>
         <CssBaseline />
         <Box className={classes.root}>
@@ -47,11 +56,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                         variant="h6">
                         Night Driver Strip
                     </Typography>
-                    <IconButton>
-                        <Badge aria-label="Alerts" badgeContent={4} color="secondary">
-                            <Icon>notifications</Icon>
-                        </Badge>
-                    </IconButton>
+                    <NotificationPanel notifications={notifications}/>
                 </Toolbar>
             </AppBar>
             <Drawer variant="permanent" 
@@ -79,9 +84,9 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats}/> 
-                <DesignerPanel siteConfig={siteConfig} open={designer}/>
-                <ConfigDialog siteConfig={siteConfig} open={config} onClose={() => {setConfig(false)}} />
+                <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
+                <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
+                <ConfigDialog siteConfig={siteConfig} open={config} addNotification={addNotification} onClose={() => {setConfig(false)}} />
             </Box>
         </Box>
     </ThemeProvider>;

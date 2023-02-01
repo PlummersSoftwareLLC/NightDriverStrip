@@ -108,7 +108,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
     
             getStats(aborter)
                 .then(setStatistics)
-                .catch(console.error);
+                .catch(err => addNotification("Error","Service","Get Statistics",err));
     
             if (timer) {
                 clearTimeout(timer);

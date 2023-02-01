@@ -1,11 +1,10 @@
 const DesignerPanel = withStyles(designStyle)(props => {
-    const { classes, open } = props;
+    const { classes, open, addNotification } = props;
     const [ effects, setEffects ] = useState(undefined);
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(undefined);
-    const [ timeRemaining, setTimeRemaining ] = useState(undefined);
 
     useEffect(() => {
         if (abortControler) {
@@ -24,7 +23,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 .then(resp => resp.json())
                 .then(setEffects)
                 .then(()=>clearTimeout(timer))
-                .catch(console.error);
+                .catch(err => addNotification("Error","Service","Get Effect List",err));
     
             return () => {
                 abortControler && abortControler.abort();
@@ -33,37 +32,23 @@ const DesignerPanel = withStyles(designStyle)(props => {
         }
     },[open,nextRefreshDate]);
 
-    useEffect(() => {
-        if (effects) {
-            const timeReference = Date.now()+effects.millisecondsRemaining;
-            var requestSent = false;
-            setTimeRemaining(timeReference-Date.now());
-            const interval = setInterval(()=>{
-                const remaining = timeReference-Date.now();
-                if (remaining >= 0) {
-                    setTimeRemaining(remaining);
-                }
-                if ((remaining <= 100) && !requestSent) {
-                    setNextRefreshDate(Date.now());
-                    requestSent=true;
-                }
-            },100);
-            return ()=>clearInterval(interval);
-        }
-    },[effects]);
-
     const postUpdate = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
 
     const navigate = (up)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Effect Navigation",err));
     }
 
     const updateEventInterval = (interval)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,{method:"POST", body: new URLSearchParams({effectInterval:interval})})
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+        {
+            method:"POST", 
+            body: new URLSearchParams({effectInterval:interval}),
+            timeout: 3000
+        })
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Update Settings",err));
     }
 
     const displayHeader = ()=>{
@@ -112,10 +97,10 @@ const DesignerPanel = withStyles(designStyle)(props => {
             {editing ? 
             editingHeader():
             displayHeader()}
-            <Box className={classes.effectsHeaderValue}>
-                <Typography variant="little" color="textSecondary">Time Remaining</Typography>:
-                <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
-            </Box>
+            <Countdown 
+                label="Time Remaining"
+                postUpdate={postUpdate}
+                millisecondsRemaining={effects.millisecondsRemaining}/>
             {(effects.Effects.length > 1) && <Box>
                 <IconButton onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
                 <IconButton onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
@@ -130,7 +115,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                                                     postUpdate={postUpdate}
                                                     effectInterval={effects.effectInterval}
                                                     selected={idx === effects.currentEffect}
-                                                    timeRemaining={timeRemaining}/>)}
+                                                    millisecondsRemaining={effects.millisecondsRemaining}/>)}
         </Box>
     </Box>
 });

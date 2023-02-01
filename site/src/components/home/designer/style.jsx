@@ -25,8 +25,5 @@ const designStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
-    },
-    timeremaining: {
-        width: "50px"
     }
 });

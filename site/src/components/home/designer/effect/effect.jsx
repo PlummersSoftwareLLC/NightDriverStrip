@@ -1,24 +1,32 @@
 const Effect = withStyles(effectStyle)(props => {
-    const { classes, effect, effectInterval, effectIndex, timeRemaining, selected, postUpdate } = props;
+    const { classes, effect, effectInterval, effectIndex, millisecondsRemaining, selected, postUpdate } = props;
     const [ progress, setProgress ] = useState(undefined);
 
-    useEffect(()=>{
-        const timeout = setTimeout(() => selected && setProgress((timeRemaining/effectInterval)*100.0),300);
-        return () => clearTimeout(timeout);
-    },[progress,selected]);
-
-    useEffect(()=>{selected && setProgress((timeRemaining/effectInterval)*100.0)},[effect]);
+    useEffect(() => {
+        if (millisecondsRemaining && selected) {
+            const timeReference = Date.now()+millisecondsRemaining;
+            var timeRemaining = timeReference-Date.now();
+            const interval = setInterval(()=>{
+                const remaining = timeReference-Date.now();
+                if (remaining >= 0) {
+                    timeRemaining = remaining;
+                    setProgress((timeRemaining/effectInterval)*100.0);
+                }
+            },300);
+            return ()=>clearInterval(interval);
+        }
+    },[millisecondsRemaining,selected]);
 
     const navigateTo = (idx)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Effect Selection",err));
     }
 
     const effectEnable = (idx,enable)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Effect Enablement",err));
     }
 
     return <Box className={classes.effect}>

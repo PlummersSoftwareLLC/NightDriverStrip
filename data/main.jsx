@@ -1,9 +1,9 @@
-const httpPrefix='';
-const { useState, useEffect, useMemo, useRef } = window.React;
+const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
-const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme, LinearProgress } = window.MaterialUI;
+const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme, LinearProgress, Popover } = window.MaterialUI;
+const { Card, CardHeader, CardContent, Collapse, CardActions, CardActionArea, Avatar } = window.MaterialUI;
 
 const { AreaChart, BarChart, Area, Bar, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } = window.Recharts;
 
@@ -72,7 +72,24 @@ const darkTheme = createTheme({
   },
   typography: commonTypography
 });
-const drawerWidth = 240;
+const notificationsStyle = theme => ({
+    root: {
+    },
+    popup: {
+    },
+    errorTarget: {
+    },
+    errors: {
+        display: "flex",
+        flexDirection: "column"
+    },
+    errorHeader: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        borderBottom: "solid aquamarine 2px",
+    }
+});const drawerWidth = 240;
 
 const mainAppStyle = theme => ({
     root: {
@@ -209,6 +226,13 @@ const mainAppStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
+    }
+});const countdownStyle = theme => ({
+    root: {
+        display: "flex",
+        flexDirection: "row",
+        columnGap: "3px",
+        alignItems: "center",
     },
     timeremaining: {
         width: "50px"
@@ -523,7 +547,80 @@ const barChartStyle = theme => ({
         "color": "aqua"
     }
 });
-const MainApp = withStyles(mainAppStyle)(props => {
+const NotificationPanel = withStyles(notificationsStyle)(props => {
+    const { classes, notifications } = props;
+    const [numErrors, setNumErrors] = React.useState(undefined);
+    const [errorTargets, setErrorTargets] = React.useState({});
+    const [open, setOpen] = React.useState(false);
+    const inputRef = React.createRef();
+
+    useEffect(()=>{
+        setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
+        setErrorTargets(notifications.reduce((ret,notif) => 
+            {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
+    },[notifications]);
+
+    return (
+        <Box className={classes.root}>
+            <IconButton
+                    id="notifications"
+                    ref={inputRef}
+                    onClick={() => setOpen(wasOpen=>!wasOpen)}>
+                <Badge 
+                    aria-label="Alerts" 
+                    badgeContent={numErrors} 
+                    color="secondary">
+                    <Icon>notifications</Icon>
+                </Badge>
+            </IconButton>
+            <Popover
+                open={open}
+                target="notifications"
+                onClose={()=>{setOpen(false)}}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}>
+                <Card className={classes.popup} elevation={9}>
+                    <CardHeader
+                        avatar={
+                        <Avatar aria-label="error">
+                            !
+                        </Avatar>
+                        }
+                        action={
+                        <IconButton onClick={()=>setOpen(false)} aria-label="settings">
+                            <Icon>close</Icon>
+                        </IconButton>
+                        }
+                        title={`${numErrors} Errors`}
+                    />
+                    <CardContent>
+                        {Object.entries(errorTargets).map(target => 
+                            <CardContent key={target[0]} className={classes.errors}>
+                                {Object.entries(notifications)
+                                       .filter(notif => notif[1].target === target[0])
+                                       .map(error =>
+                                <Box key={error[0]}>
+                                    <Box className={classes.errorHeader} key="header">
+                                        <Typography>{target[0]}</Typography>
+                                        <Typography color="textSecondary">{error[1].type}</Typography>
+                                        <Typography>{error[1].level}</Typography>
+                                    </Box>
+                                    <Box className={classes.errors} key="errors">
+                                        {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
+                                                .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
+                                        }
+                                    </Box>
+                                </Box>
+                                       )}
+                            </CardContent>
+                        )}
+                    </CardContent>
+                </Card>
+            </Popover>
+        </Box>);
+});const MainApp = withStyles(mainAppStyle)(props => {
     const { classes } = props;
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [mode, setMode] = useState('dark');
@@ -533,6 +630,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
     const [animateChart, setAnimateChart ] = useState(false);
+    const [notifications, setNotifications] = useState([]);
 
     const siteConfig = {
         statsRefreshRate: {
@@ -555,6 +653,14 @@ const MainApp = withStyles(mainAppStyle)(props => {
         }
     };
 
+    const addNotification = (level,type,target,notification) => {
+        setNotifications(prevNotifs => {
+            const group = prevNotifs.find(notif=>(notif.level === level) && (notif.type == type) && (notif.target === target)) || {level,type,target,notifications:[]};
+            group.notifications.push({date:new Date(),notification});
+            return [...prevNotifs.filter(notif => notif !== group), group];
+        });
+    };
+
     return <ThemeProvider theme={mode == "dark" ? darkTheme : lightTheme}>
         <CssBaseline />
         <Box className={classes.root}>
@@ -572,11 +678,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                         variant="h6">
                         Night Driver Strip
                     </Typography>
-                    <IconButton>
-                        <Badge aria-label="Alerts" badgeContent={4} color="secondary">
-                            <Icon>notifications</Icon>
-                        </Badge>
-                    </IconButton>
+                    <NotificationPanel notifications={notifications}/>
                 </Toolbar>
             </AppBar>
             <Drawer variant="permanent" 
@@ -604,9 +706,9 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats}/> 
-                <DesignerPanel siteConfig={siteConfig} open={designer}/>
-                <ConfigDialog siteConfig={siteConfig} open={config} onClose={() => {setConfig(false)}} />
+                <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
+                <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
+                <ConfigDialog siteConfig={siteConfig} open={config} addNotification={addNotification} onClose={() => {setConfig(false)}} />
             </Box>
         </Box>
     </ThemeProvider>;
@@ -714,13 +816,12 @@ const ConfigDialog = withStyles(configStyle)(props => {
     </Dialog>
   );
 });const DesignerPanel = withStyles(designStyle)(props => {
-    const { classes, open } = props;
+    const { classes, open, addNotification } = props;
     const [ effects, setEffects ] = useState(undefined);
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(undefined);
-    const [ timeRemaining, setTimeRemaining ] = useState(undefined);
 
     useEffect(() => {
         if (abortControler) {
@@ -739,7 +840,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                 .then(resp => resp.json())
                 .then(setEffects)
                 .then(()=>clearTimeout(timer))
-                .catch(console.error);
+                .catch(err => addNotification("Error","Service","Get Effect List",err));
     
             return () => {
                 abortControler && abortControler.abort();
@@ -748,37 +849,23 @@ const ConfigDialog = withStyles(configStyle)(props => {
         }
     },[open,nextRefreshDate]);
 
-    useEffect(() => {
-        if (effects) {
-            const timeReference = Date.now()+effects.millisecondsRemaining;
-            var requestSent = false;
-            setTimeRemaining(timeReference-Date.now());
-            const interval = setInterval(()=>{
-                const remaining = timeReference-Date.now();
-                if (remaining >= 0) {
-                    setTimeRemaining(remaining);
-                }
-                if ((remaining <= 100) && !requestSent) {
-                    setNextRefreshDate(Date.now());
-                    requestSent=true;
-                }
-            },100);
-            return ()=>clearInterval(interval);
-        }
-    },[effects]);
-
     const postUpdate = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
 
     const navigate = (up)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Effect Navigation",err));
     }
 
     const updateEventInterval = (interval)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,{method:"POST", body: new URLSearchParams({effectInterval:interval})})
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+        {
+            method:"POST", 
+            body: new URLSearchParams({effectInterval:interval}),
+            timeout: 3000
+        })
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Update Settings",err));
     }
 
     const displayHeader = ()=>{
@@ -827,10 +914,10 @@ const ConfigDialog = withStyles(configStyle)(props => {
             {editing ? 
             editingHeader():
             displayHeader()}
-            <Box className={classes.effectsHeaderValue}>
-                <Typography variant="little" color="textSecondary">Time Remaining</Typography>:
-                <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
-            </Box>
+            <Countdown 
+                label="Time Remaining"
+                postUpdate={postUpdate}
+                millisecondsRemaining={effects.millisecondsRemaining}/>
             {(effects.Effects.length > 1) && <Box>
                 <IconButton onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
                 <IconButton onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
@@ -845,30 +932,67 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                     postUpdate={postUpdate}
                                                     effectInterval={effects.effectInterval}
                                                     selected={idx === effects.currentEffect}
-                                                    timeRemaining={timeRemaining}/>)}
+                                                    millisecondsRemaining={effects.millisecondsRemaining}/>)}
         </Box>
     </Box>
+});const Countdown = withStyles(countdownStyle)(props => {
+    const { classes,  label, millisecondsRemaining, postUpdate } = props;
+    const [ timeRemaining, setTimeRemaining ] = useState(false);
+
+    useEffect(() => {
+        if (millisecondsRemaining) {
+            const timeReference = Date.now()+millisecondsRemaining;
+            setTimeRemaining(timeReference-Date.now());
+            var requestSent = false;
+            const interval = setInterval(()=>{
+                const remaining = timeReference-Date.now();
+                if (remaining >= 0) {
+                    setTimeRemaining(remaining);
+                }
+                if ((remaining <= 100) && !requestSent) {
+                    requestSent=true;
+                    postUpdate();
+                }
+            },50);
+            return ()=>clearInterval(interval);
+        }
+    },[millisecondsRemaining]);
+
+    return (            
+    <Box className={classes.root}>
+        <Typography variant="little" color="textSecondary">{label}</Typography>:
+        <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
+    </Box>)
+
 });const Effect = withStyles(effectStyle)(props => {
-    const { classes, effect, effectInterval, effectIndex, timeRemaining, selected, postUpdate } = props;
+    const { classes, effect, effectInterval, effectIndex, millisecondsRemaining, selected, postUpdate } = props;
     const [ progress, setProgress ] = useState(undefined);
 
-    useEffect(()=>{
-        const timeout = setTimeout(() => selected && setProgress((timeRemaining/effectInterval)*100.0),300);
-        return () => clearTimeout(timeout);
-    },[progress,selected]);
-
-    useEffect(()=>{selected && setProgress((timeRemaining/effectInterval)*100.0)},[effect]);
+    useEffect(() => {
+        if (millisecondsRemaining && selected) {
+            const timeReference = Date.now()+millisecondsRemaining;
+            var timeRemaining = timeReference-Date.now();
+            const interval = setInterval(()=>{
+                const remaining = timeReference-Date.now();
+                if (remaining >= 0) {
+                    timeRemaining = remaining;
+                    setProgress((timeRemaining/effectInterval)*100.0);
+                }
+            },300);
+            return ()=>clearInterval(interval);
+        }
+    },[millisecondsRemaining,selected]);
 
     const navigateTo = (idx)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Effect Selection",err));
     }
 
     const effectEnable = (idx,enable)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
         .then(postUpdate)
-        .catch(console.error);
+        .catch(err => addNotification("Error","Service","Effect Enablement",err));
     }
 
     return <Box className={classes.effect}>
@@ -1116,7 +1240,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
     
             getStats(aborter)
                 .then(setStatistics)
-                .catch(console.error);
+                .catch(err => addNotification("Error","Service","Get Statistics",err));
     
             if (timer) {
                 clearTimeout(timer);
@@ -1239,4 +1363,4 @@ const BarStat = withStyles(barChartStyle)(props => {
     }
 });
     ReactDOM.createRoot(document.getElementById("root"))
-        .render(<MainApp/>);
+        .render(<StrictMode><MainApp/></StrictMode>);

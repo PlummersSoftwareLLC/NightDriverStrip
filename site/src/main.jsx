@@ -1,2 +1,2 @@
 ReactDOM.createRoot(document.getElementById("root"))
-        .render(<MainApp/>);
+        .render(<StrictMode><MainApp/></StrictMode>);
