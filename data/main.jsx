@@ -1,4 +1,5 @@
-const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef } = window.React;
+const httpPrefix='';
+const { useState, useEffect, useMemo, useRef } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
