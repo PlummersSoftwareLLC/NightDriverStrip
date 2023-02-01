@@ -208,6 +208,13 @@ const mainAppStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
+        width: "180px",
+        border: "green solid 1px"
+    },
+    effects: {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
     },
     timeremaining: {
         width: "50px"
@@ -216,9 +223,13 @@ const mainAppStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
+        width: "100%",
     },
     unselected: {
         opacity: "30%"
+    },
+    selected: {
+        backgroundColor: theme.palette.background.paper,
     }
 });const statsStyle = theme => ({
     root: {
@@ -733,27 +744,29 @@ const ConfigDialog = withStyles(configStyle)(props => {
         }
     },[effects]);
 
+    const postUpdate = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
+
     const navigate = (up)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
-        .then(setNextRefreshDate(Date.now()))
+        .then(postUpdate)
         .catch(console.error);
     }
 
     const navigateTo = (idx)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
-        .then(setNextRefreshDate(Date.now()))
+        .then(postUpdate)
         .catch(console.error);
     }
 
     const updatePendingInterval = (interval)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,{method:"POST", body: new URLSearchParams({effectInterval:interval})})
-        .then(setNextRefreshDate(Date.now()))
+        .then(postUpdate)
         .catch(console.error);
     }
 
     const effectEnable = (idx,enable)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
-        .then(setNextRefreshDate(Date.now()))
+        .then(postUpdate)
         .catch(console.error);
     }
 
@@ -802,18 +815,21 @@ const ConfigDialog = withStyles(configStyle)(props => {
             {(effects.Effects.length > 1) && <Box>
                 <IconButton onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
                 <IconButton onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
+                <IconButton onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
             </Box>}
         </Box>
-        {effects.Effects.map((effect,idx) => 
-            <Box key={`effect-${idx}`} className={classes.effect}>
-                {(idx === effects.currentEffect) ?
-                effects.Effects.length > 1 && <Icon>arrow_right_alt</Icon>:
-                <IconButton onClick={()=>navigateTo(idx)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
-                <Box className={classes.effectAttribute}>
-                    <IconButton onClick={()=>effectEnable(idx,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
-                    <Box className={!effect.enabled && classes.unselected}>{effect.name}</Box>
-                </Box>
-            </Box>)}
+        <Box className={classes.effects}>
+            {effects.Effects.map((effect,idx) => 
+                <Box key={`effect-${idx}`} className={classes.effect}>
+                    {(idx === effects.currentEffect) ?
+                    effects.Effects.length > 1 && <Icon>arrow_right_alt</Icon>:
+                    <IconButton onClick={()=>effect.enabled && navigateTo(idx)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
+                    <Box className={`${classes.effectAttribute} ${(idx === effects.currentEffect) && classes.selected}`}>
+                        <IconButton onClick={()=>effectEnable(idx,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
+                        <Box className={!effect.enabled && classes.unselected}>{effect.name}</Box>
+                    </Box>
+                </Box>)}
+        </Box>
     </Box>
 });const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;

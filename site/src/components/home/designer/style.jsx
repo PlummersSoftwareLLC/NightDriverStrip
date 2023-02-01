@@ -25,6 +25,13 @@ const designStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
+        width: "180px",
+        border: "green solid 1px"
+    },
+    effects: {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
     },
     timeremaining: {
         width: "50px"
@@ -33,8 +40,12 @@ const designStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
+        width: "100%",
     },
     unselected: {
         opacity: "30%"
+    },
+    selected: {
+        backgroundColor: theme.palette.background.paper,
     }
 });
