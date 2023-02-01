@@ -972,6 +972,39 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_INFO_PAGES 1
 
     #define COLOR_ORDER EOrder::RGB
+
+#else
+
+    // This is a simple demo configuration used when no other project is defined; it's only purpose is
+    // to serve as a build to be run for [all-deps]
+
+    #define MATRIX_WIDTH            144
+    #define MATRIX_HEIGHT           8
+    #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define NUM_CHANNELS            8
+    #define NUM_RINGS               5
+    #define RING_SIZE_0             24
+    #define POWER_LIMIT_MW          3 * 1000   // 3 watt power supply
+
+    // Once you have a working project, selectively enable various additional features by setting
+    // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
+
+    #define ENABLE_AUDIO            1
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              1
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+
+    #define LED_PIN0         5
+    #define LED_PIN1        16
+    #define LED_PIN2        17
+    #define LED_PIN3        18
+    #define LED_PIN4        32
+    #define LED_PIN5        33
+    #define LED_PIN6        23
+    #define LED_PIN7        22
 #endif
 
 #if USEMATRIX
@@ -1035,6 +1068,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #ifdef ENABLE_AUDIO
     #ifndef NUM_BANDS              // How many bands in the spectrum analyzer
         #define NUM_BANDS 16
+    #endif
+    #ifndef NOISE_FLOOR
+        #define NOISE_FLOOR 200.0f
     #endif
 #endif
 
