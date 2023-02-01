@@ -17,7 +17,7 @@ Once this is finished, please run `npm run start` to have the site available for
 
 If you make code changes, you will need to reatart the `npm run start` command. If you are developing and wish to see your changes live without needing to kill and restart the server, you can simply type `npm run rebuild`, and this will re-compile after a file has been modified. Please note that if you add new files/folders, you will need to restart the `npm run rebuild` command.
 
-Once local testing is done, run `npm run build`, and then use platformio to build the filesystem, and then flash the ASP32.
+Once local testing is done, run `npm run build`, and then use platformio to build the filesystem, and then flash the ESP32.
 
 <img src="../assets/dark.PNG" width="400" />
 <img src="../assets/light.PNG" width="400" />
