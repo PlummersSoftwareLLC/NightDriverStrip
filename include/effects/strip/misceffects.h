@@ -31,15 +31,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
-
 // SimpleRainbowTestEffect
 //
 // Fills the spokes with a rainbow palette, skipping dots as specified

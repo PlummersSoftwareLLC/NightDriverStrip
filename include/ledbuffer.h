@@ -36,14 +36,8 @@
 #include <pixeltypes.h>
 #include <memory>
 #include <iostream>
-#include "gfxbase.h"
-#include "globals.h"
-
-using namespace std;
 
 extern DRAM_ATTR AppTime g_AppTime;                       
-extern double g_BufferAgeNewest;
-extern double g_BufferAgeOldest;
 
 #ifdef USE_PSRAM
 
@@ -127,7 +121,7 @@ class LEDBuffer
             // _leds = psram_allocator<CRGB>().allocate(NUM_LEDS);
             _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
         #else
-            _leds = make_unique<CRGB []>(NUM_LEDS);
+            _leds = std::make_unique<CRGB []>(NUM_LEDS);
         #endif
 
 
@@ -221,13 +215,13 @@ class LEDBuffer
 
 class LEDBufferManager
 {
-    const std::unique_ptr<shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
-    std::shared_ptr<LEDBuffer>                      _pLastBufferAdded;   // Keeps track of the MRU buffer
-    size_t                                          _iNextBuffer;        // Head pointer index
-    size_t                                          _iLastBuffer;        // Tail pointer index
-    uint32_t                                        _cBuffers;           // Number of buffers
-    double                                          _BufferAgeOldest = 0;
-    double                                          _BufferAgeNewest = 0;
+    const std::unique_ptr<std::shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
+    std::shared_ptr<LEDBuffer>                           _pLastBufferAdded;   // Keeps track of the MRU buffer
+    size_t                                               _iNextBuffer;        // Head pointer index
+    size_t                                               _iLastBuffer;        // Tail pointer index
+    uint32_t                                             _cBuffers;           // Number of buffers
+    double                                               _BufferAgeOldest = 0;
+    double                                               _BufferAgeNewest = 0;
    
   public:
 
@@ -244,36 +238,37 @@ class LEDBufferManager
         for (int i = 0; i < _cBuffers; i++)
         {
             #if USE_PSRAM
-                _ppBuffers[i] = allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
+                _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
             #else
                 _ppBuffers[i] = std::make_shared<LEDBuffer>(pGFX);
             #endif
         }
     }
 
-    // UpdateOldestAndNewest
-    //
-    // Update the global stats of oldest and newest buffer frame.
-
-    void UpdateOldestAndNewest()
+    double AgeOfOldestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pOldest = PeekOldestBuffer();
-            auto pNewest = PeekNewestBuffer();                    
-            _BufferAgeNewest = (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
-            _BufferAgeOldest = (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
         }
         else
         {
-            _BufferAgeNewest = _BufferAgeOldest = 0;
+            return 0.0;
         }
+    }
 
-        // BUGBUG - This has no clue about mulitple channels.  It should be taking the min/max of all the channels
-        //          not just the current one.  
-
-        g_BufferAgeNewest = _BufferAgeNewest;
-        g_BufferAgeOldest = _BufferAgeOldest;
+    double AgeOfNewestBuffer()
+    {
+        if (false == IsEmpty())
+        {
+            auto pNewest = PeekNewestBuffer();
+            return (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+        }
+        else
+        {
+            return 0.0;
+        }
     }
 
     // BufferCount
@@ -326,7 +321,6 @@ class LEDBufferManager
             _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
         _pLastBufferAdded = pResult;
-        UpdateOldestAndNewest();
         return pResult;
     }
 
@@ -341,7 +335,6 @@ class LEDBufferManager
         auto pResult = _ppBuffers[_iLastBuffer];
         _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
-        UpdateOldestAndNewest();
         return pResult;
     }
 

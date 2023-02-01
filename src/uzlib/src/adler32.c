@@ -36,6 +36,8 @@
  * Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler
  */
 
+// Note: This code might be modfified from teh original, but is based entirely on it.
+
 #include "tinf.h"
 
 #define A32_BASE 65521

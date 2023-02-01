@@ -58,10 +58,6 @@
 #ifndef PatternPulse_H
 #define PatternPulse_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternPulse : public LEDStripEffect
 {
   private:
@@ -137,7 +133,7 @@ class PatternPulsar : public BeatEffectBase2, public LEDStripEffect
         int step = -1;
     };
 
-    vector<PulsePop> _pops;
+    std::vector<PulsePop> _pops;
 
     float fadeRate = 0.9;
     int diff;
@@ -182,7 +178,7 @@ class PatternPulsar : public BeatEffectBase2, public LEDStripEffect
 
         const int maxNewStarsPerFrame = 4;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
-            if (random(4) < gVURatio)
+            if (random(4) < g_Analyzer._VURatio)
                 graphics()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
 
         for (auto pop = _pops.begin(); pop != _pops.end(); pop++)

@@ -58,10 +58,6 @@
 #ifndef PatternSpiral_H
 #define PatternSpiral_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternSerendipity : public LEDStripEffect
 {
 private:

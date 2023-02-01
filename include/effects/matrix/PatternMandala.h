@@ -60,10 +60,6 @@
 #define PatternMandala_H
 #if     USEMATRIX
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternMandala : public LEDStripEffect
 {
 private:

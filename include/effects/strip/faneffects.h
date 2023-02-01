@@ -32,23 +32,7 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <math.h>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
 #include "paletteeffect.h"
-#include "effectmanager.h"
-#include "gfxbase.h"
-
-extern volatile float gVURatio;  
-extern volatile float gVURatioFade;
-
-using namespace std;
 
 // Simple definitions of what direction we're talking about
 
@@ -391,12 +375,12 @@ class FanBeatEffect : public LEDStripEffect
 
     void OnBeat()
     {
-        int passes = random(1, mapDouble(gVURatio, 1.0, 2.0, 1, 3));
-        passes = gVURatio;
+        int passes = random(1, mapDouble(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
+        passes = g_Analyzer._VURatio;
         for (int iPass = 0; iPass < passes; iPass++)
         {
           int iFan = random(0, NUM_FANS);
-          int passes = random(1, gVURatio);
+          int passes = random(1, g_Analyzer._VURatio);
           CRGB c = CHSV(random(0, 255), 255, 255);
 
           for (int iPass = 0; iPass < passes; iPass++)
@@ -420,23 +404,22 @@ class FanBeatEffect : public LEDStripEffect
 
         if (latch)
         {
-          if (gVURatio < minVUSeen)
-            minVUSeen = gVURatio;
+          if (g_Analyzer._VURatio < minVUSeen)
+            minVUSeen = g_Analyzer._VURatio;
         }
 
-        if (gVURatio < 0.25)             // Crossing center going up
+        if (g_Analyzer._VURatio < 0.25)             // Crossing center going up
         {
           latch = true;
-          minVUSeen = gVURatio;
+          minVUSeen = g_Analyzer._VURatio;
         }
 
         if (latch)
         {
-            if (gVURatio > 1.5)
+            if (g_Analyzer._VURatio > 1.5)
             {
-              if (randomDouble(1.0, 3.0) < gVURatio)
+              if (randomDouble(1.0, 3.0) < g_Analyzer._VURatio)
               {
-                //Serial.printf("Beat at: %f\n", gVURatio - minVUSeen);
                 latch = false;
                 OnBeat();
               }
@@ -588,7 +571,7 @@ class PaletteReelEffect : public LEDStripEffect
       {
         for (int i = 0; i < NUM_FANS; i++)
         {
-          if (random(0, 100) < 50 * gVURatio)              // 40% Chance of attempting to do something
+          if (random(0, 100) < 50 * g_Analyzer._VURatio)              // 40% Chance of attempting to do something
           {
             int action = random(0, 3);          // Generate a random outcome
             if (action == 0 || action == 3)                     
@@ -597,7 +580,7 @@ class PaletteReelEffect : public LEDStripEffect
             }
             else if (action == 1)
             {
-              if (gVURatio > 0.5)
+              if (g_Analyzer._VURatio > 0.5)
               {
                 if (ReelDir[i] == 0)
                 {
@@ -612,7 +595,7 @@ class PaletteReelEffect : public LEDStripEffect
             }
             else if (action == 2)
             {
-              if (gVURatio > 0.5)
+              if (g_Analyzer._VURatio > 0.5)
               {
                 if (ReelDir[i] == 0)              // 2 -> Spin Forwards, or accel if already doing so
                 {
@@ -633,7 +616,7 @@ class PaletteReelEffect : public LEDStripEffect
       {
         for (int i = 0; i < NUM_FANS; i++)
         {
-          ReelPos[i] = (ReelPos[i] + ReelDir[i] * (2 + gVURatio));
+          ReelPos[i] = (ReelPos[i] + ReelDir[i] * (2 + g_Analyzer._VURatio));
           if (ReelPos[i] < 0)
             ReelPos[i] += FAN_SIZE;
           if (ReelPos[i] >= FAN_SIZE)
@@ -677,8 +660,8 @@ class PaletteSpinEffect : public LEDStripEffect
     int   ColorOffset[NUM_FANS] = { 0 };
   public:
 
-    PaletteSpinEffect(const char * pszName, const CRGBPalette256 & palette, bool bReplace, double sparkleChance = 0.0) 
-      : LEDStripEffect(pszName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
+    PaletteSpinEffect(const String & strName, const CRGBPalette256 & palette, bool bReplace, double sparkleChance = 0.0) 
+      : LEDStripEffect(strName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
     {
 
     }
@@ -908,7 +891,7 @@ class FireFanEffect : public LEDStripEffect
 
     PixelOrder Order;
 
-    unique_ptr<uint8_t []> abHeat; // Heat table to map temp to color
+    std::unique_ptr<uint8_t []> abHeat; // Heat table to map temp to color
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
     // You can tune these coefficients to control how quickly and smoothly the fire spreads
@@ -948,7 +931,7 @@ class FireFanEffect : public LEDStripEffect
     {
         if (bMirrored)
             LEDCount = LEDCount / 2;
-        abHeat = make_unique<uint8_t []>(CellCount());
+        abHeat = std::make_unique<uint8_t []>(CellCount());
     }
 
     virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
@@ -1038,7 +1021,7 @@ class FireFanEffect : public LEDStripEffect
         {
           for (int i = 0 ; i < Sparks; i++)
           {
-              if (random(255) < Sparking / 4 + Sparking * (gVURatio / 2.0) * 0.5)
+              if (random(255) < Sparking / 4 + Sparking * (g_Analyzer._VURatio / 2.0) * 0.5)
               // if (random(255) < Sparking / 4)
               {
                   int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
@@ -1131,25 +1114,25 @@ class MusicFireEffect : public FireFanEffect
 
       if (latch)
       {
-        if (gVURatio < minVUSeen)
-          minVUSeen = gVURatio;
+        if (g_Analyzer._VURatio < minVUSeen)
+          minVUSeen = g_Analyzer._VURatio;
       }
 
-      if (gVURatio < 0.25)             // We've seen a "low" value, so set the latch
+      if (g_Analyzer._VURatio < 0.25)             // We've seen a "low" value, so set the latch
       {
         latch = true;
-        minVUSeen = gVURatio;
+        minVUSeen = g_Analyzer._VURatio;
       }
 
       if (latch)
       {
-          if (gVURatio > 1.0)
+          if (g_Analyzer._VURatio > 1.0)
           {
-            if (randomDouble(0.0, 3.0) < gVURatio)
+            if (randomDouble(0.0, 3.0) < g_Analyzer._VURatio)
             {
-              //Serial.printf("Beat at: %f\n", gVURatio - minVUSeen);
+              //Serial.printf("Beat at: %f\n", g_Analyzer.gVURatio - minVUSeen);
               latch = false;
-              OnBeat(gVURatio - minVUSeen);
+              OnBeat(g_Analyzer._VURatio - minVUSeen);
             }
           }
       }
@@ -1172,7 +1155,7 @@ class MusicFireEffect : public FireFanEffect
     virtual void Draw()
     {
         // Cycle the color (used by multicoor mode only)
-        _colorOffset = fmod(_colorOffset + 16 * gVURatio, 240); //  * _intensityAdjust.GetValue(), 240);
+        _colorOffset = fmod(_colorOffset + 16 * g_Analyzer._VURatio, 240); //  * _intensityAdjust.GetValue(), 240);
 
         FastLED.clear(false);
         DrawFire(Sequential);
@@ -1276,7 +1259,7 @@ class LanternParticle
     {
         val = min(val, 255);
         val = max(val, 0);
-#ifdef LANTERN        
+#if LANTERN        
         return CRGB( val,  val*.30, val*.05);
 #else
         return LEDStripEffect::GetBlackBodyHeatColor(val/255.0f*.20 + 0.25);
@@ -1346,7 +1329,7 @@ class LanternParticle
         rotation += 0.0;
         
 #ifdef LANTERN
-        float scalar = .75 + gVURatio / 2;
+        float scalar = .75 + g_Analyzer._VURatio / 2;
 #else        
         float scalar = 1.35;
 #endif

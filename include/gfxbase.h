@@ -63,23 +63,10 @@
  */
 
 #pragma once
-#include "globals.h"
-#include "Adafruit_GFX.h"
+
 #include <stdexcept>
-
-
-// 5:6:5 Color definitions
-#define BLACK16 0x0000
-#define BLUE16 0x001F
-#define RED16 0xF800
-#define GREEN16 0x07E0
-#define CYAN16 0x07FF
-#define MAGENTA16 0xF81F
-#define YELLOW16 0xFFE0
-#define WHITE16 0xFFFF
-
-#include "screen.h"
-
+#include "Adafruit_GFX.h"
+#include "pixeltypes.h"
 
 class GFXBase : public Adafruit_GFX
 {
@@ -97,7 +84,7 @@ protected:
     CRGBPalette16 currentPalette;
     CRGBPalette16 targetPalette;
     uint lastSecond = 99;
-    char *currentPaletteName;
+    String currentPaletteName;
     bool palettePaused = false;
 
     static const int HeatColorsPaletteIndex = 6;
@@ -107,8 +94,6 @@ protected:
     // THey should be turned into member variables, etc.
 
     friend class PatternMandala;
-
-    CRGB * leds2;
 
 #if USEMATRIX    
     static uint32_t noise_x;
@@ -140,12 +125,10 @@ public:
                             _width(w),
                             _height(h)
     {
-        leds2 = new CRGB[NUM_LEDS]();
     }
 
     virtual ~GFXBase()
     {
-        delete [] leds2;
     }
 
     inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
@@ -536,7 +519,7 @@ public:
     {
         currentPalette = palette;
         targetPalette = palette;
-        currentPaletteName = (char *)"Custom";
+        currentPaletteName = "Custom";
     }
 
     void loadPalette(int index)
@@ -552,48 +535,48 @@ public:
         {
         case 0:
             targetPalette = RainbowColors_p;
-            currentPaletteName = (char *)"Rainbow";
+            currentPaletteName = "Rainbow";
             break;
             // case 1:
             //   targetPalette = RainbowStripeColors_p;
-            //   currentPaletteName = (char *)"RainbowStripe";
+            //   currentPaletteName = "RainbowStripe";
             //   break;
         case 1:
             targetPalette = OceanColors_p;
-            currentPaletteName = (char *)"Ocean";
+            currentPaletteName = "Ocean";
             break;
         case 2:
             targetPalette = CloudColors_p;
-            currentPaletteName = (char *)"Cloud";
+            currentPaletteName = "Cloud";
             break;
         case 3:
             targetPalette = ForestColors_p;
-            currentPaletteName = (char *)"Forest";
+            currentPaletteName = "Forest";
             break;
         case 4:
             targetPalette = PartyColors_p;
-            currentPaletteName = (char *)"Party";
+            currentPaletteName = "Party";
             break;
         case 5:
             setupGrayscalePalette();
-            currentPaletteName = (char *)"Grey";
+            currentPaletteName = "Grey";
             break;
         case HeatColorsPaletteIndex:
             targetPalette = HeatColors_p;
-            currentPaletteName = (char *)"Heat";
+            currentPaletteName = "Heat";
             break;
         case 7:
             targetPalette = LavaColors_p;
-            currentPaletteName = (char *)"Lava";
+            currentPaletteName = "Lava";
             break;
         case 8:
             setupIcePalette();
-            currentPaletteName = (char *)"Ice";
+            currentPaletteName = "Ice";
             break;
         case RandomPaletteIndex:
             loadPalette(random(0, paletteCount - 1));
             paletteIndex = RandomPaletteIndex;
-            currentPaletteName = (char *)"Random";
+            currentPaletteName = "Random";
             break;
         }
         currentPalette = targetPalette;
@@ -1227,7 +1210,6 @@ public:
         }       
     }
 
-    // non leds2 memory version.
     // MoveX - Shift the content on the matrix left or right
     
     inline void MoveX(uint8_t delta)
@@ -1265,6 +1247,8 @@ public:
 #if USEMATRIX
     void MoveFractionalNoiseX(uint8_t amt = 16)
     {
+        std::unique_ptr<CRGB []> ledsTemp = std::make_unique<CRGB []>(NUM_LEDS);
+
         // move delta pixelwise
         for (int y = 0; y < MATRIX_HEIGHT; y++)
         {
@@ -1273,11 +1257,11 @@ public:
 
             // Process up to the end less the dekta
             for (int x = 0; x < MATRIX_WIDTH - delta; x++)
-                leds2[xy(x, y)] = leds[xy(x + delta, y)];
+                ledsTemp[xy(x, y)] = leds[xy(x + delta, y)];
 
             // Do the tail portion while wrapping around
             for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++)
-                leds2[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
+                ledsTemp[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
         }
 
         // move fractions
@@ -1292,8 +1276,8 @@ public:
 
             for (uint8_t x = 1; x < MATRIX_WIDTH; x++)
             {
-                PixelA = leds2[xy(x, y)];
-                PixelB = leds2[xy(x - 1, y)];
+                PixelA = ledsTemp[xy(x, y)];
+                PixelB = ledsTemp[xy(x - 1, y)];
 
                 PixelA %= 255 - fractions;
                 PixelB %= fractions;
@@ -1301,8 +1285,8 @@ public:
                 leds[xy(x, y)] = PixelA + PixelB;
             }
 
-            PixelA = leds2[xy(0, y)];
-            PixelB = leds2[xy(MATRIX_WIDTH - 1, y)];
+            PixelA = ledsTemp[xy(0, y)];
+            PixelB = ledsTemp[xy(MATRIX_WIDTH - 1, y)];
 
             PixelA %= 255 - fractions;
             PixelB %= fractions;
@@ -1313,6 +1297,8 @@ public:
 
     void MoveFractionalNoiseY(uint8_t amt = 16)
     {
+        std::unique_ptr<CRGB []> ledsTemp = std::make_unique<CRGB []>(NUM_LEDS);
+
         // move delta pixelwise
         for (int x = 0; x < MATRIX_WIDTH; x++)
         {
@@ -1321,11 +1307,11 @@ public:
 
             for (int y = 0; y < MATRIX_HEIGHT - delta; y++)
             {
-                leds2[xy(x, y)] = leds[xy(x, y + delta)];
+                ledsTemp[xy(x, y)] = leds[xy(x, y + delta)];
             }
             for (int y = MATRIX_HEIGHT - delta; y < MATRIX_HEIGHT; y++)
             {
-                leds2[xy(x, y)] = leds[xy(x, y + delta - MATRIX_HEIGHT)];
+                ledsTemp[xy(x, y)] = leds[xy(x, y + delta - MATRIX_HEIGHT)];
             }
         }
 
@@ -1341,8 +1327,8 @@ public:
 
             for (uint8_t y = 1; y < MATRIX_HEIGHT; y++)
             {
-                PixelA = leds2[xy(x, y)];
-                PixelB = leds2[xy(x, y - 1)];
+                PixelA = ledsTemp[xy(x, y)];
+                PixelB = ledsTemp[xy(x, y - 1)];
 
                 PixelA %= 255 - fractions;
                 PixelB %= fractions;
@@ -1350,8 +1336,8 @@ public:
                 leds[xy(x, y)] = PixelA + PixelB;
             }
 
-            PixelA = leds2[xy(x, 0)];
-            PixelB = leds2[xy(x, MATRIX_HEIGHT - 1)];
+            PixelA = ledsTemp[xy(x, 0)];
+            PixelB = ledsTemp[xy(x, MATRIX_HEIGHT - 1)];
 
             PixelA %= 255 - fractions;
             PixelB %= fractions;

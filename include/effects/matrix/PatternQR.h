@@ -56,7 +56,6 @@
 #ifndef PatternQR_H
 #define PatternQR_H
 
-#include "globals.h"
 #include "Geometry.h"
 #include "qrcode.h"
 
@@ -107,7 +106,7 @@ public:
             const uint16_t backgroundColor = graphics()->to16bit(CRGB(0,0,144));
             const uint16_t borderColor = BLUE16;
             if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
-            throw new runtime_error("Matrix can't hold the QR code height");
+            throw std::runtime_error("Matrix can't hold the QR code height");
 
             int w = qrcode.size + borderSize * 2;
             int h = w;

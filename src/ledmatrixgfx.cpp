@@ -28,9 +28,7 @@
 //
 //---------------------------------------------------------------------------
 
-#include "gfxbase.h"
 #include "globals.h"
-#include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
 

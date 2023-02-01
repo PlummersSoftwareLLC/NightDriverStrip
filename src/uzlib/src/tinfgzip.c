@@ -33,6 +33,8 @@
  *    any source distribution.
  */
 
+// Note: This code might be modfified from teh original, but is based entirely on it.
+
 #include "tinf.h"
 
 #define FTEXT    1

@@ -66,10 +66,6 @@
 #ifndef PatternPongClock_H
 #define PatternPongClock_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 #define BAT1_X 2 // Pong left bat x pos (this is where the ball collision occurs, the bat is drawn 1 behind these coords)
 #define BAT2_X (MATRIX_WIDTH - 4)
 #define BAT_HEIGHT (MATRIX_HEIGHT / 4)

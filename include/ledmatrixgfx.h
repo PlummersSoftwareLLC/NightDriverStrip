@@ -33,14 +33,12 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "gfxbase.h"
 
 #if USEMATRIX
+
 #include <SmartMatrix.h>
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-
-using namespace std;
 
 //
 // Matrix Panel
@@ -51,7 +49,7 @@ using namespace std;
 class LEDMatrixGFX : public GFXBase
 {
 protected:
-    const char *pszCaption = nullptr;
+    String strCaption;
     unsigned long captionStartTime;
     double captionDuration;
     const double captionFadeInTime = 500;
@@ -76,8 +74,8 @@ public:
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
     #endif
 
-    unique_ptr<Boid []> boids = make_unique<Boid []>(MATRIX_WIDTH);
-    unique_ptr<uint8_t []> heat = make_unique<uint8_t []>(NUM_LEDS);
+    std::unique_ptr<Boid []> boids = std::make_unique<Boid []>(MATRIX_WIDTH);
+    std::unique_ptr<uint8_t []> heat = std::make_unique<uint8_t []>(NUM_LEDS);
 
     LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
@@ -97,15 +95,15 @@ public:
         leds = pLeds;
     }
 
-    const char *GetCaption()
+    const String & GetCaption()
     {
-        return pszCaption;
+        return strCaption;
     }
 
     double GetCaptionTransparency()
     {
         unsigned long now = millis();
-        if (pszCaption == nullptr)
+        if (strCaption == nullptr)
             return 0;
 
         if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
@@ -122,10 +120,10 @@ public:
         return 1.0;
     }
 
-    void SetCaption(const char *psz, uint32_t duration)
+    void SetCaption(const String & str, uint32_t duration)
     {
         captionDuration = duration;
-        pszCaption = psz;
+        strCaption = str;
         captionStartTime = millis();
     }
 

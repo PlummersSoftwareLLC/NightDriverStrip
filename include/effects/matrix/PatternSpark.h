@@ -57,8 +57,6 @@
 #ifndef PatternSpark_H
 #define PatternSpark_H
 
-#include "globals.h"
-
 class PatternSpark : public LEDStripEffect 
 {
   private:

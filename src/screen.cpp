@@ -28,18 +28,8 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-#include "globals.h" // CONFIG and global headers
-#include "gfxbase.h"
-#include "ledbuffer.h"     // For g_apBufferManager type
-#include "effectmanager.h" // So we can display cur effect
-#include "Bounce2.h"
-#include "freefonts.h"
-#include "colordata.h"
-#if ENABLE_AUDIO
-#include "soundanalyzer.h"
-extern int g_serialFPS; // Frames per sec reported on serial
-#endif
-#include <mutex>
+
+#include "globals.h"
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 
@@ -62,7 +52,7 @@ M5Display *g_pDisplay;
 #if USE_TFTSPI
 #include <TFT_eSPI.h>
 #include <SPI.h>
-TFT_eSPI *g_pDisplay = new TFT_eSPI();
+std::unique_ptr<TFT_eSPI> g_pDisplay = std::make_unique<TFT_eSPI>();
 #endif
 
 //
@@ -72,24 +62,16 @@ TFT_eSPI *g_pDisplay = new TFT_eSPI();
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 
 extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
-extern double g_BufferAgeOldest;        // Age of oldest frame in WiFi buffer
-extern double g_BufferAgeNewest;        // Age of newest frame in WiFi buffer
 extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
 extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
-extern volatile float gVU;              // VU Ratio, 0-2
-extern volatile float gVURatioFade;     // VU Ratio with decay
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
 extern volatile double g_FreeDrawTime;           // Idle drawing time
 
 DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
 
 bool g_ShowFPS = true; // Indicates whether little lcd should show FPS
-#if ENABLE_AUDIO
-extern volatile float DRAM_ATTR gVURatio; // Current VU as a ratio to its recent min and max
-
-#endif
 
 // BasicInfoSummary
 //
@@ -130,16 +112,16 @@ void BasicInfoSummary(bool bRedraw)
 
     // Status line 1
 
-    char szBuffer[256];
-    static const char szStatus[] = "|/-\\";
+    static const String szStatus("|/-\\");
     static int cStatus = 0;
-    int c2 = cStatus % strlen(szStatus);
+    int c2 = cStatus % szStatus.length();
     char chStatus = szStatus[c2];
     cStatus++;
 
     Screen::setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
     Screen::setTextSize(Screen::SMALL);
 
+    char szBuffer[256];
     snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
     Screen::setCursor(xMargin, yMargin);
     Screen::println(szBuffer);
@@ -174,8 +156,8 @@ void BasicInfoSummary(bool bRedraw)
     // Data Status Line 4
 
     snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+06.2lf-%+06.2lf", 
-        min(99.99, g_BufferAgeOldest), 
-        min(99.99, g_BufferAgeNewest)
+        min(99.99, g_apBufferManager[0]->AgeOfOldestBuffer()), 
+        min(99.99, g_apBufferManager[0]->AgeOfNewestBuffer())
     );
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
     Screen::println(szBuffer);
@@ -197,24 +179,25 @@ void BasicInfoSummary(bool bRedraw)
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 3);
     Screen::println(szBuffer);
 
-    // PSRAM Info Line 6 - only if display tall enough
+    // LED Power Info Line 6 - only if display tall enough
 
     if (Screen::screenHeight() >= lineHeight * 5 + Screen::fontHeight())
-    {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%dK/%dK\n", 
-            ESP.getFreePsram() / 1024, 
-            ESP.getPsramSize() / 1024);
-        Screen::setCursor(xMargin + 0, yMargin + lineHeight * 5);
-        Screen::println(szBuffer);
-    }
-
-    // LED Power Info Line 7 - only if display tall enough
-
-    if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
     {
         snprintf(szBuffer, ARRAYSIZE(szBuffer), "POWR:%3.0lf%% %4uW\n",
                 g_Brite,
                 g_Watts);
+        Screen::setCursor(xMargin + 0, yMargin + lineHeight * 5);
+        Screen::println(szBuffer);
+    }
+
+
+    // PSRAM Info Line 7 - only if display tall enough
+
+    if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
+    {
+        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%dK/%dK\n", 
+            ESP.getFreePsram() / 1024, 
+            ESP.getPsramSize() / 1024);
         Screen::setCursor(xMargin + 0, yMargin + lineHeight * 6);
         Screen::println(szBuffer);
     }
@@ -300,14 +283,14 @@ void CurrentEffectSummary(bool bRedraw)
 
             Screen::setTextSize(Screen::SMALL);
             Screen::setTextColor(YELLOW16, backColor);
-            string sEffect = to_string("Current Effect: ") +
-                            to_string(g_pEffectManager->GetCurrentEffectIndex() + 1) +
-                            to_string("/") +
-                            to_string(g_pEffectManager->EffectCount());
+            String sEffect = String("Current Effect: ") +
+                             String(g_pEffectManager->GetCurrentEffectIndex() + 1) +
+                             String("/") +
+                             String(g_pEffectManager->EffectCount());
             Screen::drawString(sEffect.c_str(), yh);
             yh += Screen::fontHeight();
             // get effect name length and switch text size accordingly
-            int effectnamelen = strlen(g_pEffectManager->GetCurrentEffectName());
+            int effectnamelen = g_pEffectManager->GetCurrentEffectName().length();
 
 #if M5STICKCPLUS
             Screen::setTextSize(Screen::MEDIUM);
@@ -329,15 +312,15 @@ void CurrentEffectSummary(bool bRedraw)
         }
 
 #if ENABLE_AUDIO
-        if ((g_ShowFPS && ((lastFPS != g_FPS) || (lastAudio != g_AudioFPS) || (lastSerial != g_serialFPS))))
+        if ((g_ShowFPS && ((lastFPS != g_FPS) || (lastAudio != g_Analyzer._AudioFPS) || (lastSerial != g_Analyzer._serialFPS))))
         {
             lastFPS = g_FPS;
-            lastSerial = g_serialFPS;
-            lastAudio = g_AudioFPS;
+            lastSerial = g_Analyzer._serialFPS;
+            lastAudio = g_Analyzer._AudioFPS;
             Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
             char szBuffer[64];
             yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-            snprintf(szBuffer, sizeof(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_AudioFPS, g_serialFPS);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
             Screen::setTextColor(YELLOW16, backColor);
             Screen::drawString(szBuffer, yh);
             yh += Screen::fontHeight();
@@ -356,7 +339,7 @@ void CurrentEffectSummary(bool bRedraw)
     float ySizeVU = Screen::screenHeight() / 16; // vu is 1/20th the screen height, height of each block
     int cPixels = 16;
     float xSize = xHalf / cPixels + 1;               // xSize is count of pixels in each block
-    int litBlocks = (gVURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
+    int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
 
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
     {
@@ -375,10 +358,10 @@ void CurrentEffectSummary(bool bRedraw)
         CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
         int bandWidth = Screen::screenWidth() / NUM_BANDS;
         auto color16 = Screen::to16bit(bandColor);
-        auto topSection = bandHeight - bandHeight * g_peak2Decay[iBand];
+        auto topSection = bandHeight - bandHeight * g_Analyzer.g_peak2Decay[iBand];
         if (topSection > 0)
             Screen::fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
-        auto val = min(1.0f, g_peak2Decay[iBand]);
+        auto val = min(1.0f, g_Analyzer.g_peak2Decay[iBand]);
         assert(bandHeight * val <= bandHeight);
         Screen::fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }

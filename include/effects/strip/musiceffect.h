@@ -13,7 +13,7 @@
 //   
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    MERHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
 //   
 //    You should have received a copy of the GNU General Public License
@@ -30,22 +30,9 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <deque>
-#include <math.h>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h" 
 #include "faneffects.h"
-#include "gfxbase.h"
 
 extern DRAM_ATTR AppTime g_AppTime;
-extern volatile float gVURatioFade;
-extern volatile float gVURatio;                 // Current VU as a ratio to its recent min and max
-extern volatile float gVU;                      // Instantaneous read of VU value
 
 // BeatEffectBase
 //
@@ -57,7 +44,7 @@ extern volatile float gVU;                      // Instantaneous read of VU valu
 // For a highly sensitive (defaults), keep them both close to 1.0.  For a wider beat 
 // detection you could use 0.25 and 1.75 for example.
 
-class BeatEffectBase : public virtual LEDStripEffect
+class BeatEffectBase 
 {
   protected:
 
@@ -72,8 +59,7 @@ class BeatEffectBase : public virtual LEDStripEffect
   public:
    
     BeatEffectBase(double lowLatch = 1.0, double highLatch = 1.75, double minElapsed = 0.25)      // Eighth note at 120BPM is .125
-     : LEDStripEffect(nullptr),
-       _lowLatch(lowLatch),
+     : _lowLatch(lowLatch),
        _highLatch(highLatch),
        _minElapsed(minElapsed),
        _lowestSeen(2.0)
@@ -85,7 +71,7 @@ class BeatEffectBase : public virtual LEDStripEffect
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        debugV("BEAT: [%s], gVURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", gVURatio, g_AppTime.CurrentTime() - _lastBeat, gVURatio - _lowestSeen);
+        debugV("BEAT: [%s], g_Analyzer._VURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", g_Analyzer._VURatio, g_AppTime.CurrentTime() - _lastBeat, g_Analyzer._VURatio - _lowestSeen);
     }
 
     double SecondsSinceLastBeat()
@@ -94,12 +80,12 @@ class BeatEffectBase : public virtual LEDStripEffect
     }
 
 
-    // BeatEffectBase::Draw
+    // BeatEffectBase::ProcessAudio
     //
     // Doesn't actually "draw" anything, but rather it scans the audio VU to detect beats, and when it finds one,
     // it calls the virtual "HandleBeat" function.
 
-    virtual void Draw()
+    virtual void ProcessAudio()
     {
         debugV("BeatEffectBase::Draw");
         double elapsed = SecondsSinceLastBeat();
@@ -107,19 +93,19 @@ class BeatEffectBase : public virtual LEDStripEffect
         if (elapsed < _minElapsed)                      // Too soon since last beat to even consider another.  
           return;
 
-        if (gVURatio < _lowestSeen)
-            _lowestSeen = gVURatio;
+        if (g_Analyzer._VURatio < _lowestSeen)
+            _lowestSeen = g_Analyzer._VURatio;
 
-        if (gVURatio < _lowLatch)                       // If we dip below the low latch, we're latched (armed)
+        if (g_Analyzer._VURatio < _lowLatch)                       // If we dip below the low latch, we're latched (armed)
             _latched = true;                            //   to trigger a beat if we then go above the high latch
 
-        if (_latched && gVURatio >= _highLatch)
+        if (_latched && g_Analyzer._VURatio >= _highLatch)
         {
             // When we crest above the high latch point while latched (ie: we see a high value aftering confirming
             // that we've seen a low one) we know it's a round trip on the VU meter and so we call that a beat.  We
             // call the client handler and then reset the latch, then record now as the last beat time.
 
-            HandleBeat(elapsed > 1.0, elapsed, gVURatio - _lowestSeen);
+            HandleBeat(elapsed > 1.0, elapsed, g_Analyzer._VURatio - _lowestSeen);
             _lastBeat = g_AppTime.CurrentTime();
             _latched = false;
             _lowestSeen = 2.0;
@@ -168,7 +154,7 @@ class BeatEffectBase2
         debugV("BeatEffectBase2::Draw");
         double elapsed = SecondsSinceLastBeat();
     
-        _samples.push_back(gVURatio);
+        _samples.push_back(g_Analyzer._VURatio);
         double minimum = *min_element(_samples.begin(), _samples.end());
         double maximum = *max_element(_samples.begin(), _samples.end());
 
@@ -200,137 +186,42 @@ class BeatEffectBase2
 // MusicalInsulatorEffect
 //
 
-class BeatEffect : public LEDStripEffect
+class BeatEffect
 {
   public:
-
-    using LEDStripEffect::LEDStripEffect;
 
     virtual void OnBeat()
     {
 
     }
 
-    virtual void Draw()
+    virtual void ProcessAudio()
     {
         static bool  latch = false;
         static float minVUSeen = 0.0;
 
         if (latch)
         {
-          if (gVURatio < minVUSeen)
-            minVUSeen = gVURatio;
+          if (g_Analyzer._VURatio < minVUSeen)
+            minVUSeen = g_Analyzer._VURatio;
         }
 
-        if (gVURatio < 0.5)             // Crossing center going down
+        if (g_Analyzer._VURatio < 0.5)             // Crossing center going down
         {
           latch = true;
-          minVUSeen = gVURatio;
+          minVUSeen = g_Analyzer._VURatio;
         }
 
         if (latch)
         {
-            if (gVURatio > 1.75)      // Going back up
+            if (g_Analyzer._VURatio > 1.75)      // Going back up
             {
                 latch = false;
                 OnBeat();
-                debugV("Beat: %f, %f\n", gVURatio, gVU);
+                debugV("Beat: %f, %f\n", g_Analyzer._VURatio, g_Analyzer._VU);
             }
         }
       
-    }
-};
-
-class ChannelBeatEffect : public BeatEffect
-{
-    std::shared_ptr<GFXBase> * _gfx;
-
-  public:
-
-    using BeatEffect::BeatEffect;
-
-    size_t iLastArm = -1;
-    double lastBeat = 0;
-    CRGB   lastColor;
-
-    std::deque<int> litArms;
-
-    virtual void Draw()
-    {
-        BeatEffect::Draw();
-        
-        EVERY_N_MILLISECONDS(20)
-        {
-          fadeAllChannelsToBlackBy(10);
-        }
-
-        delay(10);
-    }
-
-
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
-    {
-        _gfx = gfx;
-        if (!LEDStripEffect::Init(gfx))
-            return false;
-        return true;
-    }
-
-    virtual void OnBeat()
-    {
-      size_t iNew = -1;
-      double elapsed = g_AppTime.CurrentTime() - lastBeat;
-      lastBeat = g_AppTime.CurrentTime();
-
-      CRGB b = CHSV(random(0, 255), 255, 80);
-      setPixelsOnAllChannels(0, NUM_LEDS, b, true);
-
-      // Color is additive, so we start with 200 V instead of 255 so that if the same beat in the same color iis replayed in the same insulator, it gets brighter
-
-      CRGB c = CHSV(random(0, 255), 255, 200);
-
-      // gVURatio is better when it's been a while since a beat, so we don't do a repeat beat for big values of it
-
-      if (gVURatio < 1.9 && elapsed < 0.25 && iLastArm != -1)
-      {
-        iNew = iLastArm;
-        c = lastColor;
-      }
-      else if (litArms.size() >= NUM_CHANNELS)
-      {
-        iNew = litArms.back();
-        litArms.pop_back();
-      }
-      else
-      {
-        for (int iPass = 0; iPass < NUM_CHANNELS * 10; iPass++)
-        {
-          size_t i = random(0, NUM_CHANNELS);
-          if (litArms.end() != std::find(litArms.begin(), litArms.end(), i))
-            continue;
-          iNew = i;
-          litArms.push_front(iNew);
-          if (randomDouble(0.0, 1.0) < 0.25)       // Sometimes we put this one on twice just to switch up the order 
-            litArms.push_front(iNew);
-          break;
-        }
-      }
-  
-      if (iNew == -1)               // No empty slot could be found!
-      { 
-        litArms.clear();
-        setAllOnAllChannels(0,0,0);
-        debugV("No slot!\n");
-        return;
-      }
-      
-      lastBeat = g_AppTime.CurrentTime();
-      lastColor = c;
-      iLastArm = iNew;
-
-       
-      //for (int i = 0; i < NUM_LEDS; i++)
-      //  _gfx[iNew]->leds()[i] = c;
     }
 };
 
@@ -339,7 +230,7 @@ class ChannelBeatEffect : public BeatEffect
 // Uses a very sensitive beat detection.  Fills all pixels blue based on VU, and on beats, fills a random insulator
 // with a random color.  Longer beats get more insulators.  Very long beats get everything filled with purple.
 
-class SimpleColorBeat : public BeatEffectBase, protected virtual LEDStripEffect
+class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
 {
   protected:
 
@@ -347,12 +238,12 @@ class SimpleColorBeat : public BeatEffectBase, protected virtual LEDStripEffect
            
     virtual void Draw()
     {
-        BeatEffectBase::Draw();
+        ProcessAudio();
 
-        CRGB c = CRGB::Blue * gVURatio * g_AppTime.DeltaTime() * 0.75;
+        CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_AppTime.DeltaTime() * 0.75;
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
-        LEDStripEffect::fadeAllChannelsToBlackBy(min(255.0,1000 * g_AppTime.DeltaTime()));
+        fadeAllChannelsToBlackBy(min(255.0,1000 * g_AppTime.DeltaTime()));
         delay(1);
     }
 
@@ -403,10 +294,8 @@ class SimpleColorBeat : public BeatEffectBase, protected virtual LEDStripEffect
 
   public:
   
-    using BeatEffectBase::BeatEffectBase;
-  
-    SimpleColorBeat(const char * pszName)
-      : LEDStripEffect(pszName), BeatEffectBase(1.0, 1.0, 0.25)
+    SimpleColorBeat(const String & strName)
+      : BeatEffectBase(1.0, 1.0, 0.25), LEDStripEffect(strName)
     {
     }
 

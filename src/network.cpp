@@ -28,14 +28,15 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"
-#include "network.h"
-#include "ledbuffer.h"
-#include "spiffswebserver.h"
-#include <mutex>
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+
+#include "globals.h"
+
+#if ENABLE_WEBSERVER
+    extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
+#endif
 
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
@@ -43,7 +44,6 @@ DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 #endif
 
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
-extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
 
 std::mutex g_buffer_mutex;
 
@@ -52,15 +52,7 @@ std::mutex g_buffer_mutex;
 // This is where we can add our own custom debugger commands
 
 extern AppTime  g_AppTime;
-extern double   g_BufferAgeOldest;
-extern double   g_BufferAgeNewest;
 extern uint32_t g_FPS;
-
-extern volatile float gVURatioFade;
-extern volatile float gVURatio;       // Current VU as a ratio to its recent min and max
-extern volatile float gVU;            // Instantaneous read of VU value
-extern volatile float gPeakVU;        // How high our peak VU scale is in live mode
-extern volatile float gMinVU;   
 
 // processRemoteDebugCmd
 // 
@@ -96,18 +88,18 @@ extern volatile float gMinVU;
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
             debugI("%s", szBuffer);
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_BufferAgeOldest, g_BufferAgeNewest);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_apBufferManager[0]->AgeOfOldestBuffer(), g_apBufferManager[0]->AgeOfNewestBuffer());
             debugI("%s", szBuffer);
 
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
             debugI("%s", szBuffer);
 
             #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "gVU: %.2f, gMinVU: %.2f, gPeakVU: %.2f, gVURatio: %.2f", gVU, gMinVU, gPeakVU, gVURatio);
+                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
                 debugI("%s", szBuffer);
             #endif
 
-            #if INCOMING_WIFI_ENABLED
+            #if INCOMING_WIFI_ENABLEDgVUR
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             debugI("%s", szBuffer);
             #endif
@@ -126,6 +118,90 @@ extern volatile float gMinVU;
         }
     }
 #endif
+
+// SetupOTA
+//
+// Set up the over-the-air programming info so that we can be flashed over WiFi
+
+void SetupOTA(const String & strHostname)
+{
+#if ENABLE_OTA
+    ArduinoOTA.setRebootOnSuccess(true);
+
+    if (strHostname.isEmpty())
+        ArduinoOTA.setMdnsEnabled(false);
+    else
+        ArduinoOTA.setHostname(strHostname.c_str());
+
+    ArduinoOTA
+        .onStart([]() {
+            g_bUpdateStarted = true;
+
+            String type;
+            if (ArduinoOTA.getCommand() == U_FLASH)
+                type = "sketch";
+            else // U_SPIFFS
+                type = "filesystem";
+
+            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+            debugI("Stopping SPIFFS");
+            #if ENABLE_WEBSEVER
+            SPIFFS.end();
+            #endif
+            
+            debugI("Stopping IR remote");
+            #if ENABLE_REMOTE            
+            g_RemoteControl.end();
+            #endif        
+            
+            debugI("Start updating from OTA ");
+            debugI("%s", type.c_str());
+        })
+        .onEnd([]() {
+            debugI("\nEnd OTA");
+        })
+        .onProgress([](unsigned int progress, unsigned int total) 
+        {
+            static uint last_time = millis();
+            if (millis() - last_time > 1000)
+            {
+                last_time = millis();
+                debugI("Progress: %u%%\r", (progress / (total / 100)));
+            }
+            else
+            {
+                debugV("Progress: %u%%\r", (progress / (total / 100)));
+            }
+            
+        })
+        .onError([](ota_error_t error) {
+            debugW("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR)
+            {
+                debugW("Auth Failed");
+            }
+            else if (error == OTA_BEGIN_ERROR)
+            {
+                debugW("Begin Failed");
+            }
+            else if (error == OTA_CONNECT_ERROR)
+            {
+                debugW("Connect Failed");
+            }
+            else if (error == OTA_RECEIVE_ERROR)
+            {
+                debugW("Receive Failed");
+            }
+            else if (error == OTA_END_ERROR)
+            {
+                debugW("End Failed");
+            }
+            throw std::runtime_error("OTA Flash update failed.");
+        });
+
+    ArduinoOTA.begin();
+#endif
+}
 
 // RemoteLoopEntry
 //
@@ -210,14 +286,14 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugI("Starting/restarting Socket Server...");
             g_SocketServer.release();
             if (false == g_SocketServer.begin())
-                throw runtime_error("Could not start socket server!");
+                throw std::runtime_error("Could not start socket server!");
 
             debugI("Socket server started.");
         #endif
 
         #if ENABLE_OTA
             debugI("Publishing OTA...");
-            SetupOTA(cszHostname);
+            SetupOTA(String(cszHostname));
         #endif
 
         #if ENABLE_NTP
@@ -276,89 +352,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     
 #endif
 
-// SetupOTA
-//
-// Set up the over-the-air programming info so that we can be flashed over WiFi
 
-void SetupOTA(const char *pszHostname)
-{
-#if ENABLE_OTA
-    ArduinoOTA.setRebootOnSuccess(true);
-
-    if (nullptr == pszHostname)
-        ArduinoOTA.setMdnsEnabled(false);
-    else
-        ArduinoOTA.setHostname(pszHostname);
-
-    ArduinoOTA
-        .onStart([]() {
-            g_bUpdateStarted = true;
-
-            String type;
-            if (ArduinoOTA.getCommand() == U_FLASH)
-                type = "sketch";
-            else // U_SPIFFS
-                type = "filesystem";
-
-            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-            debugI("Stopping SPIFFS");
-            #if ENABLE_WEBSEVER
-            SPIFFS.end();
-            #endif
-            
-            debugI("Stopping IR remote");
-            #if ENABLE_REMOTE            
-            g_RemoteControl.end();
-            #endif        
-            
-            debugI("Start updating from OTA ");
-            debugI("%s", type.c_str());
-        })
-        .onEnd([]() {
-            debugI("\nEnd OTA");
-        })
-        .onProgress([](unsigned int progress, unsigned int total) 
-        {
-            static uint last_time = millis();
-            if (millis() - last_time > 1000)
-            {
-                last_time = millis();
-                debugI("Progress: %u%%\r", (progress / (total / 100)));
-            }
-            else
-            {
-                debugV("Progress: %u%%\r", (progress / (total / 100)));
-            }
-            
-        })
-        .onError([](ota_error_t error) {
-            debugW("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR)
-            {
-                debugW("Auth Failed");
-            }
-            else if (error == OTA_BEGIN_ERROR)
-            {
-                debugW("Begin Failed");
-            }
-            else if (error == OTA_CONNECT_ERROR)
-            {
-                debugW("Connect Failed");
-            }
-            else if (error == OTA_RECEIVE_ERROR)
-            {
-                debugW("Receive Failed");
-            }
-            else if (error == OTA_END_ERROR)
-            {
-                debugW("End Failed");
-            }
-            throw runtime_error("OTA Flash update failed.");
-        });
-
-    ArduinoOTA.begin();
-#endif
-}
 
 // ProcessIncomingData
 //
@@ -403,7 +397,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             // Go through the channel mask to see which bits are set in the channel16 specifier, and send the data to each and every
             // channel that matches the mask.  So if the send channel 7, that means the lowest 3 channels will be set.
 
-            lock_guard<mutex> guard(g_buffer_mutex);
+            std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
             //if (!heap_caps_check_integrity_all(true))
             //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
@@ -423,7 +417,6 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                             debugV("Updating existing buffer");
                             if (!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
                                 return false;
-                            g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                             bDone = true;
                         }
                     }
@@ -433,41 +426,9 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                         auto pNewBuffer = g_apBufferManager[iChannel]->GetNewBuffer();
                         if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                             return false;
-                        g_apBufferManager[iChannel]->UpdateOldestAndNewest();
                     }
                 }
             }
-            return true;
-        }
-
-        case WIFI_COMMAND_VU:
-        {
-            debugW("Deprecated WIFI_COMMAND_VU received.");
-            uint32_t vu32 = payloadData[5] << 24 | payloadData[4] << 16 | payloadData[3] << 8 | payloadData[2];
-            debugV("Incoming VU: %u", vu32);
-            return true;
-        }
-
-        // WIFI_COMMAND_CLOCK
-        //
-        // Allows the server to send its current timeofday clock; if it's newer than our clock, we update ours
-
-        case WIFI_COMMAND_CLOCK:
-        {
-            debugW("Deprecated WIFI_COMMAND_CLOCK received.");
-            if (payloadLength != WIFI_COMMAND_CLOCK_SIZE)
-            {
-                debugW("Incorrect packet size for clock command received.  Expected %d and got %d\n", WIFI_COMMAND_CLOCK_SIZE, payloadLength);
-                return false;
-            }
-
-            uint16_t channel16    = payloadData[3]  << 8  | payloadData[2];
-
-            if (channel16 != 0)
-            {
-                debugW("Nonzero channel for clock not currently supported, but received: %d\n", channel16);
-            }
-
             return true;
         }
 

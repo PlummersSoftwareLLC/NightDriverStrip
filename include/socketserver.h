@@ -82,8 +82,6 @@ static_assert(sizeof(double) == 8);
 static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and double size" );            
 
 extern AppTime g_AppTime;
-extern double g_BufferAgeNewest;
-extern double g_BufferAgeOldest;
 extern std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
 extern uint32_t g_FPS;
 extern double g_Brite;
@@ -113,7 +111,7 @@ public:
         _server_fd(0),
         _cbReceived(0)
     {
-        _abOutputBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+        _abOutputBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -131,7 +129,7 @@ public:
 
     bool begin()
     {
-        _pBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+        _pBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
 
         _cbReceived = 0;
         
@@ -325,7 +323,7 @@ public:
                 // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
                 
                 #if USE_PSRAM
-                    std::unique_ptr<uint8_t []> _abTempBuffer = make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
                     memcpy(_abTempBuffer.get(), _pBuffer.get(), EXPECTED_EXPANDED_PACKET_SIZE);
                     auto pSourceBuffer = &_abTempBuffer[COMPRESSED_DATA_HEADER_SIZE];
                 #else
@@ -408,8 +406,8 @@ public:
                                         .size = sizeof(SocketResponse),
                                         .flashVersion = FLASH_VERSION,
                                         .currentClock = g_AppTime.CurrentTime(),
-                                        .oldestPacket = g_BufferAgeOldest,
-                                        .newestPacket = g_BufferAgeNewest,
+                                        .oldestPacket = g_apBufferManager[0]->AgeOfOldestBuffer(),
+                                        .newestPacket = g_apBufferManager[0]->AgeOfNewestBuffer(),
                                         .brightness   = g_Brite,
                                         .wifiSignal   = (double) WiFi.RSSI(),
                                         .bufferSize   = g_apBufferManager[0]->BufferCount(),

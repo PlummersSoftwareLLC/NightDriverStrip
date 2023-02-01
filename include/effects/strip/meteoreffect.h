@@ -31,29 +31,15 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
-#include <vector>
-#include <math.h>
-#include "colorutils.h"
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-#if ENABLE_AUDIO
-#include "soundanalyzer.h"
-#endif
-
-
 extern AppTime g_AppTime;
 
 class MeteorChannel
 {
-    vector<float> hue;
-    vector<float> iPos;
-    vector<bool>  bLeft;
-    vector<float> speed;
-    vector<double> lastBeat;
+    std::vector<float> hue;
+    std::vector<float> iPos;
+    std::vector<bool>  bLeft;
+    std::vector<float> speed;
+    std::vector<double> lastBeat;
 
 public:
 
@@ -131,10 +117,11 @@ public:
         for (int i = 0; i < meteorCount; i++)
         {
             float spd = speed[i];
-#if ENABLE_AUDIO
-            if (gVURatio > 1.0)
-                spd *= gVURatio;
-#endif
+            
+            #if ENABLE_AUDIO
+                if (g_Analyzer._VURatio > 1.0)
+                    spd *= g_Analyzer._VURatio;
+            #endif
 
             iPos[i] = (bLeft[i]) ? iPos[i]-spd : iPos[i]+spd;
             if (iPos[i]< meteorSize)

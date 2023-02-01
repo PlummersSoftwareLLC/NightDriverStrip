@@ -149,38 +149,22 @@
 //
 //---------------------------------------------------------------------------
 
-#include "globals.h"                            // CONFIG and global headers
-
-// If the Atomi TM1814 lights are being used, we include the NeoPixelBus code
-// to drive them, but otherwise we do not use or include NeoPixelBus
-
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
 #include <ESPmDNS.h>
 
-#include "ntptimeclient.h"                      // setting the system clock from ntp
-#include "socketserver.h"                       // our socket server for incoming
-#if ENABLE_AUDIO
-    #include "soundanalyzer.h"                  // for audio sound processing
-#endif
-#include "network.h"                            // For WiFi credentials
-#include "ledbuffer.h"
-#include "Bounce2.h"                            // For Bounce button class
-#if ENABLE_WEBSERVER
-    #include "spiffswebserver.h"                // handle web server requests
-#endif
+#include <SPI.h>
 
-#include "colordata.h"                          // color palettes
-#include "drawing.h"                            // drawing code
-#include "taskmgr.h"                            // for cpu usage, etc
+#define HSPI_MISO   27
+#define HSPI_MOSI   26    // This is the only IO pin used in this code (master out, slave in)
+#define HSPI_SCLK   25
+#define HSPI_SS     32
+#define FASTLED_ALL_PINS_HARDWARE_SPI
+#define FASTLED_ESP32_SPI_BUS HSPI
 
-#if ENABLE_REMOTE
-    #include "remotecontrol.h" // Allows us to use a IR remote with it
-#endif
+#include "globals.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;
-extern volatile float gPeakVU; // How high our peak VU scale is in live mode
-extern volatile float gMinVU;  // How low our peak VU scale is in live mode
 extern uint32_t g_Watts;
 extern double g_Brite;
 
@@ -188,23 +172,13 @@ extern double g_Brite;
 // Task Handles to our running threads
 //
 
-TaskHandle_t g_taskScreen = nullptr;
-TaskHandle_t g_taskSync   = nullptr;
-TaskHandle_t g_taskWeb    = nullptr;
-TaskHandle_t g_taskDraw   = nullptr;
-TaskHandle_t g_taskDebug  = nullptr;
-TaskHandle_t g_taskAudio  = nullptr;
-TaskHandle_t g_taskNet    = nullptr;
-TaskHandle_t g_taskRemote = nullptr;
-TaskHandle_t g_taskSocket = nullptr;
-
-TaskManager g_TaskManager;
+NightDriverTaskManager g_TaskManager;
 
 //
 // Global Variables
 //
 
-#ifdef SPECTRUM
+#if SPECTRUM
 DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
 #else
 DRAM_ATTR uint8_t giInfoPage = 0;                   // Default to first page
@@ -216,20 +190,10 @@ DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started
 DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
 
-#ifdef USEMATRIX
-    #include "ledmatrixgfx.h"
-    #include <YouTubeSight.h>                       // For fetching YouTube sub count
-    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-#endif
-
-#ifdef USESTRIP
-    #include "ledstripgfx.h"
-#endif
-
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
 
 DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
-DRAM_ATTR mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                     // Instance of our telnet debug server
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
@@ -430,7 +394,7 @@ inline void CheckHeap()
 {
     if (false == heap_caps_check_integrity_all(true))
     {
-        throw runtime_error("Heap FAILED checks!");
+        throw std::runtime_error("Heap FAILED checks!");
     }
 }
 
@@ -521,7 +485,7 @@ void setup()
 
     #if ENABLE_WIFI
         debugI("Starting DebugLoopTaskEntry");
-        xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &g_taskDebug, DEBUG_CORE);
+        g_TaskManager.StartDebugThread();
         CheckHeap();
     #endif
 
@@ -565,7 +529,7 @@ void setup()
 
 #if USE_TFTSPI
     debugI("Initializing TFTSPI");
-    extern TFT_eSPI * g_pDisplay;
+    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, 128);
@@ -604,9 +568,9 @@ void setup()
     // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
     // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
 
-    SPIClass * hspi = new SPIClass(HSPI);
+    SPIClass * hspi = new SPIClass(HSPI);               // BUGBUG (Davepl) who frees this?
     hspi->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
-    g_pDisplay = new Adafruit_ILI9341(hspi, TFT_DC, TFT_CS, TFT_RST);
+    g_pDisplay = std::make_unique<Adafruit_ILI9341>(hspi, TFT_DC, TFT_CS, TFT_RST);
     g_pDisplay->begin();
     g_pDisplay->fillScreen(BLUE16);
     g_pDisplay->setRotation(1);
@@ -640,13 +604,13 @@ void setup()
 
     #ifdef USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
-            g_pDevices[i] = make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
     #endif
 
     #if USEMATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_pDevices[i] = make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_pDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             g_pDevices[i]->loadPalette(0);
         }
     #endif
@@ -674,7 +638,7 @@ void setup()
     debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_apBufferManager[iChannel] = make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
+        g_apBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
 
     // Initialize all of the built in effects
 
@@ -703,9 +667,8 @@ void setup()
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_pDevices[0]->GetLEDCount());
             
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, 3*144);
-            FastLED[0].setLeds(((LEDStripGFX *)g_pDevices[0].get())->leds, g_pDevices[0]->GetLEDCount());   
-            FastLED.setMaxRefreshRate(0, false);  // turn OFF the refresh rate constraint
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, g_pDevices[0]->GetLEDCount());
+            FastLED.setMaxRefreshRate(100, false); 
             pinMode(LED_PIN0, OUTPUT);
         #endif
 
@@ -777,12 +740,12 @@ void setup()
     InitEffectsManager();
 
 #if USE_SCREEN
-    xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", STACK_SIZE, nullptr, SCREEN_PRIORITY, &g_taskScreen, SCREEN_CORE);
+    g_TaskManager.StartScreenThread();
 #endif
 
     debugI("Launching Drawing:");
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
-    xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &g_taskDraw, DRAWING_CORE);
+    g_TaskManager.StartDrawThread();
     CheckHeap();
 
 #if ENABLE_WIFI && WAIT_FOR_WIFI
@@ -790,7 +753,7 @@ void setup()
     if (false == ConnectToWiFi(99))
     {
         debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
-        throw runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
+        throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
     }
     Debug.setSerialEnabled(true);
 #endif
@@ -803,26 +766,26 @@ void setup()
 
 #if ENABLE_REMOTE
     // Start Remote Control
-    xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &g_taskRemote, REMOTE_CORE);
+    g_TaskManager.StartRemoteThread();
     CheckHeap();
 #endif
 
-    xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &g_taskSync, NET_CORE);
+    g_TaskManager.StartNetworkThread();
     CheckHeap();
 
 #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
-    xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", STACK_SIZE, nullptr, SOCKET_PRIORITY, &g_taskSocket, SOCKET_CORE);
+    g_TaskManager.StartSocketThread();
 #endif
 
 #if ENABLE_AUDIO
     // The audio sampler task might as well be on a different core from the LED stuff
-    xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &g_taskAudio, AUDIO_CORE);
+    g_TaskManager.StartAudioThread();
     CheckHeap();
 #endif
 
 #if ENABLE_AUDIOSERIAL
     // The audio sampler task might as well be on a different core from the LED stuff
-    xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &g_taskAudio, AUDIOSERIAL_CORE);
+    
     CheckHeap();
 #endif
 
@@ -858,11 +821,11 @@ void loop()
         EVERY_N_SECONDS(5)
         {
             #if ENABLE_AUDIO && ENABLE_WIFI
-                debugI("Wifi: %s, IP: %s, Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, Buffer: %d/%d, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
+                debugI("Wifi: %s, IP: %s, Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
                         WLtoString(WiFi.status()), WiFi.localIP().toString().c_str(), // Wifi
                         ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                         g_FPS, g_Watts, g_Brite, // LED
-                        g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, // Audio
+                        g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
                         g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                         g_FreeDrawTime);
             #elif ENABLE_AUDIO // Implied !ENABLE_WIFI from 1st condition
@@ -870,7 +833,7 @@ void loop()
                     ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
                     g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), // Buffer
                     g_FPS, g_Watts, g_Brite, // LED
-                    g_AudioFPS, g_serialFPS, gPeakVU, gMinVU, gVURatio, // Audio
+                    g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
                     g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
                     g_FreeDrawTime);
             #elif ENABLE_WIFI // Implied !ENABLE_AUDIO from 1st condition

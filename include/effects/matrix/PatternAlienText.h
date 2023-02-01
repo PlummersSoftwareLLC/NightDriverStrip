@@ -57,10 +57,6 @@
 #ifndef PatternAlienText_H
 #define PatternAlienText_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternAlienText : public LEDStripEffect
 {
 private:

@@ -27,8 +27,8 @@
 // History:     Jul-14-2021         Davepl      Split off from main.cpp
 //---------------------------------------------------------------------------
 
-#include "globals.h"                           // CONFIG and global headers
-#include "effectmanager.h"                     // manages all of the effects
+#include "globals.h"
+
 #include "effects/strip/fireeffect.h"          // fire effects
 #include "effects/strip/paletteeffect.h"       // palette effects
 #include "effects/strip/doublepaletteeffect.h" // double palette effect
@@ -38,14 +38,14 @@
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
-
+#include "effects/matrix/PatternClock.h"       // No matrix dependencies
 
 #if ENABLE_AUDIO
-#include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
-#include "effects/strip/musiceffect.h"      // Music based effects
+#include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
+#include "effects/strip/musiceffect.h"         // Music based effects
 #endif
 
-#ifdef FAN_SIZE
+#if FAN_SIZE
 #include "effects/strip/faneffects.h" // Fan-based effects
 #endif
 
@@ -53,30 +53,27 @@
 // Externals
 //
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
-
 #if USEMATRIX
-#include "ledmatrixgfx.h"
-#include "effects/matrix/PatternSerendipity.h"
-#include "effects/matrix/PatternSwirl.h"
-#include "effects/matrix/PatternPulse.h"
-#include "effects/matrix/PatternWave.h"
-#include "effects/matrix/PatternLife.h"
-#include "effects/matrix/PatternSpiro.h"
-#include "effects/matrix/PatternCube.h"
-#include "effects/matrix/PatternCircuit.h"
-#include "effects/matrix/PatternSubscribers.h"
-#include "effects/matrix/PatternAlienText.h"
-#include "effects/matrix/PatternRadar.h"
-#include "effects/matrix/PatternPongClock.h"
-#include "effects/matrix/PatternBounce.h"
-#include "effects/matrix/PatternMandala.h"
-#include "effects/matrix/PatternSpin.h"
-#include "effects/matrix/PatternFlowField.h"
-#include "effects/matrix/PatternMisc.h"
-#include "effects/matrix/PatternNoiseSmearing.h"
-#include "effects/matrix/PatternClock.h"
-#include "effects/matrix/PatternQR.h"
+        #include "ledmatrixgfx.h"
+        #include "effects/matrix/PatternSerendipity.h"
+        #include "effects/matrix/PatternSwirl.h"
+        #include "effects/matrix/PatternPulse.h"
+        #include "effects/matrix/PatternWave.h"
+        #include "effects/matrix/PatternLife.h"
+        #include "effects/matrix/PatternSpiro.h"
+        #include "effects/matrix/PatternCube.h"
+        #include "effects/matrix/PatternCircuit.h"
+        #include "effects/matrix/PatternSubscribers.h"
+        #include "effects/matrix/PatternAlienText.h"
+        #include "effects/matrix/PatternRadar.h"
+        #include "effects/matrix/PatternPongClock.h"
+        #include "effects/matrix/PatternBounce.h"
+        #include "effects/matrix/PatternMandala.h"
+        #include "effects/matrix/PatternSpin.h"
+        #include "effects/matrix/PatternFlowField.h"
+        #include "effects/matrix/PatternMisc.h"
+        #include "effects/matrix/PatternNoiseSmearing.h"
+        #include "effects/matrix/PatternQR.h"
 #endif
 
 #ifdef USESTRIP
@@ -86,8 +83,8 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
 
 #if USEMATRIX
-volatile long PatternSubscribers::cSubscribers;
-volatile long PatternSubscribers::cViews;
+        volatile long PatternSubscribers::cSubscribers;
+        volatile long PatternSubscribers::cViews;
 #endif
 
 // Palettes
@@ -298,7 +295,7 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
         CHSV hueColor = rgb2hsv_approximate(color1);
-        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
         if (object->Init(g_pDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
@@ -308,7 +305,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-        auto object = make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
         if (object->Init(g_pDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -429,7 +426,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif TTGO
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", 12, true, spectrumBasicColors, 50, 70, -1.0, 3.0),
 
 #elif WROVERKIT
 
@@ -501,7 +498,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         new SparklySpinningMusicEffect("SparklySpinningMusical", RainbowColors_p),
         new ColorBeatOverRed("ColorBeatOnRedBkgnd"),
-        new ColorBeatWithFlash("ColorBeatWithFlash"),
         new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
 
@@ -546,8 +542,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new ColorCycleEffect(Sequential),
         new PaletteEffect(RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0),
         new BouncingBallEffect(3, true, true, 1),
-
-        new ChannelBeatEffect("ChannelBeat"),
 
         new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 4), // Blooming Little Rainbow Stars
         new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 20, 12, LINEARBLEND, 1.0, 0.0, 2), // Blooming Rainbow Stars
@@ -687,9 +681,13 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         new RainbowFillEffect(24, 0),
         new RainbowFillEffect(32, 1),
-        new SimpleRainbowTestEffect(8, 1),  // Rainbow palette simple test of walking pixels
-        new PaletteEffect(MagentaColors_p), // Rainbow palette
+        new SimpleRainbowTestEffect(8, 1),              // Rainbow palette simple test of walking pixels
+        new PaletteEffect(MagentaColors_p),             // Rainbow palette
         new DoublePaletteEffect(),
+
+#else                                                                   
+
+        new RainbowFillEffect(6, 2),                    // Simple effect if not otherwise defined above
 
 #endif
 
@@ -708,10 +706,10 @@ static_assert(ARRAYSIZE(AllEffects) > 0);
 void InitEffectsManager()
 {
         debugW("InitEffectsManager...");
-        g_pEffectManager = make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
+        g_pEffectManager = std::make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
 
         if (false == g_pEffectManager->Init())
-                throw runtime_error("Could not initialize effect manager");
+                throw std::runtime_error("Could not initialize effect manager");
 }
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;

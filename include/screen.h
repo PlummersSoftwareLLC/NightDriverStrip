@@ -33,10 +33,8 @@
 
 #pragma once
 
-#include "globals.h"
-#include "gfxbase.h"
-#include "freefonts.h"
 #include <mutex>
+#include "freefonts.h"
 
 // A project with a screen will define one of these screen types (TFT, OLED, LCD, etc) and one object of the
 // correct type will be created and assigned to g_pDisplay, which will have the appropriate type.
@@ -59,7 +57,7 @@
 #if USE_TFTSPI
     #include <TFT_eSPI.h>
     #include <SPI.h>
-    extern TFT_eSPI * g_pDisplay;
+    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 #endif
 
 class Screen
@@ -88,14 +86,14 @@ class Screen
     // 
     // Display a single string of text on the TFT screen, useful during boot for status, etc.
 
-    static void IRAM_ATTR ScreenStatus(const char *pszStatus)
+    static void IRAM_ATTR ScreenStatus(const String & strStatus)
     {
     #if USE_OLED 
         g_pDisplay->clear();
         g_pDisplay->clearBuffer();                   // clear the internal memory
         g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable font
         g_pDisplay->setCursor(0, 10);
-        g_pDisplay->println(pszStatus);
+        g_pDisplay->println(strStatus);
         g_pDisplay->sendBuffer();
     #elif USE_TFTSPI || USE_M5DISPLAY
         g_pDisplay->fillScreen(TFT_BLACK);
@@ -103,7 +101,7 @@ class Screen
         g_pDisplay->setTextColor(0xFBE0);
         auto xh = 10;
         auto yh = 0; 
-        g_pDisplay->drawString(pszStatus, xh, yh);
+        g_pDisplay->drawString(strStatus, xh, yh);
     #elif USE_LCD
         g_pDisplay->fillScreen(BLUE16);
         g_pDisplay->setFont(FM9);
@@ -111,7 +109,7 @@ class Screen
         auto xh = 10;
         auto yh = 0; 
         g_pDisplay->setCursor(xh, yh);
-        g_pDisplay->print(pszStatus);
+        g_pDisplay->print(strStatus);
     #endif
     }
 
@@ -134,7 +132,7 @@ class Screen
             g_pDisplay->getTextBounds("M", 0, 0, &x1, &y1, &w, &h);         // Beats me how to do this, so I'm taking the height of M as a line height
             return w + 2;                                                   // One pixel above and below chars looks better
         #elif USE_OLED 
-            return g_pDisplay->getFontAscent();
+            return g_pDisplay->getFontAscent() + 1;
         #elif USE_TFTSPI || USE_M5DISPLAY
             return g_pDisplay->fontHeight();
         #elif USE_SCREEN
@@ -144,19 +142,19 @@ class Screen
         #endif
     }
 
-    static uint16_t textWidth(const char * psz)
+    static uint16_t textWidth(const String & str)
     {
         #if USE_OLED
-            return g_pDisplay->getStrWidth(psz);
+            return g_pDisplay->getStrWidth(str.c_str());
         #elif USE_TFTSPI || USE_M5DISPLAY            
-            return g_pDisplay->textWidth(psz);            
+            return g_pDisplay->textWidth(str);            
         #elif USE_LCD
             int16_t x1, y1;
             uint16_t w, h;
-            g_pDisplay->getTextBounds(psz, 0, 0, &x1, &y1, &w, &h);
+            g_pDisplay->getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
             return w;
         #else 
-            return 8 * strlen(psz);
+            return 8 * str.length();
         #endif
     }
 
@@ -273,28 +271,35 @@ class Screen
         #endif
     }
 
-    static void println(const char * pszText)
+    static void println(const char * strText)
     {
         #if USE_SCREEN
-            g_pDisplay->println(pszText);
+            g_pDisplay->println(strText);
         #endif
     }
 
-    static void drawString(const char * pszText, uint16_t x, uint16_t y)
+    static void println(const String & strText)
+    {
+        #if USE_SCREEN
+            g_pDisplay->println(strText.c_str());
+        #endif
+    }
+
+    static void drawString(const String & strText, uint16_t x, uint16_t y)
     {
         #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
         setCursor(x, y);
-        println(pszText);
+        println(strText.c_str());
         #endif
     }
 
     // drawString with no x component assumed you want it centered on the display
 
-    static void drawString(const char * pszText, uint16_t y)
+    static void drawString(const String & strText, uint16_t y)
     {
         #if USE_M5DISPLAY || USE_TFTSPI || USE_OLED
-        setCursor(screenWidth() / 2 - textWidth(pszText) / 2, y);
-        println(pszText);
+        setCursor(screenWidth() / 2 - textWidth(strText) / 2, y);
+        println(strText.c_str());
         #endif
     }
 

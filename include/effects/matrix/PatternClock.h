@@ -31,10 +31,6 @@
 #ifndef PatternClock_H
 #define PatternClock_H
 
-#include "globals.h"
-#include "ledstripeffect.h"
-#include "gfxbase.h"
-
 class PatternClock : public LEDStripEffect
 {
     // Radius is the lesser of the height and width so that the round clock can fit
@@ -53,7 +49,7 @@ class PatternClock : public LEDStripEffect
 
     virtual void Draw()
     {
-        auto g = mgraphics();
+        auto g = graphics();
 
         // Get the hours, minutes, and seconds of hte current time
 
