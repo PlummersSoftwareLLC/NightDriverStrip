@@ -1,5 +1,5 @@
 const DesignerPanel = withStyles(designStyle)(props => {
-    const { classes, siteConfig, open } = props;
+    const { classes, open } = props;
     const [ effects, setEffects ] = useState(undefined);
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
@@ -15,14 +15,20 @@ const DesignerPanel = withStyles(designStyle)(props => {
         if (open) {
             const aborter = new AbortController();
             setAbortControler(aborter);
+
+            const timer = setTimeout(()=>{
+                setNextRefreshDate(Date.now());
+            },3000);
     
             fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
                 .then(resp => resp.json())
                 .then(setEffects)
+                .then(()=>clearTimeout(timer))
                 .catch(console.error);
     
             return () => {
                 abortControler && abortControler.abort();
+                clearTimeout(timer);
             }
         }
     },[open,nextRefreshDate]);
@@ -31,6 +37,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
         if (effects) {
             const timeReference = Date.now()+effects.millisecondsRemaining;
             var requestSent = false;
+            setTimeRemaining(timeReference-Date.now());
             const interval = setInterval(()=>{
                 const remaining = timeReference-Date.now();
                 if (remaining >= 0) {
@@ -40,7 +47,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                     setNextRefreshDate(Date.now());
                     requestSent=true;
                 }
-            },50);
+            },100);
             return ()=>clearInterval(interval);
         }
     },[effects]);
@@ -53,22 +60,47 @@ const DesignerPanel = withStyles(designStyle)(props => {
         .catch(console.error);
     }
 
-    const navigateTo = (idx)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
-        .then(postUpdate)
-        .catch(console.error);
-    }
-
-    const updatePendingInterval = (interval)=>{
+    const updateEventInterval = (interval)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,{method:"POST", body: new URLSearchParams({effectInterval:interval})})
         .then(postUpdate)
         .catch(console.error);
     }
 
-    const effectEnable = (idx,enable)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
-        .then(postUpdate)
-        .catch(console.error);
+    const displayHeader = ()=>{
+        return <Box className={classes.effectsHeaderValue}>
+            <Typography variant="little" color="textSecondary">Interval</Typography>:
+            <Typography variant="little" color="textAttribute">{effects.effectInterval}</Typography>
+            <IconButton onClick={() => setEditing(true)}><Icon>edit</Icon></IconButton>
+        </Box>;
+    }
+
+    const editingHeader = ()=>{
+        return <Box className={classes.effectsHeaderValue}>
+            <TextField label="Interval ms"
+                variant="outlined"
+                type="number"
+                defaultValue={effects.effectInterval}
+                onChange={event => setPendingInterval(event.target.value)} />
+            <Box className={classes.saveIcons}>
+                <IconButton color="primary"
+                    aria-label="Save"
+                    component="label"
+                    onClick={_evt => {
+                        updateEventInterval(pendingInterval);
+                        setEditing(false);
+                    } }>
+                    <Icon>save</Icon>
+                </IconButton>
+                <IconButton color="secondary"
+                    aria-label="Cancel"
+                    component="label"
+                    onClick={_evt => {
+                        setEditing(false);
+                    } }>
+                    <Icon>cancel</Icon>
+                </IconButton>
+            </Box>
+        </Box>;
     }
 
     if (!effects && open){
@@ -78,37 +110,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
     return effects && <Box className={`${classes.root} ${!open && classes.hidden}`}>
         <Box className={classes.effectsHeader}>
             {editing ? 
-            <Box className={classes.effectsHeaderValue}>
-                <TextField label="Interval ms" 
-                           variant="outlined"
-                           type="number"
-                           defaultValue={effects.effectInterval}
-                           onChange={event => setPendingInterval(event.target.value) } />
-                <Box className={classes.saveIcons}>
-                    <IconButton color="primary" 
-                                aria-label="Save" 
-                                component="label"
-                                onClick={_evt => {
-                                    updatePendingInterval(pendingInterval);
-                                    setEditing(false);
-                                }}>
-                        <Icon>save</Icon>
-                    </IconButton>
-                    <IconButton color="secondary" 
-                                aria-label="Cancel" 
-                                component="label"
-                                onClick={_evt => {
-                                    setEditing(false);
-                                }}>
-                        <Icon>cancel</Icon>
-                    </IconButton>
-                </Box>
-            </Box>:
-            <Box className={classes.effectsHeaderValue}>
-                <Typography variant="little" color="textSecondary">Interval</Typography>:
-                <Typography variant="little" color="textAttribute">{effects.effectInterval}</Typography>
-                <IconButton onClick={()=>setEditing(true)}><Icon>edit</Icon></IconButton>
-            </Box>}
+            editingHeader():
+            displayHeader()}
             <Box className={classes.effectsHeaderValue}>
                 <Typography variant="little" color="textSecondary">Time Remaining</Typography>:
                 <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
@@ -120,16 +123,14 @@ const DesignerPanel = withStyles(designStyle)(props => {
             </Box>}
         </Box>
         <Box className={classes.effects}>
-            {effects.Effects.map((effect,idx) => 
-                <Box key={`effect-${idx}`} className={classes.effect}>
-                    {(idx === effects.currentEffect) ?
-                    effects.Effects.length > 1 && <Icon>arrow_right_alt</Icon>:
-                    <IconButton onClick={()=>effect.enabled && navigateTo(idx)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
-                    <Box className={`${classes.effectAttribute} ${(idx === effects.currentEffect) && classes.selected}`}>
-                        <IconButton onClick={()=>effectEnable(idx,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
-                        <Box className={!effect.enabled && classes.unselected}>{effect.name}</Box>
-                    </Box>
-                </Box>)}
+            {effects.Effects.map((effect,idx) => <Effect 
+                                                    key={`effect-${idx}`}
+                                                    effect={effect} 
+                                                    effectIndex={idx} 
+                                                    postUpdate={postUpdate}
+                                                    effectInterval={effects.effectInterval}
+                                                    selected={idx === effects.currentEffect}
+                                                    timeRemaining={timeRemaining}/>)}
         </Box>
     </Box>
 });

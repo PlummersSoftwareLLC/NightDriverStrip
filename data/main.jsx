@@ -2,7 +2,7 @@ const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, us
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
-const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme } = window.MaterialUI;
+const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme, LinearProgress } = window.MaterialUI;
 
 const { AreaChart, BarChart, Area, Bar, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } = window.Recharts;
 
@@ -204,13 +204,6 @@ const mainAppStyle = theme => ({
         columnGap: "3px",
         alignItems: "center",
     },
-    effect: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        width: "180px",
-        border: "green solid 1px"
-    },
     effects: {
         display: "flex",
         flexDirection: "row",
@@ -218,12 +211,34 @@ const mainAppStyle = theme => ({
     },
     timeremaining: {
         width: "50px"
+    }
+});const effectStyle = theme => ({
+    root: {
+        "display": "flex",
+        "flex-direction": "column",
+        border: "green solid 2px",
+        borderRadius: "15px",
+        padding: "10px",
     },
-    effectAttribute: {
+    hidden: {
+        display: "none"
+    },
+    effect: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        width: "180px",
+        border: "green solid 1px"
+    },
+    effectPannel: {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        width: "100%",
+        justifyContent: "space-around",
+    },
+    effectName: {
+        marginLeft: "10px",
+        marginBottom: "5px"
     },
     unselected: {
         opacity: "30%"
@@ -698,7 +713,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
     </Dialog>
   );
 });const DesignerPanel = withStyles(designStyle)(props => {
-    const { classes, siteConfig, open } = props;
+    const { classes, open } = props;
     const [ effects, setEffects ] = useState(undefined);
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
@@ -714,14 +729,20 @@ const ConfigDialog = withStyles(configStyle)(props => {
         if (open) {
             const aborter = new AbortController();
             setAbortControler(aborter);
+
+            const timer = setTimeout(()=>{
+                setNextRefreshDate(Date.now());
+            },3000);
     
             fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
                 .then(resp => resp.json())
                 .then(setEffects)
+                .then(()=>clearTimeout(timer))
                 .catch(console.error);
     
             return () => {
                 abortControler && abortControler.abort();
+                clearTimeout(timer);
             }
         }
     },[open,nextRefreshDate]);
@@ -730,6 +751,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
         if (effects) {
             const timeReference = Date.now()+effects.millisecondsRemaining;
             var requestSent = false;
+            setTimeRemaining(timeReference-Date.now());
             const interval = setInterval(()=>{
                 const remaining = timeReference-Date.now();
                 if (remaining >= 0) {
@@ -739,7 +761,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                     setNextRefreshDate(Date.now());
                     requestSent=true;
                 }
-            },50);
+            },100);
             return ()=>clearInterval(interval);
         }
     },[effects]);
@@ -752,22 +774,47 @@ const ConfigDialog = withStyles(configStyle)(props => {
         .catch(console.error);
     }
 
-    const navigateTo = (idx)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
-        .then(postUpdate)
-        .catch(console.error);
-    }
-
-    const updatePendingInterval = (interval)=>{
+    const updateEventInterval = (interval)=>{
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,{method:"POST", body: new URLSearchParams({effectInterval:interval})})
         .then(postUpdate)
         .catch(console.error);
     }
 
-    const effectEnable = (idx,enable)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
-        .then(postUpdate)
-        .catch(console.error);
+    const displayHeader = ()=>{
+        return <Box className={classes.effectsHeaderValue}>
+            <Typography variant="little" color="textSecondary">Interval</Typography>:
+            <Typography variant="little" color="textAttribute">{effects.effectInterval}</Typography>
+            <IconButton onClick={() => setEditing(true)}><Icon>edit</Icon></IconButton>
+        </Box>;
+    }
+
+    const editingHeader = ()=>{
+        return <Box className={classes.effectsHeaderValue}>
+            <TextField label="Interval ms"
+                variant="outlined"
+                type="number"
+                defaultValue={effects.effectInterval}
+                onChange={event => setPendingInterval(event.target.value)} />
+            <Box className={classes.saveIcons}>
+                <IconButton color="primary"
+                    aria-label="Save"
+                    component="label"
+                    onClick={_evt => {
+                        updateEventInterval(pendingInterval);
+                        setEditing(false);
+                    } }>
+                    <Icon>save</Icon>
+                </IconButton>
+                <IconButton color="secondary"
+                    aria-label="Cancel"
+                    component="label"
+                    onClick={_evt => {
+                        setEditing(false);
+                    } }>
+                    <Icon>cancel</Icon>
+                </IconButton>
+            </Box>
+        </Box>;
     }
 
     if (!effects && open){
@@ -777,37 +824,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
     return effects && <Box className={`${classes.root} ${!open && classes.hidden}`}>
         <Box className={classes.effectsHeader}>
             {editing ? 
-            <Box className={classes.effectsHeaderValue}>
-                <TextField label="Interval ms" 
-                           variant="outlined"
-                           type="number"
-                           defaultValue={effects.effectInterval}
-                           onChange={event => setPendingInterval(event.target.value) } />
-                <Box className={classes.saveIcons}>
-                    <IconButton color="primary" 
-                                aria-label="Save" 
-                                component="label"
-                                onClick={_evt => {
-                                    updatePendingInterval(pendingInterval);
-                                    setEditing(false);
-                                }}>
-                        <Icon>save</Icon>
-                    </IconButton>
-                    <IconButton color="secondary" 
-                                aria-label="Cancel" 
-                                component="label"
-                                onClick={_evt => {
-                                    setEditing(false);
-                                }}>
-                        <Icon>cancel</Icon>
-                    </IconButton>
-                </Box>
-            </Box>:
-            <Box className={classes.effectsHeaderValue}>
-                <Typography variant="little" color="textSecondary">Interval</Typography>:
-                <Typography variant="little" color="textAttribute">{effects.effectInterval}</Typography>
-                <IconButton onClick={()=>setEditing(true)}><Icon>edit</Icon></IconButton>
-            </Box>}
+            editingHeader():
+            displayHeader()}
             <Box className={classes.effectsHeaderValue}>
                 <Typography variant="little" color="textSecondary">Time Remaining</Typography>:
                 <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
@@ -819,18 +837,53 @@ const ConfigDialog = withStyles(configStyle)(props => {
             </Box>}
         </Box>
         <Box className={classes.effects}>
-            {effects.Effects.map((effect,idx) => 
-                <Box key={`effect-${idx}`} className={classes.effect}>
-                    {(idx === effects.currentEffect) ?
-                    effects.Effects.length > 1 && <Icon>arrow_right_alt</Icon>:
-                    <IconButton onClick={()=>effect.enabled && navigateTo(idx)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
-                    <Box className={`${classes.effectAttribute} ${(idx === effects.currentEffect) && classes.selected}`}>
-                        <IconButton onClick={()=>effectEnable(idx,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
-                        <Box className={!effect.enabled && classes.unselected}>{effect.name}</Box>
-                    </Box>
-                </Box>)}
+            {effects.Effects.map((effect,idx) => <Effect 
+                                                    key={`effect-${idx}`}
+                                                    effect={effect} 
+                                                    effectIndex={idx} 
+                                                    postUpdate={postUpdate}
+                                                    effectInterval={effects.effectInterval}
+                                                    selected={idx === effects.currentEffect}
+                                                    timeRemaining={timeRemaining}/>)}
         </Box>
     </Box>
+});const Effect = withStyles(effectStyle)(props => {
+    const { classes, effect, effectInterval, effectIndex, timeRemaining, selected, postUpdate } = props;
+    const [ progress, setProgress ] = useState(undefined);
+
+    useEffect(()=>{
+        const timeout = setTimeout(() => selected && setProgress((timeRemaining/effectInterval)*100.0),300);
+        return () => clearTimeout(timeout);
+    },[progress,selected]);
+
+    useEffect(()=>{selected && setProgress((timeRemaining/effectInterval)*100.0)},[effect]);
+
+    const navigateTo = (idx)=>{
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
+        .then(postUpdate)
+        .catch(console.error);
+    }
+
+    const effectEnable = (idx,enable)=>{
+        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
+        .then(postUpdate)
+        .catch(console.error);
+    }
+
+    return <Box className={classes.effect}>
+                <Box className={selected && classes.selected}>
+                    <Box className={classes.effectPannel}>
+                        {selected ?
+                        <Box>
+                            <Icon>arrow_right_alt</Icon>
+                        </Box>:
+                        <IconButton onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
+                        <IconButton onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
+                    </Box>
+                    <Box className={`${!effect.enabled && classes.unselected} ${classes.effectName}`}>{effect.name}</Box>
+                </Box>
+                {selected && <LinearProgress variant="determinate" sx={{transition: 'none'}} value={progress}/>}
+            </Box>
 });const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
 

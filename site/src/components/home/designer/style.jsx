@@ -21,13 +21,6 @@ const designStyle = theme => ({
         columnGap: "3px",
         alignItems: "center",
     },
-    effect: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        width: "180px",
-        border: "green solid 1px"
-    },
     effects: {
         display: "flex",
         flexDirection: "row",
@@ -35,17 +28,5 @@ const designStyle = theme => ({
     },
     timeremaining: {
         width: "50px"
-    },
-    effectAttribute: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        width: "100%",
-    },
-    unselected: {
-        opacity: "30%"
-    },
-    selected: {
-        backgroundColor: theme.palette.background.paper,
     }
 });
