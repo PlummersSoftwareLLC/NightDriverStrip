@@ -90,7 +90,7 @@ inline int16_t GetRingPixelPosition(float fPos, int16_t ringSize)
     debugW("GetRingPixelPosition called with negative value %f", fPos);
     return 0;
   }
-
+  
   int pos = fPos;
   if (pos & 1)
     return ringSize - 1 - pos / 2;

@@ -867,8 +867,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT           1
     #define RESERVE_MEMORY          150000
     
-    #define NOISE_CUTOFF            20
-    #define NOISE_FLOOR             200.0f
+    // Being case-mounted normally, the FANSET needs a more sensitive mic so the NOISE_CUTOFF value is are lower than spectrum
+    
+    #define NOISE_CUTOFF            0
+    #define NOISE_FLOOR             0.0f
 
     #define TOGGLE_BUTTON_1         37
     #define TOGGLE_BUTTON_2         39
