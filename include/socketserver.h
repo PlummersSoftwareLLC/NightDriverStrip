@@ -395,10 +395,17 @@ public:
                     debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
                     ResetReadBuffer();
                 }
+                else
+                {
+                    debugW("Unknown command in packet received: %d\n", command16);
+                    close(new_socket);
+                    ResetReadBuffer();
+                    return false;
+                }
+
             }
 
-            // The fall through cases are either success above or an unrecognized command, or garbage. Either way, we consume
-            // everything read so far up to this point as "completed".
+            // If we make it to this point, it should be success, so we consume 
 
             ResetReadBuffer();
             yield();
@@ -423,8 +430,6 @@ public:
         } while (true);
     }    
 
-    #define OUT_CHUNK_SIZE 1
-
     // DecompressBuffer
     //
     // Use unzlib to decompress a memory buffer
@@ -447,7 +452,6 @@ public:
         if (res < 0)
         {
             debugE("ERROR: Cannot parse zlib data header\n");
-            delete pOutput;
             return false;
         }
 
@@ -455,17 +459,15 @@ public:
 
         if (res != TINF_DONE) {
             debugE("Error during decompression after producing %d bytes: %d\n", d.dest - pOutput, res);
-            delete pOutput;
             return false;
         }
 
         if (d.dest - pOutput != expectedOutputSize)
         {
             debugE("Exepcted it to to decompress to %d but got %d instead\n", expectedOutputSize, d.dest - pOutput);
-            delete pOutput;
             return false;
         }
-        //printf("Returning good result");
+        
         return true;
     }
 };
