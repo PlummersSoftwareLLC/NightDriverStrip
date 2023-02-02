@@ -314,6 +314,7 @@ public:
                 if (expandedSize > EXPECTED_EXPANDED_PACKET_SIZE)
                 {
                     debugE("Expanded data size of %d would overflow buffer of %d\n", expandedSize, sizeof(_abOutputBuffer));
+                    close(new_socket);
                     ResetReadBuffer();
                     return false;
                 }
@@ -332,16 +333,16 @@ public:
                 
                 if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
                 {
-                    close(new_socket);
                     debugW("Error decompressing data\n");
+                    close(new_socket);
                     ResetReadBuffer();
                     return false;
                 }
 
                 if (false == ProcessIncomingData(_abOutputBuffer.get(), expandedSize))
                 {
-                    close(new_socket);
                     debugW("Error processing data\n");
+                    close(new_socket);
                     ResetReadBuffer();
                     return false;                    
                 }
@@ -400,7 +401,7 @@ public:
             // everything read so far up to this point as "completed".
 
             ResetReadBuffer();
-            delay(1);
+            yield();
 
             SocketResponse response = { 
                                         .size = sizeof(SocketResponse),
@@ -446,6 +447,7 @@ public:
         if (res < 0)
         {
             debugE("ERROR: Cannot parse zlib data header\n");
+            delete pOutput;
             return false;
         }
 
@@ -453,6 +455,7 @@ public:
 
         if (res != TINF_DONE) {
             debugE("Error during decompression after producing %d bytes: %d\n", d.dest - pOutput, res);
+            delete pOutput;
             return false;
         }
 

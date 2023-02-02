@@ -229,7 +229,8 @@ class LEDBufferManager
      : _ppBuffers(std::make_unique<std::shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
        _iNextBuffer(0),
        _iLastBuffer(0),
-       _cBuffers(cBuffers)
+       _cBuffers(cBuffers),
+       _pLastBufferAdded
     {
         // The initializer creates a uniquely owned table of shared pointers.
         // We exclusively can see the table, but the buffer objects it contains
@@ -316,11 +317,14 @@ class LEDBufferManager
     std::shared_ptr<LEDBuffer> GetNewBuffer()
     {
         auto pResult = _ppBuffers[_iNextBuffer++];
-        _iNextBuffer %= _cBuffers;
+
         if (IsEmpty())
             _iLastBuffer++;
+
         _iLastBuffer %= _cBuffers;
         _pLastBufferAdded = pResult;
+        _iNextBuffer %= _cBuffers;
+
         return pResult;
     }
 
