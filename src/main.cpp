@@ -223,7 +223,7 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNEL
 //
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER
-    DRAM_ATTR CSPIFFSWebServer g_WebServer;
+    DRAM_ATTR CWebServer g_WebServer;
 #endif
 
 #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
@@ -586,18 +586,6 @@ void setup()
     x = g_pDisplay->readcommand8(ILI9341_RDSELFDIAG);
     debugI("Self Diagnostic: %x", x); 
 
-#endif
-
-#if ENABLE_WEBSERVER                                                    
-    debugI("Starting SPIFFS...");
-    if (!SPIFFS.begin(true))
-    {
-        debugI("ERROR: SPIFFS Mount Failed");
-    }
-    else
-    {
-        debugI("SPIFFS OK!");
-    }
 #endif
 
     // Initialize the strand controllers depending on how many channels we have

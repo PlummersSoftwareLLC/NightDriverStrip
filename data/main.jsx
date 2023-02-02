@@ -1,4 +1,5 @@
-const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
+const httpPrefix='';
+const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
@@ -548,7 +549,7 @@ const barChartStyle = theme => ({
     }
 });
 const NotificationPanel = withStyles(notificationsStyle)(props => {
-    const { classes, notifications } = props;
+    const { classes, notifications, clearNotifications } = props;
     const [numErrors, setNumErrors] = React.useState(undefined);
     const [errorTargets, setErrorTargets] = React.useState({});
     const [open, setOpen] = React.useState(false);
@@ -596,7 +597,9 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                         title={`${numErrors} Errors`}
                     />
                     <CardContent>
-                        {Object.entries(errorTargets).map(target => 
+                        {Object.entries(errorTargets)
+                               .sort((a,b)=>a[0].localeCompare(b[0]))
+                               .map(target => 
                             <CardContent key={target[0]} className={classes.errors}>
                                 {Object.entries(notifications)
                                        .filter(notif => notif[1].target === target[0])
@@ -617,6 +620,11 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                             </CardContent>
                         )}
                     </CardContent>
+                    <CardActions disableSpacing>
+                        <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
+                            <Icon>delete</Icon>
+                        </IconButton>
+                    </CardActions>
                 </Card>
             </Popover>
         </Box>);
@@ -625,7 +633,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [mode, setMode] = useState('dark');
     const [stats, setStats] = useState(false);
-    const [designer, setDesigner] = useState(true);
+    const [designer, setDesigner] = useState(false);
     const [config, setConfig] = useState(false);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
@@ -678,7 +686,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                         variant="h6">
                         Night Driver Strip
                     </Typography>
-                    <NotificationPanel notifications={notifications}/>
+                    {(notifications.length > 0) && <NotificationPanel notifications={notifications} clearNotifications={()=>setNotifications([])}/>}
                 </Toolbar>
             </AppBar>
             <Drawer variant="permanent" 
@@ -858,14 +866,20 @@ const ConfigDialog = withStyles(configStyle)(props => {
     }
 
     const updateEventInterval = (interval)=>{
+        const abort = new AbortController();
+        const timer = setTimeout(()=>abort.abort(),3000);
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
         {
-            method:"POST", 
-            body: new URLSearchParams({effectInterval:interval}),
-            timeout: 3000
+            method:"POST",
+            signal:abort.signal,
+            body: new URLSearchParams({effectInterval:interval})
         })
+        .then(()=>clearTimeout(timer))
         .then(postUpdate)
-        .catch(err => addNotification("Error","Service","Update Settings",err));
+        .catch(err => {
+            addNotification("Error","Service","Update Settings",err);
+            clearTimeout(timer);
+        });
     }
 
     const displayHeader = ()=>{
@@ -1131,7 +1145,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
     }
 });
     const StatsPanel = withStyles(statsStyle)(props => {
-    const { classes, siteConfig, open } = props;
+    const { classes, siteConfig, open, addNotification } = props;
     const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
     const [ statistics, setStatistics] = useState(undefined);
     const [ timer, setTimer ] = useState(undefined);
@@ -1229,6 +1243,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                     },
                                 };
                             });
+
     useEffect(() => {
         if (abortControler) {
             abortControler.abort();
