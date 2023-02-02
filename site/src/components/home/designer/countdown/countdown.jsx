@@ -1,5 +1,5 @@
 const Countdown = withStyles(countdownStyle)(props => {
-    const { classes,  label, millisecondsRemaining, postUpdate } = props;
+    const { classes,  label, millisecondsRemaining, requestRefresh } = props;
     const [ timeRemaining, setTimeRemaining ] = useState(false);
 
     useEffect(() => {
@@ -14,7 +14,7 @@ const Countdown = withStyles(countdownStyle)(props => {
                 }
                 if ((remaining <= 100) && !requestSent) {
                     requestSent=true;
-                    postUpdate();
+                    requestRefresh();
                 }
             },50);
             return ()=>clearInterval(interval);

@@ -27,7 +27,6 @@ const effectStyle = theme => ({
         marginBottom: "5px"
     },
     unselected: {
-        opacity: "30%"
     },
     selected: {
         backgroundColor: theme.palette.background.paper,

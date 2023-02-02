@@ -34,7 +34,7 @@ const lightTheme = createTheme({
         bcolor4: '#189cdb38',
       }
     },
-  typography: commonTypography
+  typography: commonTypography,
 });
 
 const darkTheme = createTheme({
@@ -60,6 +60,36 @@ const darkTheme = createTheme({
       attribute: "aqua",
       icon: "aquamarine"
     },
+    primary: {
+      main: "#97ea44"
+    }
   },
-  typography: commonTypography
+  typography: commonTypography,
+  overrides: {
+    MuiAppBar: {
+      colorPrimary: {
+        backgroundColor: "black",
+        color: "textPrimary"
+      }
+    },
+    MuiIconButton: {
+      colorPrimary: {
+        color: "aquamarine"
+      },
+      colorSecondary: {
+        color: "aqua"
+      },
+      root:{
+        color: "lightgreen",
+      }
+    },
+    MuiCheckbox: {
+      colorPrimary: {
+        color: "textPrimary"
+      },
+      colorSecondary: {
+        "&$checked": "aquamarine"
+      }
+    }
+  },
 });

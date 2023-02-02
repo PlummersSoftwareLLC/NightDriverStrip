@@ -1,5 +1,4 @@
-const httpPrefix='';
-const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
+const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
@@ -44,7 +43,7 @@ const lightTheme = createTheme({
         bcolor4: '#189cdb38',
       }
     },
-  typography: commonTypography
+  typography: commonTypography,
 });
 
 const darkTheme = createTheme({
@@ -70,8 +69,38 @@ const darkTheme = createTheme({
       attribute: "aqua",
       icon: "aquamarine"
     },
+    primary: {
+      main: "#97ea44"
+    }
   },
-  typography: commonTypography
+  typography: commonTypography,
+  overrides: {
+    MuiAppBar: {
+      colorPrimary: {
+        backgroundColor: "black",
+        color: "textPrimary"
+      }
+    },
+    MuiIconButton: {
+      colorPrimary: {
+        color: "aquamarine"
+      },
+      colorSecondary: {
+        color: "aqua"
+      },
+      root:{
+        color: "lightgreen",
+      }
+    },
+    MuiCheckbox: {
+      colorPrimary: {
+        color: "textPrimary"
+      },
+      colorSecondary: {
+        "&$checked": "aquamarine"
+      }
+    }
+  },
 });
 const notificationsStyle = theme => ({
     root: {
@@ -267,7 +296,6 @@ const mainAppStyle = theme => ({
         marginBottom: "5px"
     },
     unselected: {
-        opacity: "30%"
     },
     selected: {
         backgroundColor: theme.palette.background.paper,
@@ -554,6 +582,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
     const [errorTargets, setErrorTargets] = React.useState({});
     const [open, setOpen] = React.useState(false);
     const inputRef = React.createRef();
+    const theme = useTheme();
 
     useEffect(()=>{
         setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
@@ -585,7 +614,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                 <Card className={classes.popup} elevation={9}>
                     <CardHeader
                         avatar={
-                        <Avatar aria-label="error">
+                        <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
                             !
                         </Avatar>
                         }
@@ -829,6 +858,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
+    const [ requestRunning, setRequestRunning ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(undefined);
 
     useEffect(() => {
@@ -844,7 +874,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                 setNextRefreshDate(Date.now());
             },3000);
     
-            fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
                 .then(resp => resp.json())
                 .then(setEffects)
                 .then(()=>clearTimeout(timer))
@@ -857,29 +887,41 @@ const ConfigDialog = withStyles(configStyle)(props => {
         }
     },[open,nextRefreshDate]);
 
-    const postUpdate = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
+    const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
+
+    const chipRequest = (url,options,operation) => {
+        setRequestRunning(true);
+        return fetch(url,options)
+                .catch(err => addNotification("Error",operation,err))
+                .finally(()=>setRequestRunning(false));
+    };
+
+    const navigateTo = (idx)=>{
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
+                .then(requestRefresh);
+    }
+
+    const effectEnable = (idx,enable)=>{
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
+        .then(requestRefresh);
+    }
 
     const navigate = (up)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
-        .then(postUpdate)
-        .catch(err => addNotification("Error","Service","Effect Navigation",err));
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
+        .then(requestRefresh);
     }
 
     const updateEventInterval = (interval)=>{
         const abort = new AbortController();
         const timer = setTimeout(()=>abort.abort(),3000);
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+        chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
         {
             method:"POST",
             signal:abort.signal,
             body: new URLSearchParams({effectInterval:interval})
-        })
-        .then(()=>clearTimeout(timer))
-        .then(postUpdate)
-        .catch(err => {
-            addNotification("Error","Service","Update Settings",err);
-            clearTimeout(timer);
-        });
+        }).then(()=>clearTimeout(timer))
+          .then(requestRefresh)
+          .catch(_err => clearTimeout(timer));
     }
 
     const displayHeader = ()=>{
@@ -930,12 +972,12 @@ const ConfigDialog = withStyles(configStyle)(props => {
             displayHeader()}
             <Countdown 
                 label="Time Remaining"
-                postUpdate={postUpdate}
+                requestRefresh={requestRefresh}
                 millisecondsRemaining={effects.millisecondsRemaining}/>
             {(effects.Effects.length > 1) && <Box>
-                <IconButton onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
-                <IconButton onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
-                <IconButton onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
+                <IconButton disabled={requestRunning} onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
+                <IconButton disabled={requestRunning} onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
+                <IconButton disabled={requestRunning} onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
             </Box>}
         </Box>
         <Box className={classes.effects}>
@@ -943,14 +985,16 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                                     key={`effect-${idx}`}
                                                     effect={effect} 
                                                     effectIndex={idx} 
-                                                    postUpdate={postUpdate}
+                                                    navigateTo={navigateTo}
+                                                    requestRunning={requestRunning}
+                                                    effectEnable={effectEnable}
                                                     effectInterval={effects.effectInterval}
                                                     selected={idx === effects.currentEffect}
                                                     millisecondsRemaining={effects.millisecondsRemaining}/>)}
         </Box>
     </Box>
 });const Countdown = withStyles(countdownStyle)(props => {
-    const { classes,  label, millisecondsRemaining, postUpdate } = props;
+    const { classes,  label, millisecondsRemaining, requestRefresh } = props;
     const [ timeRemaining, setTimeRemaining ] = useState(false);
 
     useEffect(() => {
@@ -965,7 +1009,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                 }
                 if ((remaining <= 100) && !requestSent) {
                     requestSent=true;
-                    postUpdate();
+                    requestRefresh();
                 }
             },50);
             return ()=>clearInterval(interval);
@@ -979,7 +1023,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
     </Box>)
 
 });const Effect = withStyles(effectStyle)(props => {
-    const { classes, effect, effectInterval, effectIndex, millisecondsRemaining, selected, postUpdate } = props;
+    const { classes, effect, effectInterval, effectIndex, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
     const [ progress, setProgress ] = useState(undefined);
 
     useEffect(() => {
@@ -997,18 +1041,6 @@ const ConfigDialog = withStyles(configStyle)(props => {
         }
     },[millisecondsRemaining,selected]);
 
-    const navigateTo = (idx)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
-        .then(postUpdate)
-        .catch(err => addNotification("Error","Service","Effect Selection",err));
-    }
-
-    const effectEnable = (idx,enable)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
-        .then(postUpdate)
-        .catch(err => addNotification("Error","Service","Effect Enablement",err));
-    }
-
     return <Box className={classes.effect}>
                 <Box className={selected && classes.selected}>
                     <Box className={classes.effectPannel}>
@@ -1016,8 +1048,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
                         <Box>
                             <Icon>arrow_right_alt</Icon>
                         </Box>:
-                        <IconButton onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
-                        <IconButton onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
+                        <IconButton disabled={requestRunning} onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
+                        <IconButton disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
                     </Box>
                     <Box className={`${!effect.enabled && classes.unselected} ${classes.effectName}`}>{effect.name}</Box>
                 </Box>
@@ -1032,8 +1064,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
             {Object.entries(stat.stat)
                    .map(entry=>
                 <ListItem key={entry[0]}>
-                    <Typography variant="little" color="textSecondary">{entry[0]}</Typography>:
-                    <Typography variant="little" color="textAttribute">{entry[1]}</Typography>
+                    <Typography variant="little" color="textAttribute">{entry[0]}</Typography>:
+                    <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
                 </ListItem>)}
         </List>:
         <List>

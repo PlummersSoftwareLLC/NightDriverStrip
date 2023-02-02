@@ -4,6 +4,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
     const [errorTargets, setErrorTargets] = React.useState({});
     const [open, setOpen] = React.useState(false);
     const inputRef = React.createRef();
+    const theme = useTheme();
 
     useEffect(()=>{
         setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
@@ -35,7 +36,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                 <Card className={classes.popup} elevation={9}>
                     <CardHeader
                         avatar={
-                        <Avatar aria-label="error">
+                        <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
                             !
                         </Avatar>
                         }

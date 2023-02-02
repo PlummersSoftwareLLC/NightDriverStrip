@@ -4,6 +4,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
+    const [ requestRunning, setRequestRunning ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(undefined);
 
     useEffect(() => {
@@ -19,7 +20,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 setNextRefreshDate(Date.now());
             },3000);
     
-            fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
                 .then(resp => resp.json())
                 .then(setEffects)
                 .then(()=>clearTimeout(timer))
@@ -32,29 +33,41 @@ const DesignerPanel = withStyles(designStyle)(props => {
         }
     },[open,nextRefreshDate]);
 
-    const postUpdate = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
+    const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
+
+    const chipRequest = (url,options,operation) => {
+        setRequestRunning(true);
+        return fetch(url,options)
+                .catch(err => addNotification("Error",operation,err))
+                .finally(()=>setRequestRunning(false));
+    };
+
+    const navigateTo = (idx)=>{
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
+                .then(requestRefresh);
+    }
+
+    const effectEnable = (idx,enable)=>{
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
+        .then(requestRefresh);
+    }
 
     const navigate = (up)=>{
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
-        .then(postUpdate)
-        .catch(err => addNotification("Error","Service","Effect Navigation",err));
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
+        .then(requestRefresh);
     }
 
     const updateEventInterval = (interval)=>{
         const abort = new AbortController();
         const timer = setTimeout(()=>abort.abort(),3000);
-        fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+        chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
         {
             method:"POST",
             signal:abort.signal,
             body: new URLSearchParams({effectInterval:interval})
-        })
-        .then(()=>clearTimeout(timer))
-        .then(postUpdate)
-        .catch(err => {
-            addNotification("Error","Service","Update Settings",err);
-            clearTimeout(timer);
-        });
+        }).then(()=>clearTimeout(timer))
+          .then(requestRefresh)
+          .catch(_err => clearTimeout(timer));
     }
 
     const displayHeader = ()=>{
@@ -105,12 +118,12 @@ const DesignerPanel = withStyles(designStyle)(props => {
             displayHeader()}
             <Countdown 
                 label="Time Remaining"
-                postUpdate={postUpdate}
+                requestRefresh={requestRefresh}
                 millisecondsRemaining={effects.millisecondsRemaining}/>
             {(effects.Effects.length > 1) && <Box>
-                <IconButton onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
-                <IconButton onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
-                <IconButton onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
+                <IconButton disabled={requestRunning} onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
+                <IconButton disabled={requestRunning} onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
+                <IconButton disabled={requestRunning} onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
             </Box>}
         </Box>
         <Box className={classes.effects}>
@@ -118,7 +131,9 @@ const DesignerPanel = withStyles(designStyle)(props => {
                                                     key={`effect-${idx}`}
                                                     effect={effect} 
                                                     effectIndex={idx} 
-                                                    postUpdate={postUpdate}
+                                                    navigateTo={navigateTo}
+                                                    requestRunning={requestRunning}
+                                                    effectEnable={effectEnable}
                                                     effectInterval={effects.effectInterval}
                                                     selected={idx === effects.currentEffect}
                                                     millisecondsRemaining={effects.millisecondsRemaining}/>)}
