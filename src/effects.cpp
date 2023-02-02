@@ -609,45 +609,43 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif FANSET
 
-        new RainbowFillEffect(24, 0),
         new ColorCycleEffect(BottomUp),
+
+        new RainbowFillEffect(24, 0),
+
         new ColorCycleEffect(TopDown),
         new ColorCycleEffect(LeftRight),
         new ColorCycleEffect(RightLeft),
-
-        // /* 8 */ new StarryNightEffect<FanStar>("FanStars", RainbowColors_p, 4.0, 1.0, LINEARBLEND, 80.0, 0, 4.0),
-        /* 6 */ new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 1.0), // Blooming Little Rainbow Stars
-        /* 7 */ new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),            // Blooming Rainbow Stars
-        /* 6 */ new StarryNightEffect<BubblyStar>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),                                 // Neon Bars
-
-        new FireFanEffect(NUM_LEDS, 4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-        new FireFanEffect(NUM_LEDS, 3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-        new FireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-        new FireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-
-//        new HueFireFanEffect(NUM_LEDS, 4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-//        new HueFireFanEffect(NUM_LEDS, 3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-//        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-//        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-
-//        new HueFireFanEffect(NUM_LEDS, 4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-//        new HueFireFanEffect(NUM_LEDS, 3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-//        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-//        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-
-#if ENABLE_AUDIO
-
-        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
-
-        new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
-        new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
 
         new FanBeatEffect("FanBeat"),
         new PaletteReelEffect("PaletteReelEffect"),
         new MeteorEffect(),
         new TapeReelEffect("TapeReelEffect"),
-//        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR, 50, true),
-#endif
+
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
+
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
+
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
+
+        // /* 8 */ new StarryNightEffect<FanStar>("FanStars", RainbowColors_p, 4.0, 1.0, LINEARBLEND, 80.0, 0, 4.0),
+        new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 1.0), // Blooming Little Rainbow Stars
+        new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),            // Blooming Rainbow Stars
+        new StarryNightEffect<BubblyStar>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),                                 // Neon Bars
+
+
+        new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
+        new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
+
 
 #elif BROOKLYNROOM
 

@@ -209,12 +209,14 @@ public:
 
     void StartScreenThread()
     {
+        debugW(">> Launching Screen Thread");
         xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
     }
 
     void StartSerialThread()
     {
         #if ENABLE_SERIAL
+            debugW(">> Launching Serial Thread");
             xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);    
         #endif
     }
@@ -222,21 +224,22 @@ public:
 
     void StartDrawThread()
     {
+        debugW(">> Launching Draw Thread");
         xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);    
     }
 
     void StartAudioThread()
     {
         #if ENABLE_AUDIO
+            debugW(">> Launching Audio Thread");
             xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
         #endif
     }
     
-
-    
     void StartNetworkThread()
     {
         #if ENABLE_WIFI
+            debugW(">> Launching Network Thread");
             xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);    
         #endif
     }
@@ -244,6 +247,7 @@ public:
     void StartDebugThread()
     {
         #if ENABLE_WIFI
+            debugW(">> Launching Debug Thread");
             xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);    
         #endif
     }
@@ -251,6 +255,7 @@ public:
     void StartSocketThread()
     {
         #if ENABLE_WIFI
+            debugW(">> Launching Socket Thread");
             xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
         #endif
     }
@@ -258,6 +263,7 @@ public:
     void StartRemoteThread()
     {
         #if ENABLE_WIFI
+            debugW(">> Launching Remote Thread");
             xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
         #endif
     }

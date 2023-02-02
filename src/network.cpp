@@ -214,7 +214,7 @@ extern RemoteControl g_RemoteControl;
 
 void IRAM_ATTR RemoteLoopEntry(void *)
 {
-    debugI(">> RemoteLoopEntry\n");
+    debugW(">> RemoteLoopEntry\n");
 
     g_RemoteControl.begin();
     while (true)

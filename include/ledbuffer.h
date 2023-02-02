@@ -229,8 +229,7 @@ class LEDBufferManager
      : _ppBuffers(std::make_unique<std::shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
        _iNextBuffer(0),
        _iLastBuffer(0),
-       _cBuffers(cBuffers),
-       _pLastBufferAdded
+       _cBuffers(cBuffers)
     {
         // The initializer creates a uniquely owned table of shared pointers.
         // We exclusively can see the table, but the buffer objects it contains
@@ -276,7 +275,7 @@ class LEDBufferManager
     //
     // The fixed, maximum size of the whole thing if it were full
 
-    uint32_t BufferCount() const   
+    size_t BufferCount() const   
     { 
         return _cBuffers; 
     }
@@ -322,9 +321,10 @@ class LEDBufferManager
             _iLastBuffer++;
 
         _iLastBuffer %= _cBuffers;
-        _pLastBufferAdded = pResult;
         _iNextBuffer %= _cBuffers;
-
+        
+        _pLastBufferAdded = pResult;
+        
         return pResult;
     }
 
@@ -336,9 +336,11 @@ class LEDBufferManager
     {
         if (IsEmpty())
             return nullptr; 
+
         auto pResult = _ppBuffers[_iLastBuffer];
         _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
+        
         return pResult;
     }
 
@@ -350,6 +352,7 @@ class LEDBufferManager
     {
         if (IsEmpty())
             return nullptr; 
+        
         return _ppBuffers[_iLastBuffer];
     }
 
@@ -360,7 +363,6 @@ class LEDBufferManager
         size_t i = (_iLastBuffer + index) % _cBuffers;
         return _ppBuffers[i];
     }
-
 };
 
 

@@ -206,11 +206,11 @@ uint16_t LocalDraw()
             g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
             g_aptrEffectManager->Update(); // Draw the current built in effect
 
-#if USE_MATRIX
-            auto spectrum = GetSpectrumAnalyzer(0);
-            if (g_aptrEffectManager->IsVUVisible())
-                ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
-#endif
+            #if USE_MATRIX
+                auto spectrum = GetSpectrumAnalyzer(0);
+                if (g_aptrEffectManager->IsVUVisible())
+                    ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
+            #endif
             debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
             return NUM_LEDS;
         }
@@ -308,7 +308,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
         g_FreeDrawTime = .001;
-        delay(1);
+        yield();
     }
 
 #endif
