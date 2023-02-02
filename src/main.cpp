@@ -276,7 +276,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
 // Data for Dave's Garage as an example,
 
-#if USEMATRIX
+#if USE_MATRIX
     const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
     const char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
@@ -322,7 +322,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 
                 if (WiFi.isConnected())
                 {
-                    #if USEMATRIX
+                    #if USE_MATRIX
                     static uint64_t     _NextRunTime = millis();
                     if (millis() > _NextRunTime)
                     {
@@ -607,7 +607,7 @@ void setup()
             g_aptrDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
     #endif
 
-    #if USEMATRIX
+    #if USE_MATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             g_aptrDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
@@ -647,7 +647,7 @@ void setup()
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
 
-    #if USEMATRIX
+    #if USE_MATRIX
         LEDMatrixGFX::StartMatrix();
     #endif
 

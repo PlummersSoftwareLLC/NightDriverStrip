@@ -71,7 +71,7 @@ DRAM_ATTR uint8_t g_Fader = 255;
 
 void MatrixPreDraw()
 {
-#if USEMATRIX
+#if USE_MATRIX
     // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
     // both 24-bits RGB triplets.  Or at least the same size!
 
@@ -206,7 +206,7 @@ uint16_t LocalDraw()
             g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
             g_aptrEffectManager->Update(); // Draw the current built in effect
 
-#if USEMATRIX
+#if USE_MATRIX
             auto spectrum = GetSpectrumAnalyzer(0);
             if (g_aptrEffectManager->IsVUVisible())
                 ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
@@ -377,7 +377,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     GFXBase *graphics = (GFXBase *)(*g_aptrEffectManager)[0].get();
     graphics->Setup();
 
-#if USEMATRIX
+#if USE_MATRIX
     // We don't need color correction on the chromakey'd title layer
     LEDMatrixGFX::titleLayer.enableColorCorrection(false);
 
@@ -400,7 +400,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         uint16_t wifiPixelsDrawn    = 0;
         double frameStartTime       = g_AppTime.CurrentTime();
 
-        #if USEMATRIX
+        #if USE_MATRIX
             MatrixPreDraw();
         #endif
 

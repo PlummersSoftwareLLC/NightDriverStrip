@@ -83,7 +83,7 @@ class LEDStripEffect
         return _GFX[0];
     }
 
-#if USEMATRIX
+#if USE_MATRIX
     static inline LEDMatrixGFX * mgraphics()
     {
         return ((LEDMatrixGFX *)g_aptrDevices[0].get());

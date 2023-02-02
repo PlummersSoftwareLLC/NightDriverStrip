@@ -112,7 +112,7 @@
 
 #define FLASH_VERSION         36    // Update ONLY this to increment the version number
 
-#ifndef USEMATRIX                   // We support strips by default unless specifically defined out
+#ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
 #endif
 
@@ -1007,7 +1007,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_PIN7        22
 #endif
 
-#if USEMATRIX
+#if USE_MATRIX
 #include "MatrixHardware_ESP32_Custom.h"
 #define SM_INTERNAL     // Silence build messages from their header
 #include <SmartMatrix.h>
@@ -1571,7 +1571,7 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 
 // Conditional includes depending on which project is being build
 
-#if USEMATRIX
+#if USE_MATRIX
     #include <YouTubeSight.h>                       // For fetching YouTube sub count
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif

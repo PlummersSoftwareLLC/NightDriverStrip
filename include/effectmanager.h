@@ -160,7 +160,7 @@ public:
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
 
-        #if (USEMATRIX)
+        #if (USE_MATRIX)
                 GFXBase *pMatrix = (*this)[0].get();
                 pMatrix->setPalette(CRGBPalette16(oldColor, color));
                 pMatrix->PausePalette(true);
@@ -193,7 +193,7 @@ public:
     {
         _pRemoteEffect = nullptr;
 
-        #if (USEMATRIX)
+        #if (USE_MATRIX)
             LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
             pMatrix->PausePalette(false);
         #endif
@@ -201,7 +201,7 @@ public:
 
     void StartEffect()
     {
-        #if USEMATRIX
+        #if USE_MATRIX
             LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
             pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 3000);
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());

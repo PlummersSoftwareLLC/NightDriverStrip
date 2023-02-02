@@ -53,7 +53,7 @@
 
 #pragma once
 
-#if USEMATRIX
+#if USE_MATRIX
 
 class PatternFlowField : public LEDStripEffect
 {

@@ -37,7 +37,7 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
 
-#if USEMATRIX
+#if USE_MATRIX
 
 uint32_t GFXBase::noise_x;
 uint32_t GFXBase::noise_y;
@@ -52,6 +52,8 @@ uint8_t GFXBase::noisesmoothing;
 #include "ledmatrixgfx.h"
     
 const rgb24 LEDMatrixGFX::defaultBackgroundColor = {0x40, 0, 0};    
+
+// The delcarations create the "layers" that make up the matrix display
 
 SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::backgroundLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
 SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::titleLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);

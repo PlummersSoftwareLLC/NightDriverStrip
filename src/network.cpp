@@ -307,7 +307,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugI("Web Server begin called!");
         #endif
 
-        #if USEMATRIX
+        #if USE_MATRIX
             //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
         #endif
 

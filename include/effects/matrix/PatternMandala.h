@@ -58,7 +58,7 @@
 
 #ifndef PatternMandala_H
 #define PatternMandala_H
-#if     USEMATRIX
+#if     USE_MATRIX
 
 class PatternMandala : public LEDStripEffect
 {
