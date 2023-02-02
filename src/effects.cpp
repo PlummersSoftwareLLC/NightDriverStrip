@@ -437,7 +437,6 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
         new ColorBeatOverRed("ColorBeatOverRed"),
 
-        new FireFanEffect(NUM_LEDS, 1, 12, 210, 2, NUM_LEDS / 2, Sequential, false, true),
         //        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
         //        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
 
@@ -501,8 +500,6 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
 
-        new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
-
 #elif BELT
 
         // Yes, I made a sparkly LED belt and wore it to a party.  Batteries toO!
@@ -534,10 +531,10 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif ATOMLIGHT
         new ColorFillEffect(CRGB::White, 1),
-        new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
-        new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
-        //        new HueFireFanEffect(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
-        //        new HueFireFanEffect(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
+        // new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
+        // new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
+        // new HueFireFanEffect(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
+        //  new HueFireFanEffect(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
         new RainbowFillEffect(60, 0),
         new ColorCycleEffect(Sequential),
         new PaletteEffect(RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0),

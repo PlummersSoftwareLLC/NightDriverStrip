@@ -1173,6 +1173,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define TIME_BEFORE_LOCAL 5
 #endif
 
+#ifndef ENABLE_REMOTE
+#define ENABLE_REMOTE 0
+#endif
+
 // Power Limit
 //
 // The limit, in watts, that the power supply for your project can supply.  If your demands
