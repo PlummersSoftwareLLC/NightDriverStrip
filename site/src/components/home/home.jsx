@@ -3,7 +3,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [mode, setMode] = useState('dark');
     const [stats, setStats] = useState(false);
-    const [designer, setDesigner] = useState(true);
+    const [designer, setDesigner] = useState(false);
     const [config, setConfig] = useState(false);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
@@ -56,7 +56,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
                         variant="h6">
                         Night Driver Strip
                     </Typography>
-                    <NotificationPanel notifications={notifications}/>
+                    {(notifications.length > 0) && <NotificationPanel notifications={notifications} clearNotifications={()=>setNotifications([])}/>}
                 </Toolbar>
             </AppBar>
             <Drawer variant="permanent" 

@@ -41,14 +41,20 @@ const DesignerPanel = withStyles(designStyle)(props => {
     }
 
     const updateEventInterval = (interval)=>{
+        const abort = new AbortController();
+        const timer = setTimeout(()=>abort.abort(),3000);
         fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
         {
-            method:"POST", 
-            body: new URLSearchParams({effectInterval:interval}),
-            timeout: 3000
+            method:"POST",
+            signal:abort.signal,
+            body: new URLSearchParams({effectInterval:interval})
         })
+        .then(()=>clearTimeout(timer))
         .then(postUpdate)
-        .catch(err => addNotification("Error","Service","Update Settings",err));
+        .catch(err => {
+            addNotification("Error","Service","Update Settings",err);
+            clearTimeout(timer);
+        });
     }
 
     const displayHeader = ()=>{

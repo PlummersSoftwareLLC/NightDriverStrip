@@ -1,5 +1,5 @@
 const StatsPanel = withStyles(statsStyle)(props => {
-    const { classes, siteConfig, open } = props;
+    const { classes, siteConfig, open, addNotification } = props;
     const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
     const [ statistics, setStatistics] = useState(undefined);
     const [ timer, setTimer ] = useState(undefined);
@@ -97,6 +97,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                     },
                                 };
                             });
+
     useEffect(() => {
         if (abortControler) {
             abortControler.abort();
