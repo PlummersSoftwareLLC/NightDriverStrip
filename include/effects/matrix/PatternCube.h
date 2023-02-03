@@ -200,7 +200,7 @@ class PatternCube : public LEDStripEffect
 
     virtual void Draw()
     {
-      auto g = g_pEffectManager->graphics();
+      auto g = g_aptrEffectManager->graphics();
 
       //uint8_t blurAmount = beatsin8(2, 250, 255);
       g->Clear();

@@ -85,11 +85,11 @@ public:
 
     virtual void Draw()
     {
-        auto g = g_pEffectManager->graphics();
+        auto g = g_aptrEffectManager->graphics();
         // dim all pixels on the display
 
         // Blue columns only, and skip the first row of each column if the VU meter is being shown so we don't blend it onto ourselves
-        g->blurColumns(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_pEffectManager->IsVUVisible() ? 1 : 0, 200);
+        g->blurColumns(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_aptrEffectManager->IsVUVisible() ? 1 : 0, 200);
         g->DimAll(250);
 
         for (int i = 0; i < count; i++)

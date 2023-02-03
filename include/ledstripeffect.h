@@ -32,7 +32,7 @@
 
 
 extern bool                      g_bUpdateStarted;
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 
 // LEDStripEffect
@@ -83,10 +83,10 @@ class LEDStripEffect
         return _GFX[0];
     }
 
-#if USEMATRIX
+#if USE_MATRIX
     static inline LEDMatrixGFX * mgraphics()
     {
-        return ((LEDMatrixGFX *)g_pDevices[0].get());
+        return ((LEDMatrixGFX *)g_aptrDevices[0].get());
     }
 #endif 
    

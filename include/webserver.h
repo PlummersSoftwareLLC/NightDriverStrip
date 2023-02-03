@@ -89,15 +89,15 @@ class CWebServer
             response->addHeader("Server","NightDriverStrip");
             auto j = response->getRoot();
 
-            j["currentEffect"]         = g_pEffectManager->GetCurrentEffectIndex();
-            j["millisecondsRemaining"] = g_pEffectManager->GetTimeRemainingForCurrentEffect();
-            j["effectInterval"]        = g_pEffectManager->GetInterval();
-            j["enabledCount"]          = g_pEffectManager->EnabledCount();
+            j["currentEffect"]         = g_aptrEffectManager->GetCurrentEffectIndex();
+            j["millisecondsRemaining"] = g_aptrEffectManager->GetTimeRemainingForCurrentEffect();
+            j["effectInterval"]        = g_aptrEffectManager->GetInterval();
+            j["enabledCount"]          = g_aptrEffectManager->EnabledCount();
 
-            for (int i = 0; i < g_pEffectManager->EffectCount(); i++) { 
+            for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++) { 
                 DynamicJsonDocument effectDoc(256);
-                effectDoc["name"]    = g_pEffectManager->EffectsList()[i]->FriendlyName();
-                effectDoc["enabled"] = g_pEffectManager->IsEffectEnabled(i);
+                effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
+                effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
 
                 if (!j["Effects"].add(effectDoc)) {
                     bufferOverflow = true;
@@ -169,7 +169,7 @@ class CWebServer
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
             size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
-            g_pEffectManager->SetInterval(effectInterval);
+            g_aptrEffectManager->SetInterval(effectInterval);
         }       
         // Complete the response so the client knows it can happily proceed now
         AddCORSHeaderAndSendOKResponse(pRequest);   
@@ -201,7 +201,7 @@ class CWebServer
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strCurrentEffectIndex, true);
             size_t currentEffectIndex = strtoul(param->value().c_str(), NULL, 10);  
-            g_pEffectManager->SetCurrentEffectIndex(currentEffectIndex);
+            g_aptrEffectManager->SetCurrentEffectIndex(currentEffectIndex);
         }
         // Complete the response so the client knows it can happily proceed now
         AddCORSHeaderAndSendOKResponse(pRequest);   
@@ -218,7 +218,7 @@ class CWebServer
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
-            g_pEffectManager->EnableEffect(effectIndex);
+            g_aptrEffectManager->EnableEffect(effectIndex);
         }
         // Complete the response so the client knows it can happily proceed now
         AddCORSHeaderAndSendOKResponse(pRequest);   
@@ -235,7 +235,7 @@ class CWebServer
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
-            g_pEffectManager->DisableEffect(effectIndex);
+            g_aptrEffectManager->DisableEffect(effectIndex);
             debugV("Disabled Effect %d", effectIndex);
         }
         // Complete the response so the client knows it can happily proceed now
@@ -245,14 +245,14 @@ class CWebServer
     void NextEffect(AsyncWebServerRequest * pRequest)
     {
         debugI("NextEffect");
-        g_pEffectManager->NextEffect();
+        g_aptrEffectManager->NextEffect();
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
     void PreviousEffect(AsyncWebServerRequest * pRequest)
     {
         debugI("PreviousEffect");
-        g_pEffectManager->PreviousEffect();
+        g_aptrEffectManager->PreviousEffect();
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 

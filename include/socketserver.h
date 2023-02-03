@@ -82,7 +82,7 @@ static_assert(sizeof(double) == 8);
 static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and double size" );            
 
 extern AppTime g_AppTime;
-extern std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 extern uint32_t g_FPS;
 extern double g_Brite;
 extern uint32_t g_Watts; 
@@ -314,6 +314,7 @@ public:
                 if (expandedSize > EXPECTED_EXPANDED_PACKET_SIZE)
                 {
                     debugE("Expanded data size of %d would overflow buffer of %d\n", expandedSize, sizeof(_abOutputBuffer));
+                    close(new_socket);
                     ResetReadBuffer();
                     return false;
                 }
@@ -332,16 +333,16 @@ public:
                 
                 if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
                 {
-                    close(new_socket);
                     debugW("Error decompressing data\n");
+                    close(new_socket);
                     ResetReadBuffer();
                     return false;
                 }
 
                 if (false == ProcessIncomingData(_abOutputBuffer.get(), expandedSize))
                 {
-                    close(new_socket);
                     debugW("Error processing data\n");
+                    close(new_socket);
                     ResetReadBuffer();
                     return false;                    
                 }
@@ -394,24 +395,31 @@ public:
                     debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
                     ResetReadBuffer();
                 }
+                else
+                {
+                    debugW("Unknown command in packet received: %d\n", command16);
+                    close(new_socket);
+                    ResetReadBuffer();
+                    return false;
+                }
+
             }
 
-            // The fall through cases are either success above or an unrecognized command, or garbage. Either way, we consume
-            // everything read so far up to this point as "completed".
+            // If we make it to this point, it should be success, so we consume 
 
             ResetReadBuffer();
-            delay(1);
+            yield();
 
             SocketResponse response = { 
                                         .size = sizeof(SocketResponse),
                                         .flashVersion = FLASH_VERSION,
                                         .currentClock = g_AppTime.CurrentTime(),
-                                        .oldestPacket = g_apBufferManager[0]->AgeOfOldestBuffer(),
-                                        .newestPacket = g_apBufferManager[0]->AgeOfNewestBuffer(),
+                                        .oldestPacket = g_aptrBufferManager[0]->AgeOfOldestBuffer(),
+                                        .newestPacket = g_aptrBufferManager[0]->AgeOfNewestBuffer(),
                                         .brightness   = g_Brite,
                                         .wifiSignal   = (double) WiFi.RSSI(),
-                                        .bufferSize   = g_apBufferManager[0]->BufferCount(),
-                                        .bufferPos    = g_apBufferManager[0]->Depth(),
+                                        .bufferSize   = g_aptrBufferManager[0]->BufferCount(),
+                                        .bufferPos    = g_aptrBufferManager[0]->Depth(),
                                         .fpsDrawing   = g_FPS,
                                         .watts        = g_Watts
                                       };
@@ -421,8 +429,6 @@ public:
                 
         } while (true);
     }    
-
-    #define OUT_CHUNK_SIZE 1
 
     // DecompressBuffer
     //
@@ -459,10 +465,9 @@ public:
         if (d.dest - pOutput != expectedOutputSize)
         {
             debugE("Exepcted it to to decompress to %d but got %d instead\n", expectedOutputSize, d.dest - pOutput);
-            delete pOutput;
             return false;
         }
-        //printf("Returning good result");
+        
         return true;
     }
 };

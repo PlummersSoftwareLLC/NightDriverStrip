@@ -110,7 +110,6 @@ struct AudioVariables
     #define VUDAMPENMIN 1 // How slowly VU min creeps up to test noise floor
     #define VUDAMPENMAX 1 // How slowly VU max drops down to test noise ceiling
 
-
     // PeakData
     //
     // Keeps track of a set of peaks for a sample pass
@@ -118,6 +117,7 @@ struct AudioVariables
     class PeakData
     {
     protected:
+
         static float _Min[NUM_BANDS];
         static float _Max[NUM_BANDS];
         static float _Last[NUM_BANDS];
@@ -244,21 +244,19 @@ struct AudioVariables
         // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
 
         const size_t SAMPLING_FREQUENCY = 24000;        
+        const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
-        size_t _MaxSamples;        // Number of samples we will take, must be a power of 2
-        size_t _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
-        size_t _BandCount;
-        float * _vPeaks;
-        int _InputPin;
-        static float _oldVU;
-        static float _oldPeakVU;
-        static float _oldMinVU;
-        int _cutOffsBand[NUM_BANDS];
-
-        unsigned int _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
-        uint8_t _inputPin; // Which hardware pin do we actually sample audio from?
-
-        PeakData g_Peaks;
+        size_t     _MaxSamples;        // Number of samples we will take, must be a power of 2
+        size_t     _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
+        size_t     _BandCount;
+        float *    _vPeaks;
+        int        _InputPin;
+        int        _cutOffsBand[NUM_BANDS];
+        float      _oldVU;
+        float      _oldPeakVU;
+        float      _oldMinVU;
+        uint8_t    _inputPin; // Which hardware pin do we actually sample audio from?
+        PeakData   _Peaks;
 
         // BucketFrequency
         //
@@ -575,7 +573,7 @@ struct AudioVariables
 
         PeakData GetSamplePassPeaks()
         {
-            return g_Peaks;
+            return _Peaks;
         }
 
         // BandCutoffTable
@@ -673,21 +671,21 @@ struct AudioVariables
         {
             for (int i = 0; i < NUM_BANDS; i++)
             {
-                if (g_Peaks[i] > g_peak1Decay[i])
+                if (_Peaks[i] > g_peak1Decay[i])
                 {
-                    g_peak1Decay[i] = g_Peaks[i];
+                    g_peak1Decay[i] = _Peaks[i];
                     g_lastPeak1Time[i] = millis();
                 }
-                if (g_Peaks[i] > g_peak2Decay[i])
+                if (_Peaks[i] > g_peak2Decay[i])
                 {
-                    g_peak2Decay[i] = g_Peaks[i];
+                    g_peak2Decay[i] = _Peaks[i];
                 }
             }
         }
 
         inline PeakData GetPeakData()
         {
-            return g_Peaks;
+            return _Peaks;
         }
         //
         // RunSamplerPass
@@ -699,7 +697,7 @@ struct AudioVariables
             FillBufferI2S();
             FFT();
 
-            g_Peaks = ProcessPeaks();
+            _Peaks = ProcessPeaks();
         }
     };
 #endif

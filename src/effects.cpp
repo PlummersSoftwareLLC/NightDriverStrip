@@ -53,7 +53,7 @@
 // Externals
 //
 
-#if USEMATRIX
+#if USE_MATRIX
         #include "ledmatrixgfx.h"
         #include "effects/matrix/PatternSerendipity.h"
         #include "effects/matrix/PatternSwirl.h"
@@ -80,9 +80,9 @@
 #include "ledstripgfx.h"
 #endif
 
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
-#if USEMATRIX
+#if USE_MATRIX
         volatile long PatternSubscribers::cSubscribers;
         volatile long PatternSubscribers::cViews;
 #endif
@@ -296,7 +296,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
         CHSV hueColor = rgb2hsv_approximate(color1);
         auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
-        if (object->Init(g_pDevices))
+        if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
 }
@@ -306,7 +306,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
         auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
-        if (object->Init(g_pDevices))
+        if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
 }
@@ -316,11 +316,11 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-// AllEffects
+// g_apEffects
 //
 // The master effects table
 
-DRAM_ATTR LEDStripEffect *AllEffects[] =
+DRAM_ATTR LEDStripEffect *g_apEffects[] =
 {
 #if DEMO
 
@@ -437,7 +437,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
         new ColorBeatOverRed("ColorBeatOverRed"),
 
-        new FireFanEffect(NUM_LEDS, 1, 12, 210, 2, NUM_LEDS / 2, Sequential, false, true),
         //        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
         //        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
 
@@ -475,7 +474,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif INSULATORS
 
-        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
+        //        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
         new InsulatorSpectrumEffect("Spectrum Effect", RainbowColors_p),
         new NewMoltenGlassOnVioletBkgnd("Molten Glass", RainbowColors_p),
         new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
@@ -500,8 +499,6 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
         new ColorBeatOverRed("ColorBeatOnRedBkgnd"),
         new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
-
-        new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
 
 #elif BELT
 
@@ -534,10 +531,10 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 
 #elif ATOMLIGHT
         new ColorFillEffect(CRGB::White, 1),
-        new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
-        new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
-        //        new HueFireFanEffect(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
-        //        new HueFireFanEffect(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
+        // new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
+        // new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
+        // new HueFireFanEffect(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
+        //  new HueFireFanEffect(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
         new RainbowFillEffect(60, 0),
         new ColorCycleEffect(Sequential),
         new PaletteEffect(RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0),
@@ -610,44 +607,40 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 #elif FANSET
 
         new RainbowFillEffect(24, 0),
+
         new ColorCycleEffect(BottomUp),
         new ColorCycleEffect(TopDown),
         new ColorCycleEffect(LeftRight),
         new ColorCycleEffect(RightLeft),
 
-        // /* 8 */ new StarryNightEffect<FanStar>("FanStars", RainbowColors_p, 4.0, 1.0, LINEARBLEND, 80.0, 0, 4.0),
-        /* 6 */ new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 1.0), // Blooming Little Rainbow Stars
-        /* 7 */ new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),            // Blooming Rainbow Stars
-        /* 6 */ new StarryNightEffect<BubblyStar>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),                                 // Neon Bars
-
-        new FireFanEffect(NUM_LEDS, 4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-        new FireFanEffect(NUM_LEDS, 3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-        new FireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-        new FireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true),
-
-//        new HueFireFanEffect(NUM_LEDS, 4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-//        new HueFireFanEffect(NUM_LEDS, 3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-//        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-//        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-
-//        new HueFireFanEffect(NUM_LEDS, 4, 7, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-//        new HueFireFanEffect(NUM_LEDS, 3, 8, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-//        new HueFireFanEffect(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-//        new HueFireFanEffect(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-
-#if ENABLE_AUDIO
-
-        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
+        new PaletteReelEffect("PaletteReelEffect"),
+        new MeteorEffect(),
+        new TapeReelEffect("TapeReelEffect"),
 
         new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
 
         new FanBeatEffect("FanBeat"),
-        new PaletteReelEffect("PaletteReelEffect"),
-        new MeteorEffect(),
-        new TapeReelEffect("TapeReelEffect"),
-//        new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR, 50, true),
-#endif
+
+        new StarryNightEffect<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 1.0), // Blooming Little Rainbow Stars
+        new StarryNightEffect<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),            // Blooming Rainbow Stars
+        new StarryNightEffect<BubblyStar>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),                                 // Neon Bars
+
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(GreenHeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
+
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(BlueHeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
+
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
+        new FireFanEffect(HeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
+
 
 #elif BROOKLYNROOM
 
@@ -697,7 +690,7 @@ DRAM_ATTR LEDStripEffect *AllEffects[] =
 // add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
 // one effect even if it's the Status effect.
 
-static_assert(ARRAYSIZE(AllEffects) > 0);
+static_assert(ARRAYSIZE(g_apEffects) > 0);
 
 // InitEffectsManager
 //
@@ -706,13 +699,13 @@ static_assert(ARRAYSIZE(AllEffects) > 0);
 void InitEffectsManager()
 {
         debugW("InitEffectsManager...");
-        g_pEffectManager = std::make_unique<EffectManager<GFXBase>>(AllEffects, ARRAYSIZE(AllEffects), g_pDevices);
+        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(g_apEffects, ARRAYSIZE(g_apEffects), g_aptrDevices);
 
-        if (false == g_pEffectManager->Init())
+        if (false == g_aptrEffectManager->Init())
                 throw std::runtime_error("Could not initialize effect manager");
 }
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
 // any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
@@ -721,5 +714,5 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
 uint16_t XY(uint8_t x, uint8_t y)
 {
         // Have a drink on me!
-        return (*g_pEffectManager)[0].get()->xy(x, y);
+        return (*g_aptrEffectManager)[0].get()->xy(x, y);
 }

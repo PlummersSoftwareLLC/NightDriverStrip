@@ -275,7 +275,7 @@ class LEDBufferManager
     //
     // The fixed, maximum size of the whole thing if it were full
 
-    uint32_t BufferCount() const   
+    size_t BufferCount() const   
     { 
         return _cBuffers; 
     }
@@ -316,11 +316,15 @@ class LEDBufferManager
     std::shared_ptr<LEDBuffer> GetNewBuffer()
     {
         auto pResult = _ppBuffers[_iNextBuffer++];
-        _iNextBuffer %= _cBuffers;
+
         if (IsEmpty())
             _iLastBuffer++;
+
         _iLastBuffer %= _cBuffers;
+        _iNextBuffer %= _cBuffers;
+        
         _pLastBufferAdded = pResult;
+        
         return pResult;
     }
 
@@ -332,9 +336,11 @@ class LEDBufferManager
     {
         if (IsEmpty())
             return nullptr; 
+
         auto pResult = _ppBuffers[_iLastBuffer];
         _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
+        
         return pResult;
     }
 
@@ -346,6 +352,7 @@ class LEDBufferManager
     {
         if (IsEmpty())
             return nullptr; 
+        
         return _ppBuffers[_iLastBuffer];
     }
 
@@ -356,7 +363,6 @@ class LEDBufferManager
         size_t i = (_iLastBuffer + index) % _cBuffers;
         return _ppBuffers[i];
     }
-
 };
 
 

@@ -33,11 +33,11 @@
 #include "effects/matrix/Vector.h"
 
 extern DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
 
-#if USEMATRIX
+#if USE_MATRIX
 
 uint32_t GFXBase::noise_x;
 uint32_t GFXBase::noise_y;
@@ -52,6 +52,8 @@ uint8_t GFXBase::noisesmoothing;
 #include "ledmatrixgfx.h"
     
 const rgb24 LEDMatrixGFX::defaultBackgroundColor = {0x40, 0, 0};    
+
+// The delcarations create the "layers" that make up the matrix display
 
 SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::backgroundLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
 SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::titleLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
@@ -75,7 +77,7 @@ void LEDMatrixGFX::StartMatrix()
 CRGB * LEDMatrixGFX::GetMatrixBackBuffer()
 {
     for (int i = 0; i < NUM_CHANNELS; i++)
-      g_pDevices[i]->UpdatePaletteCycle();
+      g_aptrDevices[i]->UpdatePaletteCycle();
 
     return (CRGB *) backgroundLayer.getRealBackBuffer();
 
