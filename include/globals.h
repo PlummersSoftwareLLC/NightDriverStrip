@@ -1602,7 +1602,7 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 #endif
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER
-    #include "spiffswebserver.h"
+    #include "webserver.h"
 #endif
 
 #if ENABLE_REMOTE
