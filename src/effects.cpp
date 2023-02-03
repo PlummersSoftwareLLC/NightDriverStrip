@@ -474,7 +474,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif INSULATORS
 
-        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
+        //        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
         new InsulatorSpectrumEffect("Spectrum Effect", RainbowColors_p),
         new NewMoltenGlassOnVioletBkgnd("Molten Glass", RainbowColors_p),
         new StarryNightEffect<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
