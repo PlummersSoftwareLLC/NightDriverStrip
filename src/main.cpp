@@ -178,23 +178,23 @@ NightDriverTaskManager g_TaskManager;
 // Global Variables
 //
 
-#if SPECTRUM
-DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;  // Default to last page
-#else
-DRAM_ATTR uint8_t giInfoPage = 0;                   // Default to first page
-#endif
+#if NUM_INFO_PAGES > 0
+DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;                                  // Default to last page
+#else                               
+DRAM_ATTR uint8_t giInfoPage = 0;                                                   // Default to first page
+#endif                              
 
-DRAM_ATTR WiFiUDP g_Udp;                            // UDP object used for NNTP, etc
-DRAM_ATTR uint32_t g_FPS = 0;                       // Our global framerate
-DRAM_ATTR bool g_bUpdateStarted = false;            // Has an OTA update started?
-DRAM_ATTR AppTime g_AppTime;                        // Keeps track of frame times
-DRAM_ATTR bool NTPTimeClient::_bClockSet = false;   // Has our clock been set by SNTP?
+DRAM_ATTR WiFiUDP g_Udp;                                                            // UDP object used for NNTP, etc
+DRAM_ATTR uint32_t g_FPS = 0;                                                       // Our global framerate
+DRAM_ATTR bool g_bUpdateStarted = false;                                            // Has an OTA update started?
+DRAM_ATTR AppTime g_AppTime;                                                        // Keeps track of frame times
+DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_pEffectManager;       // The one and only global effect manager
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;       // The one and only global effect manager
 
-DRAM_ATTR std::shared_ptr<GFXBase> g_pDevices[NUM_CHANNELS];
-DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                      // Clock guard mutex for SNTP client
-DRAM_ATTR RemoteDebug Debug;                                                     // Instance of our telnet debug server
+DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                     // The array of GFXBase devices (each strip channel, for example)
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
+DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
@@ -202,7 +202,7 @@ DRAM_ATTR RemoteDebug Debug;                                                    
 // Imagine a setup of 5 christmas trees, where each tree was made up of 4 concentric rings of descreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
-DRAM_ATTR const int gRingSizeTable[MAX_RINGS] = 
+DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] = 
 { 
     RING_SIZE_0, 
     RING_SIZE_1, 
@@ -215,8 +215,8 @@ DRAM_ATTR const int gRingSizeTable[MAX_RINGS] =
 // External Variables
 //
 
-extern DRAM_ATTR LEDStripEffect * AllEffects[];      // Main table of internal events in effects.cpp
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern DRAM_ATTR LEDStripEffect * g_apEffects[];      // Main table of internal events in effects.cpp
+extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 
 //
 // Optional Components
@@ -276,7 +276,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
 // Data for Dave's Garage as an example,
 
-#if USEMATRIX
+#if USE_MATRIX
     const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
     const char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
@@ -322,7 +322,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 
                 if (WiFi.isConnected())
                 {
-                    #if USEMATRIX
+                    #if USE_MATRIX
                     static uint64_t     _NextRunTime = millis();
                     if (millis() > _NextRunTime)
                     {
@@ -392,10 +392,12 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 
 inline void CheckHeap()
 {
-    if (false == heap_caps_check_integrity_all(true))
-    {
-        throw std::runtime_error("Heap FAILED checks!");
-    }
+    #if CHECK_HEAP
+        if (false == heap_caps_check_integrity_all(true))
+        {
+            throw std::runtime_error("Heap FAILED checks!");
+        }
+    #endif
 }
 
 // PrintOutputHeader
@@ -405,8 +407,8 @@ inline void CheckHeap()
 void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
-    debugI("-------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD);
+    debugI("------------------------------------------------------------------------------------------------------------");
+    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d, USE_AUDIO: %d, ENABLE_REMOTE: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD, ENABLE_AUDIO, ENABLE_REMOTE);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -604,14 +606,14 @@ void setup()
 
     #ifdef USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
-            g_pDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
     #endif
 
-    #if USEMATRIX
+    #if USE_MATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_pDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
-            g_pDevices[i]->loadPalette(0);
+            g_aptrDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i]->loadPalette(0);
         }
     #endif
 
@@ -638,7 +640,7 @@ void setup()
     debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_apBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_pDevices[iChannel]);
+        g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
 
     // Initialize all of the built in effects
 
@@ -647,7 +649,7 @@ void setup()
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
 
-    #if USEMATRIX
+    #if USE_MATRIX
         LEDMatrixGFX::StartMatrix();
     #endif
 
@@ -665,49 +667,49 @@ void setup()
     #if USESTRIP
 
         #if NUM_CHANNELS == 1
-            debugI("Adding %d LEDs to FastLED.", g_pDevices[0]->GetLEDCount());
+            debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
             
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, g_pDevices[0]->GetLEDCount());
-            FastLED.setMaxRefreshRate(100, false); 
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_aptrDevices[0].get())->leds, g_aptrDevices[0]->GetLEDCount());
+            //FastLED.setMaxRefreshRate(100, false); 
             pinMode(LED_PIN0, OUTPUT);
         #endif
 
         #if NUM_CHANNELS >= 2
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_pDevices[0].get())->leds, ((LEDStripGFX *)g_pDevices[0].get())->GetLEDCount());
             pinMode(LED_PIN0, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[0].get()->leds,g_aptrDevices[0].get()->GetLEDCount());
 
-            FastLED.addLeds<WS2812B, LED_PIN1, COLOR_ORDER>(g_pDevices[1]->leds, g_pDevices[1]->GetLEDCount());
             pinMode(LED_PIN1, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1].get()->leds,g_aptrDevices[1].get()->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 3
-            FastLED.addLeds<WS2812B, LED_PIN2, COLOR_ORDER>(g_pDevices[2]->leds, g_pDevices[2]->GetLEDCount());
             pinMode(LED_PIN2, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[2].get()->leds,g_aptrDevices[2].get()->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 4
-            FastLED.addLeds<WS2812B, LED_PIN3, COLOR_ORDER>(g_pDevices[3]->leds, g_pDevices[3]->GetLEDCount());
             pinMode(LED_PIN3, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[3].get()->leds,g_aptrDevices[3].get()->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 5
-            FastLED.addLeds<WS2812B, LED_PIN4, COLOR_ORDER>(g_pDevices[4]->leds, g_pDevices[4]->GetLEDCount());
             pinMode(LED_PIN4, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[4].get()->leds,g_aptrDevices[4].get()->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 6
-            FastLED.addLeds<WS2812B, LED_PIN5, COLOR_ORDER>(g_pDevices[5]->leds, g_pDevices[5]->GetLEDCount());
             pinMode(LED_PIN5, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[5].get()->leds,g_aptrDevices[5].get()->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 7
-            FastLED.addLeds<WS2812B, LED_PIN6, COLOR_ORDER>(g_pDevices[6]->leds, g_pDevices[6]->GetLEDCount());
             pinMode(LED_PIN6, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[6].get()->leds,g_aptrDevices[6].get()->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 8
-            FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_pDevices[7]->leds, g_pDevices[7]->GetLEDCount());
             pinMode(LED_PIN7, OUTPUT);
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[7].get()->leds,g_aptrDevices[7].get()->GetLEDCount());
         #endif
            
         #ifdef POWER_LIMIT_MW
@@ -831,7 +833,7 @@ void loop()
             #elif ENABLE_AUDIO // Implied !ENABLE_WIFI from 1st condition
                 debugI("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, Buffer: %d/%d, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
                     ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
-                    g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), // Buffer
+                    g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), // Buffer
                     g_FPS, g_Watts, g_Brite, // LED
                     g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
                     g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
@@ -840,7 +842,7 @@ void loop()
                 debugI("Wifi: %s, IP: %s, Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, Buffer: %d/%d, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
                    WLtoString(WiFi.status()), WiFi.localIP().toString().c_str(), // Wifi
                    ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
-                   g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), // Buffer
+                   g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), // Buffer
                    g_FPS, g_Watts, g_Brite, // LED
                    g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1),  // CPU
                    g_FreeDrawTime); // FreeDraw
@@ -849,7 +851,7 @@ void loop()
                    ESP.getFreeHeap(), // Mem
                    ESP.getMaxAllocHeap(), // LargestBlk
                    ESP.getFreePsram(), ESP.getPsramSize(), // PSRAM
-                   g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), // Buffer
+                   g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), // Buffer
                    g_FPS, g_Watts, g_Brite, // LED
                    g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1),  // CPU
                    g_FreeDrawTime); // FreeDraw

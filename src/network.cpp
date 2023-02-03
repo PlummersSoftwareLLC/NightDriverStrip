@@ -43,7 +43,7 @@
 DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 #endif
 
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_apBufferManager[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 
 std::mutex g_buffer_mutex;
 
@@ -85,10 +85,10 @@ extern uint32_t g_FPS;
                                                     WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
             debugI("%s", szBuffer);
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_apBufferManager[0]->Depth(), g_apBufferManager[0]->BufferCount(), g_FPS);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
             debugI("%s", szBuffer);
 
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_apBufferManager[0]->AgeOfOldestBuffer(), g_apBufferManager[0]->AgeOfNewestBuffer());
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
             debugI("%s", szBuffer);
 
             snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
@@ -106,9 +106,9 @@ extern uint32_t g_FPS;
 
             // Print out a buffer log with timestamps and deltas 
             
-            for (size_t i = 0; i < g_apBufferManager[0]->Depth(); i++)
+            for (size_t i = 0; i < g_aptrBufferManager[0]->Depth(); i++)
             {
-                auto pBufferManager = g_apBufferManager[0].get();
+                auto pBufferManager = g_aptrBufferManager[0].get();
                 std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
                 double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
                 snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
@@ -214,7 +214,7 @@ extern RemoteControl g_RemoteControl;
 
 void IRAM_ATTR RemoteLoopEntry(void *)
 {
-    debugI(">> RemoteLoopEntry\n");
+    debugW(">> RemoteLoopEntry\n");
 
     g_RemoteControl.begin();
     while (true)
@@ -307,7 +307,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugI("Web Server begin called!");
         #endif
 
-        #if USEMATRIX
+        #if USE_MATRIX
             //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
         #endif
 
@@ -409,9 +409,9 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                     debugV("Processing for Channel %d", iChannel);
                     
                     bool bDone = false;
-                    if (!g_apBufferManager[iChannel]->IsEmpty())
+                    if (!g_aptrBufferManager[iChannel]->IsEmpty())
                     {
-                        auto pNewestBuffer = g_apBufferManager[iChannel]->PeekNewestBuffer();
+                        auto pNewestBuffer = g_aptrBufferManager[iChannel]->PeekNewestBuffer();
                         if (micros != 0 && pNewestBuffer->MicroSeconds() == micros && pNewestBuffer->Seconds() == seconds)
                         {
                             debugV("Updating existing buffer");
@@ -423,7 +423,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                     if (!bDone)
                     {
                         debugV("No match so adding new buffer");
-                        auto pNewBuffer = g_apBufferManager[iChannel]->GetNewBuffer();
+                        auto pNewBuffer = g_aptrBufferManager[iChannel]->GetNewBuffer();
                         if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                             return false;
                     }

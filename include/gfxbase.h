@@ -95,7 +95,7 @@ protected:
 
     friend class PatternMandala;
 
-#if USEMATRIX    
+#if USE_MATRIX    
     static uint32_t noise_x;
     static uint32_t noise_y;
     static uint32_t noise_z;
@@ -437,7 +437,7 @@ public:
         debugW(">> GFXBase::Setup\n");
         loadPalette(0);
 
-#if USEMATRIX
+#if USE_MATRIX
         NoiseVariablesSetup();
         FillNoise();
 #endif
@@ -691,7 +691,7 @@ public:
         memset(p, 0, sizeof(p));
     }    
 
-#if USEMATRIX
+#if USE_MATRIX
     inline void BlurFrame(int amount)
     {
         // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
@@ -1141,7 +1141,7 @@ public:
         return rgb;
     }
 
-#if USEMATRIX
+#if USE_MATRIX
     inline void NoiseVariablesSetup()
     {
         noisesmoothing = 200;
@@ -1244,7 +1244,7 @@ public:
         } // end column loop
     }     /// MoveY
 
-#if USEMATRIX
+#if USE_MATRIX
     void MoveFractionalNoiseX(uint8_t amt = 16)
     {
         std::unique_ptr<CRGB []> ledsTemp = std::make_unique<CRGB []>(NUM_LEDS);

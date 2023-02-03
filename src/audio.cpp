@@ -50,10 +50,6 @@ extern uint32_t g_Watts;
 extern double g_Brite;
 extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
-float SoundAnalyzer::_oldVU;
-float SoundAnalyzer::_oldPeakVU;
-float SoundAnalyzer::_oldMinVU;
-
 float PeakData::_Min[NUM_BANDS] = { 0.0 };
 float PeakData::_Max[NUM_BANDS] = { 0.0 }; 
 float PeakData::_Last[NUM_BANDS] = { 0.0 }; 

@@ -34,7 +34,7 @@
 
 #pragma once
 
-#if USEMATRIX
+#if USE_MATRIX
 
 #include <SmartMatrix.h>
 #include "effects/matrix/Boid.h"
@@ -67,7 +67,7 @@ public:
     static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
     static const rgb24 defaultBackgroundColor;
 
-    #if USEMATRIX
+    #if USE_MATRIX
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
     static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;

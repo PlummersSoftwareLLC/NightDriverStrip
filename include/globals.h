@@ -112,7 +112,7 @@
 
 #define FLASH_VERSION         36    // Update ONLY this to increment the version number
 
-#ifndef USEMATRIX                   // We support strips by default unless specifically defined out
+#ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
 #define USESTRIP 1
 #endif
 
@@ -388,55 +388,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
-#elif SPECTRUM
-
-    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
-    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
-    // It displays a spectrum analyzer and music visualizer
-
-    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
-    #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
-    #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0   // Accept over the air flash updates
-    #define ENABLE_REMOTE           1   // IR Remote Control
-    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
-    
-    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
-
-    #if SPECTRUM_WROVER_KIT
-        #define LED_PIN0        5
-    #else
-        #define LED_PIN0        26
-    #endif
-
-    #define NUM_CHANNELS    1
-    #define RING_SIZE_0     24    
-    #define BONUS_PIXELS    0
-    #define MATRIX_WIDTH    48
-    #define MATRIX_HEIGHT   16
-    #define NUM_FANS        MATRIX_WIDTH
-    #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       12
-    #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000
-    #define LED_FAN_OFFSET_BU 6
-    #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
-
-    #define NOISE_CUTOFF   20
-    #define NOISE_FLOOR    200.0f
-
-    #define TOGGLE_BUTTON_1 37
-    #define TOGGLE_BUTTON_2 39
-
-    #ifdef SPECTRUM_WROVER_KIT
-    #else 
-        #define NUM_INFO_PAGES          2
-        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
-    #endif
 
 #elif LASERLINE
 
@@ -830,40 +781,106 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NOISE_CUTOFF   75
     #define NOISE_FLOOR    200.0f
 
+#elif SPECTRUM
+
+    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
+    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
+    // It displays a spectrum analyzer and music visualizer
+
+    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              0   // Accept over the air flash updates
+    #define ENABLE_REMOTE           1   // IR Remote Control
+    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
+
+    #if SPECTRUM_WROVER_KIT
+        #define LED_PIN0        5
+    #else
+        #define LED_PIN0        26
+    #endif
+
+    #define NUM_CHANNELS    1
+    #define RING_SIZE_0     24    
+    #define BONUS_PIXELS    0
+    #define MATRIX_WIDTH    48
+    #define MATRIX_HEIGHT   16
+    #define NUM_FANS        MATRIX_WIDTH
+    #define FAN_SIZE        MATRIX_HEIGHT
+    #define NUM_BANDS       12
+    #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define RESERVE_MEMORY  150000
+    #define LED_FAN_OFFSET_BU 6
+    #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
+
+    #define NOISE_CUTOFF   20
+    #define NOISE_FLOOR    200.0f
+
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
+
+    #ifdef SPECTRUM_WROVER_KIT
+    #else 
+        #define NUM_INFO_PAGES          2
+        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
+    #endif
+
 #elif FANSET
 
     // An M5 stick that controls the 10 RGB fans in my PC
 
-    #define ENABLE_WIFI             0   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
+    #define ENABLE_WIFI             1           // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1           // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0           // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       2           // How many seconds before the lamp times out and shows local content
 
-    #define NUM_CHANNELS    1           // Everything wired sequentially on a single channel
-    #define NUM_FANS        10          // My system has 10 fans.  Because RGB.
-    #define NUM_BANDS       8
-    #define NUM_RINGS       1           // Fans have a single outer ring of pixels
-    #define FAN_SIZE        16          // Each fan's pixel ring has 16 LEDs
-    #define FAN_LEN         (NUM_FANS * FAN_SIZE)
-    #define MATRIX_WIDTH    (NUM_FANS * FAN_SIZE + 32)    
-    #define BONUS_PIXELS    32          // Extra pixels - in this case, my case strip
-    #define NUM_LEDS        (MATRIX_WIDTH)
-    #define LED_FAN_OFFSET_BU  3                         
-    #define ENABLE_REMOTE   1           // IR Remote Control
-    #define ENABLE_AUDIO    1           // Listen for audio from the microphone and process it
-    #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-    #define POWER_LIMIT_MW  4000
-    #define MATRIX_HEIGHT   1
-    #define RESERVE_MEMORY  150000
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              0   // Accept over the air flash updates
+    #define ENABLE_REMOTE           1   // IR Remote Control
+    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
+
+    #define LED_PIN0        26
+
+    #define BONUS_PIXELS            32          // Extra pixels - in this case, my case strip
+    #define NUM_CHANNELS            1           // Everything wired sequentially on a single channel
+    #define NUM_FANS                10          // My system has 10 fans.  Because RGB.
+    #define NUM_BANDS               8
+    #define NUM_RINGS               1           // Fans have a single outer ring of pixels
+    #define FAN_SIZE                16          // Each fan's pixel ring has 16 LEDs
+    #define FAN_LEN                 (NUM_FANS * FAN_SIZE)
+    #define MATRIX_WIDTH            (NUM_FANS * FAN_SIZE + BONUS_PIXELS)    
+    #define NUM_LEDS                (MATRIX_WIDTH)
+    #define LED_FAN_OFFSET_BU       3                         
+    #define ENABLE_REMOTE           1           // IR Remote Control
+    #define ENABLE_AUDIO            1           // Listen for audio from the microphone and process it
+    #define POWER_LIMIT_MW          8000
+    #define MATRIX_HEIGHT           1
+    #define RESERVE_MEMORY          150000
     
-    #if M5STICKC || M5STICKCPLUS
-        #define LED_PIN0 26
-    #else
-        #define LED_PIN0 5
+    // Being case-mounted normally, the FANSET needs a more sensitive mic so the NOISE_CUTOFF value is are lower than spectrum
+    
+    #define NOISE_CUTOFF            0
+    #define NOISE_FLOOR             0.0f
+
+    #define TOGGLE_BUTTON_1         37
+    #define TOGGLE_BUTTON_2         39
+
+    #ifdef SPECTRUM_WROVER_KIT
+    #else 
+        #define NUM_INFO_PAGES          2
+        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
     #endif
 
-    #define DEFAULT_EFFECT_INTERVAL     (5*60*60*24)
-
-    #define IR_REMOTE_PIN 36
     
 #elif SINGLE_INSULATOR
 
@@ -1007,7 +1024,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_PIN7        22
 #endif
 
-#if USEMATRIX
+#if USE_MATRIX
 #include "MatrixHardware_ESP32_Custom.h"
 #define SM_INTERNAL     // Silence build messages from their header
 #include <SmartMatrix.h>
@@ -1117,23 +1134,23 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef RING_SIZE_0
-#define RING_SIZE_0 0
+#define RING_SIZE_0 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_1
-#define RING_SIZE_1 0
+#define RING_SIZE_1 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_2
-#define RING_SIZE_2 0
+#define RING_SIZE_2 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_3
-#define RING_SIZE_3 0
+#define RING_SIZE_3 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_4
-#define RING_SIZE_4 0
+#define RING_SIZE_4 FAN_SIZE
 #endif
 
 #ifndef DEFAULT_EFFECT_INTERVAL
@@ -1154,6 +1171,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef TIME_BEFORE_LOCAL
 #define TIME_BEFORE_LOCAL 5
+#endif
+
+#ifndef ENABLE_REMOTE
+#define ENABLE_REMOTE 0
 #endif
 
 // Power Limit
@@ -1177,28 +1198,27 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 
-    #elif defined(M5STICKCPLUS)                               // screen definitions for m5stick-c-plus
+    #elif M5STICKCPLUS                                        // screen definitions for m5stick-c-plus
 
         #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
-    #elif defined(M5STICKC)                                   // screen definitions for m5stick-c (or m5stick-c plus)
+    #elif M5STICKC                                           // screen definitions for m5stick-c (or m5stick-c plus)
 
         #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
 
-    #elif defined(ESP32FEATHERTFT) || defined(PANLEE)
+    #elif ESP32FEATHERTFT || PANLEE
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif defined(WROVERKIT)
+    #elif WROVERKIT
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard
 
-    #elif defined(TTGO)
+    #elif TTGO
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif defined(M5STACKCORE2)
-        ARDUINO_HELTEC_WIFI_KIT_32
+    #elif M5STACKCORE2
         #define  USE_M5DISPLAY 1       
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
@@ -1255,12 +1275,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: davepl - why are some DRAM?)
 
-// gRingSizeTable
+// g_aRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
 // into rings of 30, 20, and 10, you'd have (NUM_RINGS = 3) and this table would contain (30, 20, 10).
 
-extern DRAM_ATTR const int gRingSizeTable[];
+extern DRAM_ATTR const int g_aRingSizeTable[];
 
 #define MICROS_PER_SECOND   1000000
 #define MILLIS_PER_SECOND   1000 
@@ -1571,7 +1591,7 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 
 // Conditional includes depending on which project is being build
 
-#if USEMATRIX
+#if USE_MATRIX
     #include <YouTubeSight.h>                       // For fetching YouTube sub count
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif

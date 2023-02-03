@@ -75,7 +75,7 @@ public:
 
   virtual void Start()
   {
-      auto g = g_pEffectManager->graphics();
+      auto g = g_aptrEffectManager->graphics();
       x = leftMargin;
       y = topMargin;
       g->Clear();

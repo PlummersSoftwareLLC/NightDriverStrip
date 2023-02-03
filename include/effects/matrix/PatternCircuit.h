@@ -177,7 +177,7 @@ public:
 
     virtual void Draw()
     {
-        auto g = g_pEffectManager->graphics();
+        auto g = g_aptrEffectManager->graphics();
 
         // Reset after 20 seconds
         if (millis() - msStart > 20000)

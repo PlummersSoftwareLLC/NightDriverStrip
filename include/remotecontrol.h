@@ -213,41 +213,41 @@ class RemoteControl
         if (IR_ON == result)
         {
             debugV("Turning ON via remote");
-            g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->SetInterval(0);
-            g_pEffectManager->StartEffect();
+            g_aptrEffectManager->ClearRemoteColor();
+            g_aptrEffectManager->SetInterval(0);
+            g_aptrEffectManager->StartEffect();
             g_Brightness = 255;
             return;
         }
         else if (IR_BPLUS == result)
         {
-            g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->NextEffect();
+            g_aptrEffectManager->ClearRemoteColor();
+            g_aptrEffectManager->NextEffect();
             
             return;
         }
         else if (IR_BMINUS == result)
         {
-            g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->PreviousEffect();
+            g_aptrEffectManager->ClearRemoteColor();
+            g_aptrEffectManager->PreviousEffect();
             return;
         }
         else if (IR_SMOOTH == result)
         {
-            g_pEffectManager->ClearRemoteColor();
-            g_pEffectManager->SetInterval(EffectManager<GFXBase>::csSmoothButtonSpeed);
+            g_aptrEffectManager->ClearRemoteColor();
+            g_aptrEffectManager->SetInterval(EffectManager<GFXBase>::csSmoothButtonSpeed);
         }
         else if (IR_STROBE == result)
         {
-            g_pEffectManager->NextPalette();
+            g_aptrEffectManager->NextPalette();
         }
         else if (IR_FLASH == result)
         {
-            g_pEffectManager->PreviousPalette();
+            g_aptrEffectManager->PreviousPalette();
         }
         else if (IR_FADE == result)
         {
-            g_pEffectManager->ShowVU( !g_pEffectManager->IsVUVisible() );
+            g_aptrEffectManager->ShowVU( !g_aptrEffectManager->IsVUVisible() );
         }
 
         for (int i = 0; i < ARRAYSIZE(RemoteColorCodes); i++)
@@ -255,7 +255,7 @@ class RemoteControl
             if (RemoteColorCodes[i].code == result)
             {
                 debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
-                g_pEffectManager->SetGlobalColor(RemoteColorCodes[i].color);
+                g_aptrEffectManager->SetGlobalColor(RemoteColorCodes[i].color);
                 return;
             }
         }
