@@ -1,4 +1,5 @@
-const httpPrefix="http://192.168.1.143";const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
+const httpPrefix='';
+const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
 
 const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
@@ -296,6 +297,7 @@ const mainAppStyle = theme => ({
         marginBottom: "5px"
     },
     unselected: {
+        opacity: "30%"
     },
     selected: {
         backgroundColor: theme.palette.background.paper,
@@ -1042,16 +1044,14 @@ const ConfigDialog = withStyles(configStyle)(props => {
     },[millisecondsRemaining,selected]);
 
     return <Box className={classes.effect}>
-                <Box className={selected && classes.selected}>
-                    <Box className={classes.effectPannel}>
-                        {selected ?
-                        <Box>
-                            <Icon>arrow_right_alt</Icon>
-                        </Box>:
-                        <IconButton disabled={requestRunning} onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
-                        <IconButton disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
-                    </Box>
+                <Box className={`${selected && classes.selected} ${classes.effectPannel}`}>
                     <Box className={`${!effect.enabled && classes.unselected} ${classes.effectName}`}>{effect.name}</Box>
+                    {selected ?
+                    <Box>
+                        <Icon>arrow_right_alt</Icon>
+                    </Box>:
+                    <IconButton disabled={requestRunning} onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
+                    <IconButton disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
                 </Box>
                 {selected && <LinearProgress variant="determinate" sx={{transition: 'none'}} value={progress}/>}
             </Box>
