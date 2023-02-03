@@ -18,16 +18,14 @@ const Effect = withStyles(effectStyle)(props => {
     },[millisecondsRemaining,selected]);
 
     return <Box className={classes.effect}>
-                <Box className={selected && classes.selected}>
-                    <Box className={classes.effectPannel}>
-                        {selected ?
-                        <Box>
-                            <Icon>arrow_right_alt</Icon>
-                        </Box>:
-                        <IconButton disabled={requestRunning} onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
-                        <IconButton disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
-                    </Box>
+                <Box className={`${selected && classes.selected} ${classes.effectPannel}`}>
                     <Box className={`${!effect.enabled && classes.unselected} ${classes.effectName}`}>{effect.name}</Box>
+                    {selected ?
+                    <Box>
+                        <Icon>arrow_right_alt</Icon>
+                    </Box>:
+                    <IconButton disabled={requestRunning} onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
+                    <IconButton disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
                 </Box>
                 {selected && <LinearProgress variant="determinate" sx={{transition: 'none'}} value={progress}/>}
             </Box>
