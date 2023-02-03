@@ -33,28 +33,9 @@ jobs:
         pio pkg update --no-save
     - name: Copy secrets
       run: cp include/secrets.example.h include/secrets.h
-    - name: Build chieftain
-      run: pio run -e chieftain
-    - name: Build demo
-      run: pio run -e demo
-    - name: Build heltecdemo
-      run: pio run -e heltecdemo
-    # Uncomment the following two lines once platformio.ini includes a lantern env definition
-    # - name: Build lantern
-    #   run: pio run -e lantern
-    - name: Build ledstrip
-      run: pio run -e ledstrip
-    - name: Build ledstrip_feather
-      run: pio run -e ledstrip_feather
-    - name: Build m5plusdemo
-      run: pio run -e m5plusdemo
-    - name: Build mesmerizer
-      run: pio run -e mesmerizer
-    - name: Build panlee
-      run: pio run -e panlee
-    - name: Build spectrum
-      run: pio run -e spectrum
-    - name: Build umbrella
-      run: pio run -e umbrella
-    - name: Build xmastrees
-      run: pio run -e xmastrees
+    - name: Enable all environments
+      run: |
+        cp platformio.ini platformio.ini.orig
+        grep -v ^default_envs platformio.ini.orig > platformio.ini
+    - name: Build all environments
+      run: pio run
