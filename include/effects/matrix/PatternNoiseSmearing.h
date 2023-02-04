@@ -88,7 +88,7 @@ public:
      
     // Noise
     graphics()->SetNoise(3000, 3000, 3000, 2000 *(2.0 - g_Analyzer._VURatio), 2000 *(2.0 - g_Analyzer._VURatio));
-    graphics()->FillNoise();
+    graphics()->FillGetNoise();
 
     //graphics()->MoveX(3);
     graphics()->MoveFractionalNoiseY(8);
@@ -124,7 +124,7 @@ public:
 
     // Noise
     graphics()->SetNoise(1000, 1000, 1000, 4000, 4000);
-    graphics()->FillNoise();
+    graphics()->FillGetNoise();
 
     graphics()->MoveX(3);
     graphics()->MoveFractionalNoiseX(4);
@@ -164,7 +164,7 @@ public:
     // Noise
 graphics()->SetNoise(3000, 3000, 0, 4000, 4000);
  
-    graphics()->FillNoise();
+    graphics()->FillGetNoise();
 
     graphics()->MoveX(6);
     graphics()->MoveFractionalNoiseY(4);
@@ -215,7 +215,7 @@ public:
 
     // Noise
     graphics()->SetNoise(1000, 1000, 0, 4000, 4000);
-    graphics()->FillNoise();
+    graphics()->FillGetNoise();
 
     graphics()->MoveX(8);
     graphics()->MoveFractionalNoiseY(8);

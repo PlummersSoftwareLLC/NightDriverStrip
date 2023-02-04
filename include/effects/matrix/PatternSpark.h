@@ -126,12 +126,12 @@ class PatternSpark : public LEDStripEffect
       }
 
       // Noise
-      noise_x += 1000;
-      noise_y += 1000;
-      noise_z += 1000;
-      noise_scale_x = 4000;
-      noise_scale_y = 4000;
-      effects.FillNoise();
+      graphics()->GetNoise().noise_x += 1000;
+      graphics()->GetNoise().noise_y += 1000;
+      graphics()->GetNoise().noise_z += 1000;
+      graphics()->GetNoise().noise_scale_x = 4000;
+      graphics()->GetNoise().noise_scale_y = 4000;
+      effects.FillGetNoise();
 
       effects.MoveX(3);
       effects.MoveFractionalNoiseX(4);

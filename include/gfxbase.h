@@ -68,6 +68,19 @@
 #include "Adafruit_GFX.h"
 #include "pixeltypes.h"
 
+#if USE_MATRIX
+    typedef struct 
+    {
+        uint32_t noise_x;
+        uint32_t noise_y;
+        uint32_t noise_z;
+        uint32_t noise_scale_x;
+        uint32_t noise_scale_y;
+        uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT]; // BUGBUG Could this go in PSRAM if allocated instead?
+        uint8_t  noisesmoothing;
+    } Noise;
+#endif
+
 class GFXBase : public Adafruit_GFX
 {
 protected:
@@ -91,19 +104,8 @@ protected:
     static const int _heatColorsPaletteIndex = 6;
     static const int _randomPaletteIndex = 9;
 
-    // This class parties right on the noise variables, but I don't want to encourage that by making them public.
-    // THey should be turned into member variables, etc.
-
-    friend class PatternMandala;
-
 #if USE_MATRIX    
-    static uint32_t noise_x;
-    static uint32_t noise_y;
-    static uint32_t noise_z;
-    static uint32_t noise_scale_x;
-    static uint32_t noise_scale_y;
-    static uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
-    static uint8_t  noisesmoothing;
+    static Noise     _noise;
 #endif
 
 public:
@@ -130,6 +132,18 @@ public:
 
     virtual ~GFXBase()
     {
+    }
+
+#if USE_MATRIX
+    Noise & GetNoise()
+    {
+        return _noise;
+    }
+#endif
+
+    CRGBPalette16 & GetCurrentPalette()
+    {
+        return _currentPalette;
     }
 
     inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
@@ -440,7 +454,7 @@ public:
 
 #if USE_MATRIX
         NoiseVariablesSetup();
-        FillNoise();
+        FillGetNoise();
 #endif
         ResetOscillators();
 
@@ -1145,41 +1159,41 @@ public:
 #if USE_MATRIX
     inline void NoiseVariablesSetup()
     {
-        noisesmoothing = 200;
+        _noise.noisesmoothing = 200;
 
-        noise_x = random16();
-        noise_y = random16();
-        noise_z = random16();
-        noise_scale_x = 6000;
-        noise_scale_y = 6000;
+        _noise.noise_x = random16();
+        _noise.noise_y = random16();
+        _noise.noise_z = random16();
+        _noise.noise_scale_x = 6000;
+        _noise.noise_scale_y = 6000;
     }
 
     inline void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
     {
-        noise_x += nx;
-        noise_y += ny;
-        noise_z += nx;
-        noise_scale_x = sx;
-        noise_scale_y = sy;
+        _noise.noise_x += nx;
+        _noise.noise_y += ny;
+        _noise.noise_z += nx;
+        _noise.noise_scale_x = sx;
+        _noise.noise_scale_y = sy;
     }
 
-    inline void FillNoise()
+    inline void FillGetNoise()
     {
         for (uint8_t i = 0; i < MATRIX_WIDTH; i++)
         {
-            uint32_t ioffset = noise_scale_x * (i - MATRIX_CENTER_Y);
+            uint32_t ioffset = _noise.noise_scale_x * (i - MATRIX_CENTER_Y);
 
             for (uint8_t j = 0; j < MATRIX_HEIGHT; j++)
             {
-                uint32_t joffset = noise_scale_y * (j - MATRIX_CENTER_Y);
+                uint32_t joffset = _noise.noise_scale_y * (j - MATRIX_CENTER_Y);
 
-                uint8_t data = inoise16(noise_x + ioffset, noise_y + joffset, noise_z) >> 8;
+                uint8_t data = inoise16(_noise.noise_x + ioffset, _noise.noise_y + joffset, _noise.noise_z) >> 8;
 
-                uint8_t olddata = noise[i][j];
-                uint8_t newdata = scale8(olddata, noisesmoothing) + scale8(data, 256 - noisesmoothing);
+                uint8_t olddata = _noise.noise[i][j];
+                uint8_t newdata = scale8(olddata, _noise.noisesmoothing) + scale8(data, 256 - _noise.noisesmoothing);
                 data = newdata;
 
-                noise[i][j] = data;
+                _noise.noise[i][j] = data;
             }
         }
     }
@@ -1253,7 +1267,7 @@ public:
         // move delta pixelwise
         for (int y = 0; y < MATRIX_HEIGHT; y++)
         {
-            uint16_t amount = noise[0][y] * amt;
+            uint16_t amount = _noise.noise[0][y] * amt;
             uint8_t delta = MATRIX_WIDTH - 1 - (amount / 256);
 
             // Process up to the end less the dekta
@@ -1271,8 +1285,8 @@ public:
 
         for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
         {
-            uint16_t amount = noise[0][y] * amt;
-            uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
+            uint16_t amount   = _noise.noise[0][y] * amt;
+            uint8_t delta     = MATRIX_HEIGHT - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
             for (uint8_t x = 1; x < MATRIX_WIDTH; x++)
@@ -1303,7 +1317,7 @@ public:
         // move delta pixelwise
         for (int x = 0; x < MATRIX_WIDTH; x++)
         {
-            uint16_t amount = noise[x][0] * amt;
+            uint16_t amount = _noise.noise[x][0] * amt;
             uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
 
             for (int y = 0; y < MATRIX_HEIGHT - delta; y++)
@@ -1322,7 +1336,7 @@ public:
 
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {
-            uint16_t amount = noise[x][0] * amt;
+            uint16_t amount = _noise.noise[x][0] * amt;
             uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
