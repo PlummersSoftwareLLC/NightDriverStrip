@@ -447,7 +447,6 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
     {
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
-
         
         #ifdef TOGGLE_BUTTON_1
             Button1.update();
@@ -472,7 +471,10 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         #endif
 
         UpdateScreen(bRedraw);
-        delay(g_bUpdateStarted ? 200 : 30);
+        if (g_bUpdateStarted)
+            delay(200);
+        else
+            yield;
         
         bRedraw = false;
     }
