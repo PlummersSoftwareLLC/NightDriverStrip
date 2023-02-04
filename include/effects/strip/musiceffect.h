@@ -44,76 +44,8 @@ extern DRAM_ATTR AppTime g_AppTime;
 // For a highly sensitive (defaults), keep them both close to 1.0.  For a wider beat 
 // detection you could use 0.25 and 1.75 for example.
 
-class BeatEffectBase 
-{
-  protected:
 
-    bool   _latched = false;                          // Have we seen a low val yet?
-    double _lastBeat = 0;                             // When was the last beat?
-
-    double _lowLatch;                                 // Low Point at we we set the latch ON
-    double _highLatch;                                // High Point we must crest for a beat
-    double _minElapsed;                               // Min time between beats or we ignore
-    double _lowestSeen;
-
-  public:
-   
-    BeatEffectBase(double lowLatch = 1.0, double highLatch = 1.75, double minElapsed = 0.25)      // Eighth note at 120BPM is .125
-     : _lowLatch(lowLatch),
-       _highLatch(highLatch),
-       _minElapsed(minElapsed),
-       _lowestSeen(2.0)
-    {
-    }
-
-    // When a beat is detected, this is called.  The 'bMajor' indicates whether this is a more important beat, which
-    // for now simply means it's been a minimum delay since the last beat.
-
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
-    {
-        debugV("BEAT: [%s], g_Analyzer._VURatio=%f, since last=%lf, span = %lf\n", bMajor ? "Major" : "Minor", g_Analyzer._VURatio, g_AppTime.CurrentTime() - _lastBeat, g_Analyzer._VURatio - _lowestSeen);
-    }
-
-    double SecondsSinceLastBeat()
-    {
-      return g_AppTime.CurrentTime() - _lastBeat;
-    }
-
-
-    // BeatEffectBase::ProcessAudio
-    //
-    // Doesn't actually "draw" anything, but rather it scans the audio VU to detect beats, and when it finds one,
-    // it calls the virtual "HandleBeat" function.
-
-    virtual void ProcessAudio()
-    {
-        debugV("BeatEffectBase::Draw");
-        double elapsed = SecondsSinceLastBeat();
-    
-        if (elapsed < _minElapsed)                      // Too soon since last beat to even consider another.  
-          return;
-
-        if (g_Analyzer._VURatio < _lowestSeen)
-            _lowestSeen = g_Analyzer._VURatio;
-
-        if (g_Analyzer._VURatio < _lowLatch)                       // If we dip below the low latch, we're latched (armed)
-            _latched = true;                            //   to trigger a beat if we then go above the high latch
-
-        if (_latched && g_Analyzer._VURatio >= _highLatch)
-        {
-            // When we crest above the high latch point while latched (ie: we see a high value aftering confirming
-            // that we've seen a low one) we know it's a round trip on the VU meter and so we call that a beat.  We
-            // call the client handler and then reset the latch, then record now as the last beat time.
-
-            HandleBeat(elapsed > 1.0, elapsed, g_Analyzer._VURatio - _lowestSeen);
-            _lastBeat = g_AppTime.CurrentTime();
-            _latched = false;
-            _lowestSeen = 2.0;
-        }
-    }
-};
-
-class BeatEffectBase2
+class BeatEffectBase
 {
   protected:
     const int _maxSamples = 60;
@@ -124,7 +56,7 @@ class BeatEffectBase2
 
   public:
    
-    BeatEffectBase2(double minRange = 0, double minElapsed = 0)      
+    BeatEffectBase(double minRange = 0, double minElapsed = 0)      
      :
        _minRange(minRange),
        _minElapsed(minElapsed)
@@ -134,9 +66,7 @@ class BeatEffectBase2
     // When a beat is detected, this is called.  The 'bMajor' indicates whether this is a more important beat, which
     // for now simply means it's been a minimum delay since the last beat.
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
-    {
-    }
+    virtual void HandleBeat(bool bMajor, float elapsed, double span) = 0;
 
     double SecondsSinceLastBeat()
     {
@@ -179,49 +109,6 @@ class BeatEffectBase2
               _samples.clear();
             }
         }
-    }
-};
-
-//
-// MusicalInsulatorEffect
-//
-
-class BeatEffect
-{
-  public:
-
-    virtual void OnBeat()
-    {
-
-    }
-
-    virtual void ProcessAudio()
-    {
-        static bool  latch = false;
-        static float minVUSeen = 0.0;
-
-        if (latch)
-        {
-          if (g_Analyzer._VURatio < minVUSeen)
-            minVUSeen = g_Analyzer._VURatio;
-        }
-
-        if (g_Analyzer._VURatio < 0.5)             // Crossing center going down
-        {
-          latch = true;
-          minVUSeen = g_Analyzer._VURatio;
-        }
-
-        if (latch)
-        {
-            if (g_Analyzer._VURatio > 1.75)      // Going back up
-            {
-                latch = false;
-                OnBeat();
-                debugV("Beat: %f, %f\n", g_Analyzer._VURatio, g_Analyzer._VU);
-            }
-        }
-      
     }
 };
 
@@ -295,7 +182,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
   public:
   
     SimpleColorBeat(const String & strName)
-      : BeatEffectBase(1.0, 1.0, 0.25), LEDStripEffect(strName)
+      : BeatEffectBase(0.5, 0.25), LEDStripEffect(strName)
     {
     }
 

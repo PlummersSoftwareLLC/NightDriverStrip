@@ -207,7 +207,7 @@ public:
 };
 
 #if ENABLE_AUDIO
-class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase2
+class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
   public:
 
@@ -221,7 +221,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase2
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        :   BeatEffectBase2(1.00, 0.01),
+        :   BeatEffectBase(1.00, 0.01),
             PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
           
     {
@@ -243,7 +243,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase2
 
     virtual void Draw()
     {
-        BeatEffectBase2::ProcessAudio();
+        BeatEffectBase::ProcessAudio();
         PaletteFlameEffect::Draw();
     }
 };

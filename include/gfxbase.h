@@ -78,17 +78,18 @@ protected:
     static const uint8_t gamma5[];
     static const uint8_t gamma6[];
 
-    static const int paletteCount = 10;
-    int paletteIndex = -1;
-    TBlendType currentBlendType = LINEARBLEND;
-    CRGBPalette16 currentPalette;
-    CRGBPalette16 targetPalette;
-    uint lastSecond = 99;
-    String currentPaletteName;
-    bool palettePaused = false;
+    static const int _paletteCount = 10;
+    int              _paletteIndex = -1;
+    uint             _lastSecond = 99;
+    bool             _palettePaused = false;
 
-    static const int HeatColorsPaletteIndex = 6;
-    static const int RandomPaletteIndex = 9;
+    TBlendType       _currentBlendType = LINEARBLEND;
+    CRGBPalette16    _currentPalette;
+    CRGBPalette16    _targetPalette;
+    String           _currentPaletteName;
+
+    static const int _heatColorsPaletteIndex = 6;
+    static const int _randomPaletteIndex = 9;
 
     // This class parties right on the noise variables, but I don't want to encourage that by making them public.
     // THey should be turned into member variables, etc.
@@ -111,15 +112,15 @@ public:
 
     CRGB * leds;
 
-    int8_t zD;
-    int8_t zF;
-    uint32_t* effectX = nullptr;
-    uint32_t* effectY = nullptr;
-    uint32_t* effectZ = nullptr;
-    uint32_t* effectScaleX = nullptr;
-    uint32_t* effectScaleY = nullptr;
-    uint8_t eNs_noisesmooth = 0;
-    bool eNs_isSetupped = false;
+    int8_t    _zD;
+    int8_t    _zF;
+    uint32_t* _effectX = nullptr;
+    uint32_t* _effectY = nullptr;
+    uint32_t* _effectZ = nullptr;
+    uint32_t* _effectScaleX = nullptr;
+    uint32_t* _effectScaleY = nullptr;
+    uint8_t   _eNs_noisesmooth = 0;
+    bool      _eNs_isSetupped = false;
 
     GFXBase(int w, int h) : Adafruit_GFX(w, h),
                             _width(w),
@@ -447,32 +448,32 @@ public:
 
     void CyclePalette(int offset = 1)
     {
-        loadPalette(paletteIndex + offset);
+        loadPalette(_paletteIndex + offset);
     }
 
     void ChangePalettePeriodically()
     {
-        if (palettePaused)
+        if (_palettePaused)
             return;
 
         const int minutesPerPaletteCycle = 2;
         uint8_t secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
         
-        if( lastSecond != secondHand) 
+        if( _lastSecond != secondHand) 
         {
-            lastSecond = secondHand;
+            _lastSecond = secondHand;
             if( secondHand ==  0)  
-                { targetPalette = RainbowColors_p; }
+                { _targetPalette = RainbowColors_p; }
             if( secondHand == 10)  
-                { targetPalette = HeatColors_p; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
+                { _targetPalette = HeatColors_p; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
             if( secondHand == 20)  
-                { targetPalette = ForestColors_p; } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
+                { _targetPalette = ForestColors_p; } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
             if( secondHand == 30)  
-                { targetPalette = LavaColors_p; }       // Black gaps
+                { _targetPalette = LavaColors_p; }       // Black gaps
             if( secondHand == 40)  
-                { targetPalette = CloudColors_p; }
+                { _targetPalette = CloudColors_p; }
             if( secondHand == 50)  
-                { targetPalette = PartyColors_p; }
+                { _targetPalette = PartyColors_p; }
         }
     }
 
@@ -487,12 +488,12 @@ public:
     
     void PausePalette(bool bPaused)
     {
-        palettePaused = bPaused;
+        _palettePaused = bPaused;
     }
 
     bool IsPalettePaused()
     {
-        return palettePaused;
+        return _palettePaused;
     }    
 
     void UpdatePaletteCycle()
@@ -500,12 +501,12 @@ public:
 
         ChangePalettePeriodically();
         uint8_t maxChanges = 24; 
-        nblendPaletteTowardPalette( currentPalette, targetPalette, maxChanges);
+        nblendPaletteTowardPalette( _currentPalette, _targetPalette, maxChanges);
     }
 
     void RandomPalette()
     {
-        loadPalette(RandomPaletteIndex);
+        loadPalette(_randomPaletteIndex);
     }
 
     void fillRectangle(int x0, int y0, int x1, int y1, CRGB color)
@@ -517,69 +518,69 @@ public:
 
     void setPalette(CRGBPalette16 palette)
     {
-        currentPalette = palette;
-        targetPalette = palette;
-        currentPaletteName = "Custom";
+        _currentPalette = palette;
+        _targetPalette = palette;
+        _currentPaletteName = "Custom";
     }
 
     void loadPalette(int index)
     {
-        paletteIndex = index;
+        _paletteIndex = index;
 
-        if (paletteIndex >= paletteCount)
-            paletteIndex = 0;
-        else if (paletteIndex < 0)
-            paletteIndex = paletteCount - 1;
+        if (_paletteIndex >= _paletteCount)
+            _paletteIndex = 0;
+        else if (_paletteIndex < 0)
+            _paletteIndex = _paletteCount - 1;
 
-        switch (paletteIndex)
+        switch (_paletteIndex)
         {
         case 0:
-            targetPalette = RainbowColors_p;
-            currentPaletteName = "Rainbow";
+            _targetPalette = RainbowColors_p;
+            _currentPaletteName = "Rainbow";
             break;
             // case 1:
             //   targetPalette = RainbowStripeColors_p;
             //   currentPaletteName = "RainbowStripe";
             //   break;
         case 1:
-            targetPalette = OceanColors_p;
-            currentPaletteName = "Ocean";
+            _targetPalette = OceanColors_p;
+            _currentPaletteName = "Ocean";
             break;
         case 2:
-            targetPalette = CloudColors_p;
-            currentPaletteName = "Cloud";
+            _targetPalette = CloudColors_p;
+            _currentPaletteName = "Cloud";
             break;
         case 3:
-            targetPalette = ForestColors_p;
-            currentPaletteName = "Forest";
+            _targetPalette = ForestColors_p;
+            _currentPaletteName = "Forest";
             break;
         case 4:
-            targetPalette = PartyColors_p;
-            currentPaletteName = "Party";
+            _targetPalette = PartyColors_p;
+            _currentPaletteName = "Party";
             break;
         case 5:
             setupGrayscalePalette();
-            currentPaletteName = "Grey";
+            _currentPaletteName = "Grey";
             break;
-        case HeatColorsPaletteIndex:
-            targetPalette = HeatColors_p;
-            currentPaletteName = "Heat";
+        case _heatColorsPaletteIndex:
+            _targetPalette = HeatColors_p;
+            _currentPaletteName = "Heat";
             break;
         case 7:
-            targetPalette = LavaColors_p;
-            currentPaletteName = "Lava";
+            _targetPalette = LavaColors_p;
+            _currentPaletteName = "Lava";
             break;
         case 8:
             setupIcePalette();
-            currentPaletteName = "Ice";
+            _currentPaletteName = "Ice";
             break;
-        case RandomPaletteIndex:
-            loadPalette(random(0, paletteCount - 1));
-            paletteIndex = RandomPaletteIndex;
-            currentPaletteName = "Random";
+        case _randomPaletteIndex:
+            loadPalette(random(0, _paletteCount - 1));
+            _paletteIndex = _randomPaletteIndex;
+            _currentPaletteName = "Random";
             break;
         }
-        currentPalette = targetPalette;
+        _currentPalette = _targetPalette;
     }
 
     inline void setPalette(String paletteName)
@@ -612,7 +613,7 @@ public:
     {
         Serial.println(F("{"));
         Serial.print(F("  \"count\": "));
-        Serial.print(paletteCount);
+        Serial.print(_paletteCount);
         Serial.println(",");
         Serial.println(F("  \"results\": ["));
 
@@ -629,11 +630,11 @@ public:
             "Ice",
             "Random"};
 
-        for (int i = 0; i < paletteCount; i++)
+        for (int i = 0; i < _paletteCount; i++)
         {
             Serial.print(F("    \""));
             Serial.print(paletteNames[i]);
-            if (i == paletteCount - 1)
+            if (i == _paletteCount - 1)
                 Serial.println(F("\""));
             else
                 Serial.println(F("\","));
@@ -645,12 +646,12 @@ public:
 
     inline void setupGrayscalePalette()
     {
-        targetPalette = CRGBPalette16(CRGB::Black, CRGB::White);
+        _targetPalette = CRGBPalette16(CRGB::Black, CRGB::White);
     }
 
     inline void setupIcePalette()
     {
-        targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White);
+        _targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White);
     }
 
     // write one pixel with the specified color from the current palette to coordinates
@@ -1130,7 +1131,7 @@ public:
 
     inline CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
     {
-        return ColorFromPalette(currentPalette, index, brightness, currentBlendType);
+        return ColorFromPalette(_currentPalette, index, brightness, _currentBlendType);
     }
 
     inline CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v) const

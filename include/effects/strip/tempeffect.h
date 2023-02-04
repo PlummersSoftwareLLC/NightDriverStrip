@@ -69,7 +69,7 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
     using BeatEffectBase::BeatEffectBase;
  
     SimpleInsulatorBeatEffect(const String & strName) 
-      : LEDStripEffect(strName), BeatEffectBase(1.0, 1.0, 0.01)
+      : LEDStripEffect(strName), BeatEffectBase(0.5, 0.01)
     {
     }
 };
