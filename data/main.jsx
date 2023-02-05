@@ -945,10 +945,10 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                 <List>{
                     [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
                      {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                     {caption:"", icon: "settings"}].map(item => 
+                     {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item => 
                     <ListItem key={item.icon}>
                         <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
-                            <Icon color="action" className={item.flag && (item.icon !== "settings") && classes.optionSelected}>{item.icon}</Icon>
+                            <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                         <ListItemText primary={item.caption}/>
                         {drawerOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
