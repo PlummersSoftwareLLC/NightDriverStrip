@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        SPIFFSWebServer.h
+// File:        webserver.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -22,8 +22,8 @@
 //
 // Description:
 //
-//   Web server that fulfills requests by serving them from the SPIFFS
-//   storage in flash.  Requires the espressif-esp32 WebServer class.
+//   Web server that fulfills requests by serving them from statically
+//   files in flash.  Requires the espressif-esp32 WebServer class.
 //
 //   This class contains an early attempt at exposing a REST api for
 //   adjusting effect paramters.  I'm in no way attached to it and it
@@ -33,7 +33,7 @@
 //
 // History:     Jul-12-2018         Davepl      Created
 //              Apr-29-2019         Davepl      Adapted from BigBlueLCD project
-//
+//              Feb-02-2023         LouisRiel   Removed SPIFF served files with statically linked files
 //---------------------------------------------------------------------------
 
 #pragma once
@@ -42,7 +42,6 @@
 #include <FS.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <SPIFFS.h>
 #include <Arduino.h>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
@@ -50,7 +49,7 @@
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
 
-class CSPIFFSWebServer
+class CWebServer
 {
   private:
 
@@ -58,7 +57,7 @@ class CSPIFFSWebServer
 
   public:
 
-    CSPIFFSWebServer()
+    CWebServer()
         : _server(80)
     {
     }
@@ -257,48 +256,11 @@ class CSPIFFSWebServer
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
-    // begin - register page load handlers and start serving pages
-
-    // The default method of fulfilling a file doesn't work on large files because it tries to hold
-    // the entire thing in RAM, and it chokes.  So, for files that are too large to serve from RAM, 
-    // I use this function.  It registers a file-specific handler and then does chunk based IO.
-    
-    void ServeLargeStaticFile(const char strName[], const char strType[])
-    {
-       _server.on(strName, HTTP_GET, [strName, strType](AsyncWebServerRequest *request)
-        {
-            Serial.printf("GET for: %s\n", strName);
-            fs::File SPIFFSfile = SPIFFS.open(strName, FILE_READ);
-            if (SPIFFSfile)
-            {
-                Serial.printf("[HTTP]\tOpening [%d]\r\n", SPIFFSfile);
-            } 
-            else 
-            {
-                Serial.printf("[HTTP]\tSPIFFS File DOESN'T exists [%d] <<< ERROR !!!\r\n", SPIFFSfile);
-            }
-            AsyncWebServerResponse *response = 
-                request->beginChunkedResponse(strType, [SPIFFSfile](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
-                {
-                    auto localHandle = SPIFFSfile;
-                    //Serial.printf("[HTTP]  [%6d]    INDEX [%6d]    BUFFER_MAX_LENGTH [%6d]\r\n", index, localHandle.size(), maxLen);
-                    size_t len = localHandle.read(buffer, maxLen);
-                    //Serial.printf(">> Succcessful read of %d\n", len);
-                    if (len == 0)
-                    {
-                        //Serial.printf("Closing [%d]\n", SPIFFSfile);
-                        //localHandle.close();
-                    }
-                    return len;
-                }
-            );
-            request->send(response);
-        });
-    }    
-
     void begin()
     {
         debugI("Connecting Web Endpoints");
+        extern const char html_start[] asm("_binary_data_index_html_start");
+        extern const char jsx_start[] asm("_binary_data_main_jsx_start");
         
         _server.on("/getEffectList",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetEffectListText(pRequest); });
         _server.on("/getStatistics",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetStatistics(pRequest); });
@@ -311,15 +273,8 @@ class CSPIFFSWebServer
 
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
 
-        // Extra-large files must be manually served like this per Issue #770 in AsyncWebServer lib
-        // As of now, though, the static files are small enough that the default serveStatic still works
-        //
-        //_server.serveStatic("/static/js/main.js", SPIFFS, "/static/js/main.js");
-        //ServeLargeStaticFile("/static/js/main.js", "text/javascript");
-        //ServeLargeStaticFile("/static/js/main.js.LICENSE.txt", "text/plain");
-        //ServeLargeStaticFile("/static/css/main.b4f33716.css", "text/css");
-
-        _server.serveStatic("/", SPIFFS, "/", "public, max-age=86400").setDefaultFile("index.html");        // BUGBUG Fix lifetime to 86400 or something like that
+        _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start);});
+        _server.on("/main.jsx", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_start); });
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {

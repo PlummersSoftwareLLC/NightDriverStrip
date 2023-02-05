@@ -35,7 +35,7 @@
 #include "globals.h"
 
 #if ENABLE_WEBSERVER
-    extern DRAM_ATTR CSPIFFSWebServer g_WebServer;
+    extern DRAM_ATTR CWebServer g_WebServer;
 #endif
 
 #if USE_WIFI_MANAGER
@@ -143,12 +143,6 @@ void SetupOTA(const String & strHostname)
             else // U_SPIFFS
                 type = "filesystem";
 
-            // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-            debugI("Stopping SPIFFS");
-            #if ENABLE_WEBSEVER
-            SPIFFS.end();
-            #endif
-            
             debugI("Stopping IR remote");
             #if ENABLE_REMOTE            
             g_RemoteControl.end();
@@ -241,7 +235,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             return true;
         }
         
-        debugI("Setting host name to %s...", cszHostname);
+        debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
 
     #if USE_WIFI_MANAGER
         g_WifiManager.setDebugOutput(true);
