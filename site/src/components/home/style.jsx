@@ -83,7 +83,7 @@ const mainAppStyle = theme => ({
       })
     },
     optionSelected: {
-      color: "aquamarine"
+      color: theme.palette.text.primary
     }
   });
   

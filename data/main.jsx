@@ -1,108 +1,318 @@
 const httpPrefix='';
 const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
 
-const { createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
+const { ThemeOptions, createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
 const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme, LinearProgress, Popover } = window.MaterialUI;
-const { Card, CardHeader, CardContent, Collapse, CardActions, CardActionArea, Avatar } = window.MaterialUI;
+const { Card, CardHeader, CardContent, Collapse, CardActions, CardActionArea, Avatar, Link, Paper } = window.MaterialUI;
+const { ExpandMore, ClickAwayListener } = window.MaterialUI;
 
 const { AreaChart, BarChart, Area, Bar, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } = window.Recharts;
 
-const pannelText= {
-  fontFamily: ["Roboto", "Helvetica", "Arial", "sans-serif"].join(", ")
-};
+const getPalette = (mode) => {
+  switch (mode) {
+    case "dark":
+      return {
+        mode,
+        common: {
+            black: "#000",
+            white: "#fff"
+        },
+        primary: {
+            main: '#24292e',
+            light: '#4f5358',
+            dark: '#191c21',
+            contrastText: '#d6d6ff',
+        },
+        secondary: {
+            main: "#ce93d8",
+            light: "#f3e5f5",
+            dark: "#ab47bc",
+            contrastText: "rgba(0, 0, 0, 0.87)"
+        },
+        error: {
+            main: "#f44336",
+            light: "#e57373",
+            dark: "#d32f2f",
+            contrastText: "#fff"
+        },
+        warning: {
+            main: "#ffa726",
+            light: "#ffb74d",
+            dark: "#f57c00",
+            contrastText: "rgba(0, 0, 0, 0.87)"
+        },
+        info: {
+            main: "#29b6f6",
+            light: "#4fc3f7",
+            dark: "#0288d1",
+            contrastText: "rgba(0, 0, 0, 0.87)"
+        },
+        success: {
+            main: "#66bb6a",
+            light: "#81c784",
+            dark: "#388e3c",
+            contrastText: "rgba(0, 0, 0, 0.87)"
+        },
+        grey: {
+            50: "#fafafa",
+            100: "#f5f5f5",
+            200: "#eeeeee",
+            300: "#e0e0e0",
+            400: "#bdbdbd",
+            500: "#9e9e9e",
+            600: "#757575",
+            700: "#616161",
+            800: "#424242",
+            900: "#212121",
+            A100: "#f5f5f5",
+            A200: "#eeeeee",
+            A400: "#bdbdbd",
+            A700: "#616161"
+        },
+        contrastThreshold: 3,
+        tonalOffset: 0.2,
+        text: {
+            primary: '#93aff3',
+            secondary: 'rgba(149,183,228,0.7)',
+            disabled: "rgba(255, 255, 255, 0.5)",
+            icon: "rgba(255, 255, 255, 0.5)"
+        },
+        divider: "rgba(255, 255, 255, 0.12)",
+        background: {
+            paper: "hwb(216deg 14% 73% / 99%)",
+            default: "hwb(215deg 8% 83%)"
+        },
+        action: {
+            active: "#fff",
+            hover: "rgba(255, 255, 255, 0.08)",
+            hoverOpacity: 0.08,
+            selected: "rgba(255, 255, 255, 0.16)",
+            selectedOpacity: 0.16,
+            disabled: "rgba(255, 255, 255, 0.3)",
+            disabledBackground: "rgba(255, 255, 255, 0.12)",
+            disabledOpacity: 0.38,
+            focus: "rgba(255, 255, 255, 0.12)",
+            focusOpacity: 0.12,
+            activatedOpacity: 0.24
+        },
+        taskManager: {
+          strokeColor: '#90ff91',
+          MemoryColor: '#0002ff',
+          idleColor: 'black',
+          color1: '#58be59db',
+          color2: '#58be59a1',
+          color3: '#58be596b',
+          color4: '#58be5921',
+          bcolor1: '#189cdbff',
+          bcolor2: '#189cdba1',
+          bcolor3: '#189cdb66',
+          bcolor4: '#189cdb38',
+        }
+      }      
+    case "light": 
+      return {
+        mode: mode,
+        common: {
+            black: "#000",
+            white: "#fff"
+        },
+        primary: {
+            main: "#1976d2",
+            light: "#42a5f5",
+            dark: "#1565c0",
+            contrastText: "#fff"
+        },
+        secondary: {
+            main: "#9c27b0",
+            light: "#ba68c8",
+            dark: "#7b1fa2",
+            contrastText: "#fff"
+        },
+        error: {
+            main: "#d32f2f",
+            light: "#ef5350",
+            dark: "#c62828",
+            contrastText: "#fff"
+        },
+        warning: {
+            main: "#ed6c02",
+            light: "#ff9800",
+            dark: "#e65100",
+            contrastText: "#fff"
+        },
+        info: {
+            main: "#0288d1",
+            light: "#03a9f4",
+            dark: "#01579b",
+            contrastText: "#fff"
+        },
+        success: {
+            main: "#2e7d32",
+            light: "#4caf50",
+            dark: "#1b5e20",
+            contrastText: "#fff"
+        },
+        grey: {
+            50: "#fafafa",
+            100: "#f5f5f5",
+            200: "#eeeeee",
+            300: "#e0e0e0",
+            400: "#bdbdbd",
+            500: "#9e9e9e",
+            600: "#757575",
+            700: "#616161",
+            800: "#424242",
+            900: "#212121",
+            A100: "#f5f5f5",
+            A200: "#eeeeee",
+            A400: "#bdbdbd",
+            A700: "#616161"
+        },
+        contrastThreshold: 3,
+        tonalOffset: 0.2,
+        text: {
+            primary: "rgba(0, 0, 0, 0.87)",
+            secondary: "rgba(0, 0, 0, 0.6)",
+            disabled: "rgba(0, 0, 0, 0.38)"
+        },
+        divider: "rgba(0, 0, 0, 0.12)",
+        background: {
+            paper: "#fff",
+            default: "#fff"
+        },
+        action: {
+            active: "rgba(0, 0, 0, 0.54)",
+            hover: "rgba(0, 0, 0, 0.04)",
+            hoverOpacity: 0.04,
+            selected: "rgba(0, 0, 0, 0.08)",
+            selectedOpacity: 0.08,
+            disabled: "rgba(0, 0, 0, 0.26)",
+            disabledBackground: "rgba(0, 0, 0, 0.12)",
+            disabledOpacity: 0.38,
+            focus: "rgba(0, 0, 0, 0.12)",
+            focusOpacity: 0.12,
+            activatedOpacity: 0.12
+        },
+        taskManager: {
+          strokeColor: '#90ff91',
+          MemoryColor: '#0002ff',
+          idleColor: 'black',
+          color1: '#58be59db',
+          color2: '#58be59a1',
+          color3: '#58be596b',
+          color4: '#58be5921',
+          bcolor1: '#189cdbff',
+          bcolor2: '#189cdba1',
+          bcolor3: '#189cdb66',
+          bcolor4: '#189cdb38',
+        }
+      }
 
-const commonTypography={
-  littleHeader: {
-      fontWeight: 500,
-      fontSize: "1.25rem",
-      lineHeight: 1.6,
-      letterSpacing: "0.0075em",
-  },
-  littleValue: {
-    lineHeight: 1.0,
-    fontSize: "3.75rem",
-    fontWeight: 300
+    default:
+      break;
   }
-};
-    
-const lightTheme = createTheme({
-    palette: {
-      mode: 'light',
-      type: 'light',
-      taskManager: {
-        strokeColor: '#90ff91',
-        MemoryColor: '#0002ff',
-        idleColor: 'black',
-        color1: '#58be59db',
-        color2: '#58be59a1',
-        color3: '#58be596b',
-        color4: '#58be5921',
-        bcolor1: '#189cdbff',
-        bcolor2: '#189cdba1',
-        bcolor3: '#189cdb66',
-        bcolor4: '#189cdb38',
-      }
-    },
-  typography: commonTypography,
+}
+
+const getTheme = (mode) => createTheme({
+  palette: getPalette(mode),
 });
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    type: 'dark',
-    taskManager: {
-      strokeColor: '#90ff91',
-      MemoryColor: '#0002ff',
-      idleColor: 'black',
-      color1: '#58be59db',
-      color2: '#58be59a1',
-      color3: '#58be596b',
-      color4: '#58be5921',
-      bcolor1: '#189cdbff',
-      bcolor2: '#189cdba1',
-      bcolor3: '#189cdb66',
-      bcolor4: '#189cdb38',
-    },
-    text: {
-      primary: "#97ea44",
-      secondary: "aquamarine",
-      attribute: "aqua",
-      icon: "aquamarine"
-    },
-    primary: {
-      main: "#97ea44"
-    }
-  },
-  typography: commonTypography,
-  overrides: {
-    MuiAppBar: {
-      colorPrimary: {
-        backgroundColor: "black",
-        color: "textPrimary"
-      }
-    },
-    MuiIconButton: {
-      colorPrimary: {
-        color: "aquamarine"
-      },
-      colorSecondary: {
-        color: "aqua"
-      },
-      root:{
-        color: "lightgreen",
-      }
-    },
-    MuiCheckbox: {
-      colorPrimary: {
-        color: "textPrimary"
-      },
-      colorSecondary: {
-        "&$checked": "aquamarine"
-      }
-    }
-  },
-});
+// const pannelText= {
+//   fontFamily: ["Roboto", "Helvetica", "Arial", "sans-serif"].join(", ")
+// };
+
+// const commonTypography={
+//   littleHeader: {
+//       fontWeight: 500,
+//       fontSize: "1.25rem",
+//       lineHeight: 1.6,
+//       letterSpacing: "0.0075em",
+//   },
+//   littleValue: {
+//     lineHeight: 1.0,
+//     fontSize: "3.75rem",
+//     fontWeight: 300
+//   }
+// };
+    
+// const lightTheme = createTheme({
+//     palette: {
+//       mode: 'light',
+//       type: 'light',
+//       taskManager: {
+//         strokeColor: '#90ff91',
+//         MemoryColor: '#0002ff',
+//         idleColor: 'black',
+//         color1: '#58be59db',
+//         color2: '#58be59a1',
+//         color3: '#58be596b',
+//         color4: '#58be5921',
+//         bcolor1: '#189cdbff',
+//         bcolor2: '#189cdba1',
+//         bcolor3: '#189cdb66',
+//         bcolor4: '#189cdb38',
+//       }
+//     },
+//   typography: commonTypography,
+// });
+
+// const darkTheme = createTheme({
+//   palette: {
+//     mode: 'dark',
+//     type: 'dark',
+//     taskManager: {
+//       strokeColor: '#90ff91',
+//       MemoryColor: '#0002ff',
+//       idleColor: 'black',
+//       color1: '#58be59db',
+//       color2: '#58be59a1',
+//       color3: '#58be596b',
+//       color4: '#58be5921',
+//       bcolor1: '#189cdbff',
+//       bcolor2: '#189cdba1',
+//       bcolor3: '#189cdb66',
+//       bcolor4: '#189cdb38',
+//     },
+//     text: {
+//       primary: "#97ea44",
+//       secondary: "aquamarine",
+//       attribute: "aqua",
+//       icon: "aquamarine"
+//     },
+//     primary: {
+//       main: "#97ea44"
+//     }
+//   },
+//   typography: commonTypography,
+//   overrides: {
+//     MuiAppBar: {
+//       colorPrimary: {
+//         backgroundColor: "black",
+//         color: "textPrimary"
+//       }
+//     },
+//     MuiIconButton: {
+//       colorPrimary: {
+//         color: "aquamarine"
+//       },
+//       colorSecondary: {
+//         color: "aqua"
+//       },
+//       root:{
+//         color: "lightgreen",
+//       }
+//     },
+//     MuiCheckbox: {
+//       colorPrimary: {
+//         color: "textPrimary"
+//       },
+//       colorSecondary: {
+//         &$checked: "aquamarine"
+//       }
+//     }
+//   },
+// });
 const notificationsStyle = theme => ({
     root: {
     },
@@ -205,7 +415,7 @@ const mainAppStyle = theme => ({
       })
     },
     optionSelected: {
-      color: "aquamarine"
+      color: theme.palette.text.primary
     }
   });
   const configStyle = theme => ({
@@ -215,14 +425,10 @@ const mainAppStyle = theme => ({
     configDisplay: {
         "display": "flex",
         "column-gap": "10px",
-        "flex-direction": "row",
+        "flex-direction": "column",
         "flex-wrap": "nowrap",
         "justify-content": "flex-start",
         "align-items": "center",
-    },
-    saveIcons: {
-        display: "flex",
-        "flex-direction": "column"
     },
     cblabel: {
         "margin-left": "initial"
@@ -234,9 +440,6 @@ const mainAppStyle = theme => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
-        border: "green solid 2px",
-        borderRadius: "15px",
-        padding: "10px",
     },
     hidden: {
         display: "none"
@@ -244,7 +447,7 @@ const mainAppStyle = theme => ({
     effectsHeader: {
         display: "flex",
         flexDirection: "row",
-        borderBottom: "green solid 1px",
+        borderBottom: "solid 1px",
         columnGap: "5px",
     },
     effectsHeaderValue: {
@@ -257,6 +460,10 @@ const mainAppStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
+        padding: "10px",
+        columnGap: "15px",
+        rowGap: "15px",
+        paddingTop: "20px",
     }
 });const countdownStyle = theme => ({
     root: {
@@ -272,19 +479,19 @@ const mainAppStyle = theme => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
-        border: "green solid 2px",
-        borderRadius: "15px",
         padding: "10px",
+    },
+    cardheader: {
     },
     hidden: {
         display: "none"
     },
     effect: {
+        width: "180px",
         display: "flex",
         flexDirection: "column",
-        alignItems: "stretch",
-        width: "180px",
-        border: "green solid 1px"
+        flexWrap: "nowrap",
+        justifyContent: "space-between",
     },
     effectPannel: {
         display: "flex",
@@ -313,6 +520,12 @@ const mainAppStyle = theme => ({
         columnGap: "10px",
         rowGap: "10px"
     },
+    summaryStats: {
+        cursor: "pointer"
+    },
+    detiailedStats: {
+        border: "solid 1px"
+    },
     chartArea: {
         "display": "flex",
         "flex-direction": "row",
@@ -339,8 +552,6 @@ const mainAppStyle = theme => ({
         "column-gap": "5px",
     },
     category:{
-        border: "green solid 2px",
-        borderRadius: "15px",
     },
     hidden: {
         display: "none"
@@ -350,9 +561,9 @@ const mainAppStyle = theme => ({
         "flex-direction": "row",
         "flex-wrap": "wrap",
         "align-content": "flex-start",
-        "justify-content": "center",
+        "justify-content": "space-between",
         "align-items": "center",
-        borderBottom: "green solid 1px"
+        "border-bottom": "solid 1px",
     }
 });
 
@@ -396,8 +607,7 @@ const areaChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "space-between",
         "align-items": "center",
-        "width": "100%",
-        "color": theme.palette.text.primary
+        "width": "100%"
     },
     headerField: {
         "display": "flex",
@@ -405,8 +615,7 @@ const areaChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "center",
         "align-items": "center",
-        "width": "inherit",
-        "color": theme.palette.text.secondary
+        "width": "inherit"
     },
     stats: {
         "display": "flex",
@@ -414,8 +623,7 @@ const areaChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "center",
         "align-items": "center",
-        "padding": "0px",
-        "color": theme.palette.text.secondary
+        "padding": "0px"
     },
     stat: {
         "display": "flex",
@@ -503,8 +711,7 @@ const barChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "space-between",
         "align-items": "center",
-        "width": "100%",
-        "color": theme.palette.text.primary
+        "width": "100%"
     },
     stats: {
         "display": "flex",
@@ -659,13 +866,18 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                 </Card>
             </Popover>
         </Box>);
-});const MainApp = withStyles(mainAppStyle)(props => {
-    const { classes } = props;
-    const [drawerOpened, setDrawerOpened] = useState(false);
+});const MainApp = () => {
     const [mode, setMode] = useState('dark');
+    const theme = React.useMemo(
+        () => getTheme(mode),[mode]);
+    return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
+};
+
+const AppPannel = withStyles(mainAppStyle)(props => {
+    const { classes, mode, setMode } = props;
+    const [drawerOpened, setDrawerOpened] = useState(false);
     const [stats, setStats] = useState(false);
     const [designer, setDesigner] = useState(false);
-    const [config, setConfig] = useState(false);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
     const [animateChart, setAnimateChart ] = useState(false);
@@ -679,13 +891,13 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
             type: "int"
         },
         statsAnimateChange: {
-            name: "Animate chart changes",
+            name: "Animate chart",
             value: animateChart,
             setter: setAnimateChart,
             type: "boolean"
         },
         maxSamples: {
-            name: "Number of chart points",
+            name: "Chart points",
             value: maxSamples,
             setter: setMaxSamples,
             type: "int"
@@ -700,9 +912,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
         });
     };
 
-    return <ThemeProvider theme={mode == "dark" ? darkTheme : lightTheme}>
-        <CssBaseline />
-        <Box className={classes.root}>
+    return <Box className={classes.root}>
             <AppBar className={[classes.appbar,drawerOpened && classes.appbarOpened].join(" ")}>
                 <Toolbar>
                     <IconButton 
@@ -733,24 +943,23 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                 </Box>
                 <Divider/>
                 <List>{
-                    [{caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                     {caption:"Effects Designer", flag: designer, setter: setDesigner, icon: "design_services"},
-                     {caption:"Settings", flag: config, setter: setConfig, icon: "settings"}].map(item => 
-                    <ListItem key={item.caption}>
-                        <ListItemIcon><IconButton onClick={() => item.setter(prevValue => !prevValue)}>
-                            <Icon className={item.flag && (item.icon !== "settings") && classes.optionSelected}>{item.icon}</Icon>
+                    [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
+                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
+                     {caption:"", icon: "settings"}].map(item => 
+                    <ListItem key={item.icon}>
+                        <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
+                            <Icon color="action" className={item.flag && (item.icon !== "settings") && classes.optionSelected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                         <ListItemText primary={item.caption}/>
+                        {drawerOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
                     </ListItem>)
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
                 <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
                 <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
-                <ConfigDialog siteConfig={siteConfig} open={config} addNotification={addNotification} onClose={() => {setConfig(false)}} />
             </Box>
-        </Box>
-    </ThemeProvider>;
+        </Box>;
 });
 const ConfigItem = withStyles(configStyle)(props => {
     const { name, value, configItemUpdated, datatype, classes } = props;
@@ -772,7 +981,7 @@ const ConfigItem = withStyles(configStyle)(props => {
             <FormControlLabel
                 className={classes.cblabel}
                 label={name} 
-                labelPlacement="start"
+                labelPlacement="top"
                 control={<Checkbox 
                     defaultChecked={value}
                     onChange={event => {
@@ -782,7 +991,7 @@ const ConfigItem = withStyles(configStyle)(props => {
         </ListItem>;
     }
 
-    return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
+    return <ClickAwayListener onClickAway={()=>{configItemUpdated(configValue);setEditing(false);}}><ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
                 {!editing && <ListItemText className={ classes.configDisplay }
                     primary={name}
                     secondary={configValue}/>}
@@ -792,53 +1001,11 @@ const ConfigItem = withStyles(configStyle)(props => {
                                        pattern={datatype === "int" ? "^[0-9]+$" : (datatype === "float" ? "^[0-9]+[.0-9]*$" : ".*")}
                                        defaultValue={value}
                                        onChange={event => setConfigValue(getConfigValue(event.target.value,datatype)) } />}
-                    <Box className={classes.saveIcons}>
-                        {editing && <IconButton color="primary" 
-                                            aria-label="Save" 
-                                            component="label"
-                                            onClick={_evt => {
-                                                configItemUpdated(configValue)
-                                                setEditing(false);
-                                            }}>
-                                    <Icon>save</Icon>
-                                </IconButton>}
-                        {editing && <IconButton color="secondary" 
-                                                aria-label="Cancel" 
-                                                component="label"
-                                                onClick={_evt => {
-                                                    setConfigValue(value);
-                                                    setEditing(false);
-                                                }}>
-                                        <Icon>cancel</Icon>
-                                    </IconButton>}
-                    </Box>
-            </ListItem>;
+            </ListItem></ClickAwayListener>;
 });
-const ConfigDialog = withStyles(configStyle)(props => {
-  const { classes, open, onClose, siteConfig } = props;
+const ConfigPanel = withStyles(configStyle)(props => {
+  const { classes, siteConfig } = props;
   return (
-    <Dialog
-      fullScreen
-      open={open}
-      onClose={() => onClose && onClose()}>
-      <AppBar sx={{ position: 'relative' }}>
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={()=>onClose && onClose()}
-            aria-label="close">
-            <Icon>close</Icon>
-          </IconButton>
-          <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-            Configuration
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <List className={classes.configBar}>
-        <ListItem>
-          <List>
-            <ListItemText primary="Site Configuration"/>
             <List>
                 {Object.entries(siteConfig).map(entry => <ConfigItem 
                                             name={entry[1].name}
@@ -848,11 +1015,6 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                             configItemUpdated={value => entry[1].setter(value)} 
                                             />)}
             </List>
-          </List>
-        </ListItem>
-        <Divider />
-      </List>
-    </Dialog>
   );
 });const DesignerPanel = withStyles(designStyle)(props => {
     const { classes, open, addNotification } = props;
@@ -892,10 +1054,13 @@ const ConfigDialog = withStyles(configStyle)(props => {
     const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
 
     const chipRequest = (url,options,operation) => {
-        setRequestRunning(true);
-        return fetch(url,options)
-                .catch(err => addNotification("Error",operation,err))
-                .finally(()=>setRequestRunning(false));
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            return fetch(url,options)
+                    .then(resolve)
+                    .catch(err => {addNotification("Error",operation,err);reject(err)})
+                    .finally(()=>setRequestRunning(false));    
+        });
     };
 
     const navigateTo = (idx)=>{
@@ -928,9 +1093,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
 
     const displayHeader = ()=>{
         return <Box className={classes.effectsHeaderValue}>
-            <Typography variant="little" color="textSecondary">Interval</Typography>:
-            <Typography variant="little" color="textAttribute">{effects.effectInterval}</Typography>
-            <IconButton onClick={() => setEditing(true)}><Icon>edit</Icon></IconButton>
+            <Typography variant="little" color="textPrimary">Interval</Typography>:
+            <Link href="#" variant="little" color="textSecondary" onClick={() => setEditing(true)}>{effects.effectInterval}</Link>
         </Box>;
     }
 
@@ -942,7 +1106,8 @@ const ConfigDialog = withStyles(configStyle)(props => {
                 defaultValue={effects.effectInterval}
                 onChange={event => setPendingInterval(event.target.value)} />
             <Box className={classes.saveIcons}>
-                <IconButton color="primary"
+                <IconButton 
+                    color="action"
                     aria-label="Save"
                     component="label"
                     onClick={_evt => {
@@ -1020,13 +1185,14 @@ const ConfigDialog = withStyles(configStyle)(props => {
 
     return (            
     <Box className={classes.root}>
-        <Typography variant="little" color="textSecondary">{label}</Typography>:
-        <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
+        <Typography variant="little" color="textPrimary">{label}</Typography>:
+        <Typography color="textSecondary" className={classes.timeremaining} width="100px" variant="little">{timeRemaining}</Typography>
     </Box>)
 
 });const Effect = withStyles(effectStyle)(props => {
     const { classes, effect, effectInterval, effectIndex, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
     const [ progress, setProgress ] = useState(undefined);
+    const [expanded, setExpanded] = React.useState(false);
 
     useEffect(() => {
         if (millisecondsRemaining && selected) {
@@ -1043,18 +1209,35 @@ const ConfigDialog = withStyles(configStyle)(props => {
         }
     },[millisecondsRemaining,selected]);
 
-    return <Box className={classes.effect}>
-                <Box className={`${selected && classes.selected} ${classes.effectPannel}`}>
-                    <Box className={`${!effect.enabled && classes.unselected} ${classes.effectName}`}>{effect.name}</Box>
-                    {selected ?
-                    <Box>
-                        <Icon>arrow_right_alt</Icon>
-                    </Box>:
-                    <IconButton disabled={requestRunning} onClick={()=>effect.enabled && navigateTo(effectIndex)}><Icon className={classes.unselected}>{effect.enabled ? "arrow_right_alt":""}</Icon></IconButton>}
-                    <IconButton disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}><Icon>{effect.enabled ? "check" : "close"}</Icon></IconButton>
-                </Box>
-                {selected && <LinearProgress variant="determinate" sx={{transition: 'none'}} value={progress}/>}
-            </Box>
+    return <Card variant="outlined" className={classes.effect}>
+                <CardHeader
+                    avatar={
+                        <Avatar aria-label={effect.name}>
+                            {effect.name[0]}
+                        </Avatar>
+                      }
+                    title={effect.name}
+                    subheader={effect.enabled?(selected?"Active":"Waiting") : "Disabled"}
+                    className={classes.cardheader}
+                /> 
+                <CardContent>
+                    {selected && <LinearProgress disabled={requestRunning} variant="determinate" sx={{transition: 'none'}} value={progress}/>}
+                    {!selected && <Button disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)} variant="outlined" startIcon={<Icon >{effect.enabled?"stop":"circle"}</Icon>}>{effect.enabled?"Disable":"Enable"}</Button>}
+                    {!selected && effect.enabled && <Button disabled={requestRunning} onClick={()=>navigateTo(effectIndex)} variant="outlined" startIcon={<Icon >start</Icon>}>Trigger</Button>}
+                </CardContent>
+                <CardActions disableSpacing>
+                    <IconButton
+                        onClick={()=>setExpanded(!expanded)}
+                        aria-label="show more">
+                        <Icon>settings</Icon>
+                    </IconButton>
+                </CardActions>
+                <Collapse in={expanded} timeout="auto" unmountOnExit>
+                    <CardContent>
+                        <TextField label="Option"/>
+                    </CardContent>
+                </Collapse>
+            </Card>
 });const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
 
@@ -1064,7 +1247,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
             {Object.entries(stat.stat)
                    .map(entry=>
                 <ListItem key={entry[0]}>
-                    <Typography variant="little" color="textAttribute">{entry[0]}</Typography>:
+                    <Typography variant="little" color="textPrimary">{entry[0]}</Typography>:
                     <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
                 </ListItem>)}
         </List>:
@@ -1122,16 +1305,18 @@ const ConfigDialog = withStyles(configStyle)(props => {
 
     return <Box className={classes.root}>
         {detail && <Box className={classes.header}>
-            <Typography className={classes.headerLine} variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
-                <Typography key={headerField} className={classes.headerField} variant="subtitle2">{`${headerField}: ${rawvalue[headerField]}`}</Typography>)}
+            <Typography className={classes.headerLine} color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
+                <Typography key={headerField} className={classes.headerField} color="textPrimary" variant="subtitle2">{headerField}: 
+                    <Typography color="textSecondary" variant="subtitle2">{rawvalue[headerField]}</Typography>
+                </Typography>)}
             </Typography>
             <List className={classes.stats}>
                 {Object.entries(rawvalue)
                         .filter(entry=>!ignored.includes(entry[0]))
                         .map(entry=>
                     <ListItem className={classes.stats} key={entry[0]}>
-                        <Typography variant="littleHeader">{entry[0]}</Typography>:
-                        <Typography variant="littleValue" >{getValue(entry[1])}</Typography>
+                        <Typography color="textPrimary" variant="little">{entry[0]}</Typography>:
+                        <Typography color="textSecondary" variant="little" >{getValue(entry[1])}</Typography>
                     </ListItem>)}
             </List>
         </Box>}
@@ -1154,7 +1339,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                    tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
             <YAxis hide={true}></YAxis>
             <CartesianGrid strokeDasharray="3 3"/>
-            {detail && <Tooltip content={data => getStatTooltip(data, classes)}
+            {<Tooltip content={data => getStatTooltip(data, classes)}
                      labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>}
             {Object.entries(getChartValues(rawvalue))
                     .filter(entry => entry[1] !== undefined)
@@ -1195,15 +1380,6 @@ const ConfigDialog = withStyles(configStyle)(props => {
                             .then(stats => {
                                 setAbortControler(undefined); 
                                 return {
-                                    NightDriver: {
-                                        FPS:{
-                                            stat:{
-                                                LED:stats.LED_FPS,
-                                                SERIAL:stats.SERIAL_FPS,
-                                                AUDIO:stats.AUDIO_FPS
-                                            }
-                                        },
-                                    },
                                     CPU:{
                                         CPU: {
                                             stat:{
@@ -1250,6 +1426,15 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                             idleField: "FREE",
                                             headerFields: ["SIZE","MIN"],
                                             ignored:["SIZE","MIN"]
+                                        },
+                                    },
+                                    NightDriver: {
+                                        FPS:{
+                                            stat:{
+                                                LED:stats.LED_FPS,
+                                                SERIAL:stats.SERIAL_FPS,
+                                                AUDIO:stats.AUDIO_FPS
+                                            }
                                         },
                                     },
                                     Package: {
@@ -1312,28 +1497,37 @@ const ConfigDialog = withStyles(configStyle)(props => {
     return statistics && 
     <Box className={`${classes.root} ${!open && classes.hidden}`}>
         {Object.entries(statistics).map(category => 
-        <Box key={category[0]} className={classes.category}>
+        <Box key={category[0]} className={`${classes.category} ${!openedCategories[category[0]] && classes.detailedStats}`}>
+            {openedCategories[category[0]] ? 
             <Box className={classes.statCatergoryHeader} key="header">
-                <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>{openedCategories[category[0]] ? "menu" : "expand"}</Icon></IconButton>
                 <Typography variant="h5">{category[0]}</Typography>
-            </Box>
+                <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>minimize</Icon></IconButton>
+            </Box>:
+            <Box>
+                <Typography color="textPrimary">{category[0]}</Typography>
+            </Box>}
             <Box className={classes.categoryStats}>
             {Object.entries(category[1])
                .filter(entry=> entry[1].static) 
                .map(entry=>
-                <StaticStatsPanel
-                    key={`static-${entry[0]}`}
-                    detail={openedCategories[category[0]]}
-                    name={entry[0]}
-                    stat={entry[1]}/>)}
+                <Box 
+                  key={`entry-${entry[0]}`}
+                  className={!openedCategories[category[0]] && classes.summaryStats }  
+                  onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}>
+                    <StaticStatsPanel
+                        key={`static-${entry[0]}`}
+                        detail={openedCategories[category[0]]}
+                        name={entry[0]}
+                        stat={entry[1]}/>                
+                </Box>)}
                 <Box className={classes.categoryStats} key="charts">
                     {Object.entries(category[1])
                         .filter(entry=> !entry[1].static) 
-                        .map((entry,_idx,arr)=>  
-                            <Box key={`chart-${entry[0]}`}>
-                                {!openedCategories[category[0]] && arr.length > 1 && 
-                                <Box className={classes.chartHeader}><Typography variant="littleHeader">{entry[0]}</Typography></Box>}
-                                <Box className={classes.chartArea}>
+                        .map((entry)=>  
+                            <Box key={`chart-${entry[0]}`}
+                                 sx={{cursor:"pointer"}}
+                                 onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})} 
+                                 className={`${classes.chartArea} ${!openedCategories[category[0]] && classes.summaryStats}`}>
                                     {category[1][entry[0]].idleField && <BarStat
                                         key={`Bar-${entry[0]}`}
                                         name={entry[0]}
@@ -1356,8 +1550,7 @@ const ConfigDialog = withStyles(configStyle)(props => {
                                         idleField={ category[1][entry[0]].idleField }
                                         headerFields={ category[1][entry[0]].headerFields }
                                         ignored={ category[1][entry[0]].ignored || [] } />
-                                </Box>
-                            </Box>)}
+                                </Box>)}
                 </Box>
             </Box>
         </Box>)}

@@ -5,14 +5,10 @@ const configStyle = theme => ({
     configDisplay: {
         "display": "flex",
         "column-gap": "10px",
-        "flex-direction": "row",
+        "flex-direction": "column",
         "flex-wrap": "nowrap",
         "justify-content": "flex-start",
         "align-items": "center",
-    },
-    saveIcons: {
-        display: "flex",
-        "flex-direction": "column"
     },
     cblabel: {
         "margin-left": "initial"

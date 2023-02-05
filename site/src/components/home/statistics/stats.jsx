@@ -17,15 +17,6 @@ const StatsPanel = withStyles(statsStyle)(props => {
                             .then(stats => {
                                 setAbortControler(undefined); 
                                 return {
-                                    NightDriver: {
-                                        FPS:{
-                                            stat:{
-                                                LED:stats.LED_FPS,
-                                                SERIAL:stats.SERIAL_FPS,
-                                                AUDIO:stats.AUDIO_FPS
-                                            }
-                                        },
-                                    },
                                     CPU:{
                                         CPU: {
                                             stat:{
@@ -72,6 +63,15 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                             idleField: "FREE",
                                             headerFields: ["SIZE","MIN"],
                                             ignored:["SIZE","MIN"]
+                                        },
+                                    },
+                                    NightDriver: {
+                                        FPS:{
+                                            stat:{
+                                                LED:stats.LED_FPS,
+                                                SERIAL:stats.SERIAL_FPS,
+                                                AUDIO:stats.AUDIO_FPS
+                                            }
                                         },
                                     },
                                     Package: {
@@ -134,28 +134,37 @@ const StatsPanel = withStyles(statsStyle)(props => {
     return statistics && 
     <Box className={`${classes.root} ${!open && classes.hidden}`}>
         {Object.entries(statistics).map(category => 
-        <Box key={category[0]} className={classes.category}>
+        <Box key={category[0]} className={`${classes.category} ${!openedCategories[category[0]] && classes.detailedStats}`}>
+            {openedCategories[category[0]] ? 
             <Box className={classes.statCatergoryHeader} key="header">
-                <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>{openedCategories[category[0]] ? "menu" : "expand"}</Icon></IconButton>
                 <Typography variant="h5">{category[0]}</Typography>
-            </Box>
+                <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>minimize</Icon></IconButton>
+            </Box>:
+            <Box>
+                <Typography color="textPrimary">{category[0]}</Typography>
+            </Box>}
             <Box className={classes.categoryStats}>
             {Object.entries(category[1])
                .filter(entry=> entry[1].static) 
                .map(entry=>
-                <StaticStatsPanel
-                    key={`static-${entry[0]}`}
-                    detail={openedCategories[category[0]]}
-                    name={entry[0]}
-                    stat={entry[1]}/>)}
+                <Box 
+                  key={`entry-${entry[0]}`}
+                  className={!openedCategories[category[0]] && classes.summaryStats }  
+                  onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}>
+                    <StaticStatsPanel
+                        key={`static-${entry[0]}`}
+                        detail={openedCategories[category[0]]}
+                        name={entry[0]}
+                        stat={entry[1]}/>                
+                </Box>)}
                 <Box className={classes.categoryStats} key="charts">
                     {Object.entries(category[1])
                         .filter(entry=> !entry[1].static) 
-                        .map((entry,_idx,arr)=>  
-                            <Box key={`chart-${entry[0]}`}>
-                                {!openedCategories[category[0]] && arr.length > 1 && 
-                                <Box className={classes.chartHeader}><Typography variant="littleHeader">{entry[0]}</Typography></Box>}
-                                <Box className={classes.chartArea}>
+                        .map((entry)=>  
+                            <Box key={`chart-${entry[0]}`}
+                                 sx={{cursor:"pointer"}}
+                                 onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})} 
+                                 className={`${classes.chartArea} ${!openedCategories[category[0]] && classes.summaryStats}`}>
                                     {category[1][entry[0]].idleField && <BarStat
                                         key={`Bar-${entry[0]}`}
                                         name={entry[0]}
@@ -178,8 +187,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                         idleField={ category[1][entry[0]].idleField }
                                         headerFields={ category[1][entry[0]].headerFields }
                                         ignored={ category[1][entry[0]].ignored || [] } />
-                                </Box>
-                            </Box>)}
+                                </Box>)}
                 </Box>
             </Box>
         </Box>)}

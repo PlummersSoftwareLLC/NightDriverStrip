@@ -46,16 +46,18 @@ const AreaStat = withStyles(areaChartStyle)(props => {
 
     return <Box className={classes.root}>
         {detail && <Box className={classes.header}>
-            <Typography className={classes.headerLine} variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
-                <Typography key={headerField} className={classes.headerField} variant="subtitle2">{`${headerField}: ${rawvalue[headerField]}`}</Typography>)}
+            <Typography className={classes.headerLine} color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
+                <Typography key={headerField} className={classes.headerField} color="textPrimary" variant="subtitle2">{headerField}: 
+                    <Typography color="textSecondary" variant="subtitle2">{rawvalue[headerField]}</Typography>
+                </Typography>)}
             </Typography>
             <List className={classes.stats}>
                 {Object.entries(rawvalue)
                         .filter(entry=>!ignored.includes(entry[0]))
                         .map(entry=>
                     <ListItem className={classes.stats} key={entry[0]}>
-                        <Typography variant="littleHeader">{entry[0]}</Typography>:
-                        <Typography variant="littleValue" >{getValue(entry[1])}</Typography>
+                        <Typography color="textPrimary" variant="little">{entry[0]}</Typography>:
+                        <Typography color="textSecondary" variant="little" >{getValue(entry[1])}</Typography>
                     </ListItem>)}
             </List>
         </Box>}
@@ -78,7 +80,7 @@ const AreaStat = withStyles(areaChartStyle)(props => {
                    tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
             <YAxis hide={true}></YAxis>
             <CartesianGrid strokeDasharray="3 3"/>
-            {detail && <Tooltip content={data => getStatTooltip(data, classes)}
+            {<Tooltip content={data => getStatTooltip(data, classes)}
                      labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>}
             {Object.entries(getChartValues(rawvalue))
                     .filter(entry => entry[1] !== undefined)

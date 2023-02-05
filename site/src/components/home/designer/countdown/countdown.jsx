@@ -23,8 +23,8 @@ const Countdown = withStyles(countdownStyle)(props => {
 
     return (            
     <Box className={classes.root}>
-        <Typography variant="little" color="textSecondary">{label}</Typography>:
-        <Typography className={classes.timeremaining} width="100px" variant="little" color="textAttribute">{timeRemaining}</Typography>
+        <Typography variant="little" color="textPrimary">{label}</Typography>:
+        <Typography color="textSecondary" className={classes.timeremaining} width="100px" variant="little">{timeRemaining}</Typography>
     </Box>)
 
 });

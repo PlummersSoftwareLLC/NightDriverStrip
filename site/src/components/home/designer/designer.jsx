@@ -36,10 +36,13 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
 
     const chipRequest = (url,options,operation) => {
-        setRequestRunning(true);
-        return fetch(url,options)
-                .catch(err => addNotification("Error",operation,err))
-                .finally(()=>setRequestRunning(false));
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            return fetch(url,options)
+                    .then(resolve)
+                    .catch(err => {addNotification("Error",operation,err);reject(err)})
+                    .finally(()=>setRequestRunning(false));    
+        });
     };
 
     const navigateTo = (idx)=>{
@@ -72,9 +75,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
 
     const displayHeader = ()=>{
         return <Box className={classes.effectsHeaderValue}>
-            <Typography variant="little" color="textSecondary">Interval</Typography>:
-            <Typography variant="little" color="textAttribute">{effects.effectInterval}</Typography>
-            <IconButton onClick={() => setEditing(true)}><Icon>edit</Icon></IconButton>
+            <Typography variant="little" color="textPrimary">Interval</Typography>:
+            <Link href="#" variant="little" color="textSecondary" onClick={() => setEditing(true)}>{effects.effectInterval}</Link>
         </Box>;
     }
 
@@ -86,7 +88,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 defaultValue={effects.effectInterval}
                 onChange={event => setPendingInterval(event.target.value)} />
             <Box className={classes.saveIcons}>
-                <IconButton color="primary"
+                <IconButton 
+                    color="action"
                     aria-label="Save"
                     component="label"
                     onClick={_evt => {

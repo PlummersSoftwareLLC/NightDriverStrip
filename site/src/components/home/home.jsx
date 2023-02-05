@@ -1,10 +1,15 @@
-const MainApp = withStyles(mainAppStyle)(props => {
-    const { classes } = props;
-    const [drawerOpened, setDrawerOpened] = useState(false);
+const MainApp = () => {
     const [mode, setMode] = useState('dark');
+    const theme = React.useMemo(
+        () => getTheme(mode),[mode]);
+    return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
+};
+
+const AppPannel = withStyles(mainAppStyle)(props => {
+    const { classes, mode, setMode } = props;
+    const [drawerOpened, setDrawerOpened] = useState(false);
     const [stats, setStats] = useState(false);
     const [designer, setDesigner] = useState(false);
-    const [config, setConfig] = useState(false);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
     const [animateChart, setAnimateChart ] = useState(false);
@@ -18,13 +23,13 @@ const MainApp = withStyles(mainAppStyle)(props => {
             type: "int"
         },
         statsAnimateChange: {
-            name: "Animate chart changes",
+            name: "Animate chart",
             value: animateChart,
             setter: setAnimateChart,
             type: "boolean"
         },
         maxSamples: {
-            name: "Number of chart points",
+            name: "Chart points",
             value: maxSamples,
             setter: setMaxSamples,
             type: "int"
@@ -39,9 +44,7 @@ const MainApp = withStyles(mainAppStyle)(props => {
         });
     };
 
-    return <ThemeProvider theme={mode == "dark" ? darkTheme : lightTheme}>
-        <CssBaseline />
-        <Box className={classes.root}>
+    return <Box className={classes.root}>
             <AppBar className={[classes.appbar,drawerOpened && classes.appbarOpened].join(" ")}>
                 <Toolbar>
                     <IconButton 
@@ -72,22 +75,21 @@ const MainApp = withStyles(mainAppStyle)(props => {
                 </Box>
                 <Divider/>
                 <List>{
-                    [{caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                     {caption:"Effects Designer", flag: designer, setter: setDesigner, icon: "design_services"},
-                     {caption:"Settings", flag: config, setter: setConfig, icon: "settings"}].map(item => 
-                    <ListItem key={item.caption}>
-                        <ListItemIcon><IconButton onClick={() => item.setter(prevValue => !prevValue)}>
-                            <Icon className={item.flag && (item.icon !== "settings") && classes.optionSelected}>{item.icon}</Icon>
+                    [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
+                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
+                     {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item => 
+                    <ListItem key={item.icon}>
+                        <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
+                            <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                         <ListItemText primary={item.caption}/>
+                        {drawerOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
                     </ListItem>)
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
                 <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
                 <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
-                <ConfigDialog siteConfig={siteConfig} open={config} addNotification={addNotification} onClose={() => {setConfig(false)}} />
             </Box>
-        </Box>
-    </ThemeProvider>;
+        </Box>;
 });

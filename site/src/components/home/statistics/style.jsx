@@ -9,6 +9,12 @@ const statsStyle = theme => ({
         columnGap: "10px",
         rowGap: "10px"
     },
+    summaryStats: {
+        cursor: "pointer"
+    },
+    detiailedStats: {
+        border: "solid 1px"
+    },
     chartArea: {
         "display": "flex",
         "flex-direction": "row",
@@ -35,8 +41,6 @@ const statsStyle = theme => ({
         "column-gap": "5px",
     },
     category:{
-        border: "green solid 2px",
-        borderRadius: "15px",
     },
     hidden: {
         display: "none"
@@ -46,9 +50,9 @@ const statsStyle = theme => ({
         "flex-direction": "row",
         "flex-wrap": "wrap",
         "align-content": "flex-start",
-        "justify-content": "center",
+        "justify-content": "space-between",
         "align-items": "center",
-        borderBottom: "green solid 1px"
+        "border-bottom": "solid 1px",
     }
 });
 

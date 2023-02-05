@@ -2,19 +2,19 @@ const effectStyle = theme => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
-        border: "green solid 2px",
-        borderRadius: "15px",
         padding: "10px",
+    },
+    cardheader: {
     },
     hidden: {
         display: "none"
     },
     effect: {
+        width: "180px",
         display: "flex",
         flexDirection: "column",
-        alignItems: "stretch",
-        width: "180px",
-        border: "green solid 1px"
+        flexWrap: "nowrap",
+        justifyContent: "space-between",
     },
     effectPannel: {
         display: "flex",

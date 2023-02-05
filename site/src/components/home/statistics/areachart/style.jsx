@@ -20,8 +20,7 @@ const areaChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "space-between",
         "align-items": "center",
-        "width": "100%",
-        "color": theme.palette.text.primary
+        "width": "100%"
     },
     headerField: {
         "display": "flex",
@@ -29,8 +28,7 @@ const areaChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "center",
         "align-items": "center",
-        "width": "inherit",
-        "color": theme.palette.text.secondary
+        "width": "inherit"
     },
     stats: {
         "display": "flex",
@@ -38,8 +36,7 @@ const areaChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "center",
         "align-items": "center",
-        "padding": "0px",
-        "color": theme.palette.text.secondary
+        "padding": "0px"
     },
     stat: {
         "display": "flex",

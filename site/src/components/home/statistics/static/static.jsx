@@ -7,7 +7,7 @@ const StaticStatsPanel = withStyles(staticStatStyle)(props => {
             {Object.entries(stat.stat)
                    .map(entry=>
                 <ListItem key={entry[0]}>
-                    <Typography variant="little" color="textAttribute">{entry[0]}</Typography>:
+                    <Typography variant="little" color="textPrimary">{entry[0]}</Typography>:
                     <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
                 </ListItem>)}
         </List>:

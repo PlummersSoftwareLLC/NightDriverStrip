@@ -2,9 +2,6 @@ const designStyle = theme => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
-        border: "green solid 2px",
-        borderRadius: "15px",
-        padding: "10px",
     },
     hidden: {
         display: "none"
@@ -12,7 +9,7 @@ const designStyle = theme => ({
     effectsHeader: {
         display: "flex",
         flexDirection: "row",
-        borderBottom: "green solid 1px",
+        borderBottom: "solid 1px",
         columnGap: "5px",
     },
     effectsHeaderValue: {
@@ -25,5 +22,9 @@ const designStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
+        padding: "10px",
+        columnGap: "15px",
+        rowGap: "15px",
+        paddingTop: "20px",
     }
 });

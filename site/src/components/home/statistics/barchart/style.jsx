@@ -20,8 +20,7 @@ const barChartStyle = theme => ({
         "flex-wrap": "nowrap",
         "justify-content": "space-between",
         "align-items": "center",
-        "width": "100%",
-        "color": theme.palette.text.primary
+        "width": "100%"
     },
     stats: {
         "display": "flex",
