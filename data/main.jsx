@@ -1207,6 +1207,9 @@ const ConfigPanel = withStyles(configStyle)(props => {
             },300);
             return ()=>clearInterval(interval);
         }
+        if (!selected) {
+            setProgress(0);
+        }
     },[millisecondsRemaining,selected]);
 
     return <Card variant="outlined" className={classes.effect}>
