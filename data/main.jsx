@@ -1053,42 +1053,57 @@ const ConfigPanel = withStyles(configStyle)(props => {
 
     const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
 
-    const chipRequest = (url,options,operation) => {
-        return new Promise((resolve,reject)=>{
-            setRequestRunning(true);
-            return fetch(url,options)
-                    .then(resolve)
-                    .catch(err => {addNotification("Error",operation,err);reject(err)})
-                    .finally(()=>setRequestRunning(false));    
-        });
-    };
+    const chipRequest = (url,options,operation) => 
+        new Promise((resolve,reject) => 
+            fetch(url,options)
+                .then(resolve)
+                .catch(err => {addNotification("Error",operation,err);reject(err)}));
 
     const navigateTo = (idx)=>{
-        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
-                .then(requestRefresh);
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})}, "navigateTo")
+                .then(resolve)
+                .then(requestRefresh)
+                .catch(reject)
+                .finally(()=>setRequestRunning(false));    
+        });
     }
 
     const effectEnable = (idx,enable)=>{
-        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
-        .then(requestRefresh);
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})},"effectEnable")
+                .then(resolve)
+                .then(requestRefresh)
+                .catch(reject)
+                .finally(()=>setRequestRunning(false));    
+        });
     }
 
     const navigate = (up)=>{
-        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
-        .then(requestRefresh);
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"nvigate")
+                .then(resolve)
+                .then(requestRefresh)
+                .catch(reject)
+                .finally(()=>setRequestRunning(false));    
+        });
     }
 
     const updateEventInterval = (interval)=>{
-        const abort = new AbortController();
-        const timer = setTimeout(()=>abort.abort(),3000);
-        chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
-        {
-            method:"POST",
-            signal:abort.signal,
-            body: new URLSearchParams({effectInterval:interval})
-        }).then(()=>clearTimeout(timer))
-          .then(requestRefresh)
-          .catch(_err => clearTimeout(timer));
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+            {
+                method:"POST",
+                body: new URLSearchParams({effectInterval:interval})
+            },"updateEventInterval").then(resolve)
+              .then(requestRefresh)
+              .catch(reject)
+              .finally(()=>setRequestRunning(false));    
+        });
     }
 
     const displayHeader = ()=>{
