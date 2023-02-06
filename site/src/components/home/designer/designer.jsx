@@ -5,7 +5,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
-    const [ pendingInterval, setPendingInterval ] = useState(undefined);
+    const [ pendingInterval, setPendingInterval ] = useState(effects && effects.effectInterval);
 
     useEffect(() => {
         if (abortControler) {
@@ -96,33 +96,14 @@ const DesignerPanel = withStyles(designStyle)(props => {
     }
 
     const editingHeader = ()=>{
-        return <Box className={classes.effectsHeaderValue}>
+        return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);}}>
+            <Box className={classes.effectsHeaderValue}>
             <TextField label="Interval ms"
                 variant="outlined"
                 type="number"
                 defaultValue={effects.effectInterval}
                 onChange={event => setPendingInterval(event.target.value)} />
-            <Box className={classes.saveIcons}>
-                <IconButton 
-                    color="action"
-                    aria-label="Save"
-                    component="label"
-                    onClick={_evt => {
-                        updateEventInterval(pendingInterval);
-                        setEditing(false);
-                    } }>
-                    <Icon>save</Icon>
-                </IconButton>
-                <IconButton color="secondary"
-                    aria-label="Cancel"
-                    component="label"
-                    onClick={_evt => {
-                        setEditing(false);
-                    } }>
-                    <Icon>cancel</Icon>
-                </IconButton>
-            </Box>
-        </Box>;
+        </Box></ClickAwayListener>;
     }
 
     if (!effects && open){
