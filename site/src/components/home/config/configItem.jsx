@@ -5,13 +5,13 @@ const ConfigItem = withStyles(configStyle)(props => {
     const getConfigValue = (value, type) => {
         switch (type) {
             case "int":
-                return parseInt(value)
+                return parseInt(value);
             case "float":
-                return parseFloat(value)
+                return parseFloat(value);
             default:
                 return value;
         }
-    }
+    };
 
     if (datatype === "boolean") {
         return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
