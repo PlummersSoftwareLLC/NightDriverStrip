@@ -1600,5 +1600,4 @@ const StaticStatsPanel = withStyles(staticStatStyle)(props => {
         return a === idleField && b !== idleField ? 1 : (a !== idleField && b === idleField ? -1 : a.localeCompare(b));
     }
 });
-    ReactDOM.createRoot(document.getElementById("root"))
-        .render(<StrictMode><MainApp/></StrictMode>);
+    
