@@ -7,14 +7,8 @@
         "serve": "^14.2.0"
     },
     "scripts": {
-        "buildhtml": "cat ./src/index.html",
-        "buildjsx": "(cat ./src/modules/modules.jsx && find ./src/theme -type f -name '*.jsx' -exec cat {} \\;&& find ./src/components -type f -name 'style.jsx' -exec cat {} \\; && find ./src/components -type f -name '*.jsx' ! -name 'style.jsx' | xargs cat && cat ./src/main.jsx)",
-        "build": "npm run buildsetup && (echo \"const httpPrefix='';\" && npm run --silent buildjsx) > ../data/main.jsx && npm run --silent buildhtml  > ../data/index.html",
-        "localipsetup": "grep -qv putyourespipornamehere ./src/espaddr.jsx && echo Esp IP -- OK || (echo 'Please populate the ./src/espaddr.jsx file wit the ip address of the test device' && exit 3)",
-        "localsetup": "[ -d ./local ] || mkdir local && npm run localipsetup && echo localsetup -- OK",
-        "buildsetup": "[ -d ../data ] || mkdir ../data && echo buildsetup -- OK",
-        "buildlocal": "npm run localsetup && (cat ./src/espaddr.jsx && npm run --silent buildjsx) > ./local/main.jsx && npm run --silent buildhtml  > ./local/index.html",
-        "rebuild": "npm run localsetup && node ./node_modules/fs-watch-exec/index.js run -d ./src 'npm run buildlocal'",
-        "start": "npm run localsetup && (npm run rebuild& node ./node_modules/serve/build/main.js ./local)"
+        "build": "cd .. && ./bake_site.py local",
+        "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src 'npm run build'",
+        "start": "(npm run rebuild& node ./node_modules/serve/build/main.js ./local)"
     }
 }

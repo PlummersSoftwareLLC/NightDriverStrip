@@ -1,5 +1,4 @@
-const httpPrefix='';
-const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
+const httpPrefix='';const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
 
 const { ThemeOptions, createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
@@ -313,24 +312,7 @@ const getTheme = (mode) => createTheme({
 //     }
 //   },
 // });
-const notificationsStyle = theme => ({
-    root: {
-    },
-    popup: {
-    },
-    errorTarget: {
-    },
-    errors: {
-        display: "flex",
-        flexDirection: "column"
-    },
-    errorHeader: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        borderBottom: "solid aquamarine 2px",
-    }
-});const drawerWidth = 240;
+const drawerWidth = 240;
 
 const mainAppStyle = theme => ({
     root: {
@@ -418,7 +400,24 @@ const mainAppStyle = theme => ({
       color: theme.palette.text.primary
     }
   });
-  const configStyle = theme => ({
+  const notificationsStyle = theme => ({
+    root: {
+    },
+    popup: {
+    },
+    errorTarget: {
+    },
+    errors: {
+        display: "flex",
+        flexDirection: "column"
+    },
+    errorHeader: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        borderBottom: "solid aquamarine 2px",
+    }
+});const configStyle = theme => ({
     configBar: {
         "padding-top": "65px"
     },
@@ -785,88 +784,7 @@ const barChartStyle = theme => ({
         "color": "aqua"
     }
 });
-const NotificationPanel = withStyles(notificationsStyle)(props => {
-    const { classes, notifications, clearNotifications } = props;
-    const [numErrors, setNumErrors] = React.useState(undefined);
-    const [errorTargets, setErrorTargets] = React.useState({});
-    const [open, setOpen] = React.useState(false);
-    const inputRef = React.createRef();
-    const theme = useTheme();
-
-    useEffect(()=>{
-        setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
-        setErrorTargets(notifications.reduce((ret,notif) => 
-            {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
-    },[notifications]);
-
-    return (
-        <Box className={classes.root}>
-            <IconButton
-                    id="notifications"
-                    ref={inputRef}
-                    onClick={() => setOpen(wasOpen=>!wasOpen)}>
-                <Badge 
-                    aria-label="Alerts" 
-                    badgeContent={numErrors} 
-                    color="secondary">
-                    <Icon>notifications</Icon>
-                </Badge>
-            </IconButton>
-            <Popover
-                open={open}
-                target="notifications"
-                onClose={()=>{setOpen(false)}}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}>
-                <Card className={classes.popup} elevation={9}>
-                    <CardHeader
-                        avatar={
-                        <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
-                            !
-                        </Avatar>
-                        }
-                        action={
-                        <IconButton onClick={()=>setOpen(false)} aria-label="settings">
-                            <Icon>close</Icon>
-                        </IconButton>
-                        }
-                        title={`${numErrors} Errors`}
-                    />
-                    <CardContent>
-                        {Object.entries(errorTargets)
-                               .sort((a,b)=>a[0].localeCompare(b[0]))
-                               .map(target => 
-                            <CardContent key={target[0]} className={classes.errors}>
-                                {Object.entries(notifications)
-                                       .filter(notif => notif[1].target === target[0])
-                                       .map(error =>
-                                <Box key={error[0]}>
-                                    <Box className={classes.errorHeader} key="header">
-                                        <Typography>{target[0]}</Typography>
-                                        <Typography color="textSecondary">{error[1].type}</Typography>
-                                        <Typography>{error[1].level}</Typography>
-                                    </Box>
-                                    <Box className={classes.errors} key="errors">
-                                        {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
-                                                .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
-                                        }
-                                    </Box>
-                                </Box>
-                                       )}
-                            </CardContent>
-                        )}
-                    </CardContent>
-                    <CardActions disableSpacing>
-                        <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
-                            <Icon>delete</Icon>
-                        </IconButton>
-                    </CardActions>
-                </Card>
-            </Popover>
-        </Box>);
-});const MainApp = () => {
+const MainApp = () => {
     const [mode, setMode] = useState('dark');
     const theme = React.useMemo(
         () => getTheme(mode),[mode]);
@@ -961,7 +879,88 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             </Box>
         </Box>;
 });
-const ConfigItem = withStyles(configStyle)(props => {
+const NotificationPanel = withStyles(notificationsStyle)(props => {
+    const { classes, notifications, clearNotifications } = props;
+    const [numErrors, setNumErrors] = React.useState(undefined);
+    const [errorTargets, setErrorTargets] = React.useState({});
+    const [open, setOpen] = React.useState(false);
+    const inputRef = React.createRef();
+    const theme = useTheme();
+
+    useEffect(()=>{
+        setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
+        setErrorTargets(notifications.reduce((ret,notif) => 
+            {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
+    },[notifications]);
+
+    return (
+        <Box className={classes.root}>
+            <IconButton
+                    id="notifications"
+                    ref={inputRef}
+                    onClick={() => setOpen(wasOpen=>!wasOpen)}>
+                <Badge 
+                    aria-label="Alerts" 
+                    badgeContent={numErrors} 
+                    color="secondary">
+                    <Icon>notifications</Icon>
+                </Badge>
+            </IconButton>
+            <Popover
+                open={open}
+                target="notifications"
+                onClose={()=>{setOpen(false)}}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}>
+                <Card className={classes.popup} elevation={9}>
+                    <CardHeader
+                        avatar={
+                        <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
+                            !
+                        </Avatar>
+                        }
+                        action={
+                        <IconButton onClick={()=>setOpen(false)} aria-label="settings">
+                            <Icon>close</Icon>
+                        </IconButton>
+                        }
+                        title={`${numErrors} Errors`}
+                    />
+                    <CardContent>
+                        {Object.entries(errorTargets)
+                               .sort((a,b)=>a[0].localeCompare(b[0]))
+                               .map(target => 
+                            <CardContent key={target[0]} className={classes.errors}>
+                                {Object.entries(notifications)
+                                       .filter(notif => notif[1].target === target[0])
+                                       .map(error =>
+                                <Box key={error[0]}>
+                                    <Box className={classes.errorHeader} key="header">
+                                        <Typography>{target[0]}</Typography>
+                                        <Typography color="textSecondary">{error[1].type}</Typography>
+                                        <Typography>{error[1].level}</Typography>
+                                    </Box>
+                                    <Box className={classes.errors} key="errors">
+                                        {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
+                                                .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
+                                        }
+                                    </Box>
+                                </Box>
+                                       )}
+                            </CardContent>
+                        )}
+                    </CardContent>
+                    <CardActions disableSpacing>
+                        <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
+                            <Icon>delete</Icon>
+                        </IconButton>
+                    </CardActions>
+                </Card>
+            </Popover>
+        </Box>);
+});const ConfigItem = withStyles(configStyle)(props => {
     const { name, value, configItemUpdated, datatype, classes } = props;
     const [ editing, setEditing] = useState(false);
     const [ configValue, setConfigValue] = useState(value);
@@ -1237,130 +1236,7 @@ const ConfigPanel = withStyles(configStyle)(props => {
                     </CardContent>
                 </Collapse>
             </Card>
-});const StaticStatsPanel = withStyles(staticStatStyle)(props => {
-    const { classes, stat, name, detail } = props;
-
-    return <Box className={classes.root}>
-        <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
-        {detail ? <List>
-            {Object.entries(stat.stat)
-                   .map(entry=>
-                <ListItem key={entry[0]}>
-                    <Typography variant="little" color="textPrimary">{entry[0]}</Typography>:
-                    <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
-                </ListItem>)}
-        </List>:
-        <List>
-        {Object.entries(stat.stat)
-               .filter(entry => stat.headerFields.includes(entry[0]))
-               .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
-    </List>}
-    </Box>
-});const AreaStat = withStyles(areaChartStyle)(props => {
-    const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
-    const getChartValues = (value) => Object.entries(value)
-                        .filter(entry=>!ignored.includes(entry[0]))
-                        .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{});
-    const [lastStates, setLastStates] = useState([Object.entries(getChartValues(rawvalue))
-        .filter(entry=>!ignored.includes(entry[0]))
-        .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})] );
-    const getValue = (value) => value !== undefined && !Number.isInteger(value) ? (isNaN(value) ? value : value.toFixed(2)) : value;
-    const theme = useTheme();
-
-    useMemo(()=>{
-        setLastStates(lastStates === undefined ? [Object.entries(getChartValues(rawvalue))] : [...lastStates,Object.entries(getChartValues(rawvalue))
-            .filter(entry=>!ignored.includes(entry[0]))
-            .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]
-            .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true));
-    },[rawvalue]);
-    
-    const getFillColor = ({step, isIdle}) => {
-        if (isIdle) {
-            return theme.palette.taskManager.idleColor;
-        }
-        return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
-    }
-
-    const getStatTooltip = (data, classes) => {
-        return (
-        <div className={classes.tooltipContent}>
-            <div className={classes.tooltipHeader}>{data.labelFormatter(data.label)}</div>
-            <ul className={classes.threads}>
-                {data.payload
-                    .sort((a,b) => sortStats(b,a))
-                    .map(stat => 
-                    <div key={stat.name} className={classes.thread}>
-                        <div className={classes.threadName} style={{color:stat.color}}>{stat.name}</div>
-                        <div className={classes.threadValue}>{getValue(stat.value)}
-                            <div className={classes.threadSummary}>
-                                ({(stat.value/data.payload.reduce((ret,stat) => ret + stat.value,0)*100).toFixed(2)}%)
-                            </div>
-                        </div>
-                    </div>)
-                }
-            </ul>
-        </div>)
-    }
-
-    return <Box className={classes.root}>
-        {detail && <Box className={classes.header}>
-            <Typography className={classes.headerLine} color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
-                <Typography key={headerField} className={classes.headerField} color="textPrimary" variant="subtitle2">{headerField}: 
-                    <Typography color="textSecondary" variant="subtitle2">{rawvalue[headerField]}</Typography>
-                </Typography>)}
-            </Typography>
-            <List className={classes.stats}>
-                {Object.entries(rawvalue)
-                        .filter(entry=>!ignored.includes(entry[0]))
-                        .map(entry=>
-                    <ListItem className={classes.stats} key={entry[0]}>
-                        <Typography color="textPrimary" variant="little">{entry[0]}</Typography>:
-                        <Typography color="textSecondary" variant="little" >{getValue(entry[1])}</Typography>
-                    </ListItem>)}
-            </List>
-        </Box>}
-        <AreaChart 
-            data={lastStates}
-            height={detail ? 300 : 80}
-            width={detail ? 500 : 200}
-            stackOffset="expand">
-            <defs>
-                {Object.entries(getChartValues(rawvalue))
-                       .filter(entry => entry[1] !== undefined)
-                       .map((entry,idx,arr) => <linearGradient key={`color${entry[0]}`} id={`color${entry[0]}`} x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor={getFillColor({numOfSteps: arr.length, step: idx, isIdle: entry[0] === idleField})} stopOpacity={0.8}/>
-                                                <stop offset="95%" stopColor={getFillColor({numOfSteps: arr.length, step: idx, isIdle: entry[0] === idleField})} stopOpacity={0}/>
-                                              </linearGradient>)}
-            </defs>
-            <XAxis dataKey="ts"
-                   name='Time'
-                   hide={!detail}
-                   tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
-            <YAxis hide={true}></YAxis>
-            <CartesianGrid strokeDasharray="3 3"/>
-            {<Tooltip content={data => getStatTooltip(data, classes)}
-                     labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>}
-            {Object.entries(getChartValues(rawvalue))
-                    .filter(entry => entry[1] !== undefined)
-                    .sort((a,b) => sortStats({name:a[0],chartValue:a[1]},{name:b[0],chartValue:b[1]}))
-                    .map((entry) => 
-                            <Area
-                                key={entry[0]}
-                                isAnimationActive={statsAnimateChange}
-                                type="monotone"
-                                fillOpacity={1} 
-                                fill={`url(#color${entry[0]})`}
-                                stroke={category === "Memory" ? theme.palette.taskManager.memoryColor : theme.palette.taskManager.strokeColor}
-                                dataKey={entry[0]}
-                                stackId="1"/>)}
-        </AreaChart>
-    </Box>
-
-    function sortStats(a, b) {
-        return a.name === idleField && b.name !== idleField ? 1 : (a.name !== idleField && b.name === idleField ? -1 : a.value-b.value);
-    }
-});
-    const StatsPanel = withStyles(statsStyle)(props => {
+});const StatsPanel = withStyles(statsStyle)(props => {
     const { classes, siteConfig, open, addNotification } = props;
     const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
     const [ statistics, setStatistics] = useState(undefined);
@@ -1556,7 +1432,130 @@ const ConfigPanel = withStyles(configStyle)(props => {
     </Box>
 });
 
-const BarStat = withStyles(barChartStyle)(props => {
+const StaticStatsPanel = withStyles(staticStatStyle)(props => {
+    const { classes, stat, name, detail } = props;
+
+    return <Box className={classes.root}>
+        <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
+        {detail ? <List>
+            {Object.entries(stat.stat)
+                   .map(entry=>
+                <ListItem key={entry[0]}>
+                    <Typography variant="little" color="textPrimary">{entry[0]}</Typography>:
+                    <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
+                </ListItem>)}
+        </List>:
+        <List>
+        {Object.entries(stat.stat)
+               .filter(entry => stat.headerFields.includes(entry[0]))
+               .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
+    </List>}
+    </Box>
+});const AreaStat = withStyles(areaChartStyle)(props => {
+    const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
+    const getChartValues = (value) => Object.entries(value)
+                        .filter(entry=>!ignored.includes(entry[0]))
+                        .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{});
+    const [lastStates, setLastStates] = useState([Object.entries(getChartValues(rawvalue))
+        .filter(entry=>!ignored.includes(entry[0]))
+        .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})] );
+    const getValue = (value) => value !== undefined && !Number.isInteger(value) ? (isNaN(value) ? value : value.toFixed(2)) : value;
+    const theme = useTheme();
+
+    useMemo(()=>{
+        setLastStates(lastStates === undefined ? [Object.entries(getChartValues(rawvalue))] : [...lastStates,Object.entries(getChartValues(rawvalue))
+            .filter(entry=>!ignored.includes(entry[0]))
+            .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]
+            .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true));
+    },[rawvalue]);
+    
+    const getFillColor = ({step, isIdle}) => {
+        if (isIdle) {
+            return theme.palette.taskManager.idleColor;
+        }
+        return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
+    }
+
+    const getStatTooltip = (data, classes) => {
+        return (
+        <div className={classes.tooltipContent}>
+            <div className={classes.tooltipHeader}>{data.labelFormatter(data.label)}</div>
+            <ul className={classes.threads}>
+                {data.payload
+                    .sort((a,b) => sortStats(b,a))
+                    .map(stat => 
+                    <div key={stat.name} className={classes.thread}>
+                        <div className={classes.threadName} style={{color:stat.color}}>{stat.name}</div>
+                        <div className={classes.threadValue}>{getValue(stat.value)}
+                            <div className={classes.threadSummary}>
+                                ({(stat.value/data.payload.reduce((ret,stat) => ret + stat.value,0)*100).toFixed(2)}%)
+                            </div>
+                        </div>
+                    </div>)
+                }
+            </ul>
+        </div>)
+    }
+
+    return <Box className={classes.root}>
+        {detail && <Box className={classes.header}>
+            <Typography className={classes.headerLine} color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
+                <Typography key={headerField} className={classes.headerField} color="textPrimary" variant="subtitle2">{headerField}: 
+                    <Typography color="textSecondary" variant="subtitle2">{rawvalue[headerField]}</Typography>
+                </Typography>)}
+            </Typography>
+            <List className={classes.stats}>
+                {Object.entries(rawvalue)
+                        .filter(entry=>!ignored.includes(entry[0]))
+                        .map(entry=>
+                    <ListItem className={classes.stats} key={entry[0]}>
+                        <Typography color="textPrimary" variant="little">{entry[0]}</Typography>:
+                        <Typography color="textSecondary" variant="little" >{getValue(entry[1])}</Typography>
+                    </ListItem>)}
+            </List>
+        </Box>}
+        <AreaChart 
+            data={lastStates}
+            height={detail ? 300 : 80}
+            width={detail ? 500 : 200}
+            stackOffset="expand">
+            <defs>
+                {Object.entries(getChartValues(rawvalue))
+                       .filter(entry => entry[1] !== undefined)
+                       .map((entry,idx,arr) => <linearGradient key={`color${entry[0]}`} id={`color${entry[0]}`} x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor={getFillColor({numOfSteps: arr.length, step: idx, isIdle: entry[0] === idleField})} stopOpacity={0.8}/>
+                                                <stop offset="95%" stopColor={getFillColor({numOfSteps: arr.length, step: idx, isIdle: entry[0] === idleField})} stopOpacity={0}/>
+                                              </linearGradient>)}
+            </defs>
+            <XAxis dataKey="ts"
+                   name='Time'
+                   hide={!detail}
+                   tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
+            <YAxis hide={true}></YAxis>
+            <CartesianGrid strokeDasharray="3 3"/>
+            {<Tooltip content={data => getStatTooltip(data, classes)}
+                     labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>}
+            {Object.entries(getChartValues(rawvalue))
+                    .filter(entry => entry[1] !== undefined)
+                    .sort((a,b) => sortStats({name:a[0],chartValue:a[1]},{name:b[0],chartValue:b[1]}))
+                    .map((entry) => 
+                            <Area
+                                key={entry[0]}
+                                isAnimationActive={statsAnimateChange}
+                                type="monotone"
+                                fillOpacity={1} 
+                                fill={`url(#color${entry[0]})`}
+                                stroke={category === "Memory" ? theme.palette.taskManager.memoryColor : theme.palette.taskManager.strokeColor}
+                                dataKey={entry[0]}
+                                stackId="1"/>)}
+        </AreaChart>
+    </Box>
+
+    function sortStats(a, b) {
+        return a.name === idleField && b.name !== idleField ? 1 : (a.name !== idleField && b.name === idleField ? -1 : a.value-b.value);
+    }
+});
+    const BarStat = withStyles(barChartStyle)(props => {
     const { classes, name, rawvalue, ignored, statsAnimateChange , idleField, category, detail } = props;
     const theme = useTheme();
 
