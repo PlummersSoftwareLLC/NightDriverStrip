@@ -79,13 +79,11 @@ class CWebServer
     {
         static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
         bool bufferOverflow;
-        std::unique_ptr<AsyncJsonResponse> response;
-
-        debugI("GetEffectListText");
+        debugV("GetEffectListText");
 
         do {
             bufferOverflow = false;
-            response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
+            auto response = new AsyncJsonResponse(false, jsonBufferSize);
             response->addHeader("Server","NightDriverStrip");
             auto j = response->getRoot();
 
@@ -102,24 +100,25 @@ class CWebServer
                 if (!j["Effects"].add(effectDoc)) {
                     bufferOverflow = true;
                     jsonBufferSize += JSON_BUFFER_INCREMENT;
+                    delete response;
                     debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
                     break;
                 }
             }       
-        } while (bufferOverflow);
 
-        response->addHeader("Access-Control-Allow-Origin", "*");
-        response->setLength();
-        pRequest->send(response.get());
+            response->addHeader("Access-Control-Allow-Origin", "*");
+            response->setLength();
+            pRequest->send(response);
+        } while (bufferOverflow);
     }
 
     void GetStatistics(AsyncWebServerRequest * pRequest)
     {
         static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
 
-        debugI("GetStatistics");
+        debugV("GetStatistics");
 
-        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
+        auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
         response->addHeader("Server","NightDriverStrip");
         auto j = response->getRoot();
 
@@ -152,20 +151,20 @@ class CWebServer
         j["CPU_USED_CORE0"]        = g_TaskManager.GetCPUUsagePercent(0);
         j["CPU_USED_CORE1"]        = g_TaskManager.GetCPUUsagePercent(1);
 
-        response->addHeader("Access-Control-Allow-Origin", "*");
         response->setLength();
-        pRequest->send(response.get());
+        response->addHeader("Access-Control-Allow-Origin", "*");
+        pRequest->send(response);
     }    
 
     void SetSettings(AsyncWebServerRequest * pRequest)
     {
-        debugI("SetSettings");
+        debugV("SetSettings");
 
         // Look for the parameter by name
         const String strEffectInterval = "effectInterval";
         if (pRequest->hasParam(strEffectInterval, true, false))
         {
-            debugI("found EffectInterval");
+            debugV("found EffectInterval");
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
             size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
@@ -177,7 +176,7 @@ class CWebServer
 
     void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
     {
-        debugI("SetCurrentEffectIndex");
+        debugV("SetCurrentEffectIndex");
 
         /*
         AsyncWebParameter * param = pRequest->getParam(0);
@@ -209,7 +208,7 @@ class CWebServer
 
     void EnableEffect(AsyncWebServerRequest * pRequest)
     {
-        debugI("EnableEffect");
+        debugV("EnableEffect");
 
         // Look for the parameter by name
         const String strEffectIndex = "effectIndex";
@@ -226,7 +225,7 @@ class CWebServer
 
     void DisableEffect(AsyncWebServerRequest * pRequest)
     {
-        debugI("DisableEffect");
+        debugV("DisableEffect");
 
         // Look for the parameter by name
         const String strEffectIndex = "effectIndex";
@@ -244,14 +243,14 @@ class CWebServer
 
     void NextEffect(AsyncWebServerRequest * pRequest)
     {
-        debugI("NextEffect");
+        debugV("NextEffect");
         g_aptrEffectManager->NextEffect();
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
     void PreviousEffect(AsyncWebServerRequest * pRequest)
     {
-        debugI("PreviousEffect");
+        debugV("PreviousEffect");
         g_aptrEffectManager->PreviousEffect();
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
