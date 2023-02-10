@@ -21,7 +21,7 @@ const AreaStat = withStyles(areaChartStyle)(props => {
             return theme.palette.taskManager.idleColor;
         }
         return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
-    }
+    };
 
     const getStatTooltip = (data, classes) => {
         return (
@@ -42,7 +42,11 @@ const AreaStat = withStyles(areaChartStyle)(props => {
                 }
             </ul>
         </div>)
-    }
+    };
+
+    const sortStats = (a, b) => {
+        return a.name === idleField && b.name !== idleField ? 1 : (a.name !== idleField && b.name === idleField ? -1 : a.value-b.value);
+    };
 
     return <Box className={classes.root}>
         {detail && <Box className={classes.header}>
@@ -97,9 +101,5 @@ const AreaStat = withStyles(areaChartStyle)(props => {
                                 stackId="1"/>)}
         </AreaChart>
     </Box>
-
-    function sortStats(a, b) {
-        return a.name === idleField && b.name !== idleField ? 1 : (a.name !== idleField && b.name === idleField ? -1 : a.value-b.value);
-    }
 });
     
