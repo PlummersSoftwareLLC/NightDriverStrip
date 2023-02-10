@@ -1,3 +1,17 @@
+import subprocess
+import os
+import sys
+import glob
+
+def getJsx(folder,mask,exclude=""):
+    files = glob.glob(folder + '/**/' + mask, recursive=True)
+    ret = ""
+    for i, file in enumerate(files):
+        with open(file,'r') as reader:
+            if ((exclude == "") or (file.endswith(exclude) == False)):
+                ret+=reader.read()
+    return ret
+
 localBuild=False
 for i, arg in enumerate(sys.argv):
     if (arg == 'local'):
