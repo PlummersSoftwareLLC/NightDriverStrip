@@ -400,24 +400,7 @@ const mainAppStyle = theme => ({
       color: theme.palette.text.primary
     }
   });
-  const notificationsStyle = theme => ({
-    root: {
-    },
-    popup: {
-    },
-    errorTarget: {
-    },
-    errors: {
-        display: "flex",
-        flexDirection: "column"
-    },
-    errorHeader: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        borderBottom: "solid aquamarine 2px",
-    }
-});const configStyle = theme => ({
+  const configStyle = theme => ({
     configBar: {
         "padding-top": "65px"
     },
@@ -508,6 +491,23 @@ const mainAppStyle = theme => ({
     selected: {
         backgroundColor: theme.palette.background.paper,
     }
+});const notificationsStyle = theme => ({
+    root: {
+    },
+    popup: {
+    },
+    errorTarget: {
+    },
+    errors: {
+        display: "flex",
+        flexDirection: "column"
+    },
+    errorHeader: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        borderBottom: "solid aquamarine 2px",
+    }
 });const statsStyle = theme => ({
     root: {
         "display": "flex",
@@ -570,18 +570,6 @@ const statStyle = theme => ({
     root: {
       display: 'flex',
       "flex-direction": "column"
-    }
-});
-const staticStatStyle = theme => ({
-    root: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "space-between",
-        "align-items": "flex-start",
-        "margin-left": "5px",
-        "margin-right": "5px"
     }
 });
 const areaChartStyle = theme => ({
@@ -784,6 +772,18 @@ const barChartStyle = theme => ({
         "color": "aqua"
     }
 });
+const staticStatStyle = theme => ({
+    root: {
+        "display": "flex",
+        "flex-direction": "column",
+        "flex-wrap": "wrap",
+        "align-content": "flex-start",
+        "justify-content": "space-between",
+        "align-items": "flex-start",
+        "margin-left": "5px",
+        "margin-right": "5px"
+    }
+});
 const MainApp = () => {
     const [mode, setMode] = useState('dark');
     const theme = React.useMemo(
@@ -879,87 +879,19 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             </Box>
         </Box>;
 });
-const NotificationPanel = withStyles(notificationsStyle)(props => {
-    const { classes, notifications, clearNotifications } = props;
-    const [numErrors, setNumErrors] = React.useState(undefined);
-    const [errorTargets, setErrorTargets] = React.useState({});
-    const [open, setOpen] = React.useState(false);
-    const inputRef = React.createRef();
-    const theme = useTheme();
-
-    useEffect(()=>{
-        setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
-        setErrorTargets(notifications.reduce((ret,notif) => 
-            {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
-    },[notifications]);
-
-    return (
-        <Box className={classes.root}>
-            <IconButton
-                    id="notifications"
-                    ref={inputRef}
-                    onClick={() => setOpen(wasOpen=>!wasOpen)}>
-                <Badge 
-                    aria-label="Alerts" 
-                    badgeContent={numErrors} 
-                    color="secondary">
-                    <Icon>notifications</Icon>
-                </Badge>
-            </IconButton>
-            <Popover
-                open={open}
-                target="notifications"
-                onClose={()=>{setOpen(false)}}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}>
-                <Card className={classes.popup} elevation={9}>
-                    <CardHeader
-                        avatar={
-                        <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
-                            !
-                        </Avatar>
-                        }
-                        action={
-                        <IconButton onClick={()=>setOpen(false)} aria-label="settings">
-                            <Icon>close</Icon>
-                        </IconButton>
-                        }
-                        title={`${numErrors} Errors`}
-                    />
-                    <CardContent>
-                        {Object.entries(errorTargets)
-                               .sort((a,b)=>a[0].localeCompare(b[0]))
-                               .map(target => 
-                            <CardContent key={target[0]} className={classes.errors}>
-                                {Object.entries(notifications)
-                                       .filter(notif => notif[1].target === target[0])
-                                       .map(error =>
-                                <Box key={error[0]}>
-                                    <Box className={classes.errorHeader} key="header">
-                                        <Typography>{target[0]}</Typography>
-                                        <Typography color="textSecondary">{error[1].type}</Typography>
-                                        <Typography>{error[1].level}</Typography>
-                                    </Box>
-                                    <Box className={classes.errors} key="errors">
-                                        {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
-                                                .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
-                                        }
-                                    </Box>
-                                </Box>
-                                       )}
-                            </CardContent>
-                        )}
-                    </CardContent>
-                    <CardActions disableSpacing>
-                        <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
-                            <Icon>delete</Icon>
-                        </IconButton>
-                    </CardActions>
-                </Card>
-            </Popover>
-        </Box>);
+const ConfigPanel = withStyles(configStyle)(props => {
+  const { classes, siteConfig } = props;
+  return (
+            <List>
+                {Object.entries(siteConfig).map(entry => <ConfigItem 
+                                            name={entry[1].name}
+                                            key={entry[1].name}
+                                            datatype={entry[1].type}
+                                            value={entry[1].value}
+                                            configItemUpdated={value => entry[1].setter(value)} 
+                                            />)}
+            </List>
+  );
 });const ConfigItem = withStyles(configStyle)(props => {
     const { name, value, configItemUpdated, datatype, classes } = props;
     const [ editing, setEditing] = useState(false);
@@ -1002,20 +934,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                                        onChange={event => setConfigValue(getConfigValue(event.target.value,datatype)) } />}
             </ListItem></ClickAwayListener>;
 });
-const ConfigPanel = withStyles(configStyle)(props => {
-  const { classes, siteConfig } = props;
-  return (
-            <List>
-                {Object.entries(siteConfig).map(entry => <ConfigItem 
-                                            name={entry[1].name}
-                                            key={entry[1].name}
-                                            datatype={entry[1].type}
-                                            value={entry[1].value}
-                                            configItemUpdated={value => entry[1].setter(value)} 
-                                            />)}
-            </List>
-  );
-});const DesignerPanel = withStyles(designStyle)(props => {
+const DesignerPanel = withStyles(designStyle)(props => {
     const { classes, open, addNotification } = props;
     const [ effects, setEffects ] = useState(undefined);
     const [ abortControler, setAbortControler ] = useState(undefined);
@@ -1236,6 +1155,87 @@ const ConfigPanel = withStyles(configStyle)(props => {
                     </CardContent>
                 </Collapse>
             </Card>
+});const NotificationPanel = withStyles(notificationsStyle)(props => {
+    const { classes, notifications, clearNotifications } = props;
+    const [numErrors, setNumErrors] = React.useState(undefined);
+    const [errorTargets, setErrorTargets] = React.useState({});
+    const [open, setOpen] = React.useState(false);
+    const inputRef = React.createRef();
+    const theme = useTheme();
+
+    useEffect(()=>{
+        setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
+        setErrorTargets(notifications.reduce((ret,notif) => 
+            {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
+    },[notifications]);
+
+    return (
+        <Box className={classes.root}>
+            <IconButton
+                    id="notifications"
+                    ref={inputRef}
+                    onClick={() => setOpen(wasOpen=>!wasOpen)}>
+                <Badge 
+                    aria-label="Alerts" 
+                    badgeContent={numErrors} 
+                    color="secondary">
+                    <Icon>notifications</Icon>
+                </Badge>
+            </IconButton>
+            <Popover
+                open={open}
+                target="notifications"
+                onClose={()=>{setOpen(false)}}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}>
+                <Card className={classes.popup} elevation={9}>
+                    <CardHeader
+                        avatar={
+                        <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
+                            !
+                        </Avatar>
+                        }
+                        action={
+                        <IconButton onClick={()=>setOpen(false)} aria-label="settings">
+                            <Icon>close</Icon>
+                        </IconButton>
+                        }
+                        title={`${numErrors} Errors`}
+                    />
+                    <CardContent>
+                        {Object.entries(errorTargets)
+                               .sort((a,b)=>a[0].localeCompare(b[0]))
+                               .map(target => 
+                            <CardContent key={target[0]} className={classes.errors}>
+                                {Object.entries(notifications)
+                                       .filter(notif => notif[1].target === target[0])
+                                       .map(error =>
+                                <Box key={error[0]}>
+                                    <Box className={classes.errorHeader} key="header">
+                                        <Typography>{target[0]}</Typography>
+                                        <Typography color="textSecondary">{error[1].type}</Typography>
+                                        <Typography>{error[1].level}</Typography>
+                                    </Box>
+                                    <Box className={classes.errors} key="errors">
+                                        {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
+                                                .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
+                                        }
+                                    </Box>
+                                </Box>
+                                       )}
+                            </CardContent>
+                        )}
+                    </CardContent>
+                    <CardActions disableSpacing>
+                        <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
+                            <Icon>delete</Icon>
+                        </IconButton>
+                    </CardActions>
+                </Card>
+            </Popover>
+        </Box>);
 });const StatsPanel = withStyles(statsStyle)(props => {
     const { classes, siteConfig, open, addNotification } = props;
     const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
@@ -1432,26 +1432,7 @@ const ConfigPanel = withStyles(configStyle)(props => {
     </Box>
 });
 
-const StaticStatsPanel = withStyles(staticStatStyle)(props => {
-    const { classes, stat, name, detail } = props;
-
-    return <Box className={classes.root}>
-        <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
-        {detail ? <List>
-            {Object.entries(stat.stat)
-                   .map(entry=>
-                <ListItem key={entry[0]}>
-                    <Typography variant="little" color="textPrimary">{entry[0]}</Typography>:
-                    <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
-                </ListItem>)}
-        </List>:
-        <List>
-        {Object.entries(stat.stat)
-               .filter(entry => stat.headerFields.includes(entry[0]))
-               .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
-    </List>}
-    </Box>
-});const AreaStat = withStyles(areaChartStyle)(props => {
+const AreaStat = withStyles(areaChartStyle)(props => {
     const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
     const getChartValues = (value) => Object.entries(value)
                         .filter(entry=>!ignored.includes(entry[0]))
@@ -1600,5 +1581,23 @@ const StaticStatsPanel = withStyles(staticStatStyle)(props => {
         return a === idleField && b !== idleField ? 1 : (a !== idleField && b === idleField ? -1 : a.localeCompare(b));
     }
 });
-    ReactDOM.createRoot(document.getElementById("root"))
-        .render(<StrictMode><MainApp/></StrictMode>);
+    const StaticStatsPanel = withStyles(staticStatStyle)(props => {
+    const { classes, stat, name, detail } = props;
+
+    return <Box className={classes.root}>
+        <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
+        {detail ? <List>
+            {Object.entries(stat.stat)
+                   .map(entry=>
+                <ListItem key={entry[0]}>
+                    <Typography variant="little" color="textPrimary">{entry[0]}</Typography>:
+                    <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
+                </ListItem>)}
+        </List>:
+        <List>
+        {Object.entries(stat.stat)
+               .filter(entry => stat.headerFields.includes(entry[0]))
+               .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
+    </List>}
+    </Box>
+});
