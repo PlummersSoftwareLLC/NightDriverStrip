@@ -15,7 +15,7 @@ def minimize(content):
     if (localBuild):
         return content
     else:
-        return ' '.join(map(lambda line: line.strip(), content.splitlines()))
+        return '\n'.join(map(lambda line: line.strip(), content.splitlines()))
 
 def getJsx(folder,mask,exclude=""):
     files = glob.glob(folder + '/**/' + mask, recursive=True)
