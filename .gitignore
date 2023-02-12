@@ -7,5 +7,4 @@ include/secrets.h
 lib/*
 site/node_modules
 site/local
-data/main.jsx
-data/index.html
+data/*
