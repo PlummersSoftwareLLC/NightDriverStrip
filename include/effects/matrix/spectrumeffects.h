@@ -51,7 +51,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
 
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) : 
         LEDStripEffect(strName),
-        BeatEffectBase(0.25, 1.75, .25),
+        BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {

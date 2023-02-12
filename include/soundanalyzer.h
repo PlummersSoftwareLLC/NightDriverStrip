@@ -130,7 +130,7 @@ struct AudioVariables
         {
             const bool bScaleAllBands = true;
             _allBandsMax = 0.0f;
-            for (int band = 0; band < 4; band++)
+            for (int band = 0; band < NUM_BANDS; band++)
             {
                 // If new peak is above the max, it becomes the new max.  Otherwise we drift
                 // towards it using a weighted average.

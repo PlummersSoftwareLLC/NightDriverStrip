@@ -76,7 +76,7 @@ class EffectManager
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
-    std::shared_ptr<LEDStripEffect> _pRemoteEffect = nullptr;
+    std::shared_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
 
 public:
     static const uint csFadeButtonSpeed = 15 * 1000;
@@ -183,7 +183,7 @@ public:
 
             if (effect->Init(g_aptrDevices))
             {
-                _pRemoteEffect = effect;
+                _ptrRemoteEffect = effect;
                 StartEffect();
             }
         #endif
@@ -191,7 +191,7 @@ public:
 
     void ClearRemoteColor()
     {
-        _pRemoteEffect = nullptr;
+        _ptrRemoteEffect = nullptr;
 
         #if (USE_MATRIX)
             LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
@@ -207,8 +207,8 @@ public:
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
-        if (_pRemoteEffect)
-            _pRemoteEffect->Start();
+        if (_ptrRemoteEffect)
+            _ptrRemoteEffect->Start();
         else
             _ppEffects[_iCurrentEffect]->Start();
 
@@ -309,8 +309,8 @@ public:
 
     const String & GetCurrentEffectName() const
     {
-        if (_pRemoteEffect)
-            return _pRemoteEffect->FriendlyName();
+        if (_ptrRemoteEffect)
+            return _ptrRemoteEffect->FriendlyName();
 
         return _ppEffects[_iCurrentEffect]->FriendlyName();
     }
@@ -434,9 +434,9 @@ public:
 
         // If a remote control effect is set, we draw that, otherwise we draw the regular effect
 
-        if (_pRemoteEffect)
+        if (_ptrRemoteEffect)
         {
-            _pRemoteEffect->Draw();
+            _ptrRemoteEffect->Draw();
         }
         else
         {

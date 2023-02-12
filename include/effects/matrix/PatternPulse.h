@@ -117,8 +117,7 @@ class PatternPulse : public LEDStripEffect
         // effects.standardNoiseSmearing();
     }
 };
-
-class PatternPulsar : public BeatEffectBase2, public LEDStripEffect
+class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 {
   private:
 
@@ -141,7 +140,7 @@ class PatternPulsar : public BeatEffectBase2, public LEDStripEffect
   public:
 
     PatternPulsar(double lowLatch = 1, double highLatch = 1, double minElapsed = 0.00) :
-        BeatEffectBase2(1.95, 0.25 ),
+        BeatEffectBase(1.95, 0.25 ),
         LEDStripEffect("Pulsars")
     {
     }

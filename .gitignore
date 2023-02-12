@@ -5,6 +5,7 @@ src/uzlib/src/*.o
 .history
 include/secrets.h
 lib/*
+.DS_Store
 site/node_modules
 site/local
 data/*

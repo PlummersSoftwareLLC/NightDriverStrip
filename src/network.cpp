@@ -305,42 +305,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
         #endif
 
-        /*
-        {
-            WiFiClientSecure secClient;
-
-            secClient.setInsecure();
-
-            Serial.println("\nStarting secure connection to server...");
-            uint32_t start = millis();
-            int r = secClient.connect("google.com", 443, 5000);
-            Serial.printf("Connection took: %lums\n", millis()-start);
-            if(!r) 
-            {
-                Serial.println("Connection failed!");
-            } 
-            else 
-            {
-                Serial.println("Connected!  Sending GET!");
-                secClient.println("GET https://www.google.com/search?q=tsla+stock+quote HTTP/1.0");
-                secClient.println("Host: www.google.com");
-                secClient.println("Connection: close");
-                secClient.println();
-                
-                while (secClient.connected()) 
-                {
-                    String line = secClient.readStringUntil('\n');
-                    secClient.printf("Data: %s", line.c_str());
-                    if (line == "\r") {
-                        Serial.println("headers received");
-                        break;
-                    }
-                }
-            }
-            secClient.stop();
-        }
-        */
-
         return true;
     }
     

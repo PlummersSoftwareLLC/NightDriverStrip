@@ -36,7 +36,7 @@
 
 #if ENABLE_WIFI
     extern uint8_t g_Brightness;
-    extern bool g_bUpdateStarted;
+    extern bool    g_bUpdateStarted;
     extern WiFiUDP g_Udp;
     void processRemoteDebugCmd();
 
@@ -47,27 +47,27 @@
     //
     // Simple utility functions
 
-    #define WL_NO_SHIELD "WL_NO_SHIELD";
-    #define WL_IDLE_STATUS "WL_IDLE_STATUS";
-    #define WL_NO_SSID_AVAIL "WL_NO_SSID_AVAIL";
-    #define WL_SCAN_COMPLETED "WL_SCAN_COMPLETED";
-    #define WL_CONNECTED "WL_CONNECTED";
-    #define WL_CONNECT_FAILED "WL_CONNECT_FAILED";
-    #define WL_CONNECTION_LOST "WL_CONNECTION_LOST";
-    #define WL_DISCONNECTED "WL_DISCONNECTED";
-    #define WL_UNKNOWN_STATUS "WL_UNKNOWN_STATUS";
+    #define WL_NO_SHIELD        "WL_NO_SHIELD"
+    #define WL_IDLE_STATUS      "WL_IDLE_STATUS"
+    #define WL_NO_SSID_AVAIL    "WL_NO_SSID_AVAIL"
+    #define WL_SCAN_COMPLETED   "WL_SCAN_COMPLETED"
+    #define WL_CONNECTED        "WL_CONNECTED"
+    #define WL_CONNECT_FAILED   "WL_CONNECT_FAILED"
+    #define WL_CONNECTION_LOST  "WL_CONNECTION_LOST"
+    #define WL_DISCONNECTED     "WL_DISCONNECTED"
+    #define WL_UNKNOWN_STATUS   "WL_UNKNOWN_STATUS"
 
     inline static const char* WLtoString(wl_status_t status) {
       switch (status) {
         case 255: return WL_NO_SHIELD;
-        case 0: return WL_IDLE_STATUS;
-        case 1: return WL_NO_SSID_AVAIL;
-        case 2: return WL_SCAN_COMPLETED;
-        case 3: return WL_CONNECTED;
-        case 4: return WL_CONNECT_FAILED;
-        case 5: return WL_CONNECTION_LOST;
-        case 6: return WL_DISCONNECTED;
-        default: return WL_UNKNOWN_STATUS;
+        case 0: return   WL_IDLE_STATUS;
+        case 1: return   WL_NO_SSID_AVAIL;
+        case 2: return   WL_SCAN_COMPLETED;
+        case 3: return   WL_CONNECTED;
+        case 4: return   WL_CONNECT_FAILED;
+        case 5: return   WL_CONNECTION_LOST;
+        case 6: return   WL_DISCONNECTED;
+        default: return  WL_UNKNOWN_STATUS;
       }
     }
 

@@ -66,7 +66,7 @@ public:
     }
 };
 
-class LaserLineEffect : public BeatEffectBase2, public LEDStripEffect
+class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 {
   private:
     std::vector<LaserShot>      _shots;
@@ -77,7 +77,7 @@ class LaserLineEffect : public BeatEffectBase2, public LEDStripEffect
   public:
   
     LaserLineEffect(double speed, double size) : 
-        BeatEffectBase2(1.50, 0.00), LEDStripEffect("LaserLine"), _defaultSize(size), _defaultSpeed(speed) 
+        BeatEffectBase(1.50, 0.00), LEDStripEffect("LaserLine"), _defaultSize(size), _defaultSpeed(speed) 
     {
     }
 

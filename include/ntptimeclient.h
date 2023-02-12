@@ -46,7 +46,7 @@
 
 class NTPTimeClient
 {
-    static bool _bClockSet; 
+    static bool        _bClockSet; 
     static std::mutex  _clockMutex;
 
   public:
@@ -163,7 +163,7 @@ class NTPTimeClient
 
         // If the clock is off by more than a quarter second, update it
 
-        auto delta = abs(dNew - dOld);
+        auto delta = fabs(dNew - dOld);
         if (delta < 0.25)
         {
             debugV("Clock is only off by %lf so not updating the RTC.", delta);
