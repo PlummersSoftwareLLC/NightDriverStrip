@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html class="img-no-display"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Hello! Welcome to the NightDriverLED Installation Wizard!</title>
+<style>
+html {
+    height: 100%;
+    overflow: hidden;  
+}
+body {
+    background: url(../web_images/bg.png) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    height: 100%;
+}
+div#outer {
+    display: table;
+    height: 100%;
+    width: 100%;
+}
+div#container {
+	display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+}
+#paragraph {
+	padding: 20px 0 30px 40px;
+	margin: 0 auto;
+	text-align: left;
+	width: 560px;
+	color: #146b9d;
+	font-size: 11pt;
+	font-weight: bold;
+	font-family: Verdana;
+}
+</style>
+<link href="../../help.css" type="text/css" rel="stylesheet" />
+<link href="../../scrollbar/flexcroll.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="../../scrollbar/flexcroll.js"></script>
+<script type="text/javascript" src="../../scrollbar/initFlexcroll.js"></script>
+
+<!-- ESP Web Tools -->
+    <script
+        type="module"
+        src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"
+        ></script>
+<!-- End of ESP Web Tools -->
+
+<!-- ESP Web Tools button script -->
+    <script type="module" src="https://unpkg.com/esp-web-tools@8.0.1/dist/web/install-button.js?module"></script>
+<!-- End of ESP Web Tools button script -->
+
+</head>
+<body>
+    <div class="content">
+      <h1>NightDriverLED ESP32 Installation Wizard</h1>
+      <p>Currently only the SPECTRUM config for the M5 Stick C Plus is implemented.</p>
+      <p>Select your product</p>
+      <ul class="radios">
+        <li>
+          <label><input type="radio" name="type" value="spectrum_m5stickcplus" />Spectrum for M5 Stick C Plus</label>
+        </li>
+      </ul>
+      <p class="button-row" align="center">
+        <esp-web-install-button class="invisible"></esp-web-install-button>
+      </p>
+
+      <div class="footer">
+        <a href="https://github.com/sle118/squeezelite-esp32"
+          >Squeezelite-ESP32</a
+        > &mdash;
+        Installer powered by <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>.
+    </div>
+    <script>
+      document.querySelectorAll('input[name="type"]').forEach(radio =>
+        radio.addEventListener("change", () => {
+          const button = document.querySelector('esp-web-install-button');
+          button.manifest = `./manifest_${radio.value}.json`;
+          button.classList.remove('invisible');
+        }
+      ));
+    </script>
+  </body>
+  </html>
