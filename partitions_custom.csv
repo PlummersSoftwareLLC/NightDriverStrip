@@ -3,8 +3,10 @@
 # It should also fix the OTA regression.  
 # Name,   Type, SubType,     Offset,      Size, Flags
 
+# Note that our NVS code assumes name 'storage' for this partition
+
 nvs,        data,   nvs,     0x00b000,    0x002000,
 otadata,    data,   ota,     0x00d000,    0x002000,
 app0,       app,    ota_0,   0x010000,    0x180000,
 app1,       app,    ota_1,   0x190000,    0x180000,
-storage,    data,   spiffs,  0x310000,    0x0F0000          # Note that our NVS code assumes name 'storage' for this partition
+storage,    data,   spiffs,  0x310000,    0x0F0000          
