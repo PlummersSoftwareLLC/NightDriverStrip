@@ -1,0 +1,14 @@
+{
+    "name": "app",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "fs-watch-exec": "^1.1.2",
+        "serve": "^14.2.0"
+    },
+    "scripts": {
+        "build": "cd .. && python ./bake_site.py local",
+        "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src 'npm run build'",
+        "start": "(npm run rebuild& node ./node_modules/serve/build/main.js ./local)"
+    }
+}
