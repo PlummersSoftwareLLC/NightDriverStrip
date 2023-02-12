@@ -136,8 +136,6 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        BeatEffectBase::HandleBeat(bMajor, elapsed, span);
-
         CRGB c;
         int  cInsulators = 1;
 

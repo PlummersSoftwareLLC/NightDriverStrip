@@ -49,8 +49,6 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        BeatEffectBase::HandleBeat(bMajor, elapsed, span);
-
         while (_lit.size() >= NUM_FANS - 1)
             _lit.pop_front();
 
@@ -88,8 +86,6 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        BeatEffectBase::HandleBeat(bMajor, elapsed, span);
-
         while (_lit.size() >= NUM_FANS - 1)
             _lit.pop_front();
 

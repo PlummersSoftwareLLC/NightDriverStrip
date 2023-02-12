@@ -439,8 +439,6 @@ class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase, p
     }
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        BeatEffectBase::HandleBeat(bMajor, elapsed, span);
-
         int iInsulator;
         do
         {
