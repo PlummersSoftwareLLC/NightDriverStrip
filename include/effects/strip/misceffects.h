@@ -46,7 +46,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
       : LEDStripEffect("Simple Rainbow"),
           _EveryNth(everyNthPixel),
-        _SpeedDivisor(speedDivisor)
+          _SpeedDivisor(speedDivisor)
     {
         debugV("SimpleRainbowTestEffect constructor");
     }

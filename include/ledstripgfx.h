@@ -33,6 +33,10 @@
 #pragma once
 #include "gfxbase.h"
 
+// LEDStripGFX
+// 
+// A derivation of GFXBase that adds LED-strip-specific functionality
+
 class LEDStripGFX : public GFXBase 
 {
   
@@ -84,8 +88,9 @@ public:
             return leds[x];
         else
         {
+            char szBuffer[80];
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Invalid index in getPixel: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
             throw std::runtime_error("Invalid index in getPixel: " + x);
-            return CRGB::Black;
         }
     }
 
@@ -98,7 +103,7 @@ public:
         else
         {
             char szBuffer[80];
-            snprintf(szBuffer, 80, "Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
+            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
             throw std::runtime_error(szBuffer);
         }
     }

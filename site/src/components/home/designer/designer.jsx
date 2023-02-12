@@ -5,7 +5,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
-    const [ pendingInterval, setPendingInterval ] = useState(undefined);
+    const [ pendingInterval, setPendingInterval ] = useState(effects && effects.effectInterval);
 
     useEffect(() => {
         if (abortControler) {
@@ -35,80 +35,76 @@ const DesignerPanel = withStyles(designStyle)(props => {
 
     const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
 
-    const chipRequest = (url,options,operation) => {
+    const chipRequest = (url,options,operation) => 
+        new Promise((resolve,reject) => 
+            fetch(url,options)
+                .then(resolve)
+                .catch(err => {addNotification("Error",operation,err);reject(err)}));
+
+    const navigateTo = (idx)=>{
         return new Promise((resolve,reject)=>{
             setRequestRunning(true);
-            return fetch(url,options)
-                    .then(resolve)
-                    .catch(err => {addNotification("Error",operation,err);reject(err)})
-                    .finally(()=>setRequestRunning(false));    
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})}, "navigateTo")
+                .then(resolve)
+                .then(requestRefresh)
+                .catch(reject)
+                .finally(()=>setRequestRunning(false));    
         });
     };
 
-    const navigateTo = (idx)=>{
-        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})})
-                .then(requestRefresh);
-    }
-
     const effectEnable = (idx,enable)=>{
-        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})})
-        .then(requestRefresh);
-    }
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})},"effectEnable")
+                .then(resolve)
+                .then(requestRefresh)
+                .catch(reject)
+                .finally(()=>setRequestRunning(false));    
+        });
+    };
 
     const navigate = (up)=>{
-        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"})
-        .then(requestRefresh);
-    }
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"nvigate")
+                .then(resolve)
+                .then(requestRefresh)
+                .catch(reject)
+                .finally(()=>setRequestRunning(false));    
+        });
+    };
 
     const updateEventInterval = (interval)=>{
-        const abort = new AbortController();
-        const timer = setTimeout(()=>abort.abort(),3000);
-        chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
-        {
-            method:"POST",
-            signal:abort.signal,
-            body: new URLSearchParams({effectInterval:interval})
-        }).then(()=>clearTimeout(timer))
-          .then(requestRefresh)
-          .catch(_err => clearTimeout(timer));
-    }
+        return new Promise((resolve,reject)=>{
+            setRequestRunning(true);
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+            {
+                method:"POST",
+                body: new URLSearchParams({effectInterval:interval})
+            },"updateEventInterval").then(resolve)
+              .then(requestRefresh)
+              .catch(reject)
+              .finally(()=>setRequestRunning(false));    
+        });
+    };
 
     const displayHeader = ()=>{
         return <Box className={classes.effectsHeaderValue}>
             <Typography variant="little" color="textPrimary">Interval</Typography>:
             <Link href="#" variant="little" color="textSecondary" onClick={() => setEditing(true)}>{effects.effectInterval}</Link>
         </Box>;
-    }
+    };
 
     const editingHeader = ()=>{
-        return <Box className={classes.effectsHeaderValue}>
+        return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);}}>
+            <Box className={classes.effectsHeaderValue}>
             <TextField label="Interval ms"
                 variant="outlined"
                 type="number"
                 defaultValue={effects.effectInterval}
                 onChange={event => setPendingInterval(event.target.value)} />
-            <Box className={classes.saveIcons}>
-                <IconButton 
-                    color="action"
-                    aria-label="Save"
-                    component="label"
-                    onClick={_evt => {
-                        updateEventInterval(pendingInterval);
-                        setEditing(false);
-                    } }>
-                    <Icon>save</Icon>
-                </IconButton>
-                <IconButton color="secondary"
-                    aria-label="Cancel"
-                    component="label"
-                    onClick={_evt => {
-                        setEditing(false);
-                    } }>
-                    <Icon>cancel</Icon>
-                </IconButton>
-            </Box>
-        </Box>;
-    }
+        </Box></ClickAwayListener>;
+    };
 
     if (!effects && open){
         return <Box>Loading....</Box>;

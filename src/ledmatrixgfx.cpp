@@ -39,14 +39,7 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
 #if USE_MATRIX
 
-uint32_t GFXBase::noise_x;
-uint32_t GFXBase::noise_y;
-uint32_t GFXBase::noise_z;
-uint32_t GFXBase::noise_scale_x;
-uint32_t GFXBase::noise_scale_y;
-
-uint8_t GFXBase::noise[MATRIX_WIDTH][MATRIX_HEIGHT]; // BUGBUG Could this go in PSRAM if allocated instead?
-uint8_t GFXBase::noisesmoothing;
+Noise GFXBase::_noise;
 
 #include <SmartMatrix.h>
 #include "ledmatrixgfx.h"

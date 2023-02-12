@@ -297,26 +297,20 @@ public:
                 if (expandedSize > EXPECTED_EXPANDED_PACKET_SIZE)
                 {
                     debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, EXPECTED_EXPANDED_PACKET_SIZE);
-                    close(new_socket);
-                    ResetReadBuffer();
-                    return false;
+                    break;
                 }
 
                 if (false == ReadUntilNBytesReceived(new_socket, COMPRESSED_DATA_HEADER_SIZE + compressedSize))
                 {
                     debugW("Could not read compressed data from stream\n");
-                    close(new_socket);
-                    ResetReadBuffer();
-                    return false;
+                    break;
                 }
                 debugV("Successfuly read %u bytes", COMPRESSED_DATA_HEADER_SIZE + compressedSize);
 
                 if (expandedSize > EXPECTED_EXPANDED_PACKET_SIZE)
                 {
                     debugE("Expanded data size of %d would overflow buffer of %d\n", expandedSize, sizeof(_abOutputBuffer));
-                    close(new_socket);
-                    ResetReadBuffer();
-                    return false;
+                    break;
                 }
 
                 // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
@@ -334,17 +328,14 @@ public:
                 if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
                 {
                     debugW("Error decompressing data\n");
-                    close(new_socket);
-                    ResetReadBuffer();
-                    return false;
+                    break;
                 }
 
                 if (false == ProcessIncomingData(_abOutputBuffer.get(), expandedSize))
                 {
                     debugW("Error processing data\n");
-                    close(new_socket);
-                    ResetReadBuffer();
-                    return false;                    
+                    break;
+
                 }
                 ResetReadBuffer();
             }
@@ -368,27 +359,20 @@ public:
                     if (totalExpected > EXPECTED_EXPANDED_PACKET_SIZE)
                     {
                         debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, EXPECTED_EXPANDED_PACKET_SIZE);
-                        close(new_socket);
-                        ResetReadBuffer();
-                        return false;
+                        break;
                     }
                     debugV("Expecting %d total bytes", totalExpected);
                     if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
                         debugW("Error in getting data\n");
-                        close(new_socket);
-                        ResetReadBuffer();
-                        return false;
+                        break;
                     }
                 
                     // Add it to the buffer ring
                     
                     if (false == ProcessIncomingData(_pBuffer.get(), totalExpected))
                     {
-                        debugW("Error processing incoming data\n");
-                        close(new_socket);
-                        ResetReadBuffer();
-                        return false;
+                        break;
                     }
 
                     // Consume the data by resetting the buffer 
@@ -398,9 +382,7 @@ public:
                 else
                 {
                     debugW("Unknown command in packet received: %d\n", command16);
-                    close(new_socket);
-                    ResetReadBuffer();
-                    return false;
+                    break;
                 }
 
             }
@@ -424,10 +406,15 @@ public:
                                         .watts        = g_Watts
                                       };
 
+            // I dont think this is fatal, and doesn't affect the read buffer, so content to ignore for now if it happens
             if (sizeof(response) != write(new_socket, &response, sizeof(response)))
                 debugW("Unable to send response back to server.");
                 
         } while (true);
+
+        close(new_socket);
+        ResetReadBuffer();
+        return false;
     }    
 
     // DecompressBuffer

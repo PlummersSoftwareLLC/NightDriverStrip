@@ -89,18 +89,18 @@ public:
     virtual void Start()
     {
         // set to reasonable values to avoid a black out
-        graphics()->noisesmoothing = 100;
+        graphics()->GetNoise().noisesmoothing = 100;
 
         // just any free input pin
         // random16_add_entropy(analogRead(18));
 
         // fill coordinates with random values
         // set zoom levels
-        graphics()->noise_x = random16();
-        graphics()->noise_y = random16();
-        graphics()->noise_z = random16();
-        graphics()->noise_scale_x = 6000;
-        graphics()->noise_scale_y = 6000;
+        graphics()->GetNoise().noise_x = random16();
+        graphics()->GetNoise().noise_y = random16();
+        graphics()->GetNoise().noise_z = random16();
+        graphics()->GetNoise().noise_scale_x = 6000;
+        graphics()->GetNoise().noise_scale_y = 6000;
 
         // for the random movement
         dx = random8();
@@ -119,15 +119,15 @@ public:
             dy = random16(500) - 250; // random16(2000) - 1000 is pretty fast but works fine, too
             dx = random16(500) - 250;
             dz = random16(500) - 250;
-            graphics()->noise_scale_x = random16(10000) + 2000;
-            graphics()->noise_scale_y = random16(10000) + 2000;
+            graphics()->GetNoise().noise_scale_x = random16(10000) + 2000;
+            graphics()->GetNoise().noise_scale_y = random16(10000) + 2000;
         }
 
-        graphics()->noise_y += dy * 4;
-        graphics()->noise_x += dx * 4;
-        graphics()->noise_z += dz * 4;
+        graphics()->GetNoise().noise_y += dy * 4;
+        graphics()->GetNoise().noise_x += dx * 4;
+        graphics()->GetNoise().noise_z += dz * 4;
 
-        graphics()->FillNoise();
+        graphics()->FillGetNoise();
         ShowNoiseLayer(0, 1, 0);
 
         graphics()->Caleidoscope3();
@@ -142,12 +142,12 @@ public:
             for (uint8_t j = 0; j < MATRIX_HEIGHT; j++)
             {
 
-                uint8_t color = graphics()->noise[i][j];
+                uint8_t color = graphics()->GetNoise().noise[i][j];
 
                 uint8_t bri = color;
 
                 // assign a color depending on the actual palette
-                CRGB pixel = ColorFromPalette(graphics()->currentPalette, colorrepeat * (color + colorshift), bri);
+                CRGB pixel = ColorFromPalette(graphics()->GetCurrentPalette(), colorrepeat * (color + colorshift), bri);
 
                 graphics()->leds[graphics()->xy(i, j)] = pixel;
             }

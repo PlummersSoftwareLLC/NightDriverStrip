@@ -7,7 +7,11 @@ const BarStat = withStyles(barChartStyle)(props => {
             return theme.palette.taskManager.idleColor;
         }
         return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
-    }
+    };
+
+    const sortStats = (a, b) => {
+        return a === idleField && b !== idleField ? 1 : (a !== idleField && b === idleField ? -1 : a.localeCompare(b));
+    };
 
     return (
     <Box className={classes.summary}>
@@ -38,9 +42,5 @@ const BarStat = withStyles(barChartStyle)(props => {
                                              .filter(entry => !ignored.includes(entry[0]))
                                              .reduce((ret,stat)=>ret+stat[1],0.0)*100).toFixed(0)}%</Typography>
     </Box>)
-
-    function sortStats(a, b) {
-        return a === idleField && b !== idleField ? 1 : (a !== idleField && b === idleField ? -1 : a.localeCompare(b));
-    }
 });
     

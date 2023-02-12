@@ -424,7 +424,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
     }
 };
 
-class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase2, public virtual ParticleSystem<RingParticle>
+class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase, public virtual ParticleSystem<RingParticle>
 {
     int  _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
@@ -433,14 +433,12 @@ class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase2, 
 
     ColorBeatOverRed(const String & strName)
       : LEDStripEffect(strName),
-        BeatEffectBase2(1.75, 0.2),
+        BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
     }
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        BeatEffectBase2::HandleBeat(bMajor, elapsed, span);
-
         int iInsulator;
         do
         {
@@ -693,7 +691,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
 
     MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette256 & Palette)
       : LEDStripEffect(strName),
-        BeatEffectBase(0.25, 1.75, .05),
+        BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
@@ -752,7 +750,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
     }
 };
 
-class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase2, public ParticleSystem<SpinningPaletteRingParticle>
+class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
     const CRGBPalette256 & _Palette;
@@ -762,7 +760,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
     NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette256 & Palette)
       : LEDStripEffect(strName),
-        BeatEffectBase2(1.0, 0.25 ),
+        BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
