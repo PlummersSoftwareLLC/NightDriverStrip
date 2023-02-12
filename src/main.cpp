@@ -149,10 +149,6 @@
 //
 //---------------------------------------------------------------------------
 
-#include <ArduinoOTA.h>                         // For updating the flash over WiFi
-#include <ESPmDNS.h>
-
-#include <SPI.h>
 
 #define HSPI_MISO   27
 #define HSPI_MOSI   26    // This is the only IO pin used in this code (master out, slave in)
@@ -469,6 +465,7 @@ void setup()
     // Initialize Serial output
     Serial.begin(115200);      
 
+    // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to ERROR level  
@@ -486,9 +483,34 @@ void setup()
     // Start Debug
 
     #if ENABLE_WIFI
+
+        // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
+        // move the init out of the ifdef (ie: don't duplicate it).
+
+        esp_err_t err = nvs_flash_init();
+        if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) 
+        {
+            // Looks like NVS is trash, or a future version we can't read.  Erase it.
+            ESP_ERROR_CHECK(nvs_flash_erase());
+            err = nvs_flash_init();
+        }
+        ESP_ERROR_CHECK( err );
+
+        // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h                
+        
+        if (!ReadWiFiConfig())
+        {
+            debugW("Could not read WiFI Credentials");
+            WiFi_password = cszPassword;
+            WiFi_ssid     = cszSSID;
+            if (!WriteWiFiConfig())
+                debugW("Could not even write defaults to WiFi Credentials");
+        }
+
         debugI("Starting DebugLoopTaskEntry");
         g_TaskManager.StartDebugThread();
         CheckHeap();
+
     #endif
 
     delay(100);

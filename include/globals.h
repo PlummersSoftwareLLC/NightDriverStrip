@@ -94,6 +94,12 @@
 #include <algorithm>
 
 #include <Arduino.h>
+#include <ArduinoOTA.h>                         // For updating the flash over WiFi
+#include <ESPmDNS.h>
+#include <SPI.h>
+
+#include <nvs_flash.h>                   // Non-volatile storage access
+#include <nvs.h>
 
 #define FASTLED_INTERNAL 1               // Suppresses build banners
 #include <FastLED.h>
@@ -128,6 +134,7 @@
 
 // C Helpers and Macros
 
+#define NAME_OF(x)          #x
 #define ARRAYSIZE(a)        (sizeof(a)/sizeof(a[0]))        // Returns the number of elements in an array
 #define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))    // Calculate period in microseconds (us) from frequency in Hz
 #define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
