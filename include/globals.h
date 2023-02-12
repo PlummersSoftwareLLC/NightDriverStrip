@@ -250,7 +250,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // Once you have a working project, selectively enable various additional features by setting
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
-    #define ENABLE_WIFI             0   // Connect to WiFi
+    #ifndef ENABLE_WIFI
+        #define ENABLE_WIFI             0   // Connect to WiFi
+    #endif
+
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
     #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
     #define ENABLE_NTP              0   // Set the clock from the web
@@ -267,11 +270,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
     // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
 
-    #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+    #ifndef ENABLE_WEBSERVER
+        #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+    #endif
 
 #elif LANTERN 
 
-    // A railway-style landter with concentric rings of light (16+12+8+1)
+    // A railway-style lantern with concentric rings of light (16+12+8+1)
 
     #define NUM_FANS                1
     #define NUM_RINGS               4
