@@ -11,11 +11,11 @@ In order to locally develop this site, you need to have the following requiremen
 
 With the requirements filled, open a bash terminal, go to the site folder and type `npm install`.
 
-In order to test locally, you need to put the ip address in (site/src/espaddr.jsx)[https://github.com/Louis-Riel/NightDriverStrip/blob/main/site/src/espaddr.jsx]
+In order to test locally, you need to put the ip address in [site/src/espaddr.jsx](https://github.com/Louis-Riel/NightDriverStrip/blob/main/site/src/espaddr.jsx)
 
-Once this is done, please run `npm run start`, open a browser tab and paste the address that running this command put n your clipboard.
+Once this is done, please run `npm run start`, open a browser tab and paste the address that running this command put on your clipboard.
 
 Once local testing is done, flash the ESP and point your browser to it.
 
-<img src="../assets/dark.PNG" width="400" />
-<img src="../assets/light.PNG" width="400" />
+![](../assets/dark.PNG)  
+![](../assets/light.PNG)
