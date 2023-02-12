@@ -46,6 +46,8 @@ DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 
 std::mutex g_buffer_mutex;
+String WiFi_ssid;
+String WiFi_password;
 
 // processRemoteDebugCmd() 
 //
@@ -247,7 +249,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
             //WiFi.disconnect();
-            WiFi.begin(cszSSID, cszPassword);
+            WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
             for (uint i = 0; i < WIFI_RETRIES; i++)
             {
@@ -309,8 +311,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     }
     
 #endif
-
-
 
 // ProcessIncomingData
 //
@@ -398,3 +398,100 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
     #endif
 }
 
+// Non-volatile Storage for WiFi Credentials
+
+// ReadWiFiConfig
+//
+// Attempts to read the WiFi ssid and password from NVS storage strings.  The keys
+// for those name-value pairs are made from the variable names (WiFi_ssid, WiFi_Password)
+// directly.  Limited to 63 characters in both cases, which is the WPA2 ssid limit.
+
+#define MAX_PASSWORD_LEN 63
+
+bool ReadWiFiConfig()
+{
+    char szBuffer[MAX_PASSWORD_LEN+1];
+
+    nvs_handle_t nvsROHandle;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &nvsROHandle);
+    if (err != ESP_OK) 
+    {
+        debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        return false;
+    }
+    else 
+    {
+        // Read the SSID and Password from the NVS partition name/value keypair set
+
+        auto len = ARRAYSIZE(szBuffer);
+        err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_ssid), szBuffer, &len);
+        if (ESP_OK != err)
+        {
+            debugE("Coud not read WiFi_ssid from NVS");
+            nvs_close(nvsROHandle);
+            return false;
+        }
+        WiFi_ssid = szBuffer;
+
+        len = ARRAYSIZE(szBuffer);
+        err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_password), szBuffer, &len);
+        if (ESP_OK != err)
+        {
+            debugE("Coud not read WiFi_password from NVS");
+            nvs_close(nvsROHandle);
+            return false;
+        }
+        WiFi_password = szBuffer;
+
+        // Don't check in changes that would display the password in logs, etc.
+        debugW("Retrieved SSID and Password from NVS: %s, %s", WiFi_ssid, "********");
+
+        nvs_close(nvsROHandle);
+        return true;
+    }
+}
+
+// WriteWiFiConfig
+//
+// Attempts to write the WiFi ssid and password to NVS storage strings.  The keys
+// for those name-value pairs are made from the variable names (WiFi_ssid, WiFi_Password)
+// directly.  It's not transactional, so it could conceivably succeed at writing 
+// the ssid and not the password (but will still report failure).  Does not
+// enforce length limits on values given, so conceivable you could write longer
+// pairs than you could read, but they wouldn't work on WiFi anyway.
+
+bool WriteWiFiConfig()
+{
+    nvs_handle_t nvsRWHandle;
+    
+    // The "storage" string must match NVS partition name in partition table
+    
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsRWHandle);                       
+    if (err != ESP_OK) 
+    {
+        debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        return false;
+    }
+    else 
+    {
+        err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_ssid), WiFi_ssid.c_str());
+        if (ESP_OK != err)
+        {
+            nvs_close(nvsRWHandle);
+            return false;
+        }
+        err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_password), WiFi_password.c_str());
+        if (ESP_OK != err)
+        {
+            nvs_close(nvsRWHandle);
+            return false;
+        }
+
+        // Do not check in code that displays the password in logs, etc.
+        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid);
+
+        nvs_close(nvsRWHandle);
+        return true;
+    }
+    
+}
