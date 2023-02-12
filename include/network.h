@@ -42,6 +42,10 @@
 
     bool ConnectToWiFi(uint cRetries);
     void SetupOTA(const String & strHostname);
+    bool ReadWiFiConfig();
+    bool WriteWiFiConfig();
+    extern String WiFi_password;
+    extern String WiFi_ssid;
 
     // Static Helpers
     //
