@@ -1,0 +1,54 @@
+[
+    {
+        "device": "wrover",
+        "name": "ESP-WROVER-KIT",
+        "projects": [
+            {
+                "tag": "ledstrip_feather_wrover",
+                "name": "Ledstrip Feather"
+            },
+            {
+                "tag": "mesmerizer",
+                "name": "Mesmerizer"
+            },
+            {
+                "tag": "spectrum_wrover_kit",
+                "name": "Spectrum"
+            }
+        ]
+    },
+    {
+        "device": "m5stick-c-plus",
+        "name": "M5StickC Plus",
+        "projects": [
+            {
+                "tag": "cube",
+                "name": "Cube"
+            },
+            {   
+                "tag": "m5plusdemo",
+                "name":"Demo"
+            },
+            {
+                "tag": "fanset",
+                "name": "Fan Set"
+            },
+            {
+                "tag": "insulators",
+                "name": "Insulators"
+            },
+            {
+                "tag": "laserline",
+                "name": "Laser Line"
+            },
+            {
+                "tag": "spectrum",
+                "name": "Spectrum"
+            },
+            {
+                "tag": "xmastrees",
+                "name": "X-mas Trees"
+            }
+        ]
+    }
+]

@@ -9,3 +9,6 @@ lib/*
 site/node_modules
 site/local
 data/*
+WebInstaller/firmware/**
+WebInstaller/manifests/**
+WebInstaller/web_projects.json
