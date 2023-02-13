@@ -30,7 +30,7 @@
 //
 //---------------------------------------------------------------------------
 
-#include "ImprovSerial.h"
+#include "improvserial.h"
 #include <WiFi.h>
 
 static const char *const TAG = "improv_serial";
