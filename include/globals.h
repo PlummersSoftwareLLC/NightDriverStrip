@@ -1368,6 +1368,29 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 #endif
 
+// str_snprintf
+//
+// va-args style printf that returns the formatted string as a reuslt
+
+inline String str_snprintf(const char *fmt, size_t len, ...) 
+{
+    String str;
+    va_list args;
+    
+    // Make the string buffer big enough to hold the stated size
+    str.reserve(len);
+
+    va_start(args, len);
+    size_t out_length = vsnprintf(&str[0], len + 1, fmt, args);
+    va_end(args);
+
+    // If it wound up being smaller than the max buffer size, resize down to actual string length
+    if (out_length < len)
+        str.reserve(out_length);
+
+    return String(str.c_str());
+}
+
 
 // FPS
 // 
@@ -1586,6 +1609,7 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 
 // Main includes 
 
+#include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include "gfxbase.h"                            // GFXBase drawing interface
 #include "screen.h"                             // LCD/TFT/OLED handling
 #include "socketserver.h"                       // Incoming WiFi data connections

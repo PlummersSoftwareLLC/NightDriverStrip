@@ -37,10 +37,6 @@ div#container {
 	font-family: Verdana;
 }
 </style>
-<link href="../../help.css" type="text/css" rel="stylesheet" />
-<link href="../../scrollbar/flexcroll.css" type="text/css" rel="stylesheet" />
-<script type="text/javascript" src="../../scrollbar/flexcroll.js"></script>
-<script type="text/javascript" src="../../scrollbar/initFlexcroll.js"></script>
 
 <!-- ESP Web Tools -->
     <script
@@ -48,10 +44,6 @@ div#container {
         src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"
         ></script>
 <!-- End of ESP Web Tools -->
-
-<!-- ESP Web Tools button script -->
-    <script type="module" src="https://unpkg.com/esp-web-tools@8.0.1/dist/web/install-button.js?module"></script>
-<!-- End of ESP Web Tools button script -->
 
 </head>
 <body>
@@ -68,12 +60,6 @@ div#container {
         <esp-web-install-button class="invisible"></esp-web-install-button>
       </p>
 
-      <div class="footer">
-        <a href="https://github.com/sle118/squeezelite-esp32"
-          >Squeezelite-ESP32</a
-        > &mdash;
-        Installer powered by <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>.
-    </div>
     <script>
       document.querySelectorAll('input[name="type"]').forEach(radio =>
         radio.addEventListener("change", () => {
