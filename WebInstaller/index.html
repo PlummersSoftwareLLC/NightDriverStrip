@@ -63,6 +63,7 @@ div#container {
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
+      const installButton = document.querySelector('esp-web-install-button');
       let devices = [];
 
       // Load JSON file
@@ -110,6 +111,9 @@ div#container {
 
           projectsDropdown.disabled = false;
         }
+
+        installButton.removeAttribute('manifest');
+        installButton.disabled = true;
       }
 
       devicesDropdown.addEventListener("change", function() {
@@ -120,17 +124,16 @@ div#container {
       });
 
       projectsDropdown.addEventListener("change", function() {
-        const button = document.querySelector('esp-web-install-button');
-        
         let tag = projectsDropdown.value;
 
         if (tag) {
-          button.manifest = `manifests/manifest_${tag}.json`;
-          button.classList.remove('invisible');
-          button.disabled = false;
+          installButton.manifest = `manifests/manifest_${tag}.json`;
+          installButton.classList.remove('invisible');
+          installButton.disabled = false;
         }
         else {
-          button.disabled = true;
+          installButton.removeAttribute('manifest');
+          installButton.disabled = true;
         }
       });
     </script>
