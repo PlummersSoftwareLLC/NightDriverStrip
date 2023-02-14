@@ -75,8 +75,13 @@ div#container {
 
       // Populate devices dropdown
       function populateDevicesDropdown(devices) {
+        let option = document.createElement("option");
+        option.value = "";
+        option.text = "-- Select device --";
+        devicesDropdown.appendChild(option);
+
         for (let device of devices) {
-          let option = document.createElement("option");
+          option = document.createElement("option");
           option.value = device.tag;
           option.text = device.name;
           devicesDropdown.appendChild(option);
@@ -84,22 +89,35 @@ div#container {
       }
 
       // Populate projects dropdown
+      function populateProjectsDropdown(projects) {
+        projectsDropdown.innerHTML = "";
+ 
+        if (projects === undefined) {
+          projectsDropdown.disabled = true;
+        }
+        else {
+          let option = document.createElement("option");
+          option.value = "";
+          option.text = "-- Select project --";
+          projectsDropdown.appendChild(option);
+
+          for (let project of projects) {
+            option = document.createElement("option");
+            option.value = project.tag;
+            option.text = project.name;
+            projectsDropdown.appendChild(option);
+          }
+
+          projectsDropdown.disabled = false;
+        }
+      }
+
       devicesDropdown.addEventListener("change", function() {
         let tag = devicesDropdown.value;
         let selectedDevice = devices.find(device => device.tag === tag);
-        populateProjectsDropdown(selectedDevice.projects);
+        
+        populateProjectsDropdown(selectedDevice === undefined ? undefined : selectedDevice.projects);
       });
-
-      function populateProjectsDropdown(projects) {
-        projectsDropdown.innerHTML = "";
-        for (let project of projects) {
-          let option = document.createElement("option");
-          option.value = project.tag;
-          option.text = project.name;
-          projectsDropdown.appendChild(option);
-        }
-        projectsDropdown.disabled = false;
-      }
 
       projectsDropdown.addEventListener("change", function() {
         const button = document.querySelector('esp-web-install-button');
@@ -111,8 +129,9 @@ div#container {
           button.classList.remove('invisible');
           button.disabled = false;
         }
-        else
+        else {
           button.disabled = true;
+        }
       });
     </script>
   </body>
