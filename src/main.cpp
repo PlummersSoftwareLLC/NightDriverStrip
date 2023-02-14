@@ -170,6 +170,12 @@ extern double g_Brite;
 
 NightDriverTaskManager g_TaskManager;
 
+// The one and only instance of ImprovSerial.  We instantiate is as the type needed 
+// for the serial port on this module.  That's usually HardwareSerial but can be
+// other types on the S2, etc... which is why it's a template class.
+
+ImprovSerial<typeof(Serial)> g_ImprovSerial; 
+
 //
 // Global Variables
 //

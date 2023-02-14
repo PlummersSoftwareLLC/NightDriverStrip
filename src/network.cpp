@@ -239,7 +239,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
 
-        if (WiFi_password == "Unset" || WiFi_password.length() == 0)
+        if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
         {
             debugW("WiFi Credentials not set, cannot connect");
             return false;
