@@ -356,7 +356,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE          MATRIX_HEIGHT
     #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY    150000
     #define ENABLE_REMOTE     1                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
     #define IR_REMOTE_PIN     25                   
@@ -429,7 +428,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE        MATRIX_HEIGHT
     #define NUM_BANDS       12
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
@@ -475,7 +473,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE        16
     #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  180000
     #define IR_REMOTE_PIN   39
     #define INPUT_PIN       36
     #define LED_FAN_OFFSET_BU 6
@@ -518,7 +515,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE        MATRIX_HEIGHT
     #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000
     #define IR_REMOTE_PIN   22                    
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (1 * 5 * 1000)         // Expects at least a 5V, 1A supply
@@ -560,7 +556,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_FANS        MATRIX_HEIGHT
     #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000
     #define IR_REMOTE_PIN   25                    
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
@@ -587,7 +582,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_CHANNELS    4                       // One per spoke
     #define MATRIX_WIDTH    53                      // Number of pixels wide (how many LEDs per channel)
     #define MATRIX_HEIGHT   1                       // Number of pixels tall
-    #define RESERVE_MEMORY  120000                  // How much to leave free for system operation (it's not stable in low mem)
     #define ENABLE_REMOTE   0                       // IR Remote Control
     #define ENABLE_AUDIO    1                       // Listen for audio from the microphone and process it
     #define USE_SCREEN      0                       // Normally we use a tiny board inside the lamp with no screen
@@ -627,7 +621,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_OTA              1   // Enable over the air updates to the flash
-    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   1                     // IR Remote Control
     #define IR_REMOTE_PIN   39
     #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
@@ -670,7 +663,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (NUM_FANS * FAN_SIZE + BONUS_PIXELS)    
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define MATRIX_HEIGHT   NUM_FANS
-    #define RESERVE_MEMORY  150000
     #define ENABLE_REMOTE   1                     // IR Remote Control
     #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
     #define IR_REMOTE_PIN   15                    
@@ -693,7 +685,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (8*144)       // My naximum run, and about all you can do at 30fps  
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  160000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
@@ -721,7 +712,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (12)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  180000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
     #define LED_PIN0        5
@@ -749,7 +739,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (1*144)   
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  170000                // WiFi needs about 100K free to be able to (re)connect!
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
     #define LED_PIN0        17
@@ -769,7 +758,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        600
     #define MATRIX_WIDTH    (NUM_LEDS)    
     #define MATRIX_HEIGHT   1
-    #define RESERVE_MEMORY  150000
     #define ENABLE_REMOTE   1                     // IR Remote Control
     #define FAN_SIZE        1
     #define NUM_FANS        1
@@ -828,7 +816,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE        MATRIX_HEIGHT
     #define NUM_BANDS       12
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY  150000
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
@@ -878,7 +865,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO            1           // Listen for audio from the microphone and process it
     #define POWER_LIMIT_MW          8000
     #define MATRIX_HEIGHT           1
-    #define RESERVE_MEMORY          150000
     
     // Being case-mounted normally, the FANSET needs a more sensitive mic so the NOISE_CUTOFF value is are lower than spectrum
     
@@ -912,7 +898,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_WIDTH    (NUM_FANS * FAN_SIZE + BONUS_PIXELS)    
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define MATRIX_HEIGHT   NUM_FANS
-    #define RESERVE_MEMORY  150000
+
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
 
@@ -948,7 +934,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE          MATRIX_HEIGHT
     #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY    150000
     #define ENABLE_REMOTE     0                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
     #define IR_REMOTE_PIN     26                    
@@ -988,7 +973,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define FAN_SIZE          MATRIX_HEIGHT
     #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define RESERVE_MEMORY    150000
     #define ENABLE_REMOTE     0                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
     #define IR_REMOTE_PIN     26                    
@@ -1179,7 +1163,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef RESERVE_MEMORY
-#define RESERVE_MEMORY 120000
+#define RESERVE_MEMORY 180000
 #endif
 
 #ifndef TIME_BEFORE_LOCAL
@@ -1367,6 +1351,29 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     #include <SPI.h>
     extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 #endif
+
+// str_snprintf
+//
+// va-args style printf that returns the formatted string as a reuslt
+
+inline String str_snprintf(const char *fmt, size_t len, ...) 
+{
+    String str;
+    va_list args;
+    
+    // Make the string buffer big enough to hold the stated size
+    str.reserve(len);
+
+    va_start(args, len);
+    size_t out_length = vsnprintf(&str[0], len + 1, fmt, args);
+    va_end(args);
+
+    // If it wound up being smaller than the max buffer size, resize down to actual string length
+    if (out_length < len)
+        str.reserve(out_length);
+
+    return String(str.c_str());
+}
 
 
 // FPS
@@ -1586,6 +1593,7 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 
 // Main includes 
 
+#include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include "gfxbase.h"                            // GFXBase drawing interface
 #include "screen.h"                             // LCD/TFT/OLED handling
 #include "socketserver.h"                       // Incoming WiFi data connections

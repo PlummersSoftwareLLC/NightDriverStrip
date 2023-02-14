@@ -170,6 +170,12 @@ extern double g_Brite;
 
 NightDriverTaskManager g_TaskManager;
 
+// The one and only instance of ImprovSerial.  We instantiate is as the type needed 
+// for the serial port on this module.  That's usually HardwareSerial but can be
+// other types on the S2, etc... which is why it's a template class.
+
+ImprovSerial<typeof(Serial)> g_ImprovSerial; 
+
 //
 // Global Variables
 //
@@ -300,9 +306,9 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
            it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
 
         #if ENABLE_WIFI
-            EVERY_N_SECONDS(2)
+            EVERY_N_SECONDS(1)
             {
-                if (WiFi.isConnected() == false && ConnectToWiFi(10) == false)
+                if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
                 {
                     debugE("Cannot Connect to Wifi!");
                     #if WAIT_FOR_WIFI
@@ -312,6 +318,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     #endif
                 }
             }
+
             EVERY_N_SECONDS(60)
             {
                 // Get Subscriber Count
@@ -358,7 +365,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
             }
         #endif     
 
-        delay(10);
+        delay(1);
     }
 }
 
@@ -373,6 +380,8 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
         {
             if (WiFi.isConnected())
             {
+                g_SocketServer.release();
+                g_SocketServer.begin();
                 g_SocketServer.ProcessIncomingConnectionsLoop();
                 debugW("Socket connection closed.  Retrying...\n");
             }
@@ -482,36 +491,40 @@ void setup()
 
     // Start Debug
 
-    #if ENABLE_WIFI
+#if ENABLE_WIFI
 
-        // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
-        // move the init out of the ifdef (ie: don't duplicate it).
+    debugW("Starting ImprovSerial");
+    String name = "NDESP32"; // + get_mac_address().substring(6);
+    g_ImprovSerial.setup("spectrum_m5stickcplus", "0.901", "ESP32", name.c_str(), &Serial);
 
-        esp_err_t err = nvs_flash_init();
-        if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) 
-        {
-            // Looks like NVS is trash, or a future version we can't read.  Erase it.
-            ESP_ERROR_CHECK(nvs_flash_erase());
-            err = nvs_flash_init();
-        }
-        ESP_ERROR_CHECK( err );
+    // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
+    // move the init out of the ifdef (ie: don't duplicate it).
 
-        // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h                
-        
-        if (!ReadWiFiConfig())
-        {
-            debugW("Could not read WiFI Credentials");
-            WiFi_password = cszPassword;
-            WiFi_ssid     = cszSSID;
-            if (!WriteWiFiConfig())
-                debugW("Could not even write defaults to WiFi Credentials");
-        }
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        // Looks like NVS is trash, or a future version we can't read.  Erase it.
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(err);
 
-        debugI("Starting DebugLoopTaskEntry");
-        g_TaskManager.StartDebugThread();
-        CheckHeap();
+    // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
-    #endif
+    if (!ReadWiFiConfig())
+    {
+        debugW("Could not read WiFI Credentials");
+        WiFi_password = cszPassword;
+        WiFi_ssid     = cszSSID;
+        if (!WriteWiFiConfig())
+            debugW("Could not even write defaults to WiFi Credentials");
+    }
+
+    debugI("Starting DebugLoopTaskEntry");
+    g_TaskManager.StartDebugThread();
+    CheckHeap();
+
+#endif
 
     delay(100);
 
@@ -814,6 +827,10 @@ void loop()
 {
     while(true)
     {
+        #if ENABLE_WIFI
+            g_ImprovSerial.loop();
+        #endif
+
         #if ENABLE_OTA
             EVERY_N_MILLIS(10)
             {
@@ -826,7 +843,6 @@ void loop()
                 {
                     debugW("Exception in OTA code caught");
                 }
-                
             }
         #endif
 
@@ -868,6 +884,6 @@ void loop()
             #endif
         }
 
-        delay(10);        
+        delay(1);        
     }
 }
