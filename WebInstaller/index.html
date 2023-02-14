@@ -63,11 +63,15 @@ div#container {
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
+      let devices = [];
 
       // Load JSON file
       fetch("web_projects.json")
         .then(response => response.json())
-        .then(data => populateDevicesDropdown(data.devices));
+        .then(data => {
+          devices = data.devices;
+          populateDevicesDropdown(devices);
+        });
 
       // Populate devices dropdown
       function populateDevicesDropdown(devices) {
