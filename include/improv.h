@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        improvserial.h
+// File:        improv.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//   Wraps ImprovSerial to manage its state and provide an interface to it
+//   Basic IMPROV states and rpc functions
 //
 // History:     Oct-9-2018         Davepl      File based on (Apache 2.0 License)
 //                                         https://github.com/improv-wifi/sdk-cpp
@@ -105,8 +105,6 @@ namespace improv
     bool parse_improv_serial_byte(size_t position, uint8_t byte, const uint8_t *buffer,
                                   std::function<bool(ImprovCommand)> &&callback, std::function<void(Error)> &&on_error);
 
-    std::vector<uint8_t> build_rpc_response(Command command, const std::vector<std::string> &datum,
-                                            bool add_checksum = true);
     std::vector<uint8_t> build_rpc_response(Command command, const std::vector<String> &datum, bool add_checksum = true);
 
 } // namespace improv

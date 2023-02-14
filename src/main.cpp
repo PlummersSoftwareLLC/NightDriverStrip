@@ -306,10 +306,9 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
            it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
 
         #if ENABLE_WIFI
-            /* Removing reconnect here because it interferes with ImprovSerial
-            EVERY_N_SECONDS(2)
+            EVERY_N_SECONDS(1)
             {
-                if (WiFi.isConnected() == false && ConnectToWiFi(10) == false)
+                if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
                 {
                     debugE("Cannot Connect to Wifi!");
                     #if WAIT_FOR_WIFI
@@ -319,7 +318,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     #endif
                 }
             }
-            */
+
             EVERY_N_SECONDS(60)
             {
                 // Get Subscriber Count
@@ -365,10 +364,6 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 }
             }
         #endif     
-
-        #if ENABLE_WIFI
-            g_ImprovSerial.loop();
-        #endif
 
         delay(1);
     }
@@ -832,6 +827,10 @@ void loop()
 {
     while(true)
     {
+        #if ENABLE_WIFI
+            g_ImprovSerial.loop();
+        #endif
+
         #if ENABLE_OTA
             EVERY_N_MILLIS(10)
             {

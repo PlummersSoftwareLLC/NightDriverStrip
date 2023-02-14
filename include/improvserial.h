@@ -75,7 +75,11 @@ public:
         ESP_LOGI(TAG, "Settings ssid=%s, password=%s", WiFi_ssid.c_str(), WiFi_password.c_str());
     }
 
-    bool loop(bool timeout = false )
+    // Main ImprovSerial loop.  Pulls available characters from the serial port, and tries to have them parsed
+    // into IMPROV commands.  Periodically checks the provisioning state, and if in process, checks to see if
+    // the WiFi is now connected.  If so, it updates the state to PROVISIONED and returns a WIFI_SETTINGS response.
+
+    void loop()
     {
         const uint32_t now = millis();
         if (now - this->last_read_byte_ > 50)
@@ -83,18 +87,16 @@ public:
             this->rx_buffer_.clear();
             this->last_read_byte_ = now;
         }
+        
         while (this->available_())
         {
             uint8_t byte = this->read_byte_();
             if (this->parse_improv_serial_byte_(byte))
-            {
                 this->last_read_byte_ = now;
-            }
             else
-            {
                 this->rx_buffer_.clear();
-            }
         }
+
         if (this->state_ == improv::STATE_PROVISIONING)
         {
             if (WiFi.getMode() == WIFI_AP || (WiFi.getMode() == WIFI_STA && WiFi.isConnected()))
@@ -102,14 +104,8 @@ public:
                 this->set_state_(improv::STATE_PROVISIONED);
                 std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
                 this->send_response_(url);
-                return true;
-            }
-            else if (timeout)
-            {
-                this->on_wifi_connect_timeout_();
             }
         }
-        return false;
     }
 
     improv::State get_state()
@@ -217,18 +213,17 @@ protected:
                 if (!WriteWiFiConfig())
                     Serial.print("Failed writing WiFi config to NVS");
 
-                this->set_state_(improv::STATE_PROVISIONING);
-
                 ESP_LOGD(TAG, "Received Improv wifi settings ssid=%s, password=%s", command.ssid.c_str(), "******");
 
                 WiFi.disconnect();
                 WiFi.mode(WIFI_STA);
                 WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
+                this->set_state_(improv::STATE_PROVISIONING);
 
-                this->command_.command = command.command;
-                this->command_.ssid = command.ssid;
+                this->command_.command  = command.command;
+                this->command_.ssid     = command.ssid;
                 this->command_.password = command.password;
-
+                
                 return true;
             }
 
@@ -270,7 +265,7 @@ protected:
 
                 // Send empty response to signify the end of the list.
     
-                std::vector<uint8_t> data =improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<std::string>{}, false);
+                std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<String>{}, false);
                 this->send_response_(data);
                 return true;
             }
