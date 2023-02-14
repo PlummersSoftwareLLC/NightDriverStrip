@@ -37,10 +37,6 @@ div#container {
 	font-family: Verdana;
 }
 </style>
-<link href="../../help.css" type="text/css" rel="stylesheet" />
-<link href="../../scrollbar/flexcroll.css" type="text/css" rel="stylesheet" />
-<script type="text/javascript" src="../../scrollbar/flexcroll.js"></script>
-<script type="text/javascript" src="../../scrollbar/initFlexcroll.js"></script>
 
 <!-- ESP Web Tools -->
     <script
@@ -49,39 +45,71 @@ div#container {
         ></script>
 <!-- End of ESP Web Tools -->
 
-<!-- ESP Web Tools button script -->
-    <script type="module" src="https://unpkg.com/esp-web-tools@8.0.1/dist/web/install-button.js?module"></script>
-<!-- End of ESP Web Tools button script -->
-
 </head>
 <body>
     <div class="content">
       <h1>NightDriverLED ESP32 Installation Wizard</h1>
-      <p>Currently only the SPECTRUM config for the M5 Stick C Plus is implemented.</p>
-      <p>Select your product</p>
-      <ul class="radios">
-        <li>
-          <label><input type="radio" name="type" value="spectrum_m5stickcplus" />Spectrum for M5 Stick C Plus</label>
-        </li>
-      </ul>
+      <label for="devices-dropdown">Select a device:</label>
+      <select id="devices-dropdown"></select>
+  
+      <br><br>
+  
+      <label for="projects-dropdown">Then, select a project:</label>
+      <select id="projects-dropdown" disabled></select>
       <p class="button-row" align="center">
         <esp-web-install-button class="invisible"></esp-web-install-button>
       </p>
 
-      <div class="footer">
-        <a href="https://github.com/sle118/squeezelite-esp32"
-          >Squeezelite-ESP32</a
-        > &mdash;
-        Installer powered by <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>.
-    </div>
     <script>
-      document.querySelectorAll('input[name="type"]').forEach(radio =>
-        radio.addEventListener("change", () => {
-          const button = document.querySelector('esp-web-install-button');
-          button.manifest = `./manifest_${radio.value}.json`;
-          button.classList.remove('invisible');
+      const devicesDropdown = document.getElementById("devices-dropdown");
+      const projectsDropdown = document.getElementById("projects-dropdown");
+
+      // Load JSON file
+      fetch("web_projects.json")
+        .then(response => response.json())
+        .then(data => populateDevicesDropdown(data.devices));
+
+      // Populate devices dropdown
+      function populateDevicesDropdown(devices) {
+        for (let device of devices) {
+          let option = document.createElement("option");
+          option.value = device.tag;
+          option.text = device.name;
+          devicesDropdown.appendChild(option);
         }
-      ));
+      }
+
+      // Populate projects dropdown
+      devicesDropdown.addEventListener("change", function() {
+        let tag = devicesDropdown.value;
+        let selectedDevice = devices.find(device => device.tag === tag);
+        populateProjectsDropdown(selectedDevice.projects);
+      });
+
+      function populateProjectsDropdown(projects) {
+        projectsDropdown.innerHTML = "";
+        for (let project of projects) {
+          let option = document.createElement("option");
+          option.value = project.tag;
+          option.text = project.name;
+          projectsDropdown.appendChild(option);
+        }
+        projectsDropdown.disabled = false;
+      }
+
+      projectsDropdown.addEventListener("change", function() {
+        const button = document.querySelector('esp-web-install-button');
+        
+        let tag = projectsDropdown.value;
+
+        if (tag) {
+          button.manifest = `manifests/manifest_${tag}.json`;
+          button.classList.remove('invisible');
+          button.disabled = false;
+        }
+        else
+          button.disabled = true;
+      });
     </script>
   </body>
   </html>
