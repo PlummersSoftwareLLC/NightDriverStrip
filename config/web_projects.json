@@ -164,26 +164,6 @@
                 {
                     "tag": "ledstrip_pico",
                     "name": "Ledstrip"
-                },
-                {
-                    "tag": "fanset",
-                    "name": "Fan Set"
-                },
-                {
-                    "tag": "insulators",
-                    "name": "Insulators"
-                },
-                {
-                    "tag": "laserline",
-                    "name": "Laser Line"
-                },
-                {
-                    "tag": "spectrum",
-                    "name": "Spectrum"
-                },
-                {
-                    "tag": "xmastrees",
-                    "name": "X-mas Trees"
                 }
             ]
         }
