@@ -75,4 +75,45 @@
       }
     }
 
+    // get_mac_address_raw
+    //
+    // Reads the raw MAC
+
+    inline void get_mac_address_raw(uint8_t *mac) 
+    {
+      #if defined(USE_ESP32_IGNORE_EFUSE_MAC_CRC)
+        // On some devices, the MAC address that is burnt into EFuse does not
+        // match the CRC that goes along with it. For those devices, this
+        // work-around reads and uses the MAC address as-is from EFuse,
+        // without doing the CRC check.
+        esp_efuse_read_field_blob(ESP_EFUSE_MAC_FACTORY, mac, 48);
+      #else
+        esp_efuse_mac_get_default(mac);
+      #endif
+    }
+
+    // get_mac_address
+    //
+    // Returns a packed (non-pretty, without colons) version of the MAC id
+
+    inline String get_mac_address() 
+    {
+      uint8_t mac[6];
+      get_mac_address_raw(mac);
+      return str_snprintf("%02x%02x%02x%02x%02x%02x", 12, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    }
+
+    // get_mac_address_pretty()
+    //
+    // Returns a packed (non-pretty, without colons) version of the MAC id
+
+    inline String get_mac_address_pretty() 
+    {
+      uint8_t mac[6];
+      get_mac_address_raw(mac);
+      return str_snprintf("%02X:%02X:%02X:%02X:%02X:%02X", 17, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    }    
+
+
+
 #endif
