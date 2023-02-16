@@ -87,7 +87,7 @@ public:
         if (x >= 0 && x <= MATRIX_WIDTH * MATRIX_HEIGHT)
             return leds[x];
         else
-            throw std::runtime_error(str_sprintf_c("Invalid index in getPixel: x=%d, NUM_LEDS=%d", x, NUM_LEDS));
+            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, NUM_LEDS=%d", x, NUM_LEDS).c_str());
     }
 
     inline CRGB getPixel(int16_t x, int16_t y) const
@@ -95,6 +95,6 @@ public:
         if (x >= 0 && x <= MATRIX_WIDTH && y >= 0 && y <= MATRIX_HEIGHT)
             return leds[xy(x, y)];
         else
-            throw std::runtime_error(str_sprintf_c("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS));
+            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 };

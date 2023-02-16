@@ -449,6 +449,7 @@ public:
 
     void Setup()
     {
+
         debugW(">> GFXBase::Setup\n");
         loadPalette(0);
 

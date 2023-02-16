@@ -1401,11 +1401,6 @@ inline String str_sprintf(const char *fmt, ...)
     return String(str.c_str());
 }
 
-inline const char * str_sprintf_c(const char *fmt, ...)
-{
-    return str_sprintf(fmt).c_str();
-}
-
 // FPS
 // 
 // Given a time value for when the last frame took place and the current timestamp returns the number of
