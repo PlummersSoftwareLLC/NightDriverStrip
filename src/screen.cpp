@@ -90,9 +90,9 @@ void BasicInfoSummary(bool bRedraw)
 
     // Blue Theme
 
-    const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);  
+    const uint16_t bkgndColor  = Screen::to16bit(CRGB::DarkBlue);  
     const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
-    const uint16_t textColor = Screen::to16bit(CRGB::White);
+    const uint16_t textColor   = Screen::to16bit(CRGB::White);
 
     // Green Terminal Theme
     //
@@ -119,48 +119,42 @@ void BasicInfoSummary(bool bRedraw)
     cStatus++;
 
     Screen::setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
-    Screen::setTextSize(Screen::SMALL);
+    Screen::setTextSize(Screen::screenWidth() < 240 ? Screen::SMALL : Screen::MEDIUM);
 
-    char szBuffer[256];
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
     Screen::setCursor(xMargin, yMargin);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
 
     // WiFi info line 2
 
+    auto lineHeight = Screen::fontHeight();
+    Screen::setCursor(xMargin + 0, yMargin + lineHeight);
+    
     if (WiFi.isConnected() == false)
     {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "No Wifi");
+        Screen::println("No Wifi");
     }
     else
     {
         const IPAddress address = WiFi.localIP();
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%ddB:%d.%d.%d.%d",
-                (int)labs(WiFi.RSSI()), // skip sign in first character
-                address[0], address[1], address[2], address[3]);
+        Screen::println(str_sprintf("%ddB:%d.%d.%d.%d",
+                        (int)labs(WiFi.RSSI()), // skip sign in first character
+                        address[0], address[1], address[2], address[3]));
     }
-    
-    auto lineHeight = Screen::fontHeight();
-    Screen::setCursor(xMargin + 0, yMargin + lineHeight);
-    Screen::println(szBuffer);
 
     // Buffer Status Line 3
 
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d %dfps ", 
-        g_aptrBufferManager[0]->Depth(), 
-        g_aptrBufferManager[0]->BufferCount(), 
-        g_FPS);
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 4);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("BUFR:%02d/%02d %dfps ", 
+                                 g_aptrBufferManager[0]->Depth(), 
+                                 g_aptrBufferManager[0]->BufferCount(), 
+                                 g_FPS));
 
     // Data Status Line 4
 
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+06.2lf-%+06.2lf", 
-        min(99.99, g_aptrBufferManager[0]->AgeOfOldestBuffer()), 
-        min(99.99, g_aptrBufferManager[0]->AgeOfNewestBuffer())
-    );
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("DATA:%+06.2lf-%+06.2lf", 
+                                min(99.99, g_aptrBufferManager[0]->AgeOfOldestBuffer()), 
+                                min(99.99, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
 
     // Clock info Line 5 
     //
@@ -173,21 +167,19 @@ void BasicInfoSummary(bool bRedraw)
     char szTime[16];
     strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
 
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%s %04.3lf", 
-        g_AppTime.CurrentTime() > 100000 ? szTime : "Unset", 
-        g_FreeDrawTime);
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 3);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("CLCK:%s %04.3lf", 
+                                g_AppTime.CurrentTime() > 100000 ? szTime : "Unset", 
+                                g_FreeDrawTime));
 
     // LED Power Info Line 6 - only if display tall enough
 
     if (Screen::screenHeight() >= lineHeight * 5 + Screen::fontHeight())
     {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "POWR:%3.0lf%% %4uW\n",
-                g_Brite,
-                g_Watts);
         Screen::setCursor(xMargin + 0, yMargin + lineHeight * 5);
-        Screen::println(szBuffer);
+        Screen::println(str_sprintf("POWR:%3.0lf%% %4uW\n",
+                                    g_Brite,
+                                    g_Watts));
     }
 
 
@@ -195,11 +187,10 @@ void BasicInfoSummary(bool bRedraw)
 
     if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
     {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%dK/%dK\n", 
-            ESP.getFreePsram() / 1024, 
-            ESP.getPsramSize() / 1024);
         Screen::setCursor(xMargin + 0, yMargin + lineHeight * 6);
-        Screen::println(szBuffer);
+        Screen::println(str_sprintf("PRAM:%dK/%dK\n", 
+                                    ESP.getFreePsram() / 1024, 
+                                    ESP.getPsramSize() / 1024));
     }
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
@@ -282,6 +273,7 @@ void CurrentEffectSummary(bool bRedraw)
             lastFPS = g_FPS;
 
             Screen::setTextSize(Screen::SMALL);
+            
             Screen::setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
                              String(g_aptrEffectManager->GetCurrentEffectIndex() + 1) +
@@ -318,11 +310,9 @@ void CurrentEffectSummary(bool bRedraw)
             lastSerial = g_Analyzer._serialFPS;
             lastAudio = g_Analyzer._AudioFPS;
             Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
-            char szBuffer[64];
             yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
             Screen::setTextColor(YELLOW16, backColor);
-            Screen::drawString(szBuffer, yh);
+            Screen::drawString(str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS), yh);
             yh += Screen::fontHeight();
         }
 #endif
@@ -474,7 +464,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         if (g_bUpdateStarted)
             delay(200);
         else
-            yield;
+            delay(10);
         
         bRedraw = false;
     }

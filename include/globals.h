@@ -1375,6 +1375,36 @@ inline String str_snprintf(const char *fmt, size_t len, ...)
     return String(str.c_str());
 }
 
+// str_snprintf
+//
+// va-args style printf that returns the formatted string as a reuslt
+
+inline String str_sprintf(const char *fmt, ...)
+{
+    std::string str;
+    va_list args, args2;
+    va_start(args, fmt);
+    va_copy(args2, args);
+    va_start(args2, fmt); // reset args to the beginning of the argument list
+    
+    int requiredLen = vsnprintf(NULL, 0, fmt, args);
+    if (requiredLen > 0)
+    {
+        str.reserve(requiredLen);
+        size_t out_length = vsnprintf(&str[0], requiredLen, fmt, args2);
+        if (out_length < requiredLen)
+            str.reserve(out_length);
+    }
+        
+    va_end(args2);
+    va_end(args);
+    return String(str.c_str());
+}
+
+inline const char * str_sprintf_c(const char *fmt, ...)
+{
+    return str_sprintf(fmt).c_str();
+}
 
 // FPS
 // 
