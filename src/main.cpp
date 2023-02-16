@@ -482,19 +482,19 @@ void setup()
     // Set the unhandled exception handler to be our own special exit function                 
     std::set_terminate(TerminateHandler);
 
-    // Re-route debug output to the serial port
-    Debug.setSerialEnabled(true);
 
     // Display a simple statup header on the serial port
     PrintOutputHeader();
     debugI("Startup!");
 
+    delay(100);
+    
     // Start Debug
 
 #if ENABLE_WIFI
 
     debugW("Starting ImprovSerial");
-    String name = "NDESP32"; // + get_mac_address().substring(6);
+    String name = "NDESP32"; //  + get_mac_address().substring(6);
     g_ImprovSerial.setup("spectrum_m5stickcplus", "0.901", "ESP32", name.c_str(), &Serial);
 
     // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
@@ -526,7 +526,8 @@ void setup()
 
 #endif
 
-    delay(100);
+    // Re-route debug output to the serial port
+    Debug.setSerialEnabled(true);
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 

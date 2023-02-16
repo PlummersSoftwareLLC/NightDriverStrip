@@ -9,12 +9,14 @@ html {
     overflow: hidden;  
 }
 body {
-    background: url(../web_images/bg.png) no-repeat center center fixed;
+    background: black no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
     height: 100%;
+    color: white;
+    font-family:Arial, Helvetica, sans-serif
 }
 div#outer {
     display: table;
@@ -39,26 +41,29 @@ div#container {
 </style>
 
 <!-- ESP Web Tools -->
-    <script
-        type="module"
-        src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"
-        ></script>
+<script
+  type="module"
+  src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"
+></script>
 <!-- End of ESP Web Tools -->
 
 </head>
 <body>
+    <center>
+
     <div class="content">
+        <img src="NightDriverLogo-small.png" style="width: 640px; height: 380px" />
       <h1>NightDriverLED ESP32 Installation Wizard</h1>
       <p>Currently only the SPECTRUM config for the M5 Stick C Plus is implemented.</p>
       <p>Select your product</p>
-      <ul class="radios">
-        <li>
-          <label><input type="radio" name="type" value="spectrum_m5stickcplus" />Spectrum for M5 Stick C Plus</label>
-        </li>
-      </ul>
-      <p class="button-row" align="center">
-        <esp-web-install-button class="invisible"></esp-web-install-button>
-      </p>
+      <div>
+        <ul class="radios">
+            <label><input type="radio" name="type" value="spectrum_m5stickcplus" />Spectrum for M5 Stick C Plus</label>
+        </ul>
+        <p class="button-row" align="center">
+          <esp-web-install-button class="invisible"></esp-web-install-button>
+        </p>
+      </div>
 
     <script>
       document.querySelectorAll('input[name="type"]').forEach(radio =>
@@ -69,5 +74,8 @@ div#container {
         }
       ));
     </script>
+
+      </center>
+
   </body>
   </html>
