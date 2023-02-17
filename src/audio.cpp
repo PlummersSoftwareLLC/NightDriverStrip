@@ -94,7 +94,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         unsigned long elapsed = millis() - lastFrame;
 
-        const auto targetDelay = PERIOD_FROM_FREQ(40) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
+        const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
         delay(elapsed >= targetDelay ? 1 : targetDelay - elapsed);
 
         if (g_bUpdateStarted)

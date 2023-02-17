@@ -430,17 +430,17 @@ void PrintOutputHeader()
 
 void TerminateHandler()
 {
-    debugI("-------------------------------------------------------------------------------------");
-    debugI("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
-    debugI("-------------------------------------------------------------------------------------");
+    debugE("-------------------------------------------------------------------------------------");
+    debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
+    debugE("-------------------------------------------------------------------------------------");
+    
     PrintOutputHeader();
 
-    std::exception_ptr exptr = std::current_exception();
     try {
-        std::rethrow_exception(exptr);
+        std::rethrow_exception(std::current_exception());
     }
     catch (std::exception &ex) {
-        debugI("Terminated due to exception: %s", ex.what());
+        debugE("Terminated due to exception: %s", ex.what());
     }
 
     abort();
@@ -481,7 +481,6 @@ void setup()
 
     // Set the unhandled exception handler to be our own special exit function                 
     std::set_terminate(TerminateHandler);
-
 
     // Display a simple statup header on the serial port
     PrintOutputHeader();
