@@ -20,6 +20,12 @@
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
 //
+//    Uses the improv namespace to call functions from that file. It 
+//    then sets up a callback function to be called when data is received 
+//    from the serial port. When data is received, the callback function parses 
+//    the data using parse_improv_serial_byte from the improv namespace and sends 
+//    a response using build_rpc_response from the improv namespace. The response 
+//    consists of the command type and a vector of strings.
 //
 // Description:
 //
