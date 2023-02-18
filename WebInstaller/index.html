@@ -88,7 +88,7 @@ div#container {
           installButton.classList.remove('invisible');
         }
         else {
-          installButton.removeAttribute('manifest');
+          delete installButton.manifest;
           if (!installButton.classList.contains('invisible'))
             installButton.classList.add('invisible');
         }
