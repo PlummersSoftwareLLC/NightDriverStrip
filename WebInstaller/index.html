@@ -82,6 +82,22 @@ div#container {
           populateDevicesDropdown(devices);
         });
 
+      function setManifest(manifest) {
+        if (manifest !== undefined) {
+          installButton.manifest = manifest;
+          installButton.classList.remove('invisible');
+        }
+        else {
+          installButton.removeAttribute('manifest');
+          if (!installButton.classList.contains('invisible'))
+            installButton.classList.add('invisible');
+        }
+      }
+
+      function clearManifest() {
+        setManifest(undefined);
+      }
+
       // Populate devices dropdown
       function populateDevicesDropdown(devices) {
         let option = document.createElement("option");
@@ -120,9 +136,7 @@ div#container {
           projectsDropdown.disabled = false;
         }
 
-        installButton.removeAttribute('manifest');
-        if (!installButton.classList.contains('invisible'))
-          installButton.classList.add('invisible');
+        clearManifest();
       }
 
       devicesDropdown.addEventListener("change", function() {
@@ -135,15 +149,10 @@ div#container {
       projectsDropdown.addEventListener("change", function() {
         let tag = projectsDropdown.value;
 
-        if (tag) {
-          installButton.manifest = `manifests/manifest_${tag}.json`;
-          installButton.classList.remove('invisible');
-        }
-        else {
-          installButton.removeAttribute('manifest');
-          if (!installButton.classList.contains('invisible'))
-            installButton.classList.add('invisible');
-        }
+        if (tag)
+          setManifest(`manifests/manifest_${tag}.json`);
+        else 
+          clearManifest();
       });
     </script>
 
