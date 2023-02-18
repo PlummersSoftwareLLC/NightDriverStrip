@@ -199,7 +199,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     while (true)
     {
         g_RemoteControl.handle();
-        delay(50);        
+        delay(20);        
     }
 }
 #endif

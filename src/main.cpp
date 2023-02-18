@@ -477,7 +477,7 @@ void setup()
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
 
-    esp_log_level_set("*", ESP_LOG_WARN);        // set all components to ERROR level  
+    esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
     // Set the unhandled exception handler to be our own special exit function                 
     std::set_terminate(TerminateHandler);

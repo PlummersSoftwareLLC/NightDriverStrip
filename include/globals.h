@@ -151,6 +151,7 @@
 #endif
 
 #if M5STICKCPLUS
+#define LED_BUILTIN 10                          // Not defined by the M5 headers, but it seems to be PIN 10
 #include "M5StickCPlus.h"
 #undef min                                      // They define a min() on us
 #endif
@@ -201,28 +202,6 @@
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
-
-
-
-
-// I don't know why to_string is missing, but it seems to be a compiler/cygwin
-// issue. If this turns into a redefinition at some point because the real one
-// comes online in the future, this to_string can be removed.
-
-template <typename T>
-std::string to_string(T value)
-{
-    //create an output string stream
-    std::ostringstream os ;
-
-    //throw the value into the string stream
-    os << value ;
-
-      //convert the string stream into a string and return
-    return os.str();
-}
-
-#define STRING(num) STR(num)
 
 extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this
 

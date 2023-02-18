@@ -464,7 +464,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         if (g_bUpdateStarted)
             delay(200);
         else
-            delay(10);
+            yield();
         
         bRedraw = false;
     }

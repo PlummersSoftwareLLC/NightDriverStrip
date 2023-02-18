@@ -1,5 +1,5 @@
 {
-  "name": "NightDriverLED Spectrum Project for M5 Stick-C Plus",
+  "name": "spectrum_m5stickcplus",
   "version": "0.901",
   "builds": [
     {

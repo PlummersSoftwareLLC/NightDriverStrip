@@ -372,6 +372,7 @@ public:
         if (p >= 0 && p < GetLEDCount())
             for (int i = 0; i < NUM_CHANNELS; i++)
                 leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
+                
         p = fPos + (1.0 - frac1);
         count -= (1.0 - frac1);
 
