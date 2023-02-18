@@ -52,7 +52,7 @@ div#container {
     <center>
 
     <div class="content">
-        <img src="NightDriverLogo-small.png" style="width: 640px; height: 380px" />
+      <img src="assets/NightDriverLogo-small.png" style="width: 640px; height: 380px" />
       <h1>NightDriverLED ESP32 Installation Wizard</h1>
       <label for="devices-dropdown">Select your device type:</label>
       <select id="devices-dropdown"></select>
@@ -64,6 +64,9 @@ div#container {
       <p class="button-row" align="center">
         <esp-web-install-button class="invisible"></esp-web-install-button>
       </p>
+    </div>
+
+    </center>
 
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
@@ -118,7 +121,8 @@ div#container {
         }
 
         installButton.removeAttribute('manifest');
-        installButton.disabled = true;
+        if (!installButton.classList.contains('invisible'))
+          installButton.classList.add('invisible');
       }
 
       devicesDropdown.addEventListener("change", function() {
@@ -134,16 +138,14 @@ div#container {
         if (tag) {
           installButton.manifest = `manifests/manifest_${tag}.json`;
           installButton.classList.remove('invisible');
-          installButton.disabled = false;
         }
         else {
           installButton.removeAttribute('manifest');
-          installButton.disabled = true;
+          if (!installButton.classList.contains('invisible'))
+            installButton.classList.add('invisible');
         }
       });
     </script>
-
-      </center>
 
   </body>
   </html>
