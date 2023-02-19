@@ -145,7 +145,7 @@ div#container {
         let tag = devicesDropdown.value;
         let selectedDevice = devices.find(device => device.tag === tag);
         
-        populateProjectsDropdown(selectedDevice === undefined ? undefined : selectedDevice.projects);
+        populateProjectsDropdown(selectedDevice?.projects);
       });
 
       projectsDropdown.addEventListener("change", function() {
