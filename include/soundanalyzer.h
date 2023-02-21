@@ -64,6 +64,7 @@ struct AudioVariables
     unsigned long _cSamples    = 0U;                     // Total number of samples successfully collected
     int           _AudioFPS    = 0;                      // Framerate of the audio sampler
     int           _serialFPS   = 0;                      // How many serial packets are processed per second
+    uint          _msLastRemote= 0;                      // When the last Peak data came in from external (ie: WiFi)
 };
 
 #if !ENABLE_AUDIO
@@ -308,7 +309,11 @@ struct AudioVariables
         void FFT()
         {
             arduinoFFT _FFT(_vReal, _vImaginary, _MaxSamples, _SamplingFrequency);
+            _FFT.DCRemoval();
+            _FFT.Windowing(FFT_WIN_TYP_FLT_TOP, FFT_FORWARD);
             _FFT.Compute(FFT_FORWARD);
+            _FFT.ComplexToMagnitude();
+            _FFT.MajorPeak();
         }
 
         inline bool IsBufferFull() const __attribute__((always_inline))
@@ -399,7 +404,7 @@ struct AudioVariables
 
         void FillBufferI2S()
         {
-            int16_t byteBuffer[MAX_SAMPLES];
+            int16_t sampleBuffer[MAX_SAMPLES];
 
             if (IsBufferFull())
             {
@@ -409,8 +414,7 @@ struct AudioVariables
             size_t bytesRead = 0;
 
             #if M5STICKC || M5STICKCPLUS
-                // REVIEW(davepl) - If I do not indicate one less byte of length, i2s_read will corrupt the heap
-                ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)byteBuffer, sizeof(byteBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
+                ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
             #else
                 ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
                 ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)byteBuffer, sizeof(byteBuffer), &bytesRead, portMAX_DELAY));
@@ -418,16 +422,16 @@ struct AudioVariables
             #endif
 
             _cSamples = _MaxSamples;
-            if (bytesRead != sizeof(byteBuffer))
+            if (bytesRead != sizeof(sampleBuffer))
             {
-                debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, sizeof(byteBuffer));
+                debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, sizeof(sampleBuffer));
                 return;
             }
 
-            for (int i = 0; i < ARRAYSIZE(byteBuffer); i++)
+            for (int i = 0; i < ARRAYSIZE(sampleBuffer); i++)
             {
                 #if M5STICKC || M5STICKCPLUS
-                    _vReal[i] = ::map(byteBuffer[i], INT16_MIN, INT16_MAX, 0, MAX_VU);
+                    _vReal[i] = ::map(sampleBuffer[i], INT16_MIN, INT16_MAX, 0, MAX_VU);
                 #else
                     _vReal[i] = byteBuffer[i];
                 #endif
@@ -606,9 +610,9 @@ struct AudioVariables
             _MaxSamples = MAX_SAMPLES;
             _InputPin = INPUT_PIN;
 
-            _vReal = (double *)malloc(_MaxSamples * sizeof(_vReal[0]));
+            _vReal      = (double *)malloc(_MaxSamples * sizeof(_vReal[0]));
             _vImaginary = (double *)malloc(_MaxSamples * sizeof(_vImaginary[0]));
-            _vPeaks = (float *)malloc(_BandCount * sizeof(_vPeaks[0]));
+            _vPeaks     = (float *) malloc(_BandCount * sizeof(_vPeaks[0]));
 
             _oldVU = 0.0f;
             _oldPeakVU = 0.0f;
@@ -687,17 +691,28 @@ struct AudioVariables
         {
             return _Peaks;
         }
+        
+        inline void SetPeakData(const PeakData & peaks)
+        {
+            _msLastRemote = millis();
+            _Peaks = peaks;
+        }
+        
         //
         // RunSamplerPass
         //
 
         inline void RunSamplerPass()
         {
-            Reset();
-            FillBufferI2S();
-            FFT();
+            if (millis() - _msLastRemote > AUDIO_PEAK_REMOTE_TIMEOUT)
+            {
+                Reset();
+                FillBufferI2S();
+                FFT();
+                _Peaks = ProcessPeaks();
+            }
+            
 
-            _Peaks = ProcessPeaks();
         }
     };
 #endif
