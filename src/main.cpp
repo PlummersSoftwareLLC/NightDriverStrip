@@ -493,7 +493,7 @@ void setup()
 #if ENABLE_WIFI
 
     debugW("Starting ImprovSerial");
-    String name = "NDESP32"; //  + get_mac_address().substring(6);
+    String name = "NDESP32" + get_mac_address().substring(6);
     g_ImprovSerial.setup("spectrum_m5stickcplus", "0.901", "ESP32", name.c_str(), &Serial);
 
     // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,

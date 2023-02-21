@@ -1058,12 +1058,17 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define NUM_FANS NUM_LEDS
 #endif
 
-#ifdef ENABLE_AUDIO
+#if ENABLE_AUDIO
     #ifndef NUM_BANDS              // How many bands in the spectrum analyzer
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
         #define NOISE_FLOOR 200.0f
+    #endif
+    #if ENABLE_WIFI
+        #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
+            #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again   
+        #endif
     #endif
 #endif
 
@@ -1308,10 +1313,7 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #define WIFI_COMMAND_VU          1             // Wifi command to set the current VU reading (DEPRECATED)
 #define WIFI_COMMAND_CLOCK       2             // Wifi command telling us current time at the server (DEPRECATED)
 #define WIFI_COMMAND_PIXELDATA64 3             // Wifi command with color data and 64-bit clock vals 
-#define WIFI_COMMAND_STATS       4             // Wifi command to request stats from chip back to server
-#define WIFI_COMMAND_REBOOT      5             // Wifi command to reboot the client chip (that's us!)
-#define WIFI_COMMAND_VU_SIZE     16
-#define WIFI_COMMAND_CLOCK_SIZE  20
+#define WIFI_COMMAND_PEAKDATA    4             // Wifi command that delivers audio peaks
 
 // Final headers
 // 
@@ -1540,7 +1542,6 @@ inline double mapDouble(double x, double in_min, double in_max, double out_min, 
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
 inline uint64_t ULONGFromMemory(uint8_t * payloadData)
 {
     return  (uint64_t)payloadData[7] << 56  | 

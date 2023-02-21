@@ -319,6 +319,28 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
     switch (command16)
     {
+        // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
+        
+        case WIFI_COMMAND_PEAKDATA:
+        {
+            uint16_t numbands  = WORDFromMemory(&payloadData[2]);
+            uint32_t length32  = DWORDFromMemory(&payloadData[4]);
+            uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
+            uint64_t micros    = ULONGFromMemory(&payloadData[16]);
+        
+            debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
+                   numbands, 
+                   length32, 
+                   seconds, 
+                   micros);
+                   
+            PeakData peaks((float *)(payloadData + EXPANDED_DATA_HEADER_SIZE));
+            g_Analyzer.SetPeakData(peaks);
+            return true;
+        }
+        
+        // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
+        
         case WIFI_COMMAND_PIXELDATA64:
         {
             uint16_t channel16 = WORDFromMemory(&payloadData[2]);

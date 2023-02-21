@@ -72,8 +72,8 @@ struct SocketResponse
     uint32_t    watts;             // 4
 };
 
-static_assert(sizeof(double) == 8);
-
+static_assert(sizeof(double) == 8);             // SocketResponse on wire uses 8 byte doubles
+static_assert(sizeof(float)  == 4);             // PeakData on wire uses 4 byte floats
 // Two things must be true for this to work and interop with the C# side:  doubles must be 8 bytes, not the default
 // of 4 for Arduino.  So that must be set in 'platformio.ini', and you must ensure that you align things such that
 // doubles land on byte multiples of 8, otherwise you'll get packing bytes inserted.  Welcome to my world! Once upon
@@ -86,6 +86,7 @@ extern std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 extern uint32_t g_FPS;
 extern double g_Brite;
 extern uint32_t g_Watts; 
+
 // SocketServer
 //
 // Handles incoming connections from the server and pass the data that comes in 
@@ -344,7 +345,44 @@ public:
                 // Read the rest of the data
                 uint16_t command16   = WORDFromMemory(&_pBuffer.get()[0]);
 
-                if (command16 == WIFI_COMMAND_PIXELDATA64)
+                if (command16 == WIFI_COMMAND_PEAKDATA)
+                {
+                    uint16_t numbands  = WORDFromMemory(&_pBuffer.get()[2]);
+                    uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
+                    uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
+                    uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
+
+                    size_t totalExpected = EXPANDED_DATA_HEADER_SIZE + length32;
+
+                    debugW("PeakData Header: numbands=%u, length=%u, seconds=%llu, micro=%llu", numbands, length32, seconds, micros);
+                    
+                    if (numbands != NUM_BANDS)
+                    {
+                        debugW("Expecting %d bands but received %d", NUM_BANDS, numbands);
+                        break;
+                    }
+                    
+                    if (length32 != numbands * sizeof(float))
+                    {
+                        debugW("Expecting %d bytes for %d audio bands, but received %d", totalExpected, NUM_BANDS, _cbReceived);
+                        break;
+                    }
+                    
+                    if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
+                    {
+                        debugW("Error in getting peak data from wifi");
+                        break;
+                    }
+                    
+                    if (false == ProcessIncomingData(_pBuffer.get(), totalExpected))
+                        break;
+
+                    // Consume the data by resetting the buffer 
+                    debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %d down 0.", _cbReceived);
+                    ResetReadBuffer();
+                    
+                }
+                else if (command16 == WIFI_COMMAND_PIXELDATA64)
                 {
                     // We know it's pixel data, so we do some validation before calling Process.
 
@@ -364,7 +402,7 @@ public:
                     debugV("Expecting %d total bytes", totalExpected);
                     if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
-                        debugW("Error in getting data\n");
+                        debugW("Error in getting pixel data from wifi\n");
                         break;
                     }
                 
@@ -384,7 +422,6 @@ public:
                     debugW("Unknown command in packet received: %d\n", command16);
                     break;
                 }
-
             }
 
             // If we make it to this point, it should be success, so we consume 
