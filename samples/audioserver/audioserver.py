@@ -19,14 +19,13 @@ import numpy as np
 import socket
 import struct
 import time
+import sys
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
 client = '192.168.8.197'        
 
-# Set up audio input stream.  If you get an input overload, increase the chunk size or decrease
-# the sample rate.  Or figure out how to reset the audio stream each time you read from it, 
-# as I don't know how (and flush() didn't work).  512@24000 gives a nice framerate.  And 512
+# Set up audio input stream. 512@24000 gives a nice framerate.  And 512
 # is what I run on the ESP32 if connected via hardware mic, so at least it matches
 
 chunk_size   = 512
@@ -70,6 +69,8 @@ print("Connect to " + client + "...")
 
 sock = None
 
+stream = p.open(format=pyaudio.paFloat32, channels=1, rate=sample_rate, input=True, frames_per_buffer=chunk_size)
+
 # Loop to continuously sample audio and compute spectrum analyzer bands
 while True:
 
@@ -81,10 +82,10 @@ while True:
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         sock.setblocking(True);
 
-    stream = p.open(format=pyaudio.paFloat32, channels=1, rate=sample_rate, input=True, frames_per_buffer=chunk_size)
+    # Clear out the audio buffer so we start fresh each frame
 
     # Read the raw audio data
-    audio_data = np.frombuffer(stream.read(chunk_size), dtype=np.float32)
+    audio_data = np.frombuffer(stream.read(chunk_size, exception_on_overflow=False), dtype=np.float32)
     
     # Compute the FFT to put the samples into frequency
     fft_data = np.abs(np.fft.rfft(audio_data, n=fft_size))
@@ -116,7 +117,8 @@ while True:
 
     # Print ASCII bargraphs
     print(bargraphs)
-    
+    sys.stdout.write('*')
+
     packed_data = struct.pack('f' * len(scaled_values), *scaled_values)
     command = 4
     length32 = 4 * num_bands
@@ -138,6 +140,6 @@ while True:
         sock.close()
         sock = None
     
-    time.sleep(0.01);
+    time.sleep(0.02);
 
 sock.close()
