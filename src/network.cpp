@@ -334,7 +334,8 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                    seconds, 
                    micros);
                    
-            PeakData peaks((float *)(payloadData + EXPANDED_DATA_HEADER_SIZE));
+            PeakData peaks((float *)(payloadData + STANDARD_DATA_HEADER_SIZE));
+            peaks.ApplyScalars(PeakData::PCREMOTE);
             g_Analyzer.SetPeakData(peaks);
             return true;
         }

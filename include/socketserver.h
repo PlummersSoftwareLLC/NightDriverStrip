@@ -44,11 +44,16 @@ extern "C"
     #include "uzlib/src/uzlib.h"
 }
 
-#define EXPANDED_DATA_HEADER_SIZE 24                                                // Size of the header for expanded data
-#define COMPRESSED_DATA_HEADER_SIZE 16                                              // Size of the header for compressed data
-#define LED_DATA_SIZE     3                                                         // Data size of an LED (24 bits or 3 bytes)
-#define EXPECTED_EXPANDED_PACKET_SIZE \
-            (EXPANDED_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS)                  // Header plus 24 bits per actual LED
+#define STANDARD_DATA_HEADER_SIZE   24                                              // Size of the header for expanded data
+#define COMPRESSED_HEADER_SIZE      16                                              // Size of the header for compressed data
+#define LED_DATA_SIZE                3                                              // Data size of an LED (24 bits or 3 bytes)
+
+// We allocate whatever the max packet is, and use it to validate incoming packets, so right now it's set to the maxiumum
+// LED data packet you could have (header plus 3 RGBs per NUM_LED)
+
+#define MAXIUMUM_PACKET_SIZE \
+            (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS)                  // Header plus 24 bits per actual LED
+
 #define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header 
 bool ProcessIncomingData(uint8_t * payloadData, size_t payloadLength);              // In main file
 
@@ -112,7 +117,7 @@ public:
         _server_fd(0),
         _cbReceived(0)
     {
-        _abOutputBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+        _abOutputBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -130,7 +135,7 @@ public:
 
     bool begin()
     {
-        _pBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
+        _pBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
 
         _cbReceived = 0;
         
@@ -180,7 +185,10 @@ public:
             return true;
         }
 
-        if (cbNeeded > EXPECTED_EXPANDED_PACKET_SIZE)
+        // This test caps maximum packet size as a full buffer read of LED data.  If other packets wind up being longer,
+        // the buffer itself and this test might need to change
+        
+        if (cbNeeded > MAXIUMUM_PACKET_SIZE)
         {
             debugW("Unexpected request for %d bytes in ReadUntilNBytesReceived\n", cbNeeded);
             return false;
@@ -191,7 +199,7 @@ public:
             // If we're reading at a point in the buffer more than just the header, we're actually transferring data, so light up the LED
 
             auto oldState = digitalRead(BUILTIN_LED_PIN);
-            if (cbNeeded > EXPANDED_DATA_HEADER_SIZE)
+            if (cbNeeded > STANDARD_DATA_HEADER_SIZE)
                 digitalWrite(BUILTIN_LED_PIN, 1);
 
             // Read data from the socket until we have _bcNeeded bytes in the buffer
@@ -200,7 +208,7 @@ public:
 
             // Restore the old state
 
-            if (cbNeeded > EXPANDED_DATA_HEADER_SIZE)
+            if (cbNeeded > STANDARD_DATA_HEADER_SIZE)
                 digitalWrite(BUILTIN_LED_PIN, oldState);
 
             if (cbRead > 0)
@@ -275,9 +283,11 @@ public:
         
         do
         {
+            bool bSendResponsePacket = false;
+
              // Read until we have at least enough for the data header 
 
-            if (false == ReadUntilNBytesReceived(new_socket, COMPRESSED_DATA_HEADER_SIZE))
+            if (false == ReadUntilNBytesReceived(new_socket, STANDARD_DATA_HEADER_SIZE))
             {
                 debugW("Read error in getting header.\n");
                 close(new_socket);
@@ -295,24 +305,18 @@ public:
                 uint32_t reserved       = _pBuffer[15] << 24 | _pBuffer[14] << 16 | _pBuffer[13] << 8 | _pBuffer[12];
                 debugV("Compressed Header: compressedSize: %u, expandedSize: %u, reserved: %u", compressedSize, expandedSize, reserved);
 
-                if (expandedSize > EXPECTED_EXPANDED_PACKET_SIZE)
+                if (expandedSize > MAXIUMUM_PACKET_SIZE)
                 {
-                    debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, EXPECTED_EXPANDED_PACKET_SIZE);
+                    debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, MAXIUMUM_PACKET_SIZE);
                     break;
                 }
 
-                if (false == ReadUntilNBytesReceived(new_socket, COMPRESSED_DATA_HEADER_SIZE + compressedSize))
+                if (false == ReadUntilNBytesReceived(new_socket, STANDARD_DATA_HEADER_SIZE + compressedSize))
                 {
                     debugW("Could not read compressed data from stream\n");
                     break;
                 }
-                debugV("Successfuly read %u bytes", COMPRESSED_DATA_HEADER_SIZE + compressedSize);
-
-                if (expandedSize > EXPECTED_EXPANDED_PACKET_SIZE)
-                {
-                    debugE("Expanded data size of %d would overflow buffer of %d\n", expandedSize, sizeof(_abOutputBuffer));
-                    break;
-                }
+                debugV("Successfuly read %u bytes", STANDARD_DATA_HEADER_SIZE + compressedSize);
 
                 // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
                 // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
@@ -321,9 +325,9 @@ public:
                 #if USE_PSRAM
                     std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
                     memcpy(_abTempBuffer.get(), _pBuffer.get(), EXPECTED_EXPANDED_PACKET_SIZE);
-                    auto pSourceBuffer = &_abTempBuffer[COMPRESSED_DATA_HEADER_SIZE];
+                    auto pSourceBuffer = &_abTempBuffer[STANDARD_DATA_HEADER_SIZE];
                 #else
-                    auto pSourceBuffer = &_pBuffer[COMPRESSED_DATA_HEADER_SIZE];
+                    auto pSourceBuffer = &_pBuffer[STANDARD_DATA_HEADER_SIZE];
                 #endif
                 
                 if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
@@ -352,25 +356,25 @@ public:
                     uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
                     uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
 
-                    size_t totalExpected = EXPANDED_DATA_HEADER_SIZE + length32;
+                    size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
 
-                    debugW("PeakData Header: numbands=%u, length=%u, seconds=%llu, micro=%llu", numbands, length32, seconds, micros);
+                    debugV("PeakData Header: numbands=%u, length=%u, seconds=%llu, micro=%llu", numbands, length32, seconds, micros);
                     
                     if (numbands != NUM_BANDS)
                     {
-                        debugW("Expecting %d bands but received %d", NUM_BANDS, numbands);
+                        debugE("Expecting %d bands but received %d", NUM_BANDS, numbands);
                         break;
                     }
                     
                     if (length32 != numbands * sizeof(float))
                     {
-                        debugW("Expecting %d bytes for %d audio bands, but received %d", totalExpected, NUM_BANDS, _cbReceived);
+                        debugE("Expecting %d bytes for %d audio bands, but received %d.  Ensure float size and endianness matches between sender and receiver systems.", totalExpected, NUM_BANDS, _cbReceived);
                         break;
                     }
-                    
+
                     if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
-                        debugW("Error in getting peak data from wifi");
+                        debugE("Error in getting peak data from wifi, could not read the %d bytes", totalExpected);
                         break;
                     }
                     
@@ -393,13 +397,14 @@ public:
 
                     debugW("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
 
-                    size_t totalExpected = EXPANDED_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
-                    if (totalExpected > EXPECTED_EXPANDED_PACKET_SIZE)
+                    size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
+                    if (totalExpected > MAXIUMUM_PACKET_SIZE)
                     {
-                        debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, EXPECTED_EXPANDED_PACKET_SIZE);
+                        debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIUMUM_PACKET_SIZE);
                         break;
                     }
-                    debugV("Expecting %d total bytes", totalExpected);
+
+                    debugE("Expecting %d total bytes", totalExpected);
                     if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
                         debugW("Error in getting pixel data from wifi\n");
@@ -416,6 +421,8 @@ public:
                     // Consume the data by resetting the buffer 
                     debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
                     ResetReadBuffer();
+                    
+                    bSendResponsePacket = true;
                 }
                 else
                 {
@@ -429,24 +436,26 @@ public:
             ResetReadBuffer();
             yield();
 
-            SocketResponse response = { 
-                                        .size = sizeof(SocketResponse),
-                                        .flashVersion = FLASH_VERSION,
-                                        .currentClock = g_AppTime.CurrentTime(),
-                                        .oldestPacket = g_aptrBufferManager[0]->AgeOfOldestBuffer(),
-                                        .newestPacket = g_aptrBufferManager[0]->AgeOfNewestBuffer(),
-                                        .brightness   = g_Brite,
-                                        .wifiSignal   = (double) WiFi.RSSI(),
-                                        .bufferSize   = g_aptrBufferManager[0]->BufferCount(),
-                                        .bufferPos    = g_aptrBufferManager[0]->Depth(),
-                                        .fpsDrawing   = g_FPS,
-                                        .watts        = g_Watts
-                                      };
+            if (bSendResponsePacket)
+            {
+                SocketResponse response = { 
+                                            .size = sizeof(SocketResponse),
+                                            .flashVersion = FLASH_VERSION,
+                                            .currentClock = g_AppTime.CurrentTime(),
+                                            .oldestPacket = g_aptrBufferManager[0]->AgeOfOldestBuffer(),
+                                            .newestPacket = g_aptrBufferManager[0]->AgeOfNewestBuffer(),
+                                            .brightness   = g_Brite,
+                                            .wifiSignal   = (double) WiFi.RSSI(),
+                                            .bufferSize   = g_aptrBufferManager[0]->BufferCount(),
+                                            .bufferPos    = g_aptrBufferManager[0]->Depth(),
+                                            .fpsDrawing   = g_FPS,
+                                            .watts        = g_Watts
+                                        };
 
-            // I dont think this is fatal, and doesn't affect the read buffer, so content to ignore for now if it happens
-            if (sizeof(response) != write(new_socket, &response, sizeof(response)))
-                debugW("Unable to send response back to server.");
-                
+                // I dont think this is fatal, and doesn't affect the read buffer, so content to ignore for now if it happens
+                if (sizeof(response) != write(new_socket, &response, sizeof(response)))
+                    debugW("Unable to send response back to server.");
+            }
         } while (true);
 
         close(new_socket);

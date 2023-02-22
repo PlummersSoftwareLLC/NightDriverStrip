@@ -365,7 +365,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
             }
         #endif     
 
-        delay(1);
+        delay(50);
     }
 }
 
@@ -517,6 +517,11 @@ void setup()
         WiFi_ssid     = cszSSID;
         if (!WriteWiFiConfig())
             debugW("Could not even write defaults to WiFi Credentials");
+    }
+    else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+    {
+        WiFi_password = cszPassword;
+        WiFi_ssid     = cszSSID;
     }
 
     debugI("Starting DebugLoopTaskEntry");
