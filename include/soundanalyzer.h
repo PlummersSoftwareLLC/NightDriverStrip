@@ -755,7 +755,7 @@ struct AudioVariables
 
                 // Scale it so that its not always in the top red
                 _MicMode = PeakData::PCREMOTE;
-                UpdateVU(0.8 * MAX_VU * sum / NUM_BANDS);
+                UpdateVU(0.25 * MAX_VU * sum / NUM_BANDS);
             }
             
 

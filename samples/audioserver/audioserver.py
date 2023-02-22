@@ -79,7 +79,7 @@ while True:
         address = (client, 49152)
         sock.connect(address)
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        sock.setblocking(False);
+        sock.setblocking(True);
 
     stream = p.open(format=pyaudio.paFloat32, channels=1, rate=sample_rate, input=True, frames_per_buffer=chunk_size)
 
