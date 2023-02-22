@@ -323,8 +323,8 @@ public:
                 // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
                 
                 #if USE_PSRAM
-                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(EXPECTED_EXPANDED_PACKET_SIZE);
-                    memcpy(_abTempBuffer.get(), _pBuffer.get(), EXPECTED_EXPANDED_PACKET_SIZE);
+                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
+                    memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIUMUM_PACKET_SIZE);
                     auto pSourceBuffer = &_abTempBuffer[STANDARD_DATA_HEADER_SIZE];
                 #else
                     auto pSourceBuffer = &_pBuffer[STANDARD_DATA_HEADER_SIZE];
@@ -351,38 +351,42 @@ public:
 
                 if (command16 == WIFI_COMMAND_PEAKDATA)
                 {
-                    uint16_t numbands  = WORDFromMemory(&_pBuffer.get()[2]);
-                    uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
-                    uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
-                    uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
+                    #if ENABLE_AUDIO
 
-                    size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
+                        uint16_t numbands  = WORDFromMemory(&_pBuffer.get()[2]);
+                        uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
+                        uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
+                        uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
 
-                    debugV("PeakData Header: numbands=%u, length=%u, seconds=%llu, micro=%llu", numbands, length32, seconds, micros);
-                    
-                    if (numbands != NUM_BANDS)
-                    {
-                        debugE("Expecting %d bands but received %d", NUM_BANDS, numbands);
-                        break;
-                    }
-                    
-                    if (length32 != numbands * sizeof(float))
-                    {
-                        debugE("Expecting %d bytes for %d audio bands, but received %d.  Ensure float size and endianness matches between sender and receiver systems.", totalExpected, NUM_BANDS, _cbReceived);
-                        break;
-                    }
+                        size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
 
-                    if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
-                    {
-                        debugE("Error in getting peak data from wifi, could not read the %d bytes", totalExpected);
-                        break;
-                    }
-                    
-                    if (false == ProcessIncomingData(_pBuffer.get(), totalExpected))
-                        break;
+                        debugV("PeakData Header: numbands=%u, length=%u, seconds=%llu, micro=%llu", numbands, length32, seconds, micros);
+                        
+                        if (numbands != NUM_BANDS)
+                        {
+                            debugE("Expecting %d bands but received %d", NUM_BANDS, numbands);
+                            break;
+                        }
+                        
+                        if (length32 != numbands * sizeof(float))
+                        {
+                            debugE("Expecting %d bytes for %d audio bands, but received %d.  Ensure float size and endianness matches between sender and receiver systems.", totalExpected, NUM_BANDS, _cbReceived);
+                            break;
+                        }
 
-                    // Consume the data by resetting the buffer 
-                    debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %d down 0.", _cbReceived);
+                        if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
+                        {
+                            debugE("Error in getting peak data from wifi, could not read the %d bytes", totalExpected);
+                            break;
+                        }
+                        
+                        if (false == ProcessIncomingData(_pBuffer.get(), totalExpected))
+                            break;
+
+                        // Consume the data by resetting the buffer 
+                        debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %d down 0.", _cbReceived);
+    
+                    #endif
                     ResetReadBuffer();
                     
                 }
@@ -421,7 +425,7 @@ public:
                     // Consume the data by resetting the buffer 
                     debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
                     ResetReadBuffer();
-                    
+
                     bSendResponsePacket = true;
                 }
                 else

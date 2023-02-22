@@ -441,7 +441,7 @@ struct AudioVariables
                 ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
             #else
                 ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
-                ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)byteBuffer, sizeof(byteBuffer), &bytesRead, portMAX_DELAY));
+                ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, portMAX_DELAY));
                 ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
             #endif
 
@@ -457,7 +457,7 @@ struct AudioVariables
                 #if M5STICKC || M5STICKCPLUS
                     _vReal[i] = ::map(sampleBuffer[i], INT16_MIN, INT16_MAX, 0, MAX_VU);
                 #else
-                    _vReal[i] = byteBuffer[i];
+                    _vReal[i] = sampleBuffer[i];
                 #endif
             }
         }
