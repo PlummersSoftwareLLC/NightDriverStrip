@@ -365,7 +365,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
             }
         #endif     
 
-        delay(1);
+        delay(50);
     }
 }
 
@@ -493,7 +493,7 @@ void setup()
 #if ENABLE_WIFI
 
     debugW("Starting ImprovSerial");
-    String name = "NDESP32"; //  + get_mac_address().substring(6);
+    String name = "NDESP32" + get_mac_address().substring(6);
     g_ImprovSerial.setup("spectrum_m5stickcplus", "0.901", "ESP32", name.c_str(), &Serial);
 
     // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
@@ -517,6 +517,11 @@ void setup()
         WiFi_ssid     = cszSSID;
         if (!WriteWiFiConfig())
             debugW("Could not even write defaults to WiFi Credentials");
+    }
+    else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+    {
+        WiFi_password = cszPassword;
+        WiFi_ssid     = cszSSID;
     }
 
     debugI("Starting DebugLoopTaskEntry");

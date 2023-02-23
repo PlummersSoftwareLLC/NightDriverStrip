@@ -435,37 +435,37 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
     bool bRedraw = true;                            
     for (;;)
     {
-        // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
-        // nothing has been drawn for any page yet
-        
-        #ifdef TOGGLE_BUTTON_1
-            Button1.update();
-            if (Button1.pressed())
-            {
-                std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+            // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
+            // nothing has been drawn for any page yet
+            
+            #ifdef TOGGLE_BUTTON_1
+                Button1.update();
+                if (Button1.pressed())
+                {
+                    std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-                // When the button is pressed advance to the next information page on the little display
+                    // When the button is pressed advance to the next information page on the little display
 
-                giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
-                bRedraw = true;
-            }
-        #endif
+                    giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
+                    bRedraw = true;
+                }
+            #endif
 
-        #ifdef TOGGLE_BUTTON_2
-            Button2.update();
-            if (Button2.pressed())
-            {
-                g_aptrEffectManager->NextEffect();
-                bRedraw = true;
-            }
-        #endif
+            #ifdef TOGGLE_BUTTON_2
+                Button2.update();
+                if (Button2.pressed())
+                {
+                    g_aptrEffectManager->NextEffect();
+                    bRedraw = true;
+                }
+            #endif
 
-        UpdateScreen(bRedraw);
-        if (g_bUpdateStarted)
-            delay(200);
-        else
-            yield();
-        
-        bRedraw = false;
+            UpdateScreen(bRedraw);
+            if (g_bUpdateStarted)
+                delay(200);
+            else
+                delay(50);
+            
+            bRedraw = false;
     }
 }
