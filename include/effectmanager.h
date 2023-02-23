@@ -207,6 +207,9 @@ public:
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
+        // If there's a temporary effect override from the remote control active, we start that, else
+        // we start the current regular effect
+        
         if (_ptrRemoteEffect)
             _ptrRemoteEffect->Start();
         else
@@ -435,13 +438,9 @@ public:
         // If a remote control effect is set, we draw that, otherwise we draw the regular effect
 
         if (_ptrRemoteEffect)
-        {
             _ptrRemoteEffect->Draw();
-        }
         else
-        {
             _ppEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
-        }
 
         // If we do indeed have multiple effects (BUGBUG what if only a single enabled?) then we
         // fade in and out at the appropriate time based on the time remaining/used by the effect

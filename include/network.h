@@ -90,9 +90,9 @@
 
     inline String get_mac_address() 
     {
-      uint8_t mac[8];
-      get_mac_address_raw(mac);
-      return str_snprintf("%02x%02x%02x%02x%02x%02x", 12, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+      uint8_t mac[6];
+      WiFi.macAddress(mac);
+      return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
 
     // get_mac_address_pretty()
@@ -101,9 +101,9 @@
 
     inline String get_mac_address_pretty() 
     {
-      uint8_t mac[8];
-      get_mac_address_raw(mac);
-      return str_snprintf("%02X:%02X:%02X:%02X:%02X:%02X", 17, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+      uint8_t mac[6];
+      WiFi.macAddress(mac);
+      return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }    
 
 

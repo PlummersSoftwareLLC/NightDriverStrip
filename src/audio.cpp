@@ -65,42 +65,41 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
     for (;;)
     {
-        static uint64_t lastFrame = millis();
-        g_Analyzer._AudioFPS = FPS(lastFrame, millis());
-        static double lastVU = 0.0;
+        EVERY_N_MILLISECONDS(g_bUpdateStarted ? 1000 : 25)
+        {
+            static uint64_t lastFrame = millis();
+            g_Analyzer._AudioFPS = FPS(lastFrame, millis());
+            static double lastVU = 0.0;
 
-        // VURatio with a fadeout
+            // VURatio with a fadeout
 
-        constexpr auto VU_DECAY_PER_SECOND = 3.0;
-        if (g_Analyzer._VURatio > lastVU)
-            lastVU = g_Analyzer._VURatio;
-        else
-            lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
-        lastVU = std::max(lastVU, 0.0);
-        lastVU = std::min(lastVU, 2.0);
-        g_Analyzer._VURatioFade = lastVU;
+            constexpr auto VU_DECAY_PER_SECOND = 3.0;
+            if (g_Analyzer._VURatio > lastVU)
+                lastVU = g_Analyzer._VURatio;
+            else
+                lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
+            lastVU = std::max(lastVU, 0.0);
+            lastVU = std::min(lastVU, 2.0);
+            g_Analyzer._VURatioFade = lastVU;
 
-        lastFrame = millis();
+            lastFrame = millis();
 
-        g_Analyzer.RunSamplerPass();
-        g_Analyzer.UpdatePeakData();        
-        g_Analyzer.DecayPeaks();
+            g_Analyzer.RunSamplerPass();
+            g_Analyzer.UpdatePeakData();        
+            g_Analyzer.DecayPeaks();
 
-        // Instantaneous VURatio
+            // Instantaneous VURatio
 
-        g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ? 0.0 : (g_Analyzer._VU-g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
+            g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ? 0.0 : (g_Analyzer._VU-g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
 
-        // Delay enough time to yield 25ms total used this frame, which will net 40FPS exactly (as long as the CPU keeps up)
+            // Delay enough time to yield 25ms total used this frame, which will net 40FPS exactly (as long as the CPU keeps up)
 
-        unsigned long elapsed = millis() - lastFrame;
+            unsigned long elapsed = millis() - lastFrame;
 
-        const auto targetDelay = PERIOD_FROM_FREQ(40) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(elapsed >= targetDelay ? 1 : targetDelay - elapsed);
-
-        if (g_bUpdateStarted)
-            delay(1000);
-
-        delay(1);
+            const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
+            delay(elapsed >= targetDelay ? 1 : targetDelay - elapsed);
+        }
+        yield();
     }
 }
 
