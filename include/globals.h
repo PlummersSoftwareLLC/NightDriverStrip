@@ -1065,10 +1065,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef NOISE_FLOOR
         #define NOISE_FLOOR 200.0f
     #endif
-    #if ENABLE_WIFI
-        #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
-            #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again   
-        #endif
+    #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
+        #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again   
     #endif
 #endif
 

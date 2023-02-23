@@ -757,8 +757,6 @@ struct AudioVariables
                 _MicMode = PeakData::PCREMOTE;
                 UpdateVU(0.25 * MAX_VU * sum / NUM_BANDS);
             }
-            
-
         }
     };
 #endif
