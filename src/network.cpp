@@ -77,33 +77,17 @@ extern uint32_t g_FPS;
         {
             debugI("Displaying statistics....");
 
-            char szBuffer[256];
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
-            debugI("%s", szBuffer);
-
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s\n", 
-                                                    String(WiFi.RSSI()).substring(1).c_str(), 
-                                                    WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            debugI("%s", szBuffer);
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
-            debugI("%s", szBuffer);
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
-            debugI("%s", szBuffer);
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
-            debugI("%s", szBuffer);
+            debugI("%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugI("%sdB:%s\n",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            debugI("BUFR:%02d/%02d [%dfps]\n", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
+            debugI("DATA:%+04.2lf-%+04.2lf\n", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
 
             #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
-                debugI("%s", szBuffer);
+                debugI("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
             #endif
 
-            #if INCOMING_WIFI_ENABLEDgVUR
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
-            debugI("%s", szBuffer);
+            #if INCOMING_WIFI_ENABLED
+                debugI("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             #endif
 
             // Print out a buffer log with timestamps and deltas 
@@ -113,8 +97,7 @@ extern uint32_t g_FPS;
                 auto pBufferManager = g_aptrBufferManager[0].get();
                 std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
                 double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
-                debugI("%s", szBuffer);
+                debugI("Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
             }
 
         }
@@ -216,7 +199,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     while (true)
     {
         g_RemoteControl.handle();
-        delay(50);        
+        delay(20);        
     }
 }
 #endif
@@ -336,6 +319,31 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
     switch (command16)
     {
+        // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
+        
+        case WIFI_COMMAND_PEAKDATA:
+        {
+            #if ENABLE_AUDIO
+                uint16_t numbands  = WORDFromMemory(&payloadData[2]);
+                uint32_t length32  = DWORDFromMemory(&payloadData[4]);
+                uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
+                uint64_t micros    = ULONGFromMemory(&payloadData[16]);
+            
+                debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
+                    numbands, 
+                    length32, 
+                    seconds, 
+                    micros);
+                    
+                PeakData peaks((float *)(payloadData + STANDARD_DATA_HEADER_SIZE));
+                peaks.ApplyScalars(PeakData::PCREMOTE);
+                g_Analyzer.SetPeakData(peaks);
+            #endif
+            return true;
+        }
+        
+        // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
+        
         case WIFI_COMMAND_PIXELDATA64:
         {
             uint16_t channel16 = WORDFromMemory(&payloadData[2]);

@@ -61,8 +61,8 @@ const CRGBPalette256 vuPaletteSeahawks = gpSeahawks;
 DEFINE_GRADIENT_PALETTE( vu_gpBlue ) 
 {
       0,     0,   0,   4,   // near black green
-     64,     0,   0, 255,   // green
-    128,   255, 255,   0,   // yellow
+     64,     0,   0, 255,   // blue
+    128,     0, 255,   0,   // green
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red
 };

@@ -49,8 +49,6 @@ class PatternSubscribers : public LEDStripEffect
 
   virtual void Draw()
   {
-      char szBuffer[32];
-
       LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(0, 16, 64));
       LEDMatrixGFX::backgroundLayer.setFont(font5x7);
 
@@ -73,13 +71,14 @@ class PatternSubscribers : public LEDStripEffect
       while (z/=10)
         x-= CHAR_WIDTH / 2;
 
-      sprintf(szBuffer, "%ld", cSubscribers);
+      String text = str_sprintf("%ld", cSubscribers);
+      const char * pszText = text.c_str();
       LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
-      LEDMatrixGFX::backgroundLayer.drawString(x-1, y,   rgb24(0,0,0),          szBuffer);
-      LEDMatrixGFX::backgroundLayer.drawString(x+1, y,   rgb24(0,0,0),          szBuffer);
-      LEDMatrixGFX::backgroundLayer.drawString(x,   y-1, rgb24(0,0,0),          szBuffer);
-      LEDMatrixGFX::backgroundLayer.drawString(x,   y+1, rgb24(0,0,0),          szBuffer);
-      LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    szBuffer);
+      LEDMatrixGFX::backgroundLayer.drawString(x-1, y,   rgb24(0,0,0),          pszText);
+      LEDMatrixGFX::backgroundLayer.drawString(x+1, y,   rgb24(0,0,0),          pszText);
+      LEDMatrixGFX::backgroundLayer.drawString(x,   y-1, rgb24(0,0,0),          pszText);
+      LEDMatrixGFX::backgroundLayer.drawString(x,   y+1, rgb24(0,0,0),          pszText);
+      LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
   }
 };
 
