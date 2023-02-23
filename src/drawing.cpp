@@ -209,7 +209,7 @@ uint16_t LocalDraw()
             #if USE_MATRIX
                 auto spectrum = GetSpectrumAnalyzer(0);
                 if (g_aptrEffectManager->IsVUVisible())
-                    ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, &vuPaletteGreen);
+                    ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
             #endif
             debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
             return NUM_LEDS;

@@ -151,6 +151,7 @@
 #endif
 
 #if M5STICKCPLUS
+#define LED_BUILTIN 10                          // Not defined by the M5 headers, but it seems to be PIN 10
 #include "M5StickCPlus.h"
 #undef min                                      // They define a min() on us
 #endif
@@ -164,8 +165,8 @@
 //
 // Idle tasks in taskmgr run at IDLE_PRIORITY+1 so you want to be at least +2 
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+6
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+7
 #define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
 #define NET_PRIORITY            tskIDLE_PRIORITY+4
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+3
@@ -201,28 +202,6 @@
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
-
-
-
-
-// I don't know why to_string is missing, but it seems to be a compiler/cygwin
-// issue. If this turns into a redefinition at some point because the real one
-// comes online in the future, this to_string can be removed.
-
-template <typename T>
-std::string to_string(T value)
-{
-    //create an output string stream
-    std::ostringstream os ;
-
-    //throw the value into the string stream
-    os << value ;
-
-      //convert the string stream into a string and return
-    return os.str();
-}
-
-#define STRING(num) STR(num)
 
 extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this
 
@@ -788,7 +767,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
 
-    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
+    #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption   
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -1079,12 +1058,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define NUM_FANS NUM_LEDS
 #endif
 
-#ifdef ENABLE_AUDIO
+#if ENABLE_AUDIO
     #ifndef NUM_BANDS              // How many bands in the spectrum analyzer
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
         #define NOISE_FLOOR 200.0f
+    #endif
+    #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
+        #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again   
     #endif
 #endif
 
@@ -1329,10 +1311,7 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #define WIFI_COMMAND_VU          1             // Wifi command to set the current VU reading (DEPRECATED)
 #define WIFI_COMMAND_CLOCK       2             // Wifi command telling us current time at the server (DEPRECATED)
 #define WIFI_COMMAND_PIXELDATA64 3             // Wifi command with color data and 64-bit clock vals 
-#define WIFI_COMMAND_STATS       4             // Wifi command to request stats from chip back to server
-#define WIFI_COMMAND_REBOOT      5             // Wifi command to reboot the client chip (that's us!)
-#define WIFI_COMMAND_VU_SIZE     16
-#define WIFI_COMMAND_CLOCK_SIZE  20
+#define WIFI_COMMAND_PEAKDATA    4             // Wifi command that delivers audio peaks
 
 // Final headers
 // 
@@ -1375,6 +1354,31 @@ inline String str_snprintf(const char *fmt, size_t len, ...)
     return String(str.c_str());
 }
 
+// str_snprintf
+//
+// va-args style printf that returns the formatted string as a reuslt
+
+inline String str_sprintf(const char *fmt, ...)
+{
+    std::string str;
+    va_list args, args2;
+    va_start(args, fmt);
+    va_copy(args2, args);
+    va_start(args2, fmt); // reset args to the beginning of the argument list
+    
+    int requiredLen = vsnprintf(NULL, 0, fmt, args);
+    if (requiredLen > 0)
+    {
+        str.reserve(requiredLen);
+        size_t out_length = vsnprintf(&str[0], requiredLen, fmt, args2);
+        if (out_length < requiredLen)
+            str.reserve(out_length);
+    }
+        
+    va_end(args2);
+    va_end(args);
+    return String(str.c_str());
+}
 
 // FPS
 // 
@@ -1536,7 +1540,6 @@ inline double mapDouble(double x, double in_min, double in_max, double out_min, 
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
 inline uint64_t ULONGFromMemory(uint8_t * payloadData)
 {
     return  (uint64_t)payloadData[7] << 56  | 

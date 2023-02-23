@@ -365,7 +365,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
             }
         #endif     
 
-        delay(1);
+        delay(50);
     }
 }
 
@@ -430,17 +430,17 @@ void PrintOutputHeader()
 
 void TerminateHandler()
 {
-    debugI("-------------------------------------------------------------------------------------");
-    debugI("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
-    debugI("-------------------------------------------------------------------------------------");
+    debugE("-------------------------------------------------------------------------------------");
+    debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
+    debugE("-------------------------------------------------------------------------------------");
+    
     PrintOutputHeader();
 
-    std::exception_ptr exptr = std::current_exception();
     try {
-        std::rethrow_exception(exptr);
+        std::rethrow_exception(std::current_exception());
     }
     catch (std::exception &ex) {
-        debugI("Terminated due to exception: %s", ex.what());
+        debugE("Terminated due to exception: %s", ex.what());
     }
 
     abort();
@@ -477,11 +477,10 @@ void setup()
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
 
-    esp_log_level_set("*", ESP_LOG_WARN);        // set all components to ERROR level  
+    esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
     // Set the unhandled exception handler to be our own special exit function                 
     std::set_terminate(TerminateHandler);
-
 
     // Display a simple statup header on the serial port
     PrintOutputHeader();
@@ -494,7 +493,7 @@ void setup()
 #if ENABLE_WIFI
 
     debugW("Starting ImprovSerial");
-    String name = "NDESP32"; //  + get_mac_address().substring(6);
+    String name = "NDESP32" + get_mac_address().substring(6);
     g_ImprovSerial.setup("spectrum_m5stickcplus", "0.901", "ESP32", name.c_str(), &Serial);
 
     // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
@@ -518,6 +517,11 @@ void setup()
         WiFi_ssid     = cszSSID;
         if (!WriteWiFiConfig())
             debugW("Could not even write defaults to WiFi Credentials");
+    }
+    else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+    {
+        WiFi_password = cszPassword;
+        WiFi_ssid     = cszSSID;
     }
 
     debugI("Starting DebugLoopTaskEntry");

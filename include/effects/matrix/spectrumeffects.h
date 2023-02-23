@@ -103,6 +103,9 @@ class VUMeterEffect
 
     void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette256 * pPalette = nullptr)
     {
+        if (g_Analyzer.MicMode() == PeakData::PCREMOTE)
+            pPalette = &vuPaletteBlue;
+
         int xHalf = pGFXChannel->width()/2;
         pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
         pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
