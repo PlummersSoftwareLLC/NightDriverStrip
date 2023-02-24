@@ -358,9 +358,8 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 if (WiFi.isConnected())
                 {
                     debugV("Refreshing Time from Server...");
-                    digitalWrite(BUILTIN_LED_PIN, 1);
                     NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-                    digitalWrite(BUILTIN_LED_PIN, 0);
+                    
                 }
             }
         #endif     
@@ -742,9 +741,6 @@ void setup()
            
         #ifdef POWER_LIMIT_MW
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
-            #ifdef LED_BUILTIN
-                set_max_power_indicator_LED(LED_BUILTIN);
-            #endif
         #endif
 
             g_Brightness = 255;
@@ -757,9 +753,6 @@ void setup()
             pinMode(15, INPUT);
         #endif
     #endif
-
-
-    pinMode(BUILTIN_LED_PIN, OUTPUT);
 
     // Microphone stuff
     #if ENABLE_AUDIO    

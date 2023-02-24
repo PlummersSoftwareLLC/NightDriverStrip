@@ -434,8 +434,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             delay(100);
 
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
-        // whose time has come
+        // whose time has come.  yield() alone did not solve it, likely since our priority is higher than the idle
+        // task so you can still starve the watchdog if you're always busy
 
-        yield();
+        delay(5);
     }
 }

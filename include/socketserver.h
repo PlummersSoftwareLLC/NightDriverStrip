@@ -198,18 +198,11 @@ public:
         {
             // If we're reading at a point in the buffer more than just the header, we're actually transferring data, so light up the LED
 
-            auto oldState = digitalRead(BUILTIN_LED_PIN);
-            if (cbNeeded > STANDARD_DATA_HEADER_SIZE)
-                digitalWrite(BUILTIN_LED_PIN, 1);
-
             // Read data from the socket until we have _bcNeeded bytes in the buffer
 
             int cbRead = read(socket, _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
 
             // Restore the old state
-
-            if (cbNeeded > STANDARD_DATA_HEADER_SIZE)
-                digitalWrite(BUILTIN_LED_PIN, oldState);
 
             if (cbRead > 0)
             {

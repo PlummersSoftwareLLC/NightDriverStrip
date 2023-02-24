@@ -57,7 +57,10 @@ void LEDMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
     matrix.addLayer(&titleLayer); 
+    matrix.setRefreshRate(30);
     matrix.begin(100000);
+
+    Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
 
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
     backgroundLayer.setFont(font6x10);

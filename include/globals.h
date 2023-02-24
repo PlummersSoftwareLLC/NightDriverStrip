@@ -1013,10 +1013,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 #endif
 
-#ifndef BUILTIN_LED_PIN
-#define BUILTIN_LED_PIN 25          // Pin for the built in LED on the Heltec board
-#endif
-
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
 #define TIME_CHECK_INTERVAL_MS (1000 * 60 * 5)   // How often in ms we resync the clock from NTP
 #define MIN_BRIGHTNESS  4                   
