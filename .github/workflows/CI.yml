@@ -5,8 +5,7 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
     env: 
-#      ENABLE_PAGES_PUSH: ${{ github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' }}
-      ENABLE_PAGES_PUSH: ${{ github.repository_owner == 'rbergen' && github.ref == 'refs/heads/add-installer-baker' }}
+      ENABLE_PAGES_PUSH: ${{ github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' }}
 
     runs-on: ubuntu-latest
 
