@@ -121,16 +121,21 @@ class VUMeterEffect
     
   public:
 
-    inline void EraseVUMeter(GFXBase * pGFXChannel, int yVU) const
+    inline void EraseVUMeter(GFXBase * pGFXChannel, int start, int yVU) const
     {
-        pGFXChannel->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
+        int xHalf = pGFXChannel->width()/2;
+        for (int i = start; i < xHalf; i++)
+        {
+            pGFXChannel->setPixel(xHalf-i,   yVU, CRGB::Black);
+            pGFXChannel->setPixel(xHalf+i,   yVU, CRGB::Black);
+        }
     }
 
     void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette256 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
 
-        EraseVUMeter(pGFXChannel, yVU);
+        EraseVUMeter(pGFXChannel, iPeakVUy, yVU);
 
         if (iPeakVUy > 1)
         {
@@ -253,7 +258,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int xOffset   = iBar * barWidth;
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
-    
+
+        for (int y = 1; y < yOffset2; y++)
+            for (int x = xOffset; x < xOffset + barWidth; x++)
+                graphics()->setPixel(x, y, CRGB::Black);
+
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
                 graphics()->setPixel(x, y, baseColor);
@@ -340,11 +349,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
-        else
-            fillSolidOnAllChannels(CRGB::Black);
-
-  
-        std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
         if (_bShowVU)
             DrawVUMeter(pGFXChannel, 0);

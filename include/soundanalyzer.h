@@ -274,7 +274,7 @@ struct AudioVariables
         // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
         // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
 
-        const size_t SAMPLING_FREQUENCY = 16000;        
+        const size_t SAMPLING_FREQUENCY = 24000;        
         const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
         size_t     _MaxSamples;        // Number of samples we will take, must be a power of 2

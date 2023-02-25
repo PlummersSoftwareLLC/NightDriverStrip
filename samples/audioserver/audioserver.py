@@ -29,8 +29,8 @@ client = '192.168.8.219'
 # is what I run on the ESP32 if connected via hardware mic, so at least it matches
 
 chunk_size   = 512
-sample_rate  = 24000
-max_freq     = 12000
+sample_rate  = 44100
+max_freq     = 20000
 num_bands    = 16
 
 # Correction I apply to get a mostly linear response across the bands.  
@@ -41,7 +41,7 @@ if num_bands == 16:
     band_scalars = [ 0.35, 0.20, 0.125, 0.1, 0.5, 1.2, 1.7, 2.0, 2.1, 2.75, 2.0, 8.0, 8.0, 8.0, 8.0, 8.0 ]
 else:
     if num_bands == 12:
-        band_scalars = [ 0.35, 0.20, 0.125, 0.1, 0.5, 1.2, 1.7, 2.0, 2.1, 2.75, 2.0, 8.0 ]
+        band_scalars = [ 1.0, 1.0, 1.0, 1.0, 0.01, 0.01, 0.01, 0.1, 0.1, 0.1, 0.1, 1.0 ]
 
 # Open the audio stream.  I'm reading from the mic here because I could not find a system independent
 # way to read from the default output device, which would normally require a loopback instance be 
