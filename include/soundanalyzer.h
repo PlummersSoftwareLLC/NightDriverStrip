@@ -183,7 +183,7 @@ struct AudioVariables
 
     public:
 
-        typedef enum { PCREMOTE, M5 } MicrophoneType;
+        typedef enum { MESMERIZERMIC, PCREMOTE, M5 } MicrophoneType;
 
         PeakData()
         {
@@ -219,10 +219,16 @@ struct AudioVariables
         {
             switch (mic)
             {
+                case MESMERIZERMIC:
+                {
+                    static const double Scalars12[16] = {0.6, 1.0, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+                    double result = (NUM_BANDS == 16) ? Scalars12[i] : mapDouble(i, 0, NUM_BANDS, 0.75, 1.0);
+                    return result;
+                }            
                 case PCREMOTE:
                 {
-                    static const double Scalars12[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-                    double result = (NUM_BANDS == 12) ? Scalars12[i] : mapDouble(i, 0, NUM_BANDS, 0.75, 1.0);
+                    static const double Scalars12[16] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+                    double result = (NUM_BANDS == 16) ? Scalars12[i] : mapDouble(i, 0, NUM_BANDS, 0.75, 1.0);
                     return result;
                 }
                 default:                
@@ -399,7 +405,7 @@ struct AudioVariables
                 i2s_config.dma_buf_count = 2;
 
                 ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
-                ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
+                ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_2_5));
                 ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
                 ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
 
@@ -743,6 +749,13 @@ struct AudioVariables
                 FillBufferI2S();
                 FFT();
                 _Peaks = ProcessPeaks();
+                
+                #ifdef M5STICKC || M5STICKCPLUS
+                    _Peaks.ApplyScalars(PeakData::M5);    
+                #else 
+                    _Peaks.ApplyScalars(PeakData::MESMERIZERMIC);
+                #endif
+
                 _Peaks.ApplyScalars(PeakData::M5);
                 _MicMode = PeakData::M5;
             }
