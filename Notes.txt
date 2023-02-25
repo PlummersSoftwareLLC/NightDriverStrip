@@ -1,0 +1,10 @@
+
+// Test demo: https://davepl.com/NightDriver/
+// ESP Web Tools:  https://esphome.github.io/esp-web-tools/
+//
+// We use ESPWebTools to handle the flashing of the module (ands soon, configuration of the wifi).  The index.html
+// page includes one of their scripts along with their CONNECT button that launches WebSerial, a protocol supported
+// by most browsers to talk to the serial port.  Your site must be https for it to work.
+//
+// The manifest file defines what bins get written where on the chip.  Normally you write the partition table, 
+// bootloader, firmware, and spiffs.  

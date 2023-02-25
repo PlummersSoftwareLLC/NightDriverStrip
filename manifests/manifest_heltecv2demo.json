@@ -1,0 +1,16 @@
+{
+  "name": "Demo for Heltec Wifi Kit 32 (V2)",
+  "version": "0.901",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": 
+      [
+        { "path": "../firmware/heltecv2demo/bootloader.bin", "offset": 4096  },
+        { "path": "../firmware/heltecv2demo/partitions.bin", "offset": 32768 },
+        { "path": "../firmware/heltecv2demo/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/heltecv2demo/spiffs.bin", "offset": 3211264 }
+      ]
+    }
+  ]
+}

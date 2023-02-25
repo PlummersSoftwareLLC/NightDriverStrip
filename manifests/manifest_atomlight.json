@@ -1,0 +1,16 @@
+{
+  "name": "Atom Light for Heltec Wifi Kit 32",
+  "version": "0.901",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": 
+      [
+        { "path": "../firmware/atomlight/bootloader.bin", "offset": 4096  },
+        { "path": "../firmware/atomlight/partitions.bin", "offset": 32768 },
+        { "path": "../firmware/atomlight/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/atomlight/spiffs.bin", "offset": 3211264 }
+      ]
+    }
+  ]
+}

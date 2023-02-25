@@ -1,0 +1,16 @@
+{
+  "name": "Panlee for ESP32ESP32-S3-DevKitC-1",
+  "version": "0.901",
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": 
+      [
+        { "path": "../firmware/panlee/bootloader.bin", "offset": 4096  },
+        { "path": "../firmware/panlee/partitions.bin", "offset": 32768 },
+        { "path": "../firmware/panlee/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/panlee/spiffs.bin", "offset": 3211264 }
+      ]
+    }
+  ]
+}

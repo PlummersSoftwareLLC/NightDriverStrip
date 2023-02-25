@@ -1,0 +1,16 @@
+{
+  "name": "X-mas Trees for M5StickC Plus",
+  "version": "0.901",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": 
+      [
+        { "path": "../firmware/xmastrees/bootloader.bin", "offset": 4096  },
+        { "path": "../firmware/xmastrees/partitions.bin", "offset": 32768 },
+        { "path": "../firmware/xmastrees/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/xmastrees/spiffs.bin", "offset": 3211264 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Fan Set for M5StickC Plus",
+  "version": "0.901",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": 
+      [
+        { "path": "../firmware/fanset/bootloader.bin", "offset": 4096  },
+        { "path": "../firmware/fanset/partitions.bin", "offset": 32768 },
+        { "path": "../firmware/fanset/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/fanset/spiffs.bin", "offset": 3211264 }
+      ]
+    }
+  ]
+}
