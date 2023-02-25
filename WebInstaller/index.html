@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html class="img-no-display"><head>
+<html class="img-no-display">
+<head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
 <title>Hello! Welcome to the NightDriverLED Installation Wizard!</title>
 <style>
 html {
@@ -58,30 +60,109 @@ div#container {
     <center>
 
     <div class="content">
-        <img src="NightDriverLogo-small.png" style="width: 640px; height: 380px" />
+      <img src="assets/NightDriverLogo-small.png" style="width: 640px; height: 380px" />
       <h1>NightDriverLED ESP32 Installation Wizard</h1>
-      <p>Currently only the SPECTRUM config for the M5 Stick C Plus is implemented.</p>
-      <p>Select your product</p>
-      <div>
-        <ul class="radios">
-            <label><input type="radio" name="type" value="spectrum_m5stickcplus" />Spectrum for M5 Stick C Plus</label>
-        </ul>
-        <p class="button-row" align="center">
-          <esp-web-install-button class="invisible"></esp-web-install-button>
-        </p>
-      </div>
+      <label for="devices-dropdown">Select your device type:</label>
+      <select id="devices-dropdown"></select>
+  
+      <br><br>
+  
+      <label for="projects-dropdown">Then, select a project:</label>
+      <select id="projects-dropdown" disabled></select>
+      <p class="button-row" align="center">
+        <esp-web-install-button class="invisible"></esp-web-install-button>
+      </p>
+    </div>
+
+    </center>
 
     <script>
-      document.querySelectorAll('input[name="type"]').forEach(radio =>
-        radio.addEventListener("change", () => {
-          const button = document.querySelector('esp-web-install-button');
-          button.manifest = `./manifest_${radio.value}.json`;
-          button.classList.remove('invisible');
-        }
-      ));
-    </script>
+      const devicesDropdown = document.getElementById("devices-dropdown");
+      const projectsDropdown = document.getElementById("projects-dropdown");
+      const installButton = document.querySelector('esp-web-install-button');
+      let devices = [];
 
-      </center>
+      // Load JSON file
+      fetch("web_projects.json")
+        .then(response => response.json())
+        .then(data => {
+          devices = data.devices;
+          populateDevicesDropdown(devices);
+        });
+
+      function setManifest(manifest) {
+        if (manifest !== undefined) {
+          installButton.manifest = manifest;
+          installButton.classList.remove('invisible');
+        }
+        else {
+          delete installButton.manifest;
+          if (!installButton.classList.contains('invisible'))
+            installButton.classList.add('invisible');
+        }
+      }
+
+      function clearManifest() {
+        setManifest(undefined);
+      }
+
+      // Populate devices dropdown
+      function populateDevicesDropdown(devices) {
+        let option = document.createElement("option");
+        option.value = "";
+        option.text = "-- Select device --";
+        devicesDropdown.appendChild(option);
+
+        for (let device of devices) {
+          option = document.createElement("option");
+          option.value = device.tag;
+          option.text = device.name;
+          devicesDropdown.appendChild(option);
+        }
+      }
+
+      // Populate projects dropdown
+      function populateProjectsDropdown(projects) {
+        projectsDropdown.innerHTML = "";
+ 
+        if (projects === undefined) {
+          projectsDropdown.disabled = true;
+        }
+        else {
+          let option = document.createElement("option");
+          option.value = "";
+          option.text = "-- Select project --";
+          projectsDropdown.appendChild(option);
+
+          for (let project of projects) {
+            option = document.createElement("option");
+            option.value = project.tag;
+            option.text = project.name;
+            projectsDropdown.appendChild(option);
+          }
+
+          projectsDropdown.disabled = false;
+        }
+
+        clearManifest();
+      }
+
+      devicesDropdown.addEventListener("change", function() {
+        let tag = devicesDropdown.value;
+        let selectedDevice = devices.find(device => device.tag === tag);
+        
+        populateProjectsDropdown(selectedDevice?.projects);
+      });
+
+      projectsDropdown.addEventListener("change", function() {
+        let tag = projectsDropdown.value;
+
+        if (tag)
+          setManifest(`manifests/manifest_${tag}.json`);
+        else 
+          clearManifest();
+      });
+    </script>
 
   </body>
   </html>
