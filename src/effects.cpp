@@ -345,11 +345,12 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
         new SpectrumAnalyzerEffect("Spectrum",   false, NUM_BANDS, spectrumBasicColors, 100, 0, 1.0, 1.0),
 
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, 64, CRGB(0,0,40), 0, 0, 1.25, 1.25),
+
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new PatternQR(),           
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
         new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
-        new GhostWave("WaveOut", &RainbowColors_p, 0, 0),
+        new GhostWave("WaveOut", &RainbowColors_p, 0, 0, false, 2),
 
         new SpectrumAnalyzerEffect("USA",        false, NUM_BANDS, USAColors_p,         0),
         new SpectrumAnalyzerEffect("Spectrum++", false, NUM_BANDS, spectrumBasicColors, 0, 70, -1.0, 3.0),
@@ -383,7 +384,8 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new PatternPaletteSmear(),
         new PatternCurtain(),
         new PatternGridLights(),
-        new PatternMunch()
+        new PatternMunch(),
+        new PatternQR(),           
         
 #elif UMBRELLA
 
