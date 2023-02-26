@@ -57,6 +57,21 @@ pio run --target buildfs --environment <project name>
 pio run --target uploadfs --environment <project name>
 ```
 
+## Tools
+
+This repository includes a number of scrips to perform various tasks during or after building projects. They are included in the [`tools`](tools) directory. Please note that the scripts expect to be started from the project's main directory. So, using:
+
+```shell
+tools/buddybuild.sh
+```
+
+Instead of:
+
+```shell
+cd tools
+./buddybuild.sh
+```
+
 ## Sample Parts (Plummer's Software LLC Amazon Affiliate Links)
 
 - BTF-Lighting WS2812B Strip, 144 pixels per meter, white: [Amazon.com](https://amzn.to/3CtZW2g)
