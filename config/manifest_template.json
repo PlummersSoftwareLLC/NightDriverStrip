@@ -1,6 +1,6 @@
 {
   "name": "<name>",
-  "version": "<version>",
+  "version": "v<version>",
   "builds": [
     {
       "chipFamily": "<chipfamily>",
