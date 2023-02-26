@@ -224,7 +224,7 @@ public:
         {
         case MESMERIZERMIC:
         {
-            static const double Scalars16[16] = {0.08, 0.5, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static const double Scalars16[16] = {0.1, 0.36, 0.2, 0.25, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
             double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -375,7 +375,7 @@ class SoundAnalyzer : public AudioVariables
     {
         arduinoFFT _FFT(_vReal, _vImaginary, _MaxSamples, _SamplingFrequency);
         //_FFT.DCRemoval();
-        _FFT.Windowing(FFT_WIN_TYP_FLT_TOP, FFT_FORWARD);
+        _FFT.Windowing(FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
         _FFT.Compute(FFT_FORWARD);
         _FFT.ComplexToMagnitude();
         _FFT.MajorPeak();
