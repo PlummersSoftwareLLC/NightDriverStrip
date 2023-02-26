@@ -62,6 +62,5 @@ for device in devices:
         project_manifest = project_manifest.replace('<chipfamily>', device['chipfamily'])
         project_manifest = project_manifest.replace('<tag>', tag)
 
-        f = open(os.path.join(manifest_target_path, manifest_prefix + tag + '.json'), 'w', encoding='utf-8')
-        f.write(project_manifest)
-        f.close()
+        with open(os.path.join(manifest_target_path, manifest_prefix + tag + '.json'), 'w', encoding='utf-8') as f:
+            f.write(project_manifest)
