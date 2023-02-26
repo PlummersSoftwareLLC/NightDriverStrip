@@ -123,7 +123,11 @@
 #endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
-#define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic, clever person!
+#if FLASH_VERSION > 99
+    #define STR(x) "v"#x
+#else
+    #define STR(x) "v0"#x
+#endif
 #define FLASH_VERSION_NAME_X(x) "v"#x 
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
