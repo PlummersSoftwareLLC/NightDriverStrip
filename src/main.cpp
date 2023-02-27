@@ -494,7 +494,7 @@ void setup()
 
     debugW("Starting ImprovSerial");
     String name = "NDESP32" + get_mac_address().substring(6);
-    g_ImprovSerial.setup("NightDriver", FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
+    g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
 
     // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
     // move the init out of the ifdef (ie: don't duplicate it).
