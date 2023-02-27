@@ -1,6 +1,6 @@
 {
   "name": "Mesmerizer for ESP-WROVER-KIT",
-  "version": "0.901",
+  "version": "v036",
   "builds": [
     {
       "chipFamily": "ESP32",
