@@ -36,8 +36,10 @@ jobs:
         pio pkg install --no-save
         pio pkg update --no-save
 
-    - name: Copy secrets
-      run: cp include/secrets.example.h include/secrets.h
+    - name: Copy secrets and clear SSID
+      run: | 
+        grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
+        echo '#define cszSSID ""' >> include/secrets.h
 
     - name: Build all environments
       run: |

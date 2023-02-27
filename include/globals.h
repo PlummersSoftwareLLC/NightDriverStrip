@@ -123,7 +123,11 @@
 #endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
-#define STR(x) "v0"#x               // Remove the zero when we exceed 100, or make this dynamic, clever person!
+#if FLASH_VERSION > 99
+    #define STR(x) "v"#x
+#else
+    #define STR(x) "v0"#x
+#endif
 #define FLASH_VERSION_NAME_X(x) "v"#x 
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
@@ -222,6 +226,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     //
     // Please ensure you supply sufficent power to your strip, as even the DEMO of 144 LEDs, if set
     // to white, would overload a USB port.
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Demo"
+    #endif
 
     #define MATRIX_WIDTH            144
     #define MATRIX_HEIGHT           8
@@ -263,6 +270,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #elif LANTERN 
 
     // A railway-style lantern with concentric rings of light (16+12+8+1)
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Lantern"
+    #endif
 
     #define NUM_FANS                1
     #define NUM_RINGS               4
@@ -314,6 +325,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spctrum analyzer on one of the info pages (slower)
 
 #elif TREESET
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Treeset"
+    #endif
 
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
@@ -385,6 +400,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
 
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Laser Line"
+    #endif
+
+
     #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption   
     #define ENABLE_WIFI             0   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
@@ -428,6 +448,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
     
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Mesmerizer"
+    #endif
+
     #define SHOW_FPS_ON_MATRIX      0
     #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI             1   // Connect to WiFi
@@ -469,7 +493,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
-    
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "TTGO"
+    #endif
+
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -510,6 +538,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "X-mas Trees"
+    #endif
     
     #define ENABLE_WIFI             1  // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
@@ -550,6 +582,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // This is the "Tiki Atomic Fire Lamp" project, which is an LED lamp with 4 arms of 53 LEDs each.
     // Each arm is wired as a separate channel.
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Atom Light"
+    #endif
 
     #define ENABLE_WIFI             0               // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0               // Accepting incoming color data and commands
@@ -594,6 +630,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #elif UMBRELLA
 
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Umbrella"
+    #endif
+
     #define COLOR_ORDER     EOrder::RGB
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
@@ -627,6 +667,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // A magic infinity mirror such as: https://amzn.to/3lEZo2D
     // I then replaced the white LEDs with a WS2812B strip and a heltec32 module:
 
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Magic Mirror"
+    #endif
+
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -653,6 +697,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #elif LEDSTRIP
 
     // The LED strips I use for Christmas lights under my eaves
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Ledstrip"
+    #endif
 
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_WIFI             1   // Connect to WiFi
@@ -682,6 +730,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The LED strips I use for Christmas lights under my eaves
 
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Chieftain"
+    #endif
+
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -709,6 +761,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // I was asked to wear something sparkly once, so I made an LED belt...
 
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Belt"
+    #endif
+
     #define ENABLE_WIFI             0   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -727,6 +783,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #elif BROOKLYNROOM
 
     // A decorative strip for a rec room or similar
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Brooklyn Room"
+    #endif
 
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
@@ -766,6 +826,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
     // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Spectrum"
+    #endif
 
     #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption   
     #define ENABLE_WIFI             1   // Connect to WiFi
@@ -813,6 +877,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #elif FANSET
 
     // An M5 stick that controls the 10 RGB fans in my PC
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Fan set"
+    #endif
 
     #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption   
     #define ENABLE_WIFI             1           // Connect to WiFi
@@ -862,6 +930,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     
 #elif SINGLE_INSULATOR
 
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Single Insulator"
+    #endif
+
     // A single glass insulator with a 12-pixel ring and then a 7=pixel "bonus" ring in the middle
     #define ENABLE_WIFI             0   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
@@ -895,6 +967,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #elif INSULATORS
 
     // A set of 5 Hemmingray glass insulators that each have a ring of 12 LEDs.  Music reactive to the beat.
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Insulators"
+    #endif
 
     #define ENABLE_WIFI             0   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
@@ -933,6 +1009,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #elif CUBE
 
     // A cube of 5 x 5 x 5 LEDs
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Cube"
+    #endif
 
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
@@ -998,6 +1078,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_PIN5        33
     #define LED_PIN6        23
     #define LED_PIN7        22
+#endif
+
+#ifndef PROJECT_NAME
+#define PROJECT_NAME        "NightDriver"
 #endif
 
 #if USE_MATRIX
