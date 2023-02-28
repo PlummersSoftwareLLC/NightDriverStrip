@@ -177,7 +177,7 @@ example in globals.h:
 
 ## Time It Takes To Build This Project
 
-Time to build the SPECTRUM config. Assumes a clean build after everything has been installed and downloaded.
+Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build after everything has been installed and downloaded.
 
 - AMD 3970 32-cores, 128GB, RAID SSD
   -> [davepl 09/19/2021] 12.93 seconds (Running Under WSL)
@@ -189,7 +189,7 @@ Time to build the SPECTRUM config. Assumes a clean build after everything has be
   -> [davepl 12/15/2021] 20.90 seconds
 
 - Apple MacBook Air M2, 16GB, 256GB SSD
-  -> [vaaski 02/28/2023] 23.01 seconds
+  -> [vaaski 02/28/2023] 56.17 seconds
 
 - MacBook Pro 2020, 8 Cores 2.4GHz i9, 64GB, 4TB SSD
   -> [davepl 09/19/2021] 34.09 seconds
