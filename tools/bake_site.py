@@ -1,63 +1,65 @@
 #!/usr/bin/env python
 
-import subprocess
 import os
 import sys
 import glob
-from distutils.spawn import find_executable
 
 localBuild=False
 for i, arg in enumerate(sys.argv):
-    if (arg == 'local'):
-        localBuild=True
+    if arg == 'local':
+        localBuild = True
 
 def minimize(content):
-    if (localBuild):
+    if localBuild:
         return content
     else:
         return '\n'.join(map(lambda line: line.strip(), content.splitlines()))
 
-def getJsx(folder,mask,exclude=""):
-    files = glob.glob(folder + '/**/' + mask, recursive=True)
+def getJsx(folder, mask, exclude=""):
+    files = glob.glob(os.path.join(folder, '**', mask), recursive=True)
     ret = ""
     for i, file in enumerate(files):
         with open(file,'r') as reader:
-            if ((exclude == "") or (file.endswith(exclude) == False)):
+            if exclude == "" or not file.endswith(exclude):
                 ret+=reader.read()
     return ret
 
-destFolder="data/"
+destFolder="site"
+buildType="chip"
 
-if (localBuild):
-    destFolder="site/local/"
-    if (os.path.exists(destFolder) == False):
-        print("Creating local build folder")
-        os.mkdir(destFolder)
-else:
-    if (os.path.exists(destFolder) == False):
-        print("Creating chip build folder")
-        os.mkdir(destFolder)
+if localBuild:
+    destFolder = os.path.join(destFolder, "local")
+    buildType = "local"
 
-jsx = open(destFolder + "main.jsx", "w")
-html = open(destFolder + "index.html", "w")
+if not os.path.exists(destFolder):
+    print("Creating " + buildType + " build folder")
+    os.makedirs(destFolder)
 
-html.write(open('site/src/index.html').read())
+jsxPath = os.path.join(destFolder, "main.jsx")
+jsx = open(jsxPath, "w")
+htmlPath = os.path.join(destFolder, "index.html")
+html = open(htmlPath, "w")
+
+srcFolder = os.path.join('site', 'src')
+
+html.write(open(os.path.join(srcFolder, 'index.html')).read())
 html.close()
 
 if (localBuild):
     print("Building site in local development code")
-    jsx.write(open('site/src/espaddr.jsx').read())
+    jsx.write(open(os.path.join(srcFolder, 'espaddr.jsx')).read())
 else:
     print("Building site in Chip model")
     jsx.write("const httpPrefix='';")
 
-jsx.write(minimize(open('site/src/modules/modules.jsx').read()))
-jsx.write(minimize(getJsx('site/src/theme',"*.jsx")))
-jsx.write(minimize(getJsx('site/src/components',"style.jsx")))
-jsx.write(minimize(getJsx('site/src/components',"*.jsx","style.jsx")))
-jsx.write(minimize(open('site/src/main.jsx').read()))
+jsx.write(minimize(open(os.path.join(srcFolder, 'modules', 'modules.jsx')).read()))
+jsx.write(minimize(getJsx(os.path.join(srcFolder, 'theme'), "*.jsx")))
+compFolder = os.path.join(srcFolder, 'components')
+jsx.write(minimize(getJsx(compFolder, "style.jsx")))
+jsx.write(minimize(getJsx(compFolder, "*.jsx", "style.jsx")))
+jsx.write(minimize(open(os.path.join(srcFolder, 'main.jsx')).read()))
 jsx.close()
 
-htmlBytes = os.stat(destFolder + "index.html").st_size
-jsxBytes = os.stat(destFolder + "main.jsx").st_size
-print('Build completed, html: %d bytes, jsx: %d total: %dK' % (htmlBytes, jsxBytes,(htmlBytes + jsxBytes)/1024))
+htmlBytes = os.stat(htmlPath).st_size
+jsxBytes = os.stat(jsxPath).st_size
+print('Build completed, html: %d bytes, jsx: %d total: %dK' % (htmlBytes, jsxBytes, (htmlBytes + jsxBytes) / 1024))

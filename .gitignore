@@ -8,7 +8,8 @@ lib/*
 .DS_Store
 site/node_modules
 site/local
-data/*
+site/index.html
+site/main.jsx
 WebInstaller/firmware/**
 WebInstaller/manifests/**
 WebInstaller/web_projects.json

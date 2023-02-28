@@ -45,6 +45,8 @@ if not os.path.exists(manifest_target_path):
     os.makedirs(manifest_target_path)
 
 for device in devices:
+    device_name = device['name']
+
     for project in device['projects']:
         tag = project['tag']
         project_firmware_path = os.path.join(firmware_path, tag)
@@ -57,7 +59,7 @@ for device in devices:
         for bin_file in bin_files:
             shutil.copy(bin_file, project_firmware_path)
 
-        project_manifest = manifest_text.replace('<name>', project['name'] + ' for ' + device['name'])
+        project_manifest = manifest_text.replace('<name>', project['name'] + ' for ' + device_name)
         project_manifest = project_manifest.replace('<version>', version)
         project_manifest = project_manifest.replace('<chipfamily>', device['chipfamily'])
         project_manifest = project_manifest.replace('<tag>', tag)

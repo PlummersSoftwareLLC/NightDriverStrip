@@ -257,10 +257,11 @@ class CWebServer
 
     void begin()
     {
-        debugI("Connecting Web Endpoints");
-        extern const char html_start[] asm("_binary_data_index_html_start");
-        extern const char jsx_start[] asm("_binary_data_main_jsx_start");
+        extern const char html_start[] asm("_binary_site_index_html_start");
+        extern const char jsx_start[] asm("_binary_site_main_jsx_start");
         
+        debugI("Connecting Web Endpoints");
+
         _server.on("/getEffectList",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetEffectListText(pRequest); });
         _server.on("/getStatistics",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetStatistics(pRequest); });
         _server.on("/nextEffect",            HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->NextEffect(pRequest); });
