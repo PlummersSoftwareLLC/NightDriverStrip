@@ -277,10 +277,15 @@ class CWebServer
 
         debugI("index.html size: %d", html_end - html_start);
         debugI("main.jsx size: %d", jsx_end - jsx_start);
-        debugI("main.jsx String length: %d", String(jsx_start).length());
 
-        _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start);});
-        _server.on("/main.jsx", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_start); });
+        String jsx_contents = String(jsx_start);
+        unsigned int jsx_length = jsx_contents.length();
+        debugI("main.jsx String length: %d", jsx_length);
+        debugI("main.jsx first 80 characters: \"%s\"", jsx_contents.substring(0, 79));
+        debugI("main.jsx last 80 characters: \"%s\"", jsx_contents.substring(jsx_length - 80));
+
+        _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start); });
+        _server.on("/main.jsx", HTTP_GET, [this, jsx_contents](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_contents); });
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {
