@@ -258,7 +258,9 @@ class CWebServer
     void begin()
     {
         extern const char html_start[] asm("_binary_site_index_html_start");
+        extern const char html_end[] asm("_binary_site_index_html_end");
         extern const char jsx_start[] asm("_binary_site_main_jsx_start");
+        extern const char jsx_end[] asm("_binary_site_main_jsx_end");
         
         debugI("Connecting Web Endpoints");
 
@@ -272,6 +274,9 @@ class CWebServer
         _server.on("/disableEffect",         HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->DisableEffect(pRequest); });
 
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
+
+        debugI("index.html size: %d", html_end - html_start);
+        debugI("main.jsx size: %d", jsx_end - jsx_start);
 
         _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start);});
         _server.on("/main.jsx", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_start); });
