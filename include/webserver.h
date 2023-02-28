@@ -277,6 +277,7 @@ class CWebServer
 
         debugI("index.html size: %d", html_end - html_start);
         debugI("main.jsx size: %d", jsx_end - jsx_start);
+        debugI("main.jsx String length: %d", String(jsx_start).length());
 
         _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start);});
         _server.on("/main.jsx", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_start); });
