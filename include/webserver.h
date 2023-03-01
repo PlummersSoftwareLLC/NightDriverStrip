@@ -49,6 +49,19 @@
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
 
+struct EmbeddedFile 
+{
+    const unsigned int length;
+    const char *const contents;
+    const char *const type; 
+
+    EmbeddedFile(const char start[], const char end[], const char type[]) :
+        length(end - start - 1),    // -1 because we don't need the closing '\0'
+        contents(start),
+        type(type)
+    {}
+};
+
 class CWebServer
 {
   private:
@@ -255,6 +268,34 @@ class CWebServer
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
+    // This registers a handler for GET requests for one of the known files embedded in the firmware. It uses
+    // chunked I/O for all files; that way AsyncWebServer can figure out what an appropriate chunk size is, and we
+    // can update (read: grow) embedded files without having to consider if we crossed the "chunked I/O" boundary.
+
+    void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
+    {
+        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
+        {
+            Serial.printf("GET for: %s\n", strUri);
+            AsyncWebServerResponse *response = 
+                request->beginChunkedResponse(file.type, [file](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
+                {
+                    if (index >= file.length)
+                        return 0;
+
+                    size_t writeBytes = min(file.length - index, maxLen);
+
+                    memcpy(buffer, ((const uint8_t *)file.contents) + index, writeBytes);
+
+                    return writeBytes;
+                }
+            );
+
+            request->send(response);
+        });
+    }
+
+    // begin - register page load handlers and start serving pages
     void begin()
     {
         extern const char html_start[] asm("_binary_site_index_html_start");
@@ -275,17 +316,15 @@ class CWebServer
 
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
 
-        debugI("index.html size: %d", html_end - html_start);
-        debugI("main.jsx size: %d", jsx_end - jsx_start);
+        EmbeddedFile html_file(html_start, html_end, "text/html");
+        EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
 
-        String jsx_contents = String(jsx_start);
-        unsigned int jsx_length = jsx_contents.length();
-        debugI("main.jsx String length: %d", jsx_length);
-        debugI("main.jsx first 80 characters: \"%s\"", jsx_contents.substring(0, 79).c_str());
-        debugI("main.jsx last 80 characters: \"%s\"", jsx_contents.substring(jsx_length - 80).c_str());
+        debugI("Embedded html file size: %d", html_file.length);
+        debugI("Embedded jsx file size: %d", jsx_file.length);
 
-        _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start); });
-        _server.on("/main.jsx", HTTP_GET, [this, jsx_contents](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_contents); });
+        ServeEmbeddedFile("/", html_file);
+        ServeEmbeddedFile("/index.html", html_file);
+        ServeEmbeddedFile("/main.jsx", jsx_file);
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {
