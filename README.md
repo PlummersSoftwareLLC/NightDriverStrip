@@ -5,8 +5,7 @@
 <!-- markdownlint-disable MD033 /no-inline-html -->
 <img src="assets/NightDriverLogo-small.png" width="400" />
 
-<!-- markdownlint-disable MD036 /no-emphasis-as-heading -->
-
+<!-- markdownlint-disable-next-line MD036 /no-emphasis-as-heading -->
 _Davepl, 9/19/2021_
 
 - See [Discussions](http://github.com/PlummersSoftwareLLC/NightDriverStrip/discussions) for questions and comments.
@@ -163,7 +162,7 @@ Note: Some defines are board specific, this is noted below.
 | ENABLE_AUDIO      | Listen for audio from the microphone and process it | M5Stick-C and M5Stick-C Plus |
 | ENABLE_REMOTE     | IR Remote Control                                   | Requires IR Hardware         |
 
-example in platformio.ini (prefix the flags with `D`, e.g. `ENABLE_WIFI=1` becomes `DENABLE_WIFI=1`)
+example in platformio.ini (prefix the flags with `-D`, e.g. `ENABLE_WIFI=1` becomes `-DENABLE_WIFI=1`)
 
 ```INI
 build_flags = -DENABLE_WIFI=1
