@@ -281,8 +281,8 @@ class CWebServer
         String jsx_contents = String(jsx_start);
         unsigned int jsx_length = jsx_contents.length();
         debugI("main.jsx String length: %d", jsx_length);
-        debugI("main.jsx first 80 characters: \"%s\"", jsx_contents.substring(0, 79));
-        debugI("main.jsx last 80 characters: \"%s\"", jsx_contents.substring(jsx_length - 80));
+        debugI("main.jsx first 80 characters: \"%s\"", jsx_contents.substring(0, 79).c_str());
+        debugI("main.jsx last 80 characters: \"%s\"", jsx_contents.substring(jsx_length - 80).c_str());
 
         _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start); });
         _server.on("/main.jsx", HTTP_GET, [this, jsx_contents](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_contents); });
