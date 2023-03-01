@@ -51,12 +51,15 @@
 
 struct EmbeddedFile 
 {
+    // Embedded file size in bytes. Note that in theory, this can be different than the char length.
     const size_t length;
+    // Contents as C string. This means that it should end with a '\0'.
     const char *const contents;
+    // Added to hold the file's MIME type. Could be used for other type types, if desired.
     const char *const type; 
 
     EmbeddedFile(const char start[], const char end[], const char type[]) :
-        length(end - start - 1),    // -1 because we don't need the closing '\0'
+        length((const uint8_t *)end - (const uint8_t *)start - 1),    // -1 because we don't need the closing '\0'
         contents(start),
         type(type)
     {}
