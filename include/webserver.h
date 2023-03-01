@@ -51,7 +51,7 @@
 
 struct EmbeddedFile 
 {
-    const unsigned int length;
+    const size_t length;
     const char *const contents;
     const char *const type; 
 
