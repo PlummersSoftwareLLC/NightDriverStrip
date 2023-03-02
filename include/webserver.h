@@ -288,7 +288,7 @@ class CWebServer
 
                     size_t writeBytes = min(file.length - index, maxLen);
 
-                    memcpy(buffer, ((const uint8_t *)file.contents) + index, writeBytes);
+                    memcpy(buffer, file.contents + index, writeBytes);
 
                     return writeBytes;
                 }
