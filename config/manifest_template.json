@@ -8,8 +8,7 @@
       [
         { "path": "../firmware/<tag>/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/<tag>/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/<tag>/firmware.bin", "offset": 65536 },
-        { "path": "../firmware/<tag>/spiffs.bin", "offset": 3211264 }
+        { "path": "../firmware/<tag>/firmware.bin", "offset": 65536 }
       ]
     }
   ]
