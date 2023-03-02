@@ -38,9 +38,10 @@ if not os.path.exists(destFolder):
 
 srcFolder = os.path.join('site', 'src')
 htmlFile = 'index.html'
+icoFile = 'favicon.ico'
 
 shutil.copy(os.path.join(srcFolder, htmlFile), destFolder)
-shutil.copy(os.path.join('assets', 'favicon.ico'), destFolder)
+shutil.copy(os.path.join('assets', icoFile), destFolder)
 
 jsxPath = os.path.join(destFolder, 'main.jsx')
 jsx = open(jsxPath, 'w', encoding='utf-8')
@@ -62,4 +63,6 @@ jsx.close()
 
 htmlBytes = os.stat(os.path.join(destFolder, htmlFile)).st_size
 jsxBytes = os.stat(jsxPath).st_size
-print('Build completed, html: %d bytes, jsx: %d total: %dK' % (htmlBytes, jsxBytes, (htmlBytes + jsxBytes) / 1024))
+icoBytes = os.stat(os.path.join(destFolder, icoFile)).st_size
+totalBytes = htmlBytes + jsxBytes + icoBytes
+print('Build completed, html: %dB, jsx: %dB, ico: %dB, total: %dKB' % (htmlBytes, jsxBytes, icoBytes, totalBytes / 1024))
