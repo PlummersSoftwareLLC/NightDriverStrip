@@ -7,8 +7,11 @@ include/secrets.h
 lib/*
 .DS_Store
 site/node_modules
-site/local
-data/*
+site/local/**
+site/index.html
+site/main.jsx
+site/favicon.ico
+WebInstaller/assets/**
 WebInstaller/firmware/**
 WebInstaller/manifests/**
 WebInstaller/web_projects.json
