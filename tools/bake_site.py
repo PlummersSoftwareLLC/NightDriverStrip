@@ -65,4 +65,4 @@ htmlBytes = os.stat(os.path.join(destFolder, htmlFile)).st_size
 jsxBytes = os.stat(jsxPath).st_size
 icoBytes = os.stat(os.path.join(destFolder, icoFile)).st_size
 totalBytes = htmlBytes + jsxBytes + icoBytes
-print('Build completed, html: %dB, jsx: %dB, ico: %dB, total: %dKB' % (htmlBytes, jsxBytes, icoBytes, totalBytes / 1024))
+print('Build completed, html: %d B, jsx: %d B, ico: %d B, total: %d KB' % (htmlBytes, jsxBytes, icoBytes, totalBytes / 1024))
