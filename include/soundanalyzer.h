@@ -572,7 +572,7 @@ class SoundAnalyzer : public AudioVariables
         // Print out the low 4 and high 4 bands so we can monitor levels in the debugger if needed
         EVERY_N_SECONDS(1)
         {
-            debugW("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
+            debugV("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
                    _vPeaks[0], _vPeaks[1], _vPeaks[2], _vPeaks[3], _vPeaks[12], _vPeaks[13], _vPeaks[14], _vPeaks[15]);
         }
 
