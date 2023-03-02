@@ -3,6 +3,7 @@
 import os
 import sys
 import glob
+import shutil
 
 localBuild=False
 for i, arg in enumerate(sys.argv):
@@ -35,15 +36,14 @@ if not os.path.exists(destFolder):
     print('Creating ' + buildType + ' build folder')
     os.makedirs(destFolder)
 
+srcFolder = os.path.join('site', 'src')
+htmlFile = 'index.html'
+
+shutil.copy(os.path.join(srcFolder, htmlFile), destFolder)
+shutil.copy(os.path.join('assets', 'favicon.ico'), destFolder)
+
 jsxPath = os.path.join(destFolder, 'main.jsx')
 jsx = open(jsxPath, 'w', encoding='utf-8')
-htmlPath = os.path.join(destFolder, 'index.html')
-html = open(htmlPath, 'w', encoding='utf-8')
-
-srcFolder = os.path.join('site', 'src')
-
-html.write(open(os.path.join(srcFolder, 'index.html'), encoding='utf-8').read())
-html.close()
 
 if (localBuild):
     print('Building site in local development code')
@@ -60,6 +60,6 @@ jsx.write(minimize(getJsx(compFolder, '*.jsx', 'style.jsx')))
 jsx.write(minimize(open(os.path.join(srcFolder, 'main.jsx'), encoding='utf-8').read()))
 jsx.close()
 
-htmlBytes = os.stat(htmlPath).st_size
+htmlBytes = os.stat(os.path.join(destFolder, htmlFile)).st_size
 jsxBytes = os.stat(jsxPath).st_size
 print('Build completed, html: %d bytes, jsx: %d total: %dK' % (htmlBytes, jsxBytes, (htmlBytes + jsxBytes) / 1024))

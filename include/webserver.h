@@ -51,15 +51,15 @@
 
 struct EmbeddedFile 
 {
-    // Embedded file size in bytes. Note that in theory, this can be different than the char length.
+    // Embedded file size in bytes.
     const size_t length;
-    // Contents as C string. This means that it should end with a '\0'.
-    const char *const contents;
+    // Contents as bytes.
+    const uint8_t *const contents;
     // Added to hold the file's MIME type. Could be used for other type types, if desired.
     const char *const type; 
 
-    EmbeddedFile(const char start[], const char end[], const char type[]) :
-        length((const uint8_t *)end - (const uint8_t *)start - 1),    // -1 because we don't need the closing '\0'
+    EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
+        length(end - start),
         contents(start),
         type(type)
     {}
@@ -301,10 +301,12 @@ class CWebServer
     // begin - register page load handlers and start serving pages
     void begin()
     {
-        extern const char html_start[] asm("_binary_site_index_html_start");
-        extern const char html_end[] asm("_binary_site_index_html_end");
-        extern const char jsx_start[] asm("_binary_site_main_jsx_start");
-        extern const char jsx_end[] asm("_binary_site_main_jsx_end");
+        extern const uint8_t html_start[] asm("_binary_site_index_html_start");
+        extern const uint8_t html_end[] asm("_binary_site_index_html_end");
+        extern const uint8_t jsx_start[] asm("_binary_site_main_jsx_start");
+        extern const uint8_t jsx_end[] asm("_binary_site_main_jsx_end");
+        extern const uint8_t ico_start[] asm("_binary_site_favicon_ico_start");
+        extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
         
         debugI("Connecting Web Endpoints");
 
@@ -321,13 +323,16 @@ class CWebServer
 
         EmbeddedFile html_file(html_start, html_end, "text/html");
         EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
+        EmbeddedFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
 
         debugI("Embedded html file size: %d", html_file.length);
         debugI("Embedded jsx file size: %d", jsx_file.length);
+        debugI("Embedded ico file size: %d", ico_file.length);
 
         ServeEmbeddedFile("/", html_file);
         ServeEmbeddedFile("/index.html", html_file);
         ServeEmbeddedFile("/main.jsx", jsx_file);
+        ServeEmbeddedFile("/favicon.ico", ico_file);
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {

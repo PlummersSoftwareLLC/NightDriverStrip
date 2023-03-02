@@ -13,14 +13,19 @@ manifest_prefix = 'manifest_'
 manifest_template = 'manifest_template.json'
 webprojects_file = 'web_projects.json'
 include_dir = 'include'
+assets_dir = 'assets'
 globals_h = 'globals.h'
 
 webprojects_path = os.path.join(config_dir, webprojects_file)
-
 shutil.copy(webprojects_path, webinstaller_dir)
 
-firmware_path = os.path.join(webinstaller_dir, firmware_dir)
+assets_target_path = os.path.join(webinstaller_dir, assets_dir)
+if not os.path.exists(assets_target_path):
+    os.makedirs(assets_target_path)
+shutil.copy(os.path.join(assets_dir, 'favicon.ico'), assets_target_path)
+shutil.copy(os.path.join(assets_dir, 'NightDriverLogo-small.png'), assets_target_path)
 
+firmware_path = os.path.join(webinstaller_dir, firmware_dir)
 if not os.path.exists(firmware_path):
     os.makedirs(firmware_path)
 
