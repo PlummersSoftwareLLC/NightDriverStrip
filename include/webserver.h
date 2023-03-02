@@ -51,11 +51,11 @@
 
 struct EmbeddedFile 
 {
-    // Embedded file size in bytes.
+    // Embedded file size in bytes
     const size_t length;
-    // Contents as bytes.
+    // Contents as bytes
     const uint8_t *const contents;
-    // Added to hold the file's MIME type. Could be used for other type types, if desired.
+    // Added to hold the file's MIME type, but could be used for other type types, if desired
     const char *const type; 
 
     EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
