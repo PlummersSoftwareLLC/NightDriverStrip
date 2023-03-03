@@ -191,7 +191,7 @@
 // Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 
-#define DRAWING_CORE            0     
+#define DRAWING_CORE            1     
 #define NET_CORE                0
 #define AUDIO_CORE              1
 #define AUDIOSERIAL_CORE        0

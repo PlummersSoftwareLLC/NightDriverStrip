@@ -1,7 +1,6 @@
-#!/Users/dave/.platformio/penv/bin/python
 ##+--------------------------------------------------------------------------
 ##
-## socketdata - (c) 2023 Dave Plummer.  All Rights Reserved.
+## audioserver - (c) 2023 Dave Plummer.  All Rights Reserved.
 ##
 ## File:        audioserver.py - Pushes Audio FFT data to NightDriverStrip
 ##

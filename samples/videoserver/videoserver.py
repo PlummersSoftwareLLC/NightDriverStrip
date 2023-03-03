@@ -1,12 +1,30 @@
+##+--------------------------------------------------------------------------
+##
+## videoserver - (c) 2023 Dave Plummer.  All Rights Reserved.
+##
+## File:        videoserver.py - Pushes video data to NightDriverStrip
+##
+## Description:
+##
+##    Pulls video from YouTube, downscales it, converts it to RGB data,
+##    compresses it, and sends it over WiFi to NightDriverStrip
+##
+## History:     Mar-2-2023     davepl      Created
+##
+##---------------------------------------------------------------------------
+
 import cv2
 from pytube import YouTube
 import sys
 import socket
 import time
 import struct
+import zlib
+import datetime
 
 # YouTube video URL
 url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+#  url = "https://www.youtube.com/watch?v=iF7lo0vU_WI"
 
 # Download the video
 yt = YouTube(url)
@@ -16,16 +34,17 @@ stream.download()
 # Open the video
 cap = cv2.VideoCapture(stream.default_filename)
 if not cap.isOpened():
-    sys.exit("Could not open video.mp4")
+    sys.exit("Could not open video")
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
 client = '192.168.8.219'      
 sock = None
 
-# Loop through each frame
-cFrames = 0
-t = time.time()
+# Get a timestamp slightly into the future for buffering
+
+now = datetime.datetime.now()
+future = now + datetime.timedelta(seconds=3)
 
 while True:
 
@@ -48,35 +67,40 @@ while True:
     # Resize the frame match the matrix
     resized = cv2.resize(rgb_frame, (64, 32))
     pixels = bytes(resized) # resized.reshape((-1, 1))
-    #byte_list = [byte for rgb in pixels for byte in bytes(rgb)]
 
-    cFrames = cFrames + 1
+    # Timestamp for when this frame shoud be shown, such as 2 seconds from now.  Advance the clock
+    # by one frame's worth of time as we send each packet
     
-    # Compose and send the PEAKDATA packet to be sent to the ESP32 NightDriverStrip instance
-
-    command = 3                                                         # WIFI_COMMAND_PIXELDATA64
-    length32 = int(len(pixels) / 3)    
-    seconds = int(time.time())
-    micros  = time.perf_counter() - seconds
-
+    future = future + datetime.timedelta(milliseconds = 40)
+    seconds = int(future.timestamp())
+    microseconds = future.microsecond    
     
+    # Compose and send the PIXELDATA packet to be sent to the ESP32 NightDriverStrip instance
+
+    command = 3                                                         # WIFI_COMMAND_PIXELDATA64 == 3
+    length32    = int(len(pixels) / 3)                                  # Number of pixels being set
     commandData = (command).to_bytes(2, byteorder='little')             # Offset 0, command16
     channelData = (1).to_bytes(2, byteorder='little')                   # Offset 2, LED channelID
     lengthData  = (length32).to_bytes(4, byteorder='little')            # Offset 4, length32 
-    secondsData = (0).to_bytes(8, byteorder='little')            # Offset 8, seconds
-    microsData  = struct.pack('d', 0)                              # Offset 16, micros
+    secondsData = (seconds).to_bytes(8, byteorder='little')             # Offset 8, seconds
+    microsData  = (microseconds).to_bytes(8, byteorder='little')        # struct.pack('d', microseconds)                        # Offset 16, micros
     colorData   = bytes(pixels)
     
-    complete_packet = commandData + channelData + lengthData + secondsData + microsData + colorData
+    header = commandData + channelData + lengthData + secondsData + microsData
+    complete_packet = header + colorData
 
-    sys.write
+    compressed_data = zlib.compress(complete_packet);
+    expandedSize = len(complete_packet);
+    expandedSizeData = expandedSize.to_bytes(4, byteorder='little')
+    compressedSize = len(compressed_data)
+    compressedSizeData = compressedSize.to_bytes(4, byteorder='little')
+    reservedData = (0x12345678).to_bytes(4, byteorder='little')
+    
+    compressed_packet = (0x44415645).to_bytes(4, byteorder='little') + compressedSizeData + expandedSizeData + reservedData + compressed_data
     
     try:
-        sock.send(complete_packet)
+        sock.send(compressed_packet)
     except socket.error as e:
         print("Socket error!");
         sock.close()
         sock = None
-
-# Print the frames matrix
-print(cFrames)
