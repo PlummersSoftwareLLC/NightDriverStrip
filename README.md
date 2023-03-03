@@ -49,16 +49,6 @@ Please do make sure you set them in include/secrets.h, NOT in include/secrets.ex
 
 This can also be configured in the platformio.ini file, as described in the [Feature Defines](#feature-defines) section below.
 
-## Webserver Setup
-
-To use the built-in webserver, you will need to build and upload the SPIFFS image to your board's flash using platformio. <br/>
-You can do this using the platformio user interface, or using the pio command line tool
-
-```ShellConsole
-pio run --target buildfs --environment <project name>
-pio run --target uploadfs --environment <project name>
-```
-
 ## Tools
 
 This repository includes a number of scrips to perform various tasks during or after building projects. They are included in the [`tools`](tools) directory. Please note that the scripts expect to be started from the project's main directory. So, using:
