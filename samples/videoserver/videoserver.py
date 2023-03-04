@@ -89,6 +89,8 @@ while True:
     header = commandData + channelData + lengthData + secondsData + microsData
     complete_packet = header + colorData
 
+    # A compressed packet is made of up the tag 0x4415645 (DAVE) followed by the raw lz-compressed bits of the original packet.
+    
     compressed_data = zlib.compress(complete_packet);
     expandedSize = len(complete_packet);
     expandedSizeData = expandedSize.to_bytes(4, byteorder='little')
