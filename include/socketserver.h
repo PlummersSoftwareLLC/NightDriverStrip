@@ -304,12 +304,12 @@ public:
                     break;
                 }
 
-                if (false == ReadUntilNBytesReceived(new_socket, STANDARD_DATA_HEADER_SIZE + compressedSize))
+                if (false == ReadUntilNBytesReceived(new_socket, COMPRESSED_HEADER_SIZE + compressedSize))
                 {
                     debugW("Could not read compressed data from stream\n");
                     break;
                 }
-                debugV("Successfuly read %u bytes", STANDARD_DATA_HEADER_SIZE + compressedSize);
+                debugV("Successfuly read %u bytes", COMPRESSED_HEADER_SIZE + compressedSize);
 
                 // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
                 // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
@@ -318,9 +318,9 @@ public:
                 #if USE_PSRAM
                     std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
                     memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIUMUM_PACKET_SIZE);
-                    auto pSourceBuffer = &_abTempBuffer[STANDARD_DATA_HEADER_SIZE];
+                    auto pSourceBuffer = &_abTempBuffer[COMPRESSED_HEADER_SIZE];
                 #else
-                    auto pSourceBuffer = &_pBuffer[STANDARD_DATA_HEADER_SIZE];
+                    auto pSourceBuffer = &_pBuffer[COMPRESSED_HEADER_SIZE];
                 #endif
                 
                 if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))

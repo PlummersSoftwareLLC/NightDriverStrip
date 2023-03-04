@@ -90,7 +90,6 @@ void MatrixPreDraw()
         GFXBase *graphics = (GFXBase *)(*g_aptrEffectManager)[0].get();
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
-        LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         LEDMatrixGFX::titleLayer.setFont(font3x5);
 
@@ -287,9 +286,9 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
     }
     else if (wifiPixelsDrawn > 0)
     {
-        // Sleep up to 1/20th second, depending on how far away the next frame we need to service is
+        // Sleep up to 1/25th second, depending on how far away the next frame we need to service is
 
-        double t = 0.05;
+        double t = 0.04;
         for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         {
             auto pOldest = g_aptrBufferManager[iChannel]->PeekOldestBuffer();
@@ -412,6 +411,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         if (wifiPixelsDrawn == 0)
             localPixelsDrawn = LocalDraw();
 
+        #if USE_MATRIX
+            if (wifiPixelsDrawn + localPixelsDrawn > 0)
+                LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+        #endif
         #if USESTRIP
             if (wifiPixelsDrawn)
                 ShowStrip(wifiPixelsDrawn);
