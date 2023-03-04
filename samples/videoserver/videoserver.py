@@ -13,8 +13,8 @@
 ##
 ##---------------------------------------------------------------------------
 
-import cv2
-from pytube import YouTube
+import cv2                      # python3 -m pip install opencv-python
+from pytube import YouTube      # python3 -m pip install pytube
 import sys
 import socket
 import time
@@ -22,9 +22,16 @@ import struct
 import zlib
 import datetime
 
+matrix_width  = 48
+matrix_height = 16
+future_delay  = 0.2
+
 # YouTube video URL
 url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-#  url = "https://www.youtube.com/watch?v=iF7lo0vU_WI"
+# url = "https://www.youtube.com/watch?v=iF7lo0vU_WI"
+# url = "https://www.youtube.com/watch?v=_gzWsIJQTKY"
+
+print("Downloading Video Data...")
 
 # Download the video
 yt = YouTube(url)
@@ -38,13 +45,15 @@ if not cap.isOpened():
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.219'      
+client = '192.168.8.197'      
 sock = None
 
 # Get a timestamp slightly into the future for buffering
 
 now = datetime.datetime.now()
-future = now + datetime.timedelta(seconds=3)
+future = now + datetime.timedelta(seconds=future_delay)
+
+print("Sending Video Data...")
 
 while True:
 
@@ -65,7 +74,7 @@ while True:
         break
 
     # Resize the frame match the matrix
-    resized = cv2.resize(rgb_frame, (64, 32))
+    resized = cv2.resize(rgb_frame, (48, 16))
     pixels = bytes(resized) # resized.reshape((-1, 1))
 
     # Timestamp for when this frame shoud be shown, such as 2 seconds from now.  Advance the clock
@@ -106,3 +115,5 @@ while True:
         print("Socket error!");
         sock.close()
         sock = None
+
+    time.sleep(0.04)

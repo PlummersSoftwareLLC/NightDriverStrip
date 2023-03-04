@@ -777,7 +777,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
-    
+
+    #define MAX_BUFFERS             10
+        
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
     #if SPECTRUM_WROVER_KIT

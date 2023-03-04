@@ -276,13 +276,28 @@ public:
 
     inline virtual void fillLeds(const CRGB *pLEDs)
     {
-        memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
+        // so we do it the "slow" way for other matrices
+
+        #if MESMERIZER
+            memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
+        #else
+            for (int x=0; x < _width; x++)
+                for (int y = 0; y < _height; y++)
+                    setPixel(x, y, pLEDs[y * _width + x]);
+        #endif
     }
 
     virtual inline void setPixel(int16_t x, int16_t y, uint16_t color)
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
             leds[xy(x, y)] = from16Bit(color);
+    }
+
+    virtual inline void setPixel(int16_t x, int16_t y, CRGB color)
+    {
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
+            leds[xy(x, y)] = color;
     }
 
     // Adafruit_GFX overrride
@@ -303,12 +318,6 @@ public:
     {
         for (int p = x; p < x + w; p++)
             setPixel(p, y, color);
-    }
-
-    inline virtual void setPixel(int16_t x, int16_t y, CRGB color)
-    {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
-            leds[xy(x, y)] = color;
     }
 
     inline virtual void setPixel(int16_t x, int r, int g, int b)

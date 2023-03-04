@@ -307,7 +307,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
         g_FreeDrawTime = .001;
-        yield();
+        delay(1);
     }
 
 #endif

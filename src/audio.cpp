@@ -99,7 +99,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
             const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
             delay(elapsed >= targetDelay ? 1 : targetDelay - elapsed);
         }
-        yield();
+        delay(1);
     }
 }
 
