@@ -90,6 +90,7 @@ div#container {
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
+      // This is made global to allow the modified code in install-button.js to read its value.
       window.bitratesDropdown = document.getElementById("bitrates-dropdown");
       const installButton = document.querySelector('esp-web-install-button');
       let devices = [];
