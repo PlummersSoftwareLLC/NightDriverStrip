@@ -90,10 +90,12 @@ div#container {
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
-      // This is made global to allow the modified code in install-button.js to read its value.
-      window.bitratesDropdown = document.getElementById("bitrates-dropdown");
+      const bitratesDropdown = document.getElementById("bitrates-dropdown");
       const installButton = document.querySelector('esp-web-install-button');
       let devices = [];
+
+      // This is made global to allow the modified code in install-button.js to read its value.
+      window.selectedBaudRate = parseInt(bitratesDropdown.value);
 
       // Load JSON file
       fetch("web_projects.json")
@@ -174,6 +176,10 @@ div#container {
           setManifest(`manifests/manifest_${tag}.json`);
         else 
           clearManifest();
+      });
+
+      bitratesDropdown.addEventListener("change", function() {
+        window.selectedBaudRate = parseInt(bitratesDropdown.value);
       });
     </script>
 
