@@ -70,22 +70,19 @@ div#container {
 
       <br><br>
 
-      <label for="bitrates-dropdown">Optionally, select a flash speed:</label>
+      <label for="bitrates-dropdown">Optionally, select a different flash speed:</label>
       <select id="bitrates-dropdown">
         <option value="115200" selected>115.200 bps</option>
         <option value="921600">921.600 bps</option>
         <option value="1500000">1.500.000 bps</option>
       </select>
 
-      <br><br>
-
-      Note that if the web server is enabled in the image you're flashing, 
-      it can take some time for it to come up after the device connects to WiFi for the first time.
-
       <p class="button-row" align="center">
         <esp-web-install-button class="invisible"></esp-web-install-button>
       </p>
 
+      <b>Note:</b> if the web server is enabled in the image you're flashing, 
+      it can take some time for it to come up after the device connects to WiFi for the first time.
     </div>
 
     </center>
@@ -93,7 +90,7 @@ div#container {
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
-      const bitratesDropdown = document.getElementById("bitrates-dropdown");
+      window.bitratesDropdown = document.getElementById("bitrates-dropdown");
       const installButton = document.querySelector('esp-web-install-button');
       let devices = [];
 
