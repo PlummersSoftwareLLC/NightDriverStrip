@@ -66,8 +66,9 @@ div#container {
 
       <br><br>
 
-      After that, the Connect button will appear below.
+      After that, you can connect to the device using the button that appears below.
 
+      <!--
       <br><br>
 
       <label for="bitrates-dropdown">Optionally, select a different flash speed:</label>
@@ -76,6 +77,7 @@ div#container {
         <option value="921600">921,600 bps</option>
         <option value="1500000">1,500,000 bps</option>
       </select>
+      -->
 
       <p class="button-row" align="center">
         <esp-web-install-button class="invisible"></esp-web-install-button>
@@ -90,12 +92,13 @@ div#container {
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
-      const bitratesDropdown = document.getElementById("bitrates-dropdown");
+      // const bitratesDropdown = document.getElementById("bitrates-dropdown");
       const installButton = document.querySelector('esp-web-install-button');
       let devices = [];
 
       // This is made global to allow the modified code in install-button.js to read its value.
-      window.selectedBaudRate = parseInt(bitratesDropdown.value);
+      // window.selectedBaudRate = parseInt(bitratesDropdown.value);
+      window.selectedBaudRate = 115200; // statically set to 115200 baud, because other values don't work
 
       // Load JSON file
       fetch("web_projects.json")
@@ -178,9 +181,11 @@ div#container {
           clearManifest();
       });
 
+      /*
       bitratesDropdown.addEventListener("change", function() {
         window.selectedBaudRate = parseInt(bitratesDropdown.value);
       });
+      */
     </script>
 
   </body>
