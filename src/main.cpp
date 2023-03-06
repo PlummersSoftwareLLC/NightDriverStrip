@@ -472,7 +472,7 @@ Bounce2::Button Button2;
 void setup()
 {
     // Initialize Serial output
-    Serial.begin(1500000);      
+    Serial.begin(115200);      
 
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
