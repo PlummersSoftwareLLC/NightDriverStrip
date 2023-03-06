@@ -66,7 +66,7 @@ div#container {
 
       <br><br>
 
-      After that, you can connect to the device using the button that appears below.
+      <div id="connect-message">After that, you can connect to the device using the button that appears below.</div>
 
       <!--
       <br><br>
@@ -93,6 +93,7 @@ div#container {
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
       // const bitratesDropdown = document.getElementById("bitrates-dropdown");
+      const connectMessage = document.getElementById("connect-message");
       const installButton = document.querySelector('esp-web-install-button');
       let devices = [];
 
@@ -111,10 +112,13 @@ div#container {
       function setManifest(manifest) {
         if (manifest !== undefined) {
           installButton.manifest = manifest;
+          if (!connectMessage.classList.contains('invisible'))
+            connectMessage.classList.add('invisible');
           installButton.classList.remove('invisible');
         }
         else {
           delete installButton.manifest;
+          connectMessage.classList.remove('invisible');
           if (!installButton.classList.contains('invisible'))
             installButton.classList.add('invisible');
         }
