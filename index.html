@@ -45,17 +45,9 @@ div#container {
 }
 </style>
 
-<script
-  type="module"
-  src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"
-></script>
-
-<!-- ESP Web Tools 
  <script
-  type="module"
-  src="esp32webtools/install-button.js?module"
+  src="esp32webtools/install-button.js"
 ></script>
--->
 
 </head>
 <body>
@@ -71,9 +63,28 @@ div#container {
   
       <label for="projects-dropdown">Then, select a project:</label>
       <select id="projects-dropdown" disabled></select>
+
+      <br><br>
+
+      <div id="connect-message">After that, you can connect to the device using the button that appears below.</div>
+
+      <!--
+      <br><br>
+
+      <label for="bitrates-dropdown">Optionally, select a different flash speed:</label>
+      <select id="bitrates-dropdown">
+        <option value="115200" selected>115,200 bps</option>
+        <option value="921600">921,600 bps</option>
+        <option value="1500000">1,500,000 bps</option>
+      </select>
+      -->
+
       <p class="button-row" align="center">
         <esp-web-install-button class="invisible"></esp-web-install-button>
       </p>
+
+      <b>Note:</b> if the web server is enabled in the image you're flashing, 
+      it can take some time for it to come up after the device connects to WiFi for the first time.
     </div>
 
     </center>
@@ -81,8 +92,14 @@ div#container {
     <script>
       const devicesDropdown = document.getElementById("devices-dropdown");
       const projectsDropdown = document.getElementById("projects-dropdown");
+      // const bitratesDropdown = document.getElementById("bitrates-dropdown");
+      const connectMessage = document.getElementById("connect-message");
       const installButton = document.querySelector('esp-web-install-button');
       let devices = [];
+
+      // This is made global to allow the modified code in install-button.js to read its value.
+      // window.selectedBaudRate = parseInt(bitratesDropdown.value);
+      window.selectedBaudRate = 115200; // statically set to 115200 baud, because other values don't work
 
       // Load JSON file
       fetch("web_projects.json")
@@ -95,10 +112,13 @@ div#container {
       function setManifest(manifest) {
         if (manifest !== undefined) {
           installButton.manifest = manifest;
+          if (!connectMessage.classList.contains('invisible'))
+            connectMessage.classList.add('invisible');
           installButton.classList.remove('invisible');
         }
         else {
           delete installButton.manifest;
+          connectMessage.classList.remove('invisible');
           if (!installButton.classList.contains('invisible'))
             installButton.classList.add('invisible');
         }
@@ -164,6 +184,12 @@ div#container {
         else 
           clearManifest();
       });
+
+      /*
+      bitratesDropdown.addEventListener("change", function() {
+        window.selectedBaudRate = parseInt(bitratesDropdown.value);
+      });
+      */
     </script>
 
   </body>
