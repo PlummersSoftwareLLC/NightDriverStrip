@@ -230,15 +230,18 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Demo"
     #endif
 
-    #define MATRIX_WIDTH            144
-    #define MATRIX_HEIGHT           8
+    // #define MATRIX_WIDTH            144
+    // #define MATRIX_HEIGHT           8
+    #define MATRIX_WIDTH            60
+    #define MATRIX_HEIGHT           1
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
     #define NUM_RINGS               5
     #define RING_SIZE_0             24
     #define ENABLE_AUDIO            0
 
-    #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
+    // #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
+    #define POWER_LIMIT_MW       500
 
     // Once you have a working project, selectively enable various additional features by setting
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
@@ -254,6 +257,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if M5STICKC || M5STICKCPLUS
         #define LED_PIN0 32
+    #elif LILYGOTDISPLAYS3
+        #define LED_PIN0 16
     #else
         #define LED_PIN0 5
     #endif
@@ -1269,7 +1274,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
 
-    #elif ESP32FEATHERTFT || PANLEE
+    #elif ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
