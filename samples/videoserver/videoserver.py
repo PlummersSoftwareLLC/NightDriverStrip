@@ -74,7 +74,7 @@ while True:
         break
 
     # Resize the frame match the matrix
-    resized = cv2.resize(rgb_frame, (48, 16))
+    resized = cv2.resize(rgb_frame, (matrix_width, matrix_height))
     pixels = bytes(resized) # resized.reshape((-1, 1))
 
     # Timestamp for when this frame shoud be shown, such as 2 seconds from now.  Advance the clock

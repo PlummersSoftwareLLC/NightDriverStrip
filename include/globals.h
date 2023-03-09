@@ -193,11 +193,11 @@
 
 #define DRAWING_CORE            1     
 #define NET_CORE                0
-#define AUDIO_CORE              1
+#define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        0
 #define SCREEN_CORE             0
 #define DEBUG_CORE              0
-#define SOCKET_CORE             0
+#define SOCKET_CORE             1
 #define REMOTE_CORE             0
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
@@ -456,9 +456,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INPUT_PIN       36
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 8 * 1000)         // Expects at least a 5V, 8A supply
-
-    #define NOISE_CUTOFF   1000
-    #define NOISE_FLOOR    1000.0f
 
     #define TOGGLE_BUTTON_1 0
 
@@ -795,7 +792,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   16
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       12
+    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)

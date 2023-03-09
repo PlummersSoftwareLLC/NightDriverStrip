@@ -343,9 +343,9 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif MESMERIZER
 
+        
         new SpectrumAnalyzerEffect("Spectrum",   false, NUM_BANDS, spectrumBasicColors, 100, 0, 1.0, 1.0),
-
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 64, CRGB(0,0,40), 0, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("AudioWave", true, 64, CRGB(0,0,40), 0, 0, 1.25, 1.25),
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),

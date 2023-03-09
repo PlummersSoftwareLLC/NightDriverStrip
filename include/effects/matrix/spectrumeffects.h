@@ -358,13 +358,13 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one
             if (pGFXChannel->IsPalettePaused())
             {
-                int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 255, 255, NOBLEND));
+                int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
+                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 240, 255, LINEARBLEND));
             }
             else
             {
                 int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, NOBLEND));
+                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, LINEARBLEND));
             }
         }
     }

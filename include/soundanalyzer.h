@@ -224,7 +224,7 @@ public:
         {
         case MESMERIZERMIC:
         {
-            static const double Scalars16[16] = {0.25, .35, 1.0, 1.0, 1.0, 1.0, 1.5, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0};  //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static const double Scalars16[16] = {3.0, .35, 0.6, 0.8, 1.2, 0.7, 1.2, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0};  //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
             double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -236,8 +236,8 @@ public:
         }
         default:
         {
-            static const double Scalars12[12] = {0.25, 0.70, 1.2, 1.1, 0.70, 0.5, 0.47, 0.68, 0.77, 0.75, 0.5, 0.72};
-            double result = (NUM_BANDS == 12) ? Scalars12[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            static const double Scalars16[16] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+            double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         }
@@ -278,13 +278,13 @@ public:
 
 class SoundAnalyzer : public AudioVariables
 {
-    const size_t MAX_SAMPLES = 512;
+    const size_t MAX_SAMPLES = 256;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
 
     const size_t SAMPLING_FREQUENCY = 24000;
-    const size_t LOWEST_FREQ = 200;
+    const size_t LOWEST_FREQ = 40;
     const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY/2;
 
     const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
@@ -548,6 +548,8 @@ class SoundAnalyzer : public AudioVariables
         float averageSum = 0.0f;
         double samplesPeak = 0.0f;
 
+        int hitCount[NUM_BANDS] = { 0 };
+
         for (int i = 2; i < _MaxSamples / 2; i++)
         {
             int freq = GetBucketFrequency(i);
@@ -563,17 +565,19 @@ class SoundAnalyzer : public AudioVariables
                 // if it's a new peak for that band, record that fact
 
                 int iBand = GetBandIndex(freq);
-
                 if (_vReal[i] > NOISE_CUTOFF)
                 {
-                    if (_vReal[i] > _vPeaks[iBand])
-                        _vPeaks[iBand] += _vReal[i];
+                    _vPeaks[iBand] += _vReal[i];
+                    hitCount[iBand]++;
                 }
             }
         }
 
         for (int i = 0; i < NUM_BANDS; i++)
+        {
+            _vPeaks[i] /= hitCount[i];
             _vPeaks[i] *= PeakData::GetBandScalar(_MicMode, i);
+        }
 
         // Print out the low 4 and high 4 bands so we can monitor levels in the debugger if needed
         EVERY_N_SECONDS(1)
@@ -639,18 +643,10 @@ class SoundAnalyzer : public AudioVariables
         if (NUM_BANDS == 16)
         {
             static int cutOffs16Band[16] =
-                {317, 398, 501, 631, 794, 1000, 1260, 1584, 1996, 2512, 3162, 3981, 5012, 6310, 7943, 10000};
+                {100, 380, 580, 800, 980, 1200, 1360, 1584, 1996, 2512, 3162, 3981, 5012, 6310, 7943, (int) HIGHEST_FREQ};
 
             for (int i = 0; i < NUM_BANDS; i++)
                 _cutOffsBand[i] = cutOffs16Band[i];
-        }
-        else if (NUM_BANDS == 12)
-        {
-            static int cutOffs12Band[12] =
-                {384, 770, 1540, 3073, 6147, 12295, 24598, 49155, 98244, 196458, 392895, 12500};
-
-            for (int i = 0; i < NUM_BANDS; i++)
-                _cutOffsBand[i] = cutOffs12Band[i];
         }
         else
         {
@@ -658,8 +654,8 @@ class SoundAnalyzer : public AudioVariables
             // and ending with a frequency of 12.5 kHz. The spacing ratio r is calculated as the 11th root of the ratio of the maximum 
             // frequency to the minimum frequency, and each upper frequency is calculated as f1 * r^(i+1).
 
-            double f1 = 200.0;
-            double f2 = 12500.0;
+            double f1 = LOWEST_FREQ;
+            double f2 = HIGHEST_FREQ;
             double r = pow(f2/f1, 1.0/(NUM_BANDS-1));
             for (int i = 0; i < NUM_BANDS; i++) 
             {
