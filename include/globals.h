@@ -255,7 +255,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #if M5STICKC || M5STICKCPLUS
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
-        #define LED_PIN0 16
+        #define LED_PIN0 21
     #else
         #define LED_PIN0 5
     #endif
