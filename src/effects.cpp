@@ -514,7 +514,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif SPECTRUM
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors, 0, 0, 0.5,  1.5),
+        new SpectrumAnalyzerEffect("Spectrum Standard", true, NUM_BANDS, spectrumAltColors, 0, 0, 0.5,  1.5),
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 1.25, 1.25),
         new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 0.25,  1.25),
 

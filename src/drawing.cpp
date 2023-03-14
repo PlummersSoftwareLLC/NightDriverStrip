@@ -205,11 +205,12 @@ uint16_t LocalDraw()
             g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
             g_aptrEffectManager->Update(); // Draw the current built in effect
 
-            #if USE_MATRIX
+            #if SHOW_VU_METER
                 auto spectrum = GetSpectrumAnalyzer(0);
                 if (g_aptrEffectManager->IsVUVisible())
                     ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
             #endif
+
             debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
             return NUM_LEDS;
         }

@@ -350,8 +350,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
 
-        if (_bShowVU)
-            DrawVUMeter(pGFXChannel, 0);
+        //if (_bShowVU)
+        //    DrawVUMeter(pGFXChannel, 0);
         
         for (int i = 0; i < _numBars; i++)
         {
