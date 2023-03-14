@@ -15,3 +15,4 @@ WebInstaller/assets/**
 WebInstaller/firmware/**
 WebInstaller/manifests/**
 WebInstaller/web_projects.json
+.idea/**

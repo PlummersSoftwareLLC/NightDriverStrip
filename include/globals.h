@@ -254,6 +254,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if M5STICKC || M5STICKCPLUS
         #define LED_PIN0 32
+    #elif LILYGOTDISPLAYS3
+        #define LED_PIN0 21
     #else
         #define LED_PIN0 5
     #endif
@@ -1269,7 +1271,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
 
-    #elif ESP32FEATHERTFT || PANLEE
+    #elif ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
