@@ -193,11 +193,11 @@
 
 #define DRAWING_CORE            1     
 #define NET_CORE                0
-#define AUDIO_CORE              1
+#define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        0
 #define SCREEN_CORE             0
 #define DEBUG_CORE              0
-#define SOCKET_CORE             0
+#define SOCKET_CORE             1
 #define REMOTE_CORE             0
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
@@ -405,7 +405,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   1
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       12
+    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
@@ -456,9 +456,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INPUT_PIN       36
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 8 * 1000)         // Expects at least a 5V, 8A supply
-
-    #define NOISE_CUTOFF   1000
-    #define NOISE_FLOOR    1000.0f
 
     #define TOGGLE_BUTTON_1 0
 
@@ -777,7 +774,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
-    
+
+    #define MAX_BUFFERS             10
+        
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
     #if SPECTRUM_WROVER_KIT
@@ -793,7 +792,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   16
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       12
+    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
@@ -1059,10 +1058,16 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 200.0f
+        #define NOISE_FLOOR 6000.0f
     #endif
+    #ifndef NOISE_CUTOFF
+        #define NOISE_CUTOFF   1000
+    #endif    
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again   
+    #endif
+    #ifndef ENABLE_AUDIO_SMOOTHING
+        #define ENABLE_AUDIO_SMOOTHING 1
     #endif
 #endif
 
@@ -1082,14 +1087,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define COLOR_ORDER EOrder::GRB
 #endif
 
-#if ENABLE_AUDIO
-    #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF   75
-    #endif
-    #ifndef NOISE_FLOOR    
-        #define NOISE_FLOOR    200.0f
-    #endif
-#endif
 // Define fan ordering for drawing into the fan directionally
 
 #ifndef LED_FAN_OFFSET_LR

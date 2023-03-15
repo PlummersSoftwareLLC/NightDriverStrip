@@ -22,7 +22,7 @@ import sys
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.219'        
+client = '192.168.8.197'        
 
 # Set up audio input stream. 512@24000 gives a nice framerate.  And 512
 # is what I run on the ESP32 if connected via hardware mic, so at least it matches

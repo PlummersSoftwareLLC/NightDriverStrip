@@ -43,7 +43,7 @@ extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
 #define SUPERSAMPLES 2                                    // How many supersamples to take
 #define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
-#define MAX_VU MAX_ANALOG_IN
+#define MAX_VU 32767
 #define MS_PER_SECOND 1000
 
 // These are the audio variables that are referenced by many audio effects.  In order to allow non-audio code to reference them too without
@@ -224,7 +224,7 @@ public:
         {
         case MESMERIZERMIC:
         {
-            static const double Scalars16[16] = {0.1, 0.36, 0.2, 0.25, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static const double Scalars16[16] = {3.0, .35, 0.4, 0.7, 0.8, 0.7, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5};  //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
             double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -236,8 +236,8 @@ public:
         }
         default:
         {
-            static const double Scalars12[12] = {0.25, 0.70, 1.2, 1.1, 0.70, 0.5, 0.47, 0.68, 0.77, 0.75, 0.5, 0.72};
-            double result = (NUM_BANDS == 12) ? Scalars12[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            static const double Scalars16[16] = {3.0, .35, 0.6, 0.8, 1.2, 0.7, 1.2, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0};  //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         }
@@ -278,12 +278,15 @@ public:
 
 class SoundAnalyzer : public AudioVariables
 {
-    const size_t MAX_SAMPLES = 512;
+    const size_t MAX_SAMPLES = 256;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
 
     const size_t SAMPLING_FREQUENCY = 24000;
+    const size_t LOWEST_FREQ = 40;
+    const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY/2;
+
     const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
     size_t _MaxSamples;        // Number of samples we will take, must be a power of 2
@@ -536,43 +539,47 @@ class SoundAnalyzer : public AudioVariables
 
     PeakData ProcessPeaks()
     {
-#ifndef NOISE_CUTOFF
-#define NOISE_CUTOFF 50
-#endif
-
         // Find the peak and the average
 
         float averageSum = 0.0f;
         double samplesPeak = 0.0f;
 
+        int hitCount[NUM_BANDS] = { 0 };
+
         for (int i = 2; i < _MaxSamples / 2; i++)
         {
-            // Track the average and the peak value
-
-            averageSum += _vReal[i];
-            if (_vReal[i] > samplesPeak)
-                samplesPeak = _vReal[i];
-
-            // If it's above the noise floor, figure out which band this belongs to and
-            // if it's a new peak for that band, record that fact
-
             int freq = GetBucketFrequency(i);
-            int iBand = GetBandIndex(freq);
-
-            if (_vReal[i] > NOISE_CUTOFF)
+            if (freq >= LOWEST_FREQ)
             {
-                if (_vReal[i] > _vPeaks[iBand])
-                    _vPeaks[iBand] += _vReal[i];
+                // Track the average and the peak value
+
+                averageSum += _vReal[i];
+                if (_vReal[i] > samplesPeak)
+                    samplesPeak = _vReal[i];
+
+                // If it's above the noise floor, figure out which band this belongs to and
+                // if it's a new peak for that band, record that fact
+
+                int iBand = GetBandIndex(freq);
+                _vPeaks[iBand] += _vReal[i];
+                hitCount[iBand]++;
             }
         }
 
+        // Noise gate - if the signal in this band is below a threshold we define, then we say there's no energy in this band
+
         for (int i = 0; i < NUM_BANDS; i++)
+        {
+            _vPeaks[i] /= hitCount[i];
             _vPeaks[i] *= PeakData::GetBandScalar(_MicMode, i);
+            if (_vPeaks[i] < NOISE_CUTOFF)
+                _vPeaks[i] = 0.0f;
+        }
 
         // Print out the low 4 and high 4 bands so we can monitor levels in the debugger if needed
         EVERY_N_SECONDS(1)
         {
-            debugV("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
+            debugW("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
                    _vPeaks[0], _vPeaks[1], _vPeaks[2], _vPeaks[3], _vPeaks[12], _vPeaks[13], _vPeaks[14], _vPeaks[15]);
         }
 
@@ -594,8 +601,8 @@ class SoundAnalyzer : public AudioVariables
         // It's hard to know what to use for a "minimum" volume so I aimed for a light ambient noise background
         // just triggering the bottom pixel, and real silence yielding darkness
 
-        debugV("All Bands Peak: %f", allBandsPeak);
         allBandsPeak = max(NOISE_FLOOR, allBandsPeak);
+        debugW("All Bands Peak: %f", allBandsPeak);
 
         auto multiplier = mapDouble(_VURatio, 0.0, 2.0, 1.5, 1.0);
 
@@ -633,20 +640,25 @@ class SoundAnalyzer : public AudioVariables
         if (NUM_BANDS == 16)
         {
             static int cutOffs16Band[16] =
-                {
-                    30, 300, 425, 565, 715, 900, 1125, 1400, 1750, 2250, 2800, 3150, 4000, 5000, 6400, 12500};
+                {120, 380, 580, 800, 980, 1200, 1360, 1584, 1996, 2412, 3162, 3781, 5312, 6310, 8400, (int) HIGHEST_FREQ};
+
             for (int i = 0; i < NUM_BANDS; i++)
                 _cutOffsBand[i] = cutOffs16Band[i];
         }
-
-        // The difference between each adjacent pair of cutoffs is equal to the geometric mean of the two frequencies.
-
-        double df = pow(highFreq / lowFreq, 1.0 / (NUM_BANDS - 1));
-
-        for (int i = 0; i < NUM_BANDS; i++)
+        else
         {
-            _cutOffsBand[i] = (int)lowFreq;
-            lowFreq *= df;
+            // uses geometric spacing to calculate the upper frequency for each of the 12 bands, starting with a frequency of 200 Hz 
+            // and ending with a frequency of 12.5 kHz. The spacing ratio r is calculated as the 11th root of the ratio of the maximum 
+            // frequency to the minimum frequency, and each upper frequency is calculated as f1 * r^(i+1).
+
+            double f1 = LOWEST_FREQ;
+            double f2 = HIGHEST_FREQ;
+            double r = pow(f2/f1, 1.0/(NUM_BANDS-1));
+            for (int i = 0; i < NUM_BANDS; i++) 
+            {
+                _cutOffsBand[i] = round(f1 * pow(r, i+1));
+                debugV("BAND %d: %d\n", i, _cutOffsBand[i]);
+            }
         }
     }
 
@@ -693,7 +705,7 @@ public:
         _oldMinVU = 0.0f;
 
         SampleBufferInitI2S();
-        CalculateBandCutoffs(200.0, SAMPLING_FREQUENCY / 2.0);
+        CalculateBandCutoffs(LOWEST_FREQ, SAMPLING_FREQUENCY / 2.0);
         Reset();
     }
 
@@ -738,11 +750,13 @@ public:
 
         /* Manual smoothing if desired */
 
-        for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
-        {
-            g_peak1Decay[iBand] = (g_peak1Decay[iBand-1] + g_peak1Decay[iBand+1]) / 2;
-            g_peak2Decay[iBand] = (g_peak2Decay[iBand-1] + g_peak2Decay[iBand+1]) / 2;
-        }
+        #if ENABLE_AUDIO_SMOOTHING
+            for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
+            {
+                g_peak1Decay[iBand] = (g_peak1Decay[iBand-1] + g_peak1Decay[iBand+1]) / 2;
+                g_peak2Decay[iBand] = (g_peak2Decay[iBand-1] + g_peak2Decay[iBand+1]) / 2;
+            }
+        #endif
     }
 
     // Update the local band peaks from the global sound data.  If we establish a new peak in any band,
