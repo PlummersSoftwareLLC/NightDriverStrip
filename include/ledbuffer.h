@@ -124,8 +124,7 @@ class LEDBuffer
             _leds = std::make_unique<CRGB []>(NUM_LEDS);
         #endif
 
-
-        for (int i = 0; i < ARRAYSIZE(_leds); i++)
+        for (int i = 0; i < NUM_LEDS; i++)
             _leds[i] = CRGB::Yellow;
     }
 
