@@ -57,7 +57,7 @@ class LEDStripEffect
 
     LEDStripEffect(const String & strName)
     {
-        if (strName)
+        if (!strName.isEmpty())
             _friendlyName = strName;
     }
 
@@ -156,7 +156,7 @@ class LEDStripEffect
     void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0,  uint everyN = 1)
     {
         if (!_GFX[0])
-            throw new std::runtime_error("Graphcis not set up properly");
+            throw std::runtime_error("Graphcis not set up properly");
 
         if (numToFill == 0)
             numToFill = _cLEDs-iStart;
@@ -169,7 +169,7 @@ class LEDStripEffect
 
         for (int n = 0; n < NUM_CHANNELS; n++)
         {            
-            for (int i = iStart; i < numToFill; i+= everyN)
+            for (int i = iStart; i < iStart + numToFill; i+= everyN)
                 _GFX[n]->setPixel(i, color);
                
         }
