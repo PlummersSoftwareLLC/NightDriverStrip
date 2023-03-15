@@ -43,7 +43,7 @@ extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
 #define SUPERSAMPLES 2                                    // How many supersamples to take
 #define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
-#define MAX_VU MAX_ANALOG_IN
+#define MAX_VU 32767
 #define MS_PER_SECOND 1000
 
 // These are the audio variables that are referenced by many audio effects.  In order to allow non-audio code to reference them too without
@@ -224,7 +224,7 @@ public:
         {
         case MESMERIZERMIC:
         {
-            static const double Scalars16[16] = {3.0, .35, 0.6, 0.8, 1.2, 0.7, 1.2, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0};  //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static const double Scalars16[16] = {3.0, .35, 0.4, 0.7, 0.8, 0.7, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5};  //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
             double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -539,10 +539,6 @@ class SoundAnalyzer : public AudioVariables
 
     PeakData ProcessPeaks()
     {
-#ifndef NOISE_CUTOFF
-#define NOISE_CUTOFF 50
-#endif
-
         // Find the peak and the average
 
         float averageSum = 0.0f;
@@ -565,24 +561,25 @@ class SoundAnalyzer : public AudioVariables
                 // if it's a new peak for that band, record that fact
 
                 int iBand = GetBandIndex(freq);
-                if (_vReal[i] > NOISE_CUTOFF)
-                {
-                    _vPeaks[iBand] += _vReal[i];
-                    hitCount[iBand]++;
-                }
+                _vPeaks[iBand] += _vReal[i];
+                hitCount[iBand]++;
             }
         }
+
+        // Noise gate - if the signal in this band is below a threshold we define, then we say there's no energy in this band
 
         for (int i = 0; i < NUM_BANDS; i++)
         {
             _vPeaks[i] /= hitCount[i];
             _vPeaks[i] *= PeakData::GetBandScalar(_MicMode, i);
+            if (_vPeaks[i] < NOISE_CUTOFF)
+                _vPeaks[i] = 0.0f;
         }
 
         // Print out the low 4 and high 4 bands so we can monitor levels in the debugger if needed
         EVERY_N_SECONDS(1)
         {
-            debugV("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
+            debugW("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
                    _vPeaks[0], _vPeaks[1], _vPeaks[2], _vPeaks[3], _vPeaks[12], _vPeaks[13], _vPeaks[14], _vPeaks[15]);
         }
 
@@ -604,8 +601,8 @@ class SoundAnalyzer : public AudioVariables
         // It's hard to know what to use for a "minimum" volume so I aimed for a light ambient noise background
         // just triggering the bottom pixel, and real silence yielding darkness
 
-        debugV("All Bands Peak: %f", allBandsPeak);
         allBandsPeak = max(NOISE_FLOOR, allBandsPeak);
+        debugW("All Bands Peak: %f", allBandsPeak);
 
         auto multiplier = mapDouble(_VURatio, 0.0, 2.0, 1.5, 1.0);
 
@@ -643,7 +640,7 @@ class SoundAnalyzer : public AudioVariables
         if (NUM_BANDS == 16)
         {
             static int cutOffs16Band[16] =
-                {100, 380, 580, 800, 980, 1200, 1360, 1584, 1996, 2512, 3162, 3981, 5012, 6310, 7943, (int) HIGHEST_FREQ};
+                {120, 380, 580, 800, 980, 1200, 1360, 1584, 1996, 2412, 3162, 3781, 5312, 6310, 8400, (int) HIGHEST_FREQ};
 
             for (int i = 0; i < NUM_BANDS; i++)
                 _cutOffsBand[i] = cutOffs16Band[i];
@@ -753,11 +750,13 @@ public:
 
         /* Manual smoothing if desired */
 
-        for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
-        {
-            //g_peak1Decay[iBand] = (g_peak1Decay[iBand-1] + g_peak1Decay[iBand+1]) / 2;
-            //g_peak2Decay[iBand] = (g_peak2Decay[iBand-1] + g_peak2Decay[iBand+1]) / 2;
-        }
+        #if ENABLE_AUDIO_SMOOTHING
+            for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
+            {
+                g_peak1Decay[iBand] = (g_peak1Decay[iBand-1] + g_peak1Decay[iBand+1]) / 2;
+                g_peak2Decay[iBand] = (g_peak2Decay[iBand-1] + g_peak2Decay[iBand+1]) / 2;
+            }
+        #endif
     }
 
     // Update the local band peaks from the global sound data.  If we establish a new peak in any band,
