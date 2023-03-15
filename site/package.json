@@ -8,7 +8,7 @@
     },
     "scripts": {
         "build": "cd .. && python tools/bake_site.py local",
-        "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src 'npm run build'",
+        "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src npm run build",
         "start": "(npm run rebuild& node ./node_modules/serve/build/main.js ./local)"
     }
 }
