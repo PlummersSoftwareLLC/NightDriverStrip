@@ -227,7 +227,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             for (uint iPass = 0; iPass < cRetries; iPass++)
             {
                 Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                    iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+                    iPass, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
                 WiFi.disconnect();
                 WiFi.mode(WIFI_STA);
