@@ -65,14 +65,15 @@ class PatternSubscribers : public LEDStripEffect
       const int CHAR_WIDTH = 6;
       const int CHAR_HEIGHT = 7;
       int x = MATRIX_WIDTH / 2 - CHAR_WIDTH / 2;
-      int y = MATRIX_HEIGHT / 2 - CHAR_HEIGHT / 2;
-      int z = cSubscribers;
+      int y = MATRIX_HEIGHT / 2 - CHAR_HEIGHT / 2 - 3;        // -3 to put it above the caption
+      long z = cSubscribers;                                  // Use a long in case of Mr Beast
 
       while (z/=10)
         x-= CHAR_WIDTH / 2;
 
-      String text = str_sprintf("%ld", cSubscribers);
-      const char * pszText = text.c_str();
+      String result = str_sprintf("%ld", cSubscribers);
+      const char * pszText = result.c_str();
+
       LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
       LEDMatrixGFX::backgroundLayer.drawString(x-1, y,   rgb24(0,0,0),          pszText);
       LEDMatrixGFX::backgroundLayer.drawString(x+1, y,   rgb24(0,0,0),          pszText);
