@@ -38,7 +38,7 @@ class PaletteEffect : public LEDStripEffect
 
     float _startIndex;
     float _paletteIndex;
-    const CRGBPalette256 _palette;
+    const CRGBPalette16 _palette;
     const float _density;
     const float _paletteSpeed;
     const float  _lightSize;
@@ -50,7 +50,7 @@ class PaletteEffect : public LEDStripEffect
 
   public:
 
-    PaletteEffect(const CRGBPalette256 & palette, 
+    PaletteEffect(const CRGBPalette16 & palette, 
                   float density = 1.0,                
                   float paletteSpeed = 1, 
                   float ledsPerSecond = 0, 

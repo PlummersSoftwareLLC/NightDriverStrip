@@ -94,7 +94,7 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 const TProgmemRGBPalette16 BlueColors1_p = { CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White };
 const TProgmemRGBPalette16 GhostWaveColors1_p = { CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red };
 
-const CRGBPalette256 BlueColors_p =
+const CRGBPalette16 BlueColors_p =
 {
         CRGB::DarkBlue,
         CRGB::MediumBlue,
@@ -114,7 +114,7 @@ const CRGBPalette256 BlueColors_p =
         CRGB::MediumBlue
 };
 
-const CRGBPalette256 RedColors_p =
+const CRGBPalette16 RedColors_p =
 {
         CRGB::Red,
         CRGB::DarkRed,
@@ -137,7 +137,7 @@ const CRGBPalette256 RedColors_p =
         CRGB::OrangeRed
 };
 
-const CRGBPalette256 GreenColors_p =
+const CRGBPalette16 GreenColors_p =
 {
         CRGB::Green,
         CRGB::DarkGreen,
@@ -160,7 +160,7 @@ const CRGBPalette256 GreenColors_p =
         CRGB::LimeGreen
 };
 
-const CRGBPalette256 PurpleColors_p =
+const CRGBPalette16 PurpleColors_p =
 {
         CRGB::Purple,
         CRGB::Maroon,
@@ -183,7 +183,7 @@ const CRGBPalette256 PurpleColors_p =
         CRGB::DarkViolet,
 };
 
-const CRGBPalette256 RGBColors_p =
+const CRGBPalette16 RGBColors_p =
 {
         CRGB::Red,
         CRGB::Green,
@@ -203,7 +203,7 @@ const CRGBPalette256 RGBColors_p =
         CRGB::Blue
 };
 
-const CRGBPalette256 MagentaColors_p =
+const CRGBPalette16 MagentaColors_p =
 {
         CRGB::Pink,
         CRGB::DeepPink,
@@ -344,14 +344,15 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 #elif MESMERIZER
 
         new SpectrumAnalyzerEffect("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
-        
-        new PatternSubscribers(),
-        
+        new SpectrumAnalyzerEffect("Spectrum",   32,            spectrumBasicColors, 100, 0, 1.0, 1.0),
+
         new SpectrumAnalyzerEffect("USA",        NUM_BANDS,     USAColors_p,         0),
         new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 70, -1.0, 2.0),
         new SpectrumAnalyzerEffect("AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25),
 
+
         new PatternPongClock(),
+        new PatternSubscribers(),
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
@@ -377,7 +378,6 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new PatternPulsar(),
 
         new PatternBounce(),
-//        new PatternSubscribers(),
         new PatternCube(),
         new PatternSpiro(),
         new PatternWave(),
@@ -396,17 +396,17 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new FireEffect("Medium Fire", NUM_LEDS, 1, 5, 100, 3, 4, true, false),
         new MusicalPaletteFire("Musical Red Fire", HeatColors_p, NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
-        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        new MusicalPaletteFire("Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
-        new MusicalPaletteFire("Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        new MusicalPaletteFire("Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
-        new MusicalPaletteFire("Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        new MusicalPaletteFire("Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
         new BouncingBallEffect(),
         new DoublePaletteEffect(),

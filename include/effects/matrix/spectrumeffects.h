@@ -101,7 +101,7 @@ class VUMeterEffect
     //
     // Draw i-th pixel in row y
 
-    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette256 * pPalette = nullptr)
+    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
     {
         if (g_Analyzer.MicMode() == PeakData::PCREMOTE)
             pPalette = &vuPaletteBlue;
@@ -131,7 +131,7 @@ class VUMeterEffect
         }
     }
 
-    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette256 * pPalette = nullptr)
+    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette16 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
 
@@ -173,6 +173,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 {
   protected:
 
+    bool      _bShowVU;
     uint8_t   _colorOffset;
     uint16_t  _scrollSpeed;
     uint8_t   _fadeRate;
@@ -309,10 +310,10 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
                            int                    cNumBars = 12,
-                           CRGB                 baseColor = CRGB::Red, 
-                           uint8_t               fadeRate = 0,
-                           float           peak1DecayRate = 1.0,
-                           float           peak2DecayRate = 1.0)
+                           const CRGB &          baseColor = CRGB::Red, 
+                           uint8_t                fadeRate = 0,
+                           float            peak1DecayRate = 1.0,
+                           float            peak2DecayRate = 1.0)
         : LEDStripEffect(pszFriendlyName), 
           _numBars(cNumBars),
           _colorOffset(0),

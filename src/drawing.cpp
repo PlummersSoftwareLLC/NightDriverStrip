@@ -52,7 +52,7 @@ extern AppTime g_AppTime;
 extern bool g_bUpdateStarted;
 extern double g_Brite;
 extern uint32_t g_Watts;
-extern const CRGBPalette256 vuPaletteGreen;
+extern const CRGBPalette16 vuPaletteGreen;
 
 void ShowTM1814();
 

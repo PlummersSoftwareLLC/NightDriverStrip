@@ -177,11 +177,11 @@ class FireEffect : public LEDStripEffect
 
 class PaletteFlameEffect : public FireEffect
 {
-    CRGBPalette256 _palette;
+    CRGBPalette16 _palette;
 
 public:
     PaletteFlameEffect(const String & strName,
-                       const CRGBPalette256 &palette,
+                       const CRGBPalette16 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
@@ -212,7 +212,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
   public:
 
     MusicalPaletteFire(const String & strName,
-                       const CRGBPalette256 &palette,
+                       const CRGBPalette16 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip

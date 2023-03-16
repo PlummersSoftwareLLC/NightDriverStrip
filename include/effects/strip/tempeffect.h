@@ -112,7 +112,7 @@ class VUInsulatorsEffect : public LEDStripEffect
 
     using LEDStripEffect::LEDStripEffect;
 
-    void DrawVUPixels(int i, int fadeBy, const CRGBPalette256 & palette)
+    void DrawVUPixels(int i, int fadeBy, const CRGBPalette16 & palette)
     {
       CRGB c = ColorFromPalette(palette, ::map(i, 0, _cLEDs, 0, 255)).fadeToBlackBy(fadeBy);
       setPixelOnAllChannels(i, c);
