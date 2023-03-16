@@ -156,8 +156,8 @@ class PatternPinwheel : public LEDStripEffect
 
     virtual void Draw()
     {
-      uint8_t dim = beatsin8(2, 120, 220);
-      graphics()->DimAll(dim); 
+      uint8_t dim = beatsin8(2, 30, 70);
+      fadeAllChannelsToBlackBy(dim); 
       //Serial.printf("Dimming by %d\n", dim);
       for (uint8_t i = 0; i < 64; i++)
       {

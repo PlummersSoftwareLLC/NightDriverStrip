@@ -579,21 +579,20 @@ class SoundAnalyzer : public AudioVariables
         // Print out the low 4 and high 4 bands so we can monitor levels in the debugger if needed
         EVERY_N_SECONDS(1)
         {
-            debugW("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
+            debugV("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
                    _vPeaks[0], _vPeaks[1], _vPeaks[2], _vPeaks[3], _vPeaks[12], _vPeaks[13], _vPeaks[14], _vPeaks[15]);
         }
-
-        //        for (int i = 0; i < _BandCount; i++)
-        //        {
-        //            _vPeaks[i] *= GetBandScalar(i);
-        //        }
-
         // If you want the peaks to be a lot more prominent, you can exponentially raise the values
         // and then they'll be scaled back down linearly, but you'd have to adjust allBandsPeak
         // accordingly as well as the value there now is based on no exponential scaling.
         //
-        //  _vPeaks[i] = powf(_vPeaks[i], 2.0);
-
+        //  
+        
+        #if SCALE_AUDIO_EXPONENTIAL
+            for (int i = 0; i < NUM_BANDS; i++)
+                _vPeaks[i] = powf(_vPeaks[i], 2.0);
+        #endif
+        
         float allBandsPeak = 0;
         for (int i = 0; i < _BandCount; i++)
             allBandsPeak = max(allBandsPeak, _vPeaks[i]);
@@ -602,7 +601,7 @@ class SoundAnalyzer : public AudioVariables
         // just triggering the bottom pixel, and real silence yielding darkness
 
         allBandsPeak = max(NOISE_FLOOR, allBandsPeak);
-        debugW("All Bands Peak: %f", allBandsPeak);
+        debugV("All Bands Peak: %f", allBandsPeak);
 
         auto multiplier = mapDouble(_VURatio, 0.0, 2.0, 1.5, 1.0);
 

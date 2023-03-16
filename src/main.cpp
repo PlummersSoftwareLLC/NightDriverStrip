@@ -319,36 +319,31 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 }
             }
 
-            EVERY_N_SECONDS(60)
-            {
-                // Get Subscriber Count
+            // Get Subscriber Count when wifi first connects, then every 60 seconds (or whatever the interval is set to)
 
+            #if (SUB_CHECK_INTERVAL > 0)
                 if (WiFi.isConnected())
                 {
-                    #if USE_MATRIX
-                    static uint64_t     _NextRunTime = millis();
-                    if (millis() > _NextRunTime)
+                    static int millisLastCheck = 0;
+                    if (millisLastCheck == 0 || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
                     {
-                        debugV("Fetching YouTube Data...");
-
+                        millisLastCheck = millis();
                         sight._debug = false;
+
+                        // Use the YouTubeSight API call to get the current channel stats
+
                         if (sight.getData())
                         {
-                            debugV("Got YouTube Data...");
-                            long result = atol(sight.channelStats.subscribers_count.c_str());
-                            PatternSubscribers::cSubscribers = result;
-                            _NextRunTime = millis() + SUB_CHECK_INTERVAL;
-                            PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
+                            PatternSubscribers::cSubscribers = atol(sight.channelStats.subscribers_count.c_str());
+                            PatternSubscribers::cViews       = atol(sight.channelStats.views.c_str());
                         }
                         else
                         {
                             debugW("YouTubeSight Subscriber API failed\n");
-                            _NextRunTime = millis() + SUB_CHECK_ERROR_INTERVAL;
                         }
                     }
-                    #endif
-                }                
-            }
+                }
+            #endif
         #endif
 
 

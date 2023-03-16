@@ -173,7 +173,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 {
   protected:
 
-    bool      _bShowVU;
     uint8_t   _colorOffset;
     uint16_t  _scrollSpeed;
     uint8_t   _fadeRate;
@@ -291,7 +290,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
   public:
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
-                           bool                   bShowVU,
                            int                    cNumBars = 12,
                            const CRGBPalette16  & palette = spectrumBasicColors, 
                            uint16_t           scrollSpeed = 0, 
@@ -299,7 +297,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0)
         : LEDStripEffect(pszFriendlyName),
-          _bShowVU(bShowVU),
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
@@ -311,14 +308,12 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     }
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
-                           bool                   bShowVU, 
                            int                    cNumBars = 12,
                            CRGB                 baseColor = CRGB::Red, 
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0)
         : LEDStripEffect(pszFriendlyName), 
-          _bShowVU(bShowVU),        
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(0), 

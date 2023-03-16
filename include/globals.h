@@ -439,6 +439,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    #define SUBCHECK_INTERVAL   20000   // Update subscriber count every N seconds
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0
@@ -1129,6 +1130,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define DEFAULT_EFFECT_INTERVAL 1000*30
 #endif
 
+#ifndef SUBCHECK_INTERVAL
+#define SUBCHECK_INTERVAL 0                             // How often to poll for youtube sub count, 0 means never
+#endif
+
 #ifndef MILLIS_PER_FRAME
 #define MILLIS_PER_FRAME 0
 #endif
@@ -1357,15 +1362,14 @@ inline String str_sprintf(const char *fmt, ...)
     va_list args, args2;
     va_start(args, fmt);
     va_copy(args2, args);
-    va_start(args2, fmt); // reset args to the beginning of the argument list
     
-    int requiredLen = vsnprintf(NULL, 0, fmt, args);
-    if (requiredLen > 0)
+    int requiredLen = vsnprintf(NULL, 0, fmt, args) + 1;
+    if (requiredLen > 1)
     {
-        str.reserve(requiredLen);
-        size_t out_length = vsnprintf(&str[0], requiredLen, fmt, args2);
+        str.resize(requiredLen);
+        size_t out_length = vsnprintf(&str[0], requiredLen, fmt, args2) + 1;
         if (out_length < requiredLen)
-            str.reserve(out_length);
+            str.resize(out_length);
     }
         
     va_end(args2);
