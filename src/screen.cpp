@@ -28,7 +28,6 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-
 #include "globals.h"
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
@@ -67,7 +66,7 @@ extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern volatile double g_FreeDrawTime;           // Idle drawing time
+extern volatile double g_FreeDrawTime;  // Idle drawing time
 
 DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
 
@@ -79,20 +78,20 @@ bool g_ShowFPS = true; // Indicates whether little lcd should show FPS
 
 void BasicInfoSummary(bool bRedraw)
 {
-    #ifdef ARDUINO_HELTEC_WIFI_KIT_32
-        // No border will be drawn so no inset margin needed
-        const int xMargin = 0;
-        const int yMargin = 0;
-    #else
-        const int xMargin = 10;
-        const int yMargin = 6;
-    #endif
+#ifdef ARDUINO_HELTEC_WIFI_KIT_32
+    // No border will be drawn so no inset margin needed
+    const int xMargin = 0;
+    const int yMargin = 0;
+#else
+    const int xMargin = 10;
+    const int yMargin = 6;
+#endif
 
     // Blue Theme
 
-    const uint16_t bkgndColor  = Screen::to16bit(CRGB::DarkBlue);  
+    const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);
     const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
-    const uint16_t textColor   = Screen::to16bit(CRGB::White);
+    const uint16_t textColor = Screen::to16bit(CRGB::White);
 
     // Green Terminal Theme
     //
@@ -102,13 +101,13 @@ void BasicInfoSummary(bool bRedraw)
 
     // bRedraw is set for full redraw, in which case we fill the screen
 
-    #if USE_OLED
-        if (bRedraw)
-            Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
-    #else
-        if (bRedraw)
-            Screen::fillRect(1, 1, Screen::screenWidth() - 2, Screen::screenHeight() - 2, bkgndColor);
-    #endif
+#if USE_OLED
+    if (bRedraw)
+        Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
+#else
+    if (bRedraw)
+        Screen::fillRect(1, 1, Screen::screenWidth() - 2, Screen::screenHeight() - 2, bkgndColor);
+#endif
 
     // Status line 1
 
@@ -128,7 +127,7 @@ void BasicInfoSummary(bool bRedraw)
 
     auto lineHeight = Screen::fontHeight();
     Screen::setCursor(xMargin + 0, yMargin + lineHeight);
-    
+
     if (WiFi.isConnected() == false)
     {
         Screen::println("No Wifi");
@@ -137,39 +136,39 @@ void BasicInfoSummary(bool bRedraw)
     {
         const IPAddress address = WiFi.localIP();
         Screen::println(str_sprintf("%ddB:%d.%d.%d.%d",
-                        (int)labs(WiFi.RSSI()), // skip sign in first character
-                        address[0], address[1], address[2], address[3]));
+                                    (int)labs(WiFi.RSSI()), // skip sign in first character
+                                    address[0], address[1], address[2], address[3]));
     }
 
     // Buffer Status Line 3
 
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 4);
-    Screen::println(str_sprintf("BUFR:%02d/%02d %dfps ", 
-                                 g_aptrBufferManager[0]->Depth(), 
-                                 g_aptrBufferManager[0]->BufferCount(), 
-                                 g_FPS));
+    Screen::println(str_sprintf("BUFR:%02d/%02d %dfps ",
+                                g_aptrBufferManager[0]->Depth(),
+                                g_aptrBufferManager[0]->BufferCount(),
+                                g_FPS));
 
     // Data Status Line 4
 
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
-    Screen::println(str_sprintf("DATA:%+06.2lf-%+06.2lf", 
-                                min(99.99, g_aptrBufferManager[0]->AgeOfOldestBuffer()), 
+    Screen::println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
+                                min(99.99, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
                                 min(99.99, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
 
-    // Clock info Line 5 
+    // Clock info Line 5
     //
     // Get the current clock time in HH:MM:SS format
 
     time_t t;
     time(&t);
     struct tm *tmp = localtime(&t);
-    tmp->tm_hour = (tmp->tm_hour+5)%24;           // BUGBUG: Hardcoded to PST for now
+    tmp->tm_hour = (tmp->tm_hour + 5) % 24; // BUGBUG: Hardcoded to PST for now
     char szTime[16];
     strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
 
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 3);
-    Screen::println(str_sprintf("CLCK:%s %04.3lf", 
-                                g_AppTime.CurrentTime() > 100000 ? szTime : "Unset", 
+    Screen::println(str_sprintf("CLCK:%s %04.3lf",
+                                g_AppTime.CurrentTime() > 100000 ? szTime : "Unset",
                                 g_FreeDrawTime));
 
     // LED Power Info Line 6 - only if display tall enough
@@ -182,14 +181,13 @@ void BasicInfoSummary(bool bRedraw)
                                     g_Watts));
     }
 
-
     // PSRAM Info Line 7 - only if display tall enough
 
     if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
     {
         Screen::setCursor(xMargin + 0, yMargin + lineHeight * 6);
-        Screen::println(str_sprintf("PRAM:%dK/%dK\n", 
-                                    ESP.getFreePsram() / 1024, 
+        Screen::println(str_sprintf("PRAM:%dK/%dK\n",
+                                    ESP.getFreePsram() / 1024,
                                     ESP.getPsramSize() / 1024));
     }
 
@@ -201,13 +199,13 @@ void BasicInfoSummary(bool bRedraw)
         int top = yMargin + lineHeight * 7 + 1;
         int height = lineHeight - 5;
         int width = Screen::screenWidth() - xMargin * 2;
-        double ratio = (double) g_aptrBufferManager[0]->Depth() / (double) g_aptrBufferManager[0]->BufferCount();
+        double ratio = (double)g_aptrBufferManager[0]->Depth() / (double)g_aptrBufferManager[0]->BufferCount();
         ratio = std::min(1.0, ratio);
         int filled = (width - 2) * ratio;
 
         // Color bar red/yellow/green depending on buffer fill
 
-        uint16_t color = RED16;           
+        uint16_t color = RED16;
         if (ratio > 0.25)
         {
             color = Screen::to16bit(CRGB::Orange);
@@ -222,15 +220,15 @@ void BasicInfoSummary(bool bRedraw)
                 }
             }
         }
-        
-        Screen::fillRect(xMargin+1, top+1, filled, height-2, color);
-        Screen::fillRect(xMargin+filled, top+1, width-filled, height-2, bkgndColor);
-        Screen::drawRect(xMargin, top, width,  height, WHITE16);
+
+        Screen::fillRect(xMargin + 1, top + 1, filled, height - 2, color);
+        Screen::fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
+        Screen::drawRect(xMargin, top, width, height, WHITE16);
     }
 
-    #ifndef ARDUINO_HELTEC_WIFI_KIT_32
-        Screen::drawRect(0, 0, Screen::screenWidth(), Screen::screenHeight(), borderColor);
-    #endif        
+#ifndef ARDUINO_HELTEC_WIFI_KIT_32
+    Screen::drawRect(0, 0, Screen::screenWidth(), Screen::screenHeight(), borderColor);
+#endif
 }
 
 // CurrentEffectSummary
@@ -273,7 +271,7 @@ void CurrentEffectSummary(bool bRedraw)
             lastFPS = g_FPS;
 
             Screen::setTextSize(Screen::SMALL);
-            
+
             Screen::setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
                              String(g_aptrEffectManager->GetCurrentEffectIndex() + 1) +
@@ -328,7 +326,7 @@ void CurrentEffectSummary(bool bRedraw)
     int xHalf = Screen::screenWidth() / 2 - 1;   // xHalf is half the screen width
     float ySizeVU = Screen::screenHeight() / 16; // vu is 1/20th the screen height, height of each block
     int cPixels = 16;
-    float xSize = xHalf / cPixels + 1;               // xSize is count of pixels in each block
+    float xSize = xHalf / cPixels + 1;                          // xSize is count of pixels in each block
     int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
 
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
@@ -355,16 +353,13 @@ void CurrentEffectSummary(bool bRedraw)
         assert(bandHeight * val <= bandHeight);
         Screen::fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }
-    
+
     // Draw horizontal lines so the bars look like they are made of segments
 
     for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += 5)
         Screen::drawLine(0, iLine, Screen::screenWidth(), iLine, BLACK16);
 #endif
 }
-
-       
-
 
 // UpdateScreen
 //
@@ -382,28 +377,28 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
 
     std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-    #if USE_OLED
-        g_pDisplay->clearBuffer();
-    #endif
+#if USE_OLED
+    g_pDisplay->clearBuffer();
+#endif
 
-        switch (giInfoPage)
-        {
-            case 0:
-                BasicInfoSummary(bRedraw);
-                break;
+    switch (giInfoPage)
+    {
+    case 0:
+        BasicInfoSummary(bRedraw);
+        break;
 
-            case 1:
-                CurrentEffectSummary(bRedraw);
-                break;
+    case 1:
+        CurrentEffectSummary(bRedraw);
+        break;
 
-            default:
-                throw new std::runtime_error("Invalid info page in UpateScreen");
-                break;
-        }
+    default:
+        throw new std::runtime_error("Invalid info page in UpateScreen");
+        break;
+    }
 
-    #if USE_OLED
-        g_pDisplay->sendBuffer();
-    #endif
+#if USE_OLED
+    g_pDisplay->sendBuffer();
+#endif
 
 #endif
 }
@@ -426,46 +421,46 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 {
     debugI(">> ScreenUpdateLoopEntry\n");
 
-    #if USE_OLED
-        g_pDisplay->setDisplayRotation(SCREEN_ROTATION);
-        g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable default font
-        g_pDisplay->clear();
-    #endif
+#if USE_OLED
+    g_pDisplay->setDisplayRotation(SCREEN_ROTATION);
+    g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable default font
+    g_pDisplay->clear();
+#endif
 
-    bool bRedraw = true;                            
+    bool bRedraw = true;
     for (;;)
     {
-            // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
-            // nothing has been drawn for any page yet
-            
-            #ifdef TOGGLE_BUTTON_1
-                Button1.update();
-                if (Button1.pressed())
-                {
-                    std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+        // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
+        // nothing has been drawn for any page yet
 
-                    // When the button is pressed advance to the next information page on the little display
+#ifdef TOGGLE_BUTTON_1
+        Button1.update();
+        if (Button1.pressed())
+        {
+            std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-                    giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
-                    bRedraw = true;
-                }
-            #endif
+            // When the button is pressed advance to the next information page on the little display
 
-            #ifdef TOGGLE_BUTTON_2
-                Button2.update();
-                if (Button2.pressed())
-                {
-                    g_aptrEffectManager->NextEffect();
-                    bRedraw = true;
-                }
-            #endif
+            giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
+            bRedraw = true;
+        }
+#endif
 
-            UpdateScreen(bRedraw);
-            if (g_bUpdateStarted)
-                delay(200);
-            else
-                delay(50);
-            
-            bRedraw = false;
+#ifdef TOGGLE_BUTTON_2
+        Button2.update();
+        if (Button2.pressed())
+        {
+            g_aptrEffectManager->NextEffect();
+            bRedraw = true;
+        }
+#endif
+
+        UpdateScreen(bRedraw);
+        if (g_bUpdateStarted)
+            delay(200);
+        else
+            delay(50);
+
+        bRedraw = false;
     }
 }

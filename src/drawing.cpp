@@ -90,7 +90,6 @@ void MatrixPreDraw()
         GFXBase *graphics = (GFXBase *)(*g_aptrEffectManager)[0].get();
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
-        LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         LEDMatrixGFX::titleLayer.setFont(font3x5);
 
@@ -206,11 +205,12 @@ uint16_t LocalDraw()
             g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
             g_aptrEffectManager->Update(); // Draw the current built in effect
 
-            #if USE_MATRIX
+            #if SHOW_VU_METER
                 auto spectrum = GetSpectrumAnalyzer(0);
                 if (g_aptrEffectManager->IsVUVisible())
                     ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
             #endif
+
             debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
             return NUM_LEDS;
         }
@@ -287,9 +287,9 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
     }
     else if (wifiPixelsDrawn > 0)
     {
-        // Sleep up to 1/20th second, depending on how far away the next frame we need to service is
+        // Sleep up to 1/25th second, depending on how far away the next frame we need to service is
 
-        double t = 0.05;
+        double t = 0.04;
         for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         {
             auto pOldest = g_aptrBufferManager[iChannel]->PeekOldestBuffer();
@@ -308,7 +308,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
         g_FreeDrawTime = .001;
-        yield();
+        delay(1);
     }
 
 #endif
@@ -412,6 +412,14 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         if (wifiPixelsDrawn == 0)
             localPixelsDrawn = LocalDraw();
 
+        #if USE_MATRIX
+            if (wifiPixelsDrawn + localPixelsDrawn > 0)
+            {
+                LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+                FastLED.countFPS();
+                g_FPS = FastLED.getFPS();
+            }
+        #endif
         #if USESTRIP
             if (wifiPixelsDrawn)
                 ShowStrip(wifiPixelsDrawn);
@@ -434,8 +442,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             delay(100);
 
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
-        // whose time has come
+        // whose time has come.  yield() alone did not solve it, likely since our priority is higher than the idle
+        // task so you can still starve the watchdog if you're always busy
 
-        yield();
+        delay(5);
     }
 }

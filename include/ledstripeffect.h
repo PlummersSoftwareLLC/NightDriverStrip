@@ -100,7 +100,7 @@ class LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 60;
+        return 30;
     }
     
     // RequiresDoubleBuffering
