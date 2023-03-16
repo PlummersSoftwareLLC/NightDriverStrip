@@ -411,24 +411,11 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         }
         else
         {
-            //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-            //    blur1d(_GFX[channel]->leds(), _cLEDs, _blurFactor * 255);
-
-
-            for (int j = 0; j < _cLEDs; j++)                            // fade brightness all LEDs one step
-            {
-                if (randomDouble(0, 10)>2) 
-                {
-                    CRGB c = _GFX[0]->getPixel(j);
-                    c.fadeToBlackBy(3);
-                    setPixelOnAllChannels(j, c);
-                }
-            }
-            fadeAllChannelsToBlackBy(1);
+            blurRows(graphics()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, _blurFactor * 255);
+            fadeAllChannelsToBlackBy(40 * (2.0 - g_Analyzer._VURatioFade));
         }
         Update();
         CreateStars();
-
     }
 
     virtual void CreateStars()

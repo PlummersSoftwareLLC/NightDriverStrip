@@ -319,36 +319,31 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 }
             }
 
-            EVERY_N_SECONDS(60)
-            {
-                // Get Subscriber Count
+            // Get Subscriber Count when wifi first connects, then every 60 seconds (or whatever the interval is set to)
 
+            #if (SUB_CHECK_INTERVAL > 0)
                 if (WiFi.isConnected())
                 {
-                    #if USE_MATRIX
-                    static uint64_t     _NextRunTime = millis();
-                    if (millis() > _NextRunTime)
+                    static int millisLastCheck = 0;
+                    if (millisLastCheck == 0 || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
                     {
-                        debugV("Fetching YouTube Data...");
-
+                        millisLastCheck = millis();
                         sight._debug = false;
+
+                        // Use the YouTubeSight API call to get the current channel stats
+
                         if (sight.getData())
                         {
-                            debugV("Got YouTube Data...");
-                            long result = atol(sight.channelStats.subscribers_count.c_str());
-                            PatternSubscribers::cSubscribers = result;
-                            _NextRunTime = millis() + SUB_CHECK_INTERVAL;
-                            PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
+                            PatternSubscribers::cSubscribers = atol(sight.channelStats.subscribers_count.c_str());
+                            PatternSubscribers::cViews       = atol(sight.channelStats.views.c_str());
                         }
                         else
                         {
                             debugW("YouTubeSight Subscriber API failed\n");
-                            _NextRunTime = millis() + SUB_CHECK_ERROR_INTERVAL;
                         }
                     }
-                    #endif
-                }                
-            }
+                }
+            #endif
         #endif
 
 
@@ -493,7 +488,7 @@ void setup()
 
     debugW("Starting ImprovSerial");
     String name = "NDESP32" + get_mac_address().substring(6);
-    g_ImprovSerial.setup("spectrum_m5stickcplus", "0.901", "ESP32", name.c_str(), &Serial);
+    g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
 
     // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
     // move the init out of the ifdef (ie: don't duplicate it).

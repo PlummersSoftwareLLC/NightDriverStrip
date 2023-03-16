@@ -295,7 +295,7 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
         CHSV hueColor = rgb2hsv_approximate(color1);
-        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
         if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
@@ -305,7 +305,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
         if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -343,38 +343,41 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif MESMERIZER
 
+        new SpectrumAnalyzerEffect("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
         
-        new SpectrumAnalyzerEffect("Spectrum",   false, NUM_BANDS, spectrumBasicColors, 100, 0, 1.0, 1.0),
-        new SpectrumAnalyzerEffect("AudioWave", true, 64, CRGB(0,0,40), 0, 0, 1.25, 1.25),
+        new PatternSubscribers(),
+        
+        new SpectrumAnalyzerEffect("USA",        NUM_BANDS,     USAColors_p,         0),
+        new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 70, -1.0, 2.0),
+        new SpectrumAnalyzerEffect("AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25),
+
+        new PatternPongClock(),
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
         new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
-        new GhostWave("WaveOut", &RainbowColors_p, 0, 0, false, 2),
+        new GhostWave("WaveOut", &RainbowColors_p, 0, 0, false, 40),
 
-        new SpectrumAnalyzerEffect("USA",        false, NUM_BANDS, USAColors_p,         0),
-        new SpectrumAnalyzerEffect("Spectrum++", false, NUM_BANDS, spectrumBasicColors, 0, 70, -1.0, 3.0),
         new WaveformEffect("WaveForm", &RainbowColors_p, 8),
         new GhostWave("GhostWave", &RainbowColors_p, 0, 0,  false),
 
+        new PatternLife(),
         new PatternRose(),
         new PatternPinwheel(),
         new PatternSunburst(),
 
         new PatternInfinity(),
         new PatternFlowField(),
-        new PatternLife(),
-
-        new PatternPongClock(),
         new PatternClock(),        
         new PatternAlienText(),
         new PatternCircuit(),
 
-        new StarryNightEffect<MusicStar>("Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 10.0),                                                // Rainbow Music Star
+        new StarryNightEffect<MusicStar>("Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0),                                                // Rainbow Music Star
 
-        new PatternPulsar(1.95, 1.95, 0.01),
+        new PatternPulsar(),
+
         new PatternBounce(),
-        new PatternSubscribers(),
+//        new PatternSubscribers(),
         new PatternCube(),
         new PatternSpiro(),
         new PatternWave(),
@@ -429,7 +432,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 #elif TTGO
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new SpectrumAnalyzerEffect("Spectrum Fade", 12, true, spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", 12, spectrumBasicColors, 50, 70, -1.0, 3.0),
 
 #elif WROVERKIT
 
@@ -514,20 +517,20 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif SPECTRUM
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, NUM_BANDS, spectrumAltColors, 0, 0, 0.5,  1.5),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 1.25, 1.25),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 0.25,  1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", NUM_BANDS, spectrumAltColors, 0, 0, 0.5,  1.5),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 24, spectrumAltColors, 0, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 24, spectrumAltColors, 0, 0, 0.25,  1.25),
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors, 0, 0, 1.0, 1.0),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 16, spectrumAltColors, 0, 0, 1.0, 1.0),
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
         
         new GhostWave("GhostWave", &RainbowColors_p, 0, 16, false, 40),
-        new SpectrumAnalyzerEffect("Spectrum USA", true, 16, USAColors_p, 0),
+        new SpectrumAnalyzerEffect("Spectrum USA", 16, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", &RainbowColors_p, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 2.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", 24, RainbowColors_p, 50, 70, -1.0, 2.0),
         new GhostWave("GhostWave Blue", &BlueColors1_p , 0),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, RainbowColors_p),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 24, RainbowColors_p),
         new GhostWave("GhostWave One", &GhostWaveColors1_p , 4),
 
         //new GhostWave("GhostWave Rainbow", &rainbowPalette),

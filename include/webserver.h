@@ -49,6 +49,22 @@
 #define JSON_BUFFER_BASE_SIZE 2048
 #define JSON_BUFFER_INCREMENT 2048
 
+struct EmbeddedFile 
+{
+    // Embedded file size in bytes
+    const size_t length;
+    // Contents as bytes
+    const uint8_t *const contents;
+    // Added to hold the file's MIME type, but could be used for other type types, if desired
+    const char *const type; 
+
+    EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
+        length(end - start),
+        contents(start),
+        type(type)
+    {}
+};
+
 class CWebServer
 {
   private:
@@ -255,12 +271,45 @@ class CWebServer
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
+    // This registers a handler for GET requests for one of the known files embedded in the firmware. It uses
+    // chunked I/O for all files; that way AsyncWebServer can figure out what an appropriate chunk size is, and we
+    // can update (read: grow) embedded files without having to consider if we crossed the "chunked I/O" boundary.
+
+    void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
+    {
+        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
+        {
+            Serial.printf("GET for: %s\n", strUri);
+            AsyncWebServerResponse *response = 
+                request->beginChunkedResponse(file.type, [file](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
+                {
+                    if (index >= file.length)
+                        return 0;
+
+                    size_t writeBytes = min(file.length - index, maxLen);
+
+                    memcpy(buffer, file.contents + index, writeBytes);
+
+                    return writeBytes;
+                }
+            );
+
+            request->send(response);
+        });
+    }
+
+    // begin - register page load handlers and start serving pages
     void begin()
     {
-        debugI("Connecting Web Endpoints");
-        extern const char html_start[] asm("_binary_data_index_html_start");
-        extern const char jsx_start[] asm("_binary_data_main_jsx_start");
+        extern const uint8_t html_start[] asm("_binary_site_index_html_start");
+        extern const uint8_t html_end[] asm("_binary_site_index_html_end");
+        extern const uint8_t jsx_start[] asm("_binary_site_main_jsx_start");
+        extern const uint8_t jsx_end[] asm("_binary_site_main_jsx_end");
+        extern const uint8_t ico_start[] asm("_binary_site_favicon_ico_start");
+        extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
         
+        debugI("Connecting Web Endpoints");
+
         _server.on("/getEffectList",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetEffectListText(pRequest); });
         _server.on("/getStatistics",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetStatistics(pRequest); });
         _server.on("/nextEffect",            HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->NextEffect(pRequest); });
@@ -272,8 +321,18 @@ class CWebServer
 
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
 
-        _server.on("/", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "text/html", html_start);});
-        _server.on("/main.jsx", HTTP_GET, [this](AsyncWebServerRequest * pRequest) { pRequest->send(200, "application/javascript", jsx_start); });
+        EmbeddedFile html_file(html_start, html_end, "text/html");
+        EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
+        EmbeddedFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
+
+        debugI("Embedded html file size: %d", html_file.length);
+        debugI("Embedded jsx file size: %d", jsx_file.length);
+        debugI("Embedded ico file size: %d", ico_file.length);
+
+        ServeEmbeddedFile("/", html_file);
+        ServeEmbeddedFile("/index.html", html_file);
+        ServeEmbeddedFile("/main.jsx", jsx_file);
+        ServeEmbeddedFile("/favicon.ico", ico_file);
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {

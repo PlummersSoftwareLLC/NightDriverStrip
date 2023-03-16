@@ -1,0 +1,171 @@
+{
+    "devices": [
+        {
+            "tag": "adafruit_feather",
+            "chipfamily": "ESP32-S3",
+            "name": "Adafruit Feather S3 TFT",
+            "projects": [
+                {
+                    "tag": "ledstrip_feather",
+                    "name": "Ledstrip"
+                }
+            ]
+        },
+        {
+            "tag": "esp32",
+            "chipfamily": "ESP32",
+            "name": "ESP32",
+            "projects": [
+                {   
+                    "tag": "demo",
+                    "name":"Demo"
+                },
+                {
+                    "tag": "ledstriplite",
+                    "name": "Ledstrip"
+                },
+                {
+                    "tag": "ttgo",
+                    "name": "TTGO"
+                },
+                {
+                    "tag": "umbrella",
+                    "name": "Umbrella"
+                }
+            ]
+        },
+        {
+            "tag": "esp32esp32-s3",
+            "chipfamily": "ESP32-S3",
+            "name": "ESP32ESP32-S3-DevKitC-1",
+            "projects": [
+                {   
+                    "tag": "panlee",
+                    "name":"Panlee"
+                }
+            ]
+        },
+        {
+            "tag": "wrover",
+            "chipfamily": "ESP32",
+            "name": "ESP-WROVER-KIT",
+            "projects": [
+                {
+                    "tag": "ledstrip_feather_wrover",
+                    "name": "Ledstrip"
+                },
+                {
+                    "tag": "mesmerizer",
+                    "name": "Mesmerizer"
+                },
+                {
+                    "tag": "spectrum_wrover_kit",
+                    "name": "Spectrum"
+                }
+            ]
+        },
+        {
+            "tag": "heltec_wifi",
+            "chipfamily": "ESP32",
+            "name": "Heltec Wifi Kit 32",
+            "projects": [
+                {
+                    "tag": "atomlight",
+                    "name": "Atom Light"
+                },
+                {
+                    "tag": "brooklynroom",
+                    "name": "Brooklyn Room"
+                },
+                {   
+                    "tag": "heltecdemo",
+                    "name":"Demo"
+                },
+                {
+                    "tag": "ledstrip",
+                    "name": "Ledstrip"
+                }
+            ]
+        },
+        {
+            "tag": "heltec_wifi_v2",
+            "chipfamily": "ESP32",
+            "name": "Heltec Wifi Kit 32 (V2)",
+            "projects": [
+                {   
+                    "tag": "heltecv2demo",
+                    "name":"Demo"
+                }
+            ]
+        },
+        {
+            "tag": "m5stick-c",
+            "chipfamily": "ESP32",
+            "name": "M5StickC",
+            "projects": [
+                {   
+                    "tag": "m5demo",
+                    "name":"Demo"
+                },
+                {
+                    "tag": "magicmirror",
+                    "name": "Magic Mirror"
+                },
+                {
+                    "tag": "spectrumlite",
+                    "name": "Spectrum"
+                }
+            ]
+        },
+        {
+            "tag": "m5stick-c-plus",
+            "chipfamily": "ESP32",
+            "name": "M5StickC Plus",
+            "projects": [
+                {
+                    "tag": "cube",
+                    "name": "Cube"
+                },
+                {   
+                    "tag": "m5plusdemo",
+                    "name":"Demo"
+                },
+                {
+                    "tag": "fanset",
+                    "name": "Fan Set"
+                },
+                {
+                    "tag": "insulators",
+                    "name": "Insulators"
+                },
+                {
+                    "tag": "laserline",
+                    "name": "Laser Line"
+                },
+                {
+                    "tag": "spectrum",
+                    "name": "Spectrum"
+                },
+                {
+                    "tag": "xmastrees",
+                    "name": "X-mas Trees"
+                }
+            ]
+        },
+        {
+            "tag": "tinypico",
+            "chipfamily": "ESP32",
+            "name": "TinyPICO",
+            "projects": [
+                {   
+                    "tag": "chieftain",
+                    "name":"Chieftain"
+                },
+                {
+                    "tag": "ledstrip_pico",
+                    "name": "Ledstrip"
+                }
+            ]
+        }
+    ]
+}
