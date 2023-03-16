@@ -169,8 +169,8 @@
 //
 // Idle tasks in taskmgr run at IDLE_PRIORITY+1 so you want to be at least +2 
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+6
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+7
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6
 #define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
 #define NET_PRIORITY            tskIDLE_PRIORITY+4
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+3
@@ -1421,19 +1421,19 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 
 inline String str_snprintf(const char *fmt, size_t len, ...) 
 {
-    String str;
+    std::string str;
     va_list args;
     
     // Make the string buffer big enough to hold the stated size
-    str.reserve(len);
+    str.resize(len);
 
     va_start(args, len);
-    size_t out_length = vsnprintf(&str[0], len + 1, fmt, args);
+    size_t out_length = vsnprintf(&str[0], len + 1, fmt, args) + 1;
     va_end(args);
 
     // If it wound up being smaller than the max buffer size, resize down to actual string length
     if (out_length < len)
-        str.reserve(out_length);
+        str.resize(out_length);
 
     return String(str.c_str());
 }
