@@ -145,12 +145,10 @@ class VUMeterEffect
         {
             msPeakVU = millis();
             iPeakVUy = bars;
-            debugW("Peak Set: %d", iPeakVUy);
         }
         else if (millis() - msPeakVU > MS_PER_SECOND)
         {
             iPeakVUy = 0;
-            debugW("Reset to: %d", iPeakVUy);
         }
 
         if (iPeakVUy > 1)
