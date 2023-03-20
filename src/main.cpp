@@ -328,7 +328,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     static bool succeededBefore = false;
 
                     // If we've never succeeded, we try every 20 seconds, but then we settle down to the SUBCHECK_INTERVAL
-                    if (millisLastCheck == 0 || (!succeededBefore && (millis() - millisLastCheck > 20000)) || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
+                    if (millisLastCheck == 0 || (!succeededBefore && (millis() - millisLastCheck > 60000)) || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
                     {
                         millisLastCheck = millis();
                         sight._debug = false;
