@@ -55,10 +55,6 @@
                     "name": "Ledstrip"
                 },
                 {
-                    "tag": "mesmerizer",
-                    "name": "Mesmerizer"
-                },
-                {
                     "tag": "spectrum_wrover_kit",
                     "name": "Spectrum"
                 }
@@ -149,6 +145,17 @@
                 {
                     "tag": "xmastrees",
                     "name": "X-mas Trees"
+                }
+            ]
+        },
+        {
+            "tag": "mesmerizer",
+            "chipfamily": "ESP32",
+            "name": "Mesmerizer",
+            "projects": [
+                {
+                    "tag": "mesmerizer",
+                    "name": "Mesmerizer"
                 }
             ]
         },
