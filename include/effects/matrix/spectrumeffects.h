@@ -124,10 +124,10 @@ class VUMeterEffect
     inline void EraseVUMeter(GFXBase * pGFXChannel, int start, int yVU) const
     {
         int xHalf = pGFXChannel->width()/2;
-        for (int i = start; i < xHalf; i++)
+        for (int i = start; i <= xHalf; i++)
         {
             pGFXChannel->setPixel(xHalf-i,   yVU, CRGB::Black);
-            pGFXChannel->setPixel(xHalf+i,   yVU, CRGB::Black);
+            pGFXChannel->setPixel(xHalf-1+i,   yVU, CRGB::Black);
         }
     }
 
@@ -135,27 +135,29 @@ class VUMeterEffect
     {
         const int MAX_FADE = 256;
 
-        EraseVUMeter(pGFXChannel, iPeakVUy, yVU);
-
-        if (iPeakVUy > 1)
-        {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
-            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade, pPalette);
-            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade, pPalette);
-        }
-
         int xHalf = pGFXChannel->width()/2-1;
         int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; // map(g_Analyzer._VU, 0, MAX_VU/8, 1, xHalf);
         bars = min(bars, xHalf);
 
-        if (bars > iPeakVUy)
+        EraseVUMeter(pGFXChannel, bars, yVU);
+
+        if (bars >= iPeakVUy)
         {
             msPeakVU = millis();
             iPeakVUy = bars;
+            debugW("Peak Set: %d", iPeakVUy);
         }
         else if (millis() - msPeakVU > MS_PER_SECOND)
         {
             iPeakVUy = 0;
+            debugW("Reset to: %d", iPeakVUy);
+        }
+
+        if (iPeakVUy > 1)
+        {
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
+            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade);
+            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade);
         }
 
         for (int i = 0; i < bars; i++)
@@ -259,10 +261,13 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
 
-        for (int y = 1; y < yOffset2; y++)
-            for (int x = xOffset; x < xOffset + barWidth; x++)
-                graphics()->setPixel(x, y, CRGB::Black);
-
+        if (_fadeRate == 0)
+        {
+            for (int y = 1; y < yOffset2; y++)
+                for (int x = xOffset; x < xOffset + barWidth; x++)
+                    graphics()->setPixel(x, y, CRGB::Black);
+        }
+        
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
                 graphics()->setPixel(x, y, baseColor);

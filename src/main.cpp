@@ -325,7 +325,10 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 if (WiFi.isConnected())
                 {
                     static int millisLastCheck = 0;
-                    if (millisLastCheck == 0 || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
+                    static bool succeededBefore = false;
+
+                    // If we've never succeeded, we try every 20 seconds, but then we settle down to the SUBCHECK_INTERVAL
+                    if (millisLastCheck == 0 || (!succeededBefore && (millis() - millisLastCheck > 20000)) || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
                     {
                         millisLastCheck = millis();
                         sight._debug = false;
@@ -336,6 +339,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                         {
                             PatternSubscribers::cSubscribers = atol(sight.channelStats.subscribers_count.c_str());
                             PatternSubscribers::cViews       = atol(sight.channelStats.views.c_str());
+                            succeededBefore = true;
                         }
                         else
                         {

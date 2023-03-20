@@ -192,17 +192,17 @@
 // #define REMOTE_CORE             1
 
 // Some "Reliability Rules"
-// Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
+// Drawing must be on Core 1 if using SmartMatrix unless you specify SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1
 // It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 
-#define DRAWING_CORE            1     
-#define NET_CORE                0
-#define AUDIO_CORE              0
-#define AUDIOSERIAL_CORE        0
-#define SCREEN_CORE             0
-#define DEBUG_CORE              0
+#define DRAWING_CORE            0     
+#define NET_CORE                1
+#define AUDIO_CORE              1
+#define AUDIOSERIAL_CORE        1
+#define SCREEN_CORE             1
+#define DEBUG_CORE              1
 #define SOCKET_CORE             1
-#define REMOTE_CORE             0
+#define REMOTE_CORE             1
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
@@ -465,7 +465,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
-    #define SUBCHECK_INTERVAL   20000   // Update subscriber count every N seconds
+    #define SUBCHECK_INTERVAL  600000   // Update subscriber count every N seconds
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0

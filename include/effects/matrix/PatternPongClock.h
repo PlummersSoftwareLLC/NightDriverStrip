@@ -106,7 +106,7 @@ class PatternPongClock : public LEDStripEffect
     {
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
-        local_time->tm_hour = (local_time->tm_hour+19)%24;           // BUGBUG: Hardcoded to PST for now
+        local_time->tm_hour = (local_time->tm_hour+17)%24;           // BUGBUG: Hardcoded to PST for now
 
         int ampm = true;                                            // BUGBUG: Eurofolks prefer 24-hour time
         // update score / time

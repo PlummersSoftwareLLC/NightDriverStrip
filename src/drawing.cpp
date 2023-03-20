@@ -169,7 +169,6 @@ uint16_t WiFiDraw()
 
             if (pBuffer)
             {
-                g_AppTime.NewFrame();
                 g_usLastWifiDraw = micros();
                 debugV("Calling LEDBuffer::Draw from wire with %d/%d pixels.", pixelsDrawn, NUM_LEDS);
                 pBuffer->DrawBuffer();
@@ -202,11 +201,10 @@ uint16_t LocalDraw()
         // If we've never drawn from wifi before, now would also be a good time to local draw
         if (g_usLastWifiDraw == 0 || (micros() - g_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
         {
-            g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
             g_aptrEffectManager->Update(); // Draw the current built in effect
 
             #if SHOW_VU_METER
-                auto spectrum = GetSpectrumAnalyzer(0);
+                static auto spectrum = GetSpectrumAnalyzer(0);
                 if (g_aptrEffectManager->IsVUVisible())
                     ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
             #endif
@@ -378,8 +376,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     graphics->Setup();
 
 #if USE_MATRIX
-    // We don't need color correction on the chromakey'd title layer
+    // We don't need color correction on the title layer, but we want it on the main background
+    
     LEDMatrixGFX::titleLayer.enableColorCorrection(false);
+    LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
 
     // Starting the effect might need to draw, so we need to set the leds up before doing so
     LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
@@ -394,11 +394,12 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     for (;;)
     {
+        g_AppTime.NewFrame();
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
 
         uint16_t localPixelsDrawn   = 0;
         uint16_t wifiPixelsDrawn    = 0;
-        double frameStartTime       = g_AppTime.CurrentTime();
+        double frameStartTime       = g_AppTime.FrameStartTime();
 
         #if USE_MATRIX
             MatrixPreDraw();
@@ -445,6 +446,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // whose time has come.  yield() alone did not solve it, likely since our priority is higher than the idle
         // task so you can still starve the watchdog if you're always busy
 
-        delay(5);
+        delay(1);
     }
 }

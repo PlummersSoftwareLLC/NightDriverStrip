@@ -344,21 +344,22 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 #elif MESMERIZER
 
         new SpectrumAnalyzerEffect("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
-        new SpectrumAnalyzerEffect("Spectrum",   32,            spectrumBasicColors, 100, 0, 1.0, 1.0),
+        new SpectrumAnalyzerEffect("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum 3",   32,            spectrumBasicColors, 100, 0, 0.25, 1.25),
 
         new SpectrumAnalyzerEffect("USA",        NUM_BANDS,     USAColors_p,         0),
-        new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 70, -1.0, 2.0),
         new SpectrumAnalyzerEffect("AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25),
 
+        new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0),
 
         new PatternPongClock(),
         new PatternSubscribers(),
-
+        
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
         new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
         new GhostWave("WaveOut", &RainbowColors_p, 0, 0, false, 40),
-
+ 
         new WaveformEffect("WaveForm", &RainbowColors_p, 8),
         new GhostWave("GhostWave", &RainbowColors_p, 0, 0,  false),
 
