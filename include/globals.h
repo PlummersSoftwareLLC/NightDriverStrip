@@ -183,7 +183,6 @@
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
 //
 // #define DRAWING_CORE            0
-// #define INCOMING_CORE           1
 // #define NET_CORE                1
 // #define AUDIO_CORE              0
 // #define SCREEN_CORE             1
@@ -193,13 +192,12 @@
 
 // Some "Reliability Rules"
 // Drawing must be on Core 1 if using SmartMatrix unless you specify SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1
-// It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
 
-#define DRAWING_CORE            0     
-#define NET_CORE                1
-#define AUDIO_CORE              1
+#define DRAWING_CORE            1  
+#define NET_CORE                0
+#define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        1
-#define SCREEN_CORE             1
+#define SCREEN_CORE             0
 #define DEBUG_CORE              1
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
@@ -1148,7 +1146,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NOISE_FLOOR 6000.0f
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF   1000
+        #define NOISE_CUTOFF   2000
     #endif    
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again   
@@ -1391,9 +1389,6 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 // a stats request.  Beyond color data these are poorly tested and likely can be removed, though
 // stats and clock are handy for debugging!
 
-#define WIFI_COMMAND_PIXELDATA   0             // Wifi command contains color data for the strip
-#define WIFI_COMMAND_VU          1             // Wifi command to set the current VU reading (DEPRECATED)
-#define WIFI_COMMAND_CLOCK       2             // Wifi command telling us current time at the server (DEPRECATED)
 #define WIFI_COMMAND_PIXELDATA64 3             // Wifi command with color data and 64-bit clock vals 
 #define WIFI_COMMAND_PEAKDATA    4             // Wifi command that delivers audio peaks
 

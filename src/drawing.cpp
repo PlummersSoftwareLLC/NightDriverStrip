@@ -91,10 +91,10 @@ void MatrixPreDraw()
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        LEDMatrixGFX::titleLayer.setFont(font3x5);
 
         if (pMatrix->GetCaptionTransparency() > 0.00)
         {
+            LEDMatrixGFX::titleLayer.setFont(font3x5);
             uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
             LEDMatrixGFX::titleLayer.setBrightness(brite); // 255 would obscure it entirely
             debugV("Caption: %d", brite);
@@ -437,7 +437,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         DelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn);
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
-        // so we'll pause to share the CPU a bit once the update has begun
+        // so we'll slow down to share the CPU a bit once the update has begun
 
         if (g_bUpdateStarted)
             delay(100);

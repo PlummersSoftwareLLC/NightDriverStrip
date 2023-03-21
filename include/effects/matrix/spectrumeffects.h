@@ -146,14 +146,14 @@ class VUMeterEffect
             msPeakVU = millis();
             iPeakVUy = bars;
         }
-        else if (millis() - msPeakVU > MS_PER_SECOND)
+        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
         {
             iPeakVUy = 0;
         }
 
         if (iPeakVUy > 1)
         {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
             DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade);
             DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade);
         }

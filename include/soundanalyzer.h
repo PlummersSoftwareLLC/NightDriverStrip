@@ -377,7 +377,7 @@ class SoundAnalyzer : public AudioVariables
     void FFT()
     {
         arduinoFFT _FFT(_vReal, _vImaginary, _MaxSamples, _SamplingFrequency);
-        //_FFT.DCRemoval();
+        _FFT.DCRemoval();
         _FFT.Windowing(FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
         _FFT.Compute(FFT_FORWARD);
         _FFT.ComplexToMagnitude();
@@ -545,6 +545,8 @@ class SoundAnalyzer : public AudioVariables
         double samplesPeak = 0.0f;
 
         int hitCount[NUM_BANDS] = { 0 };
+        for (int i = 0; i < NUM_BANDS; i++)
+            _vPeaks[i] = 0.0f;
 
         for (int i = 2; i < _MaxSamples / 2; i++)
         {
