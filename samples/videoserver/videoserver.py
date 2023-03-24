@@ -22,12 +22,13 @@ import struct
 import zlib
 import datetime
 
-matrix_width  = 48
-matrix_height = 16
-future_delay  = 0.2
+matrix_width  = 64
+matrix_height = 32
+future_delay  = 5
 
 # YouTube video URL
-url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+url = "https://youtu.be/7eMpKGIQ6RM"
+# url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 # url = "https://www.youtube.com/watch?v=iF7lo0vU_WI"
 # url = "https://www.youtube.com/watch?v=_gzWsIJQTKY"
 
@@ -45,7 +46,7 @@ if not cap.isOpened():
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.197'      
+client = '192.168.8.250'      
 sock = None
 
 # Get a timestamp slightly into the future for buffering
@@ -56,6 +57,8 @@ future = now + datetime.timedelta(seconds=future_delay)
 print("Sending Video Data...")
 
 while True:
+
+    startTime = datetime.datetime.now()
 
     # Connect to the socket we will be sending to if its not already connected
     if sock == None:
@@ -80,7 +83,7 @@ while True:
     # Timestamp for when this frame shoud be shown, such as 2 seconds from now.  Advance the clock
     # by one frame's worth of time as we send each packet
     
-    future = future + datetime.timedelta(milliseconds = 40)
+    future = future + datetime.timedelta(seconds = 1.0 / stream.fps)
     seconds = int(future.timestamp())
     microseconds = future.microsecond    
     
@@ -116,4 +119,4 @@ while True:
         sock.close()
         sock = None
 
-    time.sleep(0.04)
+    time.sleep(1.0 / stream.fps / 2)                                        # Div by two is a manual hack to get timing closer
