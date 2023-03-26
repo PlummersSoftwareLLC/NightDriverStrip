@@ -103,6 +103,10 @@ class LEDStripEffect
         return 30;
     }
     
+    virtual bool ShouldShowTitle() const
+    {
+        return true;
+    }
     // RequiresDoubleBuffering
     //
     // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.

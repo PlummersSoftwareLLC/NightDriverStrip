@@ -74,6 +74,7 @@
         #include "effects/matrix/PatternMisc.h"
         #include "effects/matrix/PatternNoiseSmearing.h"
         #include "effects/matrix/PatternQR.h"
+        #include "effects/matrix/PatternWeather.h"
 #endif
 
 #ifdef USESTRIP
@@ -353,6 +354,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0),
 
         new PatternPongClock(),
+        new PatternWeather(),
         new PatternSubscribers(),
         
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette

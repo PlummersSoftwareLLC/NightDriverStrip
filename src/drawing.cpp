@@ -92,7 +92,7 @@ void MatrixPreDraw()
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
 
-        if (pMatrix->GetCaptionTransparency() > 0.00)
+        if (g_aptrEffectManager->GetCurrentEffect()->ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
             LEDMatrixGFX::titleLayer.setFont(font3x5);
             uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);

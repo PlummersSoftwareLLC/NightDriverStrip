@@ -472,8 +472,14 @@ void setup()
     // Initialize Serial output
     Serial.begin(115200);      
 
+    uzlib_init();
+
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
+
+    debugI("Starting DebugLoopTaskEntry");
+    g_TaskManager.StartDebugThread();
+    CheckHeap();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
@@ -521,10 +527,6 @@ void setup()
         WiFi_password = cszPassword;
         WiFi_ssid     = cszSSID;
     }
-
-    debugI("Starting DebugLoopTaskEntry");
-    g_TaskManager.StartDebugThread();
-    CheckHeap();
 
 #endif
 
@@ -628,6 +630,10 @@ void setup()
 
 #endif
 
+    #if USE_MATRIX
+        LEDMatrixGFX::StartMatrix();
+    #endif
+
     // Initialize the strand controllers depending on how many channels we have
 
     #ifdef USESTRIP
@@ -674,12 +680,7 @@ void setup()
     CheckHeap();
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
-
-    #if USE_MATRIX
-        LEDMatrixGFX::StartMatrix();
-    #endif
-
-        // Onboard PWM LED 
+    // Onboard PWM LED 
 
     #if ONBOARD_LED_R
         ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
@@ -756,6 +757,9 @@ void setup()
     // Microphone stuff
     #if ENABLE_AUDIO    
         pinMode(INPUT_PIN, INPUT);
+        // The audio sampler task might as well be on a different core from the LED stuff
+        g_TaskManager.StartAudioThread();
+        CheckHeap();
     #endif
 
     debugI("Initializing effects manager...");
@@ -764,6 +768,35 @@ void setup()
 #if USE_SCREEN
     g_TaskManager.StartScreenThread();
 #endif
+
+    // Init the zlib compression
+
+    debugV("Initializing compression...");
+    CheckHeap();
+
+#if ENABLE_WIFI
+    g_TaskManager.StartNetworkThread();
+    CheckHeap();
+#endif
+
+#if ENABLE_REMOTE
+    // Start Remote Control
+    g_TaskManager.StartRemoteThread();
+    CheckHeap();
+#endif
+
+#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+    g_TaskManager.StartSocketThread();
+#endif
+
+#if ENABLE_AUDIOSERIAL
+    // The audio sampler task might as well be on a different core from the LED stuff
+    g_TaskManager.StartSerialThread();
+    CheckHeap();
+#endif
+
+    debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
+    CheckHeap();
 
     debugI("Launching Drawing:");
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
@@ -779,40 +812,6 @@ void setup()
     }
     Debug.setSerialEnabled(true);
 #endif
-
-    // Init the zlib compression
-
-    debugV("Initializing compression...");
-    uzlib_init();
-    CheckHeap();
-
-#if ENABLE_REMOTE
-    // Start Remote Control
-    g_TaskManager.StartRemoteThread();
-    CheckHeap();
-#endif
-
-    g_TaskManager.StartNetworkThread();
-    CheckHeap();
-
-#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
-    g_TaskManager.StartSocketThread();
-#endif
-
-#if ENABLE_AUDIO
-    // The audio sampler task might as well be on a different core from the LED stuff
-    g_TaskManager.StartAudioThread();
-    CheckHeap();
-#endif
-
-#if ENABLE_AUDIOSERIAL
-    // The audio sampler task might as well be on a different core from the LED stuff
-    
-    CheckHeap();
-#endif
-
-    debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
-    CheckHeap();
 }
 
 // loop - main execution loop
