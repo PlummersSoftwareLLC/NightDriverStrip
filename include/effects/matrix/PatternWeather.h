@@ -50,7 +50,6 @@ class PatternWeather : public LEDStripEffect
 {
 private:
 
-    String strWeatherDescription = "";
     String strLocation           = "";
     int    dayOfWeek             = 0;
     float  temperature           = 0.0f;
@@ -87,11 +86,12 @@ private:
         else
             return KelvinToCelcius(K);
     }
+
     // getTomorrowTemps
     //
     // Request a forecast and then parse out the high and low temps for tomorrow
 
-    String getTomorrowTemps(const String &zipCode, float& highTemp, float& lowTemp) 
+    bool getTomorrowTemps(const String &zipCode, float& highTemp, float& lowTemp) 
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + ",us&appid=" + cszOpenWeatherAPIKey;
@@ -122,21 +122,21 @@ private:
                 }
             }
             http.end();
-            return response;
-
+            return true;
         }
-        else {
+        else 
+        {
             debugW("Error fetching forecast data for zip: %s", zipCode);
+            http.end();
+            return false;
         }
-        http.end();
-        return "";
     }
 
     // getWeatherData
     //
     // Get the current temp and the high and low for today
 
-    String getWeatherData(const String &zipCode)
+    bool getWeatherData(const String &zipCode)
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + ",us&appid=" + cszOpenWeatherAPIKey;
@@ -151,22 +151,18 @@ private:
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
 
-            const char * pszDescription = jsonDoc["weather"][0]["description"];
-            if (pszDescription)
-                strWeatherDescription = pszDescription;
-
             const char * pszName = jsonDoc["name"];
             if (pszName)
                 strLocation = pszName;
 
             http.end();
-            return weatherData;
+            return true;
         }
         else
         {
             Serial.printf("Error fetching Weather data for zip: %s", zipCode);
             http.end();
-            return "";
+            return false;
         }
     }
 
@@ -176,12 +172,13 @@ public:
     {
     }
 
+    // We re-render the entire display every frame
+
     virtual void Draw()
     {
         const int fontHeight = 7;
         const int fontWidth  = 5;
-        const int xHalf = MATRIX_WIDTH / 2 - 1;
-        bool bShouldCheckWeather = false;
+        const int xHalf      = MATRIX_WIDTH / 2 - 1;
 
         graphics()->fillScreen(CRGB(0, 0, 0));
         graphics()->fillRect(0, 0, MATRIX_WIDTH-1, 9, graphics()->to16bit(CRGB(0,0,128)));        
@@ -194,21 +191,25 @@ public:
             {
                 EVERY_N_SECONDS_I(timingObj, 0)
                 {
-                    String weatherData = getWeatherData(cszZipCode);
-                    if (!strLocation.isEmpty())
+                    // Assume failure case, then extend the retry interval if we succeed all
+                    timingObj.setPeriod(20);                
+                    if (getWeatherData(cszZipCode))
                     {
-                        getTomorrowTemps(cszZipCode, highTomorrow, loTomorrow);
-                        // Looks like success, so recheck the weather in 10 minutes
-                        timingObj.setPeriod(60 * 10);
-                    }
-                    else
-                    {   
-                        // On a failure, check back soon
-                        timingObj.setPeriod(20);                
+                        if (getTomorrowTemps(cszZipCode, highTomorrow, loTomorrow))
+                        {
+                            // Looks like success, so recheck the weather in 10 minutes
+                            timingObj.setPeriod(60 * 10);
+
+                            // We enter this piece of code based on not having a location, so we should
+                            // absolutely have one when we're in the success case
+                            assert(!strLocation.isEmpty());
+                        }
                     }
                 }
             }
         }
+
+        // Print the town/city name, which we looked up via trhe zip code
 
         int x = 0;
         int y = fontHeight + 1;
@@ -217,11 +218,15 @@ public:
         strLocation.toUpperCase();
         graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation);
 
+        // Display the temperature, right-justified
+
         String strTemp((int)temperature);
         x = MATRIX_WIDTH - fontWidth * strTemp.length();
         graphics()->setCursor(x, y);
         graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
         graphics()->print(strTemp);
+
+        // Draw the separator lines
 
         y+=1;
 
@@ -236,18 +241,22 @@ public:
         const char * pszToday = pszDaysOfWeek[todayTime->tm_wday];
         const char * pszTomorrow = pszDaysOfWeek[ (todayTime->tm_wday + 1) % 7 ];
 
+        // Draw the day of the week and tomorrow's day as well
+
         graphics()->setTextColor(WHITE16);
         graphics()->setCursor(0, MATRIX_HEIGHT);
         graphics()->print(pszToday);
-
         graphics()->setCursor(xHalf+2, MATRIX_HEIGHT);
         graphics()->print(pszTomorrow);
 
+        // Draw the temperature in lighter white
+
         graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
-        
         String strHi((int) highToday);
         String strLo((int) loToday);
         
+        // Draw today's HI and LO temperatures
+
         x = xHalf - fontWidth * strHi.length();
         y = MATRIX_HEIGHT - fontHeight;
         graphics()->setCursor(x,y);
@@ -257,9 +266,10 @@ public:
         graphics()->setCursor(x,y);
         graphics()->print(strLo);
 
+        // Draw tomorrow's HI and LO temperatures
+
         strHi = String((int)highTomorrow);
         strLo = String((int)loTomorrow);
-
         x = MATRIX_WIDTH - fontWidth * strHi.length();
         y = MATRIX_HEIGHT - fontHeight;
         graphics()->setCursor(x,y);
@@ -268,7 +278,6 @@ public:
         y+= fontHeight;
         graphics()->setCursor(x,y);
         graphics()->print(strLo);
-
     }
 };
 
