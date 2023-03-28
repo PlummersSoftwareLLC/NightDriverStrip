@@ -292,7 +292,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
-    debugI(">> NetworkHandlingLoopEntry\n");
+    //debugI(">> NetworkHandlingLoopEntry\n");
 
 #if ENABLE_WIFI
     if(!MDNS.begin("esp32")) {
