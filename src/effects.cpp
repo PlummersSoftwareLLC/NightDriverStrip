@@ -354,8 +354,9 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0),
 
         new PatternPongClock(),
-        new PatternWeather(),
         new PatternSubscribers(),
+        new PatternWeather(),
+
         
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),

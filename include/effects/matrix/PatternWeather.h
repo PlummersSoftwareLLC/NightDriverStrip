@@ -43,6 +43,7 @@
 #include <ArduinoJson.h>
 #include "globals.h"
 #include <FontGfx_apple5x7.h>
+#include <thread>
 
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
@@ -58,6 +59,8 @@ private:
     float  loToday               = 0.0f;
     float  highTomorrow          = 0.0f;
     float  loTomorrow            = 0.0f;
+
+    TaskHandle_t weatherTask     = nullptr;
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
 
@@ -101,8 +104,9 @@ private:
         if (httpResponseCode > 0) 
         {
             String response = http.getString();
-            DynamicJsonDocument doc(1024);
+            DynamicJsonDocument doc(4096);
             deserializeJson(doc, response);
+            JsonArray list = doc["list"];
 
             // Get tomorrow's date
             time_t tomorrow = time(nullptr) + 86400;
@@ -111,10 +115,13 @@ private:
             strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
 
             // Look for the temperature data for tomorrow
-            JsonArray list = doc["list"];
-            for (JsonObject entry : list) {
-                String dt_txt = entry["dt_txt"].as<String>();
-                if (dt_txt.startsWith(dateStr)) {
+            for (size_t i = 0; i < list.size(); ++i) 
+            {
+                JsonObject entry = list[i];
+                String dt_txt = entry["dt_txt"];
+                if (dt_txt.startsWith(dateStr)) 
+                {
+                    Serial.println("Weather: Updating Forecast");
                     JsonObject main = entry["main"];
                     highTemp = KelvinToLocal(main["temp_max"]);
                     lowTemp  = KelvinToLocal(main["temp_min"]);
@@ -160,10 +167,26 @@ private:
         }
         else
         {
-            Serial.printf("Error fetching Weather data for zip: %s", zipCode);
+            debugW("Error fetching Weather data for zip: %s", zipCode);
             http.end();
             return false;
         }
+    }
+
+    // Thread entry point so we can update the weather data asynchronously.  The update thread exists
+    // when it's done fetching, it is not persistent.
+
+    static void UpdateWeather(void * pv)
+    {
+        PatternWeather * pObj = (PatternWeather *) pv;
+        if (pObj->getWeatherData(cszZipCode))
+        {
+            if (pObj->getTomorrowTemps(cszZipCode, pObj->highTomorrow, pObj->loTomorrow))
+            {
+            }
+        }
+        vTaskDelete(pObj->weatherTask);
+        pObj->weatherTask = nullptr;
     }
 
 public:
@@ -181,7 +204,7 @@ public:
         const int xHalf      = MATRIX_WIDTH / 2 - 1;
 
         graphics()->fillScreen(CRGB(0, 0, 0));
-        graphics()->fillRect(0, 0, MATRIX_WIDTH-1, 9, graphics()->to16bit(CRGB(0,0,128)));        
+        graphics()->fillRect(0, 0, MATRIX_WIDTH, 9, graphics()->to16bit(CRGB(0,0,128)));        
 
         graphics()->setFont(&Apple5x7);
 
@@ -191,19 +214,12 @@ public:
             {
                 EVERY_N_SECONDS_I(timingObj, 0)
                 {
-                    // Assume failure case, then extend the retry interval if we succeed all
-                    timingObj.setPeriod(20);                
-                    if (getWeatherData(cszZipCode))
+                    if (nullptr == weatherTask)
                     {
-                        if (getTomorrowTemps(cszZipCode, highTomorrow, loTomorrow))
-                        {
-                            // Looks like success, so recheck the weather in 10 minutes
-                            timingObj.setPeriod(60 * 10);
-
-                            // We enter this piece of code based on not having a location, so we should
-                            // absolutely have one when we're in the success case
-                            assert(!strLocation.isEmpty());
-                        }
+                        // Create a thread to update the weather data rather than blocking the draw thread
+                        
+                        xTaskCreatePinnedToCore(UpdateWeather, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
+                        timingObj.setPeriod(10 * 60);       
                     }
                 }
             }
