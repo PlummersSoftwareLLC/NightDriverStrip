@@ -45,14 +45,35 @@
 #include <FontGfx_apple5x7.h>
 #include <thread>
 
+#define WEATHER_INTERVAL_SECONDS (10*60)
+
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
+
+static const char * pszWeatherIcons[] = {   "",                                 // 00 Unused
+                                            "/bmp/clearsky.jpg",                // 01
+                                            "/bmp/fewclouds.jpg",               // 02
+                                            "/bmp/scatteredclouds.jpg",         // 03
+                                            "/bmp/brokenclouds.jpg",            // 04
+                                            "",                                 // Unused slots
+                                            "",
+                                            "",
+                                            ""
+                                            "/bmp/showerrain.jpg",              // 09
+                                            "/bmp/rain/jpg",                    // 10
+                                            "/bmp/thunderstorm.jpg",            // 11
+                                            "",
+                                            "/bmp/snow.jpg",                    // 13
+                                        };
 
 class PatternWeather : public LEDStripEffect
 {
+
 private:
 
     String strLocation           = "";
     int    dayOfWeek             = 0;
+    int    iconToday             = -1;
+    int    iconTomorrow          = -1;
     float  temperature           = 0.0f;
     float  pressure              = 0.0f;
     float  highToday             = 0.0f;
@@ -67,6 +88,11 @@ private:
     virtual bool ShouldShowTitle() const
     {
         return false;
+    }
+
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 25;
     }
 
     inline float KelvinToFarenheit(float K)
@@ -114,6 +140,8 @@ private:
             char dateStr[11];
             strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
 
+            iconTomorrow = -1;
+            
             // Look for the temperature data for tomorrow
             for (size_t i = 0; i < list.size(); ++i) 
             {
@@ -121,10 +149,19 @@ private:
                 String dt_txt = entry["dt_txt"];
                 if (dt_txt.startsWith(dateStr)) 
                 {
-                    Serial.println("Weather: Updating Forecast");
+                    //Serial.printf("Weather: Updating Forecast: %s", response.c_str());
                     JsonObject main = entry["main"];
-                    highTemp = KelvinToLocal(main["temp_max"]);
-                    lowTemp  = KelvinToLocal(main["temp_min"]);
+                    if (main["temp_max"] > 0)
+                        highTemp        = KelvinToLocal(main["temp_max"]);
+                    if (main["temp_min"] > 0)
+                        lowTemp         = KelvinToLocal(main["temp_min"]);
+                    
+                    String iconIdTomorrow = entry["weather"][0]["icon"];
+                    iconTomorrow = iconIdTomorrow.toInt();            
+                    if (iconTomorrow < 1 || iconTomorrow >= ARRAYSIZE(pszWeatherIcons))
+                        iconTomorrow = -1;
+
+                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, iconTomorrow);                        
                     break;
                 }
             }
@@ -146,17 +183,25 @@ private:
     bool getWeatherData(const String &zipCode)
     {
         HTTPClient http;
+
         String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + ",us&appid=" + cszOpenWeatherAPIKey;
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
         {
+            iconToday = -1;
             String weatherData = http.getString();
-            DynamicJsonDocument jsonDoc(1024);
+            DynamicJsonDocument jsonDoc(4096);
             deserializeJson(jsonDoc, weatherData);
             temperature = KelvinToLocal(jsonDoc["main"]["temp"]);
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
+            
+            String iconIndex = jsonDoc["weather"][0]["icon"];
+            iconToday = iconIndex.toInt();
+            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %d", (int)temperature, (int)loToday, (int)highToday, iconToday);
+            if (iconToday < 1 || iconToday >= ARRAYSIZE(pszWeatherIcons))
+                iconToday = -1;
 
             const char * pszName = jsonDoc["name"];
             if (pszName)
@@ -181,12 +226,20 @@ private:
         PatternWeather * pObj = (PatternWeather *) pv;
         if (pObj->getWeatherData(cszZipCode))
         {
+            debugW("Got today's weather");
             if (pObj->getTomorrowTemps(cszZipCode, pObj->highTomorrow, pObj->loTomorrow))
-            {
-            }
+                debugI("Got tomorrow's weather");
+            else
+                debugW("Failed to get tomorrow's weather");
         }
-        vTaskDelete(pObj->weatherTask);
+        else
+        {
+            debugW("Failed to get today's weather");
+        }
+        auto task = pObj->weatherTask;
         pObj->weatherTask = nullptr;
+        debugW("Weather thread exiting");
+        vTaskDelete(task);
     }
 
 public:
@@ -210,17 +263,19 @@ public:
 
         if (WiFi.isConnected())
         {
-            if (strLocation.isEmpty())
+            EVERY_N_SECONDS_I(timingObj, 1)
             {
-                EVERY_N_SECONDS_I(timingObj, 0)
+                if (nullptr == weatherTask)
                 {
-                    if (nullptr == weatherTask)
-                    {
-                        // Create a thread to update the weather data rather than blocking the draw thread
-                        
-                        xTaskCreatePinnedToCore(UpdateWeather, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
-                        timingObj.setPeriod(10 * 60);       
-                    }
+                    // Create a thread to update the weather data rather than blocking the draw thread
+
+                    debugW("Spawning thread to check weather..");
+                    xTaskCreatePinnedToCore(UpdateWeather, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
+                    timingObj.setPeriod(WEATHER_INTERVAL_SECONDS);       
+                }
+                else
+                {
+                    debugW("Skipping weather fetch because thread handle for previous check still exists");
                 }
             }
         }
@@ -232,7 +287,7 @@ public:
         graphics()->setCursor(x, y);
         graphics()->setTextColor(WHITE16);
         strLocation.toUpperCase();
-        graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation);
+        graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation.substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
 
         // Display the temperature, right-justified
 
@@ -294,6 +349,24 @@ public:
         y+= fontHeight;
         graphics()->setCursor(x,y);
         graphics()->print(strLo);
+
+        // Draw the graphics
+
+        if (iconToday >= 0)
+        {
+            auto filename = pszWeatherIcons[iconToday];
+            if (strlen(filename))
+                if (JDR_OK != TJpgDec.drawFsJpg(1, 10, filename))        // Draw the image
+                    debugW("Could not display %s", filename);
+        }    
+        if (iconTomorrow >= 0)
+        {
+            auto filename = pszWeatherIcons[iconTomorrow];
+            if (strlen(filename))
+                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+2, 10, filename))        // Draw the image
+                    debugW("Could not display %s", filename);
+        }    
+        delay(10);
     }
 };
 

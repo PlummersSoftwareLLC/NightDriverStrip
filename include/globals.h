@@ -1710,3 +1710,5 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
     #include "remotecontrol.h"
 #endif
 
+#include <TJpg_Decoder.h>
+
