@@ -436,11 +436,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #ifdef SPECTRUM_WROVER_KIT
-    #else 
-        #define NUM_INFO_PAGES          2
-        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
-    #endif
+    #define LED_PIN0 32
+
+    #define NUM_INFO_PAGES          2
+    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
 
 #elif MESMERIZER
 
