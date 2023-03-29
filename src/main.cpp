@@ -198,6 +198,8 @@ DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                 
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
 
+extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
+
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
 // 
@@ -474,12 +476,11 @@ void setup()
 
     uzlib_init();
 
+    if (!SPIFFS.begin(true)) 
+        Serial.println("WARNING: SPIFFs could not be intialized!");
+
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
-
-    debugI("Starting DebugLoopTaskEntry");
-    g_TaskManager.StartDebugThread();
-    CheckHeap();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
@@ -490,8 +491,10 @@ void setup()
     PrintOutputHeader();
     debugI("Startup!");
 
-    delay(100);
-    
+    debugI("Starting DebugLoopTaskEntry");
+    g_TaskManager.StartDebugThread();
+    CheckHeap();
+
     // Start Debug
 
 #if ENABLE_WIFI
@@ -600,6 +603,8 @@ void setup()
     extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
 
+    // Set up bitmap drawing for those that need it
+
     // Without these two magic lines, you get no picture, which is pretty annoying...
     
     #ifndef TFT_BL
@@ -648,6 +653,9 @@ void setup()
             g_aptrDevices[i]->loadPalette(0);
         }
     #endif
+
+    TJpgDec.setJpgScale(1);
+    TJpgDec.setCallback(bitmap_output);        
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -754,6 +762,9 @@ void setup()
         #endif
     #endif
 
+    debugI("Initializing effects manager...");
+    InitEffectsManager();
+
     // Microphone stuff
     #if ENABLE_AUDIO    
         pinMode(INPUT_PIN, INPUT);
@@ -762,38 +773,35 @@ void setup()
         CheckHeap();
     #endif
 
-    debugI("Initializing effects manager...");
-    InitEffectsManager();
-
-#if USE_SCREEN
-    g_TaskManager.StartScreenThread();
-#endif
+    #if USE_SCREEN
+        g_TaskManager.StartScreenThread();
+    #endif
 
     // Init the zlib compression
 
     debugV("Initializing compression...");
     CheckHeap();
 
-#if ENABLE_WIFI
-    g_TaskManager.StartNetworkThread();
-    CheckHeap();
-#endif
+    #if ENABLE_WIFI
+        g_TaskManager.StartNetworkThread();
+        CheckHeap();
+    #endif
 
-#if ENABLE_REMOTE
-    // Start Remote Control
-    g_TaskManager.StartRemoteThread();
-    CheckHeap();
-#endif
+    #if ENABLE_REMOTE
+        // Start Remote Control
+        g_TaskManager.StartRemoteThread();
+        CheckHeap();
+    #endif
 
-#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
-    g_TaskManager.StartSocketThread();
-#endif
+    #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+        g_TaskManager.StartSocketThread();
+    #endif
 
-#if ENABLE_AUDIOSERIAL
-    // The audio sampler task might as well be on a different core from the LED stuff
-    g_TaskManager.StartSerialThread();
-    CheckHeap();
-#endif
+    #if ENABLE_AUDIOSERIAL
+        // The audio sampler task might as well be on a different core from the LED stuff
+        g_TaskManager.StartSerialThread();
+        CheckHeap();
+    #endif
 
     debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
     CheckHeap();
@@ -803,15 +811,15 @@ void setup()
     g_TaskManager.StartDrawThread();
     CheckHeap();
 
-#if ENABLE_WIFI && WAIT_FOR_WIFI
-    debugI("Calling ConnectToWifi()\n");
-    if (false == ConnectToWiFi(99))
-    {
-        debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
-        throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
-    }
-    Debug.setSerialEnabled(true);
-#endif
+    #if ENABLE_WIFI && WAIT_FOR_WIFI
+        debugI("Calling ConnectToWifi()\n");
+        if (false == ConnectToWiFi(99))
+        {
+            debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
+            throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
+        }
+        Debug.setSerialEnabled(true);
+    #endif
 }
 
 // loop - main execution loop

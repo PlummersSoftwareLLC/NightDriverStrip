@@ -353,10 +353,9 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
         new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0),
 
+        new PatternWeather(),
         new PatternPongClock(),
         new PatternSubscribers(),
-        new PatternWeather(),
-
         
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
@@ -726,3 +725,16 @@ uint16_t XY(uint8_t x, uint8_t y)
         // Have a drink on me!
         return (*g_aptrEffectManager)[0].get()->xy(x, y);
 }
+
+// btimap_output
+//
+// Output function for the jpeg library.  It doesn't provide any mechanism for passing a this pointer or other context,
+// so it has to assume that it will be drawing to the main channel 0.
+
+bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+{
+        auto pgfx = (*g_aptrEffectManager)[0].get();
+        pgfx->drawRGBBitmap(x, y, bitmap, w, h);
+        return true;
+}
+
