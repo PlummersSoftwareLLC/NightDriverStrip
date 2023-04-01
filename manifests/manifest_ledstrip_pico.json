@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/ledstrip_pico/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/ledstrip_pico/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/ledstrip_pico/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/ledstrip_pico/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/ledstrip_pico/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

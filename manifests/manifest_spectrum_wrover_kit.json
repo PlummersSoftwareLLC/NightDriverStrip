@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/spectrum_wrover_kit/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/spectrum_wrover_kit/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/spectrum_wrover_kit/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/spectrum_wrover_kit/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/spectrum_wrover_kit/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

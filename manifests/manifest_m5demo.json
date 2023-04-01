@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/m5demo/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/m5demo/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/m5demo/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/m5demo/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/m5demo/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

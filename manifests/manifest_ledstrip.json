@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/ledstrip/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/ledstrip/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/ledstrip/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/ledstrip/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/ledstrip/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

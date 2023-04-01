@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/cube/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/cube/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/cube/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/cube/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/cube/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

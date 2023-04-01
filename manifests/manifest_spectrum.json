@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/spectrum/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/spectrum/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/spectrum/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/spectrum/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/spectrum/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/fanset/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/fanset/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/fanset/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/fanset/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/fanset/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

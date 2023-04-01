@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/ttgo/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/ttgo/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/ttgo/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/ttgo/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/ttgo/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

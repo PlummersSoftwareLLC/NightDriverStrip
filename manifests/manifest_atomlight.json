@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/atomlight/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/atomlight/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/atomlight/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/atomlight/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/atomlight/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

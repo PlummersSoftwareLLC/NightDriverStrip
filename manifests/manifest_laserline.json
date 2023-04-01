@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/laserline/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/laserline/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/laserline/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/laserline/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/laserline/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]

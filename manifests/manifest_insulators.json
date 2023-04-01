@@ -8,7 +8,8 @@
       [
         { "path": "../firmware/insulators/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/insulators/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/insulators/firmware.bin", "offset": 65536 }
+        { "path": "../firmware/insulators/firmware.bin", "offset": 65536 },
+        { "path": "../firmware/insulators/spiffs.bin", "offset": 3342336 }
       ]
     }
   ]
