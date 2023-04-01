@@ -81,6 +81,7 @@ private:
     float  highTomorrow          = 0.0f;
     float  loTomorrow            = 0.0f;
 
+    bool   dataReady             = false;
     TaskHandle_t weatherTask     = nullptr;
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
@@ -193,6 +194,11 @@ private:
             String weatherData = http.getString();
             DynamicJsonDocument jsonDoc(4096);
             deserializeJson(jsonDoc, weatherData);
+
+            // Once we have a non-zero temp we can start displaying things
+            if (0 < jsonDoc["main"]["temp"])
+                dataReady = true;
+
             temperature = KelvinToLocal(jsonDoc["main"]["temp"]);
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
@@ -287,15 +293,21 @@ public:
         graphics()->setCursor(x, y);
         graphics()->setTextColor(WHITE16);
         strLocation.toUpperCase();
-        graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation.substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
+        if (strlen(cszOpenWeatherAPIKey) == 0)
+            graphics()->print("No API Key");
+        else
+            graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation.substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
 
         // Display the temperature, right-justified
 
-        String strTemp((int)temperature);
-        x = MATRIX_WIDTH - fontWidth * strTemp.length();
-        graphics()->setCursor(x, y);
-        graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
-        graphics()->print(strTemp);
+        if (dataReady)
+        {
+            String strTemp((int)temperature);
+            x = MATRIX_WIDTH - fontWidth * strTemp.length();
+            graphics()->setCursor(x, y);
+            graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
+            graphics()->print(strTemp);
+        }
 
         // Draw the separator lines
 
@@ -322,51 +334,53 @@ public:
 
         // Draw the temperature in lighter white
 
-        graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
-        String strHi((int) highToday);
-        String strLo((int) loToday);
+        if (dataReady)
+        {
+            graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
+            String strHi((int) highToday);
+            String strLo((int) loToday);
         
-        // Draw today's HI and LO temperatures
+            // Draw today's HI and LO temperatures
 
-        x = xHalf - fontWidth * strHi.length();
-        y = MATRIX_HEIGHT - fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strHi);
-        x = xHalf - fontWidth * strLo.length();
-        y+= fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strLo);
+            x = xHalf - fontWidth * strHi.length();
+            y = MATRIX_HEIGHT - fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strHi);
+            x = xHalf - fontWidth * strLo.length();
+            y+= fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strLo);
 
-        // Draw tomorrow's HI and LO temperatures
+            // Draw tomorrow's HI and LO temperatures
 
-        strHi = String((int)highTomorrow);
-        strLo = String((int)loTomorrow);
-        x = MATRIX_WIDTH - fontWidth * strHi.length();
-        y = MATRIX_HEIGHT - fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strHi);
-        x = MATRIX_WIDTH - fontWidth * strLo.length();
-        y+= fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strLo);
+            strHi = String((int)highTomorrow);
+            strLo = String((int)loTomorrow);
+            x = MATRIX_WIDTH - fontWidth * strHi.length();
+            y = MATRIX_HEIGHT - fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strHi);
+            x = MATRIX_WIDTH - fontWidth * strLo.length();
+            y+= fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strLo);
 
-        // Draw the graphics
+            // Draw the graphics
 
-        if (iconToday >= 0)
-        {
-            auto filename = pszWeatherIcons[iconToday];
-            if (strlen(filename))
-                if (JDR_OK != TJpgDec.drawFsJpg(1, 10, filename))        // Draw the image
-                    debugW("Could not display %s", filename);
-        }    
-        if (iconTomorrow >= 0)
-        {
-            auto filename = pszWeatherIcons[iconTomorrow];
-            if (strlen(filename))
-                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+2, 10, filename))        // Draw the image
-                    debugW("Could not display %s", filename);
-        }    
-        delay(10);
+            if (iconToday >= 0)
+            {
+                auto filename = pszWeatherIcons[iconToday];
+                if (strlen(filename))
+                    if (JDR_OK != TJpgDec.drawFsJpg(1, 10, filename))        // Draw the image
+                        debugW("Could not display %s", filename);
+            }    
+            if (iconTomorrow >= 0)
+            {
+                auto filename = pszWeatherIcons[iconTomorrow];
+                if (strlen(filename))
+                    if (JDR_OK != TJpgDec.drawFsJpg(xHalf+2, 10, filename))        // Draw the image
+                        debugW("Could not display %s", filename);
+            }    
+        }
     }
 };
 
