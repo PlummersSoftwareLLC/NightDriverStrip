@@ -68,10 +68,7 @@ extern uint32_t g_FPS;
         if (str.equalsIgnoreCase("clock"))
         {
             debugI("Refreshing Time from Server...");
-
-            digitalWrite(BUILTIN_LED_PIN, 1);
             NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-            digitalWrite(BUILTIN_LED_PIN, 0);
         }
         else if (str.equalsIgnoreCase("stats"))
         {

@@ -52,7 +52,7 @@ extern AppTime g_AppTime;
 extern bool g_bUpdateStarted;
 extern double g_Brite;
 extern uint32_t g_Watts;
-extern const CRGBPalette256 vuPaletteGreen;
+extern const CRGBPalette16 vuPaletteGreen;
 
 void ShowTM1814();
 
@@ -90,12 +90,11 @@ void MatrixPreDraw()
         GFXBase *graphics = (GFXBase *)(*g_aptrEffectManager)[0].get();
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
-        LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        LEDMatrixGFX::titleLayer.setFont(font3x5);
 
-        if (pMatrix->GetCaptionTransparency() > 0.00)
+        if (g_aptrEffectManager->GetCurrentEffect()->ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
+            LEDMatrixGFX::titleLayer.setFont(font3x5);
             uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
             LEDMatrixGFX::titleLayer.setBrightness(brite); // 255 would obscure it entirely
             debugV("Caption: %d", brite);
@@ -170,7 +169,6 @@ uint16_t WiFiDraw()
 
             if (pBuffer)
             {
-                g_AppTime.NewFrame();
                 g_usLastWifiDraw = micros();
                 debugV("Calling LEDBuffer::Draw from wire with %d/%d pixels.", pixelsDrawn, NUM_LEDS);
                 pBuffer->DrawBuffer();
@@ -203,14 +201,14 @@ uint16_t LocalDraw()
         // If we've never drawn from wifi before, now would also be a good time to local draw
         if (g_usLastWifiDraw == 0 || (micros() - g_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
         {
-            g_AppTime.NewFrame();       // Start a new frame, record the time, calc deltaTime, etc.
             g_aptrEffectManager->Update(); // Draw the current built in effect
 
-            #if USE_MATRIX
-                auto spectrum = GetSpectrumAnalyzer(0);
+            #if SHOW_VU_METER
+                static auto spectrum = GetSpectrumAnalyzer(0);
                 if (g_aptrEffectManager->IsVUVisible())
                     ((SpectrumAnalyzerEffect *)spectrum.get())->DrawVUMeter(graphics, 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
             #endif
+
             debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
             return NUM_LEDS;
         }
@@ -287,9 +285,9 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
     }
     else if (wifiPixelsDrawn > 0)
     {
-        // Sleep up to 1/20th second, depending on how far away the next frame we need to service is
+        // Sleep up to 1/25th second, depending on how far away the next frame we need to service is
 
-        double t = 0.05;
+        double t = 0.04;
         for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         {
             auto pOldest = g_aptrBufferManager[iChannel]->PeekOldestBuffer();
@@ -308,7 +306,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
         g_FreeDrawTime = .001;
-        yield();
+        delay(1);
     }
 
 #endif
@@ -378,8 +376,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     graphics->Setup();
 
 #if USE_MATRIX
-    // We don't need color correction on the chromakey'd title layer
+    // We don't need color correction on the title layer, but we want it on the main background
+    
     LEDMatrixGFX::titleLayer.enableColorCorrection(false);
+    LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
 
     // Starting the effect might need to draw, so we need to set the leds up before doing so
     LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
@@ -394,11 +394,12 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     for (;;)
     {
+        g_AppTime.NewFrame();
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
 
         uint16_t localPixelsDrawn   = 0;
         uint16_t wifiPixelsDrawn    = 0;
-        double frameStartTime       = g_AppTime.CurrentTime();
+        double frameStartTime       = g_AppTime.FrameStartTime();
 
         #if USE_MATRIX
             MatrixPreDraw();
@@ -412,6 +413,14 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         if (wifiPixelsDrawn == 0)
             localPixelsDrawn = LocalDraw();
 
+        #if USE_MATRIX
+            if (wifiPixelsDrawn + localPixelsDrawn > 0)
+            {
+                LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+                FastLED.countFPS();
+                g_FPS = FastLED.getFPS();
+            }
+        #endif
         #if USESTRIP
             if (wifiPixelsDrawn)
                 ShowStrip(wifiPixelsDrawn);
@@ -428,14 +437,15 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         DelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn);
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
-        // so we'll pause to share the CPU a bit once the update has begun
+        // so we'll slow down to share the CPU a bit once the update has begun
 
         if (g_bUpdateStarted)
             delay(100);
 
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
-        // whose time has come
+        // whose time has come.  yield() alone did not solve it, likely since our priority is higher than the idle
+        // task so you can still starve the watchdog if you're always busy
 
-        yield();
+        delay(1);
     }
 }

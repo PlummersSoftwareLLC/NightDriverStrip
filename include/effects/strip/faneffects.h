@@ -656,7 +656,7 @@ public:
 
 class PaletteSpinEffect : public LEDStripEffect
 {
-  const CRGBPalette256 _Palette;
+  const CRGBPalette16 _Palette;
   bool _bReplaceMagenta;
   double _sparkleChance;
 
@@ -665,7 +665,7 @@ private:
   int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteSpinEffect(const String &strName, const CRGBPalette256 &palette, bool bReplace, double sparkleChance = 0.0)
+  PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, double sparkleChance = 0.0)
       : LEDStripEffect(strName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
   {
   }
@@ -890,7 +890,7 @@ protected:
   int Sparking;    // Probability of a spark each attempt
   bool bReversed;  // If reversed we draw from 0 outwards
   bool bMirrored;  // If mirrored we split and duplicate the drawing
-  CRGBPalette256 Palette;
+  CRGBPalette16 Palette;
 
   PixelOrder Order;
 
@@ -909,7 +909,7 @@ protected:
   int CellCount() const { return LEDCount * CellsPerLED; }
 
 public:
-  FireFanEffect(CRGBPalette256 palette,
+  FireFanEffect(CRGBPalette16 palette,
                 int ledCount,
                 int cellsPerLED = 1,
                 int cooling = 20,

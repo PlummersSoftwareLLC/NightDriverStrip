@@ -114,20 +114,20 @@
     #define CLK_PIN GPIO_NUM_2
     */
 
-    #define R1_PIN  GPIO_NUM_35                 // Cannot test - rmt assertion
-    #define G1_PIN  GPIO_NUM_34                 // Cannot test - rmt assertion
-    #define B1_PIN  GPIO_NUM_32                 // GOOD
-    #define R2_PIN  GPIO_NUM_25                 // GOOD
-    #define G2_PIN  GPIO_NUM_33                 // GOOD on blue board, NO RESPONSE on missing lines board
-    #define B2_PIN  GPIO_NUM_27                 // GOOD
-    #define A_PIN   GPIO_NUM_5                  // GOOD
-    #define B_PIN   GPIO_NUM_4                  // GOOD on blue board, NO RESPONSE on missing lines board
-    #define C_PIN   GPIO_NUM_19                 // GOOD
-    #define D_PIN   GPIO_NUM_18                 // GOOD
-    #define E_PIN   GPIO_NUM_26                 // GOOD
-    #define LAT_PIN GPIO_NUM_21                 // GOOD
-    #define OE_PIN  GPIO_NUM_23                 // GOOD
-    #define CLK_PIN GPIO_NUM_22                 // GOOD
+    #define R1_PIN  GPIO_NUM_2                  
+    #define G1_PIN  GPIO_NUM_0                  
+    #define B1_PIN  GPIO_NUM_32                 
+    #define R2_PIN  GPIO_NUM_25                 
+    #define G2_PIN  GPIO_NUM_33                 
+    #define B2_PIN  GPIO_NUM_27                 
+    #define A_PIN   GPIO_NUM_5                  
+    #define B_PIN   GPIO_NUM_4                  
+    #define C_PIN   GPIO_NUM_19                 
+    #define D_PIN   GPIO_NUM_18                 
+    #define E_PIN   GPIO_NUM_26                 
+    #define LAT_PIN GPIO_NUM_21                 
+    #define OE_PIN  GPIO_NUM_23                 
+    #define CLK_PIN GPIO_NUM_22                 
 
 //#define DEBUG_PINS_ENABLED
 //#define DEBUG_1_GPIO    GPIO_NUM_13

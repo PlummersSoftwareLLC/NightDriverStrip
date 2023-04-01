@@ -175,10 +175,10 @@ public:
                 #if SPECTRUM
                     effect = GetSpectrumAnalyzer(color, oldColor);
                 #else
-                    effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
             #else
-                effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette256(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
             #endif
 
             if (effect->Init(g_aptrDevices))

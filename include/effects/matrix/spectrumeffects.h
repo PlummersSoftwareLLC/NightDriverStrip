@@ -101,7 +101,7 @@ class VUMeterEffect
     //
     // Draw i-th pixel in row y
 
-    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette256 * pPalette = nullptr)
+    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
     {
         if (g_Analyzer.MicMode() == PeakData::PCREMOTE)
             pPalette = &vuPaletteBlue;
@@ -121,36 +121,41 @@ class VUMeterEffect
     
   public:
 
-    inline void EraseVUMeter(GFXBase * pGFXChannel, int yVU) const
+    inline void EraseVUMeter(GFXBase * pGFXChannel, int start, int yVU) const
     {
-        pGFXChannel->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
+        int xHalf = pGFXChannel->width()/2;
+        for (int i = start; i <= xHalf; i++)
+        {
+            pGFXChannel->setPixel(xHalf-i,   yVU, CRGB::Black);
+            pGFXChannel->setPixel(xHalf-1+i,   yVU, CRGB::Black);
+        }
     }
 
-    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette256 * pPalette = nullptr)
+    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette16 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
-
-        EraseVUMeter(pGFXChannel, yVU);
-
-        if (iPeakVUy > 1)
-        {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
-            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade, pPalette);
-            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade, pPalette);
-        }
 
         int xHalf = pGFXChannel->width()/2-1;
         int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; // map(g_Analyzer._VU, 0, MAX_VU/8, 1, xHalf);
         bars = min(bars, xHalf);
 
-        if (bars > iPeakVUy)
+        EraseVUMeter(pGFXChannel, bars, yVU);
+
+        if (bars >= iPeakVUy)
         {
             msPeakVU = millis();
             iPeakVUy = bars;
         }
-        else if (millis() - msPeakVU > MS_PER_SECOND)
+        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
         {
             iPeakVUy = 0;
+        }
+
+        if (iPeakVUy > 1)
+        {
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
+            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade);
+            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade);
         }
 
         for (int i = 0; i < bars; i++)
@@ -253,7 +258,14 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int xOffset   = iBar * barWidth;
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
-    
+
+        if (_fadeRate == 0)
+        {
+            for (int y = 1; y < yOffset2; y++)
+                for (int x = xOffset; x < xOffset + barWidth; x++)
+                    graphics()->setPixel(x, y, CRGB::Black);
+        }
+        
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
                 graphics()->setPixel(x, y, baseColor);
@@ -282,7 +294,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
   public:
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
-                           bool                   bShowVU,
                            int                    cNumBars = 12,
                            const CRGBPalette16  & palette = spectrumBasicColors, 
                            uint16_t           scrollSpeed = 0, 
@@ -290,7 +301,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0)
         : LEDStripEffect(pszFriendlyName),
-          _bShowVU(bShowVU),
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
@@ -302,14 +312,12 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     }
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
-                           bool                   bShowVU, 
                            int                    cNumBars = 12,
-                           CRGB                 baseColor = CRGB::Red, 
-                           uint8_t               fadeRate = 0,
-                           float           peak1DecayRate = 1.0,
-                           float           peak2DecayRate = 1.0)
+                           const CRGB &          baseColor = CRGB::Red, 
+                           uint8_t                fadeRate = 0,
+                           float            peak1DecayRate = 1.0,
+                           float            peak2DecayRate = 1.0)
         : LEDStripEffect(pszFriendlyName), 
-          _bShowVU(bShowVU),        
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(0), 
@@ -340,27 +348,22 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
-        else
-            fillSolidOnAllChannels(CRGB::Black);
 
-  
-        std::lock_guard<std::mutex> guard(Screen::_screenMutex);
-
-        if (_bShowVU)
-            DrawVUMeter(pGFXChannel, 0);
+        //if (_bShowVU)
+        //    DrawVUMeter(pGFXChannel, 0);
         
         for (int i = 0; i < _numBars; i++)
         {
             // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one
             if (pGFXChannel->IsPalettePaused())
             {
-                int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 255, 255, NOBLEND));
+                int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
+                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 240, 255, LINEARBLEND));
             }
             else
             {
                 int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, NOBLEND));
+                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, LINEARBLEND));
             }
         }
     }

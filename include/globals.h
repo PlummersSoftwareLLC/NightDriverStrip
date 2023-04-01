@@ -169,8 +169,8 @@
 //
 // Idle tasks in taskmgr run at IDLE_PRIORITY+1 so you want to be at least +2 
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+6
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+7
+#define DRAWING_PRIORITY        tskIDLE_PRIORITY+7
+#define SOCKET_PRIORITY         tskIDLE_PRIORITY+6
 #define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+5      // If equal or lower than audio, will produce garbage on serial
 #define NET_PRIORITY            tskIDLE_PRIORITY+4
 #define AUDIO_PRIORITY          tskIDLE_PRIORITY+3
@@ -183,7 +183,6 @@
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
 //
 // #define DRAWING_CORE            0
-// #define INCOMING_CORE           1
 // #define NET_CORE                1
 // #define AUDIO_CORE              0
 // #define SCREEN_CORE             1
@@ -192,17 +191,16 @@
 // #define REMOTE_CORE             1
 
 // Some "Reliability Rules"
-// Drawing must be on Core 1 if using SmartMatrix, else matrix seems not to work
-// It seems the audio sampling interupts WebServer responses, so AUDIO_CORE != NET_CORE
+// Drawing must be on Core 1 if using SmartMatrix unless you specify SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1
 
-#define DRAWING_CORE            1      // Must be core 1 or it doesn't run with SmartMatrix
+#define DRAWING_CORE            1  
 #define NET_CORE                0
-#define AUDIO_CORE              1
-#define AUDIOSERIAL_CORE        0
+#define AUDIO_CORE              0
+#define AUDIOSERIAL_CORE        1
 #define SCREEN_CORE             0
-#define DEBUG_CORE              0
-#define SOCKET_CORE             0
-#define REMOTE_CORE             0
+#define DEBUG_CORE              1
+#define SOCKET_CORE             1
+#define REMOTE_CORE             1
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
@@ -427,7 +425,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   1
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       12
+    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
@@ -464,6 +462,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    #define SUBCHECK_INTERVAL  600000   // Update subscriber count every N seconds
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0
@@ -481,9 +480,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INPUT_PIN       36
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 8 * 1000)         // Expects at least a 5V, 8A supply
-
-    #define NOISE_CUTOFF   1000
-    #define NOISE_FLOOR    1000.0f
 
     #define TOGGLE_BUTTON_1 0
 
@@ -842,7 +838,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
-    
+
+    #define MAX_BUFFERS             10
+        
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
     #if SPECTRUM_WROVER_KIT
@@ -858,7 +856,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   16
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       12
+    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
@@ -1098,10 +1096,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 #endif
 
-#ifndef BUILTIN_LED_PIN
-#define BUILTIN_LED_PIN 25          // Pin for the built in LED on the Heltec board
-#endif
-
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
 #define TIME_CHECK_INTERVAL_MS (1000 * 60 * 5)   // How often in ms we resync the clock from NTP
 #define MIN_BRIGHTNESS  4                   
@@ -1148,10 +1142,16 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 200.0f
+        #define NOISE_FLOOR 6000.0f
     #endif
+    #ifndef NOISE_CUTOFF
+        #define NOISE_CUTOFF   2000
+    #endif    
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again   
+    #endif
+    #ifndef ENABLE_AUDIO_SMOOTHING
+        #define ENABLE_AUDIO_SMOOTHING 1
     #endif
 #endif
 
@@ -1171,14 +1171,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define COLOR_ORDER EOrder::GRB
 #endif
 
-#if ENABLE_AUDIO
-    #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF   75
-    #endif
-    #ifndef NOISE_FLOOR    
-        #define NOISE_FLOOR    200.0f
-    #endif
-#endif
 // Define fan ordering for drawing into the fan directionally
 
 #ifndef LED_FAN_OFFSET_LR
@@ -1219,6 +1211,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef DEFAULT_EFFECT_INTERVAL
 #define DEFAULT_EFFECT_INTERVAL 1000*30
+#endif
+
+#ifndef SUBCHECK_INTERVAL
+#define SUBCHECK_INTERVAL 0                             // How often to poll for youtube sub count, 0 means never
 #endif
 
 #ifndef MILLIS_PER_FRAME
@@ -1392,9 +1388,6 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 // a stats request.  Beyond color data these are poorly tested and likely can be removed, though
 // stats and clock are handy for debugging!
 
-#define WIFI_COMMAND_PIXELDATA   0             // Wifi command contains color data for the strip
-#define WIFI_COMMAND_VU          1             // Wifi command to set the current VU reading (DEPRECATED)
-#define WIFI_COMMAND_CLOCK       2             // Wifi command telling us current time at the server (DEPRECATED)
 #define WIFI_COMMAND_PIXELDATA64 3             // Wifi command with color data and 64-bit clock vals 
 #define WIFI_COMMAND_PEAKDATA    4             // Wifi command that delivers audio peaks
 
@@ -1422,19 +1415,19 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 
 inline String str_snprintf(const char *fmt, size_t len, ...) 
 {
-    String str;
+    std::string str;
     va_list args;
     
     // Make the string buffer big enough to hold the stated size
-    str.reserve(len);
+    str.resize(len);
 
     va_start(args, len);
-    size_t out_length = vsnprintf(&str[0], len + 1, fmt, args);
+    size_t out_length = vsnprintf(&str[0], len + 1, fmt, args) + 1;
     va_end(args);
 
     // If it wound up being smaller than the max buffer size, resize down to actual string length
     if (out_length < len)
-        str.reserve(out_length);
+        str.resize(out_length);
 
     return String(str.c_str());
 }
@@ -1449,15 +1442,14 @@ inline String str_sprintf(const char *fmt, ...)
     va_list args, args2;
     va_start(args, fmt);
     va_copy(args2, args);
-    va_start(args2, fmt); // reset args to the beginning of the argument list
     
-    int requiredLen = vsnprintf(NULL, 0, fmt, args);
-    if (requiredLen > 0)
+    int requiredLen = vsnprintf(NULL, 0, fmt, args) + 1;
+    if (requiredLen > 1)
     {
-        str.reserve(requiredLen);
-        size_t out_length = vsnprintf(&str[0], requiredLen, fmt, args2);
+        str.resize(requiredLen);
+        size_t out_length = vsnprintf(&str[0], requiredLen, fmt, args2) + 1;
         if (out_length < requiredLen)
-            str.reserve(out_length);
+            str.resize(out_length);
     }
         
     va_end(args2);
@@ -1716,4 +1708,6 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 #if ENABLE_REMOTE
     #include "remotecontrol.h"
 #endif
+
+#include <TJpg_Decoder.h>
 

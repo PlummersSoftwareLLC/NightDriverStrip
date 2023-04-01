@@ -74,6 +74,7 @@
         #include "effects/matrix/PatternMisc.h"
         #include "effects/matrix/PatternNoiseSmearing.h"
         #include "effects/matrix/PatternQR.h"
+        #include "effects/matrix/PatternWeather.h"
 #endif
 
 #ifdef USESTRIP
@@ -94,7 +95,7 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 const TProgmemRGBPalette16 BlueColors1_p = { CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White };
 const TProgmemRGBPalette16 GhostWaveColors1_p = { CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red };
 
-const CRGBPalette256 BlueColors_p =
+const CRGBPalette16 BlueColors_p =
 {
         CRGB::DarkBlue,
         CRGB::MediumBlue,
@@ -114,7 +115,7 @@ const CRGBPalette256 BlueColors_p =
         CRGB::MediumBlue
 };
 
-const CRGBPalette256 RedColors_p =
+const CRGBPalette16 RedColors_p =
 {
         CRGB::Red,
         CRGB::DarkRed,
@@ -137,7 +138,7 @@ const CRGBPalette256 RedColors_p =
         CRGB::OrangeRed
 };
 
-const CRGBPalette256 GreenColors_p =
+const CRGBPalette16 GreenColors_p =
 {
         CRGB::Green,
         CRGB::DarkGreen,
@@ -160,7 +161,7 @@ const CRGBPalette256 GreenColors_p =
         CRGB::LimeGreen
 };
 
-const CRGBPalette256 PurpleColors_p =
+const CRGBPalette16 PurpleColors_p =
 {
         CRGB::Purple,
         CRGB::Maroon,
@@ -183,7 +184,7 @@ const CRGBPalette256 PurpleColors_p =
         CRGB::DarkViolet,
 };
 
-const CRGBPalette256 RGBColors_p =
+const CRGBPalette16 RGBColors_p =
 {
         CRGB::Red,
         CRGB::Green,
@@ -203,7 +204,7 @@ const CRGBPalette256 RGBColors_p =
         CRGB::Blue
 };
 
-const CRGBPalette256 MagentaColors_p =
+const CRGBPalette16 MagentaColors_p =
 {
         CRGB::Pink,
         CRGB::DeepPink,
@@ -295,7 +296,7 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
         CHSV hueColor = rgb2hsv_approximate(color1);
-        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color1, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
         if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
@@ -305,7 +306,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
         CHSV hueColor = rgb2hsv_approximate(color);
         CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", true, 24, CRGBPalette16(color, color2));
+        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
         if (object->Init(g_aptrDevices))
                 return object;
         throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -343,36 +344,43 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif MESMERIZER
 
+        new SpectrumAnalyzerEffect("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
+        new SpectrumAnalyzerEffect("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum 3",   32,            spectrumBasicColors, 100, 0, 0.25, 1.25),
+
+        new SpectrumAnalyzerEffect("USA",        NUM_BANDS,     USAColors_p,         0),
+        new SpectrumAnalyzerEffect("AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25),
+
+        new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0),
+
+        new PatternWeather(),
+        new PatternPongClock(),
+        new PatternSubscribers(),
+        
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new PatternQR(),           
         new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
         new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
-        new GhostWave("WaveOut", &RainbowColors_p, 0, 0),
-
-        new SpectrumAnalyzerEffect("Spectrum",   false, NUM_BANDS, spectrumBasicColors, 100, 0, 2.0, 2.0),
-        new SpectrumAnalyzerEffect("USA",        false, NUM_BANDS, USAColors_p,         0),
-        new SpectrumAnalyzerEffect("Spectrum++", false, NUM_BANDS, spectrumBasicColors, 0, 70, -1.0, 3.0),
+        new GhostWave("WaveOut", &RainbowColors_p, 0, 0, false, 40),
+ 
         new WaveformEffect("WaveForm", &RainbowColors_p, 8),
         new GhostWave("GhostWave", &RainbowColors_p, 0, 0,  false),
 
+        new PatternLife(),
         new PatternRose(),
         new PatternPinwheel(),
         new PatternSunburst(),
 
         new PatternInfinity(),
         new PatternFlowField(),
-        new PatternLife(),
-
-        new PatternPongClock(),
         new PatternClock(),        
         new PatternAlienText(),
         new PatternCircuit(),
 
-        new StarryNightEffect<MusicStar>("Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 10.0),                                                // Rainbow Music Star
+        new StarryNightEffect<MusicStar>("Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0),                                                // Rainbow Music Star
 
-        new PatternPulsar(1.95, 1.95, 0.01),
+        new PatternPulsar(),
+
         new PatternBounce(),
-        new PatternSubscribers(),
         new PatternCube(),
         new PatternSpiro(),
         new PatternWave(),
@@ -382,7 +390,8 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new PatternPaletteSmear(),
         new PatternCurtain(),
         new PatternGridLights(),
-        new PatternMunch()
+        new PatternMunch(),
+        new PatternQR(),           
         
 #elif UMBRELLA
 
@@ -390,17 +399,17 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new FireEffect("Medium Fire", NUM_LEDS, 1, 5, 100, 3, 4, true, false),
         new MusicalPaletteFire("Musical Red Fire", HeatColors_p, NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
-        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Purple Fire", CRGBPalette256(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        new MusicalPaletteFire("Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
-        new MusicalPaletteFire("Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Blue Fire", CRGBPalette256(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        new MusicalPaletteFire("Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
-        new MusicalPaletteFire("Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
-        new MusicalPaletteFire("Musical Green Fire", CRGBPalette256(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
+        new MusicalPaletteFire("Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 7, 150, 3, 10, true, false),
+        new MusicalPaletteFire("Musical Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
         new BouncingBallEffect(),
         new DoublePaletteEffect(),
@@ -426,7 +435,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 #elif TTGO
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new SpectrumAnalyzerEffect("Spectrum Fade", 12, true, spectrumBasicColors, 50, 70, -1.0, 3.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", 12, spectrumBasicColors, 50, 70, -1.0, 3.0),
 
 #elif WROVERKIT
 
@@ -511,20 +520,20 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
 #elif SPECTRUM
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 12, spectrumAltColors, 0, 0, 0.5,  1.5),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 1.25, 1.25),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, spectrumAltColors, 0, 0, 0.25,  1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", NUM_BANDS, spectrumAltColors, 0, 0, 0.5,  1.5),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 24, spectrumAltColors, 0, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 24, spectrumAltColors, 0, 0, 0.25,  1.25),
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 16, spectrumAltColors, 0, 0, 1.0, 1.0),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 16, spectrumAltColors, 0, 0, 1.0, 1.0),
 
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
         
         new GhostWave("GhostWave", &RainbowColors_p, 0, 16, false, 40),
-        new SpectrumAnalyzerEffect("Spectrum USA", true, 16, USAColors_p, 0),
+        new SpectrumAnalyzerEffect("Spectrum USA", 16, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", &RainbowColors_p, 8),
-        new SpectrumAnalyzerEffect("Spectrum Fade", true, 24, RainbowColors_p, 50, 70, -1.0, 2.0),
+        new SpectrumAnalyzerEffect("Spectrum Fade", 24, RainbowColors_p, 50, 70, -1.0, 2.0),
         new GhostWave("GhostWave Blue", &BlueColors1_p , 0),
-        new SpectrumAnalyzerEffect("Spectrum Standard", true, 24, RainbowColors_p),
+        new SpectrumAnalyzerEffect("Spectrum Standard", 24, RainbowColors_p),
         new GhostWave("GhostWave One", &GhostWaveColors1_p , 4),
 
         //new GhostWave("GhostWave Rainbow", &rainbowPalette),
@@ -716,3 +725,16 @@ uint16_t XY(uint8_t x, uint8_t y)
         // Have a drink on me!
         return (*g_aptrEffectManager)[0].get()->xy(x, y);
 }
+
+// btimap_output
+//
+// Output function for the jpeg library.  It doesn't provide any mechanism for passing a this pointer or other context,
+// so it has to assume that it will be drawing to the main channel 0.
+
+bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+{
+        auto pgfx = (*g_aptrEffectManager)[0].get();
+        pgfx->drawRGBBitmap(x, y, bitmap, w, h);
+        return true;
+}
+

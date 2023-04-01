@@ -78,14 +78,13 @@ public:
   uint8_t brightness;
 };
 
-#define CRC_LENGTH 130                           // Depth of loop check buffer
+#define CRC_LENGTH std::max(MATRIX_HEIGHT, MATRIX_WIDTH)                           // Depth of loop check buffer
 
 class PatternLife : public LEDStripEffect 
 {
 private:
-    
-    Cell (*world)[MATRIX_HEIGHT];
-    uint32_t * checksums;
+    std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
+    std::unique_ptr<uint32_t []> checksums;
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
     unsigned int density = 50;
@@ -97,12 +96,13 @@ private:
     {
         LEDStripEffect::Init(gfx);
 
-        // BUGBUG (Davepl)  Although this saves us on base mem, access to the PSRAM is fairly random which is
-        //                  not ideal and slows this down to about 23 fps.  If you need more, you'll need to go
-        //                  to regular RAM.
-        
-        world =  (Cell (*)[MATRIX_HEIGHT]) PreferPSRAMAlloc( sizeof(Cell) * MATRIX_WIDTH * MATRIX_HEIGHT);        
-        checksums = (uint32_t *) PreferPSRAMAlloc( CRC_LENGTH * sizeof(uint32_t) );
+        // Note: placing the world in PSRAM is possible, but its not made for random
+        // access.  SPI prefers sequential, so just as we don't use it for decompression,
+        // we don't use it to hold the Life world either, as it's very random-access.
+
+        world     = std::make_unique<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
+        checksums.reset(psram_allocator<uint32_t>().allocate(CRC_LENGTH));
+
         return true;
     }
     

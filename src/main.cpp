@@ -198,6 +198,8 @@ DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                 
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
 
+extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
+
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
 // 
@@ -292,7 +294,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {    
-    debugI(">> NetworkHandlingLoopEntry\n");
+    //debugI(">> NetworkHandlingLoopEntry\n");
 
 #if ENABLE_WIFI
     if(!MDNS.begin("esp32")) {
@@ -319,36 +321,35 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 }
             }
 
-            EVERY_N_SECONDS(60)
-            {
-                // Get Subscriber Count
+            // Get Subscriber Count when wifi first connects, then every 60 seconds (or whatever the interval is set to)
 
+            #if (SUB_CHECK_INTERVAL > 0)
                 if (WiFi.isConnected())
                 {
-                    #if USE_MATRIX
-                    static uint64_t     _NextRunTime = millis();
-                    if (millis() > _NextRunTime)
-                    {
-                        debugV("Fetching YouTube Data...");
+                    static int millisLastCheck = 0;
+                    static bool succeededBefore = false;
 
+                    // If we've never succeeded, we try every 20 seconds, but then we settle down to the SUBCHECK_INTERVAL
+                    if (millisLastCheck == 0 || (!succeededBefore && (millis() - millisLastCheck > 60000)) || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
+                    {
+                        millisLastCheck = millis();
                         sight._debug = false;
+
+                        // Use the YouTubeSight API call to get the current channel stats
+
                         if (sight.getData())
                         {
-                            debugV("Got YouTube Data...");
-                            long result = atol(sight.channelStats.subscribers_count.c_str());
-                            PatternSubscribers::cSubscribers = result;
-                            _NextRunTime = millis() + SUB_CHECK_INTERVAL;
-                            PatternSubscribers::cViews = atol(sight.channelStats.views.c_str());
+                            PatternSubscribers::cSubscribers = atol(sight.channelStats.subscribers_count.c_str());
+                            PatternSubscribers::cViews       = atol(sight.channelStats.views.c_str());
+                            succeededBefore = true;
                         }
                         else
                         {
                             debugW("YouTubeSight Subscriber API failed\n");
-                            _NextRunTime = millis() + SUB_CHECK_ERROR_INTERVAL;
                         }
                     }
-                    #endif
-                }                
-            }
+                }
+            #endif
         #endif
 
 
@@ -358,9 +359,8 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 if (WiFi.isConnected())
                 {
                     debugV("Refreshing Time from Server...");
-                    digitalWrite(BUILTIN_LED_PIN, 1);
                     NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-                    digitalWrite(BUILTIN_LED_PIN, 0);
+                    
                 }
             }
         #endif     
@@ -474,6 +474,11 @@ void setup()
     // Initialize Serial output
     Serial.begin(115200);      
 
+    uzlib_init();
+
+    if (!SPIFFS.begin(true)) 
+        Serial.println("WARNING: SPIFFs could not be intialized!");
+
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
 
@@ -486,8 +491,10 @@ void setup()
     PrintOutputHeader();
     debugI("Startup!");
 
-    delay(100);
-    
+    debugI("Starting DebugLoopTaskEntry");
+    g_TaskManager.StartDebugThread();
+    CheckHeap();
+
     // Start Debug
 
 #if ENABLE_WIFI
@@ -523,10 +530,6 @@ void setup()
         WiFi_password = cszPassword;
         WiFi_ssid     = cszSSID;
     }
-
-    debugI("Starting DebugLoopTaskEntry");
-    g_TaskManager.StartDebugThread();
-    CheckHeap();
 
 #endif
 
@@ -600,6 +603,8 @@ void setup()
     extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
 
+    // Set up bitmap drawing for those that need it
+
     // Without these two magic lines, you get no picture, which is pretty annoying...
     
     #ifndef TFT_BL
@@ -630,6 +635,10 @@ void setup()
 
 #endif
 
+    #if USE_MATRIX
+        LEDMatrixGFX::StartMatrix();
+    #endif
+
     // Initialize the strand controllers depending on how many channels we have
 
     #ifdef USESTRIP
@@ -644,6 +653,9 @@ void setup()
             g_aptrDevices[i]->loadPalette(0);
         }
     #endif
+
+    TJpgDec.setJpgScale(1);
+    TJpgDec.setCallback(bitmap_output);        
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -676,12 +688,7 @@ void setup()
     CheckHeap();
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
-
-    #if USE_MATRIX
-        LEDMatrixGFX::StartMatrix();
-    #endif
-
-        // Onboard PWM LED 
+    // Onboard PWM LED 
 
     #if ONBOARD_LED_R
         ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
@@ -742,9 +749,6 @@ void setup()
            
         #ifdef POWER_LIMIT_MW
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
-            #ifdef LED_BUILTIN
-                set_max_power_indicator_LED(LED_BUILTIN);
-            #endif
         #endif
 
             g_Brightness = 255;
@@ -758,69 +762,64 @@ void setup()
         #endif
     #endif
 
-
-    pinMode(BUILTIN_LED_PIN, OUTPUT);
+    debugI("Initializing effects manager...");
+    InitEffectsManager();
 
     // Microphone stuff
     #if ENABLE_AUDIO    
         pinMode(INPUT_PIN, INPUT);
+        // The audio sampler task might as well be on a different core from the LED stuff
+        g_TaskManager.StartAudioThread();
+        CheckHeap();
     #endif
 
-    debugI("Initializing effects manager...");
-    InitEffectsManager();
+    #if USE_SCREEN
+        g_TaskManager.StartScreenThread();
+    #endif
 
-#if USE_SCREEN
-    g_TaskManager.StartScreenThread();
-#endif
+    // Init the zlib compression
+
+    debugV("Initializing compression...");
+    CheckHeap();
+
+    #if ENABLE_WIFI
+        g_TaskManager.StartNetworkThread();
+        CheckHeap();
+    #endif
+
+    #if ENABLE_REMOTE
+        // Start Remote Control
+        g_TaskManager.StartRemoteThread();
+        CheckHeap();
+    #endif
+
+    #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+        g_TaskManager.StartSocketThread();
+    #endif
+
+    #if ENABLE_AUDIOSERIAL
+        // The audio sampler task might as well be on a different core from the LED stuff
+        g_TaskManager.StartSerialThread();
+        CheckHeap();
+    #endif
+
+    debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
+    CheckHeap();
 
     debugI("Launching Drawing:");
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
     g_TaskManager.StartDrawThread();
     CheckHeap();
 
-#if ENABLE_WIFI && WAIT_FOR_WIFI
-    debugI("Calling ConnectToWifi()\n");
-    if (false == ConnectToWiFi(99))
-    {
-        debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
-        throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
-    }
-    Debug.setSerialEnabled(true);
-#endif
-
-    // Init the zlib compression
-
-    debugV("Initializing compression...");
-    uzlib_init();
-    CheckHeap();
-
-#if ENABLE_REMOTE
-    // Start Remote Control
-    g_TaskManager.StartRemoteThread();
-    CheckHeap();
-#endif
-
-    g_TaskManager.StartNetworkThread();
-    CheckHeap();
-
-#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
-    g_TaskManager.StartSocketThread();
-#endif
-
-#if ENABLE_AUDIO
-    // The audio sampler task might as well be on a different core from the LED stuff
-    g_TaskManager.StartAudioThread();
-    CheckHeap();
-#endif
-
-#if ENABLE_AUDIOSERIAL
-    // The audio sampler task might as well be on a different core from the LED stuff
-    
-    CheckHeap();
-#endif
-
-    debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
-    CheckHeap();
+    #if ENABLE_WIFI && WAIT_FOR_WIFI
+        debugI("Calling ConnectToWifi()\n");
+        if (false == ConnectToWiFi(99))
+        {
+            debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
+            throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
+        }
+        Debug.setSerialEnabled(true);
+    #endif
 }
 
 // loop - main execution loop
@@ -853,40 +852,38 @@ void loop()
 
         EVERY_N_SECONDS(5)
         {
-            #if ENABLE_AUDIO && ENABLE_WIFI
-                debugI("Wifi: %s, IP: %s, Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
-                        WLtoString(WiFi.status()), WiFi.localIP().toString().c_str(), // Wifi
-                        ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
-                        g_FPS, g_Watts, g_Brite, // LED
-                        g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
-                        g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
-                        g_FreeDrawTime);
-            #elif ENABLE_AUDIO // Implied !ENABLE_WIFI from 1st condition
-                debugI("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, Buffer: %d/%d, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, Audio FPS: %d, Serial FPS: %d, PeakVU: %0.2lf, MinVU: %0.2lf, VURatio: %0.2lf, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
-                    ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
-                    g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), // Buffer
-                    g_FPS, g_Watts, g_Brite, // LED
-                    g_Analyzer._AudioFPS, g_Analyzer._serialFPS, g_Analyzer._PeakVU, g_Analyzer._MinVU, g_Analyzer._VURatio, // Audio
-                    g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), 
-                    g_FreeDrawTime);
-            #elif ENABLE_WIFI // Implied !ENABLE_AUDIO from 1st condition
-                debugI("Wifi: %s, IP: %s, Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, Buffer: %d/%d, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
-                   WLtoString(WiFi.status()), WiFi.localIP().toString().c_str(), // Wifi
-                   ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize(), // Mem
-                   g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), // Buffer
-                   g_FPS, g_Watts, g_Brite, // LED
-                   g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1),  // CPU
-                   g_FreeDrawTime); // FreeDraw
-            #else
-                debugI("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, Buffer: %d/%d, LED FPS: %d, LED Watt: %d, LED Brite: %0.0lf%%, CPU: %02.0f%%, %02.0f%%, FreeDraw: %lf",
-                   ESP.getFreeHeap(), // Mem
-                   ESP.getMaxAllocHeap(), // LargestBlk
-                   ESP.getFreePsram(), ESP.getPsramSize(), // PSRAM
-                   g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), // Buffer
-                   g_FPS, g_Watts, g_Brite, // LED
-                   g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1),  // CPU
-                   g_FreeDrawTime); // FreeDraw
+            String strOutput;
+
+            #if ENABLE_WIFI
+                strOutput += str_sprintf("WiFi: %s, IP: %s, ", WLtoString(WiFi.status()), WiFi.localIP().toString().c_str());
             #endif
+
+            strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
+            strOutput += str_sprintf("LED FPS: %d ", g_FPS);
+
+            #if USE_STRIP
+                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Watts, g_Brite);
+            #endif
+
+            #if USE_MATRIX
+                strOutput += str_sprintf("Refresh: %d Hz, ", LEDMatrixGFX::matrix.getRefreshRate());
+            #endif
+
+            #if ENABLE_AUDIO
+                strOutput += str_sprintf("Audio FPS: %d, MinVU: %6.1f, PeakVU: %6.1f, VURatio: %3.1f ", g_Analyzer._AudioFPS, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
+            #endif
+
+            #if ENABLE_SERIAL
+                strOutput += str_sprintf("Serial FPS: %d, ", g_Analyzer._serialFPS);
+            #endif
+
+            #if INCOMING_WIFI_ENABLED
+                strOutput += str_sprintf("Buffer: %d/%d, ", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount());
+            #endif
+
+            strOutput += str_sprintf("CPU: %02.0f%%, %02.0f%%, FreeDraw: %4.3lf", g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            
+            Serial.println(strOutput);
         }
 
         delay(1);        

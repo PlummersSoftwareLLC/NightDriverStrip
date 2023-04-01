@@ -49,6 +49,10 @@ extern DRAM_ATTR AppTime g_AppTime;
 //
 // When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
 // of them is still in base ram.
+//
+// (Davepl - I opted to make this *prefer* psram but return regular ram otherwise. It
+//           avoids a lot of ifdef USE_PSRAM in the code.  But I've only proved it
+//           correct, not tried it on a chip without yet.
 
 template <typename T>
 class psram_allocator
@@ -74,7 +78,10 @@ public:
 
     pointer allocate(size_type n, const void * hint = 0)
     {
-        return static_cast<pointer>(ps_malloc(n*sizeof(T)));
+        void * pmem = ps_malloc(n*sizeof(T));
+        if (nullptr == pmem)
+            pmem = malloc(n*sizeof(T));
+        return static_cast<pointer>(pmem) ;
     }
 
     void deallocate(pointer p, size_type n)
@@ -124,8 +131,7 @@ class LEDBuffer
             _leds = std::make_unique<CRGB []>(NUM_LEDS);
         #endif
 
-
-        for (int i = 0; i < ARRAYSIZE(_leds); i++)
+        for (int i = 0; i < NUM_LEDS; i++)
             _leds[i] = CRGB::Yellow;
     }
 

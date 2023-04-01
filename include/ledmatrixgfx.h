@@ -62,7 +62,7 @@ public:
     static const uint8_t kRefreshDepth = COLOR_DEPTH;                                   // known working: 24, 36, 48
     static const uint8_t kDmaBufferRows = 4;                                            // known working: 2-4, use 2 to save memory, more to keep from dropping frames and automatically lowering refresh rate
     static const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;                // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
-    static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING); // see http://docs.pixelmatix.com/SmartMatrix for options
+    static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING /* | SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1 */); // see http://docs.pixelmatix.com/SmartMatrix for options
     static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
     static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
     static const rgb24 defaultBackgroundColor;

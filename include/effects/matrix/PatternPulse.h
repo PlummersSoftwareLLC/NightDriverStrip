@@ -139,20 +139,20 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
   public:
 
-    PatternPulsar(double lowLatch = 1, double highLatch = 1, double minElapsed = 0.00) :
-        BeatEffectBase(1.95, 0.25 ),
+    PatternPulsar() :
+        BeatEffectBase(1.5, 0.1 ),
         LEDStripEffect("Pulsars")
     {
     }
     
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 50;
+        return 30;
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
-        if (span > 1.95)
+        if (span > 1.5)
         {
             for (int i = 0; i < random(2)+2; i ++)
                 _pops.push_back( PulsePop() );            
@@ -163,24 +163,25 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
             small.maxSteps = random(12)+4;
             _pops.push_back( small );
         }
+        
     }
 
     virtual void Draw()
     {
         ProcessAudio();
-        
         //VUMeterEffect::DrawVUMeter(graphics, 0);
         //blur2d(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 25);
-        fadeAllChannelsToBlackBy(20);
+        fadeAllChannelsToBlackBy(10);
 
         // Add some sparkle
 
-        const int maxNewStarsPerFrame = 4;
+        const int maxNewStarsPerFrame = 8;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
             if (random(4) < g_Analyzer._VURatio)
                 graphics()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
 
-        for (auto pop = _pops.begin(); pop != _pops.end(); pop++)
+
+        for (auto pop = _pops.begin(); pop != _pops.end();)
         {
             if (pop->step == -1)
             {
@@ -194,24 +195,27 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
             {
                 graphics()->drawCircle(pop->centerX, pop->centerY, pop->step, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue)));
                 pop->step++;
+                pop++;
             }
             else
             {
                 if (pop->step < pop->maxSteps)
                 {
                     // initial pulse
-                    graphics()->drawCircle(pop->centerX, pop->centerY, pop->step, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                    graphics()->drawCircle(pop->centerX, pop->centerY, pop->step, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
 
                     // secondary pulse
                     if (pop->step > 3)
-                    {
                         graphics()->drawCircle(pop->centerX, pop->centerY, pop->step - 3, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
-                    }
-                    pop->step++;
+                    
+                    // This looks like PDP-11 code to me.  Double post-inc for the win!
+                    pop++->step++;
                 }
                 else
                 {
-                    _pops.erase(pop--);
+                    // We remove the pulsar and do not increment the pop in the loop
+                    // because we just deleted the current position
+                    _pops.erase(pop);
                 }
             }
         }

@@ -69,10 +69,14 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         {
             static uint64_t lastFrame = millis();
             g_Analyzer._AudioFPS = FPS(lastFrame, millis());
-            static double lastVU = 0.0;
+
+            g_Analyzer.RunSamplerPass();
+            g_Analyzer.UpdatePeakData();        
+            g_Analyzer.DecayPeaks();
 
             // VURatio with a fadeout
 
+            static double lastVU = 0.0;
             constexpr auto VU_DECAY_PER_SECOND = 3.0;
             if (g_Analyzer._VURatio > lastVU)
                 lastVU = g_Analyzer._VURatio;
@@ -83,10 +87,6 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
             g_Analyzer._VURatioFade = lastVU;
 
             lastFrame = millis();
-
-            g_Analyzer.RunSamplerPass();
-            g_Analyzer.UpdatePeakData();        
-            g_Analyzer.DecayPeaks();
 
             // Instantaneous VURatio
 
@@ -99,7 +99,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
             const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
             delay(elapsed >= targetDelay ? 1 : targetDelay - elapsed);
         }
-        yield();
+        delay(1);
     }
 }
 

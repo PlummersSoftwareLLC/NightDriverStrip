@@ -1,7 +1,6 @@
-#!/Users/dave/.platformio/penv/bin/python
 ##+--------------------------------------------------------------------------
 ##
-## socketdata - (c) 2023 Dave Plummer.  All Rights Reserved.
+## audioserver - (c) 2023 Dave Plummer.  All Rights Reserved.
 ##
 ## File:        audioserver.py - Pushes Audio FFT data to NightDriverStrip
 ##
@@ -23,19 +22,25 @@ import sys
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.197'        
+client = '192.168.8.164'        
 
 # Set up audio input stream. 512@24000 gives a nice framerate.  And 512
 # is what I run on the ESP32 if connected via hardware mic, so at least it matches
 
 chunk_size   = 512
-sample_rate  = 24000
-max_freq     = 12000
-num_bands    = 12
+sample_rate  = 44100
+max_freq     = 20000
+num_bands    = 16
 
 # Correction I apply to get a mostly linear response across the bands.  
 
-band_scalars = [ 0.25, 0.25, 0.125, 0.1, 0.3, 0.3, 1.5, 1.5, 1.75, 2.0, 3.0, 8.0 ]
+# band_scalars = [ 0.25, 0.25, 0.125, 0.1, 0.3, 0.3, 1.5, 1.5, 1.75, 2.0, 3.0, 8.0 ]
+
+if num_bands == 16:
+    band_scalars = [ 0.35, 0.20, 0.125, 0.1, 0.5, 1.2, 1.7, 2.0, 2.1, 2.75, 2.0, 8.0, 8.0, 8.0, 8.0, 8.0 ]
+else:
+    if num_bands == 12:
+        band_scalars = [ 1.0, 1.0, 1.0, 1.0, 0.01, 0.01, 0.01, 0.1, 0.1, 0.1, 0.1, 1.0 ]
 
 # Open the audio stream.  I'm reading from the mic here because I could not find a system independent
 # way to read from the default output device, which would normally require a loopback instance be 
@@ -82,9 +87,8 @@ while True:
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         sock.setblocking(True);
 
-    # Clear out the audio buffer so we start fresh each frame
-
-    # Read the raw audio data
+    # Read the raw audio data.  We ignore overflow exceptions from not accepting every bit, it's ok if
+    # miss a few in betweeen samples
     audio_data = np.frombuffer(stream.read(chunk_size, exception_on_overflow=False), dtype=np.float32)
     
     # Compute the FFT to put the samples into frequency
@@ -119,6 +123,8 @@ while True:
     print(bargraphs)
     sys.stdout.write('*')
 
+    # Compose and send the PEAKDATA packet to be sent to the ESP32 NightDriverStrip instance
+
     packed_data = struct.pack('f' * len(scaled_values), *scaled_values)
     command = 4
     length32 = 4 * num_bands
@@ -140,6 +146,6 @@ while True:
         sock.close()
         sock = None
     
-    time.sleep(0.02);
+    time.sleep(0.015);
 
 sock.close()

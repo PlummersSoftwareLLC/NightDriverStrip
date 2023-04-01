@@ -194,13 +194,13 @@ class FadingPaletteObject : public FadingObject
 {
   protected:
 
-    const CRGBPalette256 & _palette;
+    const CRGBPalette16 & _palette;
     const TBlendType       _blendType = NOBLEND;
     uint8_t                _colorIndex;
 
   public:
 
-    FadingPaletteObject(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, uint8_t colorIndex =  0)
+    FadingPaletteObject(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, uint8_t colorIndex =  0)
       : _palette(palette),
         _blendType(blendType),
         _colorIndex(colorIndex)
@@ -246,7 +246,7 @@ class MovingFadingPaletteObject: public FadingPaletteObject, public MovingObject
 {
   public:
 
-    MovingFadingPaletteObject(const CRGBPalette256 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, uint8_t colorIndex = random8())
+    MovingFadingPaletteObject(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, uint8_t colorIndex = random8())
       : FadingPaletteObject(palette, blendType, colorIndex), 
         MovingObject(maxSpeed)
     {
@@ -481,7 +481,7 @@ class SpinningPaletteRingParticle : public FadingObject
           std::shared_ptr<GFXBase> * _pGFX;
           int             _iInsulator;
           int             _iRing;
-    const CRGBPalette256  _palette;
+    const CRGBPalette16  _palette;
           int             _length;
           int             _start;
     const float           _density;
@@ -503,7 +503,7 @@ class SpinningPaletteRingParticle : public FadingObject
                   std::shared_ptr<GFXBase> * pGFX,                  // BUGBUG Remove and use what is passed to Render
                   int                    iInsulator, 
                   int                    iRing, 
-                  const CRGBPalette256 & palette, 
+                  const CRGBPalette16 & palette, 
                   float                  density = 4.0,                
                   float                  paletteSpeed = 0.25, 
                   float                  ledsPerSecond = 0.1, 
@@ -684,12 +684,12 @@ class HotWhiteRingParticle : public FadingObject
 class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffectBase, public virtual ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
-    const CRGBPalette256 & _Palette;
+    const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
-    MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette256 & Palette)
+    MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
       : LEDStripEffect(strName),
         BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
@@ -753,12 +753,12 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
 class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
-    const CRGBPalette256 & _Palette;
+    const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
-    NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette256 & Palette)
+    NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
       : LEDStripEffect(strName),
         BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
@@ -822,12 +822,12 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
-    const CRGBPalette256 & _Palette;
+    const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
-    SparklySpinningMusicEffect(const String & strName, const CRGBPalette256 & Palette)
+    SparklySpinningMusicEffect(const String & strName, const CRGBPalette16 & Palette)
       : LEDStripEffect(strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
     {
 
