@@ -59,7 +59,7 @@ static const char * pszWeatherIcons[] = {   "",                                 
                                             "",
                                             ""
                                             "/bmp/showerrain.jpg",              // 09
-                                            "/bmp/rain/jpg",                    // 10
+                                            "/bmp/rain.jpg",                    // 10
                                             "/bmp/thunderstorm.jpg",            // 11
                                             "",
                                             "/bmp/snow.jpg",                    // 13
@@ -97,12 +97,12 @@ private:
 
     inline float KelvinToFarenheit(float K)
     {
-        return (K - 273.15) * 9.0f/5.0f + 32;    
+        return (K - 273.15) * 9.0f/5.0f + 32;
     }
 
     inline float KelvinToCelcius(float K)
     {
-        return K * 9.0f/5.0f + 32;    
+        return K - 273.15;
     }
     
     inline float KelvinToLocal(float K)
@@ -120,10 +120,10 @@ private:
     //
     // Request a forecast and then parse out the high and low temps for tomorrow
 
-    bool getTomorrowTemps(const String &zipCode, float& highTemp, float& lowTemp) 
+    bool getTomorrowTemps(const String &zipCode, const String &countryCode, float& highTemp, float& lowTemp) 
     {
         HTTPClient http;
-        String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + ",us&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + "," + countryCode + "&appid=" + cszOpenWeatherAPIKey;
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -180,11 +180,11 @@ private:
     //
     // Get the current temp and the high and low for today
 
-    bool getWeatherData(const String &zipCode)
+    bool getWeatherData(const String &zipCode, const String &countryCode)
     {
         HTTPClient http;
 
-        String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + ",us&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + "," + countryCode + "&appid=" + cszOpenWeatherAPIKey;
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -212,7 +212,7 @@ private:
         }
         else
         {
-            debugW("Error fetching Weather data for zip: %s", zipCode);
+            debugW("Error fetching Weather data for zip: %s in country: %s", zipCode, countryCode);
             http.end();
             return false;
         }
@@ -224,10 +224,10 @@ private:
     static void UpdateWeather(void * pv)
     {
         PatternWeather * pObj = (PatternWeather *) pv;
-        if (pObj->getWeatherData(cszZipCode))
+        if (pObj->getWeatherData(cszZipCode, cszCountryCode))
         {
             debugW("Got today's weather");
-            if (pObj->getTomorrowTemps(cszZipCode, pObj->highTomorrow, pObj->loTomorrow))
+            if (pObj->getTomorrowTemps(cszZipCode, cszCountryCode, pObj->highTomorrow, pObj->loTomorrow))
                 debugI("Got tomorrow's weather");
             else
                 debugW("Failed to get tomorrow's weather");

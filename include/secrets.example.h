@@ -35,6 +35,7 @@
 #define cszHostname   "NightDriverStrip"
 #define cszOpenWeatherAPIKey ""             // Your OpenWeatherMap APIKEY Goes Here
 #define cszZipCode    "98074"
+#define cszCountryCode "us"                 // Look up the Alpha-2 code for your country at https://www.iban.com/country-codes
 
 // define the NTP server to connect too (replace . [dots] in IP addresses with , [commas])
 #define cszNTPServer  94, 199, 173, 123     // 0.pool.ntp.org
