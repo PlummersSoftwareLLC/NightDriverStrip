@@ -47,9 +47,10 @@ jobs:
         grep -v ^default_envs platformio.ini.orig > platformio.ini
         pio run
 
-    - name: Build WebInstaller
+    - name: Build WebInstaller and dependencies
       if: ${{ env.ENABLE_PAGES_PUSH == 'true' }}
       run: | 
+        pio run -t buildfs
         python tools/bake_installer.py
         touch WebInstaller/.nojekyll
 
