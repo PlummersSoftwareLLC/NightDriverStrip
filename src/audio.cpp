@@ -33,11 +33,7 @@
 // The SoundAnalyzer is present even when Audio is not defined, but it then a mere stub class
 // with a few stats fields. In the Audio case, it's the full class
 
-#if ENABLE_AUDIO
-    SoundAnalyzer g_Analyzer(INPUT_PIN);                    // Dummy stub class in non-audio case
-#else
-    SoundAnalyzer g_Analyzer;                               // Real AudioAnalyzer in audio case
-#endif
+SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio case, real in audio case
 
 #if ENABLE_AUDIO
 
@@ -61,7 +57,9 @@ float PeakData::_allBandsMax = 1.0;
 void IRAM_ATTR AudioSamplerTaskEntry(void *)
 {
 
-    debugI(">>> Sampler Task Started");
+    // debugI(">>> Sampler Task Started");
+
+    g_Analyzer.SampleBufferInitI2S();
 
     for (;;)
     {

@@ -282,7 +282,7 @@ void CurrentEffectSummary(bool bRedraw)
             // get effect name length and switch text size accordingly
             int effectnamelen = g_aptrEffectManager->GetCurrentEffectName().length();
 
-#if M5STICKCPLUS
+#if M5STICKCPLUS || M5STACKCORE2
             Screen::setTextSize(Screen::MEDIUM);
 #else
             Screen::setTextSize(Screen::SMALL);
@@ -293,7 +293,7 @@ void CurrentEffectSummary(bool bRedraw)
             Screen::setTextSize(Screen::SMALL);
 
             String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
-#if M5STICKCPLUS
+#if M5STICKCPLUS || M5STACKCORE2
             sIP += " - NightDriverLED.com";
 #endif
             Screen::setTextColor(YELLOW16, backColor);
@@ -356,7 +356,7 @@ void CurrentEffectSummary(bool bRedraw)
 
     // Draw horizontal lines so the bars look like they are made of segments
 
-    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += 5)
+    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += Screen::screenHeight() / 25)
         Screen::drawLine(0, iLine, Screen::screenWidth(), iLine, BLACK16);
 #endif
 }
@@ -419,7 +419,7 @@ extern Bounce2::Button Button2;
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 {
-    debugI(">> ScreenUpdateLoopEntry\n");
+    //debugI(">> ScreenUpdateLoopEntry\n");
 
 #if USE_OLED
     g_pDisplay->setDisplayRotation(SCREEN_ROTATION);

@@ -245,7 +245,7 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
 #if ENABLE_WIFI
 void IRAM_ATTR DebugLoopTaskEntry(void *)
 {    
-    debugI(">> DebugLoopTaskEntry\n");
+    //debugI(">> DebugLoopTaskEntry\n");
 
    // Initialize RemoteDebug
 
@@ -543,7 +543,9 @@ void setup()
     #endif
 
     #if ENABLE_AUDIO
-        pinMode(INPUT_PIN, INPUT);
+        #if INPUT_PIN
+            pinMode(INPUT_PIN, INPUT);
+        #endif
         #if TTGO                                    
             pinMode(37, OUTPUT);            // This pin layout allows for mounting a MAX4466 to the backside
             digitalWrite(37, LOW);          //   of a TTGO with the OUT pin on 36, GND on 37, and Vcc on 38
@@ -584,11 +586,12 @@ void setup()
     g_pDisplay->fillScreen(TFT_GREEN);
 #endif
 
-#if M5STICKC || M5STICKCPLUS
+#if M5STICKC || M5STICKCPLUS || M5STACKCORE2
     #if USE_M5DISPLAY
         debugI("Intializizing TFT display\n");
         extern M5Display * g_pDisplay;
         M5.begin();
+        M5.Lcd.fillScreen(BLUE16);
         g_pDisplay = &M5.Lcd;
         g_pDisplay->setRotation(1);
         g_pDisplay->setTextDatum(C_BASELINE);
@@ -861,7 +864,7 @@ void loop()
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_FPS);
 
-            #if USE_STRIP
+            #if USESTRIP
                 strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Watts, g_Brite);
             #endif
 

@@ -119,7 +119,9 @@
 #define FLASH_VERSION         36    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
-#define USESTRIP 1
+    #ifndef USESTRIP
+        #define USESTRIP 1
+    #endif
 #endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
@@ -149,14 +151,17 @@
 // with one (but it doesn't have to be used!).
 
 #if M5STICKC
-#define LED_BUILTIN 10                          // Not defined by the M5 headers, but it seems to be PIN 10
 #include "M5StickC.h"
 #undef min                                      // They define a min() on us
 #endif
 
 #if M5STICKCPLUS
-#define LED_BUILTIN 10                          // Not defined by the M5 headers, but it seems to be PIN 10
 #include "M5StickCPlus.h"
+#undef min                                      // They define a min() on us
+#endif
+
+#if M5STACKCORE2
+#include "M5Core2.h"
 #undef min                                      // They define a min() on us
 #endif
 
@@ -250,7 +255,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
-    #if M5STICKC || M5STICKCPLUS
+    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -839,7 +844,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
-    #define MAX_BUFFERS             10
+    #if USE_PSRAM
+        #define MAX_BUFFERS         500
+    #else
+        #define MAX_BUFFERS         10
+    #endif
         
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
@@ -1262,9 +1271,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
-    #elif M5STICKC                                           // screen definitions for m5stick-c (or m5stick-c plus)
+    #elif M5STICKC                                            // screen definitions for m5stick-c (or m5stick-c plus)
 
-        #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
+        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
+
+    #elif M5STACKCORE2                                        // screen definitions for m5stick-c (or m5stick-c plus)
+
+        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
     #elif ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
 
@@ -1278,8 +1291,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif M5STACKCORE2
-        #define  USE_M5DISPLAY 1       
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
@@ -1366,7 +1377,10 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
     #ifndef INPUT_PIN
         #if TTGO
             #define INPUT_PIN (36)   
-        #elif M5STICKC || M5STICKCPLUS
+        #elif M5STACKCORE2
+            #define INPUT_PIN (0)
+            #define IO_PIN    (0)
+        #elif M5STICKC || M5STICKCPLUS 
             #define INPUT_PIN (34)   
             #define IO_PIN (0)
         #else

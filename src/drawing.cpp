@@ -366,7 +366,7 @@ void ShowOnboardPixel()
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
 
-    debugW(">> DrawLoopTaskEntry\n");
+    //debugW(">> DrawLoopTaskEntry\n");
 
     // Initialize our graphics and the first effect
 

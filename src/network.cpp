@@ -190,7 +190,7 @@ extern RemoteControl g_RemoteControl;
 
 void IRAM_ATTR RemoteLoopEntry(void *)
 {
-    debugW(">> RemoteLoopEntry\n");
+    //debugW(">> RemoteLoopEntry\n");
 
     g_RemoteControl.begin();
     while (true)
