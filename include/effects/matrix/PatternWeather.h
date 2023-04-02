@@ -81,6 +81,7 @@ private:
     float  highTomorrow          = 0.0f;
     float  loTomorrow            = 0.0f;
 
+    bool   dataReady             = false;
     TaskHandle_t weatherTask     = nullptr;
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
@@ -97,12 +98,12 @@ private:
 
     inline float KelvinToFarenheit(float K)
     {
-        return (K - 273.15) * 9.0f/5.0f + 32;    
+        return (K - 273.15) * 9.0f/5.0f + 32;
     }
 
     inline float KelvinToCelcius(float K)
     {
-        return K * 9.0f/5.0f + 32;    
+        return K - 273.15;
     }
     
     inline float KelvinToLocal(float K)
@@ -120,10 +121,10 @@ private:
     //
     // Request a forecast and then parse out the high and low temps for tomorrow
 
-    bool getTomorrowTemps(const String &zipCode, float& highTemp, float& lowTemp) 
+    bool getTomorrowTemps(const String &zipCode, const String &countryCode, float& highTemp, float& lowTemp) 
     {
         HTTPClient http;
-        String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + "," + cszCountryCode + "&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + "," + countryCode + "&appid=" + cszOpenWeatherAPIKey;
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -180,11 +181,11 @@ private:
     //
     // Get the current temp and the high and low for today
 
-    bool getWeatherData(const String &zipCode)
+    bool getWeatherData(const String &zipCode, const String &countryCode)
     {
         HTTPClient http;
 
-        String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + "," cszCountryCode + "&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + "," + countryCode + "&appid=" + cszOpenWeatherAPIKey;
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -193,6 +194,11 @@ private:
             String weatherData = http.getString();
             DynamicJsonDocument jsonDoc(4096);
             deserializeJson(jsonDoc, weatherData);
+
+            // Once we have a non-zero temp we can start displaying things
+            if (0 < jsonDoc["main"]["temp"])
+                dataReady = true;
+
             temperature = KelvinToLocal(jsonDoc["main"]["temp"]);
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
@@ -212,7 +218,7 @@ private:
         }
         else
         {
-            debugW("Error fetching Weather data for zip: %s", zipCode);
+            debugW("Error fetching Weather data for zip: %s in country: %s", zipCode, countryCode);
             http.end();
             return false;
         }
@@ -224,10 +230,10 @@ private:
     static void UpdateWeather(void * pv)
     {
         PatternWeather * pObj = (PatternWeather *) pv;
-        if (pObj->getWeatherData(cszZipCode))
+        if (pObj->getWeatherData(cszZipCode, cszCountryCode))
         {
             debugW("Got today's weather");
-            if (pObj->getTomorrowTemps(cszZipCode, pObj->highTomorrow, pObj->loTomorrow))
+            if (pObj->getTomorrowTemps(cszZipCode, cszCountryCode, pObj->highTomorrow, pObj->loTomorrow))
                 debugI("Got tomorrow's weather");
             else
                 debugW("Failed to get tomorrow's weather");
@@ -304,15 +310,21 @@ public:
         graphics()->setCursor(x, y);
         graphics()->setTextColor(WHITE16);
         strLocation.toUpperCase();
-        graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation.substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
+        if (strlen(cszOpenWeatherAPIKey) == 0)
+            graphics()->print("No API Key");
+        else
+            graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation.substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
 
         // Display the temperature, right-justified
 
-        String strTemp((int)temperature);
-        x = MATRIX_WIDTH - fontWidth * strTemp.length();
-        graphics()->setCursor(x, y);
-        graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
-        graphics()->print(strTemp);
+        if (dataReady)
+        {
+            String strTemp((int)temperature);
+            x = MATRIX_WIDTH - fontWidth * strTemp.length();
+            graphics()->setCursor(x, y);
+            graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
+            graphics()->print(strTemp);
+        }
 
         // Draw the separator lines
 
@@ -339,34 +351,36 @@ public:
 
         // Draw the temperature in lighter white
 
-        graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
-        String strHi((int) highToday);
-        String strLo((int) loToday);
+        if (dataReady)
+        {
+            graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
+            String strHi((int) highToday);
+            String strLo((int) loToday);
         
-        // Draw today's HI and LO temperatures
+            // Draw today's HI and LO temperatures
 
-        x = xHalf - fontWidth * strHi.length();
-        y = MATRIX_HEIGHT - fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strHi);
-        x = xHalf - fontWidth * strLo.length();
-        y+= fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strLo);
+            x = xHalf - fontWidth * strHi.length();
+            y = MATRIX_HEIGHT - fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strHi);
+            x = xHalf - fontWidth * strLo.length();
+            y+= fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strLo);
 
-        // Draw tomorrow's HI and LO temperatures
+            // Draw tomorrow's HI and LO temperatures
 
-        strHi = String((int)highTomorrow);
-        strLo = String((int)loTomorrow);
-        x = MATRIX_WIDTH - fontWidth * strHi.length();
-        y = MATRIX_HEIGHT - fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strHi);
-        x = MATRIX_WIDTH - fontWidth * strLo.length();
-        y+= fontHeight;
-        graphics()->setCursor(x,y);
-        graphics()->print(strLo);
-
+            strHi = String((int)highTomorrow);
+            strLo = String((int)loTomorrow);
+            x = MATRIX_WIDTH - fontWidth * strHi.length();
+            y = MATRIX_HEIGHT - fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strHi);
+            x = MATRIX_WIDTH - fontWidth * strLo.length();
+            y+= fontHeight;
+            graphics()->setCursor(x,y);
+            graphics()->print(strLo);
+        }
     }
 };
 
