@@ -54,12 +54,12 @@ static const char * pszWeatherIcons[] = {   "",                                 
                                             "/bmp/fewclouds.jpg",               // 02
                                             "/bmp/scatteredclouds.jpg",         // 03
                                             "/bmp/brokenclouds.jpg",            // 04
-                                            "",                                 // Unused slots
+                                            "/bmp/testcloud.jpg",               // Unused slots
                                             "",
                                             "",
                                             ""
                                             "/bmp/showerrain.jpg",              // 09
-                                            "/bmp/rain/jpg",                    // 10
+                                            "/bmp/rain.jpg",                    // 10
                                             "/bmp/thunderstorm.jpg",            // 11
                                             "",
                                             "/bmp/snow.jpg",                    // 13
@@ -123,7 +123,7 @@ private:
     bool getTomorrowTemps(const String &zipCode, float& highTemp, float& lowTemp) 
     {
         HTTPClient http;
-        String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + ",us&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + "," + cszCountryCode + "&appid=" + cszOpenWeatherAPIKey;
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -184,7 +184,7 @@ private:
     {
         HTTPClient http;
 
-        String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + ",us&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + "," cszCountryCode + "&appid=" + cszOpenWeatherAPIKey;
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -280,6 +280,23 @@ public:
             }
         }
 
+
+        // Draw the graphics
+        if (iconToday >= 0)
+        {
+            auto filename = pszWeatherIcons[iconToday];
+            if (strlen(filename))
+                if (JDR_OK != TJpgDec.drawFsJpg(0, 10, filename))        // Draw the image
+                    debugW("Could not display %s", filename);
+        }    
+        if (iconTomorrow >= 0)
+        {
+            auto filename = pszWeatherIcons[iconTomorrow];
+            if (strlen(filename))
+                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+1, 10, filename))        // Draw the image
+                    debugW("Could not display %s", filename);
+        }    
+
         // Print the town/city name, which we looked up via trhe zip code
 
         int x = 0;
@@ -350,23 +367,6 @@ public:
         graphics()->setCursor(x,y);
         graphics()->print(strLo);
 
-        // Draw the graphics
-
-        if (iconToday >= 0)
-        {
-            auto filename = pszWeatherIcons[iconToday];
-            if (strlen(filename))
-                if (JDR_OK != TJpgDec.drawFsJpg(1, 10, filename))        // Draw the image
-                    debugW("Could not display %s", filename);
-        }    
-        if (iconTomorrow >= 0)
-        {
-            auto filename = pszWeatherIcons[iconTomorrow];
-            if (strlen(filename))
-                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+2, 10, filename))        // Draw the image
-                    debugW("Could not display %s", filename);
-        }    
-        delay(10);
     }
 };
 
