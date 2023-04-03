@@ -884,7 +884,7 @@ void loop()
                 strOutput += str_sprintf("Buffer: %d/%d, ", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount());
             #endif
 
-            strOutput += str_sprintf("CPU: %02.0f%%, %02.0f%%, FreeDraw: %4.3lf", g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
             
             Serial.println(strOutput);
         }

@@ -522,7 +522,7 @@ class SoundAnalyzer : public AudioVariables
         // It's hard to know what to use for a "minimum" volume so I aimed for a light ambient noise background
         // just triggering the bottom pixel, and real silence yielding darkness
 
-        allBandsPeak = max(NOISE_FLOOR, allBandsPeak);
+        allBandsPeak = std::max((double)NOISE_FLOOR, allBandsPeak);
         debugV("All Bands Peak: %f", allBandsPeak);
 
         auto multiplier = mapfloat(_VURatio, 0.0, 2.0, 1.5, 1.0);
