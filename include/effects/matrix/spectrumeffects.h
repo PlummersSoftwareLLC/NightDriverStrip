@@ -72,11 +72,11 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         ProcessAudio();
         ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);        
       
-        fadeAllChannelsToBlackBy(min(255.0,2000 * g_AppTime.DeltaTime()));
+        fadeAllChannelsToBlackBy(min(255.0f,2000.0f * g_AppTime.DeltaTime()));
         delay(30);
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         int iInsulator;
         do
@@ -380,7 +380,7 @@ class WaveformEffect : public LEDStripEffect
     const TProgmemRGBPalette16 * _pPalette = nullptr;
     uint8_t                      _iColorOffset = 0;
     uint8_t                      _increment = 0;
-    double                       _iPeakVUy = 0;
+    float                        _iPeakVUy = 0;
     unsigned long                _msPeakVU = 0;
 
   public:
@@ -392,10 +392,10 @@ class WaveformEffect : public LEDStripEffect
         _increment = increment;
     }
 
-    void DrawSpike(int x, double v, bool bErase = true) 
+    void DrawSpike(int x, float v, bool bErase = true) 
     {
-        v = std::min(v, 1.0);
-        v = std::max(v, 0.0);
+        v = std::min(v, 1.0f);
+        v = std::max(v, 0.0f);
 
         auto g = g_aptrEffectManager->graphics();
 
