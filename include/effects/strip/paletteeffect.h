@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include "effects.h"
+
 extern AppTime g_AppTime;
 
 class PaletteEffect : public LEDStripEffect
@@ -59,7 +61,7 @@ class PaletteEffect : public LEDStripEffect
                   TBlendType blend = LINEARBLEND, 
                   bool  bErase = true,
                   float brightness = 1.0)
-      : LEDStripEffect("Palette Effect"),
+      : LEDStripEffect(EFFECT_STRIP_PALETTE, "Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),
@@ -72,7 +74,42 @@ class PaletteEffect : public LEDStripEffect
         _bErase(bErase),
         _brightness(brightness)
     {
-        _paletteIndex = 0.0f;
+    }
+
+    PaletteEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject),
+      _startIndex(0.0f),
+      _paletteIndex(0.0f),
+      _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>())),
+      _density(jsonObject["dns"].as<float>()),
+      _paletteSpeed(jsonObject["psp"].as<float>()),
+      _lightSize(jsonObject["lsz"].as<float>()),
+      _gapSize(jsonObject["gsz"].as<float>()),
+      _LEDSPerSecond(jsonObject["lps"].as<float>()),
+      _blend(static_cast<TBlendType>(jsonObject["bld"].as<int>())),
+      _bErase(jsonObject["ers"].as<bool>()),
+      _brightness(jsonObject["lps"].as<float>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
+        JSONSerializer::SerializeToJSON(paletteObject, _palette);
+        jsonDoc["dns"] = _density;
+        jsonDoc["psp"] = _paletteSpeed;
+        jsonDoc["lsz"] = _lightSize;
+        jsonDoc["gsz"] = _gapSize;
+        jsonDoc["lps"] = _LEDSPerSecond;
+        jsonDoc["bld"] = to_value(_blend);
+        jsonDoc["ers"] = _bErase;
+        jsonDoc["gsz"] = _brightness;
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     ~PaletteEffect()

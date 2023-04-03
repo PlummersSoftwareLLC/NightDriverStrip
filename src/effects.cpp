@@ -28,6 +28,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+#include <map>
 
 #include "effects/strip/fireeffect.h"          // fire effects
 #include "effects/strip/paletteeffect.h"       // palette effects
@@ -41,12 +42,12 @@
 #include "effects/matrix/PatternClock.h"       // No matrix dependencies
 
 #if ENABLE_AUDIO
-#include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
-#include "effects/strip/musiceffect.h"         // Music based effects
+        #include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
+        #include "effects/strip/musiceffect.h"         // Music based effects
 #endif
 
 #if FAN_SIZE
-#include "effects/strip/faneffects.h" // Fan-based effects
+        #include "effects/strip/faneffects.h" // Fan-based effects
 #endif
 
 //
@@ -78,7 +79,7 @@
 #endif
 
 #ifdef USESTRIP
-#include "ledstripgfx.h"
+        #include "ledstripgfx.h"
 #endif
 
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
@@ -316,6 +317,13 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
+
+std::map<int, JsonEffectFactory> g_JsonEffectFactories = 
+{
+        { EFFECT_STRIP_BOUNCING_BALL,           [](const JsonObjectConst&  jsonObject) -> LEDStripEffect* { return new BouncingBallEffect(jsonObject); } },
+        { EFFECT_STRIP_DOUBLE_PALETTE,          [](const JsonObjectConst&  jsonObject) -> LEDStripEffect* { return new DoublePaletteEffect(jsonObject); } },
+
+};
 
 // g_apEffects
 //

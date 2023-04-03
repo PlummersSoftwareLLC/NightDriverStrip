@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "effects.h"
+
 // SimpleRainbowTestEffect
 //
 // Fills the spokes with a rainbow palette, skipping dots as specified
@@ -44,7 +46,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
   public:
   
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
-      : LEDStripEffect("Simple Rainbow"),
+      : LEDStripEffect(EFFECT_STRIP_SIMPLE_RAINBOW, "Simple Rainbow"),
           _EveryNth(everyNthPixel),
           _SpeedDivisor(speedDivisor)
     {
@@ -71,7 +73,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
   public:
   
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect("Rainbow Twinkle"),
+      : LEDStripEffect(EFFECT_STRIP_RAINBOW_TWINKLE, "Rainbow Twinkle"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
@@ -113,7 +115,7 @@ protected:
   public:
     
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect("RainobwFill Rainbow"),
+      : LEDStripEffect(EFFECT_STRIP_RAINBOW_FILL, "RainobwFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
@@ -152,7 +154,7 @@ protected:
   public:
     
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
-      : LEDStripEffect("Color Fill"),
+      : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, "Color Fill"),
         _everyNth(everyNth),
         _color(color)
     {
@@ -177,7 +179,7 @@ class StatusEffect : public LEDStripEffect
   public:
     
     StatusEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
-      : LEDStripEffect("Status Fill"),
+      : LEDStripEffect(EFFECT_STRIP_STATUS, "Status Fill"),
         _everyNth(everyNth),
         _color(color)
     {
@@ -230,7 +232,7 @@ class TwinkleEffect : public LEDStripEffect
   public:
     
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
-      : LEDStripEffect("Twinkle"),
+      : LEDStripEffect(EFFECT_STRIP_TWINKLE, "Twinkle"),
           _countToDraw(countToDraw),
         _fadeFactor(fadeFactor),
         _updateSpeed(updateSpeed)

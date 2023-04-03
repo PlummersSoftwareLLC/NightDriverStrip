@@ -30,21 +30,22 @@
 
 #pragma once
 
+#include "jsonserializer.h"
 
 extern bool                      g_bUpdateStarted;
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
 
 // LEDStripEffect
 //
 // Base class for an LED strip effect.  At a minimum they must draw themselves and provide a unique name.
 
-class LEDStripEffect
+class LEDStripEffect : public IJSONSerializable
 {
   protected:
 
     size_t _cLEDs;
     String _friendlyName;
+    int _effectNumber;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
     inline static double randomDouble(double lower, double upper)
@@ -55,10 +56,20 @@ class LEDStripEffect
 
   public:
 
-    LEDStripEffect(const String & strName)
+    LEDStripEffect(int effectNumber, const String & strName) :
+        _effectNumber(effectNumber)
     {
         if (!strName.isEmpty())
             _friendlyName = strName;
+    }
+
+    LEDStripEffect(const JsonObjectConst&  jsonObject) 
+    {
+        if (jsonObject.containsKey("en"))
+            _effectNumber = jsonObject["en"].as<int>();
+
+        if (jsonObject.containsKey("fn"))
+            _friendlyName = jsonObject["fn"].as<const char *>();
     }
 
     virtual ~LEDStripEffect()
@@ -256,4 +267,13 @@ class LEDStripEffect
         for (int i = 0; i < NUM_CHANNELS; i++)
             _GFX[i]->setPixelsF(fPos, count, c, bMerge);
     }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        jsonObject["en"] = _effectNumber;
+        jsonObject["fn"] = _friendlyName.c_str();
+
+        return true;
+    }
+
 };

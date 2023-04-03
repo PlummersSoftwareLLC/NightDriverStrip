@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "effects.h"
 
 extern AppTime g_AppTime;
 
@@ -74,12 +75,36 @@ private:
   public:
 
     BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
-        : LEDStripEffect("Bouncing Balls"),
+        : LEDStripEffect(EFFECT_STRIP_BOUNCING_BALL, "Bouncing Balls"),
           _cBalls(ballCount),
           _cBallSize(ballSize),
           _bMirrored(bMirrored),
           _bErase(bErase)
     {
+    }
+
+    BouncingBallEffect(const JsonObjectConst&  jsonObject) 
+        : LEDStripEffect(jsonObject),
+          _cBalls(jsonObject["blc"].as<size_t>()),
+          _cBallSize(jsonObject["bls"].as<size_t>()),
+          _bMirrored(jsonObject["mir"].as<bool>()),
+          _bErase(jsonObject["ers"].as<bool>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        jsonDoc["blc"] = _cBalls;
+        jsonDoc["bls"] = _cBallSize;
+        jsonDoc["mir"] = _bMirrored;
+        jsonDoc["ers"] = _bErase;
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual size_t DesiredFramesPerSecond() const

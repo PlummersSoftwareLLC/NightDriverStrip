@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include "effects.h"
 #include "paletteeffect.h"
 
 // Simple definitions of what direction we're talking about
@@ -666,7 +667,7 @@ private:
 
 public:
   PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, double sparkleChance = 0.0)
-      : LEDStripEffect(strName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
+      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
   {
   }
 
@@ -717,7 +718,7 @@ class ColorCycleEffect : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  ColorCycleEffect(PixelOrder order = Sequential, int step = 8) : LEDStripEffect("ColorCylceEffect"), _order(order), _step(step)
+  ColorCycleEffect(PixelOrder order = Sequential, int step = 8) : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"), _order(order), _step(step)
   {
   }
 
@@ -919,7 +920,7 @@ public:
                 PixelOrder order = Sequential,
                 bool breversed = false,
                 bool bmirrored = false)
-      : LEDStripEffect("FireFanEffect"),
+      : LEDStripEffect(EFFECT_STRIP_FIRE_FAN, "FireFanEffect"),
         Palette(palette),
         LEDCount(ledCount),
         CellsPerLED(cellsPerLED),
@@ -1098,7 +1099,7 @@ class RingTestEffect : public LEDStripEffect
 {
 private:
 public:
-  RingTestEffect() : LEDStripEffect("Ring Test")
+  RingTestEffect() : LEDStripEffect(EFFECT_STRIP_RING_TEST, "Ring Test")
   {
   }
 
@@ -1248,7 +1249,7 @@ private:
   LanternParticle _particles[_maxParticles];
 
 public:
-  LanternEffect() : LEDStripEffect("LanternEffect")
+  LanternEffect() : LEDStripEffect(EFFECT_STRIP_LANTERN, "LanternEffect")
   {
   }
 

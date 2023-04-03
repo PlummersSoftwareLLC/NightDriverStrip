@@ -42,6 +42,7 @@
 #include <FastLED.h>
 #include <ArduinoJson.h>
 #include "globals.h"
+#include "jsonserializer.h"
 #include <FontGfx_apple5x7.h>
 #include <thread>
 
@@ -65,12 +66,14 @@ static const char * pszWeatherIcons[] = {   "",                                 
                                             "/bmp/snow.jpg",                    // 13
                                         };
 
-class PatternWeather : public LEDStripEffect
+class PatternWeather : public LEDStripEffect, public IJSONSerializable
 {
 
 private:
 
     String strLocation           = "";
+    String strPostalCode         = "";
+    String strCountryCode        = "";
     int    dayOfWeek             = 0;
     int    iconToday             = -1;
     int    iconTomorrow          = -1;
@@ -250,8 +253,38 @@ private:
 
 public:
 
-    PatternWeather() : LEDStripEffect("Weather")
+    PatternWeather() : LEDStripEffect(EFFECT_MATRIX_WEATHER, "Weather")
     {
+        strPostalCode = cszZipCode;
+        strCountryCode = cszCountryCode;
+    }
+
+    PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
+    {
+        if (jsonObject.containsKey("pcd"))
+            strPostalCode = jsonObject["pcd"].as<const char*>();
+
+        if (jsonObject.containsKey("ccd"))
+            strCountryCode = jsonObject["ccd"].as<const char*>();
+
+        if (strPostalCode.isEmpty())
+            strPostalCode = cszZipCode;
+
+        if (strCountryCode.isEmpty())
+            strCountryCode = cszCountryCode;
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        jsonDoc["pcd"] = strPostalCode.c_str();
+        jsonDoc["ccd"] = strCountryCode.c_str();
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     // We re-render the entire display every frame

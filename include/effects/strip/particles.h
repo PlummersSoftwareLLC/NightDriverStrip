@@ -32,6 +32,8 @@
 
 #pragma once
 
+#include "effects.h"
+
 extern AppTime g_AppTime;
 
 // Lifespan
@@ -380,7 +382,11 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
 
   public:
 
-    ColorBeatWithFlash(const String & strName) : LEDStripEffect(strName), BeatEffectBase(), ParticleSystem<RingParticle>()
+    ColorBeatWithFlash(const String & strName) : LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_WITH_FLASH, strName), BeatEffectBase(), ParticleSystem<RingParticle>()
+    {
+    }
+
+    ColorBeatWithFlash(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject), BeatEffectBase(), ParticleSystem<RingParticle>()
     {
     }
 
@@ -432,11 +438,19 @@ class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase, p
   public:
 
     ColorBeatOverRed(const String & strName)
-      : LEDStripEffect(strName),
+      : LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_OVER_RED, strName),
         BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
     }
+
+    ColorBeatOverRed(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        BeatEffectBase(1.75, 0.2),
+        ParticleSystem<RingParticle>()
+    {
+    }
+
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
         int iInsulator;
@@ -690,12 +704,34 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
   public:
 
     MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-      : LEDStripEffect(strName),
+      : LEDStripEffect(EFFECT_STRIP_MOLTEN_GLASS_ON_VIOLET_BKGND, strName),
         BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
     }
+
+    MoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        BeatEffectBase(1.50, 0.05),
+        ParticleSystem<SpinningPaletteRingParticle>(),
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
+        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
     {
@@ -752,18 +788,39 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
 
 class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
-    int                    _iLastInsulator = 0;
+    int  _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
     NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-      : LEDStripEffect(strName),
+      : LEDStripEffect(EFFECT_STRIP_NEW_MOLTEN_GLASS_ON_VIOLET_BKGND, strName),
         BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
+    }
+
+    NewMoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        BeatEffectBase(1.0, 0.25 ),
+        ParticleSystem<SpinningPaletteRingParticle>(),
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
+        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
@@ -821,16 +878,36 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
 class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
-    int                    _iLastInsulator = 0;
+    int  _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
     SparklySpinningMusicEffect(const String & strName, const CRGBPalette16 & Palette)
-      : LEDStripEffect(strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
+      : LEDStripEffect(EFFECT_STRIP_SPARKLY_SPINNING_MUSIC, strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
     {
+    }
 
+    SparklySpinningMusicEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject), 
+        BeatEffectBase(), 
+        ParticleSystem<SpinningPaletteRingParticle>(), 
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
+        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)
@@ -870,9 +947,12 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
 
   public:
 
-    MusicalHotWhiteInsulatorEffect(const String & strName) : LEDStripEffect(strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
+    MusicalHotWhiteInsulatorEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_MUSICAL_HOT_WHITE_INSULATOR, strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
     {
-      
+    }
+
+    MusicalHotWhiteInsulatorEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
+    {
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, double span)

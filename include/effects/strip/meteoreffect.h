@@ -169,7 +169,9 @@ class MeteorEffect : public LEDStripEffect
 
   public:
   
-    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, double minSpeed = 0.2, double maxSpeed = 0.2) : LEDStripEffect("Color Meteors"), _Meteors()
+    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, double minSpeed = 0.2, double maxSpeed = 0.2) 
+        : LEDStripEffect(EFFECT_STRIP_METEOR, "Color Meteors"), 
+          _Meteors()
     {
         _cMeteors = cMeteors;
         _meteorSize =  size;

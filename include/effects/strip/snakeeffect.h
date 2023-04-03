@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "effects.h"
 class SnakeEffect : public LEDStripEffect
 {
   protected:
@@ -56,12 +57,26 @@ class SnakeEffect : public LEDStripEffect
   public:
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : LEDStripEffect(strName),
+        : LEDStripEffect(EFFECT_STRIP_SNAKE, strName),
           LEDCount(ledCount),
           SnakeSpeed(snakeSpeed)
     {
         lastLEDIndex = ledCount - 1;
         Reset();
+    }
+
+    SnakeEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
+          LEDCount(jsonObject["ldc"].as<int>()),
+          SnakeSpeed(jsonObject["ssd"].as<int>())
+    {
+        lastLEDIndex = LEDCount - 1;
+        Reset();
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        
     }
 
     virtual ~SnakeEffect()

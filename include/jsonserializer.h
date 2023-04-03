@@ -34,21 +34,16 @@
 #include <ArduinoJson.h>
 #include "jsonbase.h"
 
-#define JSON_SERIALIZION_OK 0
-#define JSON_SERIALIZION_OUT_OF_MEMORY 1
-
 struct IJSONSerializable
 {
-    virtual int SerializeToJSON(JsonObject& jsonObject) = 0;
+    virtual bool SerializeToJSON(JsonObject& jsonObject) = 0;
 };
 
-template<typename T>
-struct IJSONDeserializable : IJSONSerializable 
+template <class E>
+constexpr auto to_value(E e) noexcept
 {
-    virtual void DeserializeMembersFromJSON(const JsonObject& jsonObject) {}
-
-    static virtual T DeserializeFromJSON(const JsonObject& jsonObject) = 0;
-};
+	return static_cast<std::underlying_type_t<E>>(e);
+}
 
 namespace JSONSerializer 
 {
@@ -63,7 +58,7 @@ namespace JSONSerializer
             jsonDocument = new DynamicJsonDocument(jsonBufferSize);
             JsonObject jsonObject = jsonDocument->to<JsonObject>();
 
-            if (serializableObject.SerializeToJSON(jsonObject) == JSON_SERIALIZION_OUT_OF_MEMORY)
+            if (!serializableObject.SerializeToJSON(jsonObject))
             {
                 jsonBufferSize += JSON_BUFFER_INCREMENT;
                 delete jsonDocument;
@@ -73,5 +68,69 @@ namespace JSONSerializer
         }
 
         return jsonDocument;
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject, CRGBPalette16 palette) 
+    {        
+        StaticJsonDocument<512> doc;
+ 
+        JsonArray colors = doc.createNestedArray("cs");
+
+        for (auto& color: palette.entries)
+        {
+            JsonArray components = colors.createNestedArray();
+            components.add(color.r);
+            components.add(color.g);
+            components.add(color.b);
+        }
+    
+        return jsonObject.set(doc.as<JsonObjectConst>());
+    }
+
+    CRGBPalette16 DeserializeCRGBPalette16FromJSON(const JsonObjectConst&  jsonObject) 
+    {
+        CRGB colors[16];
+
+        if (jsonObject.containsKey("cs"))
+        {
+            int colorIndex = 0;
+
+            JsonArray componentsArray = jsonObject["cs"].as<JsonArray>();
+            for (JsonVariant value : componentsArray) 
+            {
+                JsonArray components = value.as<JsonArray>();
+                colors[colorIndex] = CRGB(components[0].as<uint8_t>(), components[1].as<uint8_t>(), components[2].as<uint8_t>());
+            
+                if (++colorIndex > 15)
+                    break;
+            }
+        }
+
+        return CRGBPalette16(colors); 
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject, CRGB color)
+    {
+        StaticJsonDocument<32> doc;
+
+        JsonArray components = doc.createNestedArray("c");
+        if (components.isNull())
+            return false;
+
+        components.add(color.r);
+        components.add(color.g);
+        components.add(color.b);
+
+        return jsonObject.set(doc.as<JsonObjectConst>());
+    }
+
+    CRGB DeserializeCRGBFromJson(const JsonObjectConst&  jsonObject)
+    {
+        if (!jsonObject.containsKey("c")) 
+            return CRGB();
+
+        JsonArray components = jsonObject["c"].as<JsonArray>();
+
+        return CRGB(components[0].as<uint8_t>(), components[1].as<uint8_t>(), components[2].as<uint8_t>());
     }
 }
