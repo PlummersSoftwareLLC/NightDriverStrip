@@ -160,9 +160,9 @@
 #include "globals.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern volatile double g_FreeDrawTime;
+extern volatile float g_FreeDrawTime;
 extern uint32_t g_Watts;
-extern double g_Brite;
+extern float g_Brite;
 
 //
 // Task Handles to our running threads

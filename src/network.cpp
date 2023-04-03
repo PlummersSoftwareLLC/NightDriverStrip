@@ -93,7 +93,7 @@ extern uint32_t g_FPS;
             {
                 auto pBufferManager = g_aptrBufferManager[0].get();
                 std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
-                double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
+                float t = pBuffer->Seconds() + (float) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
                 debugI("Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
             }
 
@@ -332,7 +332,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                     seconds, 
                     micros);
                     
-                PeakData peaks((float *)(payloadData + STANDARD_DATA_HEADER_SIZE));
+                PeakData peaks((double *)(payloadData + STANDARD_DATA_HEADER_SIZE));
                 peaks.ApplyScalars(PeakData::PCREMOTE);
                 g_Analyzer.SetPeakData(peaks);
             #endif

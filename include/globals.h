@@ -1151,7 +1151,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 6000.0f
+        #define NOISE_FLOOR 6000.0
     #endif
     #ifndef NOISE_CUTOFF
         #define NOISE_CUTOFF   2000
@@ -1482,7 +1482,7 @@ inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SEC
     if (duration == 0)
         return 999;
 
-    double fpsf = 1.0f / (duration / (double) perSecond);
+    float fpsf = 1.0f / (duration / (float) perSecond);
     int FPS = (int)fpsf;
     if (FPS > 999)
         FPS = 999;
@@ -1556,8 +1556,8 @@ class AppTime
 {
   protected:
 
-    double _lastFrame;
-    double _deltaTime;
+    float _lastFrame;
+    float _deltaTime;
   
   public:
 
@@ -1570,7 +1570,7 @@ class AppTime
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        double current = CurrentTime();
+        float current = CurrentTime();
         _deltaTime = current - _lastFrame;
 
         // Cap the delta time at one full second
@@ -1586,24 +1586,24 @@ class AppTime
         NewFrame();
     }
 
-    double FrameStartTime() const
+    float FrameStartTime() const
     {
         return _lastFrame;
     }
 
-    static double CurrentTime()
+    static float CurrentTime()
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
+        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
     }
 
-    static double TimeFromTimeval(const timeval & tv)
+    static float TimeFromTimeval(const timeval & tv)
     {
-        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
+        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
     }
 
-    static timeval TimevalFromTime(double t)
+    static timeval TimevalFromTime(float t)
     {
         timeval tv;
         tv.tv_sec = (long)t;
@@ -1611,7 +1611,7 @@ class AppTime
         return tv;
     }
 
-    double DeltaTime() const
+    float DeltaTime() const
     {
         return _deltaTime;
     }
@@ -1621,13 +1621,13 @@ class AppTime
 //
 // Simple inline utility functions like random numbers, mapping, conversion, etc
 
-inline static double randomDouble(double lower, double upper)
+inline static float randomfloat(float lower, float upper)
 {
-    double result = (lower + ((upper - lower) * rand()) / RAND_MAX);
+    float result = (lower + ((upper - lower) * rand()) / RAND_MAX);
     return result;
 }
 
-inline double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
+inline float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

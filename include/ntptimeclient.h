@@ -158,8 +158,8 @@ class NTPTimeClient
         timeval tvOld;
         gettimeofday(&tvOld, nullptr);
 
-        double dOld = tvOld.tv_sec + (tvOld.tv_usec / (double) MICROS_PER_SECOND);
-        double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
+        float dOld = tvOld.tv_sec + (tvOld.tv_usec / (float) MICROS_PER_SECOND);
+        float dNew = tvNew.tv_sec + (tvNew.tv_usec / (float) MICROS_PER_SECOND);
 
         // If the clock is off by more than a quarter second, update it
 

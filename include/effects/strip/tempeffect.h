@@ -44,10 +44,10 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
     virtual void Draw()
     {
         BeatEffectBase::ProcessAudio();
-        fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
+        fadeAllChannelsToBlackBy(min(255.0f, g_AppTime.DeltaTime() * 1500.0f));
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         while (_lit.size() >= NUM_FANS - 1)
             _lit.pop_front();
@@ -81,10 +81,10 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
     virtual void Draw()
     {
         BeatEffectBase::ProcessAudio();
-        fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500));
+        fadeAllChannelsToBlackBy(min(255.0f, g_AppTime.DeltaTime() * 1500.0f));
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         while (_lit.size() >= NUM_FANS - 1)
             _lit.pop_front();

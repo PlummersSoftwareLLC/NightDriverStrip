@@ -32,7 +32,7 @@
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
-double g_Brite;
+float g_Brite;
 uint32_t g_Watts;
 
 #if USE_OLED
@@ -66,7 +66,7 @@ extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern volatile double g_FreeDrawTime;  // Idle drawing time
+extern volatile float g_FreeDrawTime;  // Idle drawing time
 
 DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
 
@@ -152,8 +152,8 @@ void BasicInfoSummary(bool bRedraw)
 
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
     Screen::println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
-                                min(99.99, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
-                                min(99.99, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
+                                min(99.99f, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
+                                min(99.99f, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
 
     // Clock info Line 5
     //
@@ -199,8 +199,8 @@ void BasicInfoSummary(bool bRedraw)
         int top = yMargin + lineHeight * 7 + 1;
         int height = lineHeight - 5;
         int width = Screen::screenWidth() - xMargin * 2;
-        double ratio = (double)g_aptrBufferManager[0]->Depth() / (double)g_aptrBufferManager[0]->BufferCount();
-        ratio = std::min(1.0, ratio);
+        float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
+        ratio = std::min(1.0f, ratio);
         int filled = (width - 2) * ratio;
 
         // Color bar red/yellow/green depending on buffer fill

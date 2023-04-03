@@ -119,13 +119,13 @@ class PeakData
 {
 
 protected:
-    static float _Min[NUM_BANDS];
-    static float _Max[NUM_BANDS];
-    static float _Last[NUM_BANDS];
-    static float _allBandsMax;
+    static double _Min[NUM_BANDS];
+    static double _Max[NUM_BANDS];
+    static double _Last[NUM_BANDS];
+    static double _allBandsMax;
 
-    float _Level[NUM_BANDS];
-    float _Ratio[NUM_BANDS];
+    double _Level[NUM_BANDS];
+    double _Ratio[NUM_BANDS];
 
     void UpdateMinMax()
     {
@@ -154,7 +154,7 @@ protected:
             else
                 _Min[band] = (_Min[band] * GAINDAMPEN + _Level[band]) / (GAINDAMPEN + 1);
 
-            _Min[band] = min(_Min[band], 0.4f);
+            _Min[band] = min(_Min[band], 0.4);
 
             // Keep track of the highest peak in any band above its own min
 
@@ -194,12 +194,12 @@ public:
             _Level[i] = _Ratio[i] = 0.0f;
     }
 
-    PeakData(float *pFloats)
+    PeakData(double *pDoubles)
     {
         for (int i = 0; i < NUM_BANDS; i++)
             _Level[i] = _Ratio[i] = 0.0f;
 
-        SetData(pFloats);
+        SetData(pDoubles);
     }
 
     PeakData &operator=(const PeakData &other)
@@ -218,26 +218,26 @@ public:
         return _Level[n];
     }
 
-    static double GetBandScalar(MicrophoneType mic, int i)
+    static float GetBandScalar(MicrophoneType mic, int i)
     {
         switch (mic)
         {
         case MESMERIZERMIC:
         {
-            static const double Scalars16[16] = {3.0, .35, 0.4, 0.7, 0.8, 0.7, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
-            double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            static const float Scalars16[16] = {3.0, .35, 0.4, 0.7, 0.8, 0.7, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : mapfloat(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         case PCREMOTE:
         {
-            static const double Scalars16[16] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-            double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            static const float Scalars16[16] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : mapfloat(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         default:
         {
-            static const double Scalars16[16] = {3.0, .35, 0.6, 0.8, 1.2, 0.7, 1.2, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
-            double result = (NUM_BANDS == 16) ? Scalars16[i] : mapDouble(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            static const float Scalars16[16] = {3.0, .35, 0.6, 0.8, 1.2, 0.7, 1.2, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : mapfloat(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         }
@@ -260,11 +260,11 @@ public:
         return _Max[n];
     }
 
-    void SetData(float *pFloats)
+    void SetData(double *pDoubles)
     {
         for (int i = 0; i < NUM_BANDS; i++)
         {
-            _Level[i] = pFloats[i];
+            _Level[i] = pDoubles[i];
         }
         UpdateMinMax();
     }
@@ -289,15 +289,15 @@ class SoundAnalyzer : public AudioVariables
 
     const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
-    size_t _MaxSamples;        // Number of samples we will take, must be a power of 2
-    size_t _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
-    size_t _BandCount;
-    float *_vPeaks;
-    int _cutOffsBand[NUM_BANDS];
-    float _oldVU;
-    float _oldPeakVU;
-    float _oldMinVU;
-    uint8_t _inputPin; // Which hardware pin do we actually sample audio from?
+    size_t   _MaxSamples;        // Number of samples we will take, must be a power of 2
+    size_t   _SamplingFrequency; // Sampling Frequency should be at least twice that of highest freq sampled
+    size_t   _BandCount;
+    double * _vPeaks;
+    int      _cutOffsBand[NUM_BANDS];
+    float    _oldVU;
+    float    _oldPeakVU;
+    float    _oldMinVU;
+    uint8_t  _inputPin; // Which hardware pin do we actually sample audio from?
     PeakData _Peaks;
 
     PeakData::MicrophoneType _MicMode = PeakData::M5;
@@ -317,7 +317,7 @@ class SoundAnalyzer : public AudioVariables
         // return iOffset * (_SamplingFrequency / 2) / (_MaxSamples / 2);
     }
 
-    int GetBandIndex(double frequency)
+    int GetBandIndex(float frequency)
     {
         int band = -1;
         for (int i = 0; i < NUM_BANDS; i++)
@@ -341,16 +341,16 @@ class SoundAnalyzer : public AudioVariables
         return band;
     }
 
-    double GetBucketFrequency(int bin_index)
+    float GetBucketFrequency(int bin_index)
     {
-        double bin_width = SAMPLING_FREQUENCY / (MAX_SAMPLES / 2);
-        double frequency = bin_width * bin_index;
+        float bin_width = SAMPLING_FREQUENCY / (MAX_SAMPLES / 2);
+        float frequency = bin_width * bin_index;
         return frequency;
     }
 
     volatile int _cSamples;
-    double *_vReal;
-    double *_vImaginary;
+    double * _vReal;
+    double * _vImaginary;
 
     // SampleBuffer::Reset
     //
@@ -426,7 +426,7 @@ class SoundAnalyzer : public AudioVariables
         }
     }
 
-    void UpdateVU(double newval)
+    void UpdateVU(float newval)
     {
         if (newval > _oldVU)
             _VU = newval;
@@ -462,7 +462,7 @@ class SoundAnalyzer : public AudioVariables
         // Find the peak and the average
 
         float averageSum = 0.0f;
-        double samplesPeak = 0.0f;
+        float samplesPeak = 0.0f;
 
         int hitCount[NUM_BANDS] = {0};
         for (int i = 0; i < NUM_BANDS; i++)
@@ -515,7 +515,7 @@ class SoundAnalyzer : public AudioVariables
             _vPeaks[i] = powf(_vPeaks[i], 2.0);
 #endif
 
-        float allBandsPeak = 0;
+        double allBandsPeak = 0;
         for (int i = 0; i < _BandCount; i++)
             allBandsPeak = max(allBandsPeak, _vPeaks[i]);
 
@@ -525,7 +525,7 @@ class SoundAnalyzer : public AudioVariables
         allBandsPeak = max(NOISE_FLOOR, allBandsPeak);
         debugV("All Bands Peak: %f", allBandsPeak);
 
-        auto multiplier = mapDouble(_VURatio, 0.0, 2.0, 1.5, 1.0);
+        auto multiplier = mapfloat(_VURatio, 0.0, 2.0, 1.5, 1.0);
 
 #if MESERMIZER
         // Visual hand-tweaking to get the display to look a little taller
@@ -556,7 +556,7 @@ class SoundAnalyzer : public AudioVariables
     // Calculate a logrithmic scale for the bands like you would find on a graphic equalizer display
     //
 
-    void CalculateBandCutoffs(double lowFreq, double highFreq)
+    void CalculateBandCutoffs(float lowFreq, float highFreq)
     {
         if (NUM_BANDS == 16)
         {
@@ -572,9 +572,9 @@ class SoundAnalyzer : public AudioVariables
             // and ending with a frequency of 12.5 kHz. The spacing ratio r is calculated as the 11th root of the ratio of the maximum
             // frequency to the minimum frequency, and each upper frequency is calculated as f1 * r^(i+1).
 
-            double f1 = LOWEST_FREQ;
-            double f2 = HIGHEST_FREQ;
-            double r = pow(f2 / f1, 1.0 / (NUM_BANDS - 1));
+            float f1 = LOWEST_FREQ;
+            float f2 = HIGHEST_FREQ;
+            float r = pow(f2 / f1, 1.0 / (NUM_BANDS - 1));
             for (int i = 0; i < NUM_BANDS; i++)
             {
                 _cutOffsBand[i] = round(f1 * pow(r, i + 1));
@@ -617,7 +617,7 @@ public:
 
         _vReal = (double *)malloc(_MaxSamples * sizeof(_vReal[0]));
         _vImaginary = (double *)malloc(_MaxSamples * sizeof(_vImaginary[0]));
-        _vPeaks = (float *)malloc(_BandCount * sizeof(_vPeaks[0]));
+        _vPeaks = (double *)malloc(_BandCount * sizeof(_vPeaks[0]));
 
         _oldVU = 0.0f;
         _oldPeakVU = 0.0f;

@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        DoublePaletteEffect.h
+// File:        floatPaletteEffect.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -33,7 +33,7 @@
 
 extern AppTime g_AppTime;
 
-class DoublePaletteEffect : public LEDStripEffect
+class floatPaletteEffect : public LEDStripEffect
 {
   private:
     
@@ -42,8 +42,8 @@ class DoublePaletteEffect : public LEDStripEffect
 
   public:
   
-    DoublePaletteEffect() 
-     :  LEDStripEffect("Double Palette"),
+    floatPaletteEffect() 
+     :  LEDStripEffect("Douuble Palette"),
         _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
         _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
     {

@@ -47,9 +47,9 @@ class LEDStripEffect
     String _friendlyName;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
-    inline static double randomDouble(double lower, double upper)
+    inline static float randomfloat(float lower, float upper)
     {
-        double result = (lower + ((upper - lower) * rand()) / RAND_MAX);
+        float result = (lower + ((upper - lower) * rand()) / RAND_MAX);
         return result;
     }
 
@@ -112,13 +112,13 @@ class LEDStripEffect
     {
         return true;
     }
-    // RequiresDoubleBuffering
+    // RequiresfloatBuffering
     //
-    // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
+    // If a matrix effect requires the state of the last buffer be preserved, then it requires float buffering.
     // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
     // and it can override this method and return false;
     
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresfloatBuffering() const
     {
         return true;
     }
@@ -134,7 +134,7 @@ class LEDStripEffect
                 CRGB::Indigo,
                 CRGB::Violet
             };
-        int randomColorIndex = (int)randomDouble(0, ARRAYSIZE(colors));
+        int randomColorIndex = (int)randomfloat(0, ARRAYSIZE(colors));
         return colors[randomColorIndex];
     }
 
@@ -158,7 +158,7 @@ class LEDStripEffect
     static inline CRGB RandomSaturatedColor()
     {
         CRGB c;
-        c.setHSV((uint8_t)randomDouble(0, 255), 255, 255);
+        c.setHSV((uint8_t)randomfloat(0, 255), 255, 255);
         return c;
     }
 

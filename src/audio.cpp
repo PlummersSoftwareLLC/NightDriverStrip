@@ -43,13 +43,13 @@ SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio ca
 extern NightDriverTaskManager g_TaskManager;
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
 extern uint32_t g_Watts; 
-extern double g_Brite;
+extern float g_Brite;
 extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
-float PeakData::_Min[NUM_BANDS] = { 0.0 };
-float PeakData::_Max[NUM_BANDS] = { 0.0 }; 
-float PeakData::_Last[NUM_BANDS] = { 0.0 }; 
-float PeakData::_allBandsMax = 1.0;
+double PeakData::_Min[NUM_BANDS] = { 0.0 };
+double PeakData::_Max[NUM_BANDS] = { 0.0 }; 
+double PeakData::_Last[NUM_BANDS] = { 0.0 }; 
+double PeakData::_allBandsMax = 1.0;
 
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
@@ -74,14 +74,14 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
             // VURatio with a fadeout
 
-            static double lastVU = 0.0;
+            static float lastVU = 0.0;
             constexpr auto VU_DECAY_PER_SECOND = 3.0;
             if (g_Analyzer._VURatio > lastVU)
                 lastVU = g_Analyzer._VURatio;
             else
                 lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
-            lastVU = std::max(lastVU, 0.0);
-            lastVU = std::min(lastVU, 2.0);
+            lastVU = std::max(lastVU, 0.0f);
+            lastVU = std::min(lastVU, 2.0f);
             g_Analyzer._VURatioFade = lastVU;
 
             lastFrame = millis();
@@ -277,7 +277,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             
         const int MAXPET = 16;                                      // Highest value that the PET can display in a bar
         data.header[0] = ((3 << 4) + 15);
-        data.vu = mapDouble(g_Analyzer._VURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
+        data.vu = mapfloat(g_Analyzer._VURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
 
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display

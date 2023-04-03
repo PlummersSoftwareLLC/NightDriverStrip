@@ -51,9 +51,9 @@ class LEDMatrixGFX : public GFXBase
 protected:
     String strCaption;
     unsigned long captionStartTime;
-    double captionDuration;
-    const double captionFadeInTime = 500;
-    const double captionFadeOutTime = 1000;
+    float captionDuration;
+    const float captionFadeInTime = 500;
+    const float captionFadeOutTime = 1000;
 
 public:
     typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;
@@ -100,7 +100,7 @@ public:
         return strCaption;
     }
 
-    double GetCaptionTransparency()
+    float GetCaptionTransparency()
     {
         unsigned long now = millis();
         if (strCaption == nullptr)
@@ -109,7 +109,7 @@ public:
         if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
             return 0;
 
-        double elapsed = now - captionStartTime;
+        float elapsed = now - captionStartTime;
 
         if (elapsed < captionFadeInTime)
             return elapsed / captionFadeInTime;

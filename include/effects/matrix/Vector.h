@@ -101,35 +101,35 @@ public:
         return *this;
     }
 
-    Vector2 operator+(double s) {
+    Vector2 operator+(float s) {
         return Vector2(x + s, y + s);
     }
-    Vector2 operator-(double s) {
+    Vector2 operator-(float s) {
         return Vector2(x - s, y - s);
     }
-    Vector2 operator*(double s) {
+    Vector2 operator*(float s) {
         return Vector2(x * s, y * s);
     }
-    Vector2 operator/(double s) {
+    Vector2 operator/(float s) {
         return Vector2(x / s, y / s);
     }
     
-    Vector2& operator+=(double s) {
+    Vector2& operator+=(float s) {
         x += s;
         y += s;
         return *this;
     }
-    Vector2& operator-=(double s) {
+    Vector2& operator-=(float s) {
         x -= s;
         y -= s;
         return *this;
     }
-    Vector2& operator*=(double s) {
+    Vector2& operator*=(float s) {
         x *= s;
         y *= s;
         return *this;
     }
-    Vector2& operator/=(double s) {
+    Vector2& operator/=(float s) {
         x /= s;
         y /= s;
         return *this;
@@ -140,12 +140,12 @@ public:
         this->y = y;
     }
 
-    void rotate(double deg) {
-        double theta = deg / 180.0 * M_PI;
-        double c = cos(theta);
-        double s = sin(theta);
-        double tx = x * c - y * s;
-        double ty = x * s + y * c;
+    void rotate(float deg) {
+        float theta = deg / 180.0 * M_PI;
+        float c = cos(theta);
+        float s = sin(theta);
+        float tx = x * c - y * s;
+        float ty = x * s + y * c;
         x = tx;
         y = ty;
     }
@@ -174,9 +174,9 @@ public:
         return (x * x + y * y);
     }
 
-    void truncate(double length) 
+    void truncate(float length) 
     {
-        double angle = atan2f(y, x);
+        float angle = atan2f(y, x);
         x = length * cos(angle);
         y = length * sin(angle);
     }

@@ -31,7 +31,7 @@
 
 #include "effects/strip/fireeffect.h"          // fire effects
 #include "effects/strip/paletteeffect.h"       // palette effects
-#include "effects/strip/doublepaletteeffect.h" // double palette effect
+#include "effects/strip/doublepaletteeffect.h" // float palette effect
 #include "effects/strip/meteoreffect.h"        // meteor blend effect
 #include "effects/strip/stareffect.h"          // star effects
 #include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
@@ -345,7 +345,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 #elif MESMERIZER
 
         new SplashLogoEffect(),
-        
+
         new SpectrumAnalyzerEffect("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
         new SpectrumAnalyzerEffect("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
         new SpectrumAnalyzerEffect("Spectrum 3",   32,            spectrumBasicColors, 100, 0, 0.25, 1.25),
@@ -414,7 +414,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new MusicalPaletteFire("Musical Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
         new BouncingBallEffect(),
-        new DoublePaletteEffect(),
+        new floatPaletteEffect(),
 
         new MeteorEffect(4, 4, 10, 2.0, 2.0),
         new MeteorEffect(10, 1, 20, 1.5, 1.5),
@@ -592,7 +592,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                             // Red Twinkle
         new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
         new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
-        new DoublePaletteEffect(),
+        new floatPaletteEffect(),
         new VUEffect()
 
 #elif FLAMEBULB
@@ -660,7 +660,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new SimpleRainbowTestEffect(8, 1),  // Rainbow palette simple test of walking pixels
         new SimpleRainbowTestEffect(8, 4),  // Rainbow palette simple test of walking pixels
         new PaletteEffect(MagentaColors_p), // Rainbow palette
-        new DoublePaletteEffect(),
+        new floatPaletteEffect(),
 
         new MeteorEffect(), // Our overlapping color meteors
 
@@ -687,7 +687,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new RainbowFillEffect(32, 1),
         new SimpleRainbowTestEffect(8, 1),              // Rainbow palette simple test of walking pixels
         new PaletteEffect(MagentaColors_p),             // Rainbow palette
-        new DoublePaletteEffect(),
+        new floatPaletteEffect(),
 
 #else                                                                   
 
