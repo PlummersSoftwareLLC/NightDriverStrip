@@ -115,7 +115,7 @@ void MatrixPreDraw()
 
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
             int w = caption.length() * kCharWidth;
-            int x = (MATRIX_WIDTH / 2) - (w / 2);
+            int x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
 
             auto szCaption = caption.c_str();
             LEDMatrixGFX::titleLayer.drawString(x - 1, y, shadowColor, szCaption);

@@ -103,6 +103,11 @@ class LEDStripEffect
         return 30;
     }
     
+    virtual size_t MinimumEffectTime() const
+    {
+        return SIZE_MAX;
+    }
+
     virtual bool ShouldShowTitle() const
     {
         return true;

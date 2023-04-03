@@ -1687,6 +1687,7 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 
 // Main includes 
 
+#include <TJpg_Decoder.h>
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include "gfxbase.h"                            // GFXBase drawing interface
 #include "screen.h"                             // LCD/TFT/OLED handling
@@ -1722,6 +1723,4 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 #if ENABLE_REMOTE
     #include "remotecontrol.h"
 #endif
-
-#include <TJpg_Decoder.h>
 
