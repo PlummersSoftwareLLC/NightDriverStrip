@@ -253,7 +253,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
 //  SoftwareSerial Serial64(SERIAL_PINRX, SERIAL_PINTX);
     debugI(">>> Sampler Task Started");
 
-    SoundAnalyzer Analyzer(INPUT_PIN);
+    SoundAnalyzer Analyzer;
 
     #if ENABLE_VICE_SERVER
         VICESocketServer socketServer(25232);
