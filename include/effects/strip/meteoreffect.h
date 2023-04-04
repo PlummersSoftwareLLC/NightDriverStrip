@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        floatPaletteEffect.h
+// File:        MeteorPaletteEffect.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//    Draws two intersecting palettes
+//    Draws flying meteors
 //
 // History:     Apr-16-2019         Davepl      Created
 //              
