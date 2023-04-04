@@ -277,12 +277,12 @@ public:
     virtual bool SerializeToJSON(JsonObject& jsonObject) 
     {
         StaticJsonDocument<128> jsonDoc;
-        
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
         jsonDoc["pcd"] = strPostalCode.c_str();
         jsonDoc["ccd"] = strCountryCode.c_str();
-
-        JsonObject root = jsonDoc.as<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

@@ -79,15 +79,15 @@ class PaletteEffect : public LEDStripEffect
     PaletteEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject),
       _startIndex(0.0f),
       _paletteIndex(0.0f),
-      _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>())),
+      _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>())),
       _density(jsonObject["dns"].as<float>()),
-      _paletteSpeed(jsonObject["psp"].as<float>()),
+      _paletteSpeed(jsonObject[PTY_SPEED].as<float>()),
       _lightSize(jsonObject["lsz"].as<float>()),
       _gapSize(jsonObject["gsz"].as<float>()),
       _LEDSPerSecond(jsonObject["lps"].as<float>()),
-      _blend(static_cast<TBlendType>(jsonObject["bld"].as<int>())),
-      _bErase(jsonObject["ers"].as<bool>()),
-      _brightness(jsonObject["lps"].as<float>())
+      _blend(static_cast<TBlendType>(jsonObject[PTY_BLEND].as<int>())),
+      _bErase(jsonObject[PTY_ERASE].as<bool>()),
+      _brightness(jsonObject["bns"].as<float>())
     {
     }
 
@@ -95,19 +95,19 @@ class PaletteEffect : public LEDStripEffect
     {
         StaticJsonDocument<512> jsonDoc;
         
-        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
         JSONSerializer::SerializeToJSON(paletteObject, _palette);
         jsonDoc["dns"] = _density;
-        jsonDoc["psp"] = _paletteSpeed;
+        jsonDoc[PTY_SPEED] = _paletteSpeed;
         jsonDoc["lsz"] = _lightSize;
         jsonDoc["gsz"] = _gapSize;
         jsonDoc["lps"] = _LEDSPerSecond;
-        jsonDoc["bld"] = to_value(_blend);
-        jsonDoc["ers"] = _bErase;
-        jsonDoc["gsz"] = _brightness;
-
-        JsonObject root = jsonDoc.as<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
+        jsonDoc[PTY_BLEND] = to_value(_blend);
+        jsonDoc[PTY_ERASE] = _bErase;
+        jsonDoc["bns"] = _brightness;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

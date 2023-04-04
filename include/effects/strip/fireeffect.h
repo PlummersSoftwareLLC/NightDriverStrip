@@ -31,12 +31,17 @@
 
 #pragma once
 
-
+#include "globals.h"
 #include "musiceffect.h"
 
 extern AppTime g_AppTime;
 class FireEffect : public LEDStripEffect
 {
+    void construct() 
+    {
+        heat = std::make_unique<uint8_t []>(CellCount());
+    }
+
   protected:
     int     LEDCount;           // Number of LEDs total
     int     CellsPerLED;
@@ -77,41 +82,38 @@ class FireEffect : public LEDStripEffect
         if (bMirrored)
             LEDCount = LEDCount / 2;
 
-        heat = std::make_unique<uint8_t []>(CellCount());
+        construct();
     }
 
     FireEffect(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
-          LEDCount(jsonObject["ldc"].as<int>()),
-          CellsPerLED(jsonObject["cpl"].as<int>()),
-          Cooling(jsonObject["clg"].as<int>()),
-          Sparks(jsonObject["spc"].as<int>()),
-          SparkHeight(jsonObject["sph"].as<int>()),
-          Sparking(jsonObject["spg"].as<int>()),
-          bReversed(jsonObject["rvr"].as<bool>()),
-          bMirrored(jsonObject["mir"].as<bool>())
+          LEDCount(jsonObject[PTY_LEDCOUNT].as<int>()),
+          CellsPerLED(jsonObject[PTY_CELLSPERLED].as<int>()),
+          Cooling(jsonObject[PTY_COOLING].as<int>()),
+          Sparks(jsonObject[PTY_SPARKS].as<int>()),
+          SparkHeight(jsonObject[PTY_SPARKHEIGHT].as<int>()),
+          Sparking(jsonObject[PTY_SPARKING].as<int>()),
+          bReversed(jsonObject[PTY_REVERSED].as<bool>()),
+          bMirrored(jsonObject[PTY_MIRORRED].as<bool>())
     {
-        if (bMirrored)
-            LEDCount = LEDCount / 2;
-
-        heat = std::make_unique<uint8_t []>(CellCount());
+        construct();
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) 
     {
         StaticJsonDocument<128> jsonDoc;
         
-        jsonDoc["ldc"] = LEDCount;
-        jsonDoc["cpl"] = CellsPerLED;
-        jsonDoc["clg"] = Cooling;
-        jsonDoc["spc"] = Sparks;
-        jsonDoc["sph"] = SparkHeight;
-        jsonDoc["spg"] = Sparking;
-        jsonDoc["rvr"] = bReversed;
-        jsonDoc["mir"] = bMirrored;
-
-        JsonObject root = jsonDoc.as<JsonObject>();
+        JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_LEDCOUNT] = LEDCount;
+        jsonDoc[PTY_CELLSPERLED] = CellsPerLED;
+        jsonDoc[PTY_COOLING] = Cooling;
+        jsonDoc[PTY_SPARKS] = Sparks;
+        jsonDoc[PTY_SPARKHEIGHT] = SparkHeight;
+        jsonDoc[PTY_SPARKING] = Sparking;
+        jsonDoc[PTY_REVERSED] = bReversed;
+        jsonDoc[PTY_MIRORRED] = bMirrored;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -215,6 +217,11 @@ class PaletteFlameEffect : public FireEffect
 {
     CRGBPalette16 _palette;
 
+    void construct() 
+    {
+        _effectNumber = EFFECT_STRIP_PALETTE_FLAME;
+    }
+
 public:
     PaletteFlameEffect(const String & strName,
                        const CRGBPalette16 &palette,
@@ -229,24 +236,24 @@ public:
         : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           _palette(palette)
     {
-        _effectNumber = EFFECT_STRIP_PALETTE_FLAME;
+        construct();
     }
 
     PaletteFlameEffect(const JsonObjectConst& jsonObject)
       : FireEffect(jsonObject),
-        _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+        _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
     {
-        _effectNumber = EFFECT_STRIP_PALETTE_FLAME;
+        construct();
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) 
     {
         StaticJsonDocument<512> jsonDoc;
+ 
         JsonObject root = jsonDoc.to<JsonObject>();
-
         FireEffect::SerializeToJSON(jsonObject);
 
-        JsonObject paletteObj = jsonObject.createNestedObject("plt");
+        JsonObject paletteObj = jsonObject.createNestedObject(PTY_PALETTE);
         JSONSerializer::SerializeToJSON(paletteObj, _palette);
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
@@ -266,6 +273,11 @@ public:
 #if ENABLE_AUDIO
 class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
+    void construct()
+    {
+        _effectNumber = EFFECT_STRIP_MUSICAL_PALETTE_FIRE;
+    }
+
   public:
 
     MusicalPaletteFire(const String & strName,
@@ -282,6 +294,14 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
             PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
           
     {
+        construct();
+    }
+
+    MusicalPaletteFire(const JsonObjectConst& jsonObject) 
+        : BeatEffectBase(1.00, 0.01), 
+          PaletteFlameEffect(jsonObject)
+    {
+        construct();
     }
 
   protected:
@@ -314,11 +334,34 @@ class ClassicFireEffect : public LEDStripEffect
 
 public:
 
-    ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5) : LEDStripEffect(EFFECT_STRIP_CLASSIC_FIRE, "Classic Fire")
+    ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5) 
+        : LEDStripEffect(EFFECT_STRIP_CLASSIC_FIRE, "Classic Fire"),
+          _Mirrored(mirrored),
+          _Reversed(reversed),
+          _Cooling(cooling)
     {
-        _Mirrored = mirrored;
-        _Reversed = reversed;
-        _Cooling  = cooling;
+    }
+
+    ClassicFireEffect(const JsonObjectConst& jsonObject) 
+        : LEDStripEffect(jsonObject),
+          _Mirrored(jsonObject[PTY_MIRORRED].as<bool>()),
+          _Reversed(jsonObject[PTY_REVERSED].as<bool>()),
+          _Cooling(jsonObject[PTY_COOLING].as<int>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_MIRORRED] = _Mirrored;
+        jsonDoc[PTY_REVERSED] = _Reversed;
+        jsonDoc[PTY_COOLING] = _Cooling;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()
@@ -469,6 +512,38 @@ public:
     {
     }
 
+    SmoothFireEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
+          _Reversed(jsonObject[PTY_REVERSED].as<bool>()),
+          _Cooling(jsonObject[PTY_COOLING].as<float>()),
+          _Sparks(jsonObject[PTY_SPARKS].as<int>()),
+          _Drift(jsonObject["dft"].as<float>()),
+          _DriftPasses(jsonObject["dtp"].as<int>()),
+          _SparkHeight(jsonObject[PTY_SPARKHEIGHT].as<int>()),
+          _Turbo(jsonObject["trb"].as<bool>()),
+          _Mirrored(jsonObject[PTY_MIRORRED].as<bool>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_MIRORRED] = _Reversed;
+        jsonDoc[PTY_COOLING] = _Cooling;
+        jsonDoc[PTY_SPARKS] = _Sparks;
+        jsonDoc["dft"] = _Drift;
+        jsonDoc["dtp"] = _DriftPasses;
+        jsonDoc[PTY_SPARKHEIGHT] = _SparkHeight;
+        jsonDoc["trb"] = _Turbo;
+        jsonDoc[PTY_MIRORRED] = _Mirrored;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         LEDStripEffect::Init(gfx);
@@ -561,6 +636,11 @@ public:
 
 class BaseFireEffect : public LEDStripEffect
 {
+    void construct()
+    {
+        heat = std::make_unique<uint8_t []>(CellCount);
+    }
+
   protected:
     int     LEDCount;           // Number of LEDs total
     int     CellCount;          // How many heat cells to represent entire flame
@@ -593,14 +673,47 @@ class BaseFireEffect : public LEDStripEffect
           bReversed(breversed),
           bMirrored(bmirrored)
     {
-        LEDCount = bmirrored ? LEDCount / 2 : LEDCount;
+        LEDCount = bMirrored ? ledCount / 2 : ledCount;
         CellCount = LEDCount * cellsPerLED;
 
-        heat = std::make_unique<uint8_t []>(CellCount);
+        construct();
+    }
+
+    BaseFireEffect(const JsonObjectConst& jsonObject) 
+        : LEDStripEffect(jsonObject),
+          Cooling(jsonObject[PTY_COOLING].as<int>()),
+          Sparks(jsonObject[PTY_SPARKS].as<int>()),
+          SparkHeight(jsonObject[PTY_SPARKHEIGHT].as<int>()),
+          Sparking(jsonObject[PTY_SPARKING].as<int>()),
+          bReversed(jsonObject[PTY_REVERSED].as<int>()),
+          bMirrored(jsonObject[PTY_MIRORRED].as<int>()),
+          LEDCount(jsonObject[PTY_LEDCOUNT].as<int>()),
+          CellCount(jsonObject["clc"].as<int>())
+    {
+        construct();
     }
 
     virtual ~BaseFireEffect()
     {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_COOLING] = Cooling;
+        jsonDoc[PTY_SPARKS] = Sparks;
+        jsonDoc[PTY_SPARKHEIGHT] = SparkHeight;
+        jsonDoc[PTY_SPARKING] = Sparking;
+        jsonDoc[PTY_REVERSED] = bReversed;
+        jsonDoc[PTY_MIRORRED] = bMirrored;
+        jsonDoc[PTY_LEDCOUNT] = LEDCount;
+        jsonDoc["clc"] = CellCount;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual CRGB MapHeatToColor(uint8_t temperature)

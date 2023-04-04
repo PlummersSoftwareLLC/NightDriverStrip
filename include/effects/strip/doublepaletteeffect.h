@@ -61,13 +61,13 @@ class DoublePaletteEffect : public LEDStripEffect
     {
         DynamicJsonDocument jsonDoc(1256);
 
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
         JsonObject paletteObj = jsonDoc.createNestedObject("pt1");
         _PaletteEffect1.SerializeToJSON(paletteObj);
         paletteObj = jsonDoc.createNestedObject("pt2");
         _PaletteEffect2.SerializeToJSON(paletteObj);
-
-        JsonObject root = jsonDoc.as<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

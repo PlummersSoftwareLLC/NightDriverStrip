@@ -33,6 +33,7 @@
 
 #include <ArduinoJson.h>
 #include "jsonbase.h"
+#include "FastLED.h"
 
 struct IJSONSerializable
 {
@@ -77,12 +78,7 @@ namespace JSONSerializer
         JsonArray colors = doc.createNestedArray("cs");
 
         for (auto& color: palette.entries)
-        {
-            JsonArray components = colors.createNestedArray();
-            components.add(color.r);
-            components.add(color.g);
-            components.add(color.b);
-        }
+            colors.add(ToUInt32(color));
     
         return jsonObject.set(doc.as<JsonObjectConst>());
     }
@@ -98,8 +94,7 @@ namespace JSONSerializer
             JsonArray componentsArray = jsonObject["cs"].as<JsonArray>();
             for (JsonVariant value : componentsArray) 
             {
-                JsonArray components = value.as<JsonArray>();
-                colors[colorIndex] = CRGB(components[0].as<uint8_t>(), components[1].as<uint8_t>(), components[2].as<uint8_t>());
+                colors[colorIndex] = CRGB(value.as<uint32_t>());
             
                 if (++colorIndex > 15)
                     break;
@@ -109,28 +104,8 @@ namespace JSONSerializer
         return CRGBPalette16(colors); 
     }
 
-    bool SerializeToJSON(JsonObject& jsonObject, CRGB color)
+    uint32_t ToUInt32(CRGB color) 
     {
-        StaticJsonDocument<32> doc;
-
-        JsonArray components = doc.createNestedArray("c");
-        if (components.isNull())
-            return false;
-
-        components.add(color.r);
-        components.add(color.g);
-        components.add(color.b);
-
-        return jsonObject.set(doc.as<JsonObjectConst>());
-    }
-
-    CRGB DeserializeCRGBFromJson(const JsonObjectConst&  jsonObject)
-    {
-        if (!jsonObject.containsKey("c")) 
-            return CRGB();
-
-        JsonArray components = jsonObject["c"].as<JsonArray>();
-
-        return CRGB(components[0].as<uint8_t>(), components[1].as<uint8_t>(), components[2].as<uint8_t>());
+        return (color.r << 16) | (color.g << 8) | color.b;
     }
 }

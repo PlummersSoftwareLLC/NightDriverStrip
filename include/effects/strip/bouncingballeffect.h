@@ -87,8 +87,8 @@ private:
         : LEDStripEffect(jsonObject),
           _cBalls(jsonObject["blc"].as<size_t>()),
           _cBallSize(jsonObject["bls"].as<size_t>()),
-          _bMirrored(jsonObject["mir"].as<bool>()),
-          _bErase(jsonObject["ers"].as<bool>())
+          _bMirrored(jsonObject[PTY_MIRORRED].as<bool>()),
+          _bErase(jsonObject[PTY_ERASE].as<bool>())
     {
     }
 
@@ -96,13 +96,13 @@ private:
     {
         StaticJsonDocument<128> jsonDoc;
         
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
         jsonDoc["blc"] = _cBalls;
         jsonDoc["bls"] = _cBallSize;
-        jsonDoc["mir"] = _bMirrored;
-        jsonDoc["ers"] = _bErase;
-
-        JsonObject root = jsonDoc.as<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
+        jsonDoc[PTY_MIRORRED] = _bMirrored;
+        jsonDoc[PTY_ERASE] = _bErase;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

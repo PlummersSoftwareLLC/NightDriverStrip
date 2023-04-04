@@ -715,7 +715,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
       : LEDStripEffect(jsonObject),
         BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
     {
     }
 
@@ -723,11 +723,11 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
     {
         StaticJsonDocument<512> jsonDoc;
         
-        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
-        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
-
-        JsonObject root = jsonDoc.as<JsonObject>();
+        JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
+
+        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
+        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -806,7 +806,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
       : LEDStripEffect(jsonObject),
         BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
     {
     }
 
@@ -814,11 +814,11 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
     {
         StaticJsonDocument<512> jsonDoc;
         
-        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
-        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
-
-        JsonObject root = jsonDoc.as<JsonObject>();
+        JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
+
+        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
+        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -893,7 +893,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
       : LEDStripEffect(jsonObject), 
         BeatEffectBase(), 
         ParticleSystem<SpinningPaletteRingParticle>(), 
-        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
     {
     }
 
@@ -901,11 +901,11 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
     {
         StaticJsonDocument<512> jsonDoc;
         
-        JsonObject paletteObject = jsonDoc.createNestedObject("plt");
-        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
-
-        JsonObject root = jsonDoc.as<JsonObject>();
+        JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
+
+        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
+        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

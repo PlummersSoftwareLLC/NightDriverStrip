@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "effects.h"
 #include "jsonserializer.h"
 
 extern bool                      g_bUpdateStarted;
@@ -64,12 +65,9 @@ class LEDStripEffect : public IJSONSerializable
     }
 
     LEDStripEffect(const JsonObjectConst&  jsonObject) 
+        : _effectNumber(jsonObject[PTY_EFFECTNR].as<int>()),
+          _friendlyName(jsonObject["fn"].as<const char *>())
     {
-        if (jsonObject.containsKey("en"))
-            _effectNumber = jsonObject["en"].as<int>();
-
-        if (jsonObject.containsKey("fn"))
-            _friendlyName = jsonObject["fn"].as<const char *>();
     }
 
     virtual ~LEDStripEffect()
@@ -107,6 +105,11 @@ class LEDStripEffect : public IJSONSerializable
     virtual const String & FriendlyName() const
     {
         return _friendlyName;
+    }
+
+    int EffectNumber() const
+    {
+        return _effectNumber;
     }
 
     virtual size_t DesiredFramesPerSecond() const
@@ -270,10 +273,15 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) 
     {
-        jsonObject["en"] = _effectNumber;
-        jsonObject["fn"] = _friendlyName.c_str();
+        StaticJsonDocument<128> jsonDoc;
+        
+        jsonDoc[PTY_EFFECTNR] = _effectNumber;
+        jsonDoc["fn"] = _friendlyName.c_str();
 
-        return true;
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
 };

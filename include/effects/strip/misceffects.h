@@ -46,11 +46,32 @@ class SimpleRainbowTestEffect : public LEDStripEffect
   public:
   
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
-      : LEDStripEffect(EFFECT_STRIP_SIMPLE_RAINBOW, "Simple Rainbow"),
+      : LEDStripEffect(EFFECT_STRIP_SIMPLE_RAINBOW_TEST, "Simple Rainbow"),
           _EveryNth(everyNthPixel),
           _SpeedDivisor(speedDivisor)
     {
         debugV("SimpleRainbowTestEffect constructor");
+    }
+
+    SimpleRainbowTestEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+          _EveryNth(jsonObject[PTY_EVERYNTH].as<uint8_t>()),
+          _SpeedDivisor(jsonObject[PTY_SPEEDDIVISOR].as<uint8_t>())
+    {
+        debugV("SimpleRainbowTestEffect JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_EVERYNTH] = _EveryNth;
+        jsonDoc[PTY_SPEEDDIVISOR] = _SpeedDivisor;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw() 
@@ -78,6 +99,27 @@ class RainbowTwinkleEffect : public LEDStripEffect
         _deltaHue(deltaHue)
     {
         debugV("RainbowFill constructor");
+    }
+
+    RainbowTwinkleEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _speedDivisor(jsonObject[PTY_SPEEDDIVISOR].as<float>()),
+        _deltaHue(jsonObject[PTY_DELTAHUE].as<int>())
+    {
+        debugV("RainbowFill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_SPEEDDIVISOR] = _speedDivisor;
+        jsonDoc[PTY_DELTAHUE] = _deltaHue;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()
@@ -122,6 +164,27 @@ protected:
         debugV("RainbowFill constructor");
     }
 
+    RainbowFillEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _speedDivisor(jsonObject[PTY_SPEEDDIVISOR].as<float>()),
+        _deltaHue(jsonObject[PTY_DELTAHUE].as<int>())
+    {
+        debugV("RainbowFill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_SPEEDDIVISOR] = _speedDivisor;
+        jsonDoc[PTY_DELTAHUE] = _deltaHue;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
     virtual void Draw()
     {
         static float hue = 0.0f;
@@ -161,6 +224,27 @@ protected:
         debugV("Color Fill constructor");
     }
 
+    ColorFillEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _everyNth(jsonObject[PTY_EVERYNTH].as<int>()),
+        _color(CRGB(jsonObject[PTY_COLOR].as<uint32_t>()))
+    {
+        debugV("Color Fill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_EVERYNTH] = _everyNth;
+        jsonDoc[PTY_COLOR] = JSONSerializer::ToUInt32(_color);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
     virtual void Draw()
     {
         if (_everyNth != 1)
@@ -184,6 +268,27 @@ class StatusEffect : public LEDStripEffect
         _color(color)
     {
         debugV("Status Fill constructor");
+    }
+
+    StatusEffect(const JsonObjectConst& jsonObject)     // Warmer: CRGB(246,200,160)
+      : LEDStripEffect(jsonObject),
+        _everyNth(jsonObject[PTY_EVERYNTH].as<int>()),
+        _color(CRGB(jsonObject[PTY_COLOR].as<uint32_t>()))
+    {
+        debugV("Status Fill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_EVERYNTH] = _everyNth;
+        jsonDoc[PTY_COLOR] = JSONSerializer::ToUInt32(_color);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()
@@ -233,10 +338,32 @@ class TwinkleEffect : public LEDStripEffect
     
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
       : LEDStripEffect(EFFECT_STRIP_TWINKLE, "Twinkle"),
-          _countToDraw(countToDraw),
+        _countToDraw(countToDraw),
         _fadeFactor(fadeFactor),
         _updateSpeed(updateSpeed)
     {
+    }
+
+    TwinkleEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _countToDraw(jsonObject["ctd"].as<int>()),
+        _fadeFactor(jsonObject["ffr"].as<int>()),
+        _updateSpeed(jsonObject[PTY_SPEED].as<int>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["ctd"] = _countToDraw;
+        jsonDoc["ffr"] = _fadeFactor;
+        jsonDoc[PTY_SPEED] = _updateSpeed;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     const int Count = 99;
