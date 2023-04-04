@@ -93,6 +93,11 @@ class LEDStripEffect
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
+    virtual bool CanDisplayVUMeter() const
+    {
+        return true;
+    }
+
     virtual const String & FriendlyName() const
     {
         return _friendlyName;
@@ -103,7 +108,7 @@ class LEDStripEffect
         return 30;
     }
     
-    virtual size_t MinimumEffectTime() const
+    virtual size_t MaximumEffectTime() const
     {
         return SIZE_MAX;
     }

@@ -133,7 +133,7 @@ public:
 
     virtual bool IsVUVisible() const
     {
-        return _bShowVU;
+        return _bShowVU && GetCurrentEffect()->CanDisplayVUMeter();
     }
 
 #if ATOMLIGHT
@@ -347,7 +347,7 @@ public:
         
         if (_effectInterval == 0)
             return std::numeric_limits<uint>::max();
-        return min(_effectInterval, GetCurrentEffect()->MinimumEffectTime() - GetTimeUsedByCurrentEffect());
+        return min(_effectInterval, GetCurrentEffect()->MaximumEffectTime() - GetTimeUsedByCurrentEffect());
     }
 
     void CheckEffectTimerExpired()

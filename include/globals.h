@@ -165,7 +165,7 @@
 #undef min                                      // They define a min() on us
 #endif
 
-#define EFFECT_CROSS_FADE_TIME 600.0    // How long for an effect to ramp brightness fader down and back during effect change
+#define EFFECT_CROSS_FADE_TIME 1200.0    // How long for an effect to ramp brightness fader down and back during effect change
 
 // Thread priorities
 //

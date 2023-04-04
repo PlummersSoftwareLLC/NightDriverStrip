@@ -85,6 +85,11 @@ public:
     {
     }
 
+    void SetBrightness(byte percent)
+    {
+        matrix.setBrightness(percent);
+    }
+    
     inline virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         return y * MATRIX_WIDTH + x;    

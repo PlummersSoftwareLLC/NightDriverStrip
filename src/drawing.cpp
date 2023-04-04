@@ -91,7 +91,8 @@ void MatrixPreDraw()
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-
+        pMatrix->SetBrightness(g_Fader);
+        
         if (g_aptrEffectManager->GetCurrentEffect()->ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
             LEDMatrixGFX::titleLayer.setFont(font3x5);

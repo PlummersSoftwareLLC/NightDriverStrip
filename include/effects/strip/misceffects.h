@@ -183,9 +183,14 @@ class SplashLogoEffect : public LEDStripEffect
         debugV("Status Fill constructor");
     }
 
-    virtual size_t MinimumEffectTime() const
+    virtual size_t MaximumEffectTime() const
     {
         return 10.0 * MILLIS_PER_SECOND;
+    }
+
+    virtual bool CanDisplayVUMeter() const
+    {
+        return false;
     }
 
     virtual void Draw()

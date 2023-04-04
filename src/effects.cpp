@@ -414,7 +414,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new MusicalPaletteFire("Musical Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false),
 
         new BouncingBallEffect(),
-        new floatPaletteEffect(),
+        new DoublePaletteEffect(),
 
         new MeteorEffect(4, 4, 10, 2.0, 2.0),
         new MeteorEffect(10, 1, 20, 1.5, 1.5),
@@ -592,7 +592,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new StarryNightEffect<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                             // Red Twinkle
         new StarryNightEffect<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
         new StarryNightEffect<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
-        new floatPaletteEffect(),
+        new DoublePaletteEffect(),
         new VUEffect()
 
 #elif FLAMEBULB
@@ -660,7 +660,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new SimpleRainbowTestEffect(8, 1),  // Rainbow palette simple test of walking pixels
         new SimpleRainbowTestEffect(8, 4),  // Rainbow palette simple test of walking pixels
         new PaletteEffect(MagentaColors_p), // Rainbow palette
-        new floatPaletteEffect(),
+        new DoublePaletteEffect(),
 
         new MeteorEffect(), // Our overlapping color meteors
 
@@ -687,7 +687,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new RainbowFillEffect(32, 1),
         new SimpleRainbowTestEffect(8, 1),              // Rainbow palette simple test of walking pixels
         new PaletteEffect(MagentaColors_p),             // Rainbow palette
-        new floatPaletteEffect(),
+        new DoublePaletteEffect(),
 
 #else                                                                   
 
