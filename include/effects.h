@@ -30,6 +30,7 @@
 #define EFFECT_STRIP_SPARKLY_SPINNING_MUSIC             26
 #define EFFECT_STRIP_MUSICAL_HOT_WHITE_INSULATOR        27
 #define EFFECT_STRIP_SNAKE                              28
+#define EFFECT_STRIP_PALETTE_FLAME                      29
 
 #define EFFECT_MATRIX_WEATHER                           99
 

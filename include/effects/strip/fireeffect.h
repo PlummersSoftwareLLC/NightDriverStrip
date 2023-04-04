@@ -80,6 +80,42 @@ class FireEffect : public LEDStripEffect
         heat = std::make_unique<uint8_t []>(CellCount());
     }
 
+    FireEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
+          LEDCount(jsonObject["ldc"].as<int>()),
+          CellsPerLED(jsonObject["cpl"].as<int>()),
+          Cooling(jsonObject["clg"].as<int>()),
+          Sparks(jsonObject["spc"].as<int>()),
+          SparkHeight(jsonObject["sph"].as<int>()),
+          Sparking(jsonObject["spg"].as<int>()),
+          bReversed(jsonObject["rvr"].as<bool>()),
+          bMirrored(jsonObject["mir"].as<bool>())
+    {
+        if (bMirrored)
+            LEDCount = LEDCount / 2;
+
+        heat = std::make_unique<uint8_t []>(CellCount());
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        jsonDoc["ldc"] = LEDCount;
+        jsonDoc["cpl"] = CellsPerLED;
+        jsonDoc["clg"] = Cooling;
+        jsonDoc["spc"] = Sparks;
+        jsonDoc["sph"] = SparkHeight;
+        jsonDoc["spg"] = Sparking;
+        jsonDoc["rvr"] = bReversed;
+        jsonDoc["mir"] = bMirrored;
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
     virtual ~FireEffect()
     {
     }
@@ -190,9 +226,30 @@ public:
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : FireEffect(strName,ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+        : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           _palette(palette)
     {
+        _effectNumber = EFFECT_STRIP_PALETTE_FLAME;
+    }
+
+    PaletteFlameEffect(const JsonObjectConst& jsonObject)
+      : FireEffect(jsonObject),
+        _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>()))
+    {
+        _effectNumber = EFFECT_STRIP_PALETTE_FLAME;
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        JsonObject root = jsonDoc.to<JsonObject>();
+
+        FireEffect::SerializeToJSON(jsonObject);
+
+        JsonObject paletteObj = jsonObject.createNestedObject("plt");
+        JSONSerializer::SerializeToJSON(paletteObj, _palette);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual CRGB GetBlackBodyHeatColor(double temp)

@@ -667,8 +667,34 @@ private:
 
 public:
   PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, double sparkleChance = 0.0)
-      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
+      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName), 
+        _Palette(palette), 
+        _bReplaceMagenta(bReplace), 
+        _sparkleChance(sparkleChance)
   {
+  }
+
+  PaletteSpinEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject), 
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>())), 
+        _bReplaceMagenta(jsonObject["rpm"].as<bool>()), 
+        _sparkleChance(jsonObject["spc"].as<double>())
+  {
+  }
+
+  virtual bool SerializeToJSON(JsonObject& jsonObject) 
+  {
+    StaticJsonDocument<512> jsonDoc;
+    
+    JsonObject paletteObject = jsonDoc.createNestedObject("plt");
+    JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+    jsonDoc["rpm"] = _bReplaceMagenta;
+    jsonDoc["spc"] = _sparkleChance;
+
+    JsonObject root = jsonDoc.as<JsonObject>();
+    LEDStripEffect::SerializeToJSON(root);
+
+    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
   virtual void Draw()
@@ -718,9 +744,32 @@ class ColorCycleEffect : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  ColorCycleEffect(PixelOrder order = Sequential, int step = 8) : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"), _order(order), _step(step)
+  ColorCycleEffect(PixelOrder order = Sequential, int step = 8) 
+    : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"), 
+      _order(order), 
+      _step(step)
   {
   }
+
+  ColorCycleEffect(const JsonObjectConst& jsonObject) 
+    : LEDStripEffect(jsonObject), 
+      _order((PixelOrder)jsonObject["ord"].as<int>()), 
+      _step(jsonObject["stp"].as<int>())
+  {
+  }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        jsonDoc["ord"] = to_value(_order);
+        jsonDoc["stp"] = _step;
+
+        JsonObject root = jsonDoc.as<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
 
   virtual void Draw()
   {
@@ -937,6 +986,46 @@ public:
     abHeat = std::make_unique<uint8_t[]>(CellCount());
   }
 
+  FireFanEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject["plt"].as<JsonObjectConst>())),
+        LEDCount(jsonObject["ldc"].as<int>()),
+        CellsPerLED(jsonObject["cpl"].as<int>()),
+        Cooling(jsonObject["clg"].as<int>()),
+        Sparks(jsonObject["spc"].as<int>()),
+        SparkHeight(jsonObject["sph"].as<int>()),
+        Sparking(jsonObject["spg"].as<int>()),
+        bReversed(jsonObject["rvr"].as<bool>()),
+        bMirrored(jsonObject["mir"].as<bool>()),
+        Order((PixelOrder)jsonObject["ord"].as<int>())
+  {
+    if (bMirrored)
+      LEDCount = LEDCount / 2;
+    abHeat = std::make_unique<uint8_t[]>(CellCount());
+  }
+
+  virtual bool SerializeToJSON(JsonObject& jsonObject) 
+  {
+    StaticJsonDocument<512> jsonDoc;
+    
+    JsonObject paletteObject = jsonDoc.createNestedObject("plt");
+    JSONSerializer::SerializeToJSON(paletteObject, Palette);
+    jsonDoc["ldc"] = LEDCount;
+    jsonDoc["cpl"] = CellsPerLED;
+    jsonDoc["clg"] = Cooling;
+    jsonDoc["spc"] = Sparks;
+    jsonDoc["sph"] = SparkHeight;
+    jsonDoc["spg"] = Sparking;
+    jsonDoc["rvr"] = bReversed;
+    jsonDoc["mir"] = bMirrored;
+    jsonDoc["ord"] = to_value(Order);
+
+    JsonObject root = jsonDoc.as<JsonObject>();
+    LEDStripEffect::SerializeToJSON(root);
+
+    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+  }
+
   virtual CRGB GetBlackBodyHeatColor(byte temp)
   {
     return ColorFromPalette(Palette, temp, 255);
@@ -1103,6 +1192,10 @@ public:
   {
   }
 
+  RingTestEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  {
+  }
+
   virtual void Draw()
   {
     for (int i = 0; i < NUM_FANS; i++)
@@ -1250,6 +1343,10 @@ private:
 
 public:
   LanternEffect() : LEDStripEffect(EFFECT_STRIP_LANTERN, "LanternEffect")
+  {
+  }
+
+  LanternEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 
