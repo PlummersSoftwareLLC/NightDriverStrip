@@ -81,7 +81,11 @@ private:
   boolean handledChange = false;
 
 public:
-  PatternSpiro() : LEDStripEffect("Spiro")
+  PatternSpiro() : LEDStripEffect(EFFECT_MATRIX_SPIRO, "Spiro")
+  {
+  }
+
+  PatternSpiro(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 

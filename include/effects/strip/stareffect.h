@@ -465,7 +465,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         _starSize(jsonObject[PTY_SIZE].as<float>()),
         _blendType(static_cast<TBlendType>(jsonObject[PTY_BLEND].as<int>())),
         _maxSpeed(jsonObject[PTY_MAXSPEED].as<double>()),
-        _blurFactor(jsonObject["blr"].as<double>()),
+        _blurFactor(jsonObject[PTY_BLUR].as<double>()),
         _musicFactor(jsonObject["msf"].as<double>()),
         _skyColor(CRGB(jsonObject[PTY_COLOR].as<uint32_t>()))
     {
@@ -485,7 +485,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         jsonDoc[PTY_SIZE] = _starSize;
         jsonDoc[PTY_BLEND] = to_value(_blendType);
         jsonDoc[PTY_MAXSPEED] = _maxSpeed;
-        jsonDoc["blr"] = _blurFactor;
+        jsonDoc[PTY_BLUR] = _blurFactor;
         jsonDoc["msf"] = _musicFactor;
         jsonDoc[PTY_COLOR] = JSONSerializer::ToUInt32(_skyColor);
 

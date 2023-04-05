@@ -63,7 +63,11 @@ private:
     const uint8_t borderWidth = 2;
 
 public:
-    PatternSwirl() : LEDStripEffect("Swirl")
+    PatternSwirl() : LEDStripEffect(EFFECT_MATRIX_SWIRL, "Swirl")
+    {
+    }
+
+    PatternSwirl(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

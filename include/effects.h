@@ -25,7 +25,6 @@
 //
 //    Defines for effect (sub)types numbers and common JSON property names
 //
-//
 // History:     Apr-05-2023         Rbergen      Created for NightDriverStrip
 //
 //---------------------------------------------------------------------------
@@ -70,6 +69,42 @@
 #define EFFECT_STRIP_TAPE_REEL                          36
 #define EFFECT_STRIP_FAN_BEAT                           37
 
+// Matrix effects
+#define EFFECT_MATRIX_ALIEN_TEXT                       101
+#define EFFECT_MATRIX_BOUNCE                           102
+#define EFFECT_MATRIX_CIRCUIT                          103
+#define EFFECT_MATRIX_CLOCK                            104
+#define EFFECT_MATRIX_CUBE                             105
+#define EFFECT_MATRIX_FLOW_FIELD                       106
+#define EFFECT_MATRIX_LIFE                             107
+#define EFFECT_MATRIX_MANDALA                          108
+#define EFFECT_MATRIX_SUNBURST                         109
+#define EFFECT_MATRIX_ROSE                             110
+#define EFFECT_MATRIX_PINWHEEL                         111
+#define EFFECT_MATRIX_INFINITY                         112
+#define EFFECT_MATRIX_MUNCH                            113
+#define EFFECT_MATRIX_CURTAIN                          114
+#define EFFECT_MATRIX_GRID_LIGHTS                      115
+#define EFFECT_MATRIX_PALETTE_SMEAR                    116
+#define EFFECT_MATRIX_RAINBOW_FLAG                     117
+#define EFFECT_MATRIX_PONG_CLOCK                       118
+#define EFFECT_MATRIX_PULSE                            119
+#define EFFECT_MATRIX_PULSAR                           120
+#define EFFECT_MATRIX_QR                               121
+#define EFFECT_MATRIX_RADAR                            122
+#define EFFECT_MATRIX_SERENDIPITY                      123
+#define EFFECT_MATRIX_SPARK                            124
+#define EFFECT_MATRIX_SPIN                             125
+#define EFFECT_MATRIX_SPIRO                            126
+#define EFFECT_MATRIX_SUBSCRIBERS                      127
+#define EFFECT_MATRIX_SWIRL                            128
+#define EFFECT_MATRIX_WAVE                             129
+#define EFFECT_MATRIX_WEATHER                          130
+#define EFFECT_MATRIX_INSULATOR_SPECTRUM               131
+#define EFFECT_MATRIX_SPECTRUM_ANALYZER                132
+#define EFFECT_MATRIX_WAVEFORM                         133
+#define EFFECT_MATRIX_GHOST_WAVE                       134
+
 // Starry Night star variations
 #define EFFECT_STAR                                      1
 #define EFFECT_STAR_RANDOM_PALETTE_COLOR                 2
@@ -85,11 +120,7 @@
 #define EFFECT_STAR_CHRISTMAS                           12
 #define EFFECT_STAR_HOT_WHITE                           13
 
-// Matrix effects
-#define EFFECT_MATRIX_WEATHER                          101
-
 // Some common JSON properties to prevent typos
-
 #define PTY_EFFECTNR        "en"
 #define PTY_REVERSED        "rvr"
 #define PTY_MIRORRED        "mir"
@@ -112,5 +143,7 @@
 #define PTY_COLOR           "clr"
 #define PTY_BLEND           "bld"
 #define PTY_STARTYPENR      "stt"
+#define PTY_BLUR            "blr"
+#define PTY_FADE            "fde"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

@@ -61,7 +61,11 @@ private:
   uint8_t hueoffset = 0;
 
 public:
-  PatternRadar() : LEDStripEffect("Radar")
+  PatternRadar() : LEDStripEffect(EFFECT_MATRIX_RADAR, "Radar")
+  {
+  }
+
+  PatternRadar(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 

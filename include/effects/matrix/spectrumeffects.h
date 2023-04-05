@@ -50,11 +50,32 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
   public:
 
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) : 
-        LEDStripEffect(strName),
+        LEDStripEffect(EFFECT_MATRIX_INSULATOR_SPECTRUM, strName),
         BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
+    }
+
+    InsulatorSpectrumEffect(const JsonObjectConst& jsonObject) : 
+        LEDStripEffect(jsonObject),
+        BeatEffectBase(1.50, 0.25),
+        ParticleSystem<SpinningPaletteRingParticle>(),
+        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
+        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()
@@ -300,7 +321,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0)
-        : LEDStripEffect(pszFriendlyName),
+        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
@@ -317,7 +338,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
                            uint8_t                fadeRate = 0,
                            float            peak1DecayRate = 1.0,
                            float            peak2DecayRate = 1.0)
-        : LEDStripEffect(pszFriendlyName), 
+        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName), 
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(0), 
@@ -327,6 +348,36 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _peak2DecayRate(peak2DecayRate)
 
     {
+    }
+
+    SpectrumAnalyzerEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject), 
+          _numBars(jsonObject["nmb"].as<int>()),
+          _colorOffset(0),
+          _scrollSpeed(0), 
+          _fadeRate(jsonObject["frt"].as<uint8_t>()),
+          _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>())),
+          _peak1DecayRate(jsonObject["pd1"].as<float>()),
+          _peak2DecayRate(jsonObject["pd2"].as<float>())
+
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
+        JSONSerializer::SerializeToJSON(paletteObject, _palette);
+        jsonDoc["nmb"] = _numBars;
+        jsonDoc["frt"] = _fadeRate;
+        jsonDoc["pd1"] = _peak1DecayRate;
+        jsonDoc["pd2"] = _peak2DecayRate;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()
@@ -386,10 +437,31 @@ class WaveformEffect : public LEDStripEffect
   public:
     
     WaveformEffect(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
-        : LEDStripEffect(pszFriendlyName)
+        : LEDStripEffect(EFFECT_MATRIX_WAVEFORM, pszFriendlyName),
+          _pPalette(pPalette),
+          _increment(increment)
     {
-        _pPalette = pPalette;
-        _increment = increment;
+    }
+
+    // NOTE: _pPalette is not (de)serialized to JSON, as it doesn't seem to be used and (de)serializing 
+    // pointers is a bit of a challenge
+
+    WaveformEffect(const JsonObjectConst& jsonObject) 
+        : LEDStripEffect(jsonObject),
+          _increment(jsonObject["inc"].as<uint8_t>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["inc"] = _increment;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     void DrawSpike(int x, double v, bool bErase = true) 
@@ -446,6 +518,11 @@ class GhostWave : public WaveformEffect
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;
+
+    void construct()
+    {
+        _effectNumber = EFFECT_MATRIX_GHOST_WAVE;
+    }
   public:
 
     GhostWave(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
@@ -454,6 +531,30 @@ class GhostWave : public WaveformEffect
           _erase(erase),
           _fade(fade)
     {
+        construct();
+    }
+
+    GhostWave(const JsonObjectConst& jsonObject) 
+        : WaveformEffect(jsonObject),
+          _blur(jsonObject[PTY_BLUR].as<uint8_t>()),
+          _erase(jsonObject[PTY_ERASE].as<bool>()),
+          _fade(jsonObject[PTY_FADE].as<int>())
+    {
+        construct();
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_BLUR] = _blur;
+        jsonDoc[PTY_ERASE] = _erase;
+        jsonDoc[PTY_FADE] = _fade;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()

@@ -57,7 +57,11 @@
 class PatternSpin : public LEDStripEffect
 {
 public:
-    PatternSpin() : LEDStripEffect("Spin")
+    PatternSpin() : LEDStripEffect(EFFECT_MATRIX_SPIN, "Spin")
+    {
+    }
+
+    PatternSpin(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

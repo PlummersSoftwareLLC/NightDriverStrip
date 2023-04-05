@@ -72,7 +72,11 @@ class PatternPulse : public LEDStripEffect
 
   public:
 
-    PatternPulse() : LEDStripEffect("Pulse")
+    PatternPulse() : LEDStripEffect(EFFECT_MATRIX_PULSE, "Pulse")
+    {
+    }
+
+    PatternPulse(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
@@ -141,7 +145,13 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
     PatternPulsar() :
         BeatEffectBase(1.5, 0.1 ),
-        LEDStripEffect("Pulsars")
+        LEDStripEffect(EFFECT_MATRIX_PULSAR, "Pulsars")
+    {
+    }
+    
+    PatternPulsar(const JsonObjectConst& jsonObject) :
+        BeatEffectBase(1.5, 0.1 ),
+        LEDStripEffect(jsonObject)
     {
     }
     

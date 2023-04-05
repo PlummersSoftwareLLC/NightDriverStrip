@@ -190,7 +190,11 @@ private:
 
 public:
 
-    PatternLife() : LEDStripEffect("Life")
+    PatternLife() : LEDStripEffect(EFFECT_MATRIX_LIFE, "Life")
+    {
+    }
+
+    PatternLife(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

@@ -64,7 +64,11 @@ uint8_t patternNoiseSmearingHue = 0;
 class PatternCurtain : public LEDStripEffect 
 {
 public:
-  PatternCurtain() : LEDStripEffect("Curtain")
+  PatternCurtain() : LEDStripEffect(EFFECT_MATRIX_CURTAIN, "Curtain")
+  {
+  }
+
+  PatternCurtain(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 
@@ -100,7 +104,11 @@ public:
 
 class PatternGridLights : public LEDStripEffect {
 public:
-  PatternGridLights() : LEDStripEffect("Grid Dots")
+  PatternGridLights() : LEDStripEffect(EFFECT_MATRIX_GRID_LIGHTS, "Grid Dots")
+  {
+  }
+
+  PatternGridLights(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 
@@ -137,7 +145,11 @@ public:
 class PatternPaletteSmear : public LEDStripEffect 
 {
 public:
-  PatternPaletteSmear() : LEDStripEffect("Smear")
+  PatternPaletteSmear() : LEDStripEffect(EFFECT_MATRIX_PALETTE_SMEAR, "Smear")
+  {
+  }
+
+  PatternPaletteSmear(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 
@@ -181,7 +193,11 @@ graphics()->SetNoise(3000, 3000, 0, 4000, 4000);
 class PatternRainbowFlag : public LEDStripEffect 
 {
 public:
-  PatternRainbowFlag() : LEDStripEffect("RainbowFlag")
+  PatternRainbowFlag() : LEDStripEffect(EFFECT_MATRIX_RAINBOW_FLAG, "RainbowFlag")
+  {
+  }
+
+  PatternRainbowFlag(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 

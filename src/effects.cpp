@@ -29,60 +29,7 @@
 
 #include "globals.h"
 #include "SPIFFS.h"
-#include <map>
-#include <cstring>
-
-#include "effects/strip/fireeffect.h"          // fire effects
-#include "effects/strip/paletteeffect.h"       // palette effects
-#include "effects/strip/doublepaletteeffect.h" // double palette effect
-#include "effects/strip/meteoreffect.h"        // meteor blend effect
-#include "effects/strip/stareffect.h"          // star effects
-#include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
-#include "effects/strip/tempeffect.h"
-#include "effects/strip/stareffect.h"
-#include "effects/strip/laserline.h"
-#include "effects/matrix/PatternClock.h"       // No matrix dependencies
-
-#if ENABLE_AUDIO
-    #include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
-    #include "effects/strip/musiceffect.h"         // Music based effects
-#endif
-
-#if FAN_SIZE
-    #include "effects/strip/faneffects.h" // Fan-based effects
-#endif
-
-//
-// Externals
-//
-
-#if USE_MATRIX
-    #include "ledmatrixgfx.h"
-    #include "effects/matrix/PatternSerendipity.h"
-    #include "effects/matrix/PatternSwirl.h"
-    #include "effects/matrix/PatternPulse.h"
-    #include "effects/matrix/PatternWave.h"
-    #include "effects/matrix/PatternLife.h"
-    #include "effects/matrix/PatternSpiro.h"
-    #include "effects/matrix/PatternCube.h"
-    #include "effects/matrix/PatternCircuit.h"
-    #include "effects/matrix/PatternSubscribers.h"
-    #include "effects/matrix/PatternAlienText.h"
-    #include "effects/matrix/PatternRadar.h"
-    #include "effects/matrix/PatternPongClock.h"
-    #include "effects/matrix/PatternBounce.h"
-    #include "effects/matrix/PatternMandala.h"
-    #include "effects/matrix/PatternSpin.h"
-    #include "effects/matrix/PatternFlowField.h"
-    #include "effects/matrix/PatternMisc.h"
-    #include "effects/matrix/PatternNoiseSmearing.h"
-    #include "effects/matrix/PatternQR.h"
-    #include "effects/matrix/PatternWeather.h"
-#endif
-
-#ifdef USESTRIP
-    #include "ledstripgfx.h"
-#endif
+#include "effectdependencies.h"
 
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
@@ -320,101 +267,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-typedef LEDStripEffect* (*JsonEffectFactory)(const JsonObjectConst&);
-
-std::map<int, JsonEffectFactory> g_JsonStarryNightEffectFactories = 
-{
-    { EFFECT_STAR,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StarryNightEffect<Star>(jsonObject); } },
-    { EFFECT_STAR_BUBBLY, 
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StarryNightEffect<BubblyStar>(jsonObject); } },
-    { EFFECT_STAR_HOT_WHITE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StarryNightEffect<HotWhiteStar>(jsonObject); } },
-    { EFFECT_STAR_LONG_LIFE_SPARKLE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StarryNightEffect<LongLifeSparkleStar>(jsonObject); } },
-
-#if ENABLE_AUDIO
-    { EFFECT_STAR_MUSIC,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StarryNightEffect<MusicStar>(jsonObject); } },
-#endif
-
-    { EFFECT_STAR_QUIET,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StarryNightEffect<QuietStar>(jsonObject); } },
-};
-
-LEDStripEffect* CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
-{
-    return g_JsonStarryNightEffectFactories[jsonObject[PTY_STARTYPENR].as<int>()](jsonObject);
-}
-
-std::map<int, JsonEffectFactory> g_JsonEffectFactories = 
-{
-    { EFFECT_STRIP_BOUNCING_BALL,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new BouncingBallEffect(jsonObject); } },
-    { EFFECT_STRIP_CLASSIC_FIRE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new ClassicFireEffect(jsonObject); } },
-    { EFFECT_STRIP_COLOR_CYCLE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new ColorCycleEffect(jsonObject); } },
-    { EFFECT_STRIP_COLOR_FILL,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new ColorFillEffect(jsonObject); } },
-    { EFFECT_STRIP_DOUBLE_PALETTE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new DoublePaletteEffect(jsonObject); } },
-    { EFFECT_STRIP_FIRE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new FireEffect(jsonObject); } },
-    { EFFECT_STRIP_LANTERN,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new LanternEffect(jsonObject); } },
-    { EFFECT_STRIP_LASER_LINE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new LaserLineEffect(jsonObject); } },
-    { EFFECT_STRIP_METEOR,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new MeteorEffect(jsonObject); } },
-    { EFFECT_STRIP_PALETTE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PaletteEffect(jsonObject); } },
-    { EFFECT_STRIP_PALETTE_FLAME,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PaletteFlameEffect(jsonObject); } },
-    { EFFECT_STRIP_RAINBOW_FILL,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new RainbowFillEffect(jsonObject); } },
-    { EFFECT_STRIP_SIMPLE_RAINBOW_TEST,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new SimpleRainbowTestEffect(jsonObject); } },
-    { EFFECT_STRIP_STARRY_NIGHT,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return CreateStarryNightEffectFromJSON(jsonObject); } },
-    { EFFECT_STRIP_STATUS,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StatusEffect(jsonObject); } },
-    { EFFECT_STRIP_TWINKLE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new TwinkleEffect(jsonObject); } },
-
-#if ENABLE_AUDIO
-    { EFFECT_STRIP_COLOR_BEAT_OVER_RED,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new ColorBeatOverRed(jsonObject); } },
-    { EFFECT_STRIP_NEW_MOLTEN_GLASS_ON_VIOLET_BKGND,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new NewMoltenGlassOnVioletBkgnd(jsonObject); } },
-    { EFFECT_STRIP_MUSICAL_PALETTE_FIRE,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new MusicalPaletteFire(jsonObject); } },
-    { EFFECT_STRIP_SIMPLE_INSULATOR_BEAT2,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new SimpleInsulatorBeatEffect2(jsonObject); } },
-    { EFFECT_STRIP_SPARKLY_SPINNING_MUSIC,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new SparklySpinningMusicEffect(jsonObject); } },
-#endif
-
-#if FAN_SIZE
-    { EFFECT_STRIP_FAN_BEAT,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new FanBeatEffect(jsonObject); } },
-    { EFFECT_STRIP_FIRE_FAN,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new FireFanEffect(jsonObject); } },
-    { EFFECT_STRIP_PALETTE_REEL,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PaletteReelEffect(jsonObject); } },
-    { EFFECT_STRIP_PALETTE_REEL,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PaletteReelEffect(jsonObject); } },
-    { EFFECT_STRIP_TAPE_REEL,
-        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new TapeReelEffect(jsonObject); } },
-#endif
-};
-
-LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject)
-{
-    return g_JsonEffectFactories[jsonObject[PTY_EFFECTNR].as<int>()](jsonObject);
-}
-
-size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& p_EffectList) 
+size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList) 
 {
     // The default effects table
     LEDStripEffect *defaultEffects[] =
@@ -795,8 +648,8 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& p_EffectList)
     // one effect even if it's the Status effect.
     static_assert(ARRAYSIZE(defaultEffects) > 0);
 
-    p_EffectList = std::make_unique<EffectPointerArray>(ARRAYSIZE(defaultEffects));
-    std::copy(std::begin(defaultEffects), std::end(defaultEffects), p_EffectList.get());
+    pEffectList = std::make_unique<EffectPointerArray>(ARRAYSIZE(defaultEffects));
+    std::copy(std::begin(defaultEffects), std::end(defaultEffects), pEffectList.get());
 
     return ARRAYSIZE(defaultEffects);
 }

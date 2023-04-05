@@ -143,7 +143,11 @@ public:
         _vEffects.reserve(effectsArray.size());
 
         for (auto effect : effectsArray)
-            _vEffects.push_back(CreateEffectFromJSON(effect.as<JsonObjectConst>()));
+        {
+            LEDStripEffect *pEffect = CreateEffectFromJSON(effect.as<JsonObjectConst>());
+            if (pEffect != nullptr)
+                _vEffects.push_back(pEffect);
+        }
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)

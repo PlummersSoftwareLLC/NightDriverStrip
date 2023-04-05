@@ -347,7 +347,7 @@ class TwinkleEffect : public LEDStripEffect
     TwinkleEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
         _countToDraw(jsonObject["ctd"].as<int>()),
-        _fadeFactor(jsonObject["ffr"].as<int>()),
+        _fadeFactor(jsonObject[PTY_FADE].as<int>()),
         _updateSpeed(jsonObject[PTY_SPEED].as<int>())
     {
     }
@@ -360,7 +360,7 @@ class TwinkleEffect : public LEDStripEffect
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc["ctd"] = _countToDraw;
-        jsonDoc["ffr"] = _fadeFactor;
+        jsonDoc[PTY_FADE] = _fadeFactor;
         jsonDoc[PTY_SPEED] = _updateSpeed;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());

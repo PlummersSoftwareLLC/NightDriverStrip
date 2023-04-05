@@ -62,6 +62,12 @@
 
 class PatternQR : public LEDStripEffect 
 {
+    void construct()
+    {
+        qrcodeData = (uint8_t *) PreferPSRAMAlloc(qrcode_getBufferSize(qrVersion));
+        lastData = "";
+    }
+
 protected:
 
     String lastData;
@@ -71,10 +77,14 @@ protected:
 
 public:
 
-    PatternQR() : LEDStripEffect("QR")
+    PatternQR() : LEDStripEffect(EFFECT_MATRIX_QR, "QR")
     {
-        qrcodeData = (uint8_t *) PreferPSRAMAlloc(qrcode_getBufferSize(qrVersion));
-        lastData = "";
+        construct();
+    }
+
+    PatternQR(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+        construct();
     }
 
     virtual ~PatternQR()

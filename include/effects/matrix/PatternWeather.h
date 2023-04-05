@@ -261,11 +261,8 @@ public:
 
     PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
-        if (jsonObject.containsKey("pcd"))
-            strPostalCode = jsonObject["pcd"].as<const char*>();
-
-        if (jsonObject.containsKey("ccd"))
-            strCountryCode = jsonObject["ccd"].as<const char*>();
+        strPostalCode = jsonObject["pcd"].as<const char*>();
+        strCountryCode = jsonObject["ccd"].as<const char*>();
 
         if (strPostalCode.isEmpty())
             strPostalCode = cszZipCode;
