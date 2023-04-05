@@ -428,7 +428,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 class WaveformEffect : public LEDStripEffect
 {
   protected:
-    const TProgmemRGBPalette16 * _pPalette = nullptr;
     uint8_t                      _iColorOffset = 0;
     uint8_t                      _increment = 0;
     double                       _iPeakVUy = 0;
@@ -436,15 +435,11 @@ class WaveformEffect : public LEDStripEffect
 
   public:
     
-    WaveformEffect(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
+    WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0) 
         : LEDStripEffect(EFFECT_MATRIX_WAVEFORM, pszFriendlyName),
-          _pPalette(pPalette),
           _increment(increment)
     {
     }
-
-    // NOTE: _pPalette is not (de)serialized to JSON, as it doesn't seem to be used and (de)serializing 
-    // pointers is a bit of a challenge
 
     WaveformEffect(const JsonObjectConst& jsonObject) 
         : LEDStripEffect(jsonObject),
@@ -525,8 +520,8 @@ class GhostWave : public WaveformEffect
     }
   public:
 
-    GhostWave(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
-        : WaveformEffect(pszFriendlyName, pPalette, increment),
+    GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
+        : WaveformEffect(pszFriendlyName, increment),
           _blur(blur),
           _erase(erase),
           _fade(fade)

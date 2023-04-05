@@ -307,12 +307,12 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new PatternSubscribers(),
         
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
-        new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
-        new GhostWave("WaveOut", &RainbowColors_p, 0, 0, false, 40),
+        new GhostWave("GhostWave", 0, 24, false),
+        new WaveformEffect("WaveIn", 8),     
+        new GhostWave("WaveOut", 0, 0, false, 40),
 
-        new WaveformEffect("WaveForm", &RainbowColors_p, 8),
-        new GhostWave("GhostWave", &RainbowColors_p, 0, 0,  false),
+        new WaveformEffect("WaveForm", 8),
+        new GhostWave("GhostWave", 0, 0,  false),
 
         new PatternLife(),
         new PatternRose(),
@@ -669,7 +669,7 @@ void InitEffectsManager()
 
     File file = SPIFFS.open(EFFECTS_CONFIG_FILE);
     
-    std::unique_ptr<DynamicJsonDocument> p_jsonDoc(nullptr);
+    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
 
     if (file) 
     {
@@ -681,14 +681,14 @@ void InitEffectsManager()
         // Loop is here to deal with out of memory conditions
         while(true)
         {
-            p_jsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
-            DeserializationError error = deserializeJson(*p_jsonDoc, file);
+            pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
+            DeserializationError error = deserializeJson(*pJsonDoc, file);
 
             if (error == DeserializationError::NoMemory)
             {
                 debugW("Out of memory reading EffectManager config - increasing buffer");
 
-                p_jsonDoc.reset(nullptr);
+                pJsonDoc.reset(nullptr);
                 g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
             }
             else if (error == DeserializationError::Ok)
@@ -707,7 +707,7 @@ void InitEffectsManager()
     {
         debugI("Creating EffectManager from JSON config");
 
-        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(p_jsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
     }
     else
     {
