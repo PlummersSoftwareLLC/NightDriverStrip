@@ -42,9 +42,6 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 //
 // Palettes that are referenced by effects need to be instantiated first
  
-const TProgmemRGBPalette16 BlueColors1_p = { CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White };
-const TProgmemRGBPalette16 GhostWaveColors1_p = { CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red };
-
 const CRGBPalette16 BlueColors_p =
 {
     CRGB::DarkBlue,
@@ -477,13 +474,13 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
 
         new SpectrumAnalyzerEffect("Spectrum Standard", 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
         
-        new GhostWave("GhostWave", &RainbowColors_p, 0, 16, false, 40),
+        new GhostWave("GhostWave", 0, 16, false, 40),
         new SpectrumAnalyzerEffect("Spectrum USA", 16, USAColors_p, 0),
-        new GhostWave("GhostWave Rainbow", &RainbowColors_p, 8),
+        new GhostWave("GhostWave Rainbow", 8),
         new SpectrumAnalyzerEffect("Spectrum Fade", 24, RainbowColors_p, 50, 70, -1.0, 2.0),
-        new GhostWave("GhostWave Blue", &BlueColors1_p , 0),
+        new GhostWave("GhostWave Blue", 0),
         new SpectrumAnalyzerEffect("Spectrum Standard", 24, RainbowColors_p),
-        new GhostWave("GhostWave One", &GhostWaveColors1_p , 4),
+        new GhostWave("GhostWave One", 4),
 
         //new GhostWave("GhostWave Rainbow", &rainbowPalette),
 
