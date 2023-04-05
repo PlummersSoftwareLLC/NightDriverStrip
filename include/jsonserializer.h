@@ -48,29 +48,6 @@ constexpr auto to_value(E e) noexcept
 
 namespace JSONSerializer 
 {
-    DynamicJsonDocument* SerializeToJSON(IJSONSerializable& serializableObject) 
-    {
-        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-        DynamicJsonDocument* jsonDocument = nullptr;
-
-        // Loop is in place to deal with the possible scenario that we run out of JSON buffer space
-        while(true)
-        {
-            jsonDocument = new DynamicJsonDocument(jsonBufferSize);
-            JsonObject jsonObject = jsonDocument->to<JsonObject>();
-
-            if (!serializableObject.SerializeToJSON(jsonObject))
-            {
-                jsonBufferSize += JSON_BUFFER_INCREMENT;
-                delete jsonDocument;
-            }
-            else
-                break;
-        }
-
-        return jsonDocument;
-    }
-
     bool SerializeToJSON(JsonObject& jsonObject, CRGBPalette16 palette) 
     {        
         StaticJsonDocument<512> doc;

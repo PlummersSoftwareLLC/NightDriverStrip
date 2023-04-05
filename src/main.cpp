@@ -803,6 +803,9 @@ void setup()
         CheckHeap();
     #endif
 
+    debugV("Saving effect manager config...");
+    SaveEffectManagerConfig();
+
     debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
     CheckHeap();
 

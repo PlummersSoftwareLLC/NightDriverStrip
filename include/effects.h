@@ -1,3 +1,34 @@
+//+--------------------------------------------------------------------------
+//
+// File:        effects.h
+//
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+//
+// This file is part of the NightDriver software project.
+//
+//    NightDriver is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    NightDriver is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Nightdriver.  It is normally found in copying.txt
+//    If not, see <https://www.gnu.org/licenses/>.
+//
+//
+// Description:
+//
+//    Defines for effect (sub)types numbers and common JSON property names
+//
+//
+// History:     Apr-05-2023         Rbergen      Created for NightDriverStrip
+//
+//---------------------------------------------------------------------------
 #pragma once
 
 // Strip effects
@@ -55,7 +86,7 @@
 #define EFFECT_STAR_HOT_WHITE                           13
 
 // Matrix effects
-#define EFFECT_MATRIX_WEATHER                           99
+#define EFFECT_MATRIX_WEATHER                          101
 
 // Some common JSON properties to prevent typos
 
@@ -82,3 +113,4 @@
 #define PTY_BLEND           "bld"
 #define PTY_STARTYPENR      "stt"
 
+#define EFFECTS_CONFIG_FILE "/effects.cfg"
