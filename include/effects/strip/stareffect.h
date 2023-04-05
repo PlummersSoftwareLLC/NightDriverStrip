@@ -152,8 +152,6 @@ class QuietStar : public RandomPaletteColorStar
 #if ENABLE_AUDIO
 class MusicStar : public Star
 {
-    static float _baseHue;
-
   public:
 
     MusicStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 2.0, double starSize = 1)
@@ -172,8 +170,6 @@ class MusicStar : public Star
     virtual float FadeTime()        const      { return 0.5f;  }
 
 };
-float MusicStar::_baseHue = 0.0f;
-
 
 class MusicPulseStar : public Star
 {

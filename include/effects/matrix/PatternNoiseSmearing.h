@@ -58,9 +58,6 @@
 #ifndef PatternNoiseSmearing_H
 #define PatternNoiseSmearing_H
 
-uint8_t patternNoiseSmearingHue = 0;
-
-
 class PatternCurtain : public LEDStripEffect 
 {
 public:

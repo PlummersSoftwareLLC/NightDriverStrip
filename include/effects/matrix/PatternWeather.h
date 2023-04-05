@@ -66,7 +66,7 @@ static const char * pszWeatherIcons[] = {   "",                                 
                                             "/bmp/snow.jpg",                    // 13
                                         };
 
-class PatternWeather : public LEDStripEffect, public IJSONSerializable
+class PatternWeather : public LEDStripEffect
 {
 
 private:

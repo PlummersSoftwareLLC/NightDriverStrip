@@ -29,6 +29,8 @@
 //
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #include "globals.h"
 
 #include "effects/strip/fireeffect.h"          // fire effects

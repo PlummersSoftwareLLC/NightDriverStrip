@@ -98,15 +98,15 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(std::unique_ptr<EffectPointerArray> pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
-        : _gfx(gfx),
+    EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
+        : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
 
-        _effects.reserve(cEffects);
+        _vEffects.reserve(cEffects);
         for (int i = 0; i < cEffects; i++)
         {
-            _effects.push_back(pEffects[i]);
+            _vEffects.push_back(pEffects[i]);
         }
 
         construct();
