@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        DoublePaletteEffect.h
+// File:        MeteorPaletteEffect.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
 //
@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//    Draws two intersecting palettes
+//    Draws flying meteors
 //
 // History:     Apr-16-2019         Davepl      Created
 //              
@@ -39,24 +39,24 @@ class MeteorChannel
     std::vector<float> iPos;
     std::vector<bool>  bLeft;
     std::vector<float> speed;
-    std::vector<double> lastBeat;
+    std::vector<float> lastBeat;
 
 public:
 
     size_t        meteorCount;
     uint8_t       meteorSize;
     uint8_t       meteorTrailDecay;
-    double        meteorSpeedMin;
-    double        meteorSpeedMax;
+    float        meteorSpeedMin;
+    float        meteorSpeedMax;
     bool          meteorRandomDecay = true;
-    const double  minTimeBetweenBeats = 0.6;
+    const float  minTimeBetweenBeats = 0.6;
 
     MeteorChannel() 
     {
     
     }
 
-    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, uint size = 4, uint decay = 3, double minSpeed = 0.5, double maxSpeed = 0.5)
+    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
     {
         meteorCount = meteors;
         meteorSize = size;
@@ -77,8 +77,8 @@ public:
             hueval %= 256;
             hue[i] = hueval;
             iPos[i] = (pGFX->GetLEDCount() / meteorCount) * i;
-            //bLeft[i] = (bool) randomDouble(0, 1);
-            speed[i] = randomDouble(meteorSpeedMin, meteorSpeedMax);
+            //bLeft[i] = (bool) randomfloat(0, 1);
+            speed[i] = randomfloat(meteorSpeedMin, meteorSpeedMax);
             lastBeat[i] = g_AppTime.FrameStartTime();
             bLeft[i] = i & 2;
         }
@@ -97,7 +97,7 @@ public:
 
         for (int j = 0; j<pGFX->GetLEDCount(); j++)                         // fade brightness all LEDs one step
         {
-            if ((!meteorRandomDecay) || (randomDouble(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight 
+            if ((!meteorRandomDecay) || (randomfloat(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight 
             {
                 CRGB c = pGFX->getPixel(j);
                 c.fadeToBlackBy(meteorTrailDecay);
@@ -164,12 +164,12 @@ class MeteorEffect : public LEDStripEffect
     int             _cMeteors;
     uint8_t         _meteorSize;
     uint8_t         _meteorTrailDecay;
-    double          _meteorSpeedMin;
-    double          _meteorSpeedMax;
+    float          _meteorSpeedMin;
+    float          _meteorSpeedMax;
 
   public:
   
-    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, double minSpeed = 0.2, double maxSpeed = 0.2) : LEDStripEffect("Color Meteors"), _Meteors()
+    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2) : LEDStripEffect("Color Meteors"), _Meteors()
     {
         _cMeteors = cMeteors;
         _meteorSize =  size;

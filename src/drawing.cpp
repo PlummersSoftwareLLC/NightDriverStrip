@@ -45,12 +45,12 @@ extern std::mutex g_buffer_mutex;
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
-double volatile g_FreeDrawTime = 0.0;
+float volatile g_FreeDrawTime = 0.0;
 
 extern uint32_t g_FPS;
 extern AppTime g_AppTime;
 extern bool g_bUpdateStarted;
-extern double g_Brite;
+extern float g_Brite;
 extern uint32_t g_Watts;
 extern const CRGBPalette16 vuPaletteGreen;
 
@@ -91,7 +91,8 @@ void MatrixPreDraw()
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-
+        pMatrix->SetBrightness(g_Fader);
+        
         if (g_aptrEffectManager->GetCurrentEffect()->ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
             LEDMatrixGFX::titleLayer.setFont(font3x5);
@@ -115,7 +116,7 @@ void MatrixPreDraw()
 
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
             int w = caption.length() * kCharWidth;
-            int x = (MATRIX_WIDTH / 2) - (w / 2);
+            int x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
 
             auto szCaption = caption.c_str();
             LEDMatrixGFX::titleLayer.drawString(x - 1, y, shadowColor, szCaption);
@@ -214,7 +215,7 @@ uint16_t LocalDraw()
         }
         else
         {
-            debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - g_usLastWifiDraw) / (double)MICROS_PER_SECOND);
+            debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - g_usLastWifiDraw) / (float)MICROS_PER_SECOND);
             // It's important to return 0 when you do not draw so that the caller knows we did not
             // render any pixels, and we can/should wait until the next frame.  Otherwise the caller might
             // draw the strip needlessly, which can take significant time.
@@ -267,7 +268,7 @@ void ShowStrip(uint16_t numToShow)
 //
 // Waits patiently until its time to draw the next frame, up to one second max
 
-void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+void DelayUntilNextFrame(float frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
     // Delay enough to slow down to the desired framerate
 
@@ -275,11 +276,11 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
 
     if (localPixelsDrawn > 0)
     {
-        const double minimumFrameTime = 1.0 / g_aptrEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
-        double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+        const float minimumFrameTime = 1.0 / g_aptrEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+        float elapsed = g_AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
         {
-            g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed));
+            g_FreeDrawTime = std::min(1.0f, (minimumFrameTime - elapsed));
             delay(g_FreeDrawTime * MILLIS_PER_SECOND);
         }
     }
@@ -287,12 +288,12 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
     {
         // Sleep up to 1/25th second, depending on how far away the next frame we need to service is
 
-        double t = 0.04;
+        float t = 0.04;
         for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         {
             auto pOldest = g_aptrBufferManager[iChannel]->PeekOldestBuffer();
             if (pOldest)
-                t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
+                t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
         }
 
         g_FreeDrawTime = t;
@@ -366,7 +367,7 @@ void ShowOnboardPixel()
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
 
-    debugW(">> DrawLoopTaskEntry\n");
+    //debugW(">> DrawLoopTaskEntry\n");
 
     // Initialize our graphics and the first effect
 
@@ -399,7 +400,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
         uint16_t localPixelsDrawn   = 0;
         uint16_t wifiPixelsDrawn    = 0;
-        double frameStartTime       = g_AppTime.FrameStartTime();
+        float frameStartTime       = g_AppTime.FrameStartTime();
 
         #if USE_MATRIX
             MatrixPreDraw();
@@ -416,7 +417,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #if USE_MATRIX
             if (wifiPixelsDrawn + localPixelsDrawn > 0)
             {
-                LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+                LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresfloatBuffering(), pMatrix->GetCaptionTransparency() > 0);
                 FastLED.countFPS();
                 g_FPS = FastLED.getFPS();
             }

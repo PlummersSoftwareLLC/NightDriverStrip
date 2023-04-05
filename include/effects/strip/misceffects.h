@@ -167,6 +167,40 @@ protected:
     }
 };
 
+// SplashLogoEffect
+// 
+// Displays the NightDriver logo on the screen
+
+static const char * pszLogoFile = "/bmp/LowResLogo.jpg";
+
+class SplashLogoEffect : public LEDStripEffect
+{
+  public:
+    
+    SplashLogoEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
+      : LEDStripEffect("NightDriver")
+    {
+        debugV("Status Fill constructor");
+    }
+
+    virtual size_t MaximumEffectTime() const
+    {
+        return 10.0 * MILLIS_PER_SECOND;
+    }
+
+    virtual bool CanDisplayVUMeter() const
+    {
+        return false;
+    }
+
+    virtual void Draw()
+    {
+        fillSolidOnAllChannels(CRGB::Black);
+        if (JDR_OK != TJpgDec.drawFsJpg(0, 0, pszLogoFile))        // Draw the image
+            debugW("Could not display logoo %s", pszLogoFile);
+    }
+}
+;
 class StatusEffect : public LEDStripEffect
 {
   protected:

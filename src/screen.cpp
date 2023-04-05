@@ -32,7 +32,7 @@
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
-double g_Brite;
+float g_Brite;
 uint32_t g_Watts;
 
 #if USE_OLED
@@ -66,7 +66,7 @@ extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern volatile double g_FreeDrawTime;  // Idle drawing time
+extern volatile float g_FreeDrawTime;  // Idle drawing time
 
 DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
 
@@ -152,8 +152,8 @@ void BasicInfoSummary(bool bRedraw)
 
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
     Screen::println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
-                                min(99.99, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
-                                min(99.99, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
+                                min(99.99f, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
+                                min(99.99f, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
 
     // Clock info Line 5
     //
@@ -199,8 +199,8 @@ void BasicInfoSummary(bool bRedraw)
         int top = yMargin + lineHeight * 7 + 1;
         int height = lineHeight - 5;
         int width = Screen::screenWidth() - xMargin * 2;
-        double ratio = (double)g_aptrBufferManager[0]->Depth() / (double)g_aptrBufferManager[0]->BufferCount();
-        ratio = std::min(1.0, ratio);
+        float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
+        ratio = std::min(1.0f, ratio);
         int filled = (width - 2) * ratio;
 
         // Color bar red/yellow/green depending on buffer fill
@@ -282,7 +282,7 @@ void CurrentEffectSummary(bool bRedraw)
             // get effect name length and switch text size accordingly
             int effectnamelen = g_aptrEffectManager->GetCurrentEffectName().length();
 
-#if M5STICKCPLUS
+#if M5STICKCPLUS || M5STACKCORE2
             Screen::setTextSize(Screen::MEDIUM);
 #else
             Screen::setTextSize(Screen::SMALL);
@@ -293,7 +293,7 @@ void CurrentEffectSummary(bool bRedraw)
             Screen::setTextSize(Screen::SMALL);
 
             String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
-#if M5STICKCPLUS
+#if M5STICKCPLUS || M5STACKCORE2
             sIP += " - NightDriverLED.com";
 #endif
             Screen::setTextColor(YELLOW16, backColor);
@@ -356,7 +356,7 @@ void CurrentEffectSummary(bool bRedraw)
 
     // Draw horizontal lines so the bars look like they are made of segments
 
-    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += 5)
+    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += Screen::screenHeight() / 25)
         Screen::drawLine(0, iLine, Screen::screenWidth(), iLine, BLACK16);
 #endif
 }
@@ -419,7 +419,7 @@ extern Bounce2::Button Button2;
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 {
-    debugI(">> ScreenUpdateLoopEntry\n");
+    //debugI(">> ScreenUpdateLoopEntry\n");
 
 #if USE_OLED
     g_pDisplay->setDisplayRotation(SCREEN_ROTATION);

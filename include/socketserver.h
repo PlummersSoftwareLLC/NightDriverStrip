@@ -77,19 +77,19 @@ struct SocketResponse
     uint32_t    watts;             // 4
 };
 
-static_assert(sizeof(double) == 8);             // SocketResponse on wire uses 8 byte doubles
+static_assert(sizeof(double) == 8);             // SocketResponse on wire uses 8 byte floats
 static_assert(sizeof(float)  == 4);             // PeakData on wire uses 4 byte floats
-// Two things must be true for this to work and interop with the C# side:  doubles must be 8 bytes, not the default
+// Two things must be true for this to work and interop with the C# side:  floats must be 8 bytes, not the default
 // of 4 for Arduino.  So that must be set in 'platformio.ini', and you must ensure that you align things such that
-// doubles land on byte multiples of 8, otherwise you'll get packing bytes inserted.  Welcome to my world! Once upon
+// floats land on byte multiples of 8, otherwise you'll get packing bytes inserted.  Welcome to my world! Once upon
 // a time, I ported about a billion lines of x86 'pragma_pack(1)' code to the MIPS (davepl)!
 
-static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and double size" );            
+static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and float size" );            
 
 extern AppTime g_AppTime;
 extern std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 extern uint32_t g_FPS;
-extern double g_Brite;
+extern float g_Brite;
 extern uint32_t g_Watts; 
 
 // SocketServer
@@ -442,7 +442,7 @@ public:
                                             .oldestPacket = g_aptrBufferManager[0]->AgeOfOldestBuffer(),
                                             .newestPacket = g_aptrBufferManager[0]->AgeOfNewestBuffer(),
                                             .brightness   = g_Brite,
-                                            .wifiSignal   = (double) WiFi.RSSI(),
+                                            .wifiSignal   = (float) WiFi.RSSI(),
                                             .bufferSize   = g_aptrBufferManager[0]->BufferCount(),
                                             .bufferPos    = g_aptrBufferManager[0]->Depth(),
                                             .fpsDrawing   = g_FPS,

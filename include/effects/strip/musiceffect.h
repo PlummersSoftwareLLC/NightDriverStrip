@@ -49,14 +49,14 @@ class BeatEffectBase
 {
   protected:
     const int _maxSamples = 60;
-    std::deque<double> _samples;
-    double _lastBeat = 0;
-    double _minRange = 0;
-    double _minElapsed = 0;
+    std::deque<float> _samples;
+    float _lastBeat = 0;
+    float _minRange = 0;
+    float _minElapsed = 0;
 
   public:
    
-    BeatEffectBase(double minRange = 0, double minElapsed = 0)      
+    BeatEffectBase(float minRange = 0, float minElapsed = 0)      
      :
        _minRange(minRange),
        _minElapsed(minElapsed)
@@ -66,9 +66,9 @@ class BeatEffectBase
     // When a beat is detected, this is called.  The 'bMajor' indicates whether this is a more important beat, which
     // for now simply means it's been a minimum delay since the last beat.
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span) = 0;
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) = 0;
 
-    double SecondsSinceLastBeat()
+    float SecondsSinceLastBeat()
     {
       return g_AppTime.CurrentTime() - _lastBeat;
     }
@@ -82,11 +82,11 @@ class BeatEffectBase
     virtual void ProcessAudio()
     {
         debugV("BeatEffectBase2::Draw");
-        double elapsed = SecondsSinceLastBeat();
+        float elapsed = SecondsSinceLastBeat();
     
         _samples.push_back(g_Analyzer._VURatio);
-        double minimum = *min_element(_samples.begin(), _samples.end());
-        double maximum = *max_element(_samples.begin(), _samples.end());
+        float minimum = *min_element(_samples.begin(), _samples.end());
+        float maximum = *max_element(_samples.begin(), _samples.end());
 
         // debugI("Samples: %d, max: %0.2lf, min: %0.2lf, span: %0.2lf\n", _samples.size(), maximum, minimum, maximum-minimum);
 
@@ -130,11 +130,11 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
         CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_AppTime.DeltaTime() * 0.75;
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
-        fadeAllChannelsToBlackBy(min(255.0,1000 * g_AppTime.DeltaTime()));
+        fadeAllChannelsToBlackBy(min(255.0f,1000.0f * g_AppTime.DeltaTime()));
         delay(1);
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         CRGB c;
         int  cInsulators = 1;
@@ -172,7 +172,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
           } while (i == _iLastInsulator);                   //  - Repeating until it doesn't match the last pass
           _iLastInsulator = i;                              // Our current choice forms the new "last" choice for next pass
 
-          DrawFanPixels(0, FAN_SIZE, c, Sequential, i);     // Draw twice to double-saturate our color
+          DrawFanPixels(0, FAN_SIZE, c, Sequential, i);     // Draw twice to float-saturate our color
           DrawFanPixels(0, FAN_SIZE, c, Sequential, i);
         }
     } 

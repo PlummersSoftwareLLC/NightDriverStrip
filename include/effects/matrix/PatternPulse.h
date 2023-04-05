@@ -150,7 +150,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         return 30;
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         if (span > 1.5)
         {
@@ -208,7 +208,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
                     if (pop->step > 3)
                         graphics()->drawCircle(pop->centerX, pop->centerY, pop->step - 3, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
                     
-                    // This looks like PDP-11 code to me.  Double post-inc for the win!
+                    // This looks like PDP-11 code to me.  double post-inc for the win!
                     pop++->step++;
                 }
                 else
