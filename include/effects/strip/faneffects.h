@@ -396,7 +396,7 @@ public:
 
   void OnBeat()
   {
-    int passes = random(1, mapDouble(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
+    int passes = random(1, mapfloat(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
     passes = g_Analyzer._VURatio;
     for (int iPass = 0; iPass < passes; iPass++)
     {
@@ -438,7 +438,7 @@ public:
     {
       if (g_Analyzer._VURatio > 1.5)
       {
-        if (randomDouble(1.0, 3.0) < g_Analyzer._VURatio)
+        if (randomfloat(1.0, 3.0) < g_Analyzer._VURatio)
         {
           latch = false;
           OnBeat();
@@ -679,14 +679,14 @@ class PaletteSpinEffect : public LEDStripEffect
 {
   const CRGBPalette16 _Palette;
   bool _bReplaceMagenta;
-  double _sparkleChance;
+  float _sparkleChance;
 
 private:
   float ReelPos[NUM_FANS] = {0};
   int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, double sparkleChance = 0.0)
+  PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
       : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName), 
         _Palette(palette), 
         _bReplaceMagenta(bReplace), 
@@ -698,7 +698,7 @@ public:
       : LEDStripEffect(jsonObject), 
         _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>())), 
         _bReplaceMagenta(jsonObject["rpm"].as<bool>()), 
-        _sparkleChance(jsonObject["sch"].as<double>())
+        _sparkleChance(jsonObject["sch"].as<float>())
   {
   }
 
@@ -749,7 +749,7 @@ public:
         CRGB c = ColorFromPalette(_Palette, 255.0 * q / FAN_SIZE, 255, NOBLEND);
         if (_bReplaceMagenta && c == CRGB(CRGB::Magenta))
           c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
-        if (randomDouble(0, 1) < _sparkleChance)
+        if (randomfloat(0, 1) < _sparkleChance)
           c = CRGB::White;
         DrawFanPixels(x, 1, c, Sequential, i);
       }

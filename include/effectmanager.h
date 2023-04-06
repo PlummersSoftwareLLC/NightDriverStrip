@@ -84,7 +84,6 @@ class EffectManager : IJSONSerializable
     void construct() 
     {
         _cEnabled = 0;
-        _effectInterval = DEFAULT_EFFECT_INTERVAL;
         _bPlayAll = false;
         _iCurrentEffect = 0;
         _effectStartTime = millis();
@@ -92,6 +91,8 @@ class EffectManager : IJSONSerializable
 
         for (int i = 0; i < _vEffects.size(); i++)
             EnableEffect(i);
+
+        SetInterval(DEFAULT_EFFECT_INTERVAL);
     }
 
 public:
@@ -192,7 +193,7 @@ public:
 
     virtual bool IsVUVisible() const
     {
-        return _bShowVU;
+        return _bShowVU && GetCurrentEffect()->CanDisplayVUMeter();
     }
 
 #if ATOMLIGHT
@@ -333,13 +334,6 @@ public:
         _bPlayAll = bPlayAll;
     }
 
-    uint GetInterval() const
-    {
-        if (_effectInterval == 0)
-            return std::numeric_limits<uint>::max();
-        return _effectInterval;
-    }
-
     void SetInterval(uint interval)
     {
         _effectInterval = interval;
@@ -392,6 +386,11 @@ public:
         StartEffect();
     }
 
+    uint GetTimeUsedByCurrentEffect() const
+    {
+        return millis() - _effectStartTime;
+    }
+
     uint GetTimeRemainingForCurrentEffect() const
     {
         // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
@@ -402,9 +401,13 @@ public:
         return GetInterval() - GetTimeUsedByCurrentEffect();
     }
 
-    uint GetTimeUsedByCurrentEffect() const
+    uint GetInterval() const
     {
-        return millis() - _effectStartTime;
+        // This allows you to return a MinimumEffectTime and your effect won't be shown longer than that
+        
+        if (_effectInterval == 0)
+            return std::numeric_limits<uint>::max();
+        return min(_effectInterval, GetCurrentEffect()->MaximumEffectTime() - GetTimeUsedByCurrentEffect());
     }
 
     void CheckEffectTimerExpired()

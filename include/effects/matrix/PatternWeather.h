@@ -55,7 +55,7 @@ static const char * pszWeatherIcons[] = {   "",                                 
                                             "/bmp/fewclouds.jpg",               // 02
                                             "/bmp/scatteredclouds.jpg",         // 03
                                             "/bmp/brokenclouds.jpg",            // 04
-                                            "",                                 // Unused slots
+                                            "/bmp/testcloud.jpg",               // Unused slots
                                             "",
                                             "",
                                             ""
@@ -316,6 +316,23 @@ public:
             }
         }
 
+
+        // Draw the graphics
+        if (iconToday >= 0)
+        {
+            auto filename = pszWeatherIcons[iconToday];
+            if (strlen(filename))
+                if (JDR_OK != TJpgDec.drawFsJpg(0, 10, filename))        // Draw the image
+                    debugW("Could not display %s", filename);
+        }    
+        if (iconTomorrow >= 0)
+        {
+            auto filename = pszWeatherIcons[iconTomorrow];
+            if (strlen(filename))
+                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+1, 10, filename))        // Draw the image
+                    debugW("Could not display %s", filename);
+        }    
+
         // Print the town/city name, which we looked up via trhe zip code
 
         int x = 0;
@@ -393,23 +410,6 @@ public:
             y+= fontHeight;
             graphics()->setCursor(x,y);
             graphics()->print(strLo);
-
-            // Draw the graphics
-
-            if (iconToday >= 0)
-            {
-                auto filename = pszWeatherIcons[iconToday];
-                if (strlen(filename))
-                    if (JDR_OK != TJpgDec.drawFsJpg(1, 10, filename))        // Draw the image
-                        debugW("Could not display %s", filename);
-            }    
-            if (iconTomorrow >= 0)
-            {
-                auto filename = pszWeatherIcons[iconTomorrow];
-                if (strlen(filename))
-                    if (JDR_OK != TJpgDec.drawFsJpg(xHalf+2, 10, filename))        // Draw the image
-                        debugW("Could not display %s", filename);
-            }    
         }
     }
 };

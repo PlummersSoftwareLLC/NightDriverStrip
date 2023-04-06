@@ -121,7 +121,9 @@
 #define FLASH_VERSION         36    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
-#define USESTRIP 1
+    #ifndef USESTRIP
+        #define USESTRIP 1
+    #endif
 #endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
@@ -151,18 +153,21 @@
 // with one (but it doesn't have to be used!).
 
 #if M5STICKC
-#define LED_BUILTIN 10                          // Not defined by the M5 headers, but it seems to be PIN 10
 #include "M5StickC.h"
 #undef min                                      // They define a min() on us
 #endif
 
 #if M5STICKCPLUS
-#define LED_BUILTIN 10                          // Not defined by the M5 headers, but it seems to be PIN 10
 #include "M5StickCPlus.h"
 #undef min                                      // They define a min() on us
 #endif
 
-#define EFFECT_CROSS_FADE_TIME 600.0    // How long for an effect to ramp brightness fader down and back during effect change
+#if M5STACKCORE2
+#include "M5Core2.h"
+#undef min                                      // They define a min() on us
+#endif
+
+#define EFFECT_CROSS_FADE_TIME 1200.0    // How long for an effect to ramp brightness fader down and back during effect change
 
 // Thread priorities
 //
@@ -252,7 +257,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
-    #if M5STICKC || M5STICKCPLUS
+    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -841,7 +846,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
-    #define MAX_BUFFERS             10
+    #if USE_PSRAM
+        #define MAX_BUFFERS         500
+    #else
+        #define MAX_BUFFERS         10
+    #endif
         
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
@@ -1144,7 +1153,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 6000.0f
+        #define NOISE_FLOOR 6000.0
     #endif
     #ifndef NOISE_CUTOFF
         #define NOISE_CUTOFF   2000
@@ -1264,9 +1273,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
-    #elif M5STICKC                                           // screen definitions for m5stick-c (or m5stick-c plus)
+    #elif M5STICKC                                            // screen definitions for m5stick-c (or m5stick-c plus)
 
-        #define USE_M5DISPLAY 1                                     // enable the M5's LCD screen
+        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
+
+    #elif M5STACKCORE2                                        // screen definitions for m5stick-c (or m5stick-c plus)
+
+        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
     #elif ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
 
@@ -1280,8 +1293,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif M5STACKCORE2
-        #define  USE_M5DISPLAY 1       
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
@@ -1368,7 +1379,10 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
     #ifndef INPUT_PIN
         #if TTGO
             #define INPUT_PIN (36)   
-        #elif M5STICKC || M5STICKCPLUS
+        #elif M5STACKCORE2
+            #define INPUT_PIN (0)
+            #define IO_PIN    (0)
+        #elif M5STICKC || M5STICKCPLUS 
             #define INPUT_PIN (34)   
             #define IO_PIN (0)
         #else
@@ -1470,7 +1484,7 @@ inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SEC
     if (duration == 0)
         return 999;
 
-    double fpsf = 1.0f / (duration / (double) perSecond);
+    float fpsf = 1.0f / (duration / (float) perSecond);
     int FPS = (int)fpsf;
     if (FPS > 999)
         FPS = 999;
@@ -1544,8 +1558,8 @@ class AppTime
 {
   protected:
 
-    double _lastFrame;
-    double _deltaTime;
+    float _lastFrame;
+    float _deltaTime;
   
   public:
 
@@ -1558,7 +1572,7 @@ class AppTime
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        double current = CurrentTime();
+        float current = CurrentTime();
         _deltaTime = current - _lastFrame;
 
         // Cap the delta time at one full second
@@ -1574,24 +1588,24 @@ class AppTime
         NewFrame();
     }
 
-    double FrameStartTime() const
+    float FrameStartTime() const
     {
         return _lastFrame;
     }
 
-    static double CurrentTime()
+    static float CurrentTime()
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
+        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
     }
 
-    static double TimeFromTimeval(const timeval & tv)
+    static float TimeFromTimeval(const timeval & tv)
     {
-        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
+        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
     }
 
-    static timeval TimevalFromTime(double t)
+    static timeval TimevalFromTime(float t)
     {
         timeval tv;
         tv.tv_sec = (long)t;
@@ -1599,7 +1613,7 @@ class AppTime
         return tv;
     }
 
-    double DeltaTime() const
+    float DeltaTime() const
     {
         return _deltaTime;
     }
@@ -1609,13 +1623,13 @@ class AppTime
 //
 // Simple inline utility functions like random numbers, mapping, conversion, etc
 
-inline static double randomDouble(double lower, double upper)
+inline static float randomfloat(float lower, float upper)
 {
-    double result = (lower + ((upper - lower) * rand()) / RAND_MAX);
+    float result = (lower + ((upper - lower) * rand()) / RAND_MAX);
     return result;
 }
 
-inline double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
+inline float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -1675,6 +1689,7 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 
 // Main includes 
 
+#include <TJpg_Decoder.h>
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include "gfxbase.h"                            // GFXBase drawing interface
 #include "screen.h"                             // LCD/TFT/OLED handling
@@ -1710,6 +1725,4 @@ inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
 #if ENABLE_REMOTE
     #include "remotecontrol.h"
 #endif
-
-#include <TJpg_Decoder.h>
 

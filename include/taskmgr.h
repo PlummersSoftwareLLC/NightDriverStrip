@@ -53,7 +53,7 @@ class IdleTask
 {
   private:
 
-    double _idleRatio = 0;
+    float _idleRatio = 0;
     unsigned long _lastMeasurement;
 
     const int kMillisPerLoop = 1;
@@ -76,8 +76,8 @@ class IdleTask
             if (delta >= kMillisPerCalc)
             {
                 //Serial.printf("Core %u Spent %lu in delay during a window of %d for a ratio of %f\n", 
-                //  xPortGetCoreID(), counter, delta, (double)counter/delta);
-                _idleRatio = ((double) counter  / delta);
+                //  xPortGetCoreID(), counter, delta, (float)counter/delta);
+                _idleRatio = ((float) counter  / delta);
                 _lastMeasurement = millis();
                 counter = 0;
             }
@@ -105,7 +105,7 @@ class IdleTask
     //
     // Returns 100 less the amount of idle time that we were able to squander.
 
-    double GetCPUUsage() const
+    float GetCPUUsage() const
     {
         // If the measurement failed to even get a chance to run, this core is maxed and there was no idle time
 
@@ -141,7 +141,7 @@ class TaskManager
 
 public:
 
-    double GetCPUUsagePercent(int iCore = -1) const
+    float GetCPUUsagePercent(int iCore = -1) const
     {
         if (iCore < 0)
             return (_taskIdle0.GetCPUUsage() + _taskIdle1.GetCPUUsage()) / 2;

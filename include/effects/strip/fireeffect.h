@@ -127,7 +127,7 @@ class FireEffect : public LEDStripEffect
         return 45;
     }
     
-    virtual CRGB GetBlackBodyHeatColor(double temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp)
     {
         temp *= 255;
         uint8_t t192 = round((temp/255.0)*191);
@@ -152,7 +152,7 @@ class FireEffect : public LEDStripEffect
         DrawFire();
     }
 
-    virtual void GenerateSparks(double multiplier = 1.0)
+    virtual void GenerateSparks(float multiplier = 1.0)
     {
         for (int i = 0 ; i < Sparks * multiplier; i++)
         {
@@ -200,7 +200,7 @@ class FireEffect : public LEDStripEffect
         for (int i = 0; i < LEDCount; i++)
         {
 
-            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]/(double)std::numeric_limits<uint8_t>::max());
+            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]/(float)std::numeric_limits<uint8_t>::max());
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
@@ -259,10 +259,10 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual CRGB GetBlackBodyHeatColor(double temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp)
     {
-        temp = min(1.0, temp);
-        int index = mapDouble(temp, 0.0, 1.0, 0.0, 240);
+        temp = min(1.0f, temp);
+        int index = mapfloat(temp, 0.0, 1.0, 0.0, 240);
         return ColorFromPalette(_palette, index, 255);
 
         //        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
@@ -306,7 +306,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
   protected:
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         if (elapsed > 1)
         {
@@ -366,7 +366,7 @@ public:
 
     virtual void Draw()
     {
-        //static double lastDraw = 0;
+        //static float lastDraw = 0;
 
         //if (g_AppTime.FrameStartTime() - lastDraw < 1.0 / 40.0)
         //    return;
@@ -561,7 +561,7 @@ public:
         free(_Temperatures);
     }
 
-    //double lastDraw = 0;
+    //float lastDraw = 0;
 
     virtual void Draw()
     {
@@ -572,7 +572,7 @@ public:
         float deltaTime = (float)g_AppTime.DeltaTime();
         setAllOnAllChannels(0, 0, 0);
 
-        float cooldown = randomDouble(0, _Cooling) * deltaTime;
+        float cooldown = randomfloat(0, _Cooling) * deltaTime;
 
         for (int i = 0; i < _cLEDs; i++)
             if (cooldown > _Temperatures[i])
@@ -601,11 +601,11 @@ public:
         // Randomly ignite new 'sparks' near the bottom
         for (int frame = 0; frame < _Sparks; frame++)
         {
-            if (randomDouble(0, 1.0f) < 0.70f)
+            if (randomfloat(0, 1.0f) < 0.70f)
             {
                 // NB: This randomly rolls over sometimes of course, and that's essential to the effect
-                int y = randomDouble(0, _SparkHeight);
-                _Temperatures[y] = (_Temperatures[y] + randomDouble(0.6f, 1.0f));
+                int y = randomfloat(0, _SparkHeight);
+                _Temperatures[y] = (_Temperatures[y] + randomfloat(0.6f, 1.0f));
 
                 if (!_Turbo)
                     while (_Temperatures[y] > 1.0)

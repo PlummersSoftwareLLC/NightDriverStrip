@@ -49,9 +49,9 @@ class LEDStripEffect : public IJSONSerializable
     int _effectNumber;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
-    inline static double randomDouble(double lower, double upper)
+    inline static float randomfloat(float lower, float upper)
     {
-        double result = (lower + ((upper - lower) * rand()) / RAND_MAX);
+        float result = (lower + ((upper - lower) * rand()) / RAND_MAX);
         return result;
     }
 
@@ -102,6 +102,11 @@ class LEDStripEffect : public IJSONSerializable
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     
+    virtual bool CanDisplayVUMeter() const
+    {
+        return true;
+    }
+
     virtual const String & FriendlyName() const
     {
         return _friendlyName;
@@ -117,17 +122,22 @@ class LEDStripEffect : public IJSONSerializable
         return 30;
     }
     
+    virtual size_t MaximumEffectTime() const
+    {
+        return SIZE_MAX;
+    }
+
     virtual bool ShouldShowTitle() const
     {
         return true;
     }
-    // RequiresDoubleBuffering
+    // RequiresfloatBuffering
     //
-    // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
+    // If a matrix effect requires the state of the last buffer be preserved, then it requires float buffering.
     // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
     // and it can override this method and return false;
     
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresfloatBuffering() const
     {
         return true;
     }
@@ -143,7 +153,7 @@ class LEDStripEffect : public IJSONSerializable
                 CRGB::Indigo,
                 CRGB::Violet
             };
-        int randomColorIndex = (int)randomDouble(0, ARRAYSIZE(colors));
+        int randomColorIndex = (int)randomfloat(0, ARRAYSIZE(colors));
         return colors[randomColorIndex];
     }
 
@@ -167,7 +177,7 @@ class LEDStripEffect : public IJSONSerializable
     static inline CRGB RandomSaturatedColor()
     {
         CRGB c;
-        c.setHSV((uint8_t)randomDouble(0, 255), 255, 255);
+        c.setHSV((uint8_t)randomfloat(0, 255), 255, 255);
         return c;
     }
 

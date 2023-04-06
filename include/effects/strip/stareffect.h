@@ -49,12 +49,12 @@ class Star : public MovingFadingPaletteObject, public ObjectSize
         return EFFECT_STAR;
     }
 
-    virtual double GetStarSize()
+    virtual float GetStarSize()
     {
         return _objectSize;
     }
 
-    Star(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, double starSize = 1.0)
+    Star(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
         : MovingFadingPaletteObject(palette, blendType, maxSpeed),
           ObjectSize(starSize)
     {
@@ -70,12 +70,12 @@ class RandomPaletteColorStar : public MovingFadingPaletteObject, public ObjectSi
         return EFFECT_STAR_RANDOM_PALETTE_COLOR;
     }
 
-    virtual double GetStarSize()
+    virtual float GetStarSize()
     {
         return _objectSize;
     }
 
-    RandomPaletteColorStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, double starSize = 1.0)
+    RandomPaletteColorStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
         : MovingFadingPaletteObject(palette, blendType, maxSpeed, random(16)*16),
           ObjectSize(starSize)
     {
@@ -96,12 +96,12 @@ class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
         return EFFECT_STAR_LONG_LIFE_SPARKLE;
     }
 
-    virtual double GetStarSize()
+    virtual float GetStarSize()
     {
         return _objectSize;
     }
 
-    LongLifeSparkleStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, double starSize = 1.0)
+    LongLifeSparkleStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
         : MovingFadingPaletteObject(palette, blendType, maxSpeed),
           ObjectSize(starSize)
     {
@@ -117,12 +117,12 @@ class ColorStar : public MovingFadingColoredObject, public ObjectSize
         return EFFECT_STAR_COLOR;
     }
 
-    virtual double GetStarSize()
+    virtual float GetStarSize()
     {
         return _objectSize;
     }
 
-    ColorStar(CRGB color, double maxSpeed = 1.0, double starSize = 1.0)
+    ColorStar(CRGB color, float maxSpeed = 1.0, float starSize = 1.0)
         : MovingFadingColoredObject(color, maxSpeed),
           ObjectSize(starSize)
     {
@@ -138,7 +138,7 @@ class QuietStar : public RandomPaletteColorStar
         return EFFECT_STAR_QUIET;
     }
         
-    QuietStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 10.0, double starSize = 1)
+    QuietStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 10.0, float starSize = 1)
       : RandomPaletteColorStar(palette, blendType, maxSpeed, starSize)
     {}
 
@@ -154,7 +154,7 @@ class MusicStar : public Star
 {
   public:
 
-    MusicStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 2.0, double starSize = 1)
+    MusicStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 2.0, float starSize = 1)
       : Star(palette, blendType, maxSpeed, starSize)
     {        
     }
@@ -175,7 +175,7 @@ class MusicPulseStar : public Star
 {
     public:
 
-    MusicPulseStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 0.0, double size = 0.0)
+    MusicPulseStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 0.0, float size = 0.0)
       : Star(palette, blendType, maxSpeed, size)
     {
 
@@ -194,7 +194,7 @@ class MusicPulseStar : public Star
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 1.00f;  }
     virtual float FadeTime()        const { return 2.00f; } 
-    virtual double GetStarSize()    const { return 1 + _objectSize * g_Analyzer._VURatio; }
+    virtual float GetStarSize()    const { return 1 + _objectSize * g_Analyzer._VURatio; }
 };
 
 #endif
@@ -206,7 +206,7 @@ class BubblyStar : public Star
 
     public:
     
-    BubblyStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 2.0, double starSize = 12)
+    BubblyStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, float starSize = 12)
       : Star(palette, blendType, maxSpeed, starSize)
     {
         static float lastHue = 0;
@@ -220,7 +220,7 @@ class BubblyStar : public Star
         return EFFECT_STAR_BUBBLY;
     }
 
-    virtual double GetStarSize()
+    virtual float GetStarSize()
     {
         float x = Age()/TotalLifetime();
         float ratio1 = -1 * (2*(x-.5)) * (2*(x-.5)) + 1;
@@ -259,10 +259,10 @@ class ColorCycleStar : public Star
 
     public:
 
-    ColorCycleStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 2.0, int speedDivisor = 1)
+    ColorCycleStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
       : Star(palette, blendType, maxSpeed)
     {
-        _brightness = randomDouble(128,255);
+        _brightness = randomfloat(128,255);
     }
 
     static int GetStarTypeNumber()
@@ -294,11 +294,11 @@ class MultiColorStar : public Star
     uint8_t         _hue;
 
     public:
-    MultiColorStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 2.0, int speedDivisor = 1)
+    MultiColorStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
       : Star(palette, blendType, maxSpeed)
     {
-        _brightness = randomDouble(128,255);
-        _hue        = randomDouble(0, 255);
+        _brightness = randomfloat(128,255);
+        _hue        = randomfloat(0, 255);
     }
 
     virtual CRGB Render(TBlendType blend)
@@ -327,11 +327,11 @@ class ChristmasLightStar : public Star
 {
   public:
 
-    ChristmasLightStar(const CRGBPalette16 & palette, TBlendType blendType, double maxSpeed = 0.0)
+    ChristmasLightStar(const CRGBPalette16 & palette, TBlendType blendType, float maxSpeed = 0.0)
       : Star(palette, blendType, maxSpeed, 1.0)
 
     {
-        int iColor = randomDouble(0,255);
+        int iColor = randomfloat(0,255);
         _colorIndex = iColor;
     }
 
@@ -356,7 +356,7 @@ class HotWhiteStar : public Star
 {
   public:
 
-    HotWhiteStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, double maxSpeed = 0.0, double size = 0.0)
+    HotWhiteStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 0.0, float size = 0.0)
       : Star(palette, blendType, maxSpeed, size)
     {
     }
@@ -396,11 +396,11 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
 
     BeatStarterEffect<ObjectType>(uint16_t )
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         ObjectType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
         // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-        newstar._iPos = (int) randomDouble(0, _cLEDs-1-starWidth);
+        newstar._iPos = (int) randomfloat(0, _cLEDs-1-starWidth);
         _allParticles.push_back(newstar);
 
     }
@@ -425,9 +425,9 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     float                        _newStarProbability;
     float                        _starSize;
     const TBlendType             _blendType;
-    double                       _maxSpeed;
-    double                       _blurFactor;
-    double                       _musicFactor;
+    float                       _maxSpeed;
+    float                       _blurFactor;
+    float                       _musicFactor;
     CRGB                         _skyColor;
 
   public:
@@ -438,9 +438,9 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                                 float probability = 1.0, 
                                 float starSize = 1.0, 
                                 TBlendType blendType = LINEARBLEND, 
-                                double maxSpeed = 100.0,
-                                double blurFactor = 0.0,
-                                double musicFactor = 1.0,
+                                float maxSpeed = 100.0,
+                                float blurFactor = 0.0,
+                                float musicFactor = 1.0,
                                 CRGB skyColor = CRGB::Black)
       : LEDStripEffect(EFFECT_STRIP_STARRY_NIGHT, strName),
         _palette(palette),
@@ -529,12 +529,12 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
             StarType::GetStarTypeNumber();
 
-            if (randomDouble(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
+            if (randomfloat(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
             {
                 //Serial.printf("Creating star with speed = %lf and factor = %lfn", _maxSpeed, _musicFactor);
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                 // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                newstar._iPos = (int) randomDouble(0, _cLEDs-1-starWidth);
+                newstar._iPos = (int) randomfloat(0, _cLEDs-1-starWidth);
                 _allParticles.push_back(newstar);
             }
         }
@@ -565,7 +565,7 @@ template <typename StarType> class BlurStarEffect : public StarryNightEffect<Sta
 
   public:
 
-    BlurStarEffect<StarType>(const CRGBPalette16 & palette, float probability = 0.2, size_t starSize = 1, TBlendType blendType = LINEARBLEND, double maxSpeed = 20.0)
+    BlurStarEffect<StarType>(const CRGBPalette16 & palette, float probability = 0.2, size_t starSize = 1, TBlendType blendType = LINEARBLEND, float maxSpeed = 20.0)
         : StarryNightEffect<StarType>(palette, probability, starSize, blendType, maxSpeed)
     {
     }
@@ -625,7 +625,7 @@ public:
             setPixelsOnAllChannels(buffer[0], 0, 0, 0);
 
         // Pick a random pixel and put it in the TOP slot
-        int iNew = (int) randomDouble(0, _cLEDs);
+        int iNew = (int) randomfloat(0, _cLEDs);
         setPixelOnAllChannels(iNew, RandomRainbowColor());
         buffer[NUM_TWINKLES - 1] = iNew;
     }

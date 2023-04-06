@@ -290,6 +290,8 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
 
     #elif MESMERIZER
 
+        new SplashLogoEffect(),
+
         new SpectrumAnalyzerEffect("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
         new SpectrumAnalyzerEffect("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
         new SpectrumAnalyzerEffect("Spectrum 3",   32,            spectrumBasicColors, 100, 0, 0.25, 1.25),
@@ -299,9 +301,9 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
 
         new SpectrumAnalyzerEffect("Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0),
 
-        new PatternWeather(),
         new PatternPongClock(),
         new PatternSubscribers(),
+        new PatternWeather(),
         
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", 0, 24, false),

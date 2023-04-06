@@ -45,7 +45,7 @@ class Lifespan
 {
   protected:
 
-    double                       _birthTime;
+    float                       _birthTime;
 
   public:
 
@@ -56,12 +56,12 @@ class Lifespan
     virtual ~Lifespan()
     {}    
 
-    double Age() const
+    float Age() const
     {
         return g_AppTime.FrameStartTime() - _birthTime;
     }    
 
-    virtual double TotalLifetime() const = 0;
+    virtual float TotalLifetime() const = 0;
 };
 
 // MovingObject
@@ -74,16 +74,16 @@ class MovingObject
 {
 protected:
 
-    double                       _velocity;
-    double                       _maxSpeed;
+    float                       _velocity;
+    float                       _maxSpeed;
 
 public:
 
-    double                       _iPos;
+    float                       _iPos;
 
-    MovingObject(double maxSpeed = 0.25) : _maxSpeed(maxSpeed)
+    MovingObject(float maxSpeed = 0.25) : _maxSpeed(maxSpeed)
     {
-        _velocity = randomDouble(0, _maxSpeed * 2) - _maxSpeed;
+        _velocity = randomfloat(0, _maxSpeed * 2) - _maxSpeed;
     }
 
     virtual ~MovingObject()
@@ -111,7 +111,7 @@ class FadingObject : public Lifespan
 
   public:
 
-    virtual double TotalLifetime() const
+    virtual float TotalLifetime() const
     {
         return PreignitionTime() + IgnitionTime() + HoldTime() + FadeTime();
     }
@@ -152,7 +152,7 @@ class FadingCountDownObject : public FadingObject
 
     virtual unsigned long CurrentCountdown()
     {
-        return mapDouble(Age(), 0, TotalLifetime(), _maxValue, 0);
+        return mapfloat(Age(), 0, TotalLifetime(), _maxValue, 0);
     }
 };
 
@@ -248,7 +248,7 @@ class MovingFadingPaletteObject: public FadingPaletteObject, public MovingObject
 {
   public:
 
-    MovingFadingPaletteObject(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, double maxSpeed = 1.0, uint8_t colorIndex = random8())
+    MovingFadingPaletteObject(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, uint8_t colorIndex = random8())
       : FadingPaletteObject(palette, blendType, colorIndex), 
         MovingObject(maxSpeed)
     {
@@ -263,7 +263,7 @@ class MovingFadingColoredObject: public FadingColoredObject, public MovingObject
 {
   public:
 
-    MovingFadingColoredObject(CRGB baseColor, double maxSpeed = 1.0)
+    MovingFadingColoredObject(CRGB baseColor, float maxSpeed = 1.0)
       : FadingColoredObject(baseColor),
         MovingObject(maxSpeed)
     {
@@ -277,9 +277,9 @@ class MovingFadingColoredObject: public FadingColoredObject, public MovingObject
 class ObjectSize 
 {
     public:
-      double _objectSize;
+      float _objectSize;
 
-      ObjectSize(double size = 1.0)
+      ObjectSize(float size = 1.0)
         :_objectSize(size)
       {
       }
@@ -398,7 +398,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
       _allParticles.push_back(newparticle);
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
       for (int pass = 0; pass < 1; pass++)
       {
@@ -451,7 +451,7 @@ class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase, p
     {
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         int iInsulator;
         do
@@ -655,7 +655,7 @@ class HotWhiteRingParticle : public FadingObject
         }
         else
         {
-          double age = Age() - PreignitionTime() - IgnitionTime();
+          float age = Age() - PreignitionTime() - IgnitionTime();
 
           uint8_t temperature = 255 * (1.0 - (age/FadeTime()));
           uint8_t t192 = round((temperature/255.0)*191);
@@ -733,7 +733,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
     }
 
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         int iInsulator;
         do
@@ -778,7 +778,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
 
       uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));   
-      _baseColor.fadeToBlackBy((min(255.0,1000 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0f, 1000.0f * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       BeatEffectBase::ProcessAudio();
@@ -823,7 +823,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         int iInsulator;
         do
@@ -869,7 +869,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
        uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));   
-      _baseColor.fadeToBlackBy((min(255.0,1000 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0f, 1000.0f * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
@@ -910,7 +910,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         int iInsulator;
         do
@@ -931,7 +931,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
       uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0,2500 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0f, 2500.0f * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       BeatEffectBase::ProcessAudio();
@@ -955,7 +955,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
     {
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         int iInsulator;
         do
@@ -976,7 +976,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
 
       uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0,1000 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0f,1000.0f * g_AppTime.DeltaTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
       setAllOnAllChannels(0,0,0);
 

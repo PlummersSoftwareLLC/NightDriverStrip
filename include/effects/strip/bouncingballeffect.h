@@ -61,15 +61,15 @@ private:
     static const int BallCount = 3;
     const bool _bErase;
 
-    double Gravity = -9.81;
-    double StartHeight = 1;
-    double ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
+    float Gravity = -9.81;
+    float StartHeight = 1;
+    float ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
     
-    std::vector<double> ClockTimeSinceLastBounce;
-    std::vector<double> TimeSinceLastBounce;
-    std::vector<double> Height;
-    std::vector<double> ImpactVelocity;
-    std::vector<double> Dampening;
+    std::vector<float> ClockTimeSinceLastBounce;
+    std::vector<float> TimeSinceLastBounce;
+    std::vector<float> Height;
+    std::vector<float> ImpactVelocity;
+    std::vector<float> Dampening;
     std::vector<CRGB>   Colors;
     
   public:
@@ -153,7 +153,7 @@ private:
         {
             for (int j = 0; j<_cLength; j++)                            // fade brightness all LEDs one step
             {
-                if (randomDouble(0, 10)>5) 
+                if (randomfloat(0, 10)>5) 
                 {
                     CRGB c = _GFX[0]->getPixel(j);
                     c.fadeToBlackBy(10);

@@ -95,9 +95,10 @@ class CWebServer
         bool bufferOverflow;
         debugV("GetEffectListText");
 
-        do {
+        do 
+        {
             bufferOverflow = false;
-            auto response = new AsyncJsonResponse(false, jsonBufferSize);
+            std::unique_ptr<AsyncJsonResponse> response(new AsyncJsonResponse(false, jsonBufferSize));
             response->addHeader("Server","NightDriverStrip");
             auto j = response->getRoot();
 
@@ -106,23 +107,28 @@ class CWebServer
             j["effectInterval"]        = g_aptrEffectManager->GetInterval();
             j["enabledCount"]          = g_aptrEffectManager->EnabledCount();
 
-            for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++) { 
+            for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++) 
+            {
                 DynamicJsonDocument effectDoc(256);
                 effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
                 effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
 
-                if (!j["Effects"].add(effectDoc)) {
+                if (!j["Effects"].add(effectDoc)) 
+                {
                     bufferOverflow = true;
                     jsonBufferSize += JSON_BUFFER_INCREMENT;
-                    delete response;
                     debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
                     break;
                 }
-            }       
+            }
 
-            response->addHeader("Access-Control-Allow-Origin", "*");
-            response->setLength();
-            pRequest->send(response);
+            if (!bufferOverflow) 
+            {
+                response->addHeader("Access-Control-Allow-Origin", "*");
+                response->setLength();
+                // The 'send' call will take ownership of the response, so we need to release it here
+                pRequest->send(response.release()); 
+            }
         } while (bufferOverflow);
     }
 

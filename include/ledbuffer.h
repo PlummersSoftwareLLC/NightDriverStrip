@@ -226,8 +226,8 @@ class LEDBufferManager
     size_t                                               _iNextBuffer;        // Head pointer index
     size_t                                               _iLastBuffer;        // Tail pointer index
     uint32_t                                             _cBuffers;           // Number of buffers
-    double                                               _BufferAgeOldest = 0;
-    double                                               _BufferAgeNewest = 0;
+    float                                               _BufferAgeOldest = 0;
+    float                                               _BufferAgeNewest = 0;
    
   public:
 
@@ -251,12 +251,12 @@ class LEDBufferManager
         }
     }
 
-    double AgeOfOldestBuffer()
+    float AgeOfOldestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pOldest = PeekOldestBuffer();
-            return (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
         }
         else
         {
@@ -264,12 +264,12 @@ class LEDBufferManager
         }
     }
 
-    double AgeOfNewestBuffer()
+    float AgeOfNewestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pNewest = PeekNewestBuffer();
-            return (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pNewest->Seconds() + pNewest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
         }
         else
         {
