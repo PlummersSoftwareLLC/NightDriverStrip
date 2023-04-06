@@ -507,6 +507,9 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new MeteorEffect(1, 1, 5, .15, .25),
         new MeteorEffect(), // Rainbow palette
 
+/* Commented out because no project definition sets the defines, and some sections refer to non-existent effects.
+   Effect instantiations will have to be reviewed if this section is uncommented.
+
     #elif FIRESTICK
 
         new BouncingBallEffect(),
@@ -560,7 +563,7 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
 
     #elif RINGSET
         new MusicalInsulatorEffect2("Musical Effect 2"),
-
+*/
     #elif FANSET
 
         new RainbowFillEffect(24, 0),
@@ -626,7 +629,10 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
     #elif LEDSTRIP
 
         new StatusEffect(CRGB::White)
-        
+
+/* Commented out because no project definition sets the define. Effect instantiations may need to be reviewed if
+   this section is uncommented.
+
     #elif HOODORNAMENT
 
         new RainbowFillEffect(24, 0),
@@ -634,7 +640,7 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new SimpleRainbowTestEffect(8, 1),              // Rainbow palette simple test of walking pixels
         new PaletteEffect(MagentaColors_p),             // Rainbow palette
         new DoublePaletteEffect(),
-
+*/
     #else                                                                   
 
         new RainbowFillEffect(6, 2),                    // Simple effect if not otherwise defined above
@@ -685,10 +691,10 @@ void InitEffectsManager()
 
             if (error == DeserializationError::NoMemory)
             {
-                debugW("Out of memory reading EffectManager config - increasing buffer");
-
                 pJsonDoc.reset(nullptr);
                 g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
+
+                debugW("Out of memory reading EffectManager config - increasing buffer to %d bytes", g_EffectsManagerJSONBufferSize);
             }
             else if (error == DeserializationError::Ok)
             {
@@ -739,6 +745,9 @@ void SaveEffectManagerConfig()
             break;
 
         g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
+
+        debugW("Out of memory serializing EffectManager config - increasing buffer to %d bytes", g_EffectsManagerJSONBufferSize);
+
     }
 
     SPIFFS.remove(EFFECTS_CONFIG_FILE);
