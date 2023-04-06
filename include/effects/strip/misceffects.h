@@ -263,10 +263,16 @@ class SplashLogoEffect : public LEDStripEffect
 {
   public:
     
-    SplashLogoEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
-      : LEDStripEffect("NightDriver")
+    SplashLogoEffect()
+      : LEDStripEffect(EFFECT_STRIP_SPLASH_LOGO, "NightDriver")
     {
-        debugV("Status Fill constructor");
+        debugV("Splash logo constructor");
+    }
+
+    SplashLogoEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+        debugV("Splash logo JSON constructor");
     }
 
     virtual size_t MaximumEffectTime() const
