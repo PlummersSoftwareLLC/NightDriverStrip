@@ -59,7 +59,6 @@
 #include "Geometry.h"
 #include "qrcode.h"
 
-
 class PatternQR : public LEDStripEffect 
 {
     void construct()

@@ -46,7 +46,7 @@ constexpr auto to_value(E e) noexcept
 	return static_cast<std::underlying_type_t<E>>(e);
 }
 
-namespace ARDUINOJSON_NAMESPACE 
+namespace ArduinoJson 
 {
     template <>
     struct Converter<CRGB> 
@@ -74,7 +74,7 @@ namespace ARDUINOJSON_NAMESPACE
         {
             StaticJsonDocument<384> doc;
     
-            JsonArray colors = dst.to<JsonArray>();
+            JsonArray colors = doc.to<JsonArray>();
 
             for (auto& color: palette.entries)
                 colors.add(color);
@@ -85,12 +85,11 @@ namespace ARDUINOJSON_NAMESPACE
         static CRGBPalette16 fromJson(JsonVariantConst src) 
         {
             CRGB colors[16];
-
             int colorIndex = 0;
 
             JsonArrayConst componentsArray = src.as<JsonArrayConst>();
             for (JsonVariantConst value : componentsArray) 
-                colors[colorIndex] = value.as<CRGB>();
+                colors[colorIndex++] = value.as<CRGB>();
 
             return CRGBPalette16(colors); 
         }

@@ -261,8 +261,8 @@ public:
 
     PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
-        strPostalCode = jsonObject["pcd"].as<const char*>();
-        strCountryCode = jsonObject["ccd"].as<const char*>();
+        strPostalCode = jsonObject["pcd"].as<String>();
+        strCountryCode = jsonObject["ccd"].as<String>();
 
         if (strPostalCode.isEmpty())
             strPostalCode = cszZipCode;
@@ -278,8 +278,8 @@ public:
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc["pcd"] = strPostalCode.c_str();
-        jsonDoc["ccd"] = strCountryCode.c_str();
+        jsonDoc["pcd"] = strPostalCode;
+        jsonDoc["ccd"] = strCountryCode;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

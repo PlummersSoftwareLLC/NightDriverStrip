@@ -58,7 +58,7 @@ void SaveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_ptrDevices[NUM_CHANNELS];
-void convertFromJson(JsonVariantConst src, LEDStripEffect*& pEffect);
+LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 
 // EffectManager
 //
@@ -143,10 +143,10 @@ public:
         JsonArrayConst effectsArray = jsonObject["efs"].as<JsonArrayConst>();
         _vEffects.reserve(effectsArray.size());
 
-        for (auto effect : effectsArray)
+        for (auto effectObject : effectsArray)
         {
-            LEDStripEffect *pEffect = effect;
-            if (pEffect != nullptr)
+            LEDStripEffect *pEffect = CreateEffectFromJSON(effectObject);
+            if (pEffect != nullptr) 
                 _vEffects.push_back(pEffect);
         }
     }

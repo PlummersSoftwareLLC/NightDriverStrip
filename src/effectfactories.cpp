@@ -96,6 +96,8 @@ std::map<int, JsonEffectFactory> g_JsonEffectFactories =
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new StatusEffect(jsonObject); } },
     { EFFECT_STRIP_TWINKLE,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new TwinkleEffect(jsonObject); } },
+    { EFFECT_STRIP_SPLASH_LOGO,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new SplashLogoEffect(jsonObject); } },
 
 #if ENABLE_AUDIO
     { EFFECT_STRIP_COLOR_BEAT_OVER_RED,
@@ -142,24 +144,40 @@ std::map<int, JsonEffectFactory> g_JsonEffectFactories =
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternClock(jsonObject); } },
     { EFFECT_MATRIX_CUBE,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternCube(jsonObject); } },
+    { EFFECT_MATRIX_CURTAIN,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternCurtain(jsonObject); } },
     { EFFECT_MATRIX_FLOW_FIELD,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternFlowField(jsonObject); } },
+    { EFFECT_MATRIX_GRID_LIGHTS,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternGridLights(jsonObject); } },
     { EFFECT_MATRIX_INFINITY,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternInfinity(jsonObject); } },
     { EFFECT_MATRIX_LIFE,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternLife(jsonObject); } },
     { EFFECT_MATRIX_MANDALA,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternMandala(jsonObject); } },
+    { EFFECT_MATRIX_MUNCH,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternMunch(jsonObject); } },
+    { EFFECT_MATRIX_PALETTE_SMEAR,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternPaletteSmear(jsonObject); } },
     { EFFECT_MATRIX_PINWHEEL,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternPinwheel(jsonObject); } },
     { EFFECT_MATRIX_PONG_CLOCK,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternPongClock(jsonObject); } },
+    { EFFECT_MATRIX_PULSE,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternPulse(jsonObject); } },
     { EFFECT_MATRIX_PULSAR,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternPulsar(jsonObject); } },
+    { EFFECT_MATRIX_QR,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternQR(jsonObject); } },
+    { EFFECT_MATRIX_RADAR,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternRadar(jsonObject); } },
     { EFFECT_MATRIX_ROSE,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternRose(jsonObject); } },
     { EFFECT_MATRIX_SERENDIPITY,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternSerendipity(jsonObject); } },
+    { EFFECT_MATRIX_SPIN,
+        [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternSpin(jsonObject); } },
     { EFFECT_MATRIX_SPIRO,
         [](const JsonObjectConst& jsonObject) -> LEDStripEffect* { return new PatternSpiro(jsonObject); } },
     { EFFECT_MATRIX_SUBSCRIBERS,
@@ -175,11 +193,11 @@ std::map<int, JsonEffectFactory> g_JsonEffectFactories =
 #endif
 };
 
-void convertFromJson(JsonVariantConst src, LEDStripEffect*& pEffect)
+LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject)
 {
-    auto entry = g_JsonEffectFactories.find(src[PTY_EFFECTNR]);
+    auto entry = g_JsonEffectFactories.find(jsonObject[PTY_EFFECTNR]);
 
-    pEffect = (entry != g_JsonEffectFactories.end()
-        ? entry->second(src.as<JsonObjectConst>())
-        : nullptr);
+    return entry != g_JsonEffectFactories.end()
+        ? entry->second(jsonObject)
+        : nullptr;
 }

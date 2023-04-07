@@ -469,7 +469,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) 
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<512> jsonDoc;
         
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);

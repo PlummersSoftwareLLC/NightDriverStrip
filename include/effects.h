@@ -68,6 +68,7 @@
 #define EFFECT_STRIP_PALETTE_REEL                       35
 #define EFFECT_STRIP_TAPE_REEL                          36
 #define EFFECT_STRIP_FAN_BEAT                           37
+#define EFFECT_STRIP_SPLASH_LOGO                        38
 
 // Matrix effects
 #define EFFECT_MATRIX_ALIEN_TEXT                       101
@@ -104,7 +105,6 @@
 #define EFFECT_MATRIX_SPECTRUM_ANALYZER                132
 #define EFFECT_MATRIX_WAVEFORM                         133
 #define EFFECT_MATRIX_GHOST_WAVE                       134
-#define EFFECT_STRIP_SPLASH_LOGO                       135
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1

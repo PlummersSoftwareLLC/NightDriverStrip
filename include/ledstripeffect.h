@@ -66,7 +66,7 @@ class LEDStripEffect : public IJSONSerializable
 
     LEDStripEffect(const JsonObjectConst&  jsonObject) 
         : _effectNumber(jsonObject[PTY_EFFECTNR]),
-          _friendlyName(jsonObject["fn"].as<const char *>())
+          _friendlyName(jsonObject["fn"].as<String>())
     {
     }
 
@@ -286,7 +286,7 @@ class LEDStripEffect : public IJSONSerializable
         StaticJsonDocument<128> jsonDoc;
         
         jsonDoc[PTY_EFFECTNR] = _effectNumber;
-        jsonDoc["fn"] = _friendlyName.c_str();
+        jsonDoc["fn"] = _friendlyName;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

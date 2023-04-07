@@ -676,7 +676,7 @@ void InitEffectsManager()
     
     std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
 
-    if (file) 
+    if (file && file.size() > 0)
     {
         debugI("Attempting to read EffectManager config from JSON file");
 
@@ -687,11 +687,13 @@ void InitEffectsManager()
         while(true)
         {
             pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
+            
             DeserializationError error = deserializeJson(*pJsonDoc, file);
 
             if (error == DeserializationError::NoMemory)
             {
                 pJsonDoc.reset(nullptr);
+                file.seek(0);
                 g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
 
                 debugW("Out of memory reading EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
@@ -702,7 +704,10 @@ void InitEffectsManager()
                 break;
             }
             else 
+            {
+                debugW("Error with code %d occurred while deserializing EffectManager config", to_value(error.code()));
                 break;
+            }
         }
 
         file.close();
@@ -733,17 +738,18 @@ void SaveEffectManagerConfig()
     if (g_EffectsManagerJSONBufferSize == 0)
         g_EffectsManagerJSONBufferSize = JSON_BUFFER_BASE_SIZE;
 
-    JsonObject jsonObject;
+    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
 
     // Loop is here to deal with out of memory conditions
     while(true)
     {
-        DynamicJsonDocument jsonDoc(g_EffectsManagerJSONBufferSize);
-        jsonObject = jsonDoc.to<JsonObject>();
+        pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
+        JsonObject jsonObject = pJsonDoc->to<JsonObject>();
 
         if (g_aptrEffectManager->SerializeToJSON(jsonObject))
             break;
 
+        pJsonDoc.reset(nullptr);
         g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
 
         debugW("Out of memory serializing EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
@@ -759,11 +765,10 @@ void SaveEffectManagerConfig()
         return;
     }
 
-    Serial.println("JSON written:");
-    serializeJsonPretty(jsonObject, Serial);
-
-    size_t bytesWritten = serializeJson(jsonObject, file);
-
+    size_t bytesWritten = serializeJson(*pJsonDoc, file);
+    debugI("Number of bytes written to config JSON file: %d", bytesWritten);
+    
+    file.flush();
     file.close();
 
     if (bytesWritten == 0)
@@ -772,6 +777,17 @@ void SaveEffectManagerConfig()
         SPIFFS.remove(EFFECTS_CONFIG_FILE);
         return;
     }
+
+/*
+    file = SPIFFS.open(EFFECTS_CONFIG_FILE);
+    if (file)
+    {
+        while (file.available())
+            Serial.write(file.read());
+        
+        file.close();
+    }
+*/
 }
 
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without

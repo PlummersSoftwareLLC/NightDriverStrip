@@ -59,7 +59,7 @@ class DoublePaletteEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        DynamicJsonDocument jsonDoc(1256);
+        DynamicJsonDocument jsonDoc(896);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
