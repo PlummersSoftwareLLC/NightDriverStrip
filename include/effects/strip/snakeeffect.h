@@ -74,8 +74,8 @@ class SnakeEffect : public LEDStripEffect
 
     SnakeEffect(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
-          LEDCount(jsonObject[PTY_LEDCOUNT].as<int>()),
-          SnakeSpeed(jsonObject[PTY_SPEED].as<int>())
+          LEDCount(jsonObject[PTY_LEDCOUNT]),
+          SnakeSpeed(jsonObject[PTY_SPEED])
     {
         construct();
     }

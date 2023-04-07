@@ -79,15 +79,15 @@ class PaletteEffect : public LEDStripEffect
     PaletteEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject),
       _startIndex(0.0f),
       _paletteIndex(0.0f),
-      _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>())),
-      _density(jsonObject["dns"].as<float>()),
-      _paletteSpeed(jsonObject[PTY_SPEED].as<float>()),
-      _lightSize(jsonObject["lsz"].as<float>()),
-      _gapSize(jsonObject["gsz"].as<float>()),
-      _LEDSPerSecond(jsonObject["lps"].as<float>()),
-      _blend(static_cast<TBlendType>(jsonObject[PTY_BLEND].as<int>())),
-      _bErase(jsonObject[PTY_ERASE].as<bool>()),
-      _brightness(jsonObject["bns"].as<float>())
+      _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+      _density(jsonObject["dns"]),
+      _paletteSpeed(jsonObject[PTY_SPEED]),
+      _lightSize(jsonObject["lsz"]),
+      _gapSize(jsonObject["gsz"]),
+      _LEDSPerSecond(jsonObject["lps"]),
+      _blend(static_cast<TBlendType>(jsonObject[PTY_BLEND])),
+      _bErase(jsonObject[PTY_ERASE]),
+      _brightness(jsonObject["bns"])
     {
     }
 
@@ -98,8 +98,7 @@ class PaletteEffect : public LEDStripEffect
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
-        JSONSerializer::SerializeToJSON(paletteObject, _palette);
+        jsonDoc[PTY_PALETTE] = _palette;
         jsonDoc["dns"] = _density;
         jsonDoc[PTY_SPEED] = _paletteSpeed;
         jsonDoc["lsz"] = _lightSize;

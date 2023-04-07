@@ -85,10 +85,10 @@ private:
 
     BouncingBallEffect(const JsonObjectConst&  jsonObject) 
         : LEDStripEffect(jsonObject),
-          _cBalls(jsonObject["blc"].as<size_t>()),
-          _cBallSize(jsonObject["bls"].as<size_t>()),
-          _bMirrored(jsonObject[PTY_MIRORRED].as<bool>()),
-          _bErase(jsonObject[PTY_ERASE].as<bool>())
+          _cBalls(jsonObject["blc"]),
+          _cBallSize(jsonObject["bls"]),
+          _bMirrored(jsonObject[PTY_MIRORRED]),
+          _bErase(jsonObject[PTY_ERASE])
     {
     }
 

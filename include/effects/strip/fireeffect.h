@@ -87,14 +87,14 @@ class FireEffect : public LEDStripEffect
 
     FireEffect(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
-          LEDCount(jsonObject[PTY_LEDCOUNT].as<int>()),
-          CellsPerLED(jsonObject[PTY_CELLSPERLED].as<int>()),
-          Cooling(jsonObject[PTY_COOLING].as<int>()),
-          Sparks(jsonObject[PTY_SPARKS].as<int>()),
-          SparkHeight(jsonObject[PTY_SPARKHEIGHT].as<int>()),
-          Sparking(jsonObject[PTY_SPARKING].as<int>()),
-          bReversed(jsonObject[PTY_REVERSED].as<bool>()),
-          bMirrored(jsonObject[PTY_MIRORRED].as<bool>())
+          LEDCount(jsonObject[PTY_LEDCOUNT]),
+          CellsPerLED(jsonObject[PTY_CELLSPERLED]),
+          Cooling(jsonObject[PTY_COOLING]),
+          Sparks(jsonObject[PTY_SPARKS]),
+          SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+          Sparking(jsonObject[PTY_SPARKING]),
+          bReversed(jsonObject[PTY_REVERSED]),
+          bMirrored(jsonObject[PTY_MIRORRED])
     {
         construct();
     }
@@ -241,7 +241,7 @@ public:
 
     PaletteFlameEffect(const JsonObjectConst& jsonObject)
       : FireEffect(jsonObject),
-        _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
+        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
     {
         construct();
     }
@@ -253,8 +253,7 @@ public:
         JsonObject root = jsonDoc.to<JsonObject>();
         FireEffect::SerializeToJSON(jsonObject);
 
-        JsonObject paletteObj = jsonObject.createNestedObject(PTY_PALETTE);
-        JSONSerializer::SerializeToJSON(paletteObj, _palette);
+        jsonObject[PTY_PALETTE] = _palette;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -344,9 +343,9 @@ public:
 
     ClassicFireEffect(const JsonObjectConst& jsonObject) 
         : LEDStripEffect(jsonObject),
-          _Mirrored(jsonObject[PTY_MIRORRED].as<bool>()),
-          _Reversed(jsonObject[PTY_REVERSED].as<bool>()),
-          _Cooling(jsonObject[PTY_COOLING].as<int>())
+          _Mirrored(jsonObject[PTY_MIRORRED]),
+          _Reversed(jsonObject[PTY_REVERSED]),
+          _Cooling(jsonObject[PTY_COOLING])
     {
     }
 
@@ -514,14 +513,14 @@ public:
 
     SmoothFireEffect(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
-          _Reversed(jsonObject[PTY_REVERSED].as<bool>()),
-          _Cooling(jsonObject[PTY_COOLING].as<float>()),
-          _Sparks(jsonObject[PTY_SPARKS].as<int>()),
-          _Drift(jsonObject["dft"].as<float>()),
-          _DriftPasses(jsonObject["dtp"].as<int>()),
-          _SparkHeight(jsonObject[PTY_SPARKHEIGHT].as<int>()),
-          _Turbo(jsonObject["trb"].as<bool>()),
-          _Mirrored(jsonObject[PTY_MIRORRED].as<bool>())
+          _Reversed(jsonObject[PTY_REVERSED]),
+          _Cooling(jsonObject[PTY_COOLING]),
+          _Sparks(jsonObject[PTY_SPARKS]),
+          _Drift(jsonObject["dft"]),
+          _DriftPasses(jsonObject["dtp"]),
+          _SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+          _Turbo(jsonObject["trb"]),
+          _Mirrored(jsonObject[PTY_MIRORRED])
     {
     }
 
@@ -681,14 +680,14 @@ class BaseFireEffect : public LEDStripEffect
 
     BaseFireEffect(const JsonObjectConst& jsonObject) 
         : LEDStripEffect(jsonObject),
-          Cooling(jsonObject[PTY_COOLING].as<int>()),
-          Sparks(jsonObject[PTY_SPARKS].as<int>()),
-          SparkHeight(jsonObject[PTY_SPARKHEIGHT].as<int>()),
-          Sparking(jsonObject[PTY_SPARKING].as<int>()),
-          bReversed(jsonObject[PTY_REVERSED].as<int>()),
-          bMirrored(jsonObject[PTY_MIRORRED].as<int>()),
-          LEDCount(jsonObject[PTY_LEDCOUNT].as<int>()),
-          CellCount(jsonObject["clc"].as<int>())
+          Cooling(jsonObject[PTY_COOLING]),
+          Sparks(jsonObject[PTY_SPARKS]),
+          SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+          Sparking(jsonObject[PTY_SPARKING]),
+          bReversed(jsonObject[PTY_REVERSED]),
+          bMirrored(jsonObject[PTY_MIRORRED]),
+          LEDCount(jsonObject[PTY_LEDCOUNT]),
+          CellCount(jsonObject["clc"])
     {
         construct();
     }

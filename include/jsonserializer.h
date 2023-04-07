@@ -46,9 +46,58 @@ constexpr auto to_value(E e) noexcept
 	return static_cast<std::underlying_type_t<E>>(e);
 }
 
-namespace JSONSerializer 
+namespace ARDUINOJSON_NAMESPACE 
 {
-    uint32_t ToUInt32(CRGB color); 
-    bool SerializeToJSON(JsonObject& jsonObject, CRGBPalette16 palette);
-    CRGBPalette16 DeserializeCRGBPalette16FromJSON(const JsonObjectConst&  jsonObject);
+    template <>
+    struct Converter<CRGB> 
+    {
+        static bool toJson(const CRGB& color, JsonVariant dst) 
+        {
+            return dst.set((uint32_t)((color.r << 16) | (color.g << 8) | color.b));
+        }
+
+        static CRGB fromJson(JsonVariantConst src) 
+        {
+            return CRGB(src.as<uint32_t>()); 
+        }
+
+        static bool checkJson(JsonVariantConst src) 
+        {
+            return src.is<uint32_t>();
+        }
+    };
+
+    template <>
+    struct Converter<CRGBPalette16> 
+    {
+        static bool toJson(const CRGBPalette16& palette, JsonVariant dst) 
+        {
+            StaticJsonDocument<384> doc;
+    
+            JsonArray colors = dst.to<JsonArray>();
+
+            for (auto& color: palette.entries)
+                colors.add(color);
+        
+            return dst.set(doc);
+        }
+
+        static CRGBPalette16 fromJson(JsonVariantConst src) 
+        {
+            CRGB colors[16];
+
+            int colorIndex = 0;
+
+            JsonArrayConst componentsArray = src.as<JsonArrayConst>();
+            for (JsonVariantConst value : componentsArray) 
+                colors[colorIndex] = value.as<CRGB>();
+
+            return CRGBPalette16(colors); 
+        }
+
+        static bool checkJson(JsonVariantConst src) 
+        {
+            return src.is<JsonArrayConst>() && src.as<JsonArrayConst>().size() == 16;
+        }
+    };
 }

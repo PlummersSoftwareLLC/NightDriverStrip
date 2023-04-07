@@ -87,8 +87,8 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
     LaserLineEffect(const JsonObjectConst& jsonObject) 
         : BeatEffectBase(1.50, 0.00), 
           LEDStripEffect(jsonObject), 
-          _defaultSize(jsonObject[PTY_SIZE].as<float>()), 
-          _defaultSpeed(jsonObject[PTY_SPEED].as<float>()) 
+          _defaultSize(jsonObject[PTY_SIZE]), 
+          _defaultSpeed(jsonObject[PTY_SPEED]) 
     {
     }
 

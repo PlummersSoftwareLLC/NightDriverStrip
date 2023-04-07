@@ -55,7 +55,7 @@ std::map<int, JsonEffectFactory> g_JsonStarryNightEffectFactories =
 
 LEDStripEffect* CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
 {
-    auto entry = g_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR].as<int>());
+    auto entry = g_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
 
     return entry != g_JsonStarryNightEffectFactories.end() 
         ? entry->second(jsonObject)
@@ -175,11 +175,11 @@ std::map<int, JsonEffectFactory> g_JsonEffectFactories =
 #endif
 };
 
-LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject)
+void convertFromJson(JsonVariantConst src, LEDStripEffect*& pEffect)
 {
-    auto entry = g_JsonEffectFactories.find(jsonObject[PTY_EFFECTNR].as<int>());
+    auto entry = g_JsonEffectFactories.find(src[PTY_EFFECTNR]);
 
-    return entry != g_JsonEffectFactories.end() 
-        ? entry->second(jsonObject)
-        : nullptr;
+    pEffect = (entry != g_JsonEffectFactories.end()
+        ? entry->second(src.as<JsonObjectConst>())
+        : nullptr);
 }

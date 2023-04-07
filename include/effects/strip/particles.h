@@ -715,7 +715,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
       : LEDStripEffect(jsonObject),
         BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
     {
     }
 
@@ -726,8 +726,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
-        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+        jsonDoc[PTY_PALETTE] = _Palette;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -806,7 +805,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
       : LEDStripEffect(jsonObject),
         BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
     {
     }
 
@@ -817,8 +816,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
-        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+        jsonDoc[PTY_PALETTE] = _Palette;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -893,7 +891,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
       : LEDStripEffect(jsonObject), 
         BeatEffectBase(), 
         ParticleSystem<SpinningPaletteRingParticle>(), 
-        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>()))
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
     {
     }
 
@@ -904,8 +902,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
-        JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+        jsonDoc[PTY_PALETTE] = _Palette;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

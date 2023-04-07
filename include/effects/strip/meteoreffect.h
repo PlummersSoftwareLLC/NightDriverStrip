@@ -183,11 +183,11 @@ class MeteorEffect : public LEDStripEffect
     MeteorEffect(const JsonObjectConst& jsonObject) 
         : LEDStripEffect(jsonObject), 
           _Meteors(),
-          _cMeteors(jsonObject["mto"].as<int>()),
-          _meteorSize(jsonObject[PTY_SIZE].as<uint8_t>()),
-          _meteorTrailDecay(jsonObject["dcy"].as<uint8_t>()),
-          _meteorSpeedMin(jsonObject[PTY_MINSPEED].as<float>()),
-          _meteorSpeedMax(jsonObject[PTY_MAXSPEED].as<float>())
+          _cMeteors(jsonObject["mto"]),
+          _meteorSize(jsonObject[PTY_SIZE]),
+          _meteorTrailDecay(jsonObject["dcy"]),
+          _meteorSpeedMin(jsonObject[PTY_MINSPEED]),
+          _meteorSpeedMax(jsonObject[PTY_MAXSPEED])
     {
     }
 

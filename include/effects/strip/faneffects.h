@@ -696,9 +696,9 @@ public:
 
   PaletteSpinEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject), 
-        _Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>())), 
-        _bReplaceMagenta(jsonObject["rpm"].as<bool>()), 
-        _sparkleChance(jsonObject["sch"].as<float>())
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()), 
+        _bReplaceMagenta(jsonObject["rpm"]), 
+        _sparkleChance(jsonObject["sch"])
   {
   }
 
@@ -709,8 +709,7 @@ public:
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
 
-    JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
-    JSONSerializer::SerializeToJSON(paletteObject, _Palette);
+    jsonDoc[PTY_PALETTE] = _Palette;
     jsonDoc["rpm"] = _bReplaceMagenta;
     jsonDoc["sch"] = _sparkleChance;
 
@@ -773,8 +772,8 @@ public:
 
   ColorCycleEffect(const JsonObjectConst& jsonObject) 
     : LEDStripEffect(jsonObject), 
-      _order((PixelOrder)jsonObject[PTY_ORDER].as<int>()), 
-      _step(jsonObject["stp"].as<int>())
+      _order((PixelOrder)jsonObject[PTY_ORDER]), 
+      _step(jsonObject["stp"])
   {
   }
 
@@ -1008,16 +1007,16 @@ public:
 
   FireFanEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
-        Palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>())),
-        LEDCount(jsonObject[PTY_LEDCOUNT].as<int>()),
-        CellsPerLED(jsonObject[PTY_CELLSPERLED].as<int>()),
-        Cooling(jsonObject[PTY_COOLING].as<int>()),
-        Sparks(jsonObject[PTY_SPARKS].as<int>()),
-        SparkHeight(jsonObject[PTY_SPARKHEIGHT].as<int>()),
-        Sparking(jsonObject[PTY_SPARKING].as<int>()),
-        bReversed(jsonObject[PTY_REVERSED].as<bool>()),
-        bMirrored(jsonObject[PTY_MIRORRED].as<bool>()),
-        Order((PixelOrder)jsonObject[PTY_ORDER].as<int>())
+        Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        CellsPerLED(jsonObject[PTY_CELLSPERLED]),
+        Cooling(jsonObject[PTY_COOLING]),
+        Sparks(jsonObject[PTY_SPARKS]),
+        SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+        Sparking(jsonObject[PTY_SPARKING]),
+        bReversed(jsonObject[PTY_REVERSED]),
+        bMirrored(jsonObject[PTY_MIRORRED]),
+        Order((PixelOrder)jsonObject[PTY_ORDER])
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
@@ -1028,8 +1027,7 @@ public:
   {
     StaticJsonDocument<512> jsonDoc;
     
-    JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
-    JSONSerializer::SerializeToJSON(paletteObject, Palette);
+    jsonDoc[PTY_PALETTE] = Palette;
     jsonDoc[PTY_LEDCOUNT] = LEDCount;
     jsonDoc[PTY_CELLSPERLED] = CellsPerLED;
     jsonDoc[PTY_COOLING] = Cooling;

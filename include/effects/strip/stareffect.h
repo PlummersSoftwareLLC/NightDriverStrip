@@ -456,14 +456,14 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
     StarryNightEffect<StarType>(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
-        _palette(JSONSerializer::DeserializeCRGBPalette16FromJSON(jsonObject[PTY_PALETTE].as<JsonObjectConst>())),
-        _newStarProbability(jsonObject["spb"].as<float>()),
-        _starSize(jsonObject[PTY_SIZE].as<float>()),
-        _blendType(static_cast<TBlendType>(jsonObject[PTY_BLEND].as<int>())),
-        _maxSpeed(jsonObject[PTY_MAXSPEED].as<double>()),
-        _blurFactor(jsonObject[PTY_BLUR].as<double>()),
-        _musicFactor(jsonObject["msf"].as<double>()),
-        _skyColor(CRGB(jsonObject[PTY_COLOR].as<uint32_t>()))
+        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        _newStarProbability(jsonObject["spb"]),
+        _starSize(jsonObject[PTY_SIZE]),
+        _blendType(static_cast<TBlendType>(jsonObject[PTY_BLEND])),
+        _maxSpeed(jsonObject[PTY_MAXSPEED]),
+        _blurFactor(jsonObject[PTY_BLUR]),
+        _musicFactor(jsonObject["msf"]),
+        _skyColor(jsonObject[PTY_COLOR].as<CRGB>())
     {
     }
 
@@ -474,8 +474,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        JsonObject paletteObject = jsonDoc.createNestedObject(PTY_PALETTE);
-        JSONSerializer::SerializeToJSON(paletteObject, _palette);
+        jsonDoc[PTY_PALETTE] = _palette;
         jsonDoc[PTY_STARTYPENR] = StarType::GetStarTypeNumber();
         jsonDoc["spb"] = _newStarProbability;
         jsonDoc[PTY_SIZE] = _starSize;
@@ -483,7 +482,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         jsonDoc[PTY_MAXSPEED] = _maxSpeed;
         jsonDoc[PTY_BLUR] = _blurFactor;
         jsonDoc["msf"] = _musicFactor;
-        jsonDoc[PTY_COLOR] = JSONSerializer::ToUInt32(_skyColor);
+        jsonDoc[PTY_COLOR] = _skyColor;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
