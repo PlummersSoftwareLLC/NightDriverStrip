@@ -694,7 +694,7 @@ void InitEffectsManager()
                 pJsonDoc.reset(nullptr);
                 g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
 
-                debugW("Out of memory reading EffectManager config - increasing buffer to %d bytes", g_EffectsManagerJSONBufferSize);
+                debugW("Out of memory reading EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
             }
             else if (error == DeserializationError::Ok)
             {
@@ -746,8 +746,7 @@ void SaveEffectManagerConfig()
 
         g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
 
-        debugW("Out of memory serializing EffectManager config - increasing buffer to %d bytes", g_EffectsManagerJSONBufferSize);
-
+        debugW("Out of memory serializing EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
     }
 
     SPIFFS.remove(EFFECTS_CONFIG_FILE);
@@ -759,6 +758,9 @@ void SaveEffectManagerConfig()
         debugE("Unable to open file to write EffectManager config!");
         return;
     }
+
+    Serial.println("JSON written:");
+    serializeJsonPretty(jsonObject, Serial);
 
     size_t bytesWritten = serializeJson(jsonObject, file);
 
