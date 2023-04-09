@@ -681,7 +681,7 @@ void InitEffectsManager()
         debugI("Attempting to read EffectManager config from JSON file");
 
         if (g_EffectsManagerJSONBufferSize == 0)
-            g_EffectsManagerJSONBufferSize = file.size();
+            g_EffectsManagerJSONBufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
 
         // Loop is here to deal with out of memory conditions
         while(true)

@@ -88,12 +88,16 @@ class EffectManager : IJSONSerializable
         _bPlayAll = false;
         _iCurrentEffect = 0;
         _effectStartTime = millis();
-        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
-
-        for (int i = 0; i < _vEffects.size(); i++)
-            EnableEffect(i);
 
         SetInterval(DEFAULT_EFFECT_INTERVAL);
+    }
+
+    void ClearEffects() 
+    {
+        for (auto effect : _vEffects)
+            delete effect;
+
+        _vEffects.clear();
     }
 
 public:
@@ -119,28 +123,30 @@ public:
     ~EffectManager()
     {
         ClearRemoteColor();
-        
-        for (auto effect : _vEffects)
-            delete effect;
-
-        _vEffects.clear();
+        ClearEffects();
     }
 
     void LoadEffectArray(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects)
     {
+        ClearEffects();
         _vEffects.reserve(cEffects);
+        
         for (int i = 0; i < cEffects; i++)
         {
             _vEffects.push_back(pEffects[i]);
         }
+
+        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
+
+        for (int i = 0; i < _vEffects.size(); i++)
+            EnableEffect(i);
 
         construct();
     }
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
     {
-        for (auto effect : _vEffects)
-            delete effect;
+        ClearEffects();
 
         JsonArrayConst effectsArray = jsonObject["efs"].as<JsonArrayConst>();
 
@@ -162,6 +168,15 @@ public:
         if (_vEffects.size() == 0)
             return false;
         
+        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
+
+        // Try to load effect enabled state from JSON also, default to "enabled" otherwise
+        JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
+        int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
+
+        for (int i = 0; i < _vEffects.size(); i++)
+            EnableEffect(i < enabledSize ? enabledArray[i].as<bool>() : true);
+
         construct();
         return true;
     }
@@ -170,6 +185,13 @@ public:
     {
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
+
+        // Serialize enabled state first. That way we'll still find out if we run out of memory, later
+        JsonArray enabledArray = jsonObject.createNestedArray("eef");
+
+        for (int i = 0; i < EffectCount(); i++)
+            enabledArray.add(IsEffectEnabled(i));
+
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
         for (auto effect : _vEffects) 
