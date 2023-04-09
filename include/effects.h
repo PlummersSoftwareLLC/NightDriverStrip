@@ -146,5 +146,6 @@
 #define PTY_STARTYPENR      "stt"
 #define PTY_BLUR            "blr"
 #define PTY_FADE            "fde"
+#define PTY_VERSION         "ver"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

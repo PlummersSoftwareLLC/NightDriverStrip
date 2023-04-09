@@ -47,6 +47,7 @@
 #include "jsonserializer.h"
 
 #define MAX_EFFECTS 32
+#define JSON_FORMAT_VERSION 1
 
 extern uint8_t g_Brightness;
 extern uint8_t g_Fader;
@@ -104,13 +105,7 @@ public:
     {
         debugV("EffectManager Constructor");
 
-        _vEffects.reserve(cEffects);
-        for (int i = 0; i < cEffects; i++)
-        {
-            _vEffects.push_back(pEffects[i]);
-        }
-
-        construct();
+        LoadEffectArray(pEffects, cEffects);
     }
 
     EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> *gfx)
@@ -119,8 +114,6 @@ public:
         debugV("EffectManager JSON Constructor");
 
         DeserializeFromJSON(jsonObject);
-
-        construct();
     }
 
     ~EffectManager()
@@ -133,14 +126,29 @@ public:
         _vEffects.clear();
     }
 
-    void DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    void LoadEffectArray(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects)
+    {
+        _vEffects.reserve(cEffects);
+        for (int i = 0; i < cEffects; i++)
+        {
+            _vEffects.push_back(pEffects[i]);
+        }
+
+        construct();
+    }
+
+    bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
     {
         for (auto effect : _vEffects)
             delete effect;
 
-        _vEffects.clear();
-    
         JsonArrayConst effectsArray = jsonObject["efs"].as<JsonArrayConst>();
+
+        // Check if the object actually contained an effect config array
+        if (effectsArray.isNull())
+            return false;
+
+        _vEffects.clear();
         _vEffects.reserve(effectsArray.size());
 
         for (auto effectObject : effectsArray)
@@ -149,10 +157,19 @@ public:
             if (pEffect != nullptr) 
                 _vEffects.push_back(pEffect);
         }
+
+        // Check if we have at least one deserialized effect
+        if (_vEffects.size() == 0)
+            return false;
+        
+        construct();
+        return true;
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
+        // Set JSON format version to be able to detect and manage future incompatible structural updates
+        jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
         for (auto effect : _vEffects) 

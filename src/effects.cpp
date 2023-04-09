@@ -718,6 +718,15 @@ void InitEffectsManager()
         debugI("Creating EffectManager from JSON config");
 
         g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+
+        if (g_aptrEffectManager->EffectCount() == 0)
+        {
+            debugW("JSON deserialization of EffectManager yielded no effects, so falling back to default list");
+            std::unique_ptr<EffectPointerArray> defaultEffects;
+            size_t effectCount = CreateDefaultEffects(defaultEffects);
+
+            g_aptrEffectManager->LoadEffectArray(defaultEffects, effectCount);
+        }
     }
     else
     {
