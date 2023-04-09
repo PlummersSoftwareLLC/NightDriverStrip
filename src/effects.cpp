@@ -676,37 +676,40 @@ void InitEffectsManager()
     
     std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
 
-    if (file && file.size() > 0)
+    if (file)
     {
-        debugI("Attempting to read EffectManager config from JSON file");
-
-        if (g_EffectsManagerJSONBufferSize == 0)
-            g_EffectsManagerJSONBufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
-
-        // Loop is here to deal with out of memory conditions
-        while(true)
+        if (file.size() > 0)
         {
-            pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
-            
-            DeserializationError error = deserializeJson(*pJsonDoc, file);
+            debugI("Attempting to read EffectManager config from JSON file");
 
-            if (error == DeserializationError::NoMemory)
-            {
-                pJsonDoc.reset(nullptr);
-                file.seek(0);
-                g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
+            if (g_EffectsManagerJSONBufferSize == 0)
+                g_EffectsManagerJSONBufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
 
-                debugW("Out of memory reading EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
-            }
-            else if (error == DeserializationError::Ok)
+            // Loop is here to deal with out of memory conditions
+            while(true)
             {
-                jsonReadSuccessful = true;
-                break;
-            }
-            else 
-            {
-                debugW("Error with code %d occurred while deserializing EffectManager config", to_value(error.code()));
-                break;
+                pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
+                
+                DeserializationError error = deserializeJson(*pJsonDoc, file);
+
+                if (error == DeserializationError::NoMemory)
+                {
+                    pJsonDoc.reset(nullptr);
+                    file.seek(0);
+                    g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
+
+                    debugW("Out of memory reading EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
+                }
+                else if (error == DeserializationError::Ok)
+                {
+                    jsonReadSuccessful = true;
+                    break;
+                }
+                else 
+                {
+                    debugW("Error with code %d occurred while deserializing EffectManager config", to_value(error.code()));
+                    break;
+                }
             }
         }
 
