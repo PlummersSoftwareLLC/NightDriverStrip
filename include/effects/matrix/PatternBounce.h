@@ -64,7 +64,11 @@ private:
     PVector gravity = PVector(0, 0.0125);
 
 public:
-    PatternBounce() : LEDStripEffect("Bounce")
+    PatternBounce() : LEDStripEffect(EFFECT_MATRIX_BOUNCE, "Bounce")
+    {
+    }
+
+    PatternBounce(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

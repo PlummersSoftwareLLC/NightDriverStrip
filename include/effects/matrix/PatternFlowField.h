@@ -58,9 +58,14 @@
 class PatternFlowField : public LEDStripEffect
 {
 public:
-    PatternFlowField() : LEDStripEffect("FlowField")
+    PatternFlowField() : LEDStripEffect(EFFECT_MATRIX_FLOW_FIELD, "FlowField")
     {
     }
+
+    PatternFlowField(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
     uint16_t x;
     uint16_t y;
     uint16_t z;

@@ -94,7 +94,11 @@ private:
     }
 
 public:
-    PatternSerendipity() : LEDStripEffect("Serendipity")
+    PatternSerendipity() : LEDStripEffect(EFFECT_MATRIX_SERENDIPITY, "Serendipity")
+    {
+    }
+
+    PatternSerendipity(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

@@ -69,7 +69,11 @@ private:
 
 public:
 
-  PatternAlienText() : LEDStripEffect("AlienText")
+  PatternAlienText() : LEDStripEffect(EFFECT_MATRIX_ALIEN_TEXT, "AlienText")
+  {
+  }
+
+  PatternAlienText(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 

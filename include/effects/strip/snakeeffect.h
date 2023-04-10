@@ -31,8 +31,17 @@
 
 #pragma once
 
+#include "effects.h"
+#include "globals.h"
+
 class SnakeEffect : public LEDStripEffect
 {
+    void construct()
+    {
+        lastLEDIndex = LEDCount - 1;
+        Reset();
+    }
+
   protected:
     int     LEDCount;             // Number of LEDs total
     int     SnakeSpeed;           // Max duration between iterations.
@@ -56,12 +65,32 @@ class SnakeEffect : public LEDStripEffect
   public:
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : LEDStripEffect(strName),
+        : LEDStripEffect(EFFECT_STRIP_SNAKE, strName),
           LEDCount(ledCount),
           SnakeSpeed(snakeSpeed)
     {
-        lastLEDIndex = ledCount - 1;
-        Reset();
+        construct();
+    }
+
+    SnakeEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
+          LEDCount(jsonObject[PTY_LEDCOUNT]),
+          SnakeSpeed(jsonObject[PTY_SPEED])
+    {
+        construct();
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_LEDCOUNT] = LEDCount;
+        jsonDoc[PTY_SPEED] = SnakeSpeed;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual ~SnakeEffect()

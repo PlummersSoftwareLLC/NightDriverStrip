@@ -62,10 +62,13 @@ class PatternSunburst : public LEDStripEffect
 {
   public:
 
-    PatternSunburst() : LEDStripEffect("Sunburst")
+    PatternSunburst() : LEDStripEffect(EFFECT_MATRIX_SUNBURST, "Sunburst")
     {
     }
 
+    PatternSunburst(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
  
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -97,7 +100,11 @@ class PatternRose : public LEDStripEffect
 {
   public:
     
-    PatternRose() : LEDStripEffect("Rose")
+    PatternRose() : LEDStripEffect(EFFECT_MATRIX_ROSE, "Rose")
+    {
+    }
+
+    PatternRose(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
@@ -140,7 +147,11 @@ class PatternPinwheel : public LEDStripEffect
 {
   public:
     
-    PatternPinwheel() : LEDStripEffect("Pinwheel")
+    PatternPinwheel() : LEDStripEffect(EFFECT_MATRIX_PINWHEEL, "Pinwheel")
+    {
+    }
+
+    PatternPinwheel(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
@@ -180,7 +191,11 @@ class PatternInfinity : public LEDStripEffect
 {
 public:
 
-    PatternInfinity() : LEDStripEffect("Infinity")
+    PatternInfinity() : LEDStripEffect(EFFECT_MATRIX_INFINITY, "Infinity")
+    {
+    }
+
+    PatternInfinity(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
@@ -241,7 +256,11 @@ private:
     uint8_t generation = 0;
 
 public:
-    PatternMunch() : LEDStripEffect("Munch")
+    PatternMunch() : LEDStripEffect(EFFECT_MATRIX_MUNCH, "Munch")
+    {
+    }
+
+    PatternMunch(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

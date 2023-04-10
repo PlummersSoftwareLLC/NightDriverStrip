@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "effects.h"
 
 extern AppTime g_AppTime;
 
@@ -43,10 +44,32 @@ class DoublePaletteEffect : public LEDStripEffect
   public:
   
     DoublePaletteEffect() 
-     :  LEDStripEffect("Douuble Palette"),
+     :  LEDStripEffect(EFFECT_STRIP_DOUBLE_PALETTE, "Double Palette"),
         _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
         _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
     {
+    }
+
+    DoublePaletteEffect(const JsonObjectConst&  jsonObject) 
+      : LEDStripEffect(jsonObject),
+        _PaletteEffect1(jsonObject["pt1"].as<JsonObjectConst>()),
+        _PaletteEffect2(jsonObject["pt2"].as<JsonObjectConst>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    {
+        DynamicJsonDocument jsonDoc(896);
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        JsonObject paletteObj = jsonDoc.createNestedObject("pt1");
+        _PaletteEffect1.SerializeToJSON(paletteObj);
+        paletteObj = jsonDoc.createNestedObject("pt2");
+        _PaletteEffect2.SerializeToJSON(paletteObj);
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
@@ -56,6 +79,7 @@ class DoublePaletteEffect : public LEDStripEffect
             return false;
         return true;
     }
+
     virtual void Draw() 
     {
         setAllOnAllChannels(0,0,0);

@@ -44,8 +44,10 @@
 
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
+#include "jsonserializer.h"
 
 #define MAX_EFFECTS 32
+#define JSON_FORMAT_VERSION 1
 
 extern uint8_t g_Brightness;
 extern uint8_t g_Fader;
@@ -53,18 +55,20 @@ extern uint8_t g_Fader;
 // References to functions in other C files
 
 void InitEffectsManager();
+void SaveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_ptrDevices[NUM_CHANNELS];
+LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
+
 // EffectManager
 //
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
 template <typename GFXTYPE>
-class EffectManager
+class EffectManager : IJSONSerializable
 {
-    LEDStripEffect **_ppEffects;
-    size_t _cEffects;
+    std::vector<LEDStripEffect*> _vEffects;
     size_t _cEnabled;
 
     size_t _iCurrentEffect;
@@ -78,31 +82,126 @@ class EffectManager
     std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
 
+    void construct() 
+    {
+        _cEnabled = 0;
+        _bPlayAll = false;
+        _iCurrentEffect = 0;
+        _effectStartTime = millis();
+
+        SetInterval(DEFAULT_EFFECT_INTERVAL);
+    }
+
+    void ClearEffects() 
+    {
+        for (auto effect : _vEffects)
+            delete effect;
+
+        _vEffects.clear();
+    }
+
 public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(LEDStripEffect **pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
-        : _ppEffects(pEffects),
-          _cEffects(cEffects),
-          _cEnabled(0),
-          _bPlayAll(false),
-          _gfx(gfx)
+    EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
+        : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
-        _iCurrentEffect = 0;
-        _effectStartTime = millis();
-        _abEffectEnabled = std::make_unique<bool[]>(cEffects);
 
-        for (int i = 0; i < cEffects; i++)
-            EnableEffect(i);
+        LoadEffectArray(pEffects, cEffects);
+    }
 
-        SetInterval(DEFAULT_EFFECT_INTERVAL);
+    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> *gfx)
+        : _gfx(gfx)
+    {
+        debugV("EffectManager JSON Constructor");
+
+        DeserializeFromJSON(jsonObject);
     }
 
     ~EffectManager()
     {
         ClearRemoteColor();
+        ClearEffects();
+    }
+
+    void LoadEffectArray(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects)
+    {
+        ClearEffects();
+        _vEffects.reserve(cEffects);
+        
+        for (int i = 0; i < cEffects; i++)
+        {
+            _vEffects.push_back(pEffects[i]);
+        }
+
+        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
+
+        for (int i = 0; i < _vEffects.size(); i++)
+            EnableEffect(i);
+
+        construct();
+    }
+
+    bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    {
+        ClearEffects();
+
+        JsonArrayConst effectsArray = jsonObject["efs"].as<JsonArrayConst>();
+
+        // Check if the object actually contained an effect config array
+        if (effectsArray.isNull())
+            return false;
+
+        _vEffects.clear();
+        _vEffects.reserve(effectsArray.size());
+
+        for (auto effectObject : effectsArray)
+        {
+            LEDStripEffect *pEffect = CreateEffectFromJSON(effectObject);
+            if (pEffect != nullptr) 
+                _vEffects.push_back(pEffect);
+        }
+
+        // Check if we have at least one deserialized effect
+        if (_vEffects.size() == 0)
+            return false;
+        
+        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
+
+        // Try to load effect enabled state from JSON also, default to "enabled" otherwise
+        JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
+        int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
+
+        for (int i = 0; i < _vEffects.size(); i++)
+            EnableEffect(i < enabledSize ? enabledArray[i].as<bool>() : true);
+
+        construct();
+        return true;
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    {
+        // Set JSON format version to be able to detect and manage future incompatible structural updates
+        jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
+
+        // Serialize enabled state first. That way we'll still find out if we run out of memory, later
+        JsonArray enabledArray = jsonObject.createNestedArray("eef");
+
+        for (int i = 0; i < EffectCount(); i++)
+            enabledArray.add(IsEffectEnabled(i));
+
+        JsonArray effectsArray = jsonObject.createNestedArray("efs");
+
+        for (auto effect : _vEffects) 
+        {
+            JsonObject effectObject = effectsArray.createNestedObject();
+            if (!(effect->SerializeToJSON(effectObject)))
+                return false;
+        }
+
+        return true;
     }
 
     std::shared_ptr<GFXTYPE> operator[](size_t index) const
@@ -204,7 +303,7 @@ public:
     {
         #if USE_MATRIX
             LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
-            pMatrix->SetCaption(_ppEffects[_iCurrentEffect]->FriendlyName(), 3000);
+            pMatrix->SetCaption(_vEffects[_iCurrentEffect]->FriendlyName(), 3000);
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
@@ -214,14 +313,14 @@ public:
         if (_ptrRemoteEffect)
             _ptrRemoteEffect->Start();
         else
-            _ppEffects[_iCurrentEffect]->Start();
+            _vEffects[_iCurrentEffect]->Start();
 
         _effectStartTime = millis();
     }
 
     void EnableEffect(size_t i)
     {
-        if (i >= _cEffects)
+        if (i >= _vEffects.size())
         {
             debugW("Invalid index for EnableEffect");
             return;
@@ -241,7 +340,7 @@ public:
 
     void DisableEffect(size_t i)
     {
-        if (i >= _cEffects)
+        if (i >= _vEffects.size())
         {
             debugW("Invalid index for DisableEffect");
             return;
@@ -261,7 +360,7 @@ public:
 
     bool IsEffectEnabled(size_t i) const
     {
-        if (i >= _cEffects)
+        if (i >= _vEffects.size())
         {
             debugW("Invalid index for IsEffectEnabled");
             return false;
@@ -281,12 +380,12 @@ public:
 
     const LEDStripEffect *const *EffectsList() const
     {
-        return _ppEffects;
+        return &_vEffects[0];
     }
 
     const size_t EffectCount() const
     {
-        return _cEffects;
+        return _vEffects.size();
     }
 
     const size_t EnabledCount() const
@@ -301,7 +400,7 @@ public:
 
     LEDStripEffect *GetCurrentEffect() const
     {
-        return _ppEffects[_iCurrentEffect];
+        return _vEffects[_iCurrentEffect];
     }
 
     const String & GetCurrentEffectName() const
@@ -309,14 +408,14 @@ public:
         if (_ptrRemoteEffect)
             return _ptrRemoteEffect->FriendlyName();
 
-        return _ppEffects[_iCurrentEffect]->FriendlyName();
+        return _vEffects[_iCurrentEffect]->FriendlyName();
     }
 
     // Change the current effect; marks the state as needing attention so this get noticed next frame
 
     void SetCurrentEffectIndex(size_t i)
     {
-        if (i >= _cEffects)
+        if (i >= _vEffects.size())
         {
             debugW("Invalid index for SetCurrentEffectIndex");
             return;
@@ -407,19 +506,19 @@ public:
     bool Init()
     {
 
-        for (int i = 0; i < _cEffects; i++)
+        for (int i = 0; i < _vEffects.size(); i++)
         {
-            debugV("About to init effect %s", _ppEffects[i]->FriendlyName());
-            if (false == _ppEffects[i]->Init(_gfx))
+            debugV("About to init effect %s", _vEffects[i]->FriendlyName());
+            if (false == _vEffects[i]->Init(_gfx))
             {
-                debugW("Could not initialize effect: %s\n", _ppEffects[i]->FriendlyName());
+                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName());
                 return false;
             }
-            debugV("Loaded Effect: %s", _ppEffects[i]->FriendlyName());
+            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName());
 
             // First time only, we ensure the data is cleared
 
-            //_ppEffects[i]->setAll(0,0,0);
+            //_vEffects[i]->setAll(0,0,0);
         }
         debugV("First Effect: %s", GetCurrentEffectName());
         return true;
@@ -443,7 +542,7 @@ public:
         if (_ptrRemoteEffect)
             _ptrRemoteEffect->Draw();
         else
-            _ppEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
+            _vEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
 
         // If we do indeed have multiple effects (BUGBUG what if only a single enabled?) then we
         // fade in and out at the appropriate time based on the time remaining/used by the effect

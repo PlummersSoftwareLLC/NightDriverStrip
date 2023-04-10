@@ -50,11 +50,31 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
   public:
 
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) : 
-        LEDStripEffect(strName),
+        LEDStripEffect(EFFECT_MATRIX_INSULATOR_SPECTRUM, strName),
         BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
+    }
+
+    InsulatorSpectrumEffect(const JsonObjectConst& jsonObject) : 
+        LEDStripEffect(jsonObject),
+        BeatEffectBase(1.50, 0.25),
+        ParticleSystem<SpinningPaletteRingParticle>(),
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_PALETTE] = _Palette;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()
@@ -300,7 +320,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0)
-        : LEDStripEffect(pszFriendlyName),
+        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(scrollSpeed), 
@@ -317,7 +337,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
                            uint8_t                fadeRate = 0,
                            float            peak1DecayRate = 1.0,
                            float            peak2DecayRate = 1.0)
-        : LEDStripEffect(pszFriendlyName), 
+        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName), 
           _numBars(cNumBars),
           _colorOffset(0),
           _scrollSpeed(0), 
@@ -327,6 +347,36 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _peak2DecayRate(peak2DecayRate)
 
     {
+    }
+
+    SpectrumAnalyzerEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject), 
+          _numBars(jsonObject["nmb"]),
+          _colorOffset(0),
+          _scrollSpeed(jsonObject[PTY_SPEED]), 
+          _fadeRate(jsonObject["frt"]),
+          _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+          _peak1DecayRate(jsonObject["pd1"]),
+          _peak2DecayRate(jsonObject["pd2"])
+
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_PALETTE] = _palette;
+        jsonDoc["nmb"] = _numBars;
+        jsonDoc[PTY_SPEED] = _scrollSpeed;
+        jsonDoc["frt"] = _fadeRate;
+        jsonDoc["pd1"] = _peak1DecayRate;
+        jsonDoc["pd2"] = _peak2DecayRate;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()
@@ -377,7 +427,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 class WaveformEffect : public LEDStripEffect
 {
   protected:
-    const TProgmemRGBPalette16 * _pPalette = nullptr;
     uint8_t                      _iColorOffset = 0;
     uint8_t                      _increment = 0;
     float                        _iPeakVUy = 0;
@@ -385,11 +434,28 @@ class WaveformEffect : public LEDStripEffect
 
   public:
     
-    WaveformEffect(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
-        : LEDStripEffect(pszFriendlyName)
+    WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0) 
+        : LEDStripEffect(EFFECT_MATRIX_WAVEFORM, pszFriendlyName),
+          _increment(increment)
     {
-        _pPalette = pPalette;
-        _increment = increment;
+    }
+
+    WaveformEffect(const JsonObjectConst& jsonObject) 
+        : LEDStripEffect(jsonObject),
+          _increment(jsonObject["inc"])
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["inc"] = _increment;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     void DrawSpike(int x, float v, bool bErase = true) 
@@ -446,14 +512,43 @@ class GhostWave : public WaveformEffect
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;
+
+    void construct()
+    {
+        _effectNumber = EFFECT_MATRIX_GHOST_WAVE;
+    }
   public:
 
-    GhostWave(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
-        : WaveformEffect(pszFriendlyName, pPalette, increment),
+    GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
+        : WaveformEffect(pszFriendlyName, increment),
           _blur(blur),
           _erase(erase),
           _fade(fade)
     {
+        construct();
+    }
+
+    GhostWave(const JsonObjectConst& jsonObject) 
+        : WaveformEffect(jsonObject),
+          _blur(jsonObject[PTY_BLUR]),
+          _erase(jsonObject[PTY_ERASE]),
+          _fade(jsonObject[PTY_FADE])
+    {
+        construct();
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_BLUR] = _blur;
+        jsonDoc[PTY_ERASE] = _erase;
+        jsonDoc[PTY_FADE] = _fade;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual void Draw()

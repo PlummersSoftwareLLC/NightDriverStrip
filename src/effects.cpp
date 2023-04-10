@@ -28,260 +28,207 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-
-#include "effects/strip/fireeffect.h"          // fire effects
-#include "effects/strip/paletteeffect.h"       // palette effects
-#include "effects/strip/doublepaletteeffect.h" // float palette effect
-#include "effects/strip/meteoreffect.h"        // meteor blend effect
-#include "effects/strip/stareffect.h"          // star effects
-#include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
-#include "effects/strip/tempeffect.h"
-#include "effects/strip/stareffect.h"
-#include "effects/strip/laserline.h"
-#include "effects/matrix/PatternClock.h"       // No matrix dependencies
-
-#if ENABLE_AUDIO
-#include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
-#include "effects/strip/musiceffect.h"         // Music based effects
-#endif
-
-#if FAN_SIZE
-#include "effects/strip/faneffects.h" // Fan-based effects
-#endif
-
-//
-// Externals
-//
-
-#if USE_MATRIX
-        #include "ledmatrixgfx.h"
-        #include "effects/matrix/PatternSerendipity.h"
-        #include "effects/matrix/PatternSwirl.h"
-        #include "effects/matrix/PatternPulse.h"
-        #include "effects/matrix/PatternWave.h"
-        #include "effects/matrix/PatternLife.h"
-        #include "effects/matrix/PatternSpiro.h"
-        #include "effects/matrix/PatternCube.h"
-        #include "effects/matrix/PatternCircuit.h"
-        #include "effects/matrix/PatternSubscribers.h"
-        #include "effects/matrix/PatternAlienText.h"
-        #include "effects/matrix/PatternRadar.h"
-        #include "effects/matrix/PatternPongClock.h"
-        #include "effects/matrix/PatternBounce.h"
-        #include "effects/matrix/PatternMandala.h"
-        #include "effects/matrix/PatternSpin.h"
-        #include "effects/matrix/PatternFlowField.h"
-        #include "effects/matrix/PatternMisc.h"
-        #include "effects/matrix/PatternNoiseSmearing.h"
-        #include "effects/matrix/PatternQR.h"
-        #include "effects/matrix/PatternWeather.h"
-#endif
-
-#ifdef USESTRIP
-#include "ledstripgfx.h"
-#endif
+#include "SPIFFS.h"
+#include "effectdependencies.h"
 
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 #if USE_MATRIX
-        volatile long PatternSubscribers::cSubscribers;
-        volatile long PatternSubscribers::cViews;
+    volatile long PatternSubscribers::cSubscribers;
+    volatile long PatternSubscribers::cViews;
 #endif
 
 // Palettes
 //
 // Palettes that are referenced by effects need to be instantiated first
  
-const TProgmemRGBPalette16 BlueColors1_p = { CRGB::DarkBlue, CRGB::Blue, CRGB::Blue, CRGB::White };
-const TProgmemRGBPalette16 GhostWaveColors1_p = { CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Red };
-
 const CRGBPalette16 BlueColors_p =
 {
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue,
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue,
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue,
-        CRGB::DarkBlue,
-        CRGB::MediumBlue,
-        CRGB::Blue,
-        CRGB::MediumBlue
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue,
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue,
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue,
+    CRGB::DarkBlue,
+    CRGB::MediumBlue,
+    CRGB::Blue,
+    CRGB::MediumBlue
 };
 
 const CRGBPalette16 RedColors_p =
 {
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
 
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
 
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
 
-        CRGB::Red,
-        CRGB::DarkRed,
-        CRGB::DarkRed,
-        CRGB::OrangeRed
+    CRGB::Red,
+    CRGB::DarkRed,
+    CRGB::DarkRed,
+    CRGB::OrangeRed
 };
 
 const CRGBPalette16 GreenColors_p =
 {
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
 
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
 
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
 
-        CRGB::Green,
-        CRGB::DarkGreen,
-        CRGB::DarkGreen,
-        CRGB::LimeGreen
+    CRGB::Green,
+    CRGB::DarkGreen,
+    CRGB::DarkGreen,
+    CRGB::LimeGreen
 };
 
 const CRGBPalette16 PurpleColors_p =
 {
-        CRGB::Purple,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+    CRGB::Purple,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 
-        CRGB::Purple,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+    CRGB::Purple,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 
-        CRGB::Purple,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+    CRGB::Purple,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 
-        CRGB::Pink,
-        CRGB::Maroon,
-        CRGB::Violet,
-        CRGB::DarkViolet,
+    CRGB::Pink,
+    CRGB::Maroon,
+    CRGB::Violet,
+    CRGB::DarkViolet,
 };
 
 const CRGBPalette16 RGBColors_p =
 {
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::Green,
-        CRGB::Blue,
-        CRGB::Blue
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Blue
 };
 
 const CRGBPalette16 MagentaColors_p =
 {
-        CRGB::Pink,
-        CRGB::DeepPink,
-        CRGB::HotPink,
-        CRGB::LightPink,
-        CRGB::LightCoral,
-        CRGB::Purple,
-        CRGB::MediumPurple,
-        CRGB::Magenta,
-        CRGB::DarkMagenta,
-        CRGB::DarkSalmon,
-        CRGB::MediumVioletRed,
-        CRGB::Pink,
-        CRGB::DeepPink,
-        CRGB::HotPink,
-        CRGB::LightPink,
-        CRGB::Magenta};
+    CRGB::Pink,
+    CRGB::DeepPink,
+    CRGB::HotPink,
+    CRGB::LightPink,
+    CRGB::LightCoral,
+    CRGB::Purple,
+    CRGB::MediumPurple,
+    CRGB::Magenta,
+    CRGB::DarkMagenta,
+    CRGB::DarkSalmon,
+    CRGB::MediumVioletRed,
+    CRGB::Pink,
+    CRGB::DeepPink,
+    CRGB::HotPink,
+    CRGB::LightPink,
+    CRGB::Magenta};
 
 const CRGBPalette16 spectrumBasicColors =
 {
-        CRGB(0xFD0E35), // Red
-        CRGB(0xFF8833), // Orange
-        CRGB(0xFFEB00), // Middle Yellow
-        CRGB(0xAFE313), // Inchworm
-        CRGB(0x3AA655), // Green
-        CRGB(0x8DD9CC), // Middle Blue Green
-        CRGB(0x0066FF), // Blue III
-        CRGB(0xDB91EF), // Lilac
-        CRGB(0xFD0E35), // Red
-        CRGB(0xFF8833), // Orange
-        CRGB(0xFFEB00), // Middle Yellow
-        CRGB(0xAFE313), // Inchworm
-        CRGB(0x3AA655), // Green
-        CRGB(0x8DD9CC), // Middle Blue Green
-        CRGB(0x0066FF), // Blue III
-        CRGB(0xDB91EF)  // Lilac
+    CRGB(0xFD0E35), // Red
+    CRGB(0xFF8833), // Orange
+    CRGB(0xFFEB00), // Middle Yellow
+    CRGB(0xAFE313), // Inchworm
+    CRGB(0x3AA655), // Green
+    CRGB(0x8DD9CC), // Middle Blue Green
+    CRGB(0x0066FF), // Blue III
+    CRGB(0xDB91EF), // Lilac
+    CRGB(0xFD0E35), // Red
+    CRGB(0xFF8833), // Orange
+    CRGB(0xFFEB00), // Middle Yellow
+    CRGB(0xAFE313), // Inchworm
+    CRGB(0x3AA655), // Green
+    CRGB(0x8DD9CC), // Middle Blue Green
+    CRGB(0x0066FF), // Blue III
+    CRGB(0xDB91EF)  // Lilac
 };
 
 
 const CRGBPalette16 spectrumAltColors =
 {
-        CRGB::Red,
-        CRGB::OrangeRed,
-        CRGB::Orange,
-        CRGB::Green,
-        CRGB::ForestGreen,
-        CRGB::Cyan,
-        CRGB::Blue,
-        CRGB::Indigo,
-        CRGB::Red,
-        CRGB::OrangeRed,
-        CRGB::Orange,
-        CRGB::Green,
-        CRGB::ForestGreen,
-        CRGB::Cyan,
-        CRGB::Blue,
-        CRGB::Indigo,
+    CRGB::Red,
+    CRGB::OrangeRed,
+    CRGB::Orange,
+    CRGB::Green,
+    CRGB::ForestGreen,
+    CRGB::Cyan,
+    CRGB::Blue,
+    CRGB::Indigo,
+    CRGB::Red,
+    CRGB::OrangeRed,
+    CRGB::Orange,
+    CRGB::Green,
+    CRGB::ForestGreen,
+    CRGB::Cyan,
+    CRGB::Blue,
+    CRGB::Indigo,
 };
 
 const CRGBPalette16 USAColors_p =
 {
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Blue,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
-        CRGB::White,
-        CRGB::Red,
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Blue,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
+    CRGB::White,
+    CRGB::Red,
 };
 
 const CRGBPalette16 rainbowPalette(RainbowColors_p);
@@ -295,21 +242,21 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
-        CHSV hueColor = rgb2hsv_approximate(color1);
-        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
-        if (object->Init(g_aptrDevices))
-                return object;
-        throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
+    CHSV hueColor = rgb2hsv_approximate(color1);
+    auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
+    if (object->Init(g_aptrDevices))
+        return object;
+    throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
 }
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
-        CHSV hueColor = rgb2hsv_approximate(color);
-        CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-        auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
-        if (object->Init(g_aptrDevices))
-                return object;
-        throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
+    CHSV hueColor = rgb2hsv_approximate(color);
+    CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
+    auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
+    if (object->Init(g_aptrDevices))
+        return object;
+    throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
 }
 
 #endif
@@ -317,32 +264,31 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-// g_apEffects
-//
-// The master effects table
-
-DRAM_ATTR LEDStripEffect *g_apEffects[] =
+size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList) 
 {
-#if DEMO
+    // The default effects table
+    LEDStripEffect *defaultEffects[] =
+    {
+    #if DEMO
 
         new RainbowFillEffect(6, 2),
 
-#elif LASERLINE
+    #elif LASERLINE
 
         new LaserLineEffect(500, 20),
 
-#elif CHIEFTAIN
+    #elif CHIEFTAIN
 
         new LanternEffect(),
         new PaletteEffect(RainbowColors_p, 2.0f, 0.1, 0.0, 1.0, 0.0, LINEARBLEND, true, 1.0),
         new RainbowFillEffect(10, 32),
 
 
-#elif LANTERN
+    #elif LANTERN
 
         new LanternEffect(),
 
-#elif MESMERIZER
+    #elif MESMERIZER
 
         new SplashLogoEffect(),
 
@@ -360,12 +306,12 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new PatternWeather(),
         
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
-        new GhostWave("GhostWave", &RainbowColors_p, 0, 24, false),
-        new WaveformEffect("WaveIn", &RainbowColors_p, 8),     
-        new GhostWave("WaveOut", &RainbowColors_p, 0, 0, false, 40),
- 
-        new WaveformEffect("WaveForm", &RainbowColors_p, 8),
-        new GhostWave("GhostWave", &RainbowColors_p, 0, 0,  false),
+        new GhostWave("GhostWave", 0, 24, false),
+        new WaveformEffect("WaveIn", 8),     
+        new GhostWave("WaveOut", 0, 0, false, 40),
+
+        new WaveformEffect("WaveForm", 8),
+        new GhostWave("GhostWave", 0, 0,  false),
 
         new PatternLife(),
         new PatternRose(),
@@ -395,7 +341,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new PatternMunch(),
         new PatternQR(),           
         
-#elif UMBRELLA
+    #elif UMBRELLA
 
         new FireEffect("Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false),
         new FireEffect("Medium Fire", NUM_LEDS, 1, 5, 100, 3, 4, true, false),
@@ -434,17 +380,17 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new PaletteEffect(RainbowColors_p, 1.0, 1.0),
         new PaletteEffect(RainbowColors_p, .25),
 
-#elif TTGO
+    #elif TTGO
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new SpectrumAnalyzerEffect("Spectrum Fade", 12, spectrumBasicColors, 50, 70, -1.0, 3.0),
 
-#elif WROVERKIT
+    #elif WROVERKIT
 
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new PaletteEffect(rainbowPalette, 256 / 16, .2, 0)
 
-#elif XMASTREES
+    #elif XMASTREES
 
         new ColorBeatOverRed("ColorBeatOverRed"),
 
@@ -483,7 +429,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         */
         new PaletteEffect(rainbowPalette, 256 / 16, .2, 0)
 
-#elif INSULATORS
+    #elif INSULATORS
 
         //        new MusicFireEffect(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
         new InsulatorSpectrumEffect("Spectrum Effect", RainbowColors_p),
@@ -494,15 +440,15 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new ColorBeatOverRed("ColorBeatOverRed"),
         new TapeReelEffect("TapeReelEffect"),
 
-// new SparklySpinningMusicEffect(RainbowColors_p),
-// new SparklySpinningMusicEffect("Blu Sprkl Spin", BlueColors_p),
-// new ColorBeatOverRed("ColorBeatOverRed"),
-// new ColorBeatWithFlash("ColorBeatFlash"),
-// new MusicalHotWhiteInsulatorEffect("Hot White"),
-// new SimpleInsulatorBeatEffect2("Simple Beat 2"),
-// new SparklySpinningMusicEffect("Sparkle Spin", RainbowColors_p),
+    // new SparklySpinningMusicEffect(RainbowColors_p),
+    // new SparklySpinningMusicEffect("Blu Sprkl Spin", BlueColors_p),
+    // new ColorBeatOverRed("ColorBeatOverRed"),
+    // new ColorBeatWithFlash("ColorBeatFlash"),
+    // new MusicalHotWhiteInsulatorEffect("Hot White"),
+    // new SimpleInsulatorBeatEffect2("Simple Beat 2"),
+    // new SparklySpinningMusicEffect("Sparkle Spin", RainbowColors_p),
 
-#elif CUBE
+    #elif CUBE
         // Simple rainbow pallette
         new PaletteEffect(rainbowPalette, 256 / 16, .2, 0),
 
@@ -511,16 +457,16 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new SimpleInsulatorBeatEffect2("SimpleInsulatorColorBeat"),
         new StarryNightEffect<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
 
-#elif BELT
+    #elif BELT
 
         // Yes, I made a sparkly LED belt and wore it to a party.  Batteries toO!
         new TwinkleEffect(NUM_LEDS / 4, 10),
 
-#elif MAGICMIRROR
+    #elif MAGICMIRROR
 
         new MoltenGlassOnVioletBkgnd("MoltenGlass", RainbowColors_p),
 
-#elif SPECTRUM
+    #elif SPECTRUM
 
         new SpectrumAnalyzerEffect("Spectrum Standard", NUM_BANDS, spectrumAltColors, 0, 0, 0.5,  1.5),
         new SpectrumAnalyzerEffect("Spectrum Standard", 24, spectrumAltColors, 0, 0, 1.25, 1.25),
@@ -530,17 +476,17 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
         new SpectrumAnalyzerEffect("Spectrum Standard", 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
         
-        new GhostWave("GhostWave", &RainbowColors_p, 0, 16, false, 40),
+        new GhostWave("GhostWave", 0, 16, false, 40),
         new SpectrumAnalyzerEffect("Spectrum USA", 16, USAColors_p, 0),
-        new GhostWave("GhostWave Rainbow", &RainbowColors_p, 8),
+        new GhostWave("GhostWave Rainbow", 8),
         new SpectrumAnalyzerEffect("Spectrum Fade", 24, RainbowColors_p, 50, 70, -1.0, 2.0),
-        new GhostWave("GhostWave Blue", &BlueColors1_p , 0),
+        new GhostWave("GhostWave Blue", 0),
         new SpectrumAnalyzerEffect("Spectrum Standard", 24, RainbowColors_p),
-        new GhostWave("GhostWave One", &GhostWaveColors1_p , 4),
+        new GhostWave("GhostWave One", 4),
 
         //new GhostWave("GhostWave Rainbow", &rainbowPalette),
 
-#elif ATOMLIGHT
+    #elif ATOMLIGHT
         new ColorFillEffect(CRGB::White, 1),
         // new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
         // new FireFanEffect(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
@@ -561,7 +507,10 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new MeteorEffect(1, 1, 5, .15, .25),
         new MeteorEffect(), // Rainbow palette
 
-#elif FIRESTICK
+/* Commented out because no project definition sets the defines, and some sections refer to non-existent effects.
+   Effect instantiations will have to be reviewed if this section is uncommented.
+
+    #elif FIRESTICK
 
         new BouncingBallEffect(),
         new VUFlameEffect("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR),
@@ -595,9 +544,9 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new DoublePaletteEffect(),
         new VUEffect()
 
-#elif FLAMEBULB
+    #elif FLAMEBULB
         new PaletteFlameEffect("Smooth Red Fire", heatmap_pal, true, 4.5, 1, 1, 255, 4, false),
-#elif BIGMATRIX
+    #elif BIGMATRIX
         new SimpleRainbowTestEffect(8, 1),  // Rainbow palette simple test of walking pixels
         new PaletteEffect(RainbowColors_p), // Rainbow palette
         new RainbowFillEffect(24, 0),
@@ -612,10 +561,10 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new BouncingBallEffect(),
         new VUEffect()
 
-#elif RINGSET
+    #elif RINGSET
         new MusicalInsulatorEffect2("Musical Effect 2"),
-
-#elif FANSET
+*/
+    #elif FANSET
 
         new RainbowFillEffect(24, 0),
 
@@ -653,7 +602,7 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
         new FireFanEffect(HeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
 
 
-#elif BROOKLYNROOM
+    #elif BROOKLYNROOM
 
         new RainbowFillEffect(24, 0),
         new RainbowFillEffect(32, 1),
@@ -677,31 +626,41 @@ DRAM_ATTR LEDStripEffect *g_apEffects[] =
 
         new ClassicFireEffect(true),
 
-#elif LEDSTRIP
+    #elif LEDSTRIP
 
         new StatusEffect(CRGB::White)
-        
-#elif HOODORNAMENT
+
+/* Commented out because no project definition sets the define. Effect instantiations may need to be reviewed if
+   this section is uncommented.
+
+    #elif HOODORNAMENT
 
         new RainbowFillEffect(24, 0),
         new RainbowFillEffect(32, 1),
         new SimpleRainbowTestEffect(8, 1),              // Rainbow palette simple test of walking pixels
         new PaletteEffect(MagentaColors_p),             // Rainbow palette
         new DoublePaletteEffect(),
-
-#else                                                                   
+*/
+    #else                                                                   
 
         new RainbowFillEffect(6, 2),                    // Simple effect if not otherwise defined above
 
-#endif
+    #endif
+    };
 
-};
+    // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to 
+    // add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
+    // one effect even if it's the Status effect.
+    static_assert(ARRAYSIZE(defaultEffects) > 0);
 
-// If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to 
-// add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
-// one effect even if it's the Status effect.
+    pEffectList = std::make_unique<EffectPointerArray>(ARRAYSIZE(defaultEffects));
+    std::copy(std::begin(defaultEffects), std::end(defaultEffects), pEffectList.get());
 
-static_assert(ARRAYSIZE(g_apEffects) > 0);
+    return ARRAYSIZE(defaultEffects);
+}
+
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 
 // InitEffectsManager
 //
@@ -709,14 +668,139 @@ static_assert(ARRAYSIZE(g_apEffects) > 0);
 
 void InitEffectsManager()
 {
-        debugW("InitEffectsManager...");
-        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(g_apEffects, ARRAYSIZE(g_apEffects), g_aptrDevices);
+    debugW("InitEffectsManager...");
 
-        if (false == g_aptrEffectManager->Init())
-                throw std::runtime_error("Could not initialize effect manager");
+    bool jsonReadSuccessful = false;
+
+    File file = SPIFFS.open(EFFECTS_CONFIG_FILE);
+    
+    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
+
+    if (file)
+    {
+        if (file.size() > 0)
+        {
+            debugI("Attempting to read EffectManager config from JSON file");
+
+            if (g_EffectsManagerJSONBufferSize == 0)
+                g_EffectsManagerJSONBufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
+
+            // Loop is here to deal with out of memory conditions
+            while(true)
+            {
+                pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
+                
+                DeserializationError error = deserializeJson(*pJsonDoc, file);
+
+                if (error == DeserializationError::NoMemory)
+                {
+                    pJsonDoc.reset(nullptr);
+                    file.seek(0);
+                    g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
+
+                    debugW("Out of memory reading EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
+                }
+                else if (error == DeserializationError::Ok)
+                {
+                    jsonReadSuccessful = true;
+                    break;
+                }
+                else 
+                {
+                    debugW("Error with code %d occurred while deserializing EffectManager config", to_value(error.code()));
+                    break;
+                }
+            }
+        }
+
+        file.close();
+    }
+
+    if (jsonReadSuccessful)
+    {
+        debugI("Creating EffectManager from JSON config");
+
+        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+
+        if (g_aptrEffectManager->EffectCount() == 0)
+        {
+            debugW("JSON deserialization of EffectManager yielded no effects, so falling back to default list");
+            std::unique_ptr<EffectPointerArray> defaultEffects;
+            size_t effectCount = CreateDefaultEffects(defaultEffects);
+
+            g_aptrEffectManager->LoadEffectArray(defaultEffects, effectCount);
+        }
+    }
+    else
+    {
+        debugI("Creating EffectManager using default effects");
+        
+        std::unique_ptr<EffectPointerArray> defaultEffects;
+        size_t effectCount = CreateDefaultEffects(defaultEffects);
+
+        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(defaultEffects, effectCount, g_aptrDevices);
+    }
+
+    if (false == g_aptrEffectManager->Init())
+        throw std::runtime_error("Could not initialize effect manager");
 }
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+void SaveEffectManagerConfig()
+{
+    if (g_EffectsManagerJSONBufferSize == 0)
+        g_EffectsManagerJSONBufferSize = JSON_BUFFER_BASE_SIZE;
+
+    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
+
+    // Loop is here to deal with out of memory conditions
+    while(true)
+    {
+        pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
+        JsonObject jsonObject = pJsonDoc->to<JsonObject>();
+
+        if (g_aptrEffectManager->SerializeToJSON(jsonObject))
+            break;
+
+        pJsonDoc.reset(nullptr);
+        g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
+
+        debugW("Out of memory serializing EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
+    }
+
+    SPIFFS.remove(EFFECTS_CONFIG_FILE);
+
+    File file = SPIFFS.open(EFFECTS_CONFIG_FILE, FILE_WRITE);
+    
+    if (!file)
+    {
+        debugE("Unable to open file to write EffectManager config!");
+        return;
+    }
+
+    size_t bytesWritten = serializeJson(*pJsonDoc, file);
+    debugI("Number of bytes written to config JSON file: %d", bytesWritten);
+    
+    file.flush();
+    file.close();
+
+    if (bytesWritten == 0)
+    {
+        debugE("Unable to write EffectManager config to file!");
+        SPIFFS.remove(EFFECTS_CONFIG_FILE);
+        return;
+    }
+
+/*
+    file = SPIFFS.open(EFFECTS_CONFIG_FILE);
+    if (file)
+    {
+        while (file.available())
+            Serial.write(file.read());
+        
+        file.close();
+    }
+*/
+}
 
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
 // any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
@@ -724,8 +808,8 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
 uint16_t XY(uint8_t x, uint8_t y)
 {
-        // Have a drink on me!
-        return (*g_aptrEffectManager)[0].get()->xy(x, y);
+    // Have a drink on me!
+    return (*g_aptrEffectManager)[0].get()->xy(x, y);
 }
 
 // btimap_output
@@ -735,8 +819,8 @@ uint16_t XY(uint8_t x, uint8_t y)
 
 bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 {
-        auto pgfx = (*g_aptrEffectManager)[0].get();
-        pgfx->drawRGBBitmap(x, y, bitmap, w, h);
-        return true;
+    auto pgfx = (*g_aptrEffectManager)[0].get();
+    pgfx->drawRGBBitmap(x, y, bitmap, w, h);
+    return true;
 }
 

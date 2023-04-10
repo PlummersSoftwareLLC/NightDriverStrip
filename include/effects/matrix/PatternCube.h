@@ -187,10 +187,20 @@ class PatternCube : public LEDStripEffect
         return 60;
     }
 
-  public:
-    PatternCube() : LEDStripEffect("Cubes")
+    void construct()
     {
       make(cubeWidth);
+    }
+
+  public:
+    PatternCube() : LEDStripEffect(EFFECT_MATRIX_CUBE, "Cubes")
+    {
+      construct();
+    }
+
+    PatternCube(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+      construct();
     }
 
     virtual bool RequiresDoubleBuffering() const

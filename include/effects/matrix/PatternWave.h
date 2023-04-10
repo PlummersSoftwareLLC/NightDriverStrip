@@ -78,11 +78,22 @@ private:
 
     uint8_t waveCount = 1;
 
-public:
-    PatternWave() : LEDStripEffect("Wave")
+    void construct()
     {
         rotation = random(0, 4);
         waveCount = random(1, 3);
+    }
+
+
+public:
+    PatternWave() : LEDStripEffect(EFFECT_MATRIX_WAVE, "Wave")
+    {
+        construct();
+    }
+
+    PatternWave(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+        construct();
     }
 
     virtual void Draw()
