@@ -38,7 +38,11 @@ class PatternSubscribers : public LEDStripEffect
 
   public:
   
-  PatternSubscribers() : LEDStripEffect("Subs")
+  PatternSubscribers() : LEDStripEffect(EFFECT_MATRIX_SUBSCRIBERS, "Subs")
+  {
+  }
+
+  PatternSubscribers(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
   }
 

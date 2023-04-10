@@ -74,7 +74,11 @@ private:
     int16_t dsy;
 
 public:
-    PatternMandala() : LEDStripEffect("MRI")
+    PatternMandala() : LEDStripEffect(EFFECT_MATRIX_MANDALA, "MRI")
+    {
+    }
+
+    PatternMandala(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

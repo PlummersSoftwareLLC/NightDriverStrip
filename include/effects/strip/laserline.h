@@ -76,9 +76,33 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 
   public:
   
-    LaserLineEffect(float speed, float size) : 
-        BeatEffectBase(1.50, 0.00), LEDStripEffect("LaserLine"), _defaultSize(size), _defaultSpeed(speed) 
+    LaserLineEffect(float speed, float size) 
+        : BeatEffectBase(1.50, 0.00), 
+          LEDStripEffect(EFFECT_STRIP_LASER_LINE, "LaserLine"), 
+          _defaultSize(size), 
+          _defaultSpeed(speed) 
     {
+    }
+
+    LaserLineEffect(const JsonObjectConst& jsonObject) 
+        : BeatEffectBase(1.50, 0.00), 
+          LEDStripEffect(jsonObject), 
+          _defaultSize(jsonObject[PTY_SIZE]), 
+          _defaultSpeed(jsonObject[PTY_SPEED]) 
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_SIZE] = _defaultSize;
+        jsonDoc[PTY_SPEED] = _defaultSpeed;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   

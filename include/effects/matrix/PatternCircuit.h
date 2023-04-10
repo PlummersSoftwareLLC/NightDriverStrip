@@ -155,12 +155,22 @@ private:
 
     static const int snakeCount = 20;
 
+    void construct()
+    {
+        snakes = new Path[snakeCount];
+    }
+
 public:
     Path *snakes; // BUGBUG marked static so as not to be on the stack, as it's too big
 
-    PatternCircuit() : LEDStripEffect("Circuit")
+    PatternCircuit() : LEDStripEffect(EFFECT_MATRIX_CIRCUIT, "Circuit")
     {
-        snakes = new Path[snakeCount];
+        construct();
+    }
+
+    PatternCircuit(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+        construct();
     }
 
     unsigned long msStart;

@@ -43,7 +43,11 @@ class PatternClock : public LEDStripEffect
 
   public:
 
-    PatternClock() : LEDStripEffect("Clock")
+    PatternClock() : LEDStripEffect(EFFECT_MATRIX_CLOCK, "Clock")
+    {
+    }
+
+    PatternClock(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

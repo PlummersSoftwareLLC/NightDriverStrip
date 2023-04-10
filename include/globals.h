@@ -79,6 +79,8 @@
 //
 //---------------------------------------------------------------------------
 
+#pragma once
+
 #include <inttypes.h>
 #include <iostream>
 #include <memory>

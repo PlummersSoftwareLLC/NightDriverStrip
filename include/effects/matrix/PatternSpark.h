@@ -62,7 +62,11 @@ class PatternSpark : public LEDStripEffect
   private:
 
   public:
-    PatternSpark() : LEDStripEffect("Spark")
+    PatternSpark() : LEDStripEffect(EFFECT_MATRIX_SPARK, "Spark")
+    {
+    }
+
+    PatternSpark(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 

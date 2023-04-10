@@ -44,6 +44,11 @@ class Star : public MovingFadingPaletteObject, public ObjectSize
 {
   public:
 
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR;
+    }
+
     virtual float GetStarSize()
     {
         return _objectSize;
@@ -59,6 +64,11 @@ class Star : public MovingFadingPaletteObject, public ObjectSize
 class RandomPaletteColorStar : public MovingFadingPaletteObject, public ObjectSize
 {
   public:
+
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_RANDOM_PALETTE_COLOR;
+    }
 
     virtual float GetStarSize()
     {
@@ -81,6 +91,11 @@ class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
 
   public:
 
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_LONG_LIFE_SPARKLE;
+    }
+
     virtual float GetStarSize()
     {
         return _objectSize;
@@ -96,6 +111,11 @@ class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
 class ColorStar : public MovingFadingColoredObject, public ObjectSize
 {
   public:
+
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_COLOR;
+    }
 
     virtual float GetStarSize()
     {
@@ -113,10 +133,15 @@ class QuietStar : public RandomPaletteColorStar
 {
   public:
 
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_QUIET;
+    }
+        
     QuietStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 10.0, float starSize = 1)
       : RandomPaletteColorStar(palette, blendType, maxSpeed, starSize)
     {}
-        
+
     virtual float PreignitionTime() const { return 1.0f; }
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 0.00f; }
@@ -127,13 +152,16 @@ class QuietStar : public RandomPaletteColorStar
 #if ENABLE_AUDIO
 class MusicStar : public Star
 {
-    static float _baseHue;
-
   public:
 
     MusicStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 2.0, float starSize = 1)
       : Star(palette, blendType, maxSpeed, starSize)
     {        
+    }
+
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_MUSIC;
     }
 
     virtual float PreignitionTime() const      { return 0.0f; }
@@ -142,8 +170,6 @@ class MusicStar : public Star
     virtual float FadeTime()        const      { return 0.5f;  }
 
 };
-float MusicStar::_baseHue = 0.0f;
-
 
 class MusicPulseStar : public Star
 {
@@ -157,6 +183,11 @@ class MusicPulseStar : public Star
 
     virtual ~MusicPulseStar()
     {
+    }
+
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_MUSIC_PULSE;
     }
 
     virtual float PreignitionTime() const { return 0.00f;  }
@@ -184,6 +215,11 @@ class BubblyStar : public Star
         lastHue = fmod(lastHue, 256);
     }
 
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_BUBBLY;
+    }
+
     virtual float GetStarSize()
     {
         float x = Age()/TotalLifetime();
@@ -205,6 +241,11 @@ class FlashStar : public Star
 {
     using Star::Star;
 
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_FLASH;
+    }
+
     virtual float PreignitionTime() const  { return 0.00f; }
     virtual float IgnitionTime()    const  { return 0.10f; }
     virtual float HoldTime()        const  { return 0.10f; }
@@ -222,6 +263,11 @@ class ColorCycleStar : public Star
       : Star(palette, blendType, maxSpeed)
     {
         _brightness = randomfloat(128,255);
+    }
+
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_COLOR_CYCLE;
     }
 
     virtual CRGB Render(TBlendType blend)
@@ -265,6 +311,11 @@ class MultiColorStar : public Star
     virtual ~MultiColorStar()
     {}
 
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_MULTI_COLOR;
+    }
+
     virtual float PreignitionTime() const { return 2.0f; }
     virtual float IgnitionTime()    const { return 0.0f; }
     virtual float HoldTime()        const { return 2.00f;}
@@ -287,6 +338,11 @@ class ChristmasLightStar : public Star
     virtual ~ChristmasLightStar()
     {}
 
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_CHRISTMAS;
+    }
+
     virtual float PreignitionTime() const { return 0.20f; }
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 6.0f;  }
@@ -307,6 +363,11 @@ class HotWhiteStar : public Star
 
     virtual ~HotWhiteStar()
     {}
+
+    static int GetStarTypeNumber()
+    {
+        return EFFECT_STAR_HOT_WHITE;
+    }
 
     virtual float PreignitionTime() const { return 0.00f;  }
     virtual float IgnitionTime()    const { return 0.20f;  }
@@ -381,7 +442,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                                 float blurFactor = 0.0,
                                 float musicFactor = 1.0,
                                 CRGB skyColor = CRGB::Black)
-      : LEDStripEffect(strName),
+      : LEDStripEffect(EFFECT_STRIP_STARRY_NIGHT, strName),
         _palette(palette),
         _newStarProbability(probability),
         _starSize(starSize),
@@ -391,6 +452,39 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         _musicFactor(musicFactor),
         _skyColor(skyColor)
     {
+    }
+
+    StarryNightEffect<StarType>(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        _newStarProbability(jsonObject["spb"]),
+        _starSize(jsonObject[PTY_SIZE]),
+        _blendType(static_cast<TBlendType>(jsonObject[PTY_BLEND])),
+        _maxSpeed(jsonObject[PTY_MAXSPEED]),
+        _blurFactor(jsonObject[PTY_BLUR]),
+        _musicFactor(jsonObject["msf"]),
+        _skyColor(jsonObject[PTY_COLOR].as<CRGB>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_PALETTE] = _palette;
+        jsonDoc[PTY_STARTYPENR] = StarType::GetStarTypeNumber();
+        jsonDoc["spb"] = _newStarProbability;
+        jsonDoc[PTY_SIZE] = _starSize;
+        jsonDoc[PTY_BLEND] = to_value(_blendType);
+        jsonDoc[PTY_MAXSPEED] = _maxSpeed;
+        jsonDoc[PTY_BLUR] = _blurFactor;
+        jsonDoc["msf"] = _musicFactor;
+        jsonDoc[PTY_COLOR] = _skyColor;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual float StarSize()
@@ -431,6 +525,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                     prob = prob * (g_Analyzer._VURatio - 0.5) * _musicFactor; 
                 }
             #endif
+
+            StarType::GetStarTypeNumber();
 
             if (randomfloat(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
             {
@@ -473,6 +569,11 @@ template <typename StarType> class BlurStarEffect : public StarryNightEffect<Sta
     {
     }
 
+    BlurStarEffect<StarType>(const JsonObjectConst& jsonObject)
+        : StarryNightEffect<StarType>(jsonObject)
+    {
+    }
+
     virtual void Clear()
     {
         StarryNightEffect<StarType>::setAll(32,0,0);
@@ -490,9 +591,12 @@ class TwinkleStarEffect : public LEDStripEffect
 
 public:
 
-    TwinkleStarEffect() : LEDStripEffect("Twinkle Star")
+    TwinkleStarEffect() : LEDStripEffect(EFFECT_STRIP_TWINKLE_STAR, "Twinkle Star")
     {
+    }
 
+    TwinkleStarEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])

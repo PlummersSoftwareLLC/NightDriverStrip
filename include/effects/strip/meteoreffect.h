@@ -169,13 +169,42 @@ class MeteorEffect : public LEDStripEffect
 
   public:
   
-    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2) : LEDStripEffect("Color Meteors"), _Meteors()
+    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2) 
+        : LEDStripEffect(EFFECT_STRIP_METEOR, "Color Meteors"), 
+          _Meteors(),
+          _cMeteors(cMeteors),
+          _meteorSize(size),
+          _meteorTrailDecay(decay),
+          _meteorSpeedMin(minSpeed),
+          _meteorSpeedMax(maxSpeed)
     {
-        _cMeteors = cMeteors;
-        _meteorSize =  size;
-        _meteorTrailDecay = decay;
-        _meteorSpeedMin = minSpeed;
-        _meteorSpeedMax = maxSpeed;
+    }
+
+    MeteorEffect(const JsonObjectConst& jsonObject) 
+        : LEDStripEffect(jsonObject), 
+          _Meteors(),
+          _cMeteors(jsonObject["mto"]),
+          _meteorSize(jsonObject[PTY_SIZE]),
+          _meteorTrailDecay(jsonObject["dcy"]),
+          _meteorSpeedMin(jsonObject[PTY_MINSPEED]),
+          _meteorSpeedMax(jsonObject[PTY_MAXSPEED])
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<128> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["mto"] = _cMeteors;
+        jsonDoc[PTY_SIZE] = _meteorSize;
+        jsonDoc["dcy"] = _meteorTrailDecay;
+        jsonDoc[PTY_MINSPEED] = _meteorSpeedMin;
+        jsonDoc[PTY_MAXSPEED] = _meteorSpeedMax;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   

@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "effects.h"
 #include "faneffects.h"
 
 extern DRAM_ATTR AppTime g_AppTime;
@@ -180,8 +181,12 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
   public:
   
     SimpleColorBeat(const String & strName)
-      : BeatEffectBase(0.5, 0.25), LEDStripEffect(strName)
+      : BeatEffectBase(0.5, 0.25), LEDStripEffect(EFFECT_STRIP_SIMPLE_COLOR_BEAT, strName)
     {
     }
 
+    SimpleColorBeat(const JsonObjectConst& jsonObject)
+      : BeatEffectBase(0.5, 0.25), LEDStripEffect(jsonObject)
+    {
+    }
 };

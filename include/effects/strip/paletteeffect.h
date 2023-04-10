@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include "effects.h"
+
 extern AppTime g_AppTime;
 
 class PaletteEffect : public LEDStripEffect
@@ -59,7 +61,7 @@ class PaletteEffect : public LEDStripEffect
                   TBlendType blend = LINEARBLEND, 
                   bool  bErase = true,
                   float brightness = 1.0)
-      : LEDStripEffect("Palette Effect"),
+      : LEDStripEffect(EFFECT_STRIP_PALETTE, "Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),
@@ -72,7 +74,41 @@ class PaletteEffect : public LEDStripEffect
         _bErase(bErase),
         _brightness(brightness)
     {
-        _paletteIndex = 0.0f;
+    }
+
+    PaletteEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject),
+      _startIndex(0.0f),
+      _paletteIndex(0.0f),
+      _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+      _density(jsonObject["dns"]),
+      _paletteSpeed(jsonObject[PTY_SPEED]),
+      _lightSize(jsonObject["lsz"]),
+      _gapSize(jsonObject["gsz"]),
+      _LEDSPerSecond(jsonObject["lps"]),
+      _blend(static_cast<TBlendType>(jsonObject[PTY_BLEND])),
+      _bErase(jsonObject[PTY_ERASE]),
+      _brightness(jsonObject["bns"])
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    {
+        StaticJsonDocument<512> jsonDoc;
+        
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_PALETTE] = _palette;
+        jsonDoc["dns"] = _density;
+        jsonDoc[PTY_SPEED] = _paletteSpeed;
+        jsonDoc["lsz"] = _lightSize;
+        jsonDoc["gsz"] = _gapSize;
+        jsonDoc["lps"] = _LEDSPerSecond;
+        jsonDoc[PTY_BLEND] = to_value(_blend);
+        jsonDoc[PTY_ERASE] = _bErase;
+        jsonDoc["bns"] = _brightness;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     ~PaletteEffect()
