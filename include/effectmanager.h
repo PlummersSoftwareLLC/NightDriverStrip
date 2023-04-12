@@ -358,7 +358,7 @@ public:
                 SetGlobalColor(CRGB::Black);
             }
 
-            SaveEffectManagerConfig()
+            SaveEffectManagerConfig();
         }
     }
 
