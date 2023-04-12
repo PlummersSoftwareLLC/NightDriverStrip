@@ -335,6 +335,8 @@ public:
                 ClearRemoteColor();
             }
             _cEnabled++;
+
+            SaveEffectManagerConfig();
         }
     }
 
@@ -355,6 +357,8 @@ public:
             {
                 SetGlobalColor(CRGB::Black);
             }
+
+            SaveEffectManagerConfig()
         }
     }
 
