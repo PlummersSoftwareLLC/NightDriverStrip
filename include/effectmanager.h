@@ -139,7 +139,7 @@ public:
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
         for (int i = 0; i < _vEffects.size(); i++)
-            EnableEffect(i);
+            EnableEffect(i, true);
 
         construct();
     }
@@ -175,7 +175,7 @@ public:
         int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
 
         for (int i = 0; i < _vEffects.size(); i++)
-            EnableEffect(i < enabledSize ? enabledArray[i].as<bool>() : true);
+            EnableEffect(i < enabledSize ? enabledArray[i].as<bool>() : true, true);
 
         construct();
         return true;
@@ -318,7 +318,7 @@ public:
         _effectStartTime = millis();
     }
 
-    void EnableEffect(size_t i)
+    void EnableEffect(size_t i, bool skipSave = false)
     {
         if (i >= _vEffects.size())
         {
@@ -336,11 +336,12 @@ public:
             }
             _cEnabled++;
 
-            SaveEffectManagerConfig();
+            if (!skipSave)
+                SaveEffectManagerConfig();
         }
     }
 
-    void DisableEffect(size_t i)
+    void DisableEffect(size_t i, bool skipSave = false)
     {
         if (i >= _vEffects.size())
         {
@@ -358,7 +359,8 @@ public:
                 SetGlobalColor(CRGB::Black);
             }
 
-            SaveEffectManagerConfig();
+            if (!skipSave)
+                SaveEffectManagerConfig();
         }
     }
 
