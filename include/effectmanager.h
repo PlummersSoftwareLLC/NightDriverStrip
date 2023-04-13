@@ -42,8 +42,6 @@
 #include <vector>
 #include <math.h>
 
-#include "effects/strip/misceffects.h"
-#include "effects/strip/fireeffect.h"
 #include "jsonserializer.h"
 
 #define MAX_EFFECTS 32
@@ -54,6 +52,7 @@ extern uint8_t g_Fader;
 
 // References to functions in other C files
 
+void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
@@ -80,7 +79,7 @@ class EffectManager : IJSONSerializable
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
-    std::shared_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
+    std::unique_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
 
     void construct() 
     {
@@ -101,6 +100,18 @@ class EffectManager : IJSONSerializable
 public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
+
+    EffectManager(LEDStripEffect *pEffect, std::shared_ptr<GFXTYPE> *gfx)
+        : _gfx(gfx)
+    {
+        debugV("EffectManager Splash Effect Constructor");
+
+        _ptrRemoteEffect.reset(pEffect);
+
+        construct();
+    }
+
+
 
     EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
         : _gfx(gfx)
@@ -142,6 +153,8 @@ public:
         SetInterval(DEFAULT_EFFECT_INTERVAL, true);
 
         construct();
+
+        _ptrRemoteEffect.reset(nullptr);
     }
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
@@ -183,6 +196,9 @@ public:
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
         construct();
+
+        _ptrRemoteEffect.reset(nullptr);
+
         return true;
     }
 
@@ -241,19 +257,6 @@ public:
     {
         return _bShowVU && GetCurrentEffect()->CanDisplayVUMeter();
     }
-
-#if ATOMLIGHT
-    static const uint FireEffectIndex = 2; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 6;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#elif FANSET
-    static const uint FireEffectIndex = 1; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#elif BROOKLYNROOM
-    static const uint FireEffectIndex = 2; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 6;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#else
-    static const uint FireEffectIndex = 0; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 0;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#endif
 
     // SetGlobalColor
     //

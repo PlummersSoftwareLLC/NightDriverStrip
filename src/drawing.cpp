@@ -43,7 +43,7 @@ CLEDController *g_ledSinglePixel;
 extern std::mutex g_buffer_mutex;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager = nullptr;
 
 float volatile g_FreeDrawTime = 0.0;
 

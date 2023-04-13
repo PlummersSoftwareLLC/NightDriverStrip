@@ -290,7 +290,7 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
 
     #elif MESMERIZER
 
-        new SplashLogoEffect(),
+//        new SplashLogoEffect(),
 
         new SpectrumAnalyzerEffect("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
         new SpectrumAnalyzerEffect("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
@@ -662,6 +662,17 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 
+#if USE_MATRIX
+
+    void InitSplashEffectManager()
+    {
+        debugW("InitSplashEffectManager");
+
+        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(new SplashLogoEffect(), g_aptrDevices);    
+    }
+
+#endif
+
 // InitEffectsManager
 //
 // Initializes the effect manager.  Reboots on failure, since it's not optional
@@ -720,7 +731,10 @@ void InitEffectsManager()
     {
         debugI("Creating EffectManager from JSON config");
 
-        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+        if (g_aptrEffectManager == nullptr)
+            g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+        else
+            g_aptrEffectManager->DeserializeFromJSON(pJsonDoc->as<JsonObjectConst>());
 
         if (g_aptrEffectManager->EffectCount() == 0)
         {
@@ -738,7 +752,10 @@ void InitEffectsManager()
         std::unique_ptr<EffectPointerArray> defaultEffects;
         size_t effectCount = CreateDefaultEffects(defaultEffects);
 
-        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(defaultEffects, effectCount, g_aptrDevices);
+        if (g_aptrEffectManager == nullptr)
+            g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(defaultEffects, effectCount, g_aptrDevices);
+        else
+            g_aptrEffectManager->LoadEffectArray(defaultEffects, effectCount);
     }
 
     if (false == g_aptrEffectManager->Init())
