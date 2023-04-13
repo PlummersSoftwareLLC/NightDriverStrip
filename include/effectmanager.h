@@ -43,6 +43,8 @@
 #include <math.h>
 
 #include "jsonserializer.h"
+#include "effects/strip/misceffects.h"
+#include "effects/strip/fireeffect.h"
 
 #define MAX_EFFECTS 32
 #define JSON_FORMAT_VERSION 1
@@ -79,7 +81,7 @@ class EffectManager : IJSONSerializable
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
-    std::unique_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
+    std::shared_ptr<LEDStripEffect> _ptrRemoteEffect;
 
     void construct() 
     {
@@ -106,8 +108,8 @@ public:
     {
         debugV("EffectManager Splash Effect Constructor");
 
-        _ptrRemoteEffect.reset(pEffect);
-        _ptrRemoteEffect->Init(_gfx);
+        if (pEffect->Init(_gfx))
+            _ptrRemoteEffect = std::shared_ptr<LEDStripEffect>(pEffect);
 
         construct();
     }
@@ -153,7 +155,7 @@ public:
 
         construct();
 
-        _ptrRemoteEffect.reset(nullptr);
+        _ptrRemoteEffect.reset();
     }
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
@@ -196,7 +198,7 @@ public:
 
         construct();
 
-        _ptrRemoteEffect.reset(nullptr);
+        _ptrRemoteEffect.reset();
 
         return true;
     }
@@ -278,17 +280,17 @@ public:
 
             if (color == CRGB(CRGB::White))
                 effect = std::make_shared<ColorFillEffect>(CRGB::White, 1);
-        else
+            else
 
-            #if ENABLE_AUDIO
-                #if SPECTRUM
-                    effect = GetSpectrumAnalyzer(color, oldColor);
+                #if ENABLE_AUDIO
+                    #if SPECTRUM
+                        effect = GetSpectrumAnalyzer(color, oldColor);
+                    #else
+                        effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    #endif
                 #else
-                    effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
-            #else
-                effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-            #endif
 
             if (effect->Init(g_aptrDevices))
             {
