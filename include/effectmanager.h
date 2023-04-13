@@ -107,6 +107,7 @@ public:
         debugV("EffectManager Splash Effect Constructor");
 
         _ptrRemoteEffect.reset(pEffect);
+        _ptrRemoteEffect->Init(_gfx);
 
         construct();
     }
