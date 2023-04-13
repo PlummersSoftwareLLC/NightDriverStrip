@@ -112,8 +112,6 @@ public:
         construct();
     }
 
-
-
     EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
         : _gfx(gfx)
     {
