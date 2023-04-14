@@ -72,23 +72,25 @@ class EffectManager : IJSONSerializable
     std::vector<LEDStripEffect*> _vEffects;
     size_t _cEnabled;
 
-    size_t _iCurrentEffect;
+    size_t _iCurrentEffect = 0;
     uint _effectStartTime;
-    uint _effectInterval;
+    uint _effectInterval = 0;
     bool _bPlayAll;
     bool _bShowVU = true;
     CRGB lastManualColor = CRGB::Red;
+    bool _clearRemoteEffectWhenExpired = false;
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _ptrRemoteEffect;
 
-    void construct() 
+    void construct(bool clearRemoteEffect) 
     {
         _cEnabled = 0;
         _bPlayAll = false;
-        _iCurrentEffect = 0;
-        _effectStartTime = millis();
+
+        if (clearRemoteEffect && _ptrRemoteEffect)
+            _clearRemoteEffectWhenExpired = true;
     }
 
     void ClearEffects() 
@@ -109,9 +111,13 @@ public:
         debugV("EffectManager Splash Effect Constructor");
 
         if (pEffect->Init(_gfx))
+        {
             _ptrRemoteEffect = std::shared_ptr<LEDStripEffect>(pEffect);
+            // This is a hacky way to ensure that the first effect in the list is shown after the one we're adopting now
+            _iCurrentEffect = -1;
+        }
 
-        construct();
+        construct(false);
     }
 
     EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
@@ -153,9 +159,7 @@ public:
 
         SetInterval(DEFAULT_EFFECT_INTERVAL, true);
 
-        construct();
-
-        _ptrRemoteEffect.reset();
+        construct(true);
     }
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
@@ -168,7 +172,6 @@ public:
         if (effectsArray.isNull())
             return false;
 
-        _vEffects.clear();
         _vEffects.reserve(effectsArray.size());
 
         for (auto effectObject : effectsArray)
@@ -196,9 +199,7 @@ public:
         
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
-        construct();
-
-        _ptrRemoteEffect.reset();
+        construct(true);
 
         return true;
     }
@@ -300,9 +301,10 @@ public:
         #endif
     }
 
-    void ClearRemoteColor()
+    void ClearRemoteColor(bool retainRemoteEffect = false)
     {
-        _ptrRemoteEffect = nullptr;
+        if (!retainRemoteEffect)
+            _ptrRemoteEffect = nullptr;
 
         #if (USE_MATRIX)
             LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
@@ -312,19 +314,17 @@ public:
 
     void StartEffect()
     {
-        #if USE_MATRIX
-            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
-            pMatrix->SetCaption(_vEffects[_iCurrentEffect]->FriendlyName(), 3000);
-            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        #endif
-
         // If there's a temporary effect override from the remote control active, we start that, else
         // we start the current regular effect
         
-        if (_ptrRemoteEffect)
-            _ptrRemoteEffect->Start();
-        else
-            _vEffects[_iCurrentEffect]->Start();
+        LEDStripEffect *pEffect = _ptrRemoteEffect ? _ptrRemoteEffect.get() : _vEffects[_iCurrentEffect];
+
+        #if USE_MATRIX
+            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+            pMatrix->SetCaption(pEffect->FriendlyName(), 3000);
+            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+        #endif
+        pEffect->Start();
 
         _effectStartTime = millis();
     }
@@ -343,7 +343,7 @@ public:
 
             if (_cEnabled < 1)
             {
-                ClearRemoteColor();
+                ClearRemoteColor(true);
             }
             _cEnabled++;
 
@@ -420,7 +420,7 @@ public:
 
     LEDStripEffect *GetCurrentEffect() const
     {
-        return _vEffects[_iCurrentEffect];
+        return _ptrRemoteEffect ? _ptrRemoteEffect.get() : _vEffects[_iCurrentEffect];
     }
 
     const String & GetCurrentEffectName() const
@@ -478,6 +478,12 @@ public:
 
         if (millis() - _effectStartTime >= GetInterval()) // See if its time for a new effect yet
         {
+            if (_clearRemoteEffectWhenExpired) 
+            {
+                _ptrRemoteEffect.reset();
+                _clearRemoteEffectWhenExpired = false;
+            }
+
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
             debugV("Current Effect: %s", GetCurrentEffectName());
