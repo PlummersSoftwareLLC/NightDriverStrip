@@ -42,9 +42,9 @@
 #include <vector>
 #include <math.h>
 
-#include "jsonserializer.h"
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
+#include "jsonserializer.h"
 
 #define MAX_EFFECTS 32
 #define JSON_FORMAT_VERSION 1
