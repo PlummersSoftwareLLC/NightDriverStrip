@@ -526,8 +526,6 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                 }
             #endif
 
-            StarType::GetStarTypeNumber();
-
             if (randomfloat(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
             {
                 //Serial.printf("Creating star with speed = %lf and factor = %lfn", _maxSpeed, _musicFactor);
