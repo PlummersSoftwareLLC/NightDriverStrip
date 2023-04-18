@@ -1558,8 +1558,8 @@ class AppTime
 {
   protected:
 
-    float _lastFrame;
-    float _deltaTime;
+    double _lastFrame;
+    double _deltaTime;
   
   public:
 
@@ -1572,13 +1572,13 @@ class AppTime
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        float current = CurrentTime();
+        double current = CurrentTime();
         _deltaTime = current - _lastFrame;
 
         // Cap the delta time at one full second
 
-        if (_deltaTime > 1.0f)
-            _deltaTime = 1.0f;
+        if (_deltaTime > 1.0)
+            _deltaTime = 1.0;
 
         _lastFrame = current;
     }
@@ -1588,24 +1588,24 @@ class AppTime
         NewFrame();
     }
 
-    float FrameStartTime() const
+    double FrameStartTime() const
     {
         return _lastFrame;
     }
 
-    static float CurrentTime()
+    static double CurrentTime()
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
+        return (double)tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
     }
 
-    static float TimeFromTimeval(const timeval & tv)
+    static double TimeFromTimeval(const timeval & tv)
     {
-        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
+        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
     }
 
-    static timeval TimevalFromTime(float t)
+    static timeval TimevalFromTime(double t)
     {
         timeval tv;
         tv.tv_sec = (long)t;
@@ -1613,7 +1613,7 @@ class AppTime
         return tv;
     }
 
-    float DeltaTime() const
+    double DeltaTime() const
     {
         return _deltaTime;
     }
@@ -1629,10 +1629,11 @@ inline static float randomfloat(float lower, float upper)
     return result;
 }
 
-inline float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
+template<typename T> inline float map(T x, T in_min, T in_max, T out_min, T out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+
 inline uint64_t ULONGFromMemory(uint8_t * payloadData)
 {
     return  (uint64_t)payloadData[7] << 56  | 

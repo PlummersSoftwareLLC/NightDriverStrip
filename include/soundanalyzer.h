@@ -225,19 +225,19 @@ public:
         case MESMERIZERMIC:
         {
             static const float Scalars16[16] = {3.0, .35, 0.4, 0.7, 0.8, 0.7, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : mapfloat(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         case PCREMOTE:
         {
             static const float Scalars16[16] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : mapfloat(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         default:
         {
             static const float Scalars16[16] = {3.0, .35, 0.6, 0.8, 1.2, 0.7, 1.2, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : mapfloat(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
         }
@@ -525,7 +525,7 @@ class SoundAnalyzer : public AudioVariables
         allBandsPeak = std::max((double)NOISE_FLOOR, allBandsPeak);
         debugV("All Bands Peak: %f", allBandsPeak);
 
-        auto multiplier = mapfloat(_VURatio, 0.0, 2.0, 1.5, 1.0);
+        auto multiplier = map(_VURatio, 0.0, 2.0, 1.5, 1.0);
 
 #if MESERMIZER
         // Visual hand-tweaking to get the display to look a little taller

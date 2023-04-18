@@ -169,7 +169,7 @@ class PatternPinwheel : public LEDStripEffect
     {
       uint8_t dim = beatsin8(2, 30, 70);
       fadeAllChannelsToBlackBy(dim); 
-      //Serial.printf("Dimming by %d\n", dim);
+      
       for (uint8_t i = 0; i < 64; i++)
       {
         CRGB color;
@@ -183,7 +183,6 @@ class PatternPinwheel : public LEDStripEffect
 
         graphics()->setPixel(x, y, color);
       }
-
     }
 };
 

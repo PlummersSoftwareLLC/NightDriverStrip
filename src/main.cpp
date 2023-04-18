@@ -160,7 +160,7 @@
 #include "globals.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern volatile float g_FreeDrawTime;
+extern volatile double g_FreeDrawTime;
 extern uint32_t g_Watts;
 extern float g_Brite;
 

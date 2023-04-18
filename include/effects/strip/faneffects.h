@@ -396,7 +396,7 @@ public:
 
   void OnBeat()
   {
-    int passes = random(1, mapfloat(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
+    int passes = random(1, map(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
     passes = g_Analyzer._VURatio;
     for (int iPass = 0; iPass < passes; iPass++)
     {
@@ -1372,8 +1372,8 @@ public:
     // Draw four outer pixels in second ring outwards.  We draw 1.05 to take advantage of the non-linear red response in
     // the second pixels (when drawn at 5%, the red will show up more, depending on color correction).
 
-    float xRatio = mapfloat(centerX, 0, maxDeviation, -1.0, 1.0);
-    float yRatio = mapfloat(centerY, 0, maxDeviation, -1.0, 1.0);
+    float xRatio = map(centerX, 0.0f, maxDeviation, -1.0f, 1.0f);
+    float yRatio = map(centerY, 0.0f, maxDeviation, -1.0f, 1.0f);
     
     auto brightness = led_brightness(xRatio, yRatio);
     for (int i = 0; i < 8; i++)
