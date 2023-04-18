@@ -51,7 +51,7 @@ class BeatEffectBase
   protected:
     const int _maxSamples = 60;
     std::deque<float> _samples;
-    float _lastBeat = 0;
+    double _lastBeat = 0;
     float _minRange = 0;
     float _minElapsed = 0;
 
@@ -69,7 +69,7 @@ class BeatEffectBase
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span) = 0;
 
-    float SecondsSinceLastBeat()
+    double SecondsSinceLastBeat()
     {
       return g_AppTime.CurrentTime() - _lastBeat;
     }
@@ -83,13 +83,13 @@ class BeatEffectBase
     virtual void ProcessAudio()
     {
         debugV("BeatEffectBase2::Draw");
-        float elapsed = SecondsSinceLastBeat();
+        double elapsed = SecondsSinceLastBeat();
     
         _samples.push_back(g_Analyzer._VURatio);
         float minimum = *min_element(_samples.begin(), _samples.end());
         float maximum = *max_element(_samples.begin(), _samples.end());
 
-        // debugI("Samples: %d, max: %0.2lf, min: %0.2lf, span: %0.2lf\n", _samples.size(), maximum, minimum, maximum-minimum);
+        //Serial.printf("Samples: %d, max: %0.2f, min: %0.2f, span: %0.2f\n", _samples.size(), maximum, minimum, maximum-minimum);
 
         if (_samples.size() >= _maxSamples)
           _samples.pop_front();
@@ -98,6 +98,7 @@ class BeatEffectBase
         {
             if (elapsed < _minElapsed)
             {
+                //Serial.printf("False Beat: elapsed: %0.2f, range: %0.2f, time: %0.2lf\n", elapsed, maximum - minimum, g_AppTime.CurrentTime());
                 // False beat too early, clear data but don't reset lastBeat
                  _samples.clear();
             }
@@ -131,7 +132,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
         CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_AppTime.DeltaTime() * 0.75;
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
-        fadeAllChannelsToBlackBy(min(255.0f,1000.0f * g_AppTime.DeltaTime()));
+        fadeAllChannelsToBlackBy(min(255.0,1000.0 * g_AppTime.DeltaTime()));
         delay(1);
     }
 

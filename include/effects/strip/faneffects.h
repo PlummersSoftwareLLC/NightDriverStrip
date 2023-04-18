@@ -396,7 +396,7 @@ public:
 
   void OnBeat()
   {
-    int passes = random(1, mapfloat(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
+    int passes = random(1, map(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
     passes = g_Analyzer._VURatio;
     for (int iPass = 0; iPass < passes; iPass++)
     {
@@ -1235,13 +1235,13 @@ public:
 
 class LanternParticle
 {
-  const int minPeturbation = 1000;
-  const int maxPeterbation = 2500;
-  const int perterbationIncrement = 2;
-  const int maxDeviation = 35;
+  const int minPeturbation = 100;
+  const int maxPeterbation = 3500;
+  const int perterbationIncrement = 1;
+  const int maxDeviation = 100;
 
-  int centerX = maxDeviation;
-  int centery = maxDeviation / 2;
+  int centerX = maxDeviation / 2;
+  int centerY = maxDeviation / 2;
 
   int velocityX = 0;
   int velocityY = 0;
@@ -1252,6 +1252,12 @@ class LanternParticle
   float rotation = 0.0f;
 
 protected:
+
+  float distance(float x1, float y1, float x2, float y2)
+  {
+    return std::sqrt(std::pow(x1-x2, 2) + std::pow(y1 - y2, 2));
+  }
+
   CRGB flameColor(int val)
   {
     val = min(val, 255);
@@ -1263,13 +1269,39 @@ protected:
 #endif
   }
 
+  // Generate a vector of how bright each of the surrounding 8 LEDs on the unit circle should be
+
+  std::vector<float> led_brightness(float wandering_x, float wandering_y) 
+  {
+    constexpr float sqrt2 = std::sqrt(2);  
+
+    const std::vector<std::pair<float, float>> unit_circle_coords = {
+        {1, 0},  
+        { 1 / sqrt2,  1 / sqrt2},
+        {0, 1},  
+        {-1 / sqrt2,  1 / sqrt2},
+        {-1, 0}, 
+        {-1 / sqrt2, -1 / sqrt2},
+        {0, -1}, 
+        { 1 / sqrt2, -1 / sqrt2}
+    };
+    
+    std::vector<float> brightness_values;
+
+    for (const auto& coord : unit_circle_coords) {
+        float d = distance(wandering_x, wandering_y, coord.first, coord.second);
+        float brightness = std::max(1.0f - d, 0.0f);
+        brightness_values.push_back(brightness);
+    }
+
+    return brightness_values;
+}
+
 public:
   void Draw()
   {
     // random trigger brightness oscillation, if at least half uncalm
 
-    EVERY_N_MILLISECONDS(15)
-    {
       int movx = 0;
       int movy = 0;
 
@@ -1295,20 +1327,32 @@ public:
       // Move center of flame around by the current velocity
 
       centerX += movx + (velocityX / 7);
-      centery += movy + (velocityY / 7);
+      centerY += movy + (velocityY / 7);
 
       // Enforce some range limits
       if (centerX < -maxDeviation)
+      {
         centerX = -maxDeviation;
+        velocityX *= -0.5;
+      }
 
       if (centerX > maxDeviation)
+      {
         centerX = maxDeviation;
+        velocityX *= -0.5;
+      }
 
-      if (centery < -maxDeviation)
-        centery = -maxDeviation;
+      if (centerY < -maxDeviation)
+      {
+        centerY = -maxDeviation;
+        velocityY *= -0.5;
+      }
 
-      if (centery > maxDeviation)
-        centery = maxDeviation;
+      if (centerY > maxDeviation)
+      {
+        centerY = maxDeviation;
+        velocityY *= -0.5;
+      }
 
       // Dampen the velocity down a fraction
 
@@ -1318,37 +1362,34 @@ public:
       // Apply Hooke's law of spring motion to accelerate back towards rest/center
 
       velocityX -= centerX;
-      velocityY -= centery;
-    }
+      velocityY -= centerY;
+    
 
     rotation += 0.0;
 
-#ifdef LANTERN
-    float scalar = .75 + g_Analyzer._VURatio / 2;
-#else
-    float scalar = 1.35;
-#endif
+    float scalar = 1; // .5 + g_Analyzer._VURatio / 2;
 
     // Draw four outer pixels in second ring outwards.  We draw 1.05 to take advantage of the non-linear red response in
     // the second pixels (when drawn at 5%, the red will show up more, depending on color correction).
 
-    DrawRingPixels(fmod(rotation + 0, RING_SIZE_2), 1.05, flameColor(128 - centerX * scalar - centery * scalar), 0, 2);
-    DrawRingPixels(fmod(rotation + 4, RING_SIZE_2), 1.05, flameColor(128 + centerX * scalar - centery * scalar), 0, 2);
-    DrawRingPixels(fmod(rotation + 2, RING_SIZE_2), 1.05, flameColor(128 + centerX * scalar + centery * scalar), 0, 2);
-    DrawRingPixels(fmod(rotation + 6, RING_SIZE_2), 1.15, flameColor(128 - centerX * scalar + centery * scalar), 0, 2);
+    float xRatio = map(centerX, 0.0f, maxDeviation, -1.0f, 1.0f);
+    float yRatio = map(centerY, 0.0f, maxDeviation, -1.0f, 1.0f);
+    
+    auto brightness = led_brightness(xRatio, yRatio);
+    for (int i = 0; i < 8; i++)
+    {
+      CRGB pixelColor = flameColor(255 * brightness[i]);
+      pixelColor.fadeToBlackBy(255 * (3.0 - brightness[i]));
+      DrawRingPixels(i, 1, pixelColor, 0, 2, true);
+    }
 
     // Now draw a center pixel which is dimmed proportional to the distance the center is from actual
 
     CRGB centerColor = CRGB(255, 12, 0);
-    centerColor.fadeToBlackBy((centerX * centerX + centery * centery) / 25);
+    centerColor.fadeToBlackBy(distance(xRatio, yRatio, 0, 0) * 128);
     DrawRingPixels(0, 1.0, centerColor, 0, 3);
 
-    /* Additional LED ring, up to your preference
-    DrawRingPixels(fmod(rotation + 0, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    DrawRingPixels(fmod(rotation + 3, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    DrawRingPixels(fmod(rotation + 6, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    DrawRingPixels(fmod(rotation + 9, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    */
+    debugW("X,Y = %f, %f\n", xRatio, yRatio);
   }
 };
 
@@ -1370,12 +1411,12 @@ public:
 
   virtual size_t DesiredFramesPerSecond() const
   {
-    return 24;
+    return 30;
   }
 
   virtual void Draw()
   {
-    setAllOnAllChannels(0, 0, 0);
+    fadeAllChannelsToBlackBy(20);
     for (int i = 0; i < _maxParticles; i++)
       _particles[i].Draw();
   }

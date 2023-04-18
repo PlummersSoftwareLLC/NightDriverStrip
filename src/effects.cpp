@@ -308,7 +308,7 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", 0, 24, false),
         new WaveformEffect("WaveIn", 8),     
-        new GhostWave("WaveOut", 0, 0, false, 40),
+        new GhostWave("WaveOut", 0, 0, true, 0),
 
         new WaveformEffect("WaveForm", 8),
         new GhostWave("GhostWave", 0, 0,  false),
@@ -318,7 +318,6 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new PatternPinwheel(),
         new PatternSunburst(),
 
-        new PatternInfinity(),
         new PatternFlowField(),
         new PatternClock(),        
         new PatternAlienText(),
@@ -339,7 +338,9 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new PatternCurtain(),
         new PatternGridLights(),
         new PatternMunch(),
-        new PatternQR(),           
+        
+        // new PatternInfinity(),
+        // new PatternQR(),           
         
     #elif UMBRELLA
 

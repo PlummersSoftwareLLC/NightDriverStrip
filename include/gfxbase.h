@@ -1212,28 +1212,52 @@ public:
 
     inline void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
-        for (int y = startY; y <= endY; y++)
-        {
-            for (int x = MATRIX_WIDTH / 2; x > 0; x--)
-                leds[xy(x, y)] = leds[xy(x - 1, y)];
+        #if USE_MATRIX
+            // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+            // out in order to do the scroll with memmove rather than row by column pixel
+            // lookups.          
+            for (int y = startY; y <= endY; y++)
+            {
+                auto pLinemem = leds + y * MATRIX_WIDTH;
+                auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+                memmove(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+                memmove(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));                
+            }
+        #else
+            for (int y = startY; y <= endY; y++)
+            {
+                for (int x = MATRIX_WIDTH / 2; x > 0; x--)
+                    leds[xy(x, y)] = leds[xy(x - 1, y)];
 
-            for (int x = MATRIX_WIDTH / 2; x < MATRIX_WIDTH; x++)
-                leds[xy(x, y)] = leds[xy(x + 1, y)];
-        }
+                for (int x = MATRIX_WIDTH / 2; x < MATRIX_WIDTH; x++)
+                    leds[xy(x, y)] = leds[xy(x + 1, y)];
+            }
+        #endif
     }
 
     inline void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
-        for (int y = startY; y <= endY; y++)
-        {
-            for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
+        #if USE_MATRIX
+            // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+            // out in order to do the scroll with memmove rather than row by column pixel
+            // lookups.  
+            for (int y = startY; y <= endY; y++)
             {
-                leds[xy(x, y)] = leds[xy(x + 1, y)];
-                leds[xy(MATRIX_WIDTH-x-1, y)] = leds[xy(MATRIX_WIDTH-x-2, y)];
-                //g->setPixel(x, y, g->getPixel(x+1, y));
-                //g->setPixel(MATRIX_WIDTH-x-1, y, g->getPixel(MATRIX_WIDTH-x-2, y));
+                auto pLinemem = leds + y * MATRIX_WIDTH;
+                auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+                memmove(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+                memmove(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
             }
-        }       
+        #else
+            for (int y = startY; y <= endY; y++)
+            {
+                for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
+                {
+                    leds[xy(x, y)] = leds[xy(x + 1, y)];
+                    leds[xy(MATRIX_WIDTH-x-1, y)] = leds[xy(MATRIX_WIDTH-x-2, y)];
+                }
+            }    
+        #endif
     }
 
     // MoveX - Shift the content on the matrix left or right

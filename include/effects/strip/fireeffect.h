@@ -261,7 +261,7 @@ public:
     virtual CRGB GetBlackBodyHeatColor(float temp)
     {
         temp = min(1.0f, temp);
-        int index = mapfloat(temp, 0.0, 1.0, 0.0, 240);
+        int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
         return ColorFromPalette(_palette, index, 255);
 
         //        uint8_t heatramp = (uint8_t)(t192 & 0x3F);

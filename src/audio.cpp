@@ -75,7 +75,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
             // VURatio with a fadeout
 
             static float lastVU = 0.0;
-            constexpr auto VU_DECAY_PER_SECOND = 3.0;
+            constexpr auto VU_DECAY_PER_SECOND = 4.0;
             if (g_Analyzer._VURatio > lastVU)
                 lastVU = g_Analyzer._VURatio;
             else
@@ -89,6 +89,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
             // Instantaneous VURatio
 
             g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ? 0.0 : (g_Analyzer._VU-g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
+            debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
             // Delay enough time to yield 25ms total used this frame, which will net 40FPS exactly (as long as the CPU keeps up)
 
@@ -277,7 +278,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
             
         const int MAXPET = 16;                                      // Highest value that the PET can display in a bar
         data.header[0] = ((3 << 4) + 15);
-        data.vu = mapfloat(g_Analyzer._VURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
+        data.vu = map(g_Analyzer._VURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
 
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display
