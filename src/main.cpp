@@ -158,6 +158,7 @@
 #define FASTLED_ESP32_SPI_BUS HSPI
 
 #include "globals.h"
+#include "deviceconfig.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;
@@ -491,21 +492,12 @@ void setup()
     PrintOutputHeader();
     debugI("Startup!");
 
+    // Start Debug
     debugI("Starting DebugLoopTaskEntry");
     g_TaskManager.StartDebugThread();
     CheckHeap();
 
-    // Start Debug
-
-#if ENABLE_WIFI
-
-    debugW("Starting ImprovSerial");
-    String name = "NDESP32" + get_mac_address().substring(6);
-    g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
-
-    // Initialize Non-Volatile Storage. If future needs require NVS for anything other than wifi,
-    // move the init out of the ifdef (ie: don't duplicate it).
-
+    // Initialize Non-Volatile Storage
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
@@ -514,6 +506,15 @@ void setup()
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK(err);
+
+    // Create and load device config from NVS if possible
+    g_aptrDeviceConfig = std::make_unique<DeviceConfig>();
+
+#if ENABLE_WIFI
+
+    debugW("Starting ImprovSerial");
+    String name = "NDESP32" + get_mac_address().substring(6);
+    g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
 
     // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 

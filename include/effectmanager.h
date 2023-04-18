@@ -66,7 +66,7 @@ LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
 template <typename GFXTYPE>
-class EffectManager : IJSONSerializable
+class EffectManager : public IJSONSerializable
 {
     std::vector<LEDStripEffect*> _vEffects;
     size_t _cEnabled;
@@ -144,7 +144,7 @@ public:
         construct();
     }
 
-    bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
     {
         ClearEffects();
 

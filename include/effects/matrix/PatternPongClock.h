@@ -66,6 +66,8 @@
 #ifndef PatternPongClock_H
 #define PatternPongClock_H
 
+#include "deviceconfig.h"
+
 #define BAT1_X 2 // Pong left bat x pos (this is where the ball collision occurs, the bat is drawn 1 behind these coords)
 #define BAT2_X (MATRIX_WIDTH - 4)
 #define BAT_HEIGHT (MATRIX_HEIGHT / 4)
@@ -110,20 +112,16 @@ class PatternPongClock : public LEDStripEffect
     {
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
-        local_time->tm_hour = (local_time->tm_hour+17)%24;           // BUGBUG: Hardcoded to PST for now
 
-        int ampm = true;                                            // BUGBUG: Eurofolks prefer 24-hour time
+        bool ampm = !g_aptrDeviceConfig->Use24HourClock();
+
         // update score / time
         mins = local_time->tm_min;
         hours = local_time->tm_hour;
-        if (hours > 12)
-        {
-            hours = hours - ampm * 12;
-        }
-        if (hours < 1)
-        {
-            hours = hours + ampm * 12;
-        }
+        if (hours > 12 && ampm)
+            hours -= 12;
+        else if (hours == 0 && ampm)
+            hours = 12;
     }
 
     virtual void Draw()
@@ -132,7 +130,6 @@ class PatternPongClock : public LEDStripEffect
 
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
-        local_time->tm_hour = (local_time->tm_hour+19)%24;           // BUGBUG: Hardcoded to PST for now
 
         g->Clear();
 
@@ -466,14 +463,14 @@ class PatternPongClock : public LEDStripEffect
             restart = 1;
 
             // update score / time
-            int ampm = true;
+            bool ampm = !g_aptrDeviceConfig->Use24HourClock();
 
             mins = local_time->tm_min;
             hours = local_time->tm_hour;
-            if (hours > 12)
-                hours = hours - ampm * 12;
-            if (hours < 1)
-                hours = hours + ampm * 12;
+            if (hours > 12 && ampm)
+                hours -= 12;
+            else if (hours == 0 && ampm)
+                hours = 12;
         }
     }
 

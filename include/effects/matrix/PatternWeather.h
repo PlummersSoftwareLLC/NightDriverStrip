@@ -42,6 +42,7 @@
 #include <FastLED.h>
 #include <ArduinoJson.h>
 #include "globals.h"
+#include "deviceconfig.h"
 #include "jsonserializer.h"
 #include <FontGfx_apple5x7.h>
 #include <thread>
@@ -71,9 +72,11 @@ class PatternWeather : public LEDStripEffect
 
 private:
 
+    String strLocationName       = "";
     String strLocation           = "";
-    String strPostalCode         = "";
     String strCountryCode        = "";
+    String strLatitude           = "0.0";
+    String strLongitude          = "0.0";
     int    dayOfWeek             = 0;
     int    iconToday             = -1;
     int    iconTomorrow          = -1;
@@ -111,23 +114,65 @@ private:
     
     inline float KelvinToLocal(float K)
     {
-        // Some future Canadian or Netherlander should add Celcius support as a preference, and that would replace
-        // the "true" test that's here as a placeholder for now.
-
-        if (true)
-            return KelvinToFarenheit(K);
-        else
+        if (g_aptrDeviceConfig->UseCelcius())
             return KelvinToCelcius(K);
+        else
+            return KelvinToFarenheit(K);
+    }
+
+    bool updateCoordinates() 
+    {
+        String strConfigLocation = g_aptrDeviceConfig->GetLocation();
+        String strConfigCountryCode = g_aptrDeviceConfig->GetCountryCode();
+        
+        // If location and country match what we looked up before, our coordinates are still valid
+        if (strLocation == strConfigLocation &&  strCountryCode == strConfigCountryCode)
+            return true;
+
+        HTTPClient http;
+        String url;
+
+        bool locationIsZip = g_aptrDeviceConfig->IsLocationZip();
+
+        if (locationIsZip) 
+            url = "http://api.openweathermap.org/geo/1.0/zip?zip=" + strConfigLocation + "," + strConfigCountryCode + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+        else
+            url = "http://api.openweathermap.org/geo/1.0/direct?q=" + strConfigLocation + "," + strConfigCountryCode + "&limit=1&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+
+        http.begin(url);
+        int httpResponseCode = http.GET();
+
+        if (httpResponseCode <= 0) 
+        {
+            debugW("Error fetching coordinates for location: %s", strConfigLocation);
+            http.end();
+            return false;
+        }
+
+        String response = http.getString();
+        DynamicJsonDocument doc(4096);
+        deserializeJson(doc, response);
+        JsonObject coordinates = locationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
+
+        strLatitude = coordinates["lat"].as<String>();
+        strLongitude = coordinates["lon"].as<String>();
+
+        http.end();
+
+        strLocation = strConfigLocation;
+        strCountryCode = strConfigCountryCode;
+
+        return true;
     }
 
     // getTomorrowTemps
     //
     // Request a forecast and then parse out the high and low temps for tomorrow
 
-    bool getTomorrowTemps(const String &zipCode, const String &countryCode, float& highTemp, float& lowTemp) 
+    bool getTomorrowTemps(float& highTemp, float& lowTemp) 
     {
         HTTPClient http;
-        String url = "http://api.openweathermap.org/data/2.5/forecast?zip=" + zipCode + "," + countryCode + "&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -174,7 +219,7 @@ private:
         }
         else 
         {
-            debugW("Error fetching forecast data for zip: %s", zipCode);
+            debugW("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
@@ -184,11 +229,11 @@ private:
     //
     // Get the current temp and the high and low for today
 
-    bool getWeatherData(const String &zipCode, const String &countryCode)
+    bool getWeatherData()
     {
         HTTPClient http;
 
-        String url = "http://api.openweathermap.org/data/2.5/weather?zip=" + zipCode + "," + countryCode + "&appid=" + cszOpenWeatherAPIKey;
+        String url = "http://api.openweathermap.org/data/2.5/weather?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -214,18 +259,20 @@ private:
 
             const char * pszName = jsonDoc["name"];
             if (pszName)
-                strLocation = pszName;
+                strLocationName = pszName;
 
             http.end();
             return true;
         }
         else
         {
-            debugW("Error fetching Weather data for zip: %s in country: %s", zipCode, countryCode);
+            debugW("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
     }
+
+
 
     // Thread entry point so we can update the weather data asynchronously.  The update thread exists
     // when it's done fetching, it is not persistent.
@@ -233,10 +280,13 @@ private:
     static void UpdateWeather(void * pv)
     {
         PatternWeather * pObj = (PatternWeather *) pv;
-        if (pObj->getWeatherData(cszZipCode, cszCountryCode))
+
+        pObj->updateCoordinates();
+
+        if (pObj->getWeatherData())
         {
             debugW("Got today's weather");
-            if (pObj->getTomorrowTemps(cszZipCode, cszCountryCode, pObj->highTomorrow, pObj->loTomorrow))
+            if (pObj->getTomorrowTemps(pObj->highTomorrow, pObj->loTomorrow))
                 debugI("Got tomorrow's weather");
             else
                 debugW("Failed to get tomorrow's weather");
@@ -255,33 +305,10 @@ public:
 
     PatternWeather() : LEDStripEffect(EFFECT_MATRIX_WEATHER, "Weather")
     {
-        strPostalCode = cszZipCode;
-        strCountryCode = cszCountryCode;
     }
 
     PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
-        strPostalCode = jsonObject["pcd"].as<String>();
-        strCountryCode = jsonObject["ccd"].as<String>();
-
-        if (strPostalCode.isEmpty())
-            strPostalCode = cszZipCode;
-
-        if (strCountryCode.isEmpty())
-            strCountryCode = cszCountryCode;
-    }
-
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
-    {
-        StaticJsonDocument<128> jsonDoc;
-
-        JsonObject root = jsonDoc.to<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
-
-        jsonDoc["pcd"] = strPostalCode;
-        jsonDoc["ccd"] = strCountryCode;
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     // We re-render the entire display every frame
@@ -339,11 +366,12 @@ public:
         int y = fontHeight + 1;
         graphics()->setCursor(x, y);
         graphics()->setTextColor(WHITE16);
-        strLocation.toUpperCase();
-        if (strlen(cszOpenWeatherAPIKey) == 0)
+        String showLocation = strLocation;
+        showLocation.toUpperCase();
+        if (g_aptrDeviceConfig->GetOpenWeatherAPIKey().isEmpty())
             graphics()->print("No API Key");
         else
-            graphics()->print(strLocation.isEmpty() ? String(cszZipCode) : strLocation.substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
+            graphics()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
 
         // Display the temperature, right-justified
 

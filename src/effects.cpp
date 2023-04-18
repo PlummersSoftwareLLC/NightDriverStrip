@@ -671,53 +671,9 @@ void InitEffectsManager()
 {
     debugW("InitEffectsManager...");
 
-    bool jsonReadSuccessful = false;
+    std::unique_ptr<DynamicJsonDocument> pJsonDoc;
 
-    File file = SPIFFS.open(EFFECTS_CONFIG_FILE);
-    
-    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
-
-    if (file)
-    {
-        if (file.size() > 0)
-        {
-            debugI("Attempting to read EffectManager config from JSON file");
-
-            if (g_EffectsManagerJSONBufferSize == 0)
-                g_EffectsManagerJSONBufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
-
-            // Loop is here to deal with out of memory conditions
-            while(true)
-            {
-                pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
-                
-                DeserializationError error = deserializeJson(*pJsonDoc, file);
-
-                if (error == DeserializationError::NoMemory)
-                {
-                    pJsonDoc.reset(nullptr);
-                    file.seek(0);
-                    g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
-
-                    debugW("Out of memory reading EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
-                }
-                else if (error == DeserializationError::Ok)
-                {
-                    jsonReadSuccessful = true;
-                    break;
-                }
-                else 
-                {
-                    debugW("Error with code %d occurred while deserializing EffectManager config", to_value(error.code()));
-                    break;
-                }
-            }
-        }
-
-        file.close();
-    }
-
-    if (jsonReadSuccessful)
+    if (LoadJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, pJsonDoc))
     {
         debugI("Creating EffectManager from JSON config");
 
@@ -748,59 +704,7 @@ void InitEffectsManager()
 
 void SaveEffectManagerConfig()
 {
-    if (g_EffectsManagerJSONBufferSize == 0)
-        g_EffectsManagerJSONBufferSize = JSON_BUFFER_BASE_SIZE;
-
-    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
-
-    // Loop is here to deal with out of memory conditions
-    while(true)
-    {
-        pJsonDoc.reset(new DynamicJsonDocument(g_EffectsManagerJSONBufferSize));
-        JsonObject jsonObject = pJsonDoc->to<JsonObject>();
-
-        if (g_aptrEffectManager->SerializeToJSON(jsonObject))
-            break;
-
-        pJsonDoc.reset(nullptr);
-        g_EffectsManagerJSONBufferSize += JSON_BUFFER_INCREMENT;
-
-        debugW("Out of memory serializing EffectManager config - increasing buffer to %zu bytes", g_EffectsManagerJSONBufferSize);
-    }
-
-    SPIFFS.remove(EFFECTS_CONFIG_FILE);
-
-    File file = SPIFFS.open(EFFECTS_CONFIG_FILE, FILE_WRITE);
-    
-    if (!file)
-    {
-        debugE("Unable to open file to write EffectManager config!");
-        return;
-    }
-
-    size_t bytesWritten = serializeJson(*pJsonDoc, file);
-    debugI("Number of bytes written to config JSON file: %d", bytesWritten);
-    
-    file.flush();
-    file.close();
-
-    if (bytesWritten == 0)
-    {
-        debugE("Unable to write EffectManager config to file!");
-        SPIFFS.remove(EFFECTS_CONFIG_FILE);
-        return;
-    }
-
-/*
-    file = SPIFFS.open(EFFECTS_CONFIG_FILE);
-    if (file)
-    {
-        while (file.available())
-            Serial.write(file.read());
-        
-        file.close();
-    }
-*/
+    SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_aptrEffectManager);
 }
 
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without

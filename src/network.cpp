@@ -480,27 +480,29 @@ bool WriteWiFiConfig()
         debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         return false;
     }
-    else 
-    {
-        err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_ssid), WiFi_ssid.c_str());
-        if (ESP_OK != err)
-        {
-            debugW("Error (%s) storing ssid!\n", esp_err_to_name(err));
-            nvs_close(nvsRWHandle);
-            return false;
-        }
-        err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_password), WiFi_password.c_str());
-        if (ESP_OK != err)
-        {
-            debugW("Error (%s) storing password!\n", esp_err_to_name(err));
-            nvs_close(nvsRWHandle);
-            return false;
-        }
 
+    bool success = true;
+
+    err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_ssid), WiFi_ssid.c_str());
+    if (ESP_OK != err)
+    {
+        debugW("Error (%s) storing ssid!\n", esp_err_to_name(err));
+        success = false;
+    }
+
+    err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_password), WiFi_password.c_str());
+    if (ESP_OK != err)
+    {
+        debugW("Error (%s) storing password!\n", esp_err_to_name(err));
+        success = false;
+    }
+
+    if (success)
         // Do not check in code that displays the password in logs, etc.
         debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid);
-        nvs_close(nvsRWHandle);
-        return true;
-    }
-    
+
+    nvs_commit(nvsRWHandle);
+    nvs_close(nvsRWHandle);
+
+    return true;
 }

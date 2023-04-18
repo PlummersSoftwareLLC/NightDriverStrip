@@ -45,6 +45,7 @@
 #include <Arduino.h>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
+#include "deviceconfig.h"
 #include "jsonbase.h"
 
 struct EmbeddedFile 
@@ -134,8 +135,6 @@ class CWebServer
 
     void GetStatistics(AsyncWebServerRequest * pRequest)
     {
-        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-
         debugV("GetStatistics");
 
         auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
@@ -176,23 +175,9 @@ class CWebServer
         pRequest->send(response);
     }    
 
-    void SetSettings(AsyncWebServerRequest * pRequest)
-    {
-        debugV("SetSettings");
+    void GetSettings(AsyncWebServerRequest * pRequest);
 
-        // Look for the parameter by name
-        const String strEffectInterval = "effectInterval";
-        if (pRequest->hasParam(strEffectInterval, true, false))
-        {
-            debugV("found EffectInterval");
-            // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
-            size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
-            g_aptrEffectManager->SetInterval(effectInterval);
-        }       
-        // Complete the response so the client knows it can happily proceed now
-        AddCORSHeaderAndSendOKResponse(pRequest);   
-    }
+    void SetSettings(AsyncWebServerRequest * pRequest);
 
     void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
     {
@@ -323,7 +308,9 @@ class CWebServer
         _server.on("/enableEffect",          HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->EnableEffect(pRequest); });
         _server.on("/disableEffect",         HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->DisableEffect(pRequest); });
 
+        _server.on("/settings",              HTTP_GET, [this](AsyncWebServerRequest * pRequest)    { this->GetSettings(pRequest); });
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
+        
 
         EmbeddedFile html_file(html_start, html_end, "text/html");
         EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
