@@ -44,7 +44,7 @@ class DeviceConfig : public IJSONSerializable
     String timeZone;
     String openWeatherApiKey;
     bool use24HourClock;
-    bool useCelcius;
+    bool useCelsius;
 
 /*    
     void WriteToNVS(const String& name, const String& value);
@@ -80,7 +80,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[NAME_OF(openWeatherApiKey)] = openWeatherApiKey;
         jsonDoc[NAME_OF(timeZone)] = timeZone;
         jsonDoc[NAME_OF(use24HourClock)] = use24HourClock;
-        jsonDoc[NAME_OF(useCelcius)] = useCelcius;
+        jsonDoc[NAME_OF(useCelsius)] = useCelsius;
     
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -97,7 +97,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, countryCode, NAME_OF(countryCode));
         SetIfPresentIn(jsonObject, openWeatherApiKey, NAME_OF(openWeatherApiKey));
         SetIfPresentIn(jsonObject, use24HourClock, NAME_OF(use24HourClock));
-        SetIfPresentIn(jsonObject, useCelcius, NAME_OF(useCelcius));
+        SetIfPresentIn(jsonObject, useCelsius, NAME_OF(useCelsius));
 
         const char *tag = NAME_OF(timeZone);
         if (jsonObject.containsKey(tag)) 
@@ -166,14 +166,14 @@ class DeviceConfig : public IJSONSerializable
         SetAndSave(openWeatherApiKey, newOpenWeatherAPIKey);
     }
 
-    bool UseCelcius() const
+    bool UseCelsius() const
     {
-        return useCelcius;
+        return useCelsius;
     }
 
-    void SetUseCelcius(bool newUseCelcius)
+    void SetUseCelsius(bool newUseCelsius)
     {
-        SetAndSave(useCelcius, newUseCelcius);
+        SetAndSave(useCelsius, newUseCelsius);
     }
 };
 

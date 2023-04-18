@@ -107,15 +107,15 @@ private:
         return (K - 273.15) * 9.0f/5.0f + 32;
     }
 
-    inline float KelvinToCelcius(float K)
+    inline float KelvinToCelsius(float K)
     {
         return K - 273.15;
     }
     
     inline float KelvinToLocal(float K)
     {
-        if (g_aptrDeviceConfig->UseCelcius())
-            return KelvinToCelcius(K);
+        if (g_aptrDeviceConfig->UseCelsius())
+            return KelvinToCelsius(K);
         else
             return KelvinToFarenheit(K);
     }

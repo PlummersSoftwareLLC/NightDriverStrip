@@ -98,7 +98,7 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
     PushPostParam<const String&>(pRequest, "openWeatherApiKey", [](const String& value) { g_aptrDeviceConfig->SetOpenWeatherAPIKey(value); });
     PushPostParam<const String&>(pRequest, "timeZone", [](const String& value) { g_aptrDeviceConfig->SetTimeZone(value); });
     PushPostParam<bool>(pRequest, "use24HourClock", [](bool value) { g_aptrDeviceConfig->Set24HourClock(value); });
-    PushPostParam<bool>(pRequest, "useCelcius", [](bool value) { g_aptrDeviceConfig->SetUseCelcius(value); });
+    PushPostParam<bool>(pRequest, "useCelsius", [](bool value) { g_aptrDeviceConfig->SetUseCelsius(value); });
 
     // We return the current config in response
     GetSettings(pRequest);

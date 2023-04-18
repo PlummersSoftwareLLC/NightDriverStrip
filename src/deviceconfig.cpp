@@ -60,7 +60,7 @@ DeviceConfig::DeviceConfig()
         countryCode = cszCountryCode;
         openWeatherApiKey = cszOpenWeatherAPIKey;
         use24HourClock = false;
-        useCelcius = false;
+        useCelsius = false;
         SetTimeZone(cszTimeZone, true);
 
         SaveToJSON();
