@@ -89,6 +89,8 @@ private:
 
     bool   dataReady             = false;
     TaskHandle_t weatherTask     = nullptr;
+    bool   updateInProgress      = false;
+
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
 
@@ -122,29 +124,27 @@ private:
 
     bool updateCoordinates() 
     {
-        String strConfigLocation = g_aptrDeviceConfig->GetLocation();
-        String strConfigCountryCode = g_aptrDeviceConfig->GetCountryCode();
-        
-        // If location and country match what we looked up before, our coordinates are still valid
-        if (strLocation == strConfigLocation &&  strCountryCode == strConfigCountryCode)
-            return true;
-
         HTTPClient http;
         String url;
 
-        bool locationIsZip = g_aptrDeviceConfig->IsLocationZip();
+        if (!HasLocationChanged())
+            return false;
 
-        if (locationIsZip) 
-            url = "http://api.openweathermap.org/geo/1.0/zip?zip=" + strConfigLocation + "," + strConfigCountryCode + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+        const String& configLocation = g_aptrDeviceConfig->GetLocation();
+        const String& configCountryCode = g_aptrDeviceConfig->GetCountryCode();
+        const bool configLocationIsZip = g_aptrDeviceConfig->IsLocationZip();
+
+        if (configLocationIsZip) 
+            url = "http://api.openweathermap.org/geo/1.0/zip?zip=" + configLocation + "," + configCountryCode + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
         else
-            url = "http://api.openweathermap.org/geo/1.0/direct?q=" + strConfigLocation + "," + strConfigCountryCode + "&limit=1&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+            url = "http://api.openweathermap.org/geo/1.0/direct?q=" + configLocation + "," + configCountryCode + "&limit=1&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
 
         http.begin(url);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode <= 0) 
         {
-            debugW("Error fetching coordinates for location: %s", strConfigLocation);
+            debugW("Error fetching coordinates for location: %s", configLocation);
             http.end();
             return false;
         }
@@ -152,15 +152,15 @@ private:
         String response = http.getString();
         DynamicJsonDocument doc(4096);
         deserializeJson(doc, response);
-        JsonObject coordinates = locationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
+        JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
 
         strLatitude = coordinates["lat"].as<String>();
         strLongitude = coordinates["lon"].as<String>();
 
         http.end();
 
-        strLocation = strConfigLocation;
-        strCountryCode = strConfigCountryCode;
+        strLocation = configLocation;
+        strCountryCode = configCountryCode;
 
         return true;
     }
@@ -272,8 +272,6 @@ private:
         }
     }
 
-
-
     // Thread entry point so we can update the weather data asynchronously.  The update thread exists
     // when it's done fetching, it is not persistent.
 
@@ -297,8 +295,17 @@ private:
         }
         auto task = pObj->weatherTask;
         pObj->weatherTask = nullptr;
+        pObj->updateInProgress = false;
         debugW("Weather thread exiting");
         vTaskDelete(task);
+    }
+
+    bool HasLocationChanged()
+    {
+        String configLocation = g_aptrDeviceConfig->GetLocation();
+        String configCountryCode = g_aptrDeviceConfig->GetCountryCode();
+
+        return strLocation != configLocation || strCountryCode != configCountryCode;
     }
 
 public:
@@ -326,10 +333,15 @@ public:
 
         if (WiFi.isConnected())
         {
-            EVERY_N_SECONDS_I(timingObj, 1)
+            static CEveryNSeconds timingObj(1);
+
+            // If location and/or country have changed, trigger an update regardless of timer
+            if (timingObj || HasLocationChanged())
             {
-                if (nullptr == weatherTask)
+                if (!updateInProgress && nullptr == weatherTask)
                 {
+                    updateInProgress = true;
+                    
                     // Create a thread to update the weather data rather than blocking the draw thread
 
                     debugW("Spawning thread to check weather..");
@@ -338,7 +350,7 @@ public:
                 }
                 else
                 {
-                    debugW("Skipping weather fetch because thread handle for previous check still exists");
+                    debugW("Skipping weather fetch because previous update still in progress");
                 }
             }
         }
