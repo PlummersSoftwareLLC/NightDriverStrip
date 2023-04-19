@@ -138,3 +138,8 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
 
     return true;
 }
+
+bool RemoveJSONFile(const char *fileName)
+{
+    return SPIFFS.remove(fileName);
+}

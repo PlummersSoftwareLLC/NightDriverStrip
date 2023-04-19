@@ -179,6 +179,8 @@ class CWebServer
 
     void SetSettings(AsyncWebServerRequest * pRequest);
 
+    void Reset(AsyncWebServerRequest * pRequest);
+
     void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
     {
         debugV("SetCurrentEffectIndex");
@@ -299,8 +301,8 @@ class CWebServer
         
         debugI("Connecting Web Endpoints");
 
-        _server.on("/getEffectList",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetEffectListText(pRequest); });
-        _server.on("/getStatistics",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetStatistics(pRequest); });
+        _server.on("/getEffectList",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetEffectListText(pRequest); });
+        _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
         _server.on("/nextEffect",            HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->NextEffect(pRequest); });
         _server.on("/previousEffect",        HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->PreviousEffect(pRequest); });
 
@@ -308,9 +310,10 @@ class CWebServer
         _server.on("/enableEffect",          HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->EnableEffect(pRequest); });
         _server.on("/disableEffect",         HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->DisableEffect(pRequest); });
 
-        _server.on("/settings",              HTTP_GET, [this](AsyncWebServerRequest * pRequest)    { this->GetSettings(pRequest); });
+        _server.on("/settings",              HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetSettings(pRequest); });
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
-        
+
+        _server.on("/reset",                 HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->Reset(pRequest); });
 
         EmbeddedFile html_file(html_start, html_end, "text/html");
         EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");

@@ -707,6 +707,11 @@ void SaveEffectManagerConfig()
     SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_aptrEffectManager);
 }
 
+void RemoveEffectManagerConfig()
+{
+    RemoveJSONFile(EFFECTS_CONFIG_FILE);
+}
+
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
 // any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
 // more than one matrix and some FastLED functions like blur2d, this would be why.

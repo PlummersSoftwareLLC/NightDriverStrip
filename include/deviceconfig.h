@@ -109,6 +109,8 @@ class DeviceConfig : public IJSONSerializable
         return true;
     }
 
+    void RemovePersisted();
+
     const String &GetTimeZone() const
     {
         return timeZone;

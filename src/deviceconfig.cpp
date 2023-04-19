@@ -36,6 +36,11 @@ extern const char timezones_start[] asm("_binary_config_zones_json_start");
 
 DRAM_ATTR size_t g_DeviceConfigJSONBufferSize = 0;
 
+void DeviceConfig::RemovePersisted()
+{
+    RemoveJSONFile(DEVICE_CONFIG_FILE);
+}
+
 void DeviceConfig::SaveToJSON()
 {
     SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this);

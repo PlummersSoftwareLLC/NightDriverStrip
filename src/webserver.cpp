@@ -30,34 +30,50 @@
 #include "globals.h"
 #include "webserver.h"
 
-template<typename Tv>
-using PostParamSetterType = std::function<void(Tv)>;
-
-template<typename Tv>
-void PushPostParam(AsyncWebServerRequest * pRequest, const char *paramName, PostParamSetterType<Tv> setter)
+namespace 
 {
-    const String strParamName = paramName;
-    if (pRequest->hasParam(strParamName, true, false))
+    bool IsParamTrue(AsyncWebParameter *param)
     {
-        debugV("found %s", paramName);
+        return param->value() == "true" || strtol(param->value().c_str(), NULL, 10);
+    }
+
+    bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName)
+    {
+        if (!pRequest->hasParam(paramName, true, false))
+            return false;
+        
+        debugV("found %s", paramName.c_str());
 
         // If found, parse it and pass it off to the setter
-        setter(pRequest->getParam(strParamName, true, false)->value());
-    }       
-}
+        return IsParamTrue(pRequest->getParam(paramName, true, false));
+    }
 
-template<>
-void PushPostParam<bool>(AsyncWebServerRequest * pRequest, const char *paramName, PostParamSetterType<bool> setter)
-{
-    const String strParamName = paramName;
-    if (pRequest->hasParam(strParamName, true, false))
+    template<typename Tv>
+    using PostParamSetterType = std::function<void(Tv)>;
+
+    template<typename Tv>
+    void PushPostParam(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetterType<Tv> setter)
     {
-        debugV("found %s", paramName);
+        if (pRequest->hasParam(paramName, true, false))
+        {
+            debugV("found %s", paramName.c_str());
 
-        // If found, parse it and pass it off to the setter
-        AsyncWebParameter * param = pRequest->getParam(strParamName, true, false);
-        setter(param->value() == "true" || strtol(param->value().c_str(), NULL, 10));
-    }       
+            // If found, parse it and pass it off to the setter
+            setter(pRequest->getParam(paramName, true, false)->value());
+        }       
+    }
+
+    template<>
+    void PushPostParam<bool>(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetterType<bool> setter)
+    {
+        if (pRequest->hasParam(paramName, true, false))
+        {
+            debugV("found %s", paramName.c_str());
+
+            // If found, parse it and pass it off to the setter
+            setter(IsParamTrue(pRequest->getParam(paramName, true, false)));
+        }       
+    }
 }
 
 void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
@@ -102,4 +118,29 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 
     // We return the current config in response
     GetSettings(pRequest);
+}
+
+void CWebServer::Reset(AsyncWebServerRequest * pRequest)
+{
+    if (IsPostParamTrue(pRequest, "deviceConfig"))
+    {
+        debugI("Removing DeviceConfig");
+        g_aptrDeviceConfig->RemovePersisted();
+    }
+
+    if (IsPostParamTrue(pRequest, "effectsConfig"))
+    {
+        debugI("Removing EffectManager config");
+        RemoveEffectManagerConfig();
+    }
+
+    bool resetRequested = IsPostParamTrue(pRequest, "board");
+    
+    AddCORSHeaderAndSendOKResponse(pRequest);
+    
+    if (resetRequested) 
+    {
+        delay(1000);    // Give the response a second to be sent
+        throw new std::runtime_error("Resetting device at API request");
+    }
 }
