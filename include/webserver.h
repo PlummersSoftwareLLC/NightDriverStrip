@@ -262,29 +262,13 @@ class CWebServer
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
-    // This registers a handler for GET requests for one of the known files embedded in the firmware. It uses
-    // chunked I/O for all files; that way AsyncWebServer can figure out what an appropriate chunk size is, and we
-    // can update (read: grow) embedded files without having to consider if we crossed the "chunked I/O" boundary.
-
+    // This registers a handler for GET requests for one of the known files embedded in the firmware. 
     void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {
             Serial.printf("GET for: %s\n", strUri);
-            AsyncWebServerResponse *response = 
-                request->beginChunkedResponse(file.type, [file](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
-                {
-                    if (index >= file.length)
-                        return 0;
-
-                    size_t writeBytes = min(file.length - index, maxLen);
-
-                    memcpy(buffer, file.contents + index, writeBytes);
-
-                    return writeBytes;
-                }
-            );
-
+            AsyncWebServerResponse *response = request->beginResponse_P(200, file.type, file.contents, file.length);
             request->send(response);
         });
     }
