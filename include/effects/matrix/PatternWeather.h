@@ -90,6 +90,7 @@ private:
     bool   dataReady             = false;
     TaskHandle_t weatherTask     = nullptr;
     bool   updateInProgress      = false;
+    time_t latestUpdate          = 0;
 
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
@@ -333,20 +334,24 @@ public:
 
         if (WiFi.isConnected())
         {
-            static CEveryNSeconds timingObj(1);
+            static CEveryNSeconds timingObj(WEATHER_INTERVAL_SECONDS);
 
-            // If location and/or country have changed, trigger an update regardless of timer
-            if (timingObj || HasLocationChanged())
+            time_t now;
+            time(&now);
+
+            // If location and/or country have changed, trigger an update regardless of timer, but 
+            // not more than once every half a minute
+            if (timingObj || (HasLocationChanged() && (now - latestUpdate >= 30)))
             {
                 if (!updateInProgress && nullptr == weatherTask)
-                {
+                {   
+                    latestUpdate = now;
                     updateInProgress = true;
                     
                     // Create a thread to update the weather data rather than blocking the draw thread
 
                     debugW("Spawning thread to check weather..");
                     xTaskCreatePinnedToCore(UpdateWeather, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
-                    timingObj.setPeriod(WEATHER_INTERVAL_SECONDS);       
                 }
                 else
                 {

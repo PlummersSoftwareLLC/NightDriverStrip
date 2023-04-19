@@ -55,6 +55,9 @@ class DeviceConfig : public IJSONSerializable
     template <typename T>
     void SetAndSave(T& target, const T& source)
     {
+        if (target == source)
+            return;
+
         target = source;
 
         SaveToJSON();
