@@ -162,7 +162,6 @@ void BasicInfoSummary(bool bRedraw)
     time_t t;
     time(&t);
     struct tm *tmp = localtime(&t);
-    tmp->tm_hour = (tmp->tm_hour + 5) % 24; // BUGBUG: Hardcoded to PST for now
     char szTime[16];
     strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
 
