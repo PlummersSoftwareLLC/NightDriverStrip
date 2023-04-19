@@ -48,25 +48,25 @@
 #include "deviceconfig.h"
 #include "jsonbase.h"
 
-struct EmbeddedFile 
-{
-    // Embedded file size in bytes
-    const size_t length;
-    // Contents as bytes
-    const uint8_t *const contents;
-    // Added to hold the file's MIME type, but could be used for other type types, if desired
-    const char *const type; 
-
-    EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
-        length(end - start),
-        contents(start),
-        type(type)
-    {}
-};
-
 class CWebServer
 {
   private:
+
+    struct EmbeddedFile 
+    {
+        // Embedded file size in bytes
+        const size_t length;
+        // Contents as bytes
+        const uint8_t *const contents;
+        // Added to hold the file's MIME type, but could be used for other type types, if desired
+        const char *const type; 
+
+        EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
+            length(end - start),
+            contents(start),
+            type(type)
+        {}
+    };
 
     AsyncWebServer _server;
 
@@ -282,6 +282,9 @@ class CWebServer
         extern const uint8_t jsx_end[] asm("_binary_site_main_jsx_end");
         extern const uint8_t ico_start[] asm("_binary_site_favicon_ico_start");
         extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
+        extern const uint8_t timezones_start[] asm("_binary_config_zones_json_start");
+        extern const uint8_t timezones_end[] asm("_binary_config_zones_json_end");
+
         
         debugI("Connecting Web Endpoints");
 
@@ -302,15 +305,18 @@ class CWebServer
         EmbeddedFile html_file(html_start, html_end, "text/html");
         EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
         EmbeddedFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
+        EmbeddedFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
 
         debugI("Embedded html file size: %d", html_file.length);
         debugI("Embedded jsx file size: %d", jsx_file.length);
         debugI("Embedded ico file size: %d", ico_file.length);
+        debugI("Embedded timezones file size: %d", timezones_file.length);
 
         ServeEmbeddedFile("/", html_file);
         ServeEmbeddedFile("/index.html", html_file);
         ServeEmbeddedFile("/main.jsx", jsx_file);
         ServeEmbeddedFile("/favicon.ico", ico_file);
+        ServeEmbeddedFile("/timezones.json", timezones_file);
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {
