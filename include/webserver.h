@@ -282,8 +282,8 @@ class CWebServer
         extern const uint8_t jsx_end[] asm("_binary_site_main_jsx_end");
         extern const uint8_t ico_start[] asm("_binary_site_favicon_ico_start");
         extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
-        extern const uint8_t timezones_start[] asm("_binary_config_zones_json_start");
-        extern const uint8_t timezones_end[] asm("_binary_config_zones_json_end");
+        extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
+        extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
 
         
         debugI("Connecting Web Endpoints");
