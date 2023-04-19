@@ -806,9 +806,6 @@ void setup()
         CheckHeap();
     #endif
 
-    debugV("Saving effect manager config...");
-    SaveEffectManagerConfig();
-
     debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
     CheckHeap();
 
@@ -816,6 +813,9 @@ void setup()
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
     g_TaskManager.StartDrawThread();
     CheckHeap();
+
+    debugV("Saving effect manager config...");
+    SaveEffectManagerConfig();
 
     #if ENABLE_WIFI && WAIT_FOR_WIFI
         debugI("Calling ConnectToWifi()\n");

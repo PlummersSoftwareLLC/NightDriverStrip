@@ -88,8 +88,6 @@ class EffectManager : IJSONSerializable
         _bPlayAll = false;
         _iCurrentEffect = 0;
         _effectStartTime = millis();
-
-        SetInterval(DEFAULT_EFFECT_INTERVAL);
     }
 
     void ClearEffects() 
@@ -139,7 +137,9 @@ public:
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
         for (int i = 0; i < _vEffects.size(); i++)
-            EnableEffect(i);
+            EnableEffect(i, true);
+
+        SetInterval(DEFAULT_EFFECT_INTERVAL, true);
 
         construct();
     }
@@ -175,7 +175,12 @@ public:
         int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
 
         for (int i = 0; i < _vEffects.size(); i++)
-            EnableEffect(i < enabledSize ? enabledArray[i].as<bool>() : true);
+        {
+            if (i >= enabledSize || enabledArray[i] == 1)
+                EnableEffect(i, true);
+        }
+        
+        SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
         construct();
         return true;
@@ -186,11 +191,13 @@ public:
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
 
+        jsonObject["ivl"] = _effectInterval;
+
         // Serialize enabled state first. That way we'll still find out if we run out of memory, later
         JsonArray enabledArray = jsonObject.createNestedArray("eef");
 
         for (int i = 0; i < EffectCount(); i++)
-            enabledArray.add(IsEffectEnabled(i));
+            enabledArray.add(IsEffectEnabled(i) ? 1 : 0);
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
@@ -318,7 +325,7 @@ public:
         _effectStartTime = millis();
     }
 
-    void EnableEffect(size_t i)
+    void EnableEffect(size_t i, bool skipSave = false)
     {
         if (i >= _vEffects.size())
         {
@@ -335,10 +342,13 @@ public:
                 ClearRemoteColor();
             }
             _cEnabled++;
+
+            if (!skipSave)
+                SaveEffectManagerConfig();
         }
     }
 
-    void DisableEffect(size_t i)
+    void DisableEffect(size_t i, bool skipSave = false)
     {
         if (i >= _vEffects.size())
         {
@@ -355,6 +365,9 @@ public:
             {
                 SetGlobalColor(CRGB::Black);
             }
+
+            if (!skipSave)
+                SaveEffectManagerConfig();
         }
     }
 
@@ -373,9 +386,12 @@ public:
         _bPlayAll = bPlayAll;
     }
 
-    void SetInterval(uint interval)
+    void SetInterval(uint interval, bool skipSave = false)
     {
         _effectInterval = interval;
+
+        if (!skipSave)
+            SaveEffectManagerConfig();
     }
 
     const LEDStripEffect *const *EffectsList() const
