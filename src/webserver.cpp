@@ -49,10 +49,10 @@ namespace
     }
 
     template<typename Tv>
-    using PostParamSetterType = std::function<void(Tv)>;
+    using PostParamSetter = std::function<void(Tv)>;
 
     template<typename Tv>
-    void PushPostParam(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetterType<Tv> setter)
+    void PushPostParam(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetter<Tv> setter)
     {
         if (pRequest->hasParam(paramName, true, false))
         {
@@ -64,7 +64,7 @@ namespace
     }
 
     template<>
-    void PushPostParam<bool>(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetterType<bool> setter)
+    void PushPostParam<bool>(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetter<bool> setter)
     {
         if (pRequest->hasParam(paramName, true, false))
         {
@@ -134,11 +134,11 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
         RemoveEffectManagerConfig();
     }
 
-    bool resetRequested = IsPostParamTrue(pRequest, "board");
+    bool boardResetRequested = IsPostParamTrue(pRequest, "board");
     
     AddCORSHeaderAndSendOKResponse(pRequest);
     
-    if (resetRequested) 
+    if (boardResetRequested) 
     {
         delay(1000);    // Give the response a second to be sent
         throw new std::runtime_error("Resetting device at API request");

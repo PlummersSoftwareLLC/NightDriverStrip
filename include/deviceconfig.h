@@ -109,7 +109,10 @@ class DeviceConfig : public IJSONSerializable
         return true;
     }
 
-    void RemovePersisted();
+    void RemovePersisted()
+    {
+        RemoveJSONFile(DEVICE_CONFIG_FILE);
+    }
 
     const String &GetTimeZone() const
     {
