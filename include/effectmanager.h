@@ -70,7 +70,7 @@ template <typename GFXTYPE>
 class EffectManager : public IJSONSerializable
 {
     std::vector<LEDStripEffect*> _vEffects;
-    size_t _cEnabled;
+    size_t _cEnabled = 0;
 
     size_t _iCurrentEffect;
     uint _effectStartTime;
@@ -85,7 +85,6 @@ class EffectManager : public IJSONSerializable
 
     void construct() 
     {
-        _cEnabled = 0;
         _bPlayAll = false;
         _iCurrentEffect = 0;
         _effectStartTime = millis();
@@ -97,6 +96,8 @@ class EffectManager : public IJSONSerializable
             delete effect;
 
         _vEffects.clear();
+        _abEffectEnabled.reset();
+        _cEnabled = 0;
     }
 
 public:
