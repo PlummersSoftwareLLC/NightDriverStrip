@@ -341,7 +341,7 @@ public:
 
             // If location and/or country have changed, trigger an update regardless of timer, but 
             // not more than once every half a minute
-            if (timingObj || (HasLocationChanged() && (now - latestUpdate >= 30)))
+            if ((timingObj || HasLocationChanged()) && (now - latestUpdate) >= 30)
             {
                 if (!updateInProgress && nullptr == weatherTask)
                 {   
