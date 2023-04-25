@@ -41,6 +41,7 @@ CLEDController *g_ledSinglePixel;
 // from the led buffer.
 
 extern std::mutex g_buffer_mutex;
+extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
@@ -88,6 +89,8 @@ void MatrixPreDraw()
         #endif
 
         GFXBase *graphics = (GFXBase *)(*g_aptrEffectManager)[0].get();
+
+        LEDMatrixGFX::matrix.setRefreshRate(95);
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());

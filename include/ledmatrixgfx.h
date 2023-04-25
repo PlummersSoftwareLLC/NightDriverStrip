@@ -37,8 +37,6 @@
 #if USE_MATRIX
 
 #include <SmartMatrix.h>
-#include "effects/matrix/Boid.h"
-#include "effects/matrix/Vector.h"
 
 //
 // Matrix Panel
@@ -73,9 +71,6 @@ public:
     static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
     #endif
-
-    std::unique_ptr<Boid []> boids = std::make_unique<Boid []>(MATRIX_WIDTH);
-    std::unique_ptr<uint8_t []> heat = std::make_unique<uint8_t []>(NUM_LEDS);
 
     LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
