@@ -1550,6 +1550,64 @@ inline void * PreferPSRAMAlloc(size_t s)
     }
 }
 
+// psram_allocator
+//
+// A C++ allocator that allocates from PSRAM instead of the regular heap. Initially
+// I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
+// with make_shared<> so I had to provide this allocator instead.
+//
+// When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
+// of them is still in base ram.
+//
+// (Davepl - I opted to make this *prefer* psram but return regular ram otherwise. It
+//           avoids a lot of ifdef USE_PSRAM in the code.  But I've only proved it
+//           correct, not tried it on a chip without yet.
+
+template <typename T>
+class psram_allocator
+{
+public:
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef T value_type;
+
+    psram_allocator(){}
+    ~psram_allocator(){}
+
+    template <class U> struct rebind { typedef psram_allocator<U> other; };
+    template <class U> psram_allocator(const psram_allocator<U>&){}
+
+    pointer address(reference x) const {return &x;}
+    const_pointer address(const_reference x) const {return &x;}
+    size_type max_size() const throw() {return size_t(-1) / sizeof(value_type);}
+
+    pointer allocate(size_type n, const void * hint = 0)
+    {
+        void * pmem = PreferPSRAMAlloc(n*sizeof(T));
+        return static_cast<pointer>(pmem) ;
+    }
+
+    void deallocate(pointer p, size_type n)
+    {
+        free(p);
+    }
+
+    template< class U, class... Args >
+    void construct( U* p, Args&&... args )
+    {
+        ::new((void *) p ) U(std::forward<Args>(args)...);
+    }
+    
+    void destroy(pointer p)
+    {
+        p->~T();
+    }
+};
+
 // AppTime
 //
 // A class that keeps track of the clock, how long the last frame took, calculating FPS, etc.

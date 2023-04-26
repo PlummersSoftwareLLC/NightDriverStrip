@@ -83,7 +83,7 @@ public:
             boid.colorIndex = colorWidth * i;
             boid.maxforce = 10;
             boid.maxspeed = 10;
-            mgraphics()->boids[i] = boid;
+            graphics()->boids[i] = boid;
         }
     }
 
@@ -98,7 +98,7 @@ public:
 
         for (int i = 0; i < count; i++)
         {
-            Boid boid = mgraphics()->boids[i];
+            Boid boid = graphics()->boids[i];
             boid.applyForce(gravity);
             boid.update();
 
@@ -110,7 +110,7 @@ public:
                 boid.velocity.y *= -1.0;
             }
 
-            mgraphics()->boids[i] = boid;
+            graphics()->boids[i] = boid;
         }
     }
 };

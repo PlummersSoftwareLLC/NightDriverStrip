@@ -184,7 +184,7 @@ class PatternCube : public LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 60;
+        return 40;
     }
 
     void construct()

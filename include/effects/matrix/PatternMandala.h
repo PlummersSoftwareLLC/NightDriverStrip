@@ -86,7 +86,7 @@ public:
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 45;
+        return 30;
     }
 
 
