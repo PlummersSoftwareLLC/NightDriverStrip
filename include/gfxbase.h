@@ -71,18 +71,16 @@
 #include "effects/matrix/Vector.h"
 #include <memory>
 
-#if USE_MATRIX
-    typedef struct 
-    {
-        uint32_t noise_x;
-        uint32_t noise_y;
-        uint32_t noise_z;
-        uint32_t noise_scale_x;
-        uint32_t noise_scale_y;
-        uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT]; // BUGBUG Could this go in PSRAM if allocated instead?
-        uint8_t  noisesmoothing;
-    } Noise;
-#endif
+typedef struct 
+{
+    uint32_t noise_x;
+    uint32_t noise_y;
+    uint32_t noise_z;
+    uint32_t noise_scale_x;
+    uint32_t noise_scale_y;
+    uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT]; // BUGBUG Could this go in PSRAM if allocated instead?
+    uint8_t  noisesmoothing;
+} Noise;
 
 class GFXBase : public Adafruit_GFX
 {

@@ -41,7 +41,10 @@ CLEDController *g_ledSinglePixel;
 // from the led buffer.
 
 extern std::mutex g_buffer_mutex;
+
+#if USE_MATRIX
 extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
+#endif
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;

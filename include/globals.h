@@ -1550,8 +1550,6 @@ inline void * PreferPSRAMAlloc(size_t s)
     }
 }
 
-#ifdef USE_PSRAM
-
 // psram_allocator
 //
 // A C++ allocator that allocates from PSRAM instead of the regular heap. Initially
@@ -1609,7 +1607,6 @@ public:
         p->~T();
     }
 };
-#endif
 
 // AppTime
 //
