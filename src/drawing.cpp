@@ -42,10 +42,14 @@ CLEDController *g_ledSinglePixel;
 
 extern std::mutex g_buffer_mutex;
 
+#if USE_MATRIX
+extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
+#endif
+
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
 
-float volatile g_FreeDrawTime = 0.0;
+double volatile g_FreeDrawTime = 0.0;
 
 extern uint32_t g_FPS;
 extern AppTime g_AppTime;
@@ -88,6 +92,8 @@ void MatrixPreDraw()
         #endif
 
         GFXBase *graphics = (GFXBase *)(*g_aptrEffectManager)[0].get();
+
+        LEDMatrixGFX::matrix.setRefreshRate(95);
 
         LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)graphics;
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
@@ -268,7 +274,7 @@ void ShowStrip(uint16_t numToShow)
 //
 // Waits patiently until its time to draw the next frame, up to one second max
 
-void DelayUntilNextFrame(float frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
     // Delay enough to slow down to the desired framerate
 
@@ -276,11 +282,11 @@ void DelayUntilNextFrame(float frameStartTime, uint16_t localPixelsDrawn, uint16
 
     if (localPixelsDrawn > 0)
     {
-        const float minimumFrameTime = 1.0 / g_aptrEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
-        float elapsed = g_AppTime.CurrentTime() - frameStartTime;
+        const double minimumFrameTime = 1.0 / g_aptrEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+        double elapsed = g_AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
         {
-            g_FreeDrawTime = std::min(1.0f, (minimumFrameTime - elapsed));
+            g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed));
             delay(g_FreeDrawTime * MILLIS_PER_SECOND);
         }
     }
@@ -288,12 +294,12 @@ void DelayUntilNextFrame(float frameStartTime, uint16_t localPixelsDrawn, uint16
     {
         // Sleep up to 1/25th second, depending on how far away the next frame we need to service is
 
-        float t = 0.04;
+        double t = 0.04;
         for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         {
             auto pOldest = g_aptrBufferManager[iChannel]->PeekOldestBuffer();
             if (pOldest)
-                t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
+                t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
         }
 
         g_FreeDrawTime = t;
@@ -400,7 +406,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
         uint16_t localPixelsDrawn   = 0;
         uint16_t wifiPixelsDrawn    = 0;
-        float frameStartTime       = g_AppTime.FrameStartTime();
+        double frameStartTime       = g_AppTime.FrameStartTime();
 
         #if USE_MATRIX
             MatrixPreDraw();

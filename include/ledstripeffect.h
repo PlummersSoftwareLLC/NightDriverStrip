@@ -51,7 +51,12 @@ class LEDStripEffect : public IJSONSerializable
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
     inline static float randomfloat(float lower, float upper)
     {
-        float result = (lower + ((upper - lower) * rand()) / RAND_MAX);
+        float result = (lower + ((upper - lower) * rand()) / (float)RAND_MAX);
+        return result;
+    }
+    inline static double randomdouble(double lower, double upper)
+    {
+        double result = (lower + ((upper - lower) * rand()) / (double)RAND_MAX);
         return result;
     }
 

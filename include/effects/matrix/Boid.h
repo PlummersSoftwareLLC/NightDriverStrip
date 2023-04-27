@@ -96,11 +96,7 @@ class Boid
     }
 
     static float randomf() {
-      return mapfloat(random(0, 255), 0, 255, -.5, .5);
-    }
-
-    static float mapfloat(float x, float in_min, float in_max, float out_min, float out_max) {
-      return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+      return map((float)random(0, 255), 0.0f, 255.0f, -.5f, .5f);
     }
 
     void run(Boid boids [], uint8_t boidCount) {

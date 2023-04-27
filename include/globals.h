@@ -1550,6 +1550,64 @@ inline void * PreferPSRAMAlloc(size_t s)
     }
 }
 
+// psram_allocator
+//
+// A C++ allocator that allocates from PSRAM instead of the regular heap. Initially
+// I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
+// with make_shared<> so I had to provide this allocator instead.
+//
+// When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
+// of them is still in base ram.
+//
+// (Davepl - I opted to make this *prefer* psram but return regular ram otherwise. It
+//           avoids a lot of ifdef USE_PSRAM in the code.  But I've only proved it
+//           correct, not tried it on a chip without yet.
+
+template <typename T>
+class psram_allocator
+{
+public:
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef T value_type;
+
+    psram_allocator(){}
+    ~psram_allocator(){}
+
+    template <class U> struct rebind { typedef psram_allocator<U> other; };
+    template <class U> psram_allocator(const psram_allocator<U>&){}
+
+    pointer address(reference x) const {return &x;}
+    const_pointer address(const_reference x) const {return &x;}
+    size_type max_size() const throw() {return size_t(-1) / sizeof(value_type);}
+
+    pointer allocate(size_type n, const void * hint = 0)
+    {
+        void * pmem = PreferPSRAMAlloc(n*sizeof(T));
+        return static_cast<pointer>(pmem) ;
+    }
+
+    void deallocate(pointer p, size_type n)
+    {
+        free(p);
+    }
+
+    template< class U, class... Args >
+    void construct( U* p, Args&&... args )
+    {
+        ::new((void *) p ) U(std::forward<Args>(args)...);
+    }
+    
+    void destroy(pointer p)
+    {
+        p->~T();
+    }
+};
+
 // AppTime
 //
 // A class that keeps track of the clock, how long the last frame took, calculating FPS, etc.
@@ -1558,8 +1616,8 @@ class AppTime
 {
   protected:
 
-    float _lastFrame;
-    float _deltaTime;
+    double _lastFrame;
+    double _deltaTime;
   
   public:
 
@@ -1572,13 +1630,13 @@ class AppTime
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        float current = CurrentTime();
+        double current = CurrentTime();
         _deltaTime = current - _lastFrame;
 
         // Cap the delta time at one full second
 
-        if (_deltaTime > 1.0f)
-            _deltaTime = 1.0f;
+        if (_deltaTime > 1.0)
+            _deltaTime = 1.0;
 
         _lastFrame = current;
     }
@@ -1588,24 +1646,24 @@ class AppTime
         NewFrame();
     }
 
-    float FrameStartTime() const
+    double FrameStartTime() const
     {
         return _lastFrame;
     }
 
-    static float CurrentTime()
+    static double CurrentTime()
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
+        return (double)tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
     }
 
-    static float TimeFromTimeval(const timeval & tv)
+    static double TimeFromTimeval(const timeval & tv)
     {
-        return tv.tv_sec + (tv.tv_usec/(float)MICROS_PER_SECOND);
+        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
     }
 
-    static timeval TimevalFromTime(float t)
+    static timeval TimevalFromTime(double t)
     {
         timeval tv;
         tv.tv_sec = (long)t;
@@ -1613,7 +1671,7 @@ class AppTime
         return tv;
     }
 
-    float DeltaTime() const
+    double DeltaTime() const
     {
         return _deltaTime;
     }
@@ -1629,10 +1687,11 @@ inline static float randomfloat(float lower, float upper)
     return result;
 }
 
-inline float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
+template<typename T> inline float map(T x, T in_min, T in_max, T out_min, T out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+
 inline uint64_t ULONGFromMemory(uint8_t * payloadData)
 {
     return  (uint64_t)payloadData[7] << 56  | 

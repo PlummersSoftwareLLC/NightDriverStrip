@@ -45,27 +45,28 @@
 #include <Arduino.h>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
+#include "deviceconfig.h"
 #include "jsonbase.h"
-
-struct EmbeddedFile 
-{
-    // Embedded file size in bytes
-    const size_t length;
-    // Contents as bytes
-    const uint8_t *const contents;
-    // Added to hold the file's MIME type, but could be used for other type types, if desired
-    const char *const type; 
-
-    EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
-        length(end - start),
-        contents(start),
-        type(type)
-    {}
-};
 
 class CWebServer
 {
   private:
+
+    struct EmbeddedFile 
+    {
+        // Embedded file size in bytes
+        const size_t length;
+        // Contents as bytes
+        const uint8_t *const contents;
+        // Added to hold the file's MIME type, but could be used for other type types, if desired
+        const char *const type; 
+
+        EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
+            length(end - start),
+            contents(start),
+            type(type)
+        {}
+    };
 
     AsyncWebServer _server;
 
@@ -134,8 +135,6 @@ class CWebServer
 
     void GetStatistics(AsyncWebServerRequest * pRequest)
     {
-        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-
         debugV("GetStatistics");
 
         auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
@@ -176,23 +175,11 @@ class CWebServer
         pRequest->send(response);
     }    
 
-    void SetSettings(AsyncWebServerRequest * pRequest)
-    {
-        debugV("SetSettings");
+    void GetSettings(AsyncWebServerRequest * pRequest);
 
-        // Look for the parameter by name
-        const String strEffectInterval = "effectInterval";
-        if (pRequest->hasParam(strEffectInterval, true, false))
-        {
-            debugV("found EffectInterval");
-            // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
-            size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
-            g_aptrEffectManager->SetInterval(effectInterval);
-        }       
-        // Complete the response so the client knows it can happily proceed now
-        AddCORSHeaderAndSendOKResponse(pRequest);   
-    }
+    void SetSettings(AsyncWebServerRequest * pRequest);
+
+    void Reset(AsyncWebServerRequest * pRequest);
 
     void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
     {
@@ -275,29 +262,13 @@ class CWebServer
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
-    // This registers a handler for GET requests for one of the known files embedded in the firmware. It uses
-    // chunked I/O for all files; that way AsyncWebServer can figure out what an appropriate chunk size is, and we
-    // can update (read: grow) embedded files without having to consider if we crossed the "chunked I/O" boundary.
-
+    // This registers a handler for GET requests for one of the known files embedded in the firmware. 
     void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {
             Serial.printf("GET for: %s\n", strUri);
-            AsyncWebServerResponse *response = 
-                request->beginChunkedResponse(file.type, [file](uint8_t *buffer, size_t maxLen, size_t index) -> size_t 
-                {
-                    if (index >= file.length)
-                        return 0;
-
-                    size_t writeBytes = min(file.length - index, maxLen);
-
-                    memcpy(buffer, file.contents + index, writeBytes);
-
-                    return writeBytes;
-                }
-            );
-
+            AsyncWebServerResponse *response = request->beginResponse_P(200, file.type, file.contents, file.length);
             request->send(response);
         });
     }
@@ -311,11 +282,14 @@ class CWebServer
         extern const uint8_t jsx_end[] asm("_binary_site_main_jsx_end");
         extern const uint8_t ico_start[] asm("_binary_site_favicon_ico_start");
         extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
+        extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
+        extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
+
         
         debugI("Connecting Web Endpoints");
 
-        _server.on("/getEffectList",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetEffectListText(pRequest); });
-        _server.on("/getStatistics",         HTTP_GET, [this](AsyncWebServerRequest * pRequest) { this->GetStatistics(pRequest); });
+        _server.on("/getEffectList",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetEffectListText(pRequest); });
+        _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
         _server.on("/nextEffect",            HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->NextEffect(pRequest); });
         _server.on("/previousEffect",        HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->PreviousEffect(pRequest); });
 
@@ -323,20 +297,26 @@ class CWebServer
         _server.on("/enableEffect",          HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->EnableEffect(pRequest); });
         _server.on("/disableEffect",         HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->DisableEffect(pRequest); });
 
+        _server.on("/settings",              HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetSettings(pRequest); });
         _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
+
+        _server.on("/reset",                 HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->Reset(pRequest); });
 
         EmbeddedFile html_file(html_start, html_end, "text/html");
         EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
         EmbeddedFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
+        EmbeddedFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
 
         debugI("Embedded html file size: %d", html_file.length);
         debugI("Embedded jsx file size: %d", jsx_file.length);
         debugI("Embedded ico file size: %d", ico_file.length);
+        debugI("Embedded timezones file size: %d", timezones_file.length);
 
         ServeEmbeddedFile("/", html_file);
         ServeEmbeddedFile("/index.html", html_file);
         ServeEmbeddedFile("/main.jsx", jsx_file);
         ServeEmbeddedFile("/favicon.ico", ico_file);
+        ServeEmbeddedFile("/timezones.json", timezones_file);
 
         _server.onNotFound([](AsyncWebServerRequest *request) 
         {

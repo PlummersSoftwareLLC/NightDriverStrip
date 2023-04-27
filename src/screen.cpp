@@ -66,7 +66,7 @@ extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern volatile float g_FreeDrawTime;  // Idle drawing time
+extern volatile double g_FreeDrawTime;  // Idle drawing time
 
 DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
 
@@ -162,7 +162,6 @@ void BasicInfoSummary(bool bRedraw)
     time_t t;
     time(&t);
     struct tm *tmp = localtime(&t);
-    tmp->tm_hour = (tmp->tm_hour + 5) % 24; // BUGBUG: Hardcoded to PST for now
     char szTime[16];
     strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
 
@@ -343,7 +342,7 @@ void CurrentEffectSummary(bool bRedraw)
 
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
     {
-        CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
+        CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
         int bandWidth = Screen::screenWidth() / NUM_BANDS;
         auto color16 = Screen::to16bit(bandColor);
         auto topSection = bandHeight - bandHeight * g_Analyzer.g_peak2Decay[iBand];

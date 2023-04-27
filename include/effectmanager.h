@@ -56,6 +56,7 @@ extern uint8_t g_Fader;
 
 void InitEffectsManager();
 void SaveEffectManagerConfig();
+void RemoveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_ptrDevices[NUM_CHANNELS];
@@ -66,10 +67,10 @@ LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
 template <typename GFXTYPE>
-class EffectManager : IJSONSerializable
+class EffectManager : public IJSONSerializable
 {
     std::vector<LEDStripEffect*> _vEffects;
-    size_t _cEnabled;
+    size_t _cEnabled = 0;
 
     size_t _iCurrentEffect;
     uint _effectStartTime;
@@ -84,7 +85,6 @@ class EffectManager : IJSONSerializable
 
     void construct() 
     {
-        _cEnabled = 0;
         _bPlayAll = false;
         _iCurrentEffect = 0;
         _effectStartTime = millis();
@@ -96,6 +96,8 @@ class EffectManager : IJSONSerializable
             delete effect;
 
         _vEffects.clear();
+        _abEffectEnabled.reset();
+        _cEnabled = 0;
     }
 
 public:
@@ -144,7 +146,7 @@ public:
         construct();
     }
 
-    bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
     {
         ClearEffects();
 

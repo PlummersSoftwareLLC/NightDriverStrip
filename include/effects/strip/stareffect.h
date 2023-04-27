@@ -165,9 +165,9 @@ class MusicStar : public Star
     }
 
     virtual float PreignitionTime() const      { return 0.0f; }
-    virtual float IgnitionTime()    const      { return 0.0 ; }
-    virtual float HoldTime()        const      { return 0.0f; }
-    virtual float FadeTime()        const      { return 0.5f;  }
+    virtual float IgnitionTime()    const      { return 0.11f; }
+    virtual float HoldTime()        const      { return 2.0f; }
+    virtual float FadeTime()        const      { return 0.25f;  }
 
 };
 
@@ -497,40 +497,24 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         LEDStripEffect::setAllOnAllChannels(_skyColor.r, _skyColor.g, _skyColor.b);
     }
 
-    virtual void Draw()
-    {
-        if (_blurFactor == 0)
-        {
-            Clear();
-        }
-        else
-        {
-            blurRows(graphics()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, _blurFactor * 255);
-            fadeAllChannelsToBlackBy(40 * (2.0 - g_Analyzer._VURatioFade));
-        }
-        Update();
-        CreateStars();
-    }
 
     virtual void CreateStars()
     {
         for (int i = 0; i < cMaxNewStarsPerFrame; i++)
         {
-            float prob = _newStarProbability;
+            double prob = _newStarProbability;
 
             #if ENABLE_AUDIO
                 if (_musicFactor != 1.0)
                 {
-                    // 
-                    prob = prob * (g_Analyzer._VURatio - 0.5) * _musicFactor; 
+                   prob = prob * (g_Analyzer._VURatio - 1.0) * _musicFactor; 
                 }
             #endif
 
             StarType::GetStarTypeNumber();
 
-            if (randomfloat(0, 1.0) < g_AppTime.DeltaTime() * prob * (float) _cLEDs / 5000.0f)
+            if (randomdouble(0, 2.0) < g_AppTime.DeltaTime() * prob)
             {
-                //Serial.printf("Creating star with speed = %lf and factor = %lfn", _maxSpeed, _musicFactor);
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                 // This always starts stars on even pixel boundaries so they look like the desired width if not moving
                 newstar._iPos = (int) randomfloat(0, _cLEDs-1-starWidth);
@@ -541,20 +525,40 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
     virtual void Update()
     {
+        // Any particles that have lived their lifespan can be removed.  They should be found at the back of the array
+        while (_allParticles.size() > 0 && (_allParticles.front().Age() >= _allParticles.front().TotalLifetime()))
+            _allParticles.pop_front();
+
+        // If we've created too many stars, prune the newest first, before they get painted
+        while (_allParticles.size() > cMaxStars)
+            _allParticles.pop_back();
+    }
+
+    virtual void Draw()
+    {
+        CreateStars();
+        Update();
+
+        if (_blurFactor == 0)
+        {
+            Clear();
+        }
+        else
+        {
+            blurRows(graphics()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, _blurFactor * 255);
+            fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer._VURatioFade));
+        }
+
+        //Serial.printf("Stars: %d Deltatime: %lf\n", _allParticles.size(), g_AppTime.DeltaTime());
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
         {
             i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
             graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);         
-        }
-
-        while (_allParticles.size() > 0 && _allParticles.front().Age() >= _allParticles.front().TotalLifetime())
-            _allParticles.pop_front();
-
-        while (_allParticles.size() > cMaxStars)
-            _allParticles.pop_front();
+        }        
     }
+
 
 };
 

@@ -92,8 +92,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         ProcessAudio();
         ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);        
       
-        fadeAllChannelsToBlackBy(min(255.0f,2000.0f * g_AppTime.DeltaTime()));
-        delay(30);
+        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.DeltaTime()));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)
@@ -496,6 +495,12 @@ class WaveformEffect : public LEDStripEffect
 
     }
 
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        // I found a pleasing scroll speed to be 24-30, not much faster or its too mesmerizing :-)
+        return 24;
+    }
+
     virtual void Draw()
     {
         auto g = g_aptrEffectManager->graphics();
@@ -551,6 +556,18 @@ class GhostWave : public WaveformEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        // If the effect entirely erases each frame, it doesn't need double buffering or preserving the old frame
+        return !_erase;
+    }
+
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        // Looks cool at the low-50s it can actually achieve
+        return _blur > 0 ? 60 : 30;
+    }
+
     virtual void Draw()
     {
         auto g = g_aptrEffectManager->graphics();
@@ -562,10 +579,14 @@ class GhostWave : public WaveformEffect
 
         if (_blur)
             g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
-            
+        
+        // VURatio is too fast, VURatioFade looks too slow, but averaged is just right
+
+        float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
+
         // Offsetting by 0.5, which is a very low ratio, helps keep the line thin when sound is low
-        DrawSpike(MATRIX_WIDTH/2, (g_Analyzer._VURatio - 0.5) / 1.5, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, (g_Analyzer._VURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.5) / 1.5, _erase);
     }
 };
 

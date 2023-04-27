@@ -38,6 +38,7 @@
 struct IJSONSerializable
 {
     virtual bool SerializeToJSON(JsonObject& jsonObject) = 0;
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) { return false; }
 };
 
 template <class E>
@@ -100,3 +101,8 @@ namespace ArduinoJson
         }
     };
 }
+
+bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<DynamicJsonDocument>& pJsonDoc);
+bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable& object);
+bool RemoveJSONFile(const char *fileName);
+
