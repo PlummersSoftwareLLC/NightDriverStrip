@@ -71,19 +71,28 @@ class DeviceConfig : public IJSONSerializable
     }
 
   public:
+
+    static constexpr const char * LOCATION_TAG = NAME_OF(location);
+    static constexpr const char * LOCATION_IS_ZIP_TAG = NAME_OF(locationIsZip);
+    static constexpr const char * COUNTRY_CODE_TAG = NAME_OF(countryCode);
+    static constexpr const char * OPEN_WEATHER_API_KEY_TAG = NAME_OF(openWeatherApiKey);
+    static constexpr const char * TIME_ZONE_TAG = NAME_OF(timeZone);
+    static constexpr const char * USE_24_HOUR_CLOCK_TAG = NAME_OF(use24HourClock);
+    static constexpr const char * USE_CELSIUS_TAG = NAME_OF(useCelsius);
+
     DeviceConfig();
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<1024> jsonDoc;
 
-        jsonDoc[NAME_OF(location)] = location;
-        jsonDoc[NAME_OF(locationIsZip)] = locationIsZip;
-        jsonDoc[NAME_OF(countryCode)] = countryCode;
-        jsonDoc[NAME_OF(openWeatherApiKey)] = openWeatherApiKey;
-        jsonDoc[NAME_OF(timeZone)] = timeZone;
-        jsonDoc[NAME_OF(use24HourClock)] = use24HourClock;
-        jsonDoc[NAME_OF(useCelsius)] = useCelsius;
+        jsonDoc[LOCATION_TAG] = location;
+        jsonDoc[LOCATION_IS_ZIP_TAG] = locationIsZip;
+        jsonDoc[COUNTRY_CODE_TAG] = countryCode;
+        jsonDoc[OPEN_WEATHER_API_KEY_TAG] = openWeatherApiKey;
+        jsonDoc[TIME_ZONE_TAG] = timeZone;
+        jsonDoc[USE_24_HOUR_CLOCK_TAG] = use24HourClock;
+        jsonDoc[USE_CELSIUS_TAG] = useCelsius;
     
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -95,16 +104,15 @@ class DeviceConfig : public IJSONSerializable
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
-        SetIfPresentIn(jsonObject, location, NAME_OF(location));
-        SetIfPresentIn(jsonObject, locationIsZip, NAME_OF(locationIsZip));
-        SetIfPresentIn(jsonObject, countryCode, NAME_OF(countryCode));
-        SetIfPresentIn(jsonObject, openWeatherApiKey, NAME_OF(openWeatherApiKey));
-        SetIfPresentIn(jsonObject, use24HourClock, NAME_OF(use24HourClock));
-        SetIfPresentIn(jsonObject, useCelsius, NAME_OF(useCelsius));
+        SetIfPresentIn(jsonObject, location, LOCATION_TAG);
+        SetIfPresentIn(jsonObject, locationIsZip, LOCATION_IS_ZIP_TAG);
+        SetIfPresentIn(jsonObject, countryCode, COUNTRY_CODE_TAG);
+        SetIfPresentIn(jsonObject, openWeatherApiKey, OPEN_WEATHER_API_KEY_TAG);
+        SetIfPresentIn(jsonObject, use24HourClock, USE_24_HOUR_CLOCK_TAG);
+        SetIfPresentIn(jsonObject, useCelsius, USE_CELSIUS_TAG);
 
-        const char *tag = NAME_OF(timeZone);
-        if (jsonObject.containsKey(tag)) 
-            return SetTimeZone(jsonObject[tag], true);
+        if (jsonObject.containsKey(TIME_ZONE_TAG)) 
+            return SetTimeZone(jsonObject[TIME_ZONE_TAG], true);
    
         if (!skipWrite)
             SaveToJSON();

@@ -70,6 +70,51 @@ class CWebServer
 
     AsyncWebServer _server;
 
+    // Helper functions/templates
+    template<typename Tv>
+    using ParamValueGetter = std::function<Tv(AsyncWebParameter *param)>;
+
+    template<typename Tv>
+    using ValueSetter = std::function<void(Tv)>;
+
+    template<typename Tv>
+    static void SetPostParam(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
+    {
+        if (!pRequest->hasParam(paramName, true, false))
+            return;
+
+        debugV("found %s", paramName.c_str());
+
+        AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
+
+        // If found, parse it and pass it off to the setter
+        setter(getter(param));
+    }
+
+    template<typename Tv>
+    static void SetPostParam(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter)
+    {
+        SetPostParam<Tv>(pRequest, paramName, setter, [](AsyncWebParameter *param) { return param->value(); });
+    }
+
+    // AddCORSHeaderAndSend(OK)Response
+    //
+    // Sends a response with CORS headers
+    template<typename Tr>    
+    static void AddCORSHeaderAndSendResponse(AsyncWebServerRequest * pRequest, Tr * pResponse)
+    {
+        pResponse->addHeader("Access-Control-Allow-Origin", "*");
+        pRequest->send(pResponse);      
+    }
+
+    // Version for empty response, normally used to finish up things that don't return anything, like "NextEffect"
+    static void AddCORSHeaderAndSendOKResponse(AsyncWebServerRequest * pRequest)
+    {
+        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(200));
+    }
+
+    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName);
+
   public:
 
     CWebServer()
@@ -77,190 +122,17 @@ class CWebServer
     {
     }
 
-    // AddCORSHeaderAndSendOKResponse
-    //
-    // Sends an empty OK/200 response; normally used to finish up things that don't return anything, like "NextEffect"
-
-    void AddCORSHeaderAndSendOKResponse(AsyncWebServerRequest * pRequest, const char * strText = nullptr)
-    {
-        AsyncWebServerResponse * pResponse = (strText == nullptr) ? 
-                                                    pRequest->beginResponse(200) :
-                                                    pRequest->beginResponse(200, "text/json",  strText);    
-        pResponse->addHeader("Access-Control-Allow-Origin", "*");
-        pRequest->send(pResponse);      
-    }
-
-    void GetEffectListText(AsyncWebServerRequest * pRequest)
-    {
-        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-        bool bufferOverflow;
-        debugV("GetEffectListText");
-
-        do 
-        {
-            bufferOverflow = false;
-            std::unique_ptr<AsyncJsonResponse> response(new AsyncJsonResponse(false, jsonBufferSize));
-            response->addHeader("Server","NightDriverStrip");
-            auto j = response->getRoot();
-
-            j["currentEffect"]         = g_aptrEffectManager->GetCurrentEffectIndex();
-            j["millisecondsRemaining"] = g_aptrEffectManager->GetTimeRemainingForCurrentEffect();
-            j["effectInterval"]        = g_aptrEffectManager->GetInterval();
-            j["enabledCount"]          = g_aptrEffectManager->EnabledCount();
-
-            for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++) 
-            {
-                DynamicJsonDocument effectDoc(256);
-                effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
-                effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
-
-                if (!j["Effects"].add(effectDoc)) 
-                {
-                    bufferOverflow = true;
-                    jsonBufferSize += JSON_BUFFER_INCREMENT;
-                    debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
-                    break;
-                }
-            }
-
-            if (!bufferOverflow) 
-            {
-                response->addHeader("Access-Control-Allow-Origin", "*");
-                response->setLength();
-                // The 'send' call will take ownership of the response, so we need to release it here
-                pRequest->send(response.release()); 
-            }
-        } while (bufferOverflow);
-    }
-
-    void GetStatistics(AsyncWebServerRequest * pRequest)
-    {
-        debugV("GetStatistics");
-
-        auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
-        response->addHeader("Server","NightDriverStrip");
-        auto j = response->getRoot();
-
-        j["LED_FPS"]               = g_FPS;
-        j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
-        j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
-
-        j["HEAP_SIZE"]             = ESP.getHeapSize();
-        j["HEAP_FREE"]             = ESP.getFreeHeap();
-        j["HEAP_MIN"]              = ESP.getMinFreeHeap();
-
-        j["DMA_SIZE"]              = heap_caps_get_total_size(MALLOC_CAP_DMA);
-        j["DMA_FREE"]              = heap_caps_get_free_size(MALLOC_CAP_DMA);
-        j["DMA_MIN"]               = heap_caps_get_largest_free_block(MALLOC_CAP_DMA);
-
-        j["PSRAM_SIZE"]            = ESP.getPsramSize();
-        j["PSRAM_FREE"]            = ESP.getFreePsram();
-        j["PSRAM_MIN"]             = ESP.getMinFreePsram();
-
-        j["CHIP_MODEL"]            = ESP.getChipModel();
-        j["CHIP_CORES"]            = ESP.getChipCores();
-        j["CHIP_SPEED"]            = ESP.getCpuFreqMHz();
-        j["PROG_SIZE"]             = ESP.getSketchSize();         
-
-        j["CODE_SIZE"]             = ESP.getSketchSize();
-        j["CODE_FREE"]             = ESP.getFreeSketchSpace();
-        j["FLASH_SIZE"]            = ESP.getFlashChipSize();
-
-        j["CPU_USED"]              = g_TaskManager.GetCPUUsagePercent();
-        j["CPU_USED_CORE0"]        = g_TaskManager.GetCPUUsagePercent(0);
-        j["CPU_USED_CORE1"]        = g_TaskManager.GetCPUUsagePercent(1);
-
-        response->setLength();
-        response->addHeader("Access-Control-Allow-Origin", "*");
-        pRequest->send(response);
-    }    
-
+    // Endpoint member functions
+    void GetEffectListText(AsyncWebServerRequest * pRequest);
+    void GetStatistics(AsyncWebServerRequest * pRequest);
     void GetSettings(AsyncWebServerRequest * pRequest);
-
     void SetSettings(AsyncWebServerRequest * pRequest);
-
     void Reset(AsyncWebServerRequest * pRequest);
-
-    void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
-    {
-        debugV("SetCurrentEffectIndex");
-
-        /*
-        AsyncWebParameter * param = pRequest->getParam(0);
-        if (param != nullptr)
-        {
-            debugV("ParamName: [%s]", param->name().c_str());
-            debugV("ParamVal : [%s]", param->value().c_str());
-            debugV("IsPost: [%d]", param->isPost());
-            debugV("IsFile: [%d]", param->isFile());
-        }
-        else
-        {
-            debugV("No args!");
-        }   
-        */
-
-        const String strCurrentEffectIndex = "currentEffectIndex";
-        if (pRequest->hasParam(strCurrentEffectIndex, true))
-        {
-            debugV("currentEffectIndex param found");
-            // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(strCurrentEffectIndex, true);
-            size_t currentEffectIndex = strtoul(param->value().c_str(), NULL, 10);  
-            g_aptrEffectManager->SetCurrentEffectIndex(currentEffectIndex);
-        }
-        // Complete the response so the client knows it can happily proceed now
-        AddCORSHeaderAndSendOKResponse(pRequest);   
-    }
-
-    void EnableEffect(AsyncWebServerRequest * pRequest)
-    {
-        debugV("EnableEffect");
-
-        // Look for the parameter by name
-        const String strEffectIndex = "effectIndex";
-        if (pRequest->hasParam(strEffectIndex, true))
-        {
-            // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
-            size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
-            g_aptrEffectManager->EnableEffect(effectIndex);
-        }
-        // Complete the response so the client knows it can happily proceed now
-        AddCORSHeaderAndSendOKResponse(pRequest);   
-    }
-
-    void DisableEffect(AsyncWebServerRequest * pRequest)
-    {
-        debugV("DisableEffect");
-
-        // Look for the parameter by name
-        const String strEffectIndex = "effectIndex";
-        if (pRequest->hasParam(strEffectIndex, true))
-        {
-            // If found, parse it and pass it off to the EffectManager, who will validate it
-            AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
-            size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
-            g_aptrEffectManager->DisableEffect(effectIndex);
-            debugV("Disabled Effect %d", effectIndex);
-        }
-        // Complete the response so the client knows it can happily proceed now
-        AddCORSHeaderAndSendOKResponse(pRequest);   
-    }
-
-    void NextEffect(AsyncWebServerRequest * pRequest)
-    {
-        debugV("NextEffect");
-        g_aptrEffectManager->NextEffect();
-        AddCORSHeaderAndSendOKResponse(pRequest);
-    }
-
-    void PreviousEffect(AsyncWebServerRequest * pRequest)
-    {
-        debugV("PreviousEffect");
-        g_aptrEffectManager->PreviousEffect();
-        AddCORSHeaderAndSendOKResponse(pRequest);
-    }
+    void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest);
+    void EnableEffect(AsyncWebServerRequest * pRequest);
+    void DisableEffect(AsyncWebServerRequest * pRequest);
+    void NextEffect(AsyncWebServerRequest * pRequest);
+    void PreviousEffect(AsyncWebServerRequest * pRequest);
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware. 
     void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
@@ -284,7 +156,6 @@ class CWebServer
         extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
         extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
         extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
-
         
         debugI("Connecting Web Endpoints");
 

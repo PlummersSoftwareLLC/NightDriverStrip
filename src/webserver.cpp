@@ -30,50 +30,179 @@
 #include "globals.h"
 #include "webserver.h"
 
-namespace 
+// Member function template specialzations
+
+template<>
+void CWebServer::SetPostParam<bool>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
 {
-    bool IsParamTrue(AsyncWebParameter *param)
+    SetPostParam<bool>(pRequest, paramName, setter, [](AsyncWebParameter *param) 
+        { 
+            const String& value = param->value();
+            return value == "true" || strtol(value.c_str(), NULL, 10);
+        }
+    );
+}
+
+template<>
+void CWebServer::SetPostParam<size_t>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
+{
+    SetPostParam<size_t>(pRequest, paramName, setter, [](AsyncWebParameter *param) { return strtoul(param->value().c_str(), NULL, 10); });
+}
+
+template<>    
+void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse)
+{
+    pResponse->setLength();
+    AddCORSHeaderAndSendResponse<AsyncWebServerResponse>(pRequest, pResponse);
+}
+
+// Member function implementations
+
+bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName)
+{
+    bool returnValue;
+
+    SetPostParam<bool>(pRequest, paramName, [returnValue](bool value) mutable { returnValue = value; });
+
+    return returnValue;
+}
+
+void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
+{
+    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+    bool bufferOverflow;
+    debugV("GetEffectListText");
+
+    do 
     {
-        return param->value() == "true" || strtol(param->value().c_str(), NULL, 10);
-    }
+        bufferOverflow = false;
+        std::unique_ptr<AsyncJsonResponse> response(new AsyncJsonResponse(false, jsonBufferSize));
+        response->addHeader("Server","NightDriverStrip");
+        auto j = response->getRoot();
 
-    bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName)
-    {
-        if (!pRequest->hasParam(paramName, true, false))
-            return false;
-        
-        debugV("found %s", paramName.c_str());
+        j["currentEffect"]         = g_aptrEffectManager->GetCurrentEffectIndex();
+        j["millisecondsRemaining"] = g_aptrEffectManager->GetTimeRemainingForCurrentEffect();
+        j["effectInterval"]        = g_aptrEffectManager->GetInterval();
+        j["enabledCount"]          = g_aptrEffectManager->EnabledCount();
 
-        // If found, parse it and pass it off to the setter
-        return IsParamTrue(pRequest->getParam(paramName, true, false));
-    }
-
-    template<typename Tv>
-    using PostParamSetter = std::function<void(Tv)>;
-
-    template<typename Tv>
-    void PushPostParam(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetter<Tv> setter)
-    {
-        if (pRequest->hasParam(paramName, true, false))
+        for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++) 
         {
-            debugV("found %s", paramName.c_str());
+            DynamicJsonDocument effectDoc(256);
+            effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
+            effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
 
-            // If found, parse it and pass it off to the setter
-            setter(pRequest->getParam(paramName, true, false)->value());
-        }       
-    }
+            if (!j["Effects"].add(effectDoc)) 
+            {
+                bufferOverflow = true;
+                jsonBufferSize += JSON_BUFFER_INCREMENT;
+                debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+                break;
+            }
+        }
 
-    template<>
-    void PushPostParam<bool>(AsyncWebServerRequest * pRequest, const String &paramName, PostParamSetter<bool> setter)
+        if (!bufferOverflow) 
+            AddCORSHeaderAndSendResponse(pRequest, response.release());
+
+    } while (bufferOverflow);
+}
+
+void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
+{
+    debugV("GetStatistics");
+
+    auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
+    response->addHeader("Server","NightDriverStrip");
+    auto j = response->getRoot();
+
+    j["LED_FPS"]               = g_FPS;
+    j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
+    j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
+
+    j["HEAP_SIZE"]             = ESP.getHeapSize();
+    j["HEAP_FREE"]             = ESP.getFreeHeap();
+    j["HEAP_MIN"]              = ESP.getMinFreeHeap();
+
+    j["DMA_SIZE"]              = heap_caps_get_total_size(MALLOC_CAP_DMA);
+    j["DMA_FREE"]              = heap_caps_get_free_size(MALLOC_CAP_DMA);
+    j["DMA_MIN"]               = heap_caps_get_largest_free_block(MALLOC_CAP_DMA);
+
+    j["PSRAM_SIZE"]            = ESP.getPsramSize();
+    j["PSRAM_FREE"]            = ESP.getFreePsram();
+    j["PSRAM_MIN"]             = ESP.getMinFreePsram();
+
+    j["CHIP_MODEL"]            = ESP.getChipModel();
+    j["CHIP_CORES"]            = ESP.getChipCores();
+    j["CHIP_SPEED"]            = ESP.getCpuFreqMHz();
+    j["PROG_SIZE"]             = ESP.getSketchSize();         
+
+    j["CODE_SIZE"]             = ESP.getSketchSize();
+    j["CODE_FREE"]             = ESP.getFreeSketchSpace();
+    j["FLASH_SIZE"]            = ESP.getFlashChipSize();
+
+    j["CPU_USED"]              = g_TaskManager.GetCPUUsagePercent();
+    j["CPU_USED_CORE0"]        = g_TaskManager.GetCPUUsagePercent(0);
+    j["CPU_USED_CORE1"]        = g_TaskManager.GetCPUUsagePercent(1);
+
+    AddCORSHeaderAndSendResponse(pRequest, response);
+}    
+
+void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
+{
+    debugV("SetCurrentEffectIndex");
+
+    /*
+    AsyncWebParameter * param = pRequest->getParam(0);
+    if (param != nullptr)
     {
-        if (pRequest->hasParam(paramName, true, false))
-        {
-            debugV("found %s", paramName.c_str());
-
-            // If found, parse it and pass it off to the setter
-            setter(IsParamTrue(pRequest->getParam(paramName, true, false)));
-        }       
+        debugV("ParamName: [%s]", param->name().c_str());
+        debugV("ParamVal : [%s]", param->value().c_str());
+        debugV("IsPost: [%d]", param->isPost());
+        debugV("IsFile: [%d]", param->isFile());
     }
+    else
+    {
+        debugV("No args!");
+    }   
+    */
+
+    SetPostParam<size_t>(pRequest, "currentEffectIndex", [](size_t value) { g_aptrEffectManager->SetCurrentEffectIndex(value); });
+
+    // Complete the response so the client knows it can happily proceed now
+    AddCORSHeaderAndSendOKResponse(pRequest);   
+}
+
+void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
+{
+    debugV("EnableEffect");
+
+    SetPostParam<size_t>(pRequest, "effectIndex", [](size_t value) { g_aptrEffectManager->EnableEffect(value); });
+
+    // Complete the response so the client knows it can happily proceed now
+    AddCORSHeaderAndSendOKResponse(pRequest);   
+}
+
+void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
+{
+    debugV("DisableEffect");
+
+    SetPostParam<size_t>(pRequest, "effectIndex", [](size_t value) { g_aptrEffectManager->DisableEffect(value); });
+
+    // Complete the response so the client knows it can happily proceed now
+    AddCORSHeaderAndSendOKResponse(pRequest);   
+}
+
+void CWebServer::NextEffect(AsyncWebServerRequest * pRequest)
+{
+    debugV("NextEffect");
+    g_aptrEffectManager->NextEffect();
+    AddCORSHeaderAndSendOKResponse(pRequest);
+}
+
+void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
+{
+    debugV("PreviousEffect");
+    g_aptrEffectManager->PreviousEffect();
+    AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
@@ -88,9 +217,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     g_aptrDeviceConfig->SerializeToJSON(jsonObject);
     jsonObject["effectInterval"] = g_aptrEffectManager->GetInterval();
 
-    response->setLength();
-    response->addHeader("Access-Control-Allow-Origin", "*");
-    pRequest->send(response);
+    AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
 void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
@@ -108,13 +235,13 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
         g_aptrEffectManager->SetInterval(effectInterval);
     }       
 
-    PushPostParam<const String&>(pRequest, "location", [](const String& value) { g_aptrDeviceConfig->SetLocation(value); });
-    PushPostParam<bool>(pRequest, "locationIsZip", [](bool value) { g_aptrDeviceConfig->SetLocationIsZip(value); });
-    PushPostParam<const String&>(pRequest, "countryCode", [](const String& value) { g_aptrDeviceConfig->SetCountryCode(value); });
-    PushPostParam<const String&>(pRequest, "openWeatherApiKey", [](const String& value) { g_aptrDeviceConfig->SetOpenWeatherAPIKey(value); });
-    PushPostParam<const String&>(pRequest, "timeZone", [](const String& value) { g_aptrDeviceConfig->SetTimeZone(value); });
-    PushPostParam<bool>(pRequest, "use24HourClock", [](bool value) { g_aptrDeviceConfig->Set24HourClock(value); });
-    PushPostParam<bool>(pRequest, "useCelsius", [](bool value) { g_aptrDeviceConfig->SetUseCelsius(value); });
+    SetPostParam<const String&>(pRequest, DeviceConfig::LOCATION_TAG, [](const String& value) { g_aptrDeviceConfig->SetLocation(value); });
+    SetPostParam<bool>(pRequest, DeviceConfig::LOCATION_IS_ZIP_TAG, [](bool value) { g_aptrDeviceConfig->SetLocationIsZip(value); });
+    SetPostParam<const String&>(pRequest, DeviceConfig::COUNTRY_CODE_TAG, [](const String& value) { g_aptrDeviceConfig->SetCountryCode(value); });
+    SetPostParam<const String&>(pRequest, DeviceConfig::OPEN_WEATHER_API_KEY_TAG, [](const String& value) { g_aptrDeviceConfig->SetOpenWeatherAPIKey(value); });
+    SetPostParam<const String&>(pRequest, DeviceConfig::TIME_ZONE_TAG, [](const String& value) { g_aptrDeviceConfig->SetTimeZone(value); });
+    SetPostParam<bool>(pRequest, DeviceConfig::USE_24_HOUR_CLOCK_TAG, [](bool value) { g_aptrDeviceConfig->Set24HourClock(value); });
+    SetPostParam<bool>(pRequest, DeviceConfig::USE_CELSIUS_TAG, [](bool value) { g_aptrDeviceConfig->SetUseCelsius(value); });
 
     // We return the current config in response
     GetSettings(pRequest);
