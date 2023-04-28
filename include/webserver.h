@@ -34,6 +34,7 @@
 // History:     Jul-12-2018         Davepl      Created
 //              Apr-29-2019         Davepl      Adapted from BigBlueLCD project
 //              Feb-02-2023         LouisRiel   Removed SPIFF served files with statically linked files
+//              Apr-28-2023         Rbergen     Reduce code duplication
 //---------------------------------------------------------------------------
 
 #pragma once

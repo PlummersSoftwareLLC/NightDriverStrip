@@ -25,6 +25,7 @@
 //   Implementations for some of the web server methods declared in webserver.h
 //
 // History:     Apr-18-2023         Rbergen     Created
+//              Apr-28-2023         Rbergen     Reduce code duplication
 //---------------------------------------------------------------------------
 
 #include "globals.h"

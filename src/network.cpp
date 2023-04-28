@@ -241,16 +241,18 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                     Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
                     break;
                 }
-                else
-                {
-                    delay(3000);
-                }
             }
             // Additional Services onwwards reliant on network so close if not up.
             if (false == WiFi.isConnected())
             {
-                debugW("Giving up on WiFi\n");
-                return false;
+                debugW("Giving WiFi a few more seconds to connect");
+                delay(4000);
+
+                if (!WiFi.isConnected())
+                {
+                    debugW("Giving up on WiFi\n");
+                    return false;
+                }
             }
         }
 
