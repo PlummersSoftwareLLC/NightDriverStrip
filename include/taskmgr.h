@@ -2,7 +2,7 @@
 //
 // File:        taskmgr.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -28,8 +28,8 @@
 //    to not timeslice with them.
 //
 //    Since this totally starves those system idle tasks, the watchdog must
-//    be turned off for them, which we do in begin().  We then turn the 
-//    watchdog on for our own idle tasks, and feed the watchdog in 
+//    be turned off for them, which we do in begin().  We then turn the
+//    watchdog on for our own idle tasks, and feed the watchdog in
 //    ProcessIdleTime as we consume all available idle time.
 //
 //    BUGBUG(davepl): I think this means that vTaskDelete is never called
@@ -46,7 +46,7 @@
 #include <Arduino.h>
 #include <esp_task_wdt.h>
 
-#define IDLE_STACK_SIZE 2048        
+#define IDLE_STACK_SIZE 2048
 // Stack size for the taskmgr's idle threads
 
 class IdleTask
@@ -58,7 +58,7 @@ class IdleTask
 
     const int kMillisPerLoop = 1;
     const int kMillisPerCalc = 1000;
-    
+
     unsigned long counter = 0;
 
   public:
@@ -75,7 +75,7 @@ class IdleTask
             int delta = millis() - _lastMeasurement;
             if (delta >= kMillisPerCalc)
             {
-                //Serial.printf("Core %u Spent %lu in delay during a window of %d for a ratio of %f\n", 
+                //Serial.printf("Core %u Spent %lu in delay during a window of %d for a ratio of %f\n",
                 //  xPortGetCoreID(), counter, delta, (float)counter/delta);
                 _idleRatio = ((float) counter  / delta);
                 _lastMeasurement = millis();
@@ -84,7 +84,7 @@ class IdleTask
             else
             {
                 esp_task_wdt_reset();
-                delayMicroseconds(kMillisPerLoop*1000);        
+                delayMicroseconds(kMillisPerLoop*1000);
                 counter += kMillisPerLoop;
             }
         }
@@ -179,7 +179,7 @@ public:
 };
 
 // NightDriverTaskManager
-// 
+//
 // A superclass of the base TaskManager that knows how to start and track the tasks specific to this project
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
@@ -217,15 +217,15 @@ public:
     {
         #if ENABLE_SERIAL
             debugW(">> Launching Serial Thread");
-            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);    
+            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);
         #endif
     }
-    
+
 
     void StartDrawThread()
     {
         debugW(">> Launching Draw Thread");
-        xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);    
+        xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);
     }
 
     void StartAudioThread()
@@ -235,12 +235,12 @@ public:
             xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
         #endif
     }
-    
+
     void StartNetworkThread()
     {
         #if ENABLE_WIFI
             debugW(">> Launching Network Thread");
-            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);    
+            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);
         #endif
     }
 
@@ -248,10 +248,10 @@ public:
     {
         #if ENABLE_WIFI
             debugW(">> Launching Debug Thread");
-            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);    
+            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
         #endif
     }
-    
+
     void StartSocketThread()
     {
         #if ENABLE_WIFI

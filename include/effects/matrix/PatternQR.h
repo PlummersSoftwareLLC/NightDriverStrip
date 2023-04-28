@@ -59,7 +59,7 @@
 #include "Geometry.h"
 #include "qrcode.h"
 
-class PatternQR : public LEDStripEffect 
+class PatternQR : public LEDStripEffect
 {
     void construct()
     {
@@ -106,7 +106,7 @@ public:
         if (sIP != lastData)
         {
             lastData = sIP;
-            qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW, sIP.c_str());  
+            qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW, sIP.c_str());
         }
         graphics()->fillScreen(graphics()->to16bit(CRGB::DarkBlue));
         const int leftMargin = MATRIX_CENTER_X - qrcode.size / 2;
@@ -124,8 +124,8 @@ public:
         graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, BLACK16);
         graphics()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, borderColor);
 
-        for (uint8_t y = 0; y < qrcode.size; y++) 
-            for (uint8_t x = 0; x < qrcode.size; x++) 
+        for (uint8_t y = 0; y < qrcode.size; y++)
+            for (uint8_t x = 0; x < qrcode.size; x++)
                 graphics()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : BLACK16));
     }
 };

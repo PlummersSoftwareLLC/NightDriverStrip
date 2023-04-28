@@ -2,7 +2,7 @@
 //
 // File:        FireEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -37,7 +37,7 @@
 extern AppTime g_AppTime;
 class FireEffect : public LEDStripEffect
 {
-    void construct() 
+    void construct()
     {
         heat = std::make_unique<uint8_t []>(CellCount());
     }
@@ -64,7 +64,7 @@ class FireEffect : public LEDStripEffect
 
     static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
-    int CellCount() const { return LEDCount * CellsPerLED; } 
+    int CellCount() const { return LEDCount * CellsPerLED; }
 
   public:
 
@@ -99,10 +99,10 @@ class FireEffect : public LEDStripEffect
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<128> jsonDoc;
-        
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -126,12 +126,12 @@ class FireEffect : public LEDStripEffect
     {
         return 45;
     }
-    
+
     virtual CRGB GetBlackBodyHeatColor(float temp)
     {
         temp *= 255;
         uint8_t t192 = round((temp/255.0)*191);
- 
+
         // calculate ramp up from
         uint8_t heatramp = t192 & 0x3F; // 0..63
         heatramp <<= 2; // scale up to 0..252
@@ -142,7 +142,7 @@ class FireEffect : public LEDStripEffect
         } else if( t192 > 0x40 ) {             // middle
             return CRGB( 255, heatramp, 0);
         } else {                               // coolest
-            return CRGB( heatramp, 0, 0);     
+            return CRGB( heatramp, 0, 0);
         }
     }
 
@@ -163,7 +163,7 @@ class FireEffect : public LEDStripEffect
             }
         }
     }
-    
+
     virtual void DrawFire()
     {
         // First cool each cell by a little bit
@@ -204,7 +204,7 @@ class FireEffect : public LEDStripEffect
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
-            
+
             int j = (!bReversed) ? i : LEDCount - 1 - i;
             setPixelsOnAllChannels(j, 1, color, false);
             //if (bMirrored)
@@ -217,7 +217,7 @@ class PaletteFlameEffect : public FireEffect
 {
     CRGBPalette16 _palette;
 
-    void construct() 
+    void construct()
     {
         _effectNumber = EFFECT_STRIP_PALETTE_FLAME;
     }
@@ -246,10 +246,10 @@ public:
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<512> jsonDoc;
- 
+
         JsonObject root = jsonDoc.to<JsonObject>();
         FireEffect::SerializeToJSON(jsonObject);
 
@@ -291,13 +291,13 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        bool mirrored = false)
         :   BeatEffectBase(1.00, 0.01),
             PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
-          
+
     {
         construct();
     }
 
-    MusicalPaletteFire(const JsonObjectConst& jsonObject) 
-        : BeatEffectBase(1.00, 0.01), 
+    MusicalPaletteFire(const JsonObjectConst& jsonObject)
+        : BeatEffectBase(1.00, 0.01),
           PaletteFlameEffect(jsonObject)
     {
         construct();
@@ -333,7 +333,7 @@ class ClassicFireEffect : public LEDStripEffect
 
 public:
 
-    ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5) 
+    ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5)
         : LEDStripEffect(EFFECT_STRIP_CLASSIC_FIRE, "Classic Fire"),
           _Mirrored(mirrored),
           _Reversed(reversed),
@@ -341,7 +341,7 @@ public:
     {
     }
 
-    ClassicFireEffect(const JsonObjectConst& jsonObject) 
+    ClassicFireEffect(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
           _Mirrored(jsonObject[PTY_MIRORRED]),
           _Reversed(jsonObject[PTY_REVERSED]),
@@ -349,10 +349,10 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<128> jsonDoc;
-        
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -440,7 +440,7 @@ public:
                 setPixelOnAllChannels(_cLEDs - 1 - Pixel, temperature);
             else
                 setPixelOnAllChannels(Pixel, temperature);
-        } 
+        }
     }
 
     void setPixelHeatColor(int Pixel, uint8_t temperature)
@@ -524,10 +524,10 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<128> jsonDoc;
-        
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -625,7 +625,7 @@ public:
     {
         if (_Reversed || _Mirrored)
             setPixelOnAllChannels(Pixel, temperature);
-        
+
         if (!_Reversed || _Mirrored)
             setPixelOnAllChannels(_cLEDs - 1 - Pixel, temperature);
     }
@@ -678,7 +678,7 @@ class BaseFireEffect : public LEDStripEffect
         construct();
     }
 
-    BaseFireEffect(const JsonObjectConst& jsonObject) 
+    BaseFireEffect(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
           Cooling(jsonObject[PTY_COOLING]),
           Sparks(jsonObject[PTY_SPARKS]),
@@ -696,10 +696,10 @@ class BaseFireEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<128> jsonDoc;
-        
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -718,7 +718,7 @@ class BaseFireEffect : public LEDStripEffect
     virtual CRGB MapHeatToColor(uint8_t temperature)
     {
         uint8_t t192 = round((temperature/255.0)*191);
- 
+
         // calculate ramp up from
         uint8_t heatramp = t192 & 0x3F; // 0..63
         heatramp <<= 2; // scale up to 0..252
@@ -729,7 +729,7 @@ class BaseFireEffect : public LEDStripEffect
         } else if( t192 > 0x40 ) {             // middle
             return CRGB( 255, heatramp, 0);
         } else {                               // coolest
-            return CRGB( heatramp, 0, 0);     
+            return CRGB( heatramp, 0, 0);
         }
     }
 

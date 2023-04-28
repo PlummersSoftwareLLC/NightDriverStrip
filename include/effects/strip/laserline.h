@@ -2,7 +2,7 @@
 //
 // File:        LaserLine.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -26,7 +26,7 @@
 //    Sound reactive laser "shot" that travels down a strip
 //
 // History:     Apr-16-2019         Davepl      Created
-//              
+//
 //---------------------------------------------------------------------------
 
 #pragma once
@@ -39,7 +39,7 @@ class LaserShot
     float         _speed    = 10.0;
     float         _size     = 10.0;
     uint8_t       _hue      = 0;
-    
+
 public:
 
     LaserShot(float position, float speed, float size, uint8_t hue)
@@ -75,27 +75,27 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
     float                      _defaultSpeed;
 
   public:
-  
-    LaserLineEffect(float speed, float size) 
-        : BeatEffectBase(1.50, 0.00), 
-          LEDStripEffect(EFFECT_STRIP_LASER_LINE, "LaserLine"), 
-          _defaultSize(size), 
-          _defaultSpeed(speed) 
+
+    LaserLineEffect(float speed, float size)
+        : BeatEffectBase(1.50, 0.00),
+          LEDStripEffect(EFFECT_STRIP_LASER_LINE, "LaserLine"),
+          _defaultSize(size),
+          _defaultSpeed(speed)
     {
     }
 
-    LaserLineEffect(const JsonObjectConst& jsonObject) 
-        : BeatEffectBase(1.50, 0.00), 
-          LEDStripEffect(jsonObject), 
-          _defaultSize(jsonObject[PTY_SIZE]), 
-          _defaultSpeed(jsonObject[PTY_SPEED]) 
+    LaserLineEffect(const JsonObjectConst& jsonObject)
+        : BeatEffectBase(1.50, 0.00),
+          LEDStripEffect(jsonObject),
+          _defaultSize(jsonObject[PTY_SIZE]),
+          _defaultSpeed(jsonObject[PTY_SPEED])
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<128> jsonDoc;
-        
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -105,7 +105,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         debugW("Initialized LaserLine Effect");
         _gfx = gfx[0];
@@ -114,20 +114,20 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() 
+    virtual void Draw()
     {
         ProcessAudio();
-        
+
         fadeAllChannelsToBlackBy(200);
 
         auto it = _shots.begin();
-        while(it != _shots.end()) 
+        while(it != _shots.end())
         {
             it->Draw(_gfx);
             if (!it->Update(g_AppTime.DeltaTime()))
                 _shots.erase(it);
             else
-                it++;                
+                it++;
         }
     }
 

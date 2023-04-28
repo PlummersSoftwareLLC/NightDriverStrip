@@ -2,7 +2,7 @@
 //
 // File:        webserver.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -52,14 +52,14 @@ class CWebServer
 {
   private:
 
-    struct EmbeddedFile 
+    struct EmbeddedFile
     {
         // Embedded file size in bytes
         const size_t length;
         // Contents as bytes
         const uint8_t *const contents;
         // Added to hold the file's MIME type, but could be used for other type types, if desired
-        const char *const type; 
+        const char *const type;
 
         EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
             length(end - start),
@@ -100,11 +100,11 @@ class CWebServer
     // AddCORSHeaderAndSend(OK)Response
     //
     // Sends a response with CORS headers
-    template<typename Tr>    
+    template<typename Tr>
     static void AddCORSHeaderAndSendResponse(AsyncWebServerRequest * pRequest, Tr * pResponse)
     {
         pResponse->addHeader("Access-Control-Allow-Origin", "*");
-        pRequest->send(pResponse);      
+        pRequest->send(pResponse);
     }
 
     // Version for empty response, normally used to finish up things that don't return anything, like "NextEffect"
@@ -134,7 +134,7 @@ class CWebServer
     void NextEffect(AsyncWebServerRequest * pRequest);
     void PreviousEffect(AsyncWebServerRequest * pRequest);
 
-    // This registers a handler for GET requests for one of the known files embedded in the firmware. 
+    // This registers a handler for GET requests for one of the known files embedded in the firmware.
     void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
@@ -156,7 +156,7 @@ class CWebServer
         extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
         extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
         extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
-        
+
         debugI("Connecting Web Endpoints");
 
         _server.on("/getEffectList",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetEffectListText(pRequest); });
@@ -189,7 +189,7 @@ class CWebServer
         ServeEmbeddedFile("/favicon.ico", ico_file);
         ServeEmbeddedFile("/timezones.json", timezones_file);
 
-        _server.onNotFound([](AsyncWebServerRequest *request) 
+        _server.onNotFound([](AsyncWebServerRequest *request)
         {
             if (request->method() == HTTP_OPTIONS) {
                 request->send(200);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer

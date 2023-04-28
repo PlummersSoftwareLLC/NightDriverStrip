@@ -2,7 +2,7 @@
 //
 // File:        MeteorPaletteEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -26,7 +26,7 @@
 //    Draws flying meteors
 //
 // History:     Apr-16-2019         Davepl      Created
-//              
+//
 //---------------------------------------------------------------------------
 
 #pragma once
@@ -51,9 +51,9 @@ public:
     bool          meteorRandomDecay = true;
     const float  minTimeBetweenBeats = 0.6;
 
-    MeteorChannel() 
+    MeteorChannel()
     {
-    
+
     }
 
     virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
@@ -97,7 +97,7 @@ public:
 
         for (int j = 0; j<pGFX->GetLEDCount(); j++)                         // fade brightness all LEDs one step
         {
-            if ((!meteorRandomDecay) || (randomfloat(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight 
+            if ((!meteorRandomDecay) || (randomfloat(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight
             {
                 CRGB c = pGFX->getPixel(j);
                 c.fadeToBlackBy(meteorTrailDecay);
@@ -106,7 +106,7 @@ public:
         }
 
             // If there's a beat to the music in a band, reverse the direction of the meteor indexed by the same number
-        /*          
+        /*
         if (g_Beats.IsBeat[0] && (g_AppTime.FrameStartTime() - lastBeat[0] > minTimeBetweenBeats))
         {
             lastBeat[0] = g_AppTime.FrameStartTime();
@@ -117,7 +117,7 @@ public:
         for (int i = 0; i < meteorCount; i++)
         {
             float spd = speed[i];
-            
+
             #if ENABLE_AUDIO
                 if (g_Analyzer._VURatio > 1.0)
                     spd *= g_Analyzer._VURatio;
@@ -138,7 +138,7 @@ public:
             for (int j = 0; j < meteorSize; j++)                    // Draw the meteor head
             {
                 int x = iPos[i] - j;
-                if ((x <= pGFX->GetLEDCount()) && (x >= 1)) 
+                if ((x <= pGFX->GetLEDCount()) && (x >= 1))
                 {
                     CRGB rgb;
                     hue[i] = hue[i] + 0.025f;
@@ -168,9 +168,9 @@ class MeteorEffect : public LEDStripEffect
     float          _meteorSpeedMax;
 
   public:
-  
-    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2) 
-        : LEDStripEffect(EFFECT_STRIP_METEOR, "Color Meteors"), 
+
+    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2)
+        : LEDStripEffect(EFFECT_STRIP_METEOR, "Color Meteors"),
           _Meteors(),
           _cMeteors(cMeteors),
           _meteorSize(size),
@@ -180,8 +180,8 @@ class MeteorEffect : public LEDStripEffect
     {
     }
 
-    MeteorEffect(const JsonObjectConst& jsonObject) 
-        : LEDStripEffect(jsonObject), 
+    MeteorEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
           _Meteors(),
           _cMeteors(jsonObject["mto"]),
           _meteorSize(jsonObject[PTY_SIZE]),
@@ -191,10 +191,10 @@ class MeteorEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<128> jsonDoc;
-        
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -207,7 +207,7 @@ class MeteorEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))
@@ -217,7 +217,7 @@ class MeteorEffect : public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() 
+    virtual void Draw()
     {
         for (int i = 0; i < ARRAYSIZE(_Meteors); i++)
             _Meteors[i].Draw(_gfx[i]);

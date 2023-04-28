@@ -2,7 +2,7 @@
 //
 // File:        deviceconfig.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -67,14 +67,14 @@ DeviceConfig::DeviceConfig()
     }
 }
 
-bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite) 
+bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
 {
     String quotedTZ = "\n\"" + newTimeZone + '"';
-    
+
     const char *start = strstr(timezones_start, quotedTZ.c_str());
 
     // If we can't find the new timezone as a timezone name, assume it's a literal value
-    if (start == NULL) 
+    if (start == NULL)
         setenv("TZ", newTimeZone.c_str(), 1);
     // We received a timezone name, so we extract and use its timezone value
     else
@@ -85,7 +85,7 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
             return false;
 
         start++;
-        const char *end = strchr(start, '"');        
+        const char *end = strchr(start, '"');
         if (end == NULL)        // Can't actually happen unless timezone file is malformed
             return false;
 
@@ -94,7 +94,7 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
         std::unique_ptr<char[]> value = std::make_unique<char[]>(length + 1);
         strncpy(value.get(), start, length);
         value[length] = 0;
-        
+
         setenv("TZ", value.get(), 1);
     }
 
@@ -112,11 +112,11 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
 void DeviceConfig::WriteToNVS(const String& name, const String& value)
 {
     nvs_handle_t nvsRWHandle;
-    
+
     // The "storage" string must match NVS partition name in partition table
-    
-    esp_err_t err = nvs_open("deviceconfig", NVS_READWRITE, &nvsRWHandle);                       
-    if (err != ESP_OK) 
+
+    esp_err_t err = nvs_open("deviceconfig", NVS_READWRITE, &nvsRWHandle);
+    if (err != ESP_OK)
     {
         debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         return;
@@ -133,11 +133,11 @@ void DeviceConfig::WriteToNVS(const String& name, const String& value)
 void DeviceConfig::WriteToNVS(const String& name, bool value)
 {
     nvs_handle_t nvsRWHandle;
-    
+
     // The "storage" string must match NVS partition name in partition table
-    
-    esp_err_t err = nvs_open("deviceconfig", NVS_READWRITE, &nvsRWHandle);                       
-    if (err != ESP_OK) 
+
+    esp_err_t err = nvs_open("deviceconfig", NVS_READWRITE, &nvsRWHandle);
+    if (err != ESP_OK)
     {
         debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         return;
@@ -157,10 +157,10 @@ DeviceConfig::DeviceConfig()
 
     nvs_handle_t nvsROHandle;
     esp_err_t err = nvs_open("deviceconfig", NVS_READONLY, &nvsROHandle);
-    if (err != ESP_OK) 
+    if (err != ESP_OK)
     {
         debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        
+
         SetLocation(cszLocation);
         SetLocationIsZip(bLocationIsZip);
         SetCountryCode(cszCountryCode);
@@ -243,8 +243,8 @@ void DeviceConfig::GetTimeZones(std::vector<std::unique_ptr<char[]>>& timeZones)
     std::unique_ptr<char[]> timeZone;
     timeZones.clear();
 
-    while(true) 
-    {  
+    while(true)
+    {
         timeZoneStart = strstr(timeZoneStart, "\n\"");
         if (timeZoneStart == NULL)
             break;
@@ -259,7 +259,7 @@ void DeviceConfig::GetTimeZones(std::vector<std::unique_ptr<char[]>>& timeZones)
         strncpy(timeZone.get(), timeZoneStart, timeZoneLength);
         timeZone[timeZoneLength] = 0;
 
-        timeZones.push_back(timeZone);   
+        timeZones.push_back(timeZone);
     }
 }
 */

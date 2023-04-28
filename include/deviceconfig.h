@@ -2,7 +2,7 @@
 //
 // File:        deviceconfig.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -46,7 +46,7 @@ class DeviceConfig : public IJSONSerializable
     bool use24HourClock;
     bool useCelsius;
 
-/*    
+/*
     void WriteToNVS(const String& name, const String& value);
     void WriteToNVS(const String& name, bool value);
 */
@@ -66,7 +66,7 @@ class DeviceConfig : public IJSONSerializable
     template <typename T>
     void SetIfPresentIn(const JsonObjectConst& jsonObject, T& target, const char *tag)
     {
-        if (jsonObject.containsKey(tag)) 
+        if (jsonObject.containsKey(tag))
             target = jsonObject[tag].as<T>();
     }
 
@@ -93,7 +93,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[TIME_ZONE_TAG] = timeZone;
         jsonDoc[USE_24_HOUR_CLOCK_TAG] = use24HourClock;
         jsonDoc[USE_CELSIUS_TAG] = useCelsius;
-    
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
@@ -111,9 +111,9 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, use24HourClock, USE_24_HOUR_CLOCK_TAG);
         SetIfPresentIn(jsonObject, useCelsius, USE_CELSIUS_TAG);
 
-        if (jsonObject.containsKey(TIME_ZONE_TAG)) 
+        if (jsonObject.containsKey(TIME_ZONE_TAG))
             return SetTimeZone(jsonObject[TIME_ZONE_TAG], true);
-   
+
         if (!skipWrite)
             SaveToJSON();
 

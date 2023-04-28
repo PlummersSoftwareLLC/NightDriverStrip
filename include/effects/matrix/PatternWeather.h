@@ -114,7 +114,7 @@ private:
     {
         return K - 273.15;
     }
-    
+
     inline float KelvinToLocal(float K)
     {
         if (g_aptrDeviceConfig->UseCelsius())
@@ -123,7 +123,7 @@ private:
             return KelvinToFarenheit(K);
     }
 
-    bool updateCoordinates() 
+    bool updateCoordinates()
     {
         HTTPClient http;
         String url;
@@ -135,7 +135,7 @@ private:
         const String& configCountryCode = g_aptrDeviceConfig->GetCountryCode();
         const bool configLocationIsZip = g_aptrDeviceConfig->IsLocationZip();
 
-        if (configLocationIsZip) 
+        if (configLocationIsZip)
             url = "http://api.openweathermap.org/geo/1.0/zip?zip=" + configLocation + "," + configCountryCode + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
         else
             url = "http://api.openweathermap.org/geo/1.0/direct?q=" + configLocation + "," + configCountryCode + "&limit=1&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
@@ -143,7 +143,7 @@ private:
         http.begin(url);
         int httpResponseCode = http.GET();
 
-        if (httpResponseCode <= 0) 
+        if (httpResponseCode <= 0)
         {
             debugW("Error fetching coordinates for location: %s", configLocation);
             http.end();
@@ -170,14 +170,14 @@ private:
     //
     // Request a forecast and then parse out the high and low temps for tomorrow
 
-    bool getTomorrowTemps(float& highTemp, float& lowTemp) 
+    bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
         http.begin(url);
         int httpResponseCode = http.GET();
 
-        if (httpResponseCode > 0) 
+        if (httpResponseCode > 0)
         {
             String response = http.getString();
             DynamicJsonDocument doc(4096);
@@ -191,13 +191,13 @@ private:
             strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
 
             iconTomorrow = -1;
-            
+
             // Look for the temperature data for tomorrow
-            for (size_t i = 0; i < list.size(); ++i) 
+            for (size_t i = 0; i < list.size(); ++i)
             {
                 JsonObject entry = list[i];
                 String dt_txt = entry["dt_txt"];
-                if (dt_txt.startsWith(dateStr)) 
+                if (dt_txt.startsWith(dateStr))
                 {
                     //Serial.printf("Weather: Updating Forecast: %s", response.c_str());
                     JsonObject main = entry["main"];
@@ -205,20 +205,20 @@ private:
                         highTemp        = KelvinToLocal(main["temp_max"]);
                     if (main["temp_min"] > 0)
                         lowTemp         = KelvinToLocal(main["temp_min"]);
-                    
+
                     String iconIdTomorrow = entry["weather"][0]["icon"];
-                    iconTomorrow = iconIdTomorrow.toInt();            
+                    iconTomorrow = iconIdTomorrow.toInt();
                     if (iconTomorrow < 1 || iconTomorrow >= ARRAYSIZE(pszWeatherIcons))
                         iconTomorrow = -1;
 
-                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, iconTomorrow);                        
+                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, iconTomorrow);
                     break;
                 }
             }
             http.end();
             return true;
         }
-        else 
+        else
         {
             debugW("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
@@ -251,7 +251,7 @@ private:
             temperature = KelvinToLocal(jsonDoc["main"]["temp"]);
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
-            
+
             String iconIndex = jsonDoc["weather"][0]["icon"];
             iconToday = iconIndex.toInt();
             debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %d", (int)temperature, (int)loToday, (int)highToday, iconToday);
@@ -328,7 +328,7 @@ public:
         const int xHalf      = MATRIX_WIDTH / 2 - 1;
 
         graphics()->fillScreen(CRGB(0, 0, 0));
-        graphics()->fillRect(0, 0, MATRIX_WIDTH, 9, graphics()->to16bit(CRGB(0,0,128)));        
+        graphics()->fillRect(0, 0, MATRIX_WIDTH, 9, graphics()->to16bit(CRGB(0,0,128)));
 
         graphics()->setFont(&Apple5x7);
 
@@ -339,15 +339,15 @@ public:
             time_t now;
             time(&now);
 
-            // If location and/or country have changed, trigger an update regardless of timer, but 
+            // If location and/or country have changed, trigger an update regardless of timer, but
             // not more than once every half a minute
             if ((timingObj || HasLocationChanged()) && (now - latestUpdate) >= 30)
             {
                 if (!updateInProgress && nullptr == weatherTask)
-                {   
+                {
                     latestUpdate = now;
                     updateInProgress = true;
-                    
+
                     // Create a thread to update the weather data rather than blocking the draw thread
 
                     debugW("Spawning thread to check weather..");
@@ -368,14 +368,14 @@ public:
             if (strlen(filename))
                 if (JDR_OK != TJpgDec.drawFsJpg(0, 10, filename))        // Draw the image
                     debugW("Could not display %s", filename);
-        }    
+        }
         if (iconTomorrow >= 0)
         {
             auto filename = pszWeatherIcons[iconTomorrow];
             if (strlen(filename))
                 if (JDR_OK != TJpgDec.drawFsJpg(xHalf+1, 10, filename))        // Draw the image
                     debugW("Could not display %s", filename);
-        }    
+        }
 
         // Print the town/city name, which we looked up via trhe zip code
 
@@ -431,7 +431,7 @@ public:
             graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
             String strHi((int) highToday);
             String strLo((int) loToday);
-        
+
             // Draw today's HI and LO temperatures
 
             x = xHalf - fontWidth * strHi.length();

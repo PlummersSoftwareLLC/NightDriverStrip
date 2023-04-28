@@ -22,7 +22,7 @@
 //
 // Description:
 //
-//    Lookup tables for effect factories that create effect instances from 
+//    Lookup tables for effect factories that create effect instances from
 //    JSON objects, and support functions using them.
 //
 // History:     Apr-05-2023         Rbergen      Created for NightDriverStrip
@@ -33,11 +33,11 @@
 
 typedef LEDStripEffect* (*JsonEffectFactory)(const JsonObjectConst&);
 
-std::map<int, JsonEffectFactory> g_JsonStarryNightEffectFactories = 
+std::map<int, JsonEffectFactory> g_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
         [](const JsonObjectConst& jsonObject)->LEDStripEffect* { return new StarryNightEffect<Star>(jsonObject); } },
-    { EFFECT_STAR_BUBBLY, 
+    { EFFECT_STAR_BUBBLY,
         [](const JsonObjectConst& jsonObject)->LEDStripEffect* { return new StarryNightEffect<BubblyStar>(jsonObject); } },
     { EFFECT_STAR_HOT_WHITE,
         [](const JsonObjectConst& jsonObject)->LEDStripEffect* { return new StarryNightEffect<HotWhiteStar>(jsonObject); } },
@@ -57,12 +57,12 @@ LEDStripEffect* CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObjec
 {
     auto entry = g_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
 
-    return entry != g_JsonStarryNightEffectFactories.end() 
+    return entry != g_JsonStarryNightEffectFactories.end()
         ? entry->second(jsonObject)
         : nullptr;
 }
 
-std::map<int, JsonEffectFactory> g_JsonEffectFactories = 
+std::map<int, JsonEffectFactory> g_JsonEffectFactories =
 {
     { EFFECT_STRIP_BOUNCING_BALL,
         [](const JsonObjectConst& jsonObject)->LEDStripEffect* { return new BouncingBallEffect(jsonObject); } },

@@ -70,7 +70,7 @@ class PatternClock : public LEDStripEffect
         g->Clear();
         g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius, GREEN16);
         g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, GREEN16);
-        
+
         // Draw the hour ticks around the outside of the clock every 30 degrees
 
         for (int z = 0; z < 360; z = z + 30)
@@ -92,7 +92,7 @@ class PatternClock : public LEDStripEffect
         int x3 = (MATRIX_CENTER_X + (sin(angle) * (radius)));
         int y3 = (MATRIX_CENTER_Y - (cos(angle) * (radius)));
         g->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::White);
-        
+
         // Draw the minute hand
 
         angle = minutes * 6;

@@ -83,14 +83,14 @@ class EffectManager : public IJSONSerializable
     std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
 
-    void construct() 
+    void construct()
     {
         _bPlayAll = false;
         _iCurrentEffect = 0;
         _effectStartTime = millis();
     }
 
-    void ClearEffects() 
+    void ClearEffects()
     {
         for (auto effect : _vEffects)
             delete effect;
@@ -130,7 +130,7 @@ public:
     {
         ClearEffects();
         _vEffects.reserve(cEffects);
-        
+
         for (int i = 0; i < cEffects; i++)
         {
             _vEffects.push_back(pEffects[i]);
@@ -162,14 +162,14 @@ public:
         for (auto effectObject : effectsArray)
         {
             LEDStripEffect *pEffect = CreateEffectFromJSON(effectObject);
-            if (pEffect != nullptr) 
+            if (pEffect != nullptr)
                 _vEffects.push_back(pEffect);
         }
 
         // Check if we have at least one deserialized effect
         if (_vEffects.size() == 0)
             return false;
-        
+
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
         // Try to load effect enabled state from JSON also, default to "enabled" otherwise
@@ -181,7 +181,7 @@ public:
             if (i >= enabledSize || enabledArray[i] == 1)
                 EnableEffect(i, true);
         }
-        
+
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
         construct();
@@ -203,7 +203,7 @@ public:
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
-        for (auto effect : _vEffects) 
+        for (auto effect : _vEffects)
         {
             JsonObject effectObject = effectsArray.createNestedObject();
             if (!(effect->SerializeToJSON(effectObject)))
@@ -318,7 +318,7 @@ public:
 
         // If there's a temporary effect override from the remote control active, we start that, else
         // we start the current regular effect
-        
+
         if (_ptrRemoteEffect)
             _ptrRemoteEffect->Start();
         else
@@ -461,7 +461,7 @@ public:
     uint GetInterval() const
     {
         // This allows you to return a MinimumEffectTime and your effect won't be shown longer than that
-        
+
         if (_effectInterval == 0)
             return std::numeric_limits<uint>::max();
         return min(_effectInterval, GetCurrentEffect()->MaximumEffectTime() - GetTimeUsedByCurrentEffect());

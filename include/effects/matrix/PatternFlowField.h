@@ -93,7 +93,7 @@ public:
     {
         return 16;
     }
-    
+
     virtual void Draw()
     {
         graphics()->DimAll(240);

@@ -2,7 +2,7 @@
 //
 // File:        network.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -49,7 +49,7 @@ std::mutex g_buffer_mutex;
 String WiFi_ssid;
 String WiFi_password;
 
-// processRemoteDebugCmd() 
+// processRemoteDebugCmd()
 //
 // This is where we can add our own custom debugger commands
 
@@ -57,12 +57,12 @@ extern AppTime  g_AppTime;
 extern uint32_t g_FPS;
 
 // processRemoteDebugCmd
-// 
+//
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
 #if ENABLE_WIFI
-    void processRemoteDebugCmd() 
+    void processRemoteDebugCmd()
     {
         String str = Debug.getLastCommand();
         if (str.equalsIgnoreCase("clock"))
@@ -87,8 +87,8 @@ extern uint32_t g_FPS;
                 debugI("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             #endif
 
-            // Print out a buffer log with timestamps and deltas 
-            
+            // Print out a buffer log with timestamps and deltas
+
             for (size_t i = 0; i < g_aptrBufferManager[0]->Depth(); i++)
             {
                 auto pBufferManager = g_aptrBufferManager[0].get();
@@ -126,17 +126,17 @@ void SetupOTA(const String & strHostname)
                 type = "filesystem";
 
             debugI("Stopping IR remote");
-            #if ENABLE_REMOTE            
+            #if ENABLE_REMOTE
             g_RemoteControl.end();
-            #endif        
-            
+            #endif
+
             debugI("Start updating from OTA ");
             debugI("%s", type.c_str());
         })
         .onEnd([]() {
             debugI("\nEnd OTA");
         })
-        .onProgress([](unsigned int progress, unsigned int total) 
+        .onProgress([](unsigned int progress, unsigned int total)
         {
             static uint last_time = millis();
             if (millis() - last_time > 1000)
@@ -148,7 +148,7 @@ void SetupOTA(const String & strHostname)
             {
                 debugV("Progress: %u%%\r", (progress / (total / 100)));
             }
-            
+
         })
         .onError([](ota_error_t error) {
             debugW("Error[%u]: ", error);
@@ -196,14 +196,14 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     while (true)
     {
         g_RemoteControl.handle();
-        delay(20);        
+        delay(20);
     }
 }
 #endif
 
 // ConnectToWiFi
 //
-// Connect to the pre-configured WiFi network.  
+// Connect to the pre-configured WiFi network.
 
 #if ENABLE_WIFI
 
@@ -254,7 +254,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
         }
 
-
         if (false == bPreviousConnection)
         {
             debugW("Received IP: %s", WiFi.localIP().toString().c_str());
@@ -292,7 +291,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         }
         return true;
     }
-    
+
 #endif
 
 // ProcessIncomingData
@@ -317,7 +316,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
     switch (command16)
     {
         // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
-        
+
         case WIFI_COMMAND_PEAKDATA:
         {
             #if ENABLE_AUDIO
@@ -325,22 +324,22 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                 uint32_t length32  = DWORDFromMemory(&payloadData[4]);
                 uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
                 uint64_t micros    = ULONGFromMemory(&payloadData[16]);
-            
-                debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
-                    numbands, 
-                    length32, 
-                    seconds, 
+
+                debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
+                    numbands,
+                    length32,
+                    seconds,
                     micros);
-                    
+
                 PeakData peaks((double *)(payloadData + STANDARD_DATA_HEADER_SIZE));
                 peaks.ApplyScalars(PeakData::PCREMOTE);
                 g_Analyzer.SetPeakData(peaks);
             #endif
             return true;
         }
-        
+
         // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
-        
+
         case WIFI_COMMAND_PIXELDATA64:
         {
             uint16_t channel16 = WORDFromMemory(&payloadData[2]);
@@ -349,14 +348,14 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
 
-            debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
-                   channel16, 
-                   length32, 
-                   seconds, 
+            debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
+                   channel16,
+                   length32,
+                   seconds,
                    micros);
 
             // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
-            
+
             if (channel16 == 0)
                 channel16 = 1;
 
@@ -373,7 +372,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                 if ((channelMask & channel16) != 0)
                 {
                     debugV("Processing for Channel %d", iChannel);
-                    
+
                     bool bDone = false;
                     if (!g_aptrBufferManager[iChannel]->IsEmpty())
                     {
@@ -422,12 +421,12 @@ bool ReadWiFiConfig()
 
     nvs_handle_t nvsROHandle;
     esp_err_t err = nvs_open("storage", NVS_READONLY, &nvsROHandle);
-    if (err != ESP_OK) 
+    if (err != ESP_OK)
     {
         debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         return false;
     }
-    else 
+    else
     {
         // Read the SSID and Password from the NVS partition name/value keypair set
 
@@ -463,7 +462,7 @@ bool ReadWiFiConfig()
 //
 // Attempts to write the WiFi ssid and password to NVS storage strings.  The keys
 // for those name-value pairs are made from the variable names (WiFi_ssid, WiFi_Password)
-// directly.  It's not transactional, so it could conceivably succeed at writing 
+// directly.  It's not transactional, so it could conceivably succeed at writing
 // the ssid and not the password (but will still report failure).  Does not
 // enforce length limits on values given, so conceivable you could write longer
 // pairs than you could read, but they wouldn't work on WiFi anyway.
@@ -471,11 +470,11 @@ bool ReadWiFiConfig()
 bool WriteWiFiConfig()
 {
     nvs_handle_t nvsRWHandle;
-    
+
     // The "storage" string must match NVS partition name in partition table
-    
-    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsRWHandle);                       
-    if (err != ESP_OK) 
+
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsRWHandle);
+    if (err != ESP_OK)
     {
         debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         return false;

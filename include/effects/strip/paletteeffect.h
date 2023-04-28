@@ -2,7 +2,7 @@
 //
 // File:        PaletteEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -25,7 +25,7 @@
 //    Fills spokes from a predefined palette
 //
 // History:     Apr-13-2019         Davepl      Adapted from LEDWifiSocket
-//              
+//
 //---------------------------------------------------------------------------
 
 #pragma once
@@ -52,13 +52,13 @@ class PaletteEffect : public LEDStripEffect
 
   public:
 
-    PaletteEffect(const CRGBPalette16 & palette, 
-                  float density = 1.0,                
-                  float paletteSpeed = 1, 
-                  float ledsPerSecond = 0, 
-                  float lightSize = 1, 
+    PaletteEffect(const CRGBPalette16 & palette,
+                  float density = 1.0,
+                  float paletteSpeed = 1,
+                  float ledsPerSecond = 0,
+                  float lightSize = 1,
                   float gapSize = 1,
-                  TBlendType blend = LINEARBLEND, 
+                  TBlendType blend = LINEARBLEND,
                   bool  bErase = true,
                   float brightness = 1.0)
       : LEDStripEffect(EFFECT_STRIP_PALETTE, "Palette Effect"),
@@ -91,10 +91,10 @@ class PaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<512> jsonDoc;
-        
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -114,21 +114,21 @@ class PaletteEffect : public LEDStripEffect
     ~PaletteEffect()
     {
     }
-    
-      virtual void Draw() 
+
+      virtual void Draw()
     {
         if (_bErase)
           setAllOnAllChannels(0,0,0);
 
         float deltaTime = g_AppTime.DeltaTime();
-        float increment = (deltaTime * _LEDSPerSecond);      
+        float increment = (deltaTime * _LEDSPerSecond);
         const int totalSize = _gapSize + _lightSize + 1;
         _startIndex   = totalSize > 1 ? fmodf(_startIndex + increment, totalSize) : 0;
-        
+
         // A single color step in a palette is 32 increments.  There are 256 total in a palette, and 144 pixels per meter typical, so this
         // scaling yields a color rotation of "one full palette per meter" by default.  We go backwards (-1) to match pixel scrolling direction.
 
-        _paletteIndex = _paletteIndex - deltaTime * _paletteSpeed * 32 * _density * 256/144.0;    
+        _paletteIndex = _paletteIndex - deltaTime * _paletteSpeed * 32 * _density * 256/144.0;
 
         float iColor = fmodf(_paletteIndex + _startIndex * _density, 256);
 

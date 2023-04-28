@@ -2,7 +2,7 @@
 //
 // File:        webserver.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -35,8 +35,8 @@
 template<>
 void CWebServer::SetPostParam<bool>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
 {
-    SetPostParam<bool>(pRequest, paramName, setter, [](AsyncWebParameter *param) 
-        { 
+    SetPostParam<bool>(pRequest, paramName, setter, [](AsyncWebParameter *param)
+        {
             const String& value = param->value();
             return value == "true" || strtol(value.c_str(), NULL, 10);
         }
@@ -49,7 +49,7 @@ void CWebServer::SetPostParam<size_t>(AsyncWebServerRequest * pRequest, const St
     SetPostParam<size_t>(pRequest, paramName, setter, [](AsyncWebParameter *param) { return strtoul(param->value().c_str(), NULL, 10); });
 }
 
-template<>    
+template<>
 void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse)
 {
     pResponse->setLength();
@@ -73,7 +73,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
     bool bufferOverflow;
     debugV("GetEffectListText");
 
-    do 
+    do
     {
         bufferOverflow = false;
         std::unique_ptr<AsyncJsonResponse> response(new AsyncJsonResponse(false, jsonBufferSize));
@@ -85,13 +85,13 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         j["effectInterval"]        = g_aptrEffectManager->GetInterval();
         j["enabledCount"]          = g_aptrEffectManager->EnabledCount();
 
-        for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++) 
+        for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++)
         {
             DynamicJsonDocument effectDoc(256);
             effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
             effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
 
-            if (!j["Effects"].add(effectDoc)) 
+            if (!j["Effects"].add(effectDoc))
             {
                 bufferOverflow = true;
                 jsonBufferSize += JSON_BUFFER_INCREMENT;
@@ -100,7 +100,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
             }
         }
 
-        if (!bufferOverflow) 
+        if (!bufferOverflow)
             AddCORSHeaderAndSendResponse(pRequest, response.release());
 
     } while (bufferOverflow);
@@ -133,7 +133,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     j["CHIP_MODEL"]            = ESP.getChipModel();
     j["CHIP_CORES"]            = ESP.getChipCores();
     j["CHIP_SPEED"]            = ESP.getCpuFreqMHz();
-    j["PROG_SIZE"]             = ESP.getSketchSize();         
+    j["PROG_SIZE"]             = ESP.getSketchSize();
 
     j["CODE_SIZE"]             = ESP.getSketchSize();
     j["CODE_FREE"]             = ESP.getFreeSketchSpace();
@@ -144,7 +144,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     j["CPU_USED_CORE1"]        = g_TaskManager.GetCPUUsagePercent(1);
 
     AddCORSHeaderAndSendResponse(pRequest, response);
-}    
+}
 
 void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
 {
@@ -162,13 +162,13 @@ void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
     else
     {
         debugV("No args!");
-    }   
+    }
     */
 
     SetPostParam<size_t>(pRequest, "currentEffectIndex", [](size_t value) { g_aptrEffectManager->SetCurrentEffectIndex(value); });
 
     // Complete the response so the client knows it can happily proceed now
-    AddCORSHeaderAndSendOKResponse(pRequest);   
+    AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
@@ -178,7 +178,7 @@ void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
     SetPostParam<size_t>(pRequest, "effectIndex", [](size_t value) { g_aptrEffectManager->EnableEffect(value); });
 
     // Complete the response so the client knows it can happily proceed now
-    AddCORSHeaderAndSendOKResponse(pRequest);   
+    AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
@@ -188,7 +188,7 @@ void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
     SetPostParam<size_t>(pRequest, "effectIndex", [](size_t value) { g_aptrEffectManager->DisableEffect(value); });
 
     // Complete the response so the client knows it can happily proceed now
-    AddCORSHeaderAndSendOKResponse(pRequest);   
+    AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::NextEffect(AsyncWebServerRequest * pRequest)
@@ -213,7 +213,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     response->addHeader("Server","NightDriverStrip");
     auto root = response->getRoot();
     JsonObject jsonObject = root.to<JsonObject>();
-    
+
     g_aptrDeviceConfig->SerializeToJSON(jsonObject);
     jsonObject["effectInterval"] = g_aptrEffectManager->GetInterval();
 
@@ -231,9 +231,9 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
         debugV("found EffectInterval");
         // If found, parse it and pass it off to the EffectManager, who will validate it
         AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
-        size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
+        size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);
         g_aptrEffectManager->SetInterval(effectInterval);
-    }       
+    }
 
     SetPostParam<const String&>(pRequest, DeviceConfig::LOCATION_TAG, [](const String& value) { g_aptrDeviceConfig->SetLocation(value); });
     SetPostParam<bool>(pRequest, DeviceConfig::LOCATION_IS_ZIP_TAG, [](bool value) { g_aptrDeviceConfig->SetLocationIsZip(value); });
@@ -262,10 +262,10 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
     }
 
     bool boardResetRequested = IsPostParamTrue(pRequest, "board");
-    
+
     AddCORSHeaderAndSendOKResponse(pRequest);
-    
-    if (boardResetRequested) 
+
+    if (boardResetRequested)
     {
         delay(1000);    // Give the response a second to be sent
         throw new std::runtime_error("Resetting device at API request");

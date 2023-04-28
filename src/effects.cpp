@@ -41,7 +41,7 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 // Palettes
 //
 // Palettes that are referenced by effects need to be instantiated first
- 
+
 const CRGBPalette16 BlueColors_p =
 {
     CRGB::DarkBlue,
@@ -264,7 +264,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList) 
+size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
 {
     // The default effects table
     LEDStripEffect *defaultEffects[] =
@@ -304,10 +304,10 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new PatternPongClock(),
         new PatternSubscribers(),
         new PatternWeather(),
-        
+
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         new GhostWave("GhostWave", 0, 24, false),
-        new WaveformEffect("WaveIn", 8),     
+        new WaveformEffect("WaveIn", 8),
         new GhostWave("WaveOut", 0, 0, true, 0),
 
         new WaveformEffect("WaveForm", 8),
@@ -319,11 +319,11 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new PatternSunburst(),
 
         new PatternFlowField(),
-        new PatternClock(),        
+        new PatternClock(),
         new PatternAlienText(),
         new PatternCircuit(),
 
-        new StarryNightEffect<MusicStar>("Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0),                                                // Rainbow Music Star
+        new StarryNightEffect<MusicStar>("Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0), // Rainbow Music Star
 
         new PatternPulsar(),
 
@@ -338,10 +338,10 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new PatternCurtain(),
         new PatternGridLights(),
         new PatternMunch(),
-        
+
         // new PatternInfinity(),
-        // new PatternQR(),           
-        
+        // new PatternQR(),
+
     #elif UMBRELLA
 
         new FireEffect("Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false),
@@ -476,7 +476,7 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new SpectrumAnalyzerEffect("Spectrum Standard", 16, spectrumAltColors, 0, 0, 1.0, 1.0),
 
         new SpectrumAnalyzerEffect("Spectrum Standard", 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
-        
+
         new GhostWave("GhostWave", 0, 16, false, 40),
         new SpectrumAnalyzerEffect("Spectrum USA", 16, USAColors_p, 0),
         new GhostWave("GhostWave Rainbow", 8),
@@ -642,14 +642,14 @@ size_t CreateDefaultEffects(std::unique_ptr<EffectPointerArray>& pEffectList)
         new PaletteEffect(MagentaColors_p),             // Rainbow palette
         new DoublePaletteEffect(),
 */
-    #else                                                                   
+    #else
 
         new RainbowFillEffect(6, 2),                    // Simple effect if not otherwise defined above
 
     #endif
     };
 
-    // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to 
+    // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
     // add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
     static_assert(ARRAYSIZE(defaultEffects) > 0);
@@ -691,7 +691,7 @@ void InitEffectsManager()
     else
     {
         debugI("Creating EffectManager using default effects");
-        
+
         std::unique_ptr<EffectPointerArray> defaultEffects;
         size_t effectCount = CreateDefaultEffects(defaultEffects);
 
