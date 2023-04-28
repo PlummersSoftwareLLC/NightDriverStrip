@@ -33,9 +33,9 @@
 // Member function template specialzations
 
 template<>
-void CWebServer::SetPostParam<bool>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
+void CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
 {
-    SetPostParam<bool>(pRequest, paramName, setter, [](AsyncWebParameter *param)
+    PushPostParamIfPresent<bool>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
         {
             const String& value = param->value();
             return value == "true" || strtol(value.c_str(), NULL, 10);
@@ -44,9 +44,9 @@ void CWebServer::SetPostParam<bool>(AsyncWebServerRequest * pRequest, const Stri
 }
 
 template<>
-void CWebServer::SetPostParam<size_t>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
+void CWebServer::PushPostParamIfPresent<size_t>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
 {
-    SetPostParam<size_t>(pRequest, paramName, setter, [](AsyncWebParameter *param) { return strtoul(param->value().c_str(), NULL, 10); });
+    PushPostParamIfPresent<size_t>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr { return strtoul(param->value().c_str(), NULL, 10); });
 }
 
 template<>
@@ -60,9 +60,9 @@ void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerR
 
 bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName)
 {
-    bool returnValue;
+    bool returnValue = false;
 
-    SetPostParam<bool>(pRequest, paramName, [returnValue](bool value) mutable { returnValue = value; });
+    PushPostParamIfPresent<bool>(pRequest, paramName, [&returnValue](auto value) { returnValue = value; });
 
     return returnValue;
 }
@@ -165,7 +165,7 @@ void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
     }
     */
 
-    SetPostParam<size_t>(pRequest, "currentEffectIndex", [](size_t value) { g_aptrEffectManager->SetCurrentEffectIndex(value); });
+    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", [](auto value) { g_aptrEffectManager->SetCurrentEffectIndex(value); });
 
     // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
@@ -175,7 +175,7 @@ void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("EnableEffect");
 
-    SetPostParam<size_t>(pRequest, "effectIndex", [](size_t value) { g_aptrEffectManager->EnableEffect(value); });
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", [](auto value) { g_aptrEffectManager->EnableEffect(value); });
 
     // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
@@ -185,7 +185,7 @@ void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("DisableEffect");
 
-    SetPostParam<size_t>(pRequest, "effectIndex", [](size_t value) { g_aptrEffectManager->DisableEffect(value); });
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", [](auto value) { g_aptrEffectManager->DisableEffect(value); });
 
     // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
@@ -235,13 +235,13 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
         g_aptrEffectManager->SetInterval(effectInterval);
     }
 
-    SetPostParam<const String&>(pRequest, DeviceConfig::LOCATION_TAG, [](const String& value) { g_aptrDeviceConfig->SetLocation(value); });
-    SetPostParam<bool>(pRequest, DeviceConfig::LOCATION_IS_ZIP_TAG, [](bool value) { g_aptrDeviceConfig->SetLocationIsZip(value); });
-    SetPostParam<const String&>(pRequest, DeviceConfig::COUNTRY_CODE_TAG, [](const String& value) { g_aptrDeviceConfig->SetCountryCode(value); });
-    SetPostParam<const String&>(pRequest, DeviceConfig::OPEN_WEATHER_API_KEY_TAG, [](const String& value) { g_aptrDeviceConfig->SetOpenWeatherAPIKey(value); });
-    SetPostParam<const String&>(pRequest, DeviceConfig::TIME_ZONE_TAG, [](const String& value) { g_aptrDeviceConfig->SetTimeZone(value); });
-    SetPostParam<bool>(pRequest, DeviceConfig::USE_24_HOUR_CLOCK_TAG, [](bool value) { g_aptrDeviceConfig->Set24HourClock(value); });
-    SetPostParam<bool>(pRequest, DeviceConfig::USE_CELSIUS_TAG, [](bool value) { g_aptrDeviceConfig->SetUseCelsius(value); });
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LOCATION_TAG, [](auto value) { g_aptrDeviceConfig->SetLocation(value); });
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LOCATION_IS_ZIP_TAG, [](auto value) { g_aptrDeviceConfig->SetLocationIsZip(value); });
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::COUNTRY_CODE_TAG, [](auto value) { g_aptrDeviceConfig->SetCountryCode(value); });
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OPEN_WEATHER_API_KEY_TAG, [](auto value) { g_aptrDeviceConfig->SetOpenWeatherAPIKey(value); });
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TIME_ZONE_TAG, [](auto value) { g_aptrDeviceConfig->SetTimeZone(value); });
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_24_HOUR_CLOCK_TAG, [](auto value) { g_aptrDeviceConfig->Set24HourClock(value); });
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_CELSIUS_TAG, [](auto value) { g_aptrDeviceConfig->SetUseCelsius(value); });
 
     // We return the current config in response
     GetSettings(pRequest);

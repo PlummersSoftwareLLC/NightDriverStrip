@@ -78,7 +78,7 @@ class CWebServer
     using ValueSetter = std::function<void(Tv)>;
 
     template<typename Tv>
-    static void SetPostParam(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
+    static void PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
     {
         if (!pRequest->hasParam(paramName, true, false))
             return;
@@ -87,14 +87,14 @@ class CWebServer
 
         AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
 
-        // If found, parse it and pass it off to the setter
+        // Extract the value and pass it off to the setter
         setter(getter(param));
     }
 
     template<typename Tv>
-    static void SetPostParam(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter)
+    static void PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter)
     {
-        SetPostParam<Tv>(pRequest, paramName, setter, [](AsyncWebParameter *param) { return param->value(); });
+        PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr { return param->value(); });
     }
 
     // AddCORSHeaderAndSend(OK)Response
