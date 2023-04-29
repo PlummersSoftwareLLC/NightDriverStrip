@@ -166,7 +166,7 @@ void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
     }
     */
 
-    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", [](auto value) { g_aptrEffectManager->SetCurrentEffectIndex(value); });
+    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_aptrEffectManager->SetCurrentEffectIndex(value)));
 
     // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
@@ -176,7 +176,7 @@ void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("EnableEffect");
 
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", [](auto value) { g_aptrEffectManager->EnableEffect(value); });
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_aptrEffectManager->EnableEffect(value)));
 
     // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
@@ -186,7 +186,7 @@ void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("DisableEffect");
 
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", [](auto value) { g_aptrEffectManager->DisableEffect(value); });
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_aptrEffectManager->DisableEffect(value)));
 
     // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
@@ -236,13 +236,13 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
         g_aptrEffectManager->SetInterval(effectInterval);
     }
 
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LOCATION_TAG, [](auto value) { g_aptrDeviceConfig->SetLocation(value); });
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LOCATION_IS_ZIP_TAG, [](auto value) { g_aptrDeviceConfig->SetLocationIsZip(value); });
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::COUNTRY_CODE_TAG, [](auto value) { g_aptrDeviceConfig->SetCountryCode(value); });
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OPEN_WEATHER_API_KEY_TAG, [](auto value) { g_aptrDeviceConfig->SetOpenWeatherAPIKey(value); });
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TIME_ZONE_TAG, [](auto value) { g_aptrDeviceConfig->SetTimeZone(value); });
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_24_HOUR_CLOCK_TAG, [](auto value) { g_aptrDeviceConfig->Set24HourClock(value); });
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_CELSIUS_TAG, [](auto value) { g_aptrDeviceConfig->SetUseCelsius(value); });
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LOCATION_TAG, SET_VALUE(g_aptrDeviceConfig->SetLocation(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LOCATION_IS_ZIP_TAG, SET_VALUE(g_aptrDeviceConfig->SetLocationIsZip(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::COUNTRY_CODE_TAG, SET_VALUE(g_aptrDeviceConfig->SetCountryCode(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OPEN_WEATHER_API_KEY_TAG, SET_VALUE(g_aptrDeviceConfig->SetOpenWeatherAPIKey(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TIME_ZONE_TAG, SET_VALUE(g_aptrDeviceConfig->SetTimeZone(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_24_HOUR_CLOCK_TAG, SET_VALUE(g_aptrDeviceConfig->Set24HourClock(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_CELSIUS_TAG, SET_VALUE(g_aptrDeviceConfig->SetUseCelsius(value)));
 
     // We return the current config in response
     GetSettings(pRequest);

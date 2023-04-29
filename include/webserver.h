@@ -205,3 +205,5 @@ class CWebServer
         debugI("HTTP server started");
     }
 };
+
+#define SET_VALUE(method) [](auto value) { method; }

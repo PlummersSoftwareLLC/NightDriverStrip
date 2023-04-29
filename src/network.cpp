@@ -207,90 +207,85 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 #if ENABLE_WIFI
 
-    #define WIFI_RETRIES 5
-
     bool ConnectToWiFi(uint cRetries)
     {
         static bool bPreviousConnection = false;
 
         // Already connected, Go no further.
+        if (WiFi.isConnected())
+            return true;
+
+        debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
+
+        if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+        {
+            debugW("WiFi Credentials not set, cannot connect");
+            return false;
+        }
+
+        for (uint iPass = 0; iPass < cRetries; iPass++)
+        {
+            Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+
+            WiFi.disconnect();
+            WiFi.mode(WIFI_STA);
+            WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
+
+            // Give the module a few seconds to connect
+            delay(4000 + iPass * 1000);
+
+            if (WiFi.isConnected())
+            {
+                Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
+                break;
+            }
+        }
+
+        // Additional Services onwwards reliant on network so close if not up.
         if (false == WiFi.isConnected())
         {
-            debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
-
-            if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
-            {
-                debugW("WiFi Credentials not set, cannot connect");
-                return false;
-            }
-
-            for (uint iPass = 1; iPass <= cRetries; iPass++)
-            {
-                Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                    iPass, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
-
-                WiFi.disconnect();
-                WiFi.mode(WIFI_STA);
-                WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
-
-                // Give the module a few seconds to connect
-                delay(4000);
-
-                if (WiFi.isConnected())
-                {
-                    Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
-                    break;
-                }
-            }
-            // Additional Services onwwards reliant on network so close if not up.
-            if (false == WiFi.isConnected())
-            {
-                debugW("Giving WiFi a few more seconds to connect");
-                delay(4000);
-
-                if (!WiFi.isConnected())
-                {
-                    debugW("Giving up on WiFi\n");
-                    return false;
-                }
-            }
+            debugW("Giving up on WiFi\n");
+            return false;
         }
 
-        if (false == bPreviousConnection)
-        {
-            debugW("Received IP: %s", WiFi.localIP().toString().c_str());
-            #if INCOMING_WIFI_ENABLED
-                // Start listening for incoming data
-                debugI("Starting/restarting Socket Server...");
-                g_SocketServer.release();
-                if (false == g_SocketServer.begin())
-                    throw std::runtime_error("Could not start socket server!");
+        debugW("Received IP: %s", WiFi.localIP().toString().c_str());
 
-                debugI("Socket server started.");
-            #endif
+        // If we were connected before, network-dependent services will have been started already
+        if (bPreviousConnection)
+            return true;
 
-            #if ENABLE_OTA
-                debugI("Publishing OTA...");
-                SetupOTA(String(cszHostname));
-            #endif
+        #if INCOMING_WIFI_ENABLED
+            // Start listening for incoming data
+            debugI("Starting/restarting Socket Server...");
+            g_SocketServer.release();
+            if (false == g_SocketServer.begin())
+                throw std::runtime_error("Could not start socket server!");
 
-            #if ENABLE_NTP
-                debugI("Setting Clock...");
-                NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-            #endif
+            debugI("Socket server started.");
+        #endif
 
-            #if ENABLE_WEBSERVER
-                debugI("Starting Web Server...");
-                g_WebServer.begin();
-                debugI("Web Server begin called!");
-            #endif
+        #if ENABLE_OTA
+            debugI("Publishing OTA...");
+            SetupOTA(String(cszHostname));
+        #endif
 
-            #if USE_MATRIX
-                //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
-            #endif
+        #if ENABLE_NTP
+            debugI("Setting Clock...");
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+        #endif
 
-            bPreviousConnection = true;
-        }
+        #if ENABLE_WEBSERVER
+            debugI("Starting Web Server...");
+            g_WebServer.begin();
+            debugI("Web Server begin called!");
+        #endif
+
+        #if USE_MATRIX
+            //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+        #endif
+
+        bPreviousConnection = true;
         return true;
     }
 
