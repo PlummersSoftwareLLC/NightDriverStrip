@@ -201,17 +201,7 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 {
     debugV("SetSettings");
 
-    // Look for the parameter by name
-    const String strEffectInterval = "effectInterval";
-    if (pRequest->hasParam(strEffectInterval, true, false))
-    {
-        debugV("found EffectInterval");
-        // If found, parse it and pass it off to the EffectManager, who will validate it
-        AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
-        size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);
-        g_aptrEffectManager->SetInterval(effectInterval);
-    }
-
+    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_aptrEffectManager->SetInterval(value)));
     PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_aptrDeviceConfig->SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_aptrDeviceConfig->SetLocationIsZip(value)));
     PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_aptrDeviceConfig->SetCountryCode(value)));
