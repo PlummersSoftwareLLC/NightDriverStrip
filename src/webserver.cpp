@@ -150,45 +150,21 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
 void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
 {
     debugV("SetCurrentEffectIndex");
-
-    /*
-    AsyncWebParameter * param = pRequest->getParam(0);
-    if (param != nullptr)
-    {
-        debugV("ParamName: [%s]", param->name().c_str());
-        debugV("ParamVal : [%s]", param->value().c_str());
-        debugV("IsPost: [%d]", param->isPost());
-        debugV("IsFile: [%d]", param->isFile());
-    }
-    else
-    {
-        debugV("No args!");
-    }
-    */
-
     PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_aptrEffectManager->SetCurrentEffectIndex(value)));
-
-    // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("EnableEffect");
-
     PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_aptrEffectManager->EnableEffect(value)));
-
-    // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("DisableEffect");
-
     PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_aptrEffectManager->DisableEffect(value)));
-
-    // Complete the response so the client knows it can happily proceed now
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
