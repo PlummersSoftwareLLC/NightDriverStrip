@@ -206,4 +206,4 @@ class CWebServer
     }
 };
 
-#define SET_VALUE(method) [](auto value) { method; }
+#define SET_VALUE(functionCall) [](auto value) { functionCall; }
