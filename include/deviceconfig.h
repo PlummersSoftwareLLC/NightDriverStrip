@@ -72,13 +72,13 @@ class DeviceConfig : public IJSONSerializable
 
   public:
 
-    static constexpr const char * LOCATION_TAG = NAME_OF(location);
-    static constexpr const char * LOCATION_IS_ZIP_TAG = NAME_OF(locationIsZip);
-    static constexpr const char * COUNTRY_CODE_TAG = NAME_OF(countryCode);
-    static constexpr const char * OPEN_WEATHER_API_KEY_TAG = NAME_OF(openWeatherApiKey);
-    static constexpr const char * TIME_ZONE_TAG = NAME_OF(timeZone);
-    static constexpr const char * USE_24_HOUR_CLOCK_TAG = NAME_OF(use24HourClock);
-    static constexpr const char * USE_CELSIUS_TAG = NAME_OF(useCelsius);
+    static constexpr const char * LocationTag = NAME_OF(location);
+    static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
+    static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
+    static constexpr const char * OpenWeatherApiKeyTag = NAME_OF(openWeatherApiKey);
+    static constexpr const char * TimeZoneTag = NAME_OF(timeZone);
+    static constexpr const char * Use24HourClockTag = NAME_OF(use24HourClock);
+    static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
 
     DeviceConfig();
 
@@ -86,13 +86,13 @@ class DeviceConfig : public IJSONSerializable
     {
         StaticJsonDocument<1024> jsonDoc;
 
-        jsonDoc[LOCATION_TAG] = location;
-        jsonDoc[LOCATION_IS_ZIP_TAG] = locationIsZip;
-        jsonDoc[COUNTRY_CODE_TAG] = countryCode;
-        jsonDoc[OPEN_WEATHER_API_KEY_TAG] = openWeatherApiKey;
-        jsonDoc[TIME_ZONE_TAG] = timeZone;
-        jsonDoc[USE_24_HOUR_CLOCK_TAG] = use24HourClock;
-        jsonDoc[USE_CELSIUS_TAG] = useCelsius;
+        jsonDoc[LocationTag] = location;
+        jsonDoc[LocationIsZipTag] = locationIsZip;
+        jsonDoc[CountryCodeTag] = countryCode;
+        jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
+        jsonDoc[TimeZoneTag] = timeZone;
+        jsonDoc[Use24HourClockTag] = use24HourClock;
+        jsonDoc[UseCelsiusTag] = useCelsius;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -104,15 +104,15 @@ class DeviceConfig : public IJSONSerializable
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
-        SetIfPresentIn(jsonObject, location, LOCATION_TAG);
-        SetIfPresentIn(jsonObject, locationIsZip, LOCATION_IS_ZIP_TAG);
-        SetIfPresentIn(jsonObject, countryCode, COUNTRY_CODE_TAG);
-        SetIfPresentIn(jsonObject, openWeatherApiKey, OPEN_WEATHER_API_KEY_TAG);
-        SetIfPresentIn(jsonObject, use24HourClock, USE_24_HOUR_CLOCK_TAG);
-        SetIfPresentIn(jsonObject, useCelsius, USE_CELSIUS_TAG);
+        SetIfPresentIn(jsonObject, location, LocationTag);
+        SetIfPresentIn(jsonObject, locationIsZip, LocationIsZipTag);
+        SetIfPresentIn(jsonObject, countryCode, CountryCodeTag);
+        SetIfPresentIn(jsonObject, openWeatherApiKey, OpenWeatherApiKeyTag);
+        SetIfPresentIn(jsonObject, use24HourClock, Use24HourClockTag);
+        SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
 
-        if (jsonObject.containsKey(TIME_ZONE_TAG))
-            return SetTimeZone(jsonObject[TIME_ZONE_TAG], true);
+        if (jsonObject.containsKey(TimeZoneTag))
+            return SetTimeZone(jsonObject[TimeZoneTag], true);
 
         if (!skipWrite)
             SaveToJSON();

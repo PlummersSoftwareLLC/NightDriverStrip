@@ -212,13 +212,13 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
         g_aptrEffectManager->SetInterval(effectInterval);
     }
 
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LOCATION_TAG, SET_VALUE(g_aptrDeviceConfig->SetLocation(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LOCATION_IS_ZIP_TAG, SET_VALUE(g_aptrDeviceConfig->SetLocationIsZip(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::COUNTRY_CODE_TAG, SET_VALUE(g_aptrDeviceConfig->SetCountryCode(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OPEN_WEATHER_API_KEY_TAG, SET_VALUE(g_aptrDeviceConfig->SetOpenWeatherAPIKey(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TIME_ZONE_TAG, SET_VALUE(g_aptrDeviceConfig->SetTimeZone(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_24_HOUR_CLOCK_TAG, SET_VALUE(g_aptrDeviceConfig->Set24HourClock(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::USE_CELSIUS_TAG, SET_VALUE(g_aptrDeviceConfig->SetUseCelsius(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_aptrDeviceConfig->SetLocation(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_aptrDeviceConfig->SetLocationIsZip(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_aptrDeviceConfig->SetCountryCode(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OpenWeatherApiKeyTag, SET_VALUE(g_aptrDeviceConfig->SetOpenWeatherAPIKey(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_aptrDeviceConfig->SetTimeZone(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_aptrDeviceConfig->Set24HourClock(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_aptrDeviceConfig->SetUseCelsius(value)));
 
     // We return the current config in response
     GetSettings(pRequest);
