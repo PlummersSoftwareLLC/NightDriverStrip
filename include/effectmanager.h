@@ -461,11 +461,10 @@ public:
     uint GetTimeRemainingForCurrentEffect() const
     {
         // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
+        uint timeUsedByCurrentEffect = GetTimeUsedByCurrentEffect();
+        uint interval = GetInterval();
 
-        if (GetTimeUsedByCurrentEffect() > GetInterval())
-            return 0;
-
-        return GetInterval() - GetTimeUsedByCurrentEffect();
+        return timeUsedByCurrentEffect > interval ? 0 : (interval - timeUsedByCurrentEffect);
     }
 
     uint GetInterval() const
@@ -481,7 +480,7 @@ public:
         if (_effectInterval == 0)
             return;
 
-        if (millis() - _effectStartTime >= GetInterval()) // See if its time for a new effect yet
+        if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if its time for a new effect yet
         {
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
