@@ -72,7 +72,7 @@ class EffectManager : public IJSONSerializable
     std::vector<LEDStripEffect*> _vEffects;
     size_t _cEnabled = 0;
 
-    size_t _iCurrentEffect;
+    size_t _iCurrentEffect = 0;
     uint _effectStartTime;
     uint _effectInterval;
     bool _bPlayAll;
@@ -83,14 +83,13 @@ class EffectManager : public IJSONSerializable
     std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
 
-    void construct() 
+    void construct()
     {
         _bPlayAll = false;
-        _iCurrentEffect = 0;
         _effectStartTime = millis();
     }
 
-    void ClearEffects() 
+    void ClearEffects()
     {
         for (auto effect : _vEffects)
             delete effect;
@@ -130,7 +129,7 @@ public:
     {
         ClearEffects();
         _vEffects.reserve(cEffects);
-        
+
         for (int i = 0; i < cEffects; i++)
         {
             _vEffects.push_back(pEffects[i]);
@@ -162,14 +161,14 @@ public:
         for (auto effectObject : effectsArray)
         {
             LEDStripEffect *pEffect = CreateEffectFromJSON(effectObject);
-            if (pEffect != nullptr) 
+            if (pEffect != nullptr)
                 _vEffects.push_back(pEffect);
         }
 
         // Check if we have at least one deserialized effect
         if (_vEffects.size() == 0)
             return false;
-        
+
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
         // Try to load effect enabled state from JSON also, default to "enabled" otherwise
@@ -181,8 +180,14 @@ public:
             if (i >= enabledSize || enabledArray[i] == 1)
                 EnableEffect(i, true);
         }
-        
+
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
+        if (jsonObject.containsKey("cei"))
+        {
+            _iCurrentEffect = jsonObject["cei"];
+            if (_iCurrentEffect >= EffectCount())
+                _iCurrentEffect = EffectCount() - 1;
+        }
 
         construct();
         return true;
@@ -194,6 +199,7 @@ public:
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
 
         jsonObject["ivl"] = _effectInterval;
+        jsonObject["cei"] = _iCurrentEffect;
 
         // Serialize enabled state first. That way we'll still find out if we run out of memory, later
         JsonArray enabledArray = jsonObject.createNestedArray("eef");
@@ -203,7 +209,7 @@ public:
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
-        for (auto effect : _vEffects) 
+        for (auto effect : _vEffects)
         {
             JsonObject effectObject = effectsArray.createNestedObject();
             if (!(effect->SerializeToJSON(effectObject)))
@@ -318,7 +324,7 @@ public:
 
         // If there's a temporary effect override from the remote control active, we start that, else
         // we start the current regular effect
-        
+
         if (_ptrRemoteEffect)
             _ptrRemoteEffect->Start();
         else
@@ -431,7 +437,7 @@ public:
 
     // Change the current effect; marks the state as needing attention so this get noticed next frame
 
-    void SetCurrentEffectIndex(size_t i)
+    void SetCurrentEffectIndex(size_t i, bool skipSave = false)
     {
         if (i >= _vEffects.size())
         {
@@ -440,6 +446,10 @@ public:
         }
         _iCurrentEffect = i;
         _effectStartTime = millis();
+
+        if (!skipSave)
+            SaveEffectManagerConfig();
+
         StartEffect();
     }
 
@@ -461,7 +471,7 @@ public:
     uint GetInterval() const
     {
         // This allows you to return a MinimumEffectTime and your effect won't be shown longer than that
-        
+
         if (_effectInterval == 0)
             return std::numeric_limits<uint>::max();
         return min(_effectInterval, GetCurrentEffect()->MaximumEffectTime() - GetTimeUsedByCurrentEffect());
@@ -503,6 +513,8 @@ public:
             _iCurrentEffect %= EffectCount();
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+
+        SaveEffectManagerConfig();
         StartEffect();
     }
 
@@ -518,6 +530,8 @@ public:
             _iCurrentEffect--;
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+
+        SaveEffectManagerConfig();
         StartEffect();
     }
 
