@@ -470,11 +470,8 @@ public:
 
     uint GetInterval() const
     {
-        // This allows you to return a MinimumEffectTime and your effect won't be shown longer than that
-
-        if (_effectInterval == 0)
-            return std::numeric_limits<uint>::max();
-        return min(_effectInterval, GetCurrentEffect()->MaximumEffectTime() - GetTimeUsedByCurrentEffect());
+        // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
+        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect()->MaximumEffectTime());
     }
 
     void CheckEffectTimerExpired()
