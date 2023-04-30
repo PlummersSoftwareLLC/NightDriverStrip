@@ -511,8 +511,6 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                 }
             #endif
 
-            StarType::GetStarTypeNumber();
-
             if (randomdouble(0, 2.0) < g_AppTime.DeltaTime() * prob)
             {
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);

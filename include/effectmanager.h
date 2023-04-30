@@ -54,6 +54,7 @@ extern uint8_t g_Fader;
 
 // References to functions in other C files
 
+void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
@@ -74,19 +75,22 @@ class EffectManager : public IJSONSerializable
 
     size_t _iCurrentEffect = 0;
     uint _effectStartTime;
-    uint _effectInterval;
+    uint _effectInterval = 0;
     bool _bPlayAll;
     bool _bShowVU = true;
     CRGB lastManualColor = CRGB::Red;
+    bool _clearRemoteEffectWhenExpired = false;
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
-    std::shared_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
+    std::shared_ptr<LEDStripEffect> _ptrRemoteEffect;
 
-    void construct()
+    void construct(bool clearRemoteEffect)
     {
         _bPlayAll = false;
-        _effectStartTime = millis();
+
+        if (clearRemoteEffect && _ptrRemoteEffect)
+            _clearRemoteEffectWhenExpired = true;
     }
 
     void ClearEffects()
@@ -102,6 +106,21 @@ class EffectManager : public IJSONSerializable
 public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
+
+    EffectManager(LEDStripEffect *pEffect, std::shared_ptr<GFXTYPE> *gfx)
+        : _gfx(gfx)
+    {
+        debugV("EffectManager Splash Effect Constructor");
+
+        if (pEffect->Init(_gfx))
+        {
+            _ptrRemoteEffect = std::shared_ptr<LEDStripEffect>(pEffect);
+            // This is a hacky way to ensure that the first effect in the list is shown after the one we're adopting now
+            _iCurrentEffect = -1;
+        }
+
+        construct(false);
+    }
 
     EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
         : _gfx(gfx)
@@ -142,7 +161,7 @@ public:
 
         SetInterval(DEFAULT_EFFECT_INTERVAL, true);
 
-        construct();
+        construct(true);
     }
 
     virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
@@ -155,7 +174,6 @@ public:
         if (effectsArray.isNull())
             return false;
 
-        _vEffects.clear();
         _vEffects.reserve(effectsArray.size());
 
         for (auto effectObject : effectsArray)
@@ -189,7 +207,8 @@ public:
                 _iCurrentEffect = EffectCount() - 1;
         }
 
-        construct();
+        construct(true);
+
         return true;
     }
 
@@ -250,19 +269,6 @@ public:
         return _bShowVU && GetCurrentEffect()->CanDisplayVUMeter();
     }
 
-#if ATOMLIGHT
-    static const uint FireEffectIndex = 2; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 6;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#elif FANSET
-    static const uint FireEffectIndex = 1; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#elif BROOKLYNROOM
-    static const uint FireEffectIndex = 2; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 6;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#else
-    static const uint FireEffectIndex = 0; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 0;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#endif
-
     // SetGlobalColor
     //
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
@@ -284,17 +290,17 @@ public:
 
             if (color == CRGB(CRGB::White))
                 effect = std::make_shared<ColorFillEffect>(CRGB::White, 1);
-        else
+            else
 
-            #if ENABLE_AUDIO
-                #if SPECTRUM
-                    effect = GetSpectrumAnalyzer(color, oldColor);
+                #if ENABLE_AUDIO
+                    #if SPECTRUM
+                        effect = GetSpectrumAnalyzer(color, oldColor);
+                    #else
+                        effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    #endif
                 #else
-                    effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
-            #else
-                effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-            #endif
 
             if (effect->Init(g_aptrDevices))
             {
@@ -304,9 +310,10 @@ public:
         #endif
     }
 
-    void ClearRemoteColor()
+    void ClearRemoteColor(bool retainRemoteEffect = false)
     {
-        _ptrRemoteEffect = nullptr;
+        if (!retainRemoteEffect)
+            _ptrRemoteEffect = nullptr;
 
         #if (USE_MATRIX)
             LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
@@ -316,19 +323,18 @@ public:
 
     void StartEffect()
     {
-        #if USE_MATRIX
-            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
-            pMatrix->SetCaption(_vEffects[_iCurrentEffect]->FriendlyName(), 3000);
-            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        #endif
-
         // If there's a temporary effect override from the remote control active, we start that, else
         // we start the current regular effect
 
-        if (_ptrRemoteEffect)
-            _ptrRemoteEffect->Start();
-        else
-            _vEffects[_iCurrentEffect]->Start();
+        LEDStripEffect *pEffect = _ptrRemoteEffect ? _ptrRemoteEffect.get() : _vEffects[_iCurrentEffect];
+
+        #if USE_MATRIX
+            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+            pMatrix->SetCaption(pEffect->FriendlyName(), 3000);
+            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+        #endif
+
+        pEffect->Start();
 
         _effectStartTime = millis();
     }
@@ -347,7 +353,7 @@ public:
 
             if (_cEnabled < 1)
             {
-                ClearRemoteColor();
+                ClearRemoteColor(true);
             }
             _cEnabled++;
 
@@ -424,7 +430,7 @@ public:
 
     LEDStripEffect *GetCurrentEffect() const
     {
-        return _vEffects[_iCurrentEffect];
+        return _ptrRemoteEffect ? _ptrRemoteEffect.get() : _vEffects[_iCurrentEffect];
     }
 
     const String & GetCurrentEffectName() const
@@ -482,6 +488,12 @@ public:
 
         if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
         {
+            if (_clearRemoteEffectWhenExpired)
+            {
+                _ptrRemoteEffect.reset();
+                _clearRemoteEffectWhenExpired = false;
+            }
+
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
             debugV("Current Effect: %s", GetCurrentEffectName());

@@ -766,8 +766,14 @@ void setup()
         #endif
     #endif
 
-    debugI("Initializing effects manager...");
-    InitEffectsManager();
+    // Show splash effect on matrix
+    #if USE_MATRIX
+        debugI("Initializing splash effect manager...");
+        InitSplashEffectManager();
+    #else
+        debugI("Initializing effects manager...");
+        InitEffectsManager();
+    #endif
 
     // Microphone stuff
     #if ENABLE_AUDIO
@@ -814,6 +820,12 @@ void setup()
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
     g_TaskManager.StartDrawThread();
     CheckHeap();
+
+    // Do proper effects manager initialization now that splash effect is running
+    #if USE_MATRIX
+        debugI("Initializing regular effects manager...");
+        InitEffectsManager();
+    #endif
 
     debugV("Saving effect manager config...");
     SaveEffectManagerConfig();
