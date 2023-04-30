@@ -90,7 +90,12 @@ class EffectManager : public IJSONSerializable
         _bPlayAll = false;
 
         if (clearRemoteEffect && _ptrRemoteEffect)
+        {
             _clearRemoteEffectWhenExpired = true;
+
+            // This is a hacky way to ensure that we start the correct effect after the temporary one
+            _iCurrentEffect--;
+        }
     }
 
     void ClearEffects()
@@ -113,11 +118,7 @@ public:
         debugV("EffectManager Splash Effect Constructor");
 
         if (pEffect->Init(_gfx))
-        {
             _ptrRemoteEffect = std::shared_ptr<LEDStripEffect>(pEffect);
-            // This is a hacky way to ensure that the first effect in the list is shown after the one we're adopting now
-            _iCurrentEffect = -1;
-        }
 
         construct(false);
     }
