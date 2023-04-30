@@ -140,6 +140,7 @@ private:
         else
             url = "http://api.openweathermap.org/geo/1.0/direct?q=" + configLocation + "," + configCountryCode + "&limit=1&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
 
+        http.useHTTP10(true);
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -150,9 +151,8 @@ private:
             return false;
         }
 
-        String response = http.getString();
         DynamicJsonDocument doc(4096);
-        deserializeJson(doc, response);
+        deserializeJson(doc, http.getStream());
         JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
 
         strLatitude = coordinates["lat"].as<String>();
@@ -174,14 +174,14 @@ private:
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+        http.useHTTP10(true);
         http.begin(url);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode > 0)
         {
-            String response = http.getString();
             DynamicJsonDocument doc(4096);
-            deserializeJson(doc, response);
+            deserializeJson(doc, http.getStream());
             JsonArray list = doc["list"];
 
             // Get tomorrow's date
@@ -235,14 +235,14 @@ private:
         HTTPClient http;
 
         String url = "http://api.openweathermap.org/data/2.5/weather?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+        http.useHTTP10(true);
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
         {
             iconToday = -1;
-            String weatherData = http.getString();
             DynamicJsonDocument jsonDoc(4096);
-            deserializeJson(jsonDoc, weatherData);
+            deserializeJson(jsonDoc, http.getStream());
 
             // Once we have a non-zero temp we can start displaying things
             if (0 < jsonDoc["main"]["temp"])
