@@ -475,12 +475,12 @@ public:
 
     void CheckEffectTimerExpired()
     {
-        // If interval is zero, the current effect never expires
+        // If interval is zero, the current effect never expires unless it thas a max effect time set
 
-        if (_effectInterval == 0)
+        if (_effectInterval == 0 && !GetCurrentEffect()->HasMaximumEffectTime())
             return;
 
-        if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if its time for a new effect yet
+        if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
         {
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
