@@ -72,7 +72,7 @@ class EffectManager : public IJSONSerializable
     std::vector<LEDStripEffect*> _vEffects;
     size_t _cEnabled = 0;
 
-    size_t _iCurrentEffect;
+    size_t _iCurrentEffect = 0;
     uint _effectStartTime;
     uint _effectInterval;
     bool _bPlayAll;
@@ -86,7 +86,6 @@ class EffectManager : public IJSONSerializable
     void construct()
     {
         _bPlayAll = false;
-        _iCurrentEffect = 0;
         _effectStartTime = millis();
     }
 
@@ -183,6 +182,12 @@ public:
         }
 
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
+        if (jsonObject.containsKey("cei"))
+        {
+            _iCurrentEffect = jsonObject["cei"];
+            if (_iCurrentEffect >= EffectCount())
+                _iCurrentEffect = EffectCount() - 1;
+        }
 
         construct();
         return true;
@@ -194,6 +199,7 @@ public:
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
 
         jsonObject["ivl"] = _effectInterval;
+        jsonObject["cei"] = _iCurrentEffect;
 
         // Serialize enabled state first. That way we'll still find out if we run out of memory, later
         JsonArray enabledArray = jsonObject.createNestedArray("eef");
@@ -431,7 +437,7 @@ public:
 
     // Change the current effect; marks the state as needing attention so this get noticed next frame
 
-    void SetCurrentEffectIndex(size_t i)
+    void SetCurrentEffectIndex(size_t i, bool skipSave = false)
     {
         if (i >= _vEffects.size())
         {
@@ -440,6 +446,10 @@ public:
         }
         _iCurrentEffect = i;
         _effectStartTime = millis();
+
+        if (!skipSave)
+            SaveEffectManagerConfig();
+
         StartEffect();
     }
 
@@ -451,20 +461,16 @@ public:
     uint GetTimeRemainingForCurrentEffect() const
     {
         // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
+        uint timeUsedByCurrentEffect = GetTimeUsedByCurrentEffect();
+        uint interval = GetInterval();
 
-        if (GetTimeUsedByCurrentEffect() > GetInterval())
-            return 0;
-
-        return GetInterval() - GetTimeUsedByCurrentEffect();
+        return timeUsedByCurrentEffect > interval ? 0 : (interval - timeUsedByCurrentEffect);
     }
 
     uint GetInterval() const
     {
-        // This allows you to return a MinimumEffectTime and your effect won't be shown longer than that
-
-        if (_effectInterval == 0)
-            return std::numeric_limits<uint>::max();
-        return min(_effectInterval, GetCurrentEffect()->MaximumEffectTime() - GetTimeUsedByCurrentEffect());
+        // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
+        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect()->MaximumEffectTime());
     }
 
     void CheckEffectTimerExpired()
@@ -474,7 +480,7 @@ public:
         if (_effectInterval == 0)
             return;
 
-        if (millis() - _effectStartTime >= GetInterval()) // See if its time for a new effect yet
+        if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if its time for a new effect yet
         {
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
@@ -503,6 +509,8 @@ public:
             _iCurrentEffect %= EffectCount();
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+
+        SaveEffectManagerConfig();
         StartEffect();
     }
 
@@ -518,6 +526,8 @@ public:
             _iCurrentEffect--;
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+
+        SaveEffectManagerConfig();
         StartEffect();
     }
 
