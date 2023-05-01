@@ -704,7 +704,7 @@ public:
 
   virtual bool SerializeToJSON(JsonObject& jsonObject)
   {
-    StaticJsonDocument<512> jsonDoc;
+    AllocatedJsonDocument jsonDoc(512);
 
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
@@ -1025,7 +1025,7 @@ public:
 
   virtual bool SerializeToJSON(JsonObject& jsonObject)
   {
-    StaticJsonDocument<512> jsonDoc;
+    AllocatedJsonDocument jsonDoc(512);
 
     jsonDoc[PTY_PALETTE] = Palette;
     jsonDoc[PTY_LEDCOUNT] = LEDCount;

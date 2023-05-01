@@ -669,7 +669,7 @@ DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
     {
         debugW("InitSplashEffectManager");
 
-        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(new SplashLogoEffect(), g_aptrDevices);    
+        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(new SplashLogoEffect(), g_aptrDevices);
     }
 
 #endif
@@ -682,7 +682,7 @@ void InitEffectsManager()
 {
     debugW("InitEffectsManager...");
 
-    std::unique_ptr<DynamicJsonDocument> pJsonDoc;
+    std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
 
     if (LoadJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, pJsonDoc))
     {

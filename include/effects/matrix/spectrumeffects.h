@@ -67,7 +67,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
+        AllocatedJsonDocument jsonDoc(512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -363,7 +363,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
+        AllocatedJsonDocument jsonDoc(512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);

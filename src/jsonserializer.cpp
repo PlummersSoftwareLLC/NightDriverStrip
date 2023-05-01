@@ -31,7 +31,7 @@
 #include "SPIFFS.h"
 #include "jsonserializer.h"
 
-bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<DynamicJsonDocument>& pJsonDoc)
+bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;
 
@@ -49,7 +49,7 @@ bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<Dyna
             // Loop is here to deal with out of memory conditions
             while(true)
             {
-                pJsonDoc.reset(new DynamicJsonDocument(bufferSize));
+                pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
 
                 DeserializationError error = deserializeJson(*pJsonDoc, file);
 
@@ -85,12 +85,12 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
     if (bufferSize == 0)
         bufferSize = JSON_BUFFER_BASE_SIZE;
 
-    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
+    std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
 
     // Loop is here to deal with out of memory conditions
     while(true)
     {
-        pJsonDoc.reset(new DynamicJsonDocument(bufferSize));
+        pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
         JsonObject jsonObject = pJsonDoc->to<JsonObject>();
 
         if (object.SerializeToJSON(jsonObject))

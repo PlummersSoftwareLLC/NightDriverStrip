@@ -88,7 +88,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
         for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++)
         {
-            DynamicJsonDocument effectDoc(256);
+            StaticJsonDocument<256> effectDoc;
             effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
             effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
 

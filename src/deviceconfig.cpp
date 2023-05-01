@@ -43,7 +43,7 @@ void DeviceConfig::SaveToJSON()
 
 DeviceConfig::DeviceConfig()
 {
-    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
+    std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
 
     if (LoadJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, pJsonDoc))
     {

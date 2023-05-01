@@ -47,6 +47,28 @@ constexpr auto to_value(E e) noexcept
 	return static_cast<std::underlying_type_t<E>>(e);
 }
 
+#if USE_PSRAM
+    struct JsonPsramAllocator
+    {
+        void* allocate(size_t size) {
+            return ps_malloc(size);
+        }
+
+        void deallocate(void* pointer) {
+            free(pointer);
+        }
+
+        void* reallocate(void* ptr, size_t new_size) {
+            return ps_realloc(ptr, new_size);
+        }
+    };
+
+    typedef BasicJsonDocument<JsonPsramAllocator> AllocatedJsonDocument;
+
+#else
+    typedef DynamicJsonDocument AllocatedJsonDocument;
+#endif
+
 namespace ArduinoJson
 {
     template <>
@@ -73,7 +95,7 @@ namespace ArduinoJson
     {
         static bool toJson(const CRGBPalette16& palette, JsonVariant dst)
         {
-            StaticJsonDocument<384> doc;
+            AllocatedJsonDocument doc(384);
 
             JsonArray colors = doc.to<JsonArray>();
 
@@ -102,7 +124,7 @@ namespace ArduinoJson
     };
 }
 
-bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<DynamicJsonDocument>& pJsonDoc);
+bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
 bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable& object);
 bool RemoveJSONFile(const char *fileName);
 

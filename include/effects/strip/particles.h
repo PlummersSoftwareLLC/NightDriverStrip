@@ -721,7 +721,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
+        AllocatedJsonDocument jsonDoc(512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -811,7 +811,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
+        AllocatedJsonDocument jsonDoc(512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -897,7 +897,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
+        AllocatedJsonDocument jsonDoc(512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);

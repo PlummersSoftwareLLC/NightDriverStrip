@@ -248,7 +248,7 @@ public:
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
+        AllocatedJsonDocument jsonDoc(512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         FireEffect::SerializeToJSON(jsonObject);

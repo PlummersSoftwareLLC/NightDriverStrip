@@ -84,7 +84,7 @@ class DeviceConfig : public IJSONSerializable
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<1024> jsonDoc;
+        AllocatedJsonDocument jsonDoc(1024);
 
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;

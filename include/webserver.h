@@ -54,6 +54,20 @@ class CWebServer
 {
   private:
 
+    struct StaticStatistics
+    {
+        uint32_t HeapSize;
+        size_t DmaHeapSize;
+        uint32_t PsramSize;
+        const char *ChipModel;
+        uint8_t ChipCores;
+        uint32_t CpuFreqMHz;
+        uint32_t SketchSize;
+        uint32_t FreeSketchSpace;
+        uint32_t FlashChipSize;
+    };
+
+
     struct EmbeddedFile
     {
         // Embedded file size in bytes
@@ -71,6 +85,7 @@ class CWebServer
     };
 
     AsyncWebServer _server;
+    StaticStatistics _staticStats;
 
     // Helper functions/templates
     template<typename Tv>

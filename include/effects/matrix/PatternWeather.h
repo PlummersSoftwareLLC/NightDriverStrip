@@ -151,7 +151,7 @@ private:
             return false;
         }
 
-        DynamicJsonDocument doc(4096);
+        AllocatedJsonDocument doc(4096);
         deserializeJson(doc, http.getStream());
         JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
 
@@ -180,7 +180,7 @@ private:
 
         if (httpResponseCode > 0)
         {
-            DynamicJsonDocument doc(4096);
+            AllocatedJsonDocument doc(4096);
             deserializeJson(doc, http.getStream());
             JsonArray list = doc["list"];
 
@@ -241,7 +241,7 @@ private:
         if (httpResponseCode > 0)
         {
             iconToday = -1;
-            DynamicJsonDocument jsonDoc(4096);
+            AllocatedJsonDocument jsonDoc(4096);
             deserializeJson(jsonDoc, http.getStream());
 
             // Once we have a non-zero temp we can start displaying things

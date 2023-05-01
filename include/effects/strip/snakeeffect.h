@@ -82,7 +82,7 @@ class SnakeEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
+        AllocatedJsonDocument jsonDoc(512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
