@@ -325,7 +325,6 @@ public:
     }
 
     // We re-render the entire display every frame
-
     virtual void Draw()
     {
         const int fontHeight = 7;
@@ -378,11 +377,11 @@ public:
         {
             auto filename = pszWeatherIcons[iconTomorrow];
             if (strlen(filename))
-                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+1, 10, filename))        // Draw the image
+                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+1, 10, filename))  // Draw the image
                     debugW("Could not display %s", filename);
         }
 
-        // Print the town/city name, which we looked up via trhe zip code
+        // Print the town/city name
 
         int x = 0;
         int y = fontHeight + 1;
