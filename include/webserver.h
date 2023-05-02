@@ -67,7 +67,6 @@ class CWebServer
         uint32_t FlashChipSize;
     };
 
-
     struct EmbeddedFile
     {
         // Embedded file size in bytes
@@ -173,6 +172,16 @@ class CWebServer
         extern const uint8_t ico_end[] asm("_binary_site_favicon_ico_end");
         extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
         extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
+
+        _staticStats.HeapSize = ESP.getHeapSize();
+        _staticStats.DmaHeapSize = heap_caps_get_total_size(MALLOC_CAP_DMA);
+        _staticStats.PsramSize = ESP.getPsramSize();
+        _staticStats.ChipModel = ESP.getChipModel();
+        _staticStats.ChipCores = ESP.getChipCores();
+        _staticStats.CpuFreqMHz = ESP.getCpuFreqMHz();
+        _staticStats.SketchSize = ESP.getSketchSize();
+        _staticStats.FreeSketchSpace = ESP.getFreeSketchSpace();
+        _staticStats.FlashChipSize = ESP.getFlashChipSize();
 
         debugI("Connecting Web Endpoints");
 

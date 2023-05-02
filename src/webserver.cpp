@@ -119,26 +119,26 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
     j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
 
-    j["HEAP_SIZE"]             = ESP.getHeapSize();
+    j["HEAP_SIZE"]             = _staticStats.HeapSize;
     j["HEAP_FREE"]             = ESP.getFreeHeap();
     j["HEAP_MIN"]              = ESP.getMinFreeHeap();
 
-    j["DMA_SIZE"]              = heap_caps_get_total_size(MALLOC_CAP_DMA);
+    j["DMA_SIZE"]              = _staticStats.DmaHeapSize;
     j["DMA_FREE"]              = heap_caps_get_free_size(MALLOC_CAP_DMA);
     j["DMA_MIN"]               = heap_caps_get_largest_free_block(MALLOC_CAP_DMA);
 
-    j["PSRAM_SIZE"]            = ESP.getPsramSize();
+    j["PSRAM_SIZE"]            = _staticStats.PsramSize;
     j["PSRAM_FREE"]            = ESP.getFreePsram();
     j["PSRAM_MIN"]             = ESP.getMinFreePsram();
 
-    j["CHIP_MODEL"]            = ESP.getChipModel();
-    j["CHIP_CORES"]            = ESP.getChipCores();
-    j["CHIP_SPEED"]            = ESP.getCpuFreqMHz();
-    j["PROG_SIZE"]             = ESP.getSketchSize();
+    j["CHIP_MODEL"]            = _staticStats.ChipModel;
+    j["CHIP_CORES"]            = _staticStats.ChipCores;
+    j["CHIP_SPEED"]            = _staticStats.CpuFreqMHz;
+    j["PROG_SIZE"]             = _staticStats.SketchSize;
 
-    j["CODE_SIZE"]             = ESP.getSketchSize();
-    j["CODE_FREE"]             = ESP.getFreeSketchSpace();
-    j["FLASH_SIZE"]            = ESP.getFlashChipSize();
+    j["CODE_SIZE"]             = _staticStats.SketchSize;
+    j["CODE_FREE"]             = _staticStats.FreeSketchSpace;
+    j["FLASH_SIZE"]            = _staticStats.FlashChipSize;
 
     j["CPU_USED"]              = g_TaskManager.GetCPUUsagePercent();
     j["CPU_USED_CORE0"]        = g_TaskManager.GetCPUUsagePercent(0);
