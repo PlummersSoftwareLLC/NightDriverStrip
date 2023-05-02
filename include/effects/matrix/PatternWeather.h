@@ -72,25 +72,24 @@ class PatternWeather : public LEDStripEffect
 
 private:
 
-    String strLocationName       = "";
-    String strLocation           = "";
-    String strCountryCode        = "";
-    String strLatitude           = "0.0";
-    String strLongitude          = "0.0";
-    int    dayOfWeek             = 0;
-    int    iconToday             = -1;
-    int    iconTomorrow          = -1;
-    float  temperature           = 0.0f;
-    float  pressure              = 0.0f;
-    float  highToday             = 0.0f;
-    float  loToday               = 0.0f;
-    float  highTomorrow          = 0.0f;
-    float  loTomorrow            = 0.0f;
+    String strLocationName   = "";
+    String strLocation       = "";
+    String strCountryCode    = "";
+    String strLatitude       = "0.0";
+    String strLongitude      = "0.0";
+    int    dayOfWeek         = 0;
+    int    iconToday         = -1;
+    int    iconTomorrow      = -1;
+    float  temperature       = 0.0f;
+    float  pressure          = 0.0f;
+    float  highToday         = 0.0f;
+    float  loToday           = 0.0f;
+    float  highTomorrow      = 0.0f;
+    float  loTomorrow        = 0.0f;
 
-    bool   dataReady             = false;
-    TaskHandle_t weatherTask     = nullptr;
-    bool   updateInProgress      = false;
-    time_t latestUpdate          = 0;
+    bool   dataReady         = false;
+    TaskHandle_t weatherTask = nullptr;
+    time_t latestUpdate      = 0;
 
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
@@ -140,7 +139,6 @@ private:
         else
             url = "http://api.openweathermap.org/geo/1.0/direct?q=" + configLocation + "," + configCountryCode + "&limit=1&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
 
-        http.useHTTP10(true);
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -152,7 +150,7 @@ private:
         }
 
         AllocatedJsonDocument doc(4096);
-        deserializeJson(doc, http.getStream());
+        deserializeJson(doc, http.getString());
         JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
 
         strLatitude = coordinates["lat"].as<String>();
@@ -174,14 +172,13 @@ private:
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
-        http.useHTTP10(true);
         http.begin(url);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode > 0)
         {
             AllocatedJsonDocument doc(4096);
-            deserializeJson(doc, http.getStream());
+            deserializeJson(doc, http.getString());
             JsonArray list = doc["list"];
 
             // Get tomorrow's date
@@ -235,14 +232,13 @@ private:
         HTTPClient http;
 
         String url = "http://api.openweathermap.org/data/2.5/weather?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
-        http.useHTTP10(true);
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
         {
             iconToday = -1;
             AllocatedJsonDocument jsonDoc(4096);
-            deserializeJson(jsonDoc, http.getStream());
+            deserializeJson(jsonDoc, http.getString());
 
             // Once we have a non-zero temp we can start displaying things
             if (0 < jsonDoc["main"]["temp"])
@@ -273,19 +269,28 @@ private:
         }
     }
 
-    // Thread entry point so we can update the weather data asynchronously.  The update thread exists
-    // when it's done fetching, it is not persistent.
-
-    static void UpdateWeather(void * pv)
+    // Thread entry point so we can update the weather data asynchronously
+    static void WeatherTaskEntryPoint(void * pv)
     {
         PatternWeather * pObj = (PatternWeather *) pv;
 
-        pObj->updateCoordinates();
+        for(;;)
+        {
+            pObj->UpdateWeather();
 
-        if (pObj->getWeatherData())
+            // Suspend ourself until Draw() wakes us up
+            vTaskSuspend(NULL);
+        }
+    }
+
+    void UpdateWeather()
+    {
+        updateCoordinates();
+
+        if (getWeatherData())
         {
             debugW("Got today's weather");
-            if (pObj->getTomorrowTemps(pObj->highTomorrow, pObj->loTomorrow))
+            if (getTomorrowTemps(highTomorrow, loTomorrow))
                 debugI("Got tomorrow's weather");
             else
                 debugW("Failed to get tomorrow's weather");
@@ -294,11 +299,6 @@ private:
         {
             debugW("Failed to get today's weather");
         }
-        auto task = pObj->weatherTask;
-        pObj->weatherTask = nullptr;
-        pObj->updateInProgress = false;
-        debugW("Weather thread exiting");
-        vTaskDelete(task);
     }
 
     bool HasLocationChanged()
@@ -317,6 +317,11 @@ public:
 
     PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
+    }
+
+    ~PatternWeather()
+    {
+        vTaskDelete(weatherTask);
     }
 
     // We re-render the entire display every frame
@@ -343,23 +348,23 @@ public:
             // not more than once every half a minute
             if ((timingObj || HasLocationChanged()) && (now - latestUpdate) >= 30)
             {
-                if (!updateInProgress && nullptr == weatherTask)
+                latestUpdate = now;
+
+                // Lazily create the weather update task the first time we need it
+                if (weatherTask == nullptr)
                 {
-                    latestUpdate = now;
-                    updateInProgress = true;
-
-                    // Create a thread to update the weather data rather than blocking the draw thread
-
-                    debugW("Spawning thread to check weather..");
-                    xTaskCreatePinnedToCore(UpdateWeather, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
+                    debugW("Spawning thread to check weather...");
+                    xTaskCreatePinnedToCore(WeatherTaskEntryPoint, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
                 }
                 else
                 {
-                    debugW("Skipping weather fetch because previous update still in progress");
+                    debugW("Triggering thread to check weather now...");
+                    // Resume the weather task. If it's not suspended then there's an update running and this will do nothing,
+                    //   so we'll silently skip the update this would otherwise trigger.
+                    vTaskResume(weatherTask);
                 }
             }
         }
-
 
         // Draw the graphics
         if (iconToday >= 0)
