@@ -39,7 +39,7 @@ class FireEffect : public LEDStripEffect
 {
     void construct() 
     {
-        heat = std::make_unique<uint8_t []>(CellCount());
+        heat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
     }
 
   protected:
@@ -378,9 +378,9 @@ public:
 
     void Fire(int Cooling, int Sparking, int Sparks)
     {
+        static std::unique_ptr<uint8_t []> heat = std::make_unique<uint8_t []>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
 
-        static uint8_t heat[NUM_LEDS];
         int cooldown;
 
         // Step 1.  Cool down every cell a little

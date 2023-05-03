@@ -53,17 +53,16 @@ void LEDMatrixGFX::StartMatrix()
 {
   matrix.addLayer(&backgroundLayer);
   matrix.addLayer(&titleLayer);
-  // matrix.setRefreshRate(200);
 
   // When the matrix starts, you can ask it to leave N bytes of memory free, and this amount must be tuned.  Too much free 
   // will cause a dim panel with a low refresh, too little will starve other things.  100K seems a good starting point.
   
-  matrix.setRefreshRate(100);
-  matrix.begin(80000);
+  matrix.setRefreshRate(200);
+  matrix.begin(50000);
 
   Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
 
-  backgroundLayer.setRefreshRate(100);
+  backgroundLayer.setRefreshRate(200);
   backgroundLayer.fillScreen(rgb24(0, 64, 0));
   backgroundLayer.setFont(font6x10);
   backgroundLayer.drawString(8, kMatrixHeight / 2 - 6, rgb24(255, 255, 255), "NightDriver");
@@ -84,8 +83,8 @@ void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
 {
   // If an effect redraws itself entirely ever frame, it can skip saving the most recent buffer, so
   // can swap without waiting for a copy.
-  matrix.setRefreshRate(100);
-  backgroundLayer.setRefreshRate(100);
+  matrix.setRefreshRate(200);
+  backgroundLayer.setRefreshRate(200);
   matrix.setMaxCalculationCpuPercentage(100);
 
   backgroundLayer.swapBuffers(bSwapBackground);

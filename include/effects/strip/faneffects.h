@@ -1002,7 +1002,7 @@ public:
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
-    abHeat = std::make_unique<uint8_t[]>(CellCount());
+    abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
   }
 
   FireFanEffect(const JsonObjectConst& jsonObject)

@@ -279,11 +279,9 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int yOffset2  = pGFXChannel->height() - value2;
 
         if (_fadeRate == 0)
-        {
             for (int y = 1; y < yOffset2; y++)
                 for (int x = xOffset; x < xOffset + barWidth; x++)
                     graphics()->setPixel(x, y, CRGB::Black);
-        }
         
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
@@ -385,7 +383,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         g_Analyzer.g_peak1DecayRate = _peak1DecayRate;
         g_Analyzer.g_peak2DecayRate = _peak2DecayRate;
 
-        auto pGFXChannel = _GFX[0].get();
+        auto pGFXChannel = _GFX[0];
 
         if (_scrollSpeed > 0)
         {
@@ -398,9 +396,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
 
-        //if (_bShowVU)
-        //    DrawVUMeter(pGFXChannel, 0);
-        
         for (int i = 0; i < _numBars; i++)
         {
             // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one

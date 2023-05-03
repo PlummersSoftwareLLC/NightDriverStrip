@@ -127,6 +127,42 @@ public:
         captionStartTime = millis();
     }
 
+    virtual inline void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    {
+        // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+        // out in order to do the scroll with memmove rather than row by column pixel
+        // lookups.          
+        for (int y = startY; y <= endY; y++)
+        {
+            auto pLinemem = leds + y * MATRIX_WIDTH;
+            auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+            memmove(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memmove(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));                
+        }
+    }
+
+    virtual inline void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    {
+        // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+        // out in order to do the scroll with memmove rather than row by column pixel
+        // lookups.  
+        for (int y = startY; y <= endY; y++)
+        {
+            auto pLinemem = leds + y * MATRIX_WIDTH;
+            auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+            memmove(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memmove(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+        }
+    }
+
+    inline virtual void fillLeds(const CRGB *pLEDs)
+    {
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
+        // so we do it the "slow" way for other matrices
+
+        memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
+    }
+
     // Matrix interop
 
     static void StartMatrix();

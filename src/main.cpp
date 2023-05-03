@@ -476,6 +476,7 @@ void setup()
     Serial.begin(115200);      
 
     uzlib_init();
+    heap_caps_malloc_extmem_enable(1024);
 
     if (!SPIFFS.begin(true)) 
         Serial.println("WARNING: SPIFFs could not be intialized!");

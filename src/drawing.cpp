@@ -423,7 +423,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #if USE_MATRIX
             if (wifiPixelsDrawn + localPixelsDrawn > 0)
             {
-                LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresfloatBuffering(), pMatrix->GetCaptionTransparency() > 0);
+                LEDMatrixGFX::MatrixSwapBuffers(g_aptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
                 FastLED.countFPS();
                 g_FPS = FastLED.getFPS();
             }

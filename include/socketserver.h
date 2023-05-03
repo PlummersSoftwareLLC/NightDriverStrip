@@ -117,7 +117,7 @@ public:
         _server_fd(0),
         _cbReceived(0)
     {
-        _abOutputBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
+        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -135,7 +135,7 @@ public:
 
     bool begin()
     {
-        _pBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
+        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );
 
         _cbReceived = 0;
         

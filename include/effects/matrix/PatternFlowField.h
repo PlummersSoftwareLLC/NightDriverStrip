@@ -85,7 +85,7 @@ public:
 
         for (int i = 0; i < count; i++)
         {
-            graphics()->boids[i] = Boid(random(MATRIX_WIDTH), 0);
+            graphics()->_boids[i] = Boid(random(MATRIX_WIDTH), 0);
         }
     }
 
@@ -102,7 +102,7 @@ public:
 
         for (int i = 0; i < count; i++)
         {
-            Boid *boid = &(graphics()->boids[i]);
+            Boid *boid = &(graphics()->_boids[i]);
 
             int ioffset = scale * boid->location.x;
             int joffset = scale * boid->location.y;
