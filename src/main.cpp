@@ -706,8 +706,10 @@ void setup()
 
     #if USESTRIP
 
+
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
+            
             
             FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_aptrDevices[0].get())->leds, g_aptrDevices[0]->GetLEDCount());
             //FastLED.setMaxRefreshRate(100, false); 
