@@ -114,7 +114,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() 
+    virtual void Draw() override 
     {
         ProcessAudio();
         

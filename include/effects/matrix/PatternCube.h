@@ -182,7 +182,7 @@ class PatternCube : public LEDStripEffect
     uint8_t hue = 0;
     int step = 0;
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 40;
     }
@@ -208,9 +208,9 @@ class PatternCube : public LEDStripEffect
         return false;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-      auto g = g_aptrEffectManager->graphics();
+      auto g = g_aptrEffectManager->g();
 
       //uint8_t blurAmount = beatsin8(2, 250, 255);
       g->Clear();

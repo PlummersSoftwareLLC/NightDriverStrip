@@ -107,7 +107,7 @@ private:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 61;
     }
@@ -142,7 +142,7 @@ private:
     //
     // Draw each of the balls.  When any ball gets too little energy it would just sit at the base so it is re-kicked with new energy.#pragma endregion
     
-    virtual void Draw()
+    virtual void Draw() override
     {
         // Erase the drawing area
         if (_bErase)

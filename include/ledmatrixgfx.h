@@ -85,12 +85,12 @@ public:
         matrix.setBrightness(percent);
     }
     
-    inline virtual uint16_t xy(uint16_t x, uint16_t y) const
+    virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         return y * MATRIX_WIDTH + x;    
     }
 
-    inline void setLeds(CRGB *pLeds)
+    void setLeds(CRGB *pLeds)
     {
         leds = pLeds;
     }
@@ -127,7 +127,7 @@ public:
         captionStartTime = millis();
     }
 
-    virtual inline void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll with memmove rather than row by column pixel
@@ -141,7 +141,7 @@ public:
         }
     }
 
-    virtual inline void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll with memmove rather than row by column pixel
@@ -155,7 +155,7 @@ public:
         }
     }
 
-    inline virtual void fillLeds(const CRGB *pLEDs)
+    virtual void fillLeds(const CRGB *pLEDs)
     {
         // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
         // so we do it the "slow" way for other matrices

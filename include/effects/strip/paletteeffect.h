@@ -115,7 +115,7 @@ class PaletteEffect : public LEDStripEffect
     {
     }
     
-      virtual void Draw() 
+      virtual void Draw() override 
     {
         if (_bErase)
           setAllOnAllChannels(0,0,0);

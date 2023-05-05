@@ -77,7 +77,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         auto peaks = g_Analyzer.GetPeakData();
 
@@ -202,7 +202,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     float _peak1DecayRate;
     float _peak2DecayRate;
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 60;
     }
@@ -281,11 +281,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         if (_fadeRate == 0)
             for (int y = 1; y < yOffset2; y++)
                 for (int x = xOffset; x < xOffset + barWidth; x++)
-                    graphics()->setPixel(x, y, CRGB::Black);
+                    g()->setPixel(x, y, CRGB::Black);
         
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
-                graphics()->setPixel(x, y, baseColor);
+                g()->setPixel(x, y, baseColor);
         
         const int PeakFadeTime_ms = 1000;
 
@@ -376,7 +376,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
 
@@ -457,7 +457,7 @@ class WaveformEffect : public LEDStripEffect
         v = std::min(v, 1.0f);
         v = std::max(v, 0.0f);
 
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_aptrEffectManager->g();
 
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
@@ -490,15 +490,15 @@ class WaveformEffect : public LEDStripEffect
 
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         // I found a pleasing scroll speed to be 24-30, not much faster or its too mesmerizing :-)
         return 24;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_aptrEffectManager->g();
         
         int top = g_aptrEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
@@ -553,19 +553,18 @@ class GhostWave : public WaveformEffect
 
     virtual bool RequiresDoubleBuffering() const
     {
-        // If the effect entirely erases each frame, it doesn't need double buffering or preserving the old frame
-        return !_erase;
+        return true; 
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         // Looks cool at the low-50s it can actually achieve
         return _blur > 0 ? 60 : 30;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_aptrEffectManager->g();
 
         int top = g_aptrEffectManager->IsVUVisible() ? 1 : 0;
 

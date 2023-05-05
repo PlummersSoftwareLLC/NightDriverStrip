@@ -89,11 +89,11 @@ public:
   {
   }
 
-  virtual size_t DesiredFramesPerSecond() const
+  virtual size_t DesiredFramesPerSecond() const override
   {
       return 120;
   }
-  virtual void Draw()
+  virtual void Draw() override
   {
     auto graphics = (GFXBase *)_GFX[0].get();
     graphics->DimAll(253);

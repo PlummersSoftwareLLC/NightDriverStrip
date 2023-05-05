@@ -88,7 +88,7 @@ class PatternSpark : public LEDStripEffect
       // Add entropy to random number generator; we use a lot of it.
       random16_add_entropy( random16());
 
-      graphics()->DimAll(235);
+      g()->DimAll(235);
       for (uint8_t x = 0; x < MATRIX_WIDTH; x++) 
       {
         // Step 1.  Cool down every cell a little
@@ -130,11 +130,11 @@ class PatternSpark : public LEDStripEffect
       }
 
       // Noise
-      graphics()->GetNoise().noise_x += 1000;
-      graphics()->GetNoise().noise_y += 1000;
-      graphics()->GetNoise().noise_z += 1000;
-      graphics()->GetNoise().noise_scale_x = 4000;
-      graphics()->GetNoise().noise_scale_y = 4000;
+      g()->GetNoise().noise_x += 1000;
+      g()->GetNoise().noise_y += 1000;
+      g()->GetNoise().noise_z += 1000;
+      g()->GetNoise().noise_scale_x = 4000;
+      g()->GetNoise().noise_scale_y = 4000;
       effects.FillGetNoise();
 
       effects.MoveX(3);

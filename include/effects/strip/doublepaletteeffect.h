@@ -80,7 +80,7 @@ class DoublePaletteEffect : public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() 
+    virtual void Draw() override 
     {
         setAllOnAllChannels(0,0,0);
         _PaletteEffect1.Draw();

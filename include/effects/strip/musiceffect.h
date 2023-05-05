@@ -125,7 +125,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
 
     int _iLastInsulator = -1;
            
-    virtual void Draw()
+    virtual void Draw() override
     {
         ProcessAudio();
 

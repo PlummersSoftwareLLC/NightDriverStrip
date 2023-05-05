@@ -80,7 +80,7 @@ class PatternPulse : public LEDStripEffect
     {
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         auto graphics = (GFXBase *) _GFX[0].get();
 
@@ -155,7 +155,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
     {
     }
     
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 30;
     }
@@ -176,7 +176,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         ProcessAudio();
         //VUMeterEffect::DrawVUMeter(graphics, 0);
@@ -188,7 +188,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         const int maxNewStarsPerFrame = 8;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
             if (random(4) < g_Analyzer._VURatio)
-                graphics()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
+                g()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
 
 
         for (auto pop = _pops.begin(); pop != _pops.end();)
@@ -203,7 +203,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
             if (pop->step == 0)
             {
-                graphics()->drawCircle(pop->centerX, pop->centerY, pop->step, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue)));
+                g()->drawCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
                 pop->step++;
                 pop++;
             }
@@ -212,11 +212,11 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
                 if (pop->step < pop->maxSteps)
                 {
                     // initial pulse
-                    graphics()->drawCircle(pop->centerX, pop->centerY, pop->step, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
+                    g()->drawCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
 
                     // secondary pulse
                     if (pop->step > 3)
-                        graphics()->drawCircle(pop->centerX, pop->centerY, pop->step - 3, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                        g()->drawCircle(pop->centerX, pop->centerY, pop->step - 3, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
                     
                     // This looks like PDP-11 code to me.  double post-inc for the win!
                     pop++->step++;

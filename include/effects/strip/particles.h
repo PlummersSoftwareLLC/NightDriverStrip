@@ -415,7 +415,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
       }
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       // We are inheriting from both the insulator music beat effect and a particle system effect, and both need
       //  
@@ -469,7 +469,7 @@ class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase, p
         _allParticles.push_back(RingParticle(iInsulator, 0, RandomSaturatedColor(), flashtime, fadetime));
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       ProcessAudio();
 
@@ -768,7 +768,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
         }
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
       // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
@@ -857,7 +857,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
         }
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       ProcessAudio();      
       // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
@@ -919,7 +919,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
         _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 1, 1.0, 1.0, 1, 0, NOBLEND, true, 1.0, min(0.15f, elapsed/2)));
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
       // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
@@ -964,7 +964,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
         _allParticles.push_back(HotWhiteRingParticle(_GFX, iInsulator, 0, 0.25, 0.75));
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
       // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We

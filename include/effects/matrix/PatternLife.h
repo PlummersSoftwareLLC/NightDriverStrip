@@ -207,7 +207,7 @@ public:
         bStuckInLoop = 0;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         auto graphics = (GFXBase *) _GFX[0].get();
         

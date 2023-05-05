@@ -219,7 +219,7 @@ public:
     }
 
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
-    inline std::shared_ptr<GFXTYPE> graphics() const
+    inline std::shared_ptr<GFXTYPE> g() const
     {
         return _gfx[0];
     }

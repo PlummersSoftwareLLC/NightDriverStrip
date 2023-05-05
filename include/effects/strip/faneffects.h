@@ -363,7 +363,7 @@ class EmptyEffect : public LEDStripEffect
 {
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -387,7 +387,7 @@ public:
   {
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     fadeToBlackBy(FastLED.leds(), NUM_LEDS, 20);
     DrawEffect();
@@ -413,7 +413,7 @@ public:
     CRGB c = CHSV(random(0, 255), 255, 255);
     for (int i = NUM_FANS * FAN_SIZE; i < NUM_LEDS; i++)
     {
-      graphics()->setPixel(i, c);
+      g()->setPixel(i, c);
     }
   }
 
@@ -457,7 +457,7 @@ class CountEffect : public LEDStripEffect
   const int DRAW_LEN = 16;
   const int OPEN_LEN = NUM_FANS * FAN_SIZE - DRAW_LEN;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     static float i = 0;
     EVERY_N_MILLISECONDS(30)
@@ -505,7 +505,7 @@ public:
   {
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     EVERY_N_MILLISECONDS(250)
     {
@@ -592,7 +592,7 @@ public:
   {
   } 
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     EVERY_N_MILLISECONDS(250)
     {
@@ -716,7 +716,7 @@ public:
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     EVERY_N_MILLISECONDS(20) // Update the reels based on the direction
     {
@@ -790,7 +790,7 @@ public:
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -814,7 +814,7 @@ class ColorCycleEffectBottomUp : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -838,7 +838,7 @@ class ColorCycleEffectTopDown : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -862,7 +862,7 @@ class ColorCycleEffectSequential : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -888,7 +888,7 @@ class SpinningPaletteEffect : public PaletteEffect
 public:
   using PaletteEffect::PaletteEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     PaletteEffect::Draw();
     for (int i = 0; i < NUM_FANS; i++)
@@ -909,7 +909,7 @@ class ColorCycleEffectRightLeft : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -931,7 +931,7 @@ class ColorCycleEffectLeftRight : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -1049,13 +1049,13 @@ public:
     return ColorFromPalette(Palette, temp, 255);
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawFire(Order);
   }
 
-  virtual size_t DesiredFramesPerSecond() const
+  virtual size_t DesiredFramesPerSecond() const override
   {
     return 60;
   }
@@ -1175,7 +1175,7 @@ public:
     DrawFanPixels(q, lineLen, color, BottomUp);
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear();
     DrawColor(CRGB::Red, 0);
@@ -1191,7 +1191,7 @@ class HueTest : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear();
     int iFan = 0;
@@ -1214,7 +1214,7 @@ public:
   {
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     for (int i = 0; i < NUM_FANS; i++)
     {
@@ -1389,7 +1389,7 @@ public:
     centerColor.fadeToBlackBy(distance(xRatio, yRatio, 0, 0) * 128);
     DrawRingPixels(0, 1.0, centerColor, 0, 3);
 
-    debugW("X,Y = %f, %f\n", xRatio, yRatio);
+    debugV("X,Y = %f, %f\n", xRatio, yRatio);
   }
 };
 
@@ -1409,12 +1409,12 @@ public:
   {
   }
 
-  virtual size_t DesiredFramesPerSecond() const
+  virtual size_t DesiredFramesPerSecond() const override
   {
     return 30;
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     fadeAllChannelsToBlackBy(20);
     for (int i = 0; i < _maxParticles; i++)

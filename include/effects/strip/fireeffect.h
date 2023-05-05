@@ -122,7 +122,7 @@ class FireEffect : public LEDStripEffect
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 45;
     }
@@ -146,7 +146,7 @@ class FireEffect : public LEDStripEffect
         }
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         FastLED.clear(false);
         DrawFire();
@@ -317,7 +317,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
         }
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         BeatEffectBase::ProcessAudio();
         PaletteFlameEffect::Draw();
@@ -363,7 +363,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         //static float lastDraw = 0;
 
@@ -562,7 +562,7 @@ public:
 
     //float lastDraw = 0;
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         //if (g_AppTime.FrameStartTime() - lastDraw < 1.0/33.0)
         //    return;
@@ -733,7 +733,7 @@ class BaseFireEffect : public LEDStripEffect
         }
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         FastLED.showColor(CRGB::Red);
         return;

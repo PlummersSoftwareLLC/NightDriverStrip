@@ -189,9 +189,9 @@ public:
         graphics->Clear();
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_aptrEffectManager->g();
 
         // Reset after 20 seconds
         if (millis() - msStart > 20000)

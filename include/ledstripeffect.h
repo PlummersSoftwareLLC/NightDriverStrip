@@ -83,23 +83,23 @@ class LEDStripEffect : public IJSONSerializable
         return true;  
     }
     
-    // graphics returns the GFXBase pointer for the first channel
-    std::shared_ptr<GFXBase> graphics() const
+    // g returns the GFXBase pointer for the first channel
+    std::shared_ptr<GFXBase> g() const
     {
         return _GFX[0];
     }
 
-    // mgraphics is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
+    // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
 
     #if USE_MATRIX
-    static std::shared_ptr<LEDMatrixGFX> mgraphics()
+    static std::shared_ptr<LEDMatrixGFX> mg()
     {
         return std::static_pointer_cast<LEDMatrixGFX>(g_aptrDevices[0]);
     }
     #endif 
    
     virtual void Start() {}                                 // Optional method called when time to clean/init the effect
-    virtual void Draw() = 0;                                // Your effect must implement the Draw function
+    virtual void Draw()= 0;                                // Your effect must implement the Draw function
     
     virtual bool CanDisplayVUMeter() const                  // Does this effect make sense with a VU meter?
     {
@@ -145,6 +145,8 @@ class LEDStripEffect : public IJSONSerializable
     // RandomRainbowColor
     //
     // Returns a random color of the rainbow
+    // BUGBUG Should likely be in GFXBase, not in LEDStripEffect
+    
 
     static CRGB RandomRainbowColor()
     {
@@ -325,7 +327,7 @@ class LEDStripEffect : public IJSONSerializable
         StaticJsonDocument<128> jsonDoc;
         
         jsonDoc[PTY_EFFECTNR] = _effectNumber;
-        jsonDoc["fn"] = _friendlyName;
+        jsonDoc["fn"]         = _friendlyName;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

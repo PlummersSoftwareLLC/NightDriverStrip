@@ -285,7 +285,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             #endif
 
             #if USE_MATRIX
-                //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+                //LEDStripEffect::m()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
             #endif
 
             bPreviousConnection = true;

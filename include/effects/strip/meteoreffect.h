@@ -217,7 +217,7 @@ class MeteorEffect : public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() 
+    virtual void Draw() override 
     {
         for (int i = 0; i < ARRAYSIZE(_Meteors); i++)
             _Meteors[i].Draw(_gfx[i]);

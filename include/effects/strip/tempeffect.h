@@ -41,7 +41,7 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 
     std::deque<int> _lit;
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         BeatEffectBase::ProcessAudio();
         fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500.0));
@@ -84,7 +84,7 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 
     std::deque<int> _lit;
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         BeatEffectBase::ProcessAudio();
         fadeAllChannelsToBlackBy(min(255.0, g_AppTime.DeltaTime() * 1500.0));
@@ -130,7 +130,7 @@ class VUInsulatorsEffect : public LEDStripEffect
       setPixelOnAllChannels(i, c);
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       static int iPeakVUy = 0;              // Where the peak occurred
       static unsigned long msPeakVU = 0;    // Timestamp of when the last big peak was

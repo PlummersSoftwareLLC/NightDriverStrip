@@ -76,18 +76,18 @@ public:
     float speed = speedStart;
     float velocity = velocityStart;
 
-    virtual void Start() 
+    virtual void Start() override
     {
         speed = speedStart;
         velocity = velocityStart;
         degrees = 0;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        graphics()->DimAll(190); 
+        g()->DimAll(190); 
         
-        CRGB color = graphics()->ColorFromCurrentPalette(speed * 8);
+        CRGB color = g()->ColorFromCurrentPalette(speed * 8);
 
         // start position
         int x;
@@ -106,8 +106,8 @@ public:
             x = (int) (MATRIX_CENTER_X + radius * cos(radians));
             y = (int) (MATRIX_CENTER_Y - radius * sin(radians));
 
-            graphics()->drawPixel(x, y, color);
-            graphics()->drawPixel(y, x, color);
+            g()->drawPixel(x, y, color);
+            g()->drawPixel(y, x, color);
 
             tempDegrees += 1;
             if (tempDegrees >= 360)

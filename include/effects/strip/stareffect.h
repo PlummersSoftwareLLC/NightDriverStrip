@@ -405,7 +405,7 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
 
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         BeatEffectBase::Draw();
     }
@@ -534,7 +534,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             _allParticles.pop_back();
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         CreateStars();
         Update();
@@ -545,7 +545,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         }
         else
         {
-            blurRows(graphics()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, _blurFactor * 255);
+            blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, _blurFactor * 255);
             fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer._VURatioFade));
         }
 
@@ -555,7 +555,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);         
+            g()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);         
         }        
     }
 
@@ -611,7 +611,7 @@ public:
         return true;    
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
 
         // Init all the memory slots to -1 which means "empty slot"

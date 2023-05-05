@@ -107,7 +107,7 @@ class SnakeEffect : public LEDStripEffect
         winMode = 0;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         setAllOnAllChannels(0,0,0); // Clear
         

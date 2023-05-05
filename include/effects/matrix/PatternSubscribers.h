@@ -51,7 +51,7 @@ class PatternSubscribers : public LEDStripEffect
   static const char szChannelID[];
   static const char szChannelName1[];
 
-  virtual void Draw()
+  virtual void Draw() override
   {
       LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(0, 16, 64));
       LEDMatrixGFX::backgroundLayer.setFont(font5x7);
