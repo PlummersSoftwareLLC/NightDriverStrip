@@ -60,7 +60,7 @@ void RemoveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_ptrDevices[NUM_CHANNELS];
-LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
+std::shared_ptr<LEDStripEffect> CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 
 // EffectManager
 //
@@ -69,7 +69,7 @@ LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 template <typename GFXTYPE>
 class EffectManager : public IJSONSerializable
 {
-    std::vector<LEDStripEffect*> _vEffects;
+    std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
     size_t _cEnabled = 0;
 
     size_t _iCurrentEffect;
@@ -92,9 +92,6 @@ class EffectManager : public IJSONSerializable
 
     void ClearEffects() 
     {
-        for (auto effect : _vEffects)
-            delete effect;
-
         _vEffects.clear();
         _abEffectEnabled.reset();
         _cEnabled = 0;
@@ -104,12 +101,12 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
+    EffectManager(const std::vector<std::shared_ptr<LEDStripEffect>> & Effects, std::shared_ptr<GFXTYPE> gfx [])
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
 
-        LoadEffectArray(pEffects, cEffects);
+        LoadEffectArray(Effects);
     }
 
     EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> *gfx)
@@ -126,15 +123,9 @@ public:
         ClearEffects();
     }
 
-    void LoadEffectArray(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects)
+    void LoadEffectArray(const std::vector<std::shared_ptr<LEDStripEffect>> & Effects)
     {
-        ClearEffects();
-        _vEffects.reserve(cEffects);
-        
-        for (int i = 0; i < cEffects; i++)
-        {
-            _vEffects.push_back(pEffects[i]);
-        }
+        _vEffects = Effects;
 
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
@@ -161,9 +152,9 @@ public:
 
         for (auto effectObject : effectsArray)
         {
-            LEDStripEffect *pEffect = CreateEffectFromJSON(effectObject);
-            if (pEffect != nullptr) 
-                _vEffects.push_back(pEffect);
+            std::shared_ptr<LEDStripEffect> ptrEffect = CreateEffectFromJSON(effectObject);
+            if (ptrEffect != nullptr) 
+                _vEffects.emplace_back(ptrEffect);
         }
 
         // Check if we have at least one deserialized effect
@@ -203,7 +194,7 @@ public:
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
-        for (auto effect : _vEffects) 
+        for (auto & effect : _vEffects) 
         {
             JsonObject effectObject = effectsArray.createNestedObject();
             if (!(effect->SerializeToJSON(effectObject)))
@@ -396,9 +387,9 @@ public:
             SaveEffectManagerConfig();
     }
 
-    const LEDStripEffect *const *EffectsList() const
+    const std::vector<std::shared_ptr<LEDStripEffect>> & EffectsList() const
     {
-        return &_vEffects[0];
+        return _vEffects;
     }
 
     const size_t EffectCount() const
@@ -416,7 +407,7 @@ public:
         return _iCurrentEffect;
     }
 
-    LEDStripEffect *GetCurrentEffect() const
+    const std::shared_ptr<LEDStripEffect> GetCurrentEffect() const
     {
         return _vEffects[_iCurrentEffect];
     }
