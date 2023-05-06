@@ -86,7 +86,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     JsonObject jsonObject = root.to<JsonObject>();
     
     g_aptrDeviceConfig->SerializeToJSON(jsonObject);
-    jsonObject["effectInterval"] = g_aptrEffectManager->GetInterval();
+    jsonObject["effectInterval"] = g_ptrEffectManager->GetInterval();
 
     response->setLength();
     response->addHeader("Access-Control-Allow-Origin", "*");
@@ -105,7 +105,7 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
         // If found, parse it and pass it off to the EffectManager, who will validate it
         AsyncWebParameter * param = pRequest->getParam(strEffectInterval, true, false);
         size_t effectInterval = strtoul(param->value().c_str(), NULL, 10);  
-        g_aptrEffectManager->SetInterval(effectInterval);
+        g_ptrEffectManager->SetInterval(effectInterval);
     }       
 
     PushPostParam<const String&>(pRequest, "location", [](const String& value) { g_aptrDeviceConfig->SetLocation(value); });

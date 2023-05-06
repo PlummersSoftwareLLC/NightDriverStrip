@@ -261,7 +261,7 @@ public:
         lastManualColor = color;
 
         #if (USE_MATRIX)
-                GFXBase *pMatrix = (*this)[0].get();
+                auto pMatrix = g();
                 pMatrix->setPalette(CRGBPalette16(oldColor, color));
                 pMatrix->PausePalette(true);
         #else
@@ -294,7 +294,7 @@ public:
         _ptrRemoteEffect = nullptr;
 
         #if (USE_MATRIX)
-            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+            auto pMatrix = (*this)[0];
             pMatrix->PausePalette(false);
         #endif
     }
@@ -302,7 +302,7 @@ public:
     void StartEffect()
     {
         #if USE_MATRIX
-            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+            auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
             pMatrix->SetCaption(_vEffects[_iCurrentEffect]->FriendlyName(), 3000);
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
@@ -481,7 +481,7 @@ public:
 
     void PreviousPalette()
     {
-        auto g = _gfx[0].get();
+        auto g = _gfx[0];
         g->CyclePalette(-1);
     }
     // Update to the next effect and abort the current effect.
@@ -586,4 +586,4 @@ public:
     }
 };
 
-extern std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;

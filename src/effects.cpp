@@ -656,7 +656,7 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
     return defaultEffects;
 }
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 
 // InitEffectsManager
@@ -673,13 +673,13 @@ void InitEffectsManager()
     {
         debugI("Creating EffectManager from JSON config");
 
-        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+        g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
 
-        if (g_aptrEffectManager->EffectCount() == 0)
+        if (g_ptrEffectManager->EffectCount() == 0)
         {
             debugW("JSON deserialization of EffectManager yielded no effects, so falling back to default list");
             std::vector<std::shared_ptr<LEDStripEffect>> vDefaultEffects = CreateDefaultEffects();
-            g_aptrEffectManager->LoadEffectArray(vDefaultEffects);
+            g_ptrEffectManager->LoadEffectArray(vDefaultEffects);
         }
     }
     else
@@ -687,16 +687,16 @@ void InitEffectsManager()
         debugI("Creating EffectManager using default effects");
         
         std::vector<std::shared_ptr<LEDStripEffect>> effects = CreateDefaultEffects();
-        g_aptrEffectManager = std::make_unique<EffectManager<GFXBase>>(effects, g_aptrDevices);
+        g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(effects, g_aptrDevices);
     }
 
-    if (false == g_aptrEffectManager->Init())
+    if (false == g_ptrEffectManager->Init())
         throw std::runtime_error("Could not initialize effect manager");
 }
 
 void SaveEffectManagerConfig()
 {
-    SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_aptrEffectManager);
+    SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_ptrEffectManager);
 }
 
 void RemoveEffectManagerConfig()
@@ -711,7 +711,7 @@ void RemoveEffectManagerConfig()
 uint16_t XY(uint8_t x, uint8_t y)
 {
     // Have a drink on me!
-    return (*g_aptrEffectManager)[0].get()->xy(x, y);
+    return (*g_ptrEffectManager)[0]->xy(x, y);
 }
 
 // btimap_output
@@ -721,7 +721,7 @@ uint16_t XY(uint8_t x, uint8_t y)
 
 bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 {
-    auto pgfx = (*g_aptrEffectManager)[0].get();
+    auto pgfx = g_ptrEffectManager->g();
     pgfx->drawRGBBitmap(x, y, bitmap, w, h);
     return true;
 }

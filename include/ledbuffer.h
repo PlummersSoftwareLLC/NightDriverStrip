@@ -85,7 +85,7 @@ class LEDBuffer
         return false;
     }
 
-    bool UpdateFromWire(uint8_t * payloadData, size_t payloadLength)
+    bool UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
     {
         if (payloadLength < 24)                 // Our header size
         {
@@ -129,7 +129,7 @@ class LEDBuffer
         
         CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
 
-        memcpy((void *)_leds.get(), pRGB, length32 * sizeof(CRGB));
+        memcpy(_leds.get(), pRGB, length32 * sizeof(CRGB));
         debugV("seconds, micros: %llu.%llu", seconds, micros);
         debugV("Color0: %08x", (uint32_t) _leds[0]);
         return true;
@@ -139,7 +139,7 @@ class LEDBuffer
     {
         _timeStampMicroseconds = 0;
         _timeStampSeconds      = 0;
-        _pStrand->fillLeds(_leds.get());
+        _pStrand->fillLeds(_leds);
     }
 };
 

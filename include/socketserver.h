@@ -55,7 +55,7 @@ extern "C"
             (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS)                  // Header plus 24 bits per actual LED
 
 #define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header 
-bool ProcessIncomingData(uint8_t * payloadData, size_t payloadLength);              // In main file
+bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
 
 #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
 
@@ -329,7 +329,7 @@ public:
                     break;
                 }
 
-                if (false == ProcessIncomingData(_abOutputBuffer.get(), expandedSize))
+                if (false == ProcessIncomingData(_abOutputBuffer, expandedSize))
                 {
                     debugW("Error processing data\n");
                     break;
@@ -373,7 +373,7 @@ public:
                             break;
                         }
                         
-                        if (false == ProcessIncomingData(_pBuffer.get(), totalExpected))
+                        if (false == ProcessIncomingData(_pBuffer, totalExpected))
                             break;
 
                         // Consume the data by resetting the buffer 
@@ -410,7 +410,7 @@ public:
                 
                     // Add it to the buffer ring
                     
-                    if (false == ProcessIncomingData(_pBuffer.get(), totalExpected))
+                    if (false == ProcessIncomingData(_pBuffer, totalExpected))
                     {
                         break;
                     }

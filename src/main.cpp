@@ -193,7 +193,7 @@ DRAM_ATTR bool g_bUpdateStarted = false;                                        
 DRAM_ATTR AppTime g_AppTime;                                                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;       // The one and only global effect manager
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;       // The one and only global effect manager
 
 DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                     // The array of GFXBase devices (each strip channel, for example)
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
@@ -711,47 +711,47 @@ void setup()
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
             
             
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(((LEDStripGFX *)g_aptrDevices[0].get())->leds, g_aptrDevices[0]->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[0]->leds, g_aptrDevices[0]->GetLEDCount());
             //FastLED.setMaxRefreshRate(100, false); 
             pinMode(LED_PIN0, OUTPUT);
         #endif
 
         #if NUM_CHANNELS >= 2
             pinMode(LED_PIN0, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[0].get()->leds,g_aptrDevices[0].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[0]->GetLEDCount());
 
             pinMode(LED_PIN1, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1].get()->leds,g_aptrDevices[1].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[1]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 3
             pinMode(LED_PIN2, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[2].get()->leds,g_aptrDevices[2].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[2]->leds,g_aptrDevices[2]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 4
             pinMode(LED_PIN3, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[3].get()->leds,g_aptrDevices[3].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[3]->leds,g_aptrDevices[3]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 5
             pinMode(LED_PIN4, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[4].get()->leds,g_aptrDevices[4].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[4]->leds,g_aptrDevices[4]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 6
             pinMode(LED_PIN5, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[5].get()->leds,g_aptrDevices[5].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[5]->leds,g_aptrDevices[5]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 7
             pinMode(LED_PIN6, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[6].get()->leds,g_aptrDevices[6].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[6]->leds,g_aptrDevices[6]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 8
             pinMode(LED_PIN7, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[7].get()->leds,g_aptrDevices[7].get()->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[7]->leds,g_aptrDevices[7]->GetLEDCount());
         #endif
            
         #ifdef POWER_LIMIT_MW

@@ -79,7 +79,7 @@ public:
 
   virtual void Start() override
   {
-      auto g = g_aptrEffectManager->g();
+      auto g = g_ptrEffectManager->g();
       x = leftMargin;
       y = topMargin;
       g->Clear();
@@ -88,7 +88,7 @@ public:
 
   virtual void Draw() override
   {
-    GFXBase * graphics = (GFXBase *) _GFX[0].get();
+    std::shared_ptr<GFXBase> graphics = _GFX[0];
 
     graphics->DimAll(245);
 

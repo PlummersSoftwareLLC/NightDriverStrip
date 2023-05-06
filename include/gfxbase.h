@@ -120,7 +120,7 @@ public:
     {
         _boids.reset( psram_allocator<Boid>().allocate(_width) );
         _ptrNoise.reset( psram_allocator<Noise>().allocate(1) );
-        assert(_ptrNoise.get());
+        assert(_ptrNoise);
     }
 
     virtual ~GFXBase()
@@ -263,7 +263,7 @@ public:
         addColor(xy(x, y), from16Bit(color));
     }
 
-    virtual void fillLeds(const CRGB *pLEDs)
+    virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs)
     {
         // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
         // so we do it the "slow" way for other matrices

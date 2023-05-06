@@ -34,7 +34,7 @@
 
 extern DRAM_ATTR AppTime g_AppTime; // Keeps track of frame times
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
 #if USE_MATRIX
 

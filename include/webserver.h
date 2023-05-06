@@ -103,16 +103,16 @@ class CWebServer
             response->addHeader("Server","NightDriverStrip");
             auto j = response->getRoot();
 
-            j["currentEffect"]         = g_aptrEffectManager->GetCurrentEffectIndex();
-            j["millisecondsRemaining"] = g_aptrEffectManager->GetTimeRemainingForCurrentEffect();
-            j["effectInterval"]        = g_aptrEffectManager->GetInterval();
-            j["enabledCount"]          = g_aptrEffectManager->EnabledCount();
+            j["currentEffect"]         = g_ptrEffectManager->GetCurrentEffectIndex();
+            j["millisecondsRemaining"] = g_ptrEffectManager->GetTimeRemainingForCurrentEffect();
+            j["effectInterval"]        = g_ptrEffectManager->GetInterval();
+            j["enabledCount"]          = g_ptrEffectManager->EnabledCount();
 
-            for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++) 
+            for (int i = 0; i < g_ptrEffectManager->EffectCount(); i++) 
             {
                 DynamicJsonDocument effectDoc(256);
-                effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
-                effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
+                effectDoc["name"]    = g_ptrEffectManager->EffectsList()[i]->FriendlyName();
+                effectDoc["enabled"] = g_ptrEffectManager->IsEffectEnabled(i);
 
                 if (!j["Effects"].add(effectDoc)) 
                 {
@@ -207,7 +207,7 @@ class CWebServer
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strCurrentEffectIndex, true);
             size_t currentEffectIndex = strtoul(param->value().c_str(), NULL, 10);  
-            g_aptrEffectManager->SetCurrentEffectIndex(currentEffectIndex);
+            g_ptrEffectManager->SetCurrentEffectIndex(currentEffectIndex);
         }
         // Complete the response so the client knows it can happily proceed now
         AddCORSHeaderAndSendOKResponse(pRequest);   
@@ -224,7 +224,7 @@ class CWebServer
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
-            g_aptrEffectManager->EnableEffect(effectIndex);
+            g_ptrEffectManager->EnableEffect(effectIndex);
         }
         // Complete the response so the client knows it can happily proceed now
         AddCORSHeaderAndSendOKResponse(pRequest);   
@@ -241,7 +241,7 @@ class CWebServer
             // If found, parse it and pass it off to the EffectManager, who will validate it
             AsyncWebParameter * param = pRequest->getParam(strEffectIndex, true);
             size_t effectIndex = strtoul(param->value().c_str(), NULL, 10); 
-            g_aptrEffectManager->DisableEffect(effectIndex);
+            g_ptrEffectManager->DisableEffect(effectIndex);
             debugV("Disabled Effect %d", effectIndex);
         }
         // Complete the response so the client knows it can happily proceed now
@@ -251,14 +251,14 @@ class CWebServer
     void NextEffect(AsyncWebServerRequest * pRequest)
     {
         debugV("NextEffect");
-        g_aptrEffectManager->NextEffect();
+        g_ptrEffectManager->NextEffect();
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
     void PreviousEffect(AsyncWebServerRequest * pRequest)
     {
         debugV("PreviousEffect");
-        g_aptrEffectManager->PreviousEffect();
+        g_ptrEffectManager->PreviousEffect();
         AddCORSHeaderAndSendOKResponse(pRequest);
     }
 
