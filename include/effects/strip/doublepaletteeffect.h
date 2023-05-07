@@ -2,7 +2,7 @@
 //
 // File:        DoublePaletteEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -25,7 +25,7 @@
 //    Draws two intersecting palettes
 //
 // History:     Apr-16-2019         Davepl      Created
-//              
+//
 //---------------------------------------------------------------------------
 
 #pragma once
@@ -37,20 +37,20 @@ extern AppTime g_AppTime;
 class DoublePaletteEffect : public LEDStripEffect
 {
   private:
-    
+
     PaletteEffect   _PaletteEffect1;
     PaletteEffect   _PaletteEffect2;
 
   public:
-  
-    DoublePaletteEffect() 
+
+    DoublePaletteEffect()
      :  LEDStripEffect(EFFECT_STRIP_DOUBLE_PALETTE, "Double Palette"),
         _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
         _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
     {
     }
 
-    DoublePaletteEffect(const JsonObjectConst&  jsonObject) 
+    DoublePaletteEffect(const JsonObjectConst&  jsonObject)
       : LEDStripEffect(jsonObject),
         _PaletteEffect1(jsonObject["pt1"].as<JsonObjectConst>()),
         _PaletteEffect2(jsonObject["pt2"].as<JsonObjectConst>())
@@ -59,7 +59,7 @@ class DoublePaletteEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        DynamicJsonDocument jsonDoc(896);
+        AllocatedJsonDocument jsonDoc(896);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -72,7 +72,7 @@ class DoublePaletteEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         LEDStripEffect::Init(gfx);
         if (!_PaletteEffect1.Init(gfx) || !_PaletteEffect2.Init(gfx))
@@ -80,7 +80,7 @@ class DoublePaletteEffect : public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() 
+    virtual void Draw()
     {
         setAllOnAllChannels(0,0,0);
         _PaletteEffect1.Draw();

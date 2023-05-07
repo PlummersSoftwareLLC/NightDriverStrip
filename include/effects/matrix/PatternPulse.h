@@ -148,13 +148,13 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         LEDStripEffect(EFFECT_MATRIX_PULSAR, "Pulsars")
     {
     }
-    
+
     PatternPulsar(const JsonObjectConst& jsonObject) :
         BeatEffectBase(1.5, 0.25 ),
         LEDStripEffect(jsonObject)
     {
     }
-    
+
     virtual size_t DesiredFramesPerSecond() const
     {
         return 30;
@@ -165,7 +165,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         if (span > 1.5)
         {
             for (int i = 0; i < random(2)+2; i ++)
-                _pops.push_back( PulsePop() );            
+                _pops.push_back( PulsePop() );
         }
         else
         {
@@ -173,7 +173,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
             small.maxSteps = random(12)+4;
             _pops.push_back( small );
         }
-        
+
     }
 
     virtual void Draw()
@@ -217,7 +217,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
                     // secondary pulse
                     if (pop->step > 3)
                         graphics()->drawCircle(pop->centerX, pop->centerY, pop->step - 3, graphics()->to16bit(graphics()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
-                    
+
                     // This looks like PDP-11 code to me.  double post-inc for the win!
                     pop++->step++;
                 }

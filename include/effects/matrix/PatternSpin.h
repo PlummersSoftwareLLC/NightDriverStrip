@@ -76,7 +76,7 @@ public:
     float speed = speedStart;
     float velocity = velocityStart;
 
-    virtual void Start() 
+    virtual void Start()
     {
         speed = speedStart;
         velocity = velocityStart;
@@ -85,8 +85,8 @@ public:
 
     virtual void Draw()
     {
-        graphics()->DimAll(190); 
-        
+        graphics()->DimAll(190);
+
         CRGB color = graphics()->ColorFromCurrentPalette(speed * 8);
 
         // start position

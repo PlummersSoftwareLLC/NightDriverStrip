@@ -646,16 +646,16 @@ public:
         esp_err_t err = ESP_OK;
 
         i2s_driver_uninstall(Speak_I2S_NUMBER);  // Uninstall the I2S driver.  卸载I2S驱动
-        i2s_config_t i2s_config = 
+        i2s_config_t i2s_config =
         {
             .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
-            .sample_rate = SAMPLING_FREQUENCY,  // Set the I2S sampling rate. 
+            .sample_rate = SAMPLING_FREQUENCY,  // Set the I2S sampling rate.
             .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,  // Fixed 12-bit stereo MSB.
             .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT,  // Set the channel format.
             .communication_format = I2S_COMM_FORMAT_STAND_I2S,  // Set the format of the communication.
-            .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,  // Set the interrupt flag.  
-            .dma_buf_count = 2,        // DMA buffer count.  
-            .dma_buf_len = 256,        // DMA buffer length. 
+            .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,  // Set the interrupt flag.
+            .dma_buf_count = 2,        // DMA buffer count.
+            .dma_buf_len = 256,        // DMA buffer length.
         };
 
         err += i2s_driver_install(Speak_I2S_NUMBER, &i2s_config, 0, NULL);
@@ -663,13 +663,13 @@ public:
         i2s_pin_config_t tx_pin_config;
         tx_pin_config.mck_io_num = I2S_PIN_NO_CHANGE;
         tx_pin_config.bck_io_num = CONFIG_I2S_BCK_PIN;            // Link the BCK to the CONFIG_I2S_BCK_PIN pin.
-        tx_pin_config.ws_io_num = CONFIG_I2S_LRCK_PIN;       
-        tx_pin_config.data_out_num = CONFIG_I2S_DATA_PIN;    
-        tx_pin_config.data_in_num = CONFIG_I2S_DATA_IN_PIN;  
+        tx_pin_config.ws_io_num = CONFIG_I2S_LRCK_PIN;
+        tx_pin_config.data_out_num = CONFIG_I2S_DATA_PIN;
+        tx_pin_config.data_in_num = CONFIG_I2S_DATA_IN_PIN;
         err += i2s_set_pin(Speak_I2S_NUMBER, &tx_pin_config);  // Set the I2S pin number.
         err += i2s_set_clk(Speak_I2S_NUMBER, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);  // Set the clock and bitwidth used by I2S Rx and Tx.
 
-    #elif M5STICKC || M5STICKCPLUS 
+    #elif M5STICKC || M5STICKCPLUS
 
         i2s_config_t i2s_config =
         {

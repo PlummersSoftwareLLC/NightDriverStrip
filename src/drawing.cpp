@@ -47,7 +47,7 @@ extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGF
 #endif
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager = nullptr;
 
 double volatile g_FreeDrawTime = 0.0;
 

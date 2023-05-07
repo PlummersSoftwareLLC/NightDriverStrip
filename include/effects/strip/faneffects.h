@@ -91,7 +91,7 @@ inline int16_t GetRingPixelPosition(float fPos, int16_t ringSize)
     debugW("GetRingPixelPosition called with negative value %f", fPos);
     return 0;
   }
-  
+
   int pos = fPos;
   if (pos & 1)
     return ringSize - 1 - pos / 2;
@@ -586,11 +586,11 @@ private:
 public:
   PaletteReelEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_PALETTE_REEL, strName)
   {
-  } 
+  }
 
   PaletteReelEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
-  } 
+  }
 
   virtual void Draw()
   {
@@ -687,25 +687,25 @@ private:
 
 public:
   PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
-      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName), 
-        _Palette(palette), 
-        _bReplaceMagenta(bReplace), 
+      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName),
+        _Palette(palette),
+        _bReplaceMagenta(bReplace),
         _sparkleChance(sparkleChance)
   {
   }
 
   PaletteSpinEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject), 
-        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()), 
-        _bReplaceMagenta(jsonObject["rpm"]), 
+      : LEDStripEffect(jsonObject),
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        _bReplaceMagenta(jsonObject["rpm"]),
         _sparkleChance(jsonObject["sch"])
   {
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject) 
+  virtual bool SerializeToJSON(JsonObject& jsonObject)
   {
-    StaticJsonDocument<512> jsonDoc;
-    
+    AllocatedJsonDocument jsonDoc(512);
+
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
 
@@ -763,24 +763,24 @@ class ColorCycleEffect : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  ColorCycleEffect(PixelOrder order = Sequential, int step = 8) 
-    : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"), 
-      _order(order), 
+  ColorCycleEffect(PixelOrder order = Sequential, int step = 8)
+    : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"),
+      _order(order),
       _step(step)
   {
   }
 
-  ColorCycleEffect(const JsonObjectConst& jsonObject) 
-    : LEDStripEffect(jsonObject), 
-      _order((PixelOrder)jsonObject[PTY_ORDER]), 
+  ColorCycleEffect(const JsonObjectConst& jsonObject)
+    : LEDStripEffect(jsonObject),
+      _order((PixelOrder)jsonObject[PTY_ORDER]),
       _step(jsonObject["stp"])
   {
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject) 
+  virtual bool SerializeToJSON(JsonObject& jsonObject)
   {
     StaticJsonDocument<128> jsonDoc;
-    
+
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
 
@@ -1023,10 +1023,10 @@ public:
     abHeat = std::make_unique<uint8_t[]>(CellCount());
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject) 
+  virtual bool SerializeToJSON(JsonObject& jsonObject)
   {
-    StaticJsonDocument<512> jsonDoc;
-    
+    AllocatedJsonDocument jsonDoc(512);
+
     jsonDoc[PTY_PALETTE] = Palette;
     jsonDoc[PTY_LEDCOUNT] = LEDCount;
     jsonDoc[PTY_CELLSPERLED] = CellsPerLED;
@@ -1271,21 +1271,21 @@ protected:
 
   // Generate a vector of how bright each of the surrounding 8 LEDs on the unit circle should be
 
-  std::vector<float> led_brightness(float wandering_x, float wandering_y) 
+  std::vector<float> led_brightness(float wandering_x, float wandering_y)
   {
-    constexpr float sqrt2 = std::sqrt(2);  
+    constexpr float sqrt2 = std::sqrt(2);
 
     const std::vector<std::pair<float, float>> unit_circle_coords = {
-        {1, 0},  
+        {1, 0},
         { 1 / sqrt2,  1 / sqrt2},
-        {0, 1},  
+        {0, 1},
         {-1 / sqrt2,  1 / sqrt2},
-        {-1, 0}, 
+        {-1, 0},
         {-1 / sqrt2, -1 / sqrt2},
-        {0, -1}, 
+        {0, -1},
         { 1 / sqrt2, -1 / sqrt2}
     };
-    
+
     std::vector<float> brightness_values;
 
     for (const auto& coord : unit_circle_coords) {
@@ -1363,7 +1363,7 @@ public:
 
       velocityX -= centerX;
       velocityY -= centerY;
-    
+
 
     rotation += 0.0;
 
@@ -1374,7 +1374,7 @@ public:
 
     float xRatio = map(centerX, 0.0f, maxDeviation, -1.0f, 1.0f);
     float yRatio = map(centerY, 0.0f, maxDeviation, -1.0f, 1.0f);
-    
+
     auto brightness = led_brightness(xRatio, yRatio);
     for (int i = 0; i < 8; i++)
     {

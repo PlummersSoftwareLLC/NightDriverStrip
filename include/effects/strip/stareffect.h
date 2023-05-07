@@ -2,7 +2,7 @@
 //
 // File:        StarEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -137,7 +137,7 @@ class QuietStar : public RandomPaletteColorStar
     {
         return EFFECT_STAR_QUIET;
     }
-        
+
     QuietStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 10.0, float starSize = 1)
       : RandomPaletteColorStar(palette, blendType, maxSpeed, starSize)
     {}
@@ -146,7 +146,7 @@ class QuietStar : public RandomPaletteColorStar
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 0.00f; }
     virtual float FadeTime()        const { return 2.0f;  }
-    virtual float StarSize()        const { return 1;     }    
+    virtual float StarSize()        const { return 1;     }
 };
 
 #if ENABLE_AUDIO
@@ -156,7 +156,7 @@ class MusicStar : public Star
 
     MusicStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 2.0, float starSize = 1)
       : Star(palette, blendType, maxSpeed, starSize)
-    {        
+    {
     }
 
     static int GetStarTypeNumber()
@@ -193,7 +193,7 @@ class MusicPulseStar : public Star
     virtual float PreignitionTime() const { return 0.00f;  }
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 1.00f;  }
-    virtual float FadeTime()        const { return 2.00f; } 
+    virtual float FadeTime()        const { return 2.00f; }
     virtual float GetStarSize()    const { return 1 + _objectSize * g_Analyzer._VURatio; }
 };
 
@@ -205,7 +205,7 @@ class BubblyStar : public Star
     int         _hue;
 
     public:
-    
+
     BubblyStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, float starSize = 12)
       : Star(palette, blendType, maxSpeed, starSize)
     {
@@ -274,12 +274,12 @@ class ColorCycleStar : public Star
     {
         CRGB c = ColorFromPalette(_palette, millis() / 2048.0f, _brightness, blend);
         fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
-        return c;        
+        return c;
     }
-    
+
     virtual ~ColorCycleStar()
     {}
-    
+
     virtual float PreignitionTime() const { return 2.0f; }
     virtual float IgnitionTime()    const { return 0.0f;}
     virtual float HoldTime()        const { return 2.00f; }
@@ -305,9 +305,9 @@ class MultiColorStar : public Star
     {
         CRGB c = ColorFromPalette(_palette, _hue, _brightness, blend);
         fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
-        return c;        
+        return c;
     }
-    
+
     virtual ~MultiColorStar()
     {}
 
@@ -346,7 +346,7 @@ class ChristmasLightStar : public Star
     virtual float PreignitionTime() const { return 0.20f; }
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 6.0f;  }
-    virtual float FadeTime()        const { return 1.25f; }    
+    virtual float FadeTime()        const { return 1.25f; }
     virtual float StarSize()        const { return 0.00f; }
 };
 
@@ -372,7 +372,7 @@ class HotWhiteStar : public Star
     virtual float PreignitionTime() const { return 0.00f;  }
     virtual float IgnitionTime()    const { return 0.20f;  }
     virtual float HoldTime()        const { return 0.00f;  }
-    virtual float FadeTime()        const { return 2.00f;  }  
+    virtual float FadeTime()        const { return 2.00f;  }
 
     virtual CRGB RenderColor(TBlendType blend)
     {
@@ -380,7 +380,7 @@ class HotWhiteStar : public Star
             return CRGB::White;
         CRGB c = ColorFromPalette(_palette, 130*(1.0f-FadeoutAmount()), 256*(1.0f-FadeoutAmount()), blend);
         return c;
-    }      
+    }
 };
 
 
@@ -413,9 +413,9 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
 
 */
 
-// StarryNightEffect template 
+// StarryNightEffect template
 //
-// Generates up to 
+// Generates up to
 
 template <typename StarType> class StarryNightEffect : public LEDStripEffect
 {
@@ -434,10 +434,10 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
 
     StarryNightEffect<StarType>(const String & strName,
-                                const CRGBPalette16& palette, 
-                                float probability = 1.0, 
-                                float starSize = 1.0, 
-                                TBlendType blendType = LINEARBLEND, 
+                                const CRGBPalette16& palette,
+                                float probability = 1.0,
+                                float starSize = 1.0,
+                                TBlendType blendType = LINEARBLEND,
                                 float maxSpeed = 100.0,
                                 float blurFactor = 0.0,
                                 float musicFactor = 1.0,
@@ -467,10 +467,10 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) 
+    virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<512> jsonDoc;
-        
+        AllocatedJsonDocument jsonDoc(512);
+
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
@@ -507,11 +507,9 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             #if ENABLE_AUDIO
                 if (_musicFactor != 1.0)
                 {
-                   prob = prob * (g_Analyzer._VURatio - 1.0) * _musicFactor; 
+                   prob = prob * (g_Analyzer._VURatio - 1.0) * _musicFactor;
                 }
             #endif
-
-            StarType::GetStarTypeNumber();
 
             if (randomdouble(0, 2.0) < g_AppTime.DeltaTime() * prob)
             {
@@ -555,8 +553,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);         
-        }        
+            graphics()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
+        }
     }
 
 
@@ -607,8 +605,8 @@ public:
     {
         LEDStripEffect::Init(gfx);
         for (int i = 0; i < NUM_TWINKLES; i++)
-            buffer[i] = -1;      
-        return true;    
+            buffer[i] = -1;
+        return true;
     }
 
     virtual void Draw()

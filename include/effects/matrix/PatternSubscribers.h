@@ -37,7 +37,7 @@ class PatternSubscribers : public LEDStripEffect
   private:
 
   public:
-  
+
   PatternSubscribers() : LEDStripEffect(EFFECT_MATRIX_SUBSCRIBERS, "Subs")
   {
   }
@@ -58,7 +58,7 @@ class PatternSubscribers : public LEDStripEffect
 
       // Draw a border around the edge of the panel
       LEDMatrixGFX::backgroundLayer.drawRectangle(0, 1, MATRIX_WIDTH-1, MATRIX_HEIGHT-2, rgb24(160,160,255));
-      
+
       // Draw the channel name
       LEDMatrixGFX::backgroundLayer.drawString(2, 3, rgb24(255,255,255), szChannelName1);
 

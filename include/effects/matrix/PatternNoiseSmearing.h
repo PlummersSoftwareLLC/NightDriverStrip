@@ -58,7 +58,7 @@
 #ifndef PatternNoiseSmearing_H
 #define PatternNoiseSmearing_H
 
-class PatternCurtain : public LEDStripEffect 
+class PatternCurtain : public LEDStripEffect
 {
 public:
   PatternCurtain() : LEDStripEffect(EFFECT_MATRIX_CURTAIN, "Curtain")
@@ -71,7 +71,7 @@ public:
 
   virtual void Draw()
   {
-    graphics()->DimAll(235); 
+    graphics()->DimAll(235);
     graphics()->BlurFrame(50);
 
     // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
@@ -79,14 +79,14 @@ public:
     for (int x = 0; x < MATRIX_WIDTH; x++)
       graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
 
-    for (uint8_t i = 3; i < MATRIX_WIDTH - 3; i = i + 3) 
+    for (uint8_t i = 3; i < MATRIX_WIDTH - 3; i = i + 3)
     {
       uint16_t color = graphics()->to16bit(graphics()->ColorFromCurrentPalette(i * 4));
       graphics()->drawCircle(i, 2, 1, color);
       graphics()->setPixel(i, 2, color);
     }
 
-     
+
     // Noise
     graphics()->SetNoise(3000, 3000, 3000, 2000 *(2.0 - g_Analyzer._VURatio), 2000 *(2.0 - g_Analyzer._VURatio));
     graphics()->FillGetNoise();
@@ -111,7 +111,7 @@ public:
 
   virtual void Draw()
   {
-    graphics()->DimAll(230); 
+    graphics()->DimAll(230);
 
     // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
 
@@ -119,9 +119,9 @@ public:
       graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
 
     // draw grid of rainbow dots on top of the dimmed image
-    for (uint8_t y = 1; y < MATRIX_HEIGHT - 6; y = y + 6) 
+    for (uint8_t y = 1; y < MATRIX_HEIGHT - 6; y = y + 6)
     {
-      for (uint8_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6) 
+      for (uint8_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6)
       {
         graphics()->leds[graphics()->xy(x, y)] += graphics()->ColorFromCurrentPalette((x * y) / 2);
       }
@@ -139,7 +139,7 @@ public:
   }
 };
 
-class PatternPaletteSmear : public LEDStripEffect 
+class PatternPaletteSmear : public LEDStripEffect
 {
 public:
   PatternPaletteSmear() : LEDStripEffect(EFFECT_MATRIX_PALETTE_SMEAR, "Smear")
@@ -153,26 +153,26 @@ public:
   virtual void Draw()
   {
     graphics()->DimAll(10);
-   
+
     // draw a rainbow color palette
-    for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) 
+    for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
     {
-      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++) 
+      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++)
       {
         graphics()->leds[graphics()->xy(x, y)] += graphics()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
-      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++) 
+      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++)
       {
         graphics()->leds[graphics()->xy(MATRIX_WIDTH - 1 - x, y)] += graphics()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
 
     }
- 
+
     // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
 
     // Noise
 graphics()->SetNoise(3000, 3000, 0, 4000, 4000);
- 
+
     graphics()->FillGetNoise();
 
     graphics()->MoveX(6);
@@ -187,7 +187,7 @@ graphics()->SetNoise(3000, 3000, 0, 4000, 4000);
   }
 };
 
-class PatternRainbowFlag : public LEDStripEffect 
+class PatternRainbowFlag : public LEDStripEffect
 {
 public:
   PatternRainbowFlag() : LEDStripEffect(EFFECT_MATRIX_RAINBOW_FLAG, "RainbowFlag")
@@ -200,7 +200,7 @@ public:
 
   virtual void Draw()
   {
-    graphics()->DimAll(10); 
+    graphics()->DimAll(10);
 
     CRGB rainbow[7] = {
       CRGB::Red,
@@ -215,7 +215,7 @@ public:
 
     for (uint8_t c = 0; c < 6; c++) {
       for (uint8_t j = 0; j < 5; j++) {
-        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) 
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {
           graphics()->leds[graphics()->xy(x, y)] += rainbow[c];
         }
