@@ -58,7 +58,7 @@
 #ifndef PatternWave_H
 #define PatternWave_H
 
-class PatternWave : public LEDStripEffect 
+class PatternWave : public LEDStripEffect
 {
 private:
     uint8_t thetaUpdate = 4;

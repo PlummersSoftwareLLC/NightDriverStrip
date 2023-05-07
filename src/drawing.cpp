@@ -47,7 +47,7 @@ extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGF
 #endif
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
+DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager = nullptr;
 
 double volatile g_FreeDrawTime = 0.0;
 
@@ -98,7 +98,7 @@ void MatrixPreDraw()
         auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         pMatrix->SetBrightness(g_Fader);
-        
+
         if (g_ptrEffectManager->GetCurrentEffect()->ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
             LEDMatrixGFX::titleLayer.setFont(font3x5);
@@ -151,11 +151,11 @@ uint16_t WiFiDraw()
     uint16_t pixelsDrawn = 0;
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
     {
-        
+
         timeval tv;
         gettimeofday(&tv, nullptr);
-        
-        // Pull buffers out of the queue.  
+
+        // Pull buffers out of the queue.
 
         if (false == g_aptrBufferManager[iChannel]->IsEmpty())
         {
@@ -379,7 +379,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
 #if USE_MATRIX
     // We don't need color correction on the title layer, but we want it on the main background
-    
+
     LEDMatrixGFX::titleLayer.enableColorCorrection(false);
     LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
 

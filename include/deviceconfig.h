@@ -2,7 +2,7 @@
 //
 // File:        deviceconfig.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -46,7 +46,7 @@ class DeviceConfig : public IJSONSerializable
     bool use24HourClock;
     bool useCelsius;
 
-/*    
+/*
     void WriteToNVS(const String& name, const String& value);
     void WriteToNVS(const String& name, bool value);
 */
@@ -66,25 +66,34 @@ class DeviceConfig : public IJSONSerializable
     template <typename T>
     void SetIfPresentIn(const JsonObjectConst& jsonObject, T& target, const char *tag)
     {
-        if (jsonObject.containsKey(tag)) 
+        if (jsonObject.containsKey(tag))
             target = jsonObject[tag].as<T>();
     }
 
   public:
+
+    static constexpr const char * LocationTag = NAME_OF(location);
+    static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
+    static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
+    static constexpr const char * OpenWeatherApiKeyTag = NAME_OF(openWeatherApiKey);
+    static constexpr const char * TimeZoneTag = NAME_OF(timeZone);
+    static constexpr const char * Use24HourClockTag = NAME_OF(use24HourClock);
+    static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
+
     DeviceConfig();
 
     virtual bool SerializeToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<1024> jsonDoc;
+        AllocatedJsonDocument jsonDoc(1024);
 
-        jsonDoc[NAME_OF(location)] = location;
-        jsonDoc[NAME_OF(locationIsZip)] = locationIsZip;
-        jsonDoc[NAME_OF(countryCode)] = countryCode;
-        jsonDoc[NAME_OF(openWeatherApiKey)] = openWeatherApiKey;
-        jsonDoc[NAME_OF(timeZone)] = timeZone;
-        jsonDoc[NAME_OF(use24HourClock)] = use24HourClock;
-        jsonDoc[NAME_OF(useCelsius)] = useCelsius;
-    
+        jsonDoc[LocationTag] = location;
+        jsonDoc[LocationIsZipTag] = locationIsZip;
+        jsonDoc[CountryCodeTag] = countryCode;
+        jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
+        jsonDoc[TimeZoneTag] = timeZone;
+        jsonDoc[Use24HourClockTag] = use24HourClock;
+        jsonDoc[UseCelsiusTag] = useCelsius;
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
@@ -95,17 +104,16 @@ class DeviceConfig : public IJSONSerializable
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
-        SetIfPresentIn(jsonObject, location, NAME_OF(location));
-        SetIfPresentIn(jsonObject, locationIsZip, NAME_OF(locationIsZip));
-        SetIfPresentIn(jsonObject, countryCode, NAME_OF(countryCode));
-        SetIfPresentIn(jsonObject, openWeatherApiKey, NAME_OF(openWeatherApiKey));
-        SetIfPresentIn(jsonObject, use24HourClock, NAME_OF(use24HourClock));
-        SetIfPresentIn(jsonObject, useCelsius, NAME_OF(useCelsius));
+        SetIfPresentIn(jsonObject, location, LocationTag);
+        SetIfPresentIn(jsonObject, locationIsZip, LocationIsZipTag);
+        SetIfPresentIn(jsonObject, countryCode, CountryCodeTag);
+        SetIfPresentIn(jsonObject, openWeatherApiKey, OpenWeatherApiKeyTag);
+        SetIfPresentIn(jsonObject, use24HourClock, Use24HourClockTag);
+        SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
 
-        const char *tag = NAME_OF(timeZone);
-        if (jsonObject.containsKey(tag)) 
-            return SetTimeZone(jsonObject[tag], true);
-   
+        if (jsonObject.containsKey(TimeZoneTag))
+            return SetTimeZone(jsonObject[TimeZoneTag], true);
+
         if (!skipWrite)
             SaveToJSON();
 

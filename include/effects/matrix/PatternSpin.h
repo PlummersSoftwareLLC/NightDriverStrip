@@ -85,8 +85,8 @@ public:
 
     virtual void Draw() override
     {
-        g()->DimAll(190); 
-        
+        g()->DimAll(190);
+
         CRGB color = g()->ColorFromCurrentPalette(speed * 8);
 
         // start position

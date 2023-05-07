@@ -102,7 +102,7 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -144,7 +144,7 @@ public:
         multiTimer[4].up = MATRIX_HEIGHT - 1;
         multiTimer[4].down = 0;
         multiTimer[4].count = 0;
-    
+
         return true;
     }
 

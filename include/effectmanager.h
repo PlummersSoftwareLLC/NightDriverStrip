@@ -54,6 +54,7 @@ extern uint8_t g_Fader;
 
 // References to functions in other C files
 
+void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
@@ -72,25 +73,32 @@ class EffectManager : public IJSONSerializable
     std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
     size_t _cEnabled = 0;
 
-    size_t _iCurrentEffect;
+    size_t _iCurrentEffect = 0;
     uint _effectStartTime;
-    uint _effectInterval;
+    uint _effectInterval = 0;
     bool _bPlayAll;
     bool _bShowVU = true;
     CRGB lastManualColor = CRGB::Red;
+    bool _clearTempEffectWhenExpired = false;
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
-    std::shared_ptr<LEDStripEffect> _ptrRemoteEffect = nullptr;
+    std::shared_ptr<LEDStripEffect> _tempEffect;
 
-    void construct() 
+    void construct(bool clearTempEffect)
     {
         _bPlayAll = false;
-        _iCurrentEffect = 0;
-        _effectStartTime = millis();
+
+        if (clearTempEffect && _tempEffect)
+        {
+            _clearTempEffectWhenExpired = true;
+
+            // This is a hacky way to ensure that we start the correct effect after the temporary one
+            _iCurrentEffect--;
+        }
     }
 
-    void ClearEffects() 
+    void ClearEffects()
     {
         _vEffects.clear();
         _abEffectEnabled.reset();
@@ -101,15 +109,26 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(const std::vector<std::shared_ptr<LEDStripEffect>> & Effects, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::shared_ptr<GFXTYPE> gfx [])
+        : _gfx(gfx)
+    {
+        debugV("EffectManager Splash Effect Constructor");
+
+        if (effect->Init(_gfx))
+            _tempEffect = effect;
+
+        construct(false);
+    }
+
+    EffectManager(const std::vector<std::shared_ptr<LEDStripEffect>> & effects, std::shared_ptr<GFXTYPE> gfx [])
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
 
-        LoadEffectArray(Effects);
+        LoadEffectArray(effects);
     }
 
-    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> *gfx)
+    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> gfx [])
         : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
@@ -123,9 +142,9 @@ public:
         ClearEffects();
     }
 
-    void LoadEffectArray(const std::vector<std::shared_ptr<LEDStripEffect>> & Effects)
+    void LoadEffectArray(const std::vector<std::shared_ptr<LEDStripEffect>> & effects)
     {
-        _vEffects = Effects;
+        _vEffects = effects;
 
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
@@ -134,7 +153,7 @@ public:
 
         SetInterval(DEFAULT_EFFECT_INTERVAL, true);
 
-        construct();
+        construct(true);
     }
 
     virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
@@ -147,20 +166,19 @@ public:
         if (effectsArray.isNull())
             return false;
 
-        _vEffects.clear();
         _vEffects.reserve(effectsArray.size());
 
         for (auto effectObject : effectsArray)
         {
             std::shared_ptr<LEDStripEffect> ptrEffect = CreateEffectFromJSON(effectObject);
-            if (ptrEffect != nullptr) 
+            if (ptrEffect != nullptr)
                 _vEffects.emplace_back(ptrEffect);
         }
 
         // Check if we have at least one deserialized effect
         if (_vEffects.size() == 0)
             return false;
-        
+
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
         // Try to load effect enabled state from JSON also, default to "enabled" otherwise
@@ -172,10 +190,17 @@ public:
             if (i >= enabledSize || enabledArray[i] == 1)
                 EnableEffect(i, true);
         }
-        
-        SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
-        construct();
+        SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
+        if (jsonObject.containsKey("cei"))
+        {
+            _iCurrentEffect = jsonObject["cei"];
+            if (_iCurrentEffect >= EffectCount())
+                _iCurrentEffect = EffectCount() - 1;
+        }
+
+        construct(true);
+
         return true;
     }
 
@@ -185,6 +210,7 @@ public:
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
 
         jsonObject["ivl"] = _effectInterval;
+        jsonObject["cei"] = _iCurrentEffect;
 
         // Serialize enabled state first. That way we'll still find out if we run out of memory, later
         JsonArray enabledArray = jsonObject.createNestedArray("eef");
@@ -194,7 +220,7 @@ public:
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
-        for (auto & effect : _vEffects) 
+        for (auto & effect : _vEffects)
         {
             JsonObject effectObject = effectsArray.createNestedObject();
             if (!(effect->SerializeToJSON(effectObject)))
@@ -235,19 +261,6 @@ public:
         return _bShowVU && GetCurrentEffect()->CanDisplayVUMeter();
     }
 
-#if ATOMLIGHT
-    static const uint FireEffectIndex = 2; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 6;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#elif FANSET
-    static const uint FireEffectIndex = 1; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#elif BROOKLYNROOM
-    static const uint FireEffectIndex = 2; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 6;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#else
-    static const uint FireEffectIndex = 0; // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-    static const uint VUEffectIndex = 0;   // Index of the fire effect in the g_apEffects table (BUGBUG hardcoded)
-#endif
-
     // SetGlobalColor
     //
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
@@ -269,29 +282,30 @@ public:
 
             if (color == CRGB(CRGB::White))
                 effect = std::make_shared<ColorFillEffect>(CRGB::White, 1);
-        else
+            else
 
-            #if ENABLE_AUDIO
-                #if SPECTRUM
-                    effect = GetSpectrumAnalyzer(color, oldColor);
+                #if ENABLE_AUDIO
+                    #if SPECTRUM
+                        effect = GetSpectrumAnalyzer(color, oldColor);
+                    #else
+                        effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    #endif
                 #else
-                    effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
-            #else
-                effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-            #endif
 
             if (effect->Init(g_aptrDevices))
             {
-                _ptrRemoteEffect = effect;
+                _tempEffect = effect;
                 StartEffect();
             }
         #endif
     }
 
-    void ClearRemoteColor()
+    void ClearRemoteColor(bool retainRemoteEffect = false)
     {
-        _ptrRemoteEffect = nullptr;
+        if (!retainRemoteEffect)
+            _tempEffect = nullptr;
 
         #if (USE_MATRIX)
             auto pMatrix = (*this)[0];
@@ -301,19 +315,18 @@ public:
 
     void StartEffect()
     {
+        // If there's a temporary effect override from the remote control active, we start that, else
+        // we start the current regular effect
+
+        std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
+
         #if USE_MATRIX
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
-            pMatrix->SetCaption(_vEffects[_iCurrentEffect]->FriendlyName(), 3000);
+            pMatrix->SetCaption(effect->FriendlyName(), 3000);
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
-        // If there's a temporary effect override from the remote control active, we start that, else
-        // we start the current regular effect
-        
-        if (_ptrRemoteEffect)
-            _ptrRemoteEffect->Start();
-        else
-            _vEffects[_iCurrentEffect]->Start();
+        effect->Start();
 
         _effectStartTime = millis();
     }
@@ -332,7 +345,7 @@ public:
 
             if (_cEnabled < 1)
             {
-                ClearRemoteColor();
+                ClearRemoteColor(true);
             }
             _cEnabled++;
 
@@ -409,20 +422,20 @@ public:
 
     const std::shared_ptr<LEDStripEffect> GetCurrentEffect() const
     {
-        return _vEffects[_iCurrentEffect];
+        return _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
     }
 
     const String & GetCurrentEffectName() const
     {
-        if (_ptrRemoteEffect)
-            return _ptrRemoteEffect->FriendlyName();
+        if (_tempEffect)
+            return _tempEffect->FriendlyName();
 
         return _vEffects[_iCurrentEffect]->FriendlyName();
     }
 
     // Change the current effect; marks the state as needing attention so this get noticed next frame
 
-    void SetCurrentEffectIndex(size_t i)
+    void SetCurrentEffectIndex(size_t i, bool skipSave = false)
     {
         if (i >= _vEffects.size())
         {
@@ -431,6 +444,10 @@ public:
         }
         _iCurrentEffect = i;
         _effectStartTime = millis();
+
+        if (!skipSave)
+            SaveEffectManagerConfig();
+
         StartEffect();
     }
 
@@ -442,31 +459,33 @@ public:
     uint GetTimeRemainingForCurrentEffect() const
     {
         // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
+        uint timeUsedByCurrentEffect = GetTimeUsedByCurrentEffect();
+        uint interval = GetInterval();
 
-        if (GetTimeUsedByCurrentEffect() > GetInterval())
-            return 0;
-
-        return GetInterval() - GetTimeUsedByCurrentEffect();
+        return timeUsedByCurrentEffect > interval ? 0 : (interval - timeUsedByCurrentEffect);
     }
 
     uint GetInterval() const
     {
-        // This allows you to return a MinimumEffectTime and your effect won't be shown longer than that
-        
-        if (_effectInterval == 0)
-            return std::numeric_limits<uint>::max();
-        return min(_effectInterval, GetCurrentEffect()->MaximumEffectTime() - GetTimeUsedByCurrentEffect());
+        // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
+        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect()->MaximumEffectTime());
     }
 
     void CheckEffectTimerExpired()
     {
-        // If interval is zero, the current effect never expires
+        // If interval is zero, the current effect never expires unless it thas a max effect time set
 
-        if (_effectInterval == 0)
+        if (_effectInterval == 0 && !GetCurrentEffect()->HasMaximumEffectTime())
             return;
 
-        if (millis() - _effectStartTime >= GetInterval()) // See if its time for a new effect yet
+        if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
         {
+            if (_clearTempEffectWhenExpired)
+            {
+                _tempEffect.reset();
+                _clearTempEffectWhenExpired = false;
+            }
+
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
             debugV("Current Effect: %s", GetCurrentEffectName());
@@ -494,6 +513,8 @@ public:
             _iCurrentEffect %= EffectCount();
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+
+        SaveEffectManagerConfig();
         StartEffect();
     }
 
@@ -509,6 +530,8 @@ public:
             _iCurrentEffect--;
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+
+        SaveEffectManagerConfig();
         StartEffect();
     }
 
@@ -548,8 +571,8 @@ public:
 
         // If a remote control effect is set, we draw that, otherwise we draw the regular effect
 
-        if (_ptrRemoteEffect)
-            _ptrRemoteEffect->Draw();
+        if (_tempEffect)
+            _tempEffect->Draw();
         else
             _vEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
 

@@ -64,23 +64,23 @@
 
 #include <bitset>
 
-extern "C" 
+extern "C"
 {
     #include "uzlib/src/uzlib.h"
 }
 
-class Cell 
+class Cell
 {
 public:
   uint8_t alive : 1;
   uint8_t prev  : 1;
-  uint8_t hue;  
+  uint8_t hue;
   uint8_t brightness;
 };
 
 #define CRC_LENGTH std::max(MATRIX_HEIGHT, MATRIX_WIDTH)                           // Depth of loop check buffer
 
-class PatternLife : public LEDStripEffect 
+class PatternLife : public LEDStripEffect
 {
 private:
     std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
@@ -92,7 +92,7 @@ private:
     unsigned long seed;
 
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
     {
         LEDStripEffect::Init(gfx);
 
@@ -105,7 +105,7 @@ private:
 
         return true;
     }
-    
+
     virtual bool RequiresDoubleBuffering() const
     {
         return false;
@@ -117,7 +117,7 @@ private:
     // Seed: 92465, Generations: 1626
 
     static constexpr long bakedInSeeds[] =
-    { 
+    {
         130908,         // 3253
         1576,           // 3125
         275011,         // 3461
@@ -140,11 +140,11 @@ private:
     };
 
 
-    void randomFillWorld() 
+    void randomFillWorld()
     {
         // Some fraction of the time we pick a pre-baked seed that we know lasts for a lot
         // of generations.  Otherwise we pick a random seed and run with that.
-        
+
         srand(millis());
         if (random(0, 4) == 0)
         {
@@ -152,7 +152,7 @@ private:
             debugI("Prebaked Seed: %lu", seed);
         }
         else
-        {   
+        {
             seed = random();
             debugI("Randomized Seed: %lu", seed);
         }
@@ -209,7 +209,7 @@ public:
 
     virtual void Draw() override
     {
-        if (cGeneration == 0) 
+        if (cGeneration == 0)
             Reset();
 
         // Display current generation
@@ -228,12 +228,12 @@ public:
 
         // We maintain a scrolling window of the last N crcs and if the current crc makes it all
         // the way down to the bototm half we assume we're stuck in a loop and restart.
-        // We have to first extract the alive bits alone because we don't want the hue and brightness 
+        // We have to first extract the alive bits alone because we don't want the hue and brightness
         // data to mess with the CRC.
 
         bool alive[MATRIX_WIDTH][MATRIX_HEIGHT];
-        for (int i = 0; i < MATRIX_WIDTH; i++) 
-            for (int j = 0; j < MATRIX_HEIGHT; j++) 
+        for (int i = 0; i < MATRIX_WIDTH; i++)
+            for (int j = 0; j < MATRIX_HEIGHT; j++)
                 alive[i][j] = world[i][j].alive;
 
         auto crc = uzlib_crc32(alive, sizeof(alive), 0xffffffff);
@@ -243,7 +243,7 @@ public:
 
 
         // Look for any occurance of the current CRC in the first half of the window, which would mean
-        // a loop has occured.  If 
+        // a loop has occured.  If
 
         if (bStuckInLoop)
         {
@@ -258,8 +258,8 @@ public:
             }
             g()->DimAll(255 - 255*elapsed/resetTime);
 
-            for (int x = 0; x < MATRIX_WIDTH; x++) 
-                for (int y = 0; y < MATRIX_HEIGHT; y++) 
+            for (int x = 0; x < MATRIX_WIDTH; x++)
+                for (int y = 0; y < MATRIX_HEIGHT; y++)
                         world[x][y].brightness *= 0.9;
             if (elapsed > resetTime)
                 Reset();
@@ -284,7 +284,7 @@ public:
                 // Default is for cell to stay the same
                 if (world[x][y].brightness > 0 && world[x][y].prev == 0)
                   world[x][y].brightness *= 0.75;
-                  
+
                 int count = neighbours(x, y);
                 if (count == 3 && world[x][y].prev == 0) {
                     // A new cell is born

@@ -58,7 +58,7 @@
 
 #include "Geometry.h"
 
-class PatternSunburst : public LEDStripEffect 
+class PatternSunburst : public LEDStripEffect
 {
   public:
 
@@ -69,7 +69,7 @@ class PatternSunburst : public LEDStripEffect
     PatternSunburst(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
- 
+
     virtual size_t DesiredFramesPerSecond() const override
     {
         return 60;
@@ -78,13 +78,13 @@ class PatternSunburst : public LEDStripEffect
     virtual void Draw() override
     {
       uint8_t dim = beatsin8(2, 210, 250);
-      g()->DimAll(dim); 
+      g()->DimAll(dim);
 
       for (int i = 2; i <= MATRIX_WIDTH / 2; i++)
       {
         CRGB color = g()->ColorFromCurrentPalette((i - 2) * (240 / (MATRIX_WIDTH / 2)));
 
-        // The LIB8TION library defines beatsin8, but this needed beatcos8 which did not exist, so I 
+        // The LIB8TION library defines beatsin8, but this needed beatcos8 which did not exist, so I
         // added it to the graphics interface rathe than adding it to a custom version of lib8tion
 
         uint8_t x = g()->beatcos8((17 - i) * 2, MATRIX_CENTER_X - i, MATRIX_CENTER_X + i);
@@ -96,10 +96,10 @@ class PatternSunburst : public LEDStripEffect
     }
 };
 
-class PatternRose : public LEDStripEffect 
+class PatternRose : public LEDStripEffect
 {
   public:
-    
+
     PatternRose() : LEDStripEffect(EFFECT_MATRIX_ROSE, "Rose")
     {
     }
@@ -116,8 +116,8 @@ class PatternRose : public LEDStripEffect
     virtual void Draw() override
     {
       uint8_t dim = beatsin8(2, 170, 250);
-      g()->DimAll(dim); 
-      
+      g()->DimAll(dim);
+
 
       for (uint8_t i = 0; i < 32; i++)
       {
@@ -146,7 +146,7 @@ class PatternRose : public LEDStripEffect
 class PatternPinwheel : public LEDStripEffect
 {
   public:
-    
+
     PatternPinwheel() : LEDStripEffect(EFFECT_MATRIX_PINWHEEL, "Pinwheel")
     {
     }
@@ -168,8 +168,8 @@ class PatternPinwheel : public LEDStripEffect
     virtual void Draw() override
     {
       uint8_t dim = beatsin8(2, 30, 70);
-      fadeAllChannelsToBlackBy(dim); 
-      
+      fadeAllChannelsToBlackBy(dim);
+
       for (uint8_t i = 0; i < 64; i++)
       {
         CRGB color;
@@ -186,7 +186,7 @@ class PatternPinwheel : public LEDStripEffect
     }
 };
 
-class PatternInfinity : public LEDStripEffect 
+class PatternInfinity : public LEDStripEffect
 {
 public:
 
@@ -208,10 +208,10 @@ public:
 
     virtual void Draw() override
     {
-        // dim all pixels on the display slightly 
+        // dim all pixels on the display slightly
         // to 250/255 (98%) of their current brightness
-        g()->DimAll(250); 
-        
+        g()->DimAll(250);
+
         // the Effects class has some sample oscillators
         // that move from 0 to 255 at different speeds
         g()->MoveOscillators();
@@ -241,12 +241,12 @@ public:
         _lastY = y;
 
         //g()->setPixel(x, y, g()->ColorFromCurrentPalette(hue));
-      
+
     }
 };
 
 
-class PatternMunch : public LEDStripEffect 
+class PatternMunch : public LEDStripEffect
 {
 private:
     uint8_t count = 0;
@@ -270,25 +270,25 @@ public:
 
     virtual void Draw() override
     {
-       
+
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
             for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
-                g()->leds[g()->xy(x, y)] = 
-                  (x ^ y ^ flip) < count ? 
-                      g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation) 
+                g()->leds[g()->xy(x, y)] =
+                  (x ^ y ^ flip) < count ?
+                      g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)
                     : CRGB::Black;
 
                 // The below is more pleasant
                // effects.leds[XY(x, y)] = effects.ColorFromCurrentPalette(((x ^ y) << 2) + generation) ;
             }
         }
-        
+
         count += dir;
-        
+
         if (count <= 0 || count >= MATRIX_WIDTH) {
           dir = -dir;
         }
-        
+
         if (count <= 0) {
           if (flip == 0)
             flip = MATRIX_WIDTH-1;

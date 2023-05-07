@@ -2,7 +2,7 @@
 //
 // File:        MusicEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -37,12 +37,12 @@ extern DRAM_ATTR AppTime g_AppTime;
 
 // BeatEffectBase
 //
-// A specialization of LEDStripEffect, adds a HandleBeat function that allows apps to 
+// A specialization of LEDStripEffect, adds a HandleBeat function that allows apps to
 // draw based on the music beat.  The Draw() function does the audio processing and calls
 // HandleBeat() whenever.  Apps are free to draw in both Draw() and HandleBeat().
 //
 // The constructor allows you to specify the sensitivity by where the latch points are/
-// For a highly sensitive (defaults), keep them both close to 1.0.  For a wider beat 
+// For a highly sensitive (defaults), keep them both close to 1.0.  For a wider beat
 // detection you could use 0.25 and 1.75 for example.
 
 
@@ -56,8 +56,8 @@ class BeatEffectBase
     float _minElapsed = 0;
 
   public:
-   
-    BeatEffectBase(float minRange = 0, float minElapsed = 0)      
+
+    BeatEffectBase(float minRange = 0, float minElapsed = 0)
      :
        _minRange(minRange),
        _minElapsed(minElapsed)
@@ -84,7 +84,7 @@ class BeatEffectBase
     {
         debugV("BeatEffectBase2::Draw");
         double elapsed = SecondsSinceLastBeat();
-    
+
         _samples.push_back(g_Analyzer._VURatio);
         float minimum = *min_element(_samples.begin(), _samples.end());
         float maximum = *max_element(_samples.begin(), _samples.end());
@@ -124,7 +124,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
   protected:
 
     int _iLastInsulator = -1;
-           
+
     virtual void Draw() override
     {
         ProcessAudio();
@@ -177,10 +177,10 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
           DrawFanPixels(0, FAN_SIZE, c, Sequential, i);     // Draw twice to float-saturate our color
           DrawFanPixels(0, FAN_SIZE, c, Sequential, i);
         }
-    } 
+    }
 
   public:
-  
+
     SimpleColorBeat(const String & strName)
       : BeatEffectBase(0.5, 0.25), LEDStripEffect(EFFECT_STRIP_SIMPLE_COLOR_BEAT, strName)
     {

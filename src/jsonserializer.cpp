@@ -2,7 +2,7 @@
 //
 // File:        jsonserializer.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -31,12 +31,12 @@
 #include "SPIFFS.h"
 #include "jsonserializer.h"
 
-bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<DynamicJsonDocument>& pJsonDoc)
+bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;
 
     File file = SPIFFS.open(fileName);
-    
+
     if (file)
     {
         if (file.size() > 0)
@@ -49,8 +49,8 @@ bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<Dyna
             // Loop is here to deal with out of memory conditions
             while(true)
             {
-                pJsonDoc.reset(new DynamicJsonDocument(bufferSize));
-                
+                pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
+
                 DeserializationError error = deserializeJson(*pJsonDoc, file);
 
                 if (error == DeserializationError::NoMemory)
@@ -66,7 +66,7 @@ bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<Dyna
                     jsonReadSuccessful = true;
                     break;
                 }
-                else 
+                else
                 {
                     debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName);
                     break;
@@ -85,12 +85,12 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
     if (bufferSize == 0)
         bufferSize = JSON_BUFFER_BASE_SIZE;
 
-    std::unique_ptr<DynamicJsonDocument> pJsonDoc(nullptr);
+    std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
 
     // Loop is here to deal with out of memory conditions
     while(true)
     {
-        pJsonDoc.reset(new DynamicJsonDocument(bufferSize));
+        pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
         JsonObject jsonObject = pJsonDoc->to<JsonObject>();
 
         if (object.SerializeToJSON(jsonObject))
@@ -105,7 +105,7 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
     SPIFFS.remove(fileName);
 
     File file = SPIFFS.open(fileName, FILE_WRITE);
-    
+
     if (!file)
     {
         debugE("Unable to open file %s to write JSON!", fileName);
@@ -114,7 +114,7 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
 
     size_t bytesWritten = serializeJson(*pJsonDoc, file);
     debugI("Number of bytes written to JSON file %s: %d", fileName, bytesWritten);
-    
+
     file.flush();
     file.close();
 
@@ -131,7 +131,7 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
     {
         while (file.available())
             Serial.write(file.read());
-        
+
         file.close();
     }
 */

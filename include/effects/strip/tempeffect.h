@@ -2,7 +2,7 @@
 //
 // File:        TempEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -58,20 +58,20 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
             i = random(0, NUM_FANS);
         } while (_lit.end() != std::find(_lit.begin(), _lit.end(), i));
         _lit.push_back(i);
-        
+
         FillRingPixels(RandomSaturatedColor(), i, 0);
     }
 
   public:
 
     using BeatEffectBase::BeatEffectBase;
- 
-    SimpleInsulatorBeatEffect(const String & strName) 
+
+    SimpleInsulatorBeatEffect(const String & strName)
       : LEDStripEffect(EFFECT_STRIP_SIMPLE_INSULATOR_BEAT, strName), BeatEffectBase(0.5, 0.01)
     {
     }
 
-    SimpleInsulatorBeatEffect(const JsonObjectConst& jsonObject) 
+    SimpleInsulatorBeatEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject), BeatEffectBase(0.5, 0.01)
     {
     }
@@ -102,17 +102,17 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
         } while (_lit.end() != std::find(_lit.begin(), _lit.end(), i));
         _lit.push_back(i);
 
-      FillRingPixels(CRGB::Red, i, 0);        
+      FillRingPixels(CRGB::Red, i, 0);
     }
 
   public:
- 
-    SimpleInsulatorBeatEffect2(const String & strName) 
+
+    SimpleInsulatorBeatEffect2(const String & strName)
       : LEDStripEffect(EFFECT_STRIP_SIMPLE_INSULATOR_BEAT2, strName), BeatEffectBase()
     {
     }
 
-    SimpleInsulatorBeatEffect2(const JsonObjectConst& jsonObject) 
+    SimpleInsulatorBeatEffect2(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject), BeatEffectBase()
     {
     }
@@ -136,7 +136,7 @@ class VUInsulatorsEffect : public LEDStripEffect
       static unsigned long msPeakVU = 0;    // Timestamp of when the last big peak was
 
       setAllOnAllChannels(0, 0 , 0);
-      
+
       const int MAX_FADE = 255;
 
       if (iPeakVUy > 0)
@@ -164,7 +164,7 @@ class VUInsulatorsEffect : public LEDStripEffect
 
       for (int i = 0; i < bars; i++)
         DrawVUPixels(i, 0, vuPaletteGreen);
-    }  
+    }
 };
 
 #endif

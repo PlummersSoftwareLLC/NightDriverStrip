@@ -41,7 +41,7 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 // Palettes
 //
 // Palettes that are referenced by effects need to be instantiated first
- 
+
 const CRGBPalette16 BlueColors_p =
 {
     CRGB::DarkBlue,
@@ -264,7 +264,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects() 
+std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 {
     // The default effects table
     static const std::vector<std::shared_ptr<LEDStripEffect>> defaultEffects =
@@ -290,7 +290,7 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 
     #elif MESMERIZER
 
-        std::make_shared<SplashLogoEffect>(),
+//        new SplashLogoEffect(),
 
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
@@ -304,10 +304,10 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<PatternPongClock>(),
         std::make_shared<PatternSubscribers>(),
         std::make_shared<PatternWeather>(),
-        
+
         // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         std::make_shared<GhostWave>("GhostWave", 0, 24, false),
-        std::make_shared<WaveformEffect>("WaveIn", 8),     
+        std::make_shared<WaveformEffect>("WaveIn", 8),
         std::make_shared<GhostWave>("WaveOut", 0, 0, true, 0),
 
         std::make_shared<WaveformEffect>("WaveForm", 8),
@@ -319,7 +319,7 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<PatternSunburst>(),
 
         std::make_shared<PatternFlowField>(),
-        std::make_shared<PatternClock>(),        
+        std::make_shared<PatternClock>(),
         std::make_shared<PatternAlienText>(),
         std::make_shared<PatternCircuit>(),
 
@@ -338,10 +338,10 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<PatternCurtain>(),
         std::make_shared<PatternGridLights>(),
         std::make_shared<PatternMunch>(),
- 
+
         // std::make_shared<PatternInfinity>(),
-        // std::make_shared<PatternQR>(),           
-        
+        // std::make_shared<PatternQR>(),
+
     #elif UMBRELLA
 
         std::make_shared<FireEffect>("Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false),
@@ -476,7 +476,7 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum Standard", 16, spectrumAltColors, 0, 0, 1.0, 1.0),
 
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum Standard", 48, CRGB(0,0,4), 0, 0, 1.25, 1.25),
-        
+
         std::make_shared<GhostWave>("GhostWave", 0, 16, false, 40),
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum USA", 16, USAColors_p, 0),
         std::make_shared<GhostWave>("GhostWave Rainbow", 8),
@@ -642,14 +642,14 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<PaletteEffect>(MagentaColors_p),             // Rainbow palette
         std::make_shared<DoublePaletteEffect>(),
 */
-    #else                                                                   
+    #else
 
         std::make_shared<RainbowFillEffect>(6, 2),                    // Simple effect if not otherwise defined above
 
     #endif
     };
 
-    // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to 
+    // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
     // add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
     static_assert(ARRAYSIZE(defaultEffects) > 0);
@@ -659,6 +659,17 @@ std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 
+#if USE_MATRIX
+
+    void InitSplashEffectManager()
+    {
+        debugW("InitSplashEffectManager");
+
+        g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(std::make_shared<SplashLogoEffect>(), g_aptrDevices);
+    }
+
+#endif
+
 // InitEffectsManager
 //
 // Initializes the effect manager.  Reboots on failure, since it's not optional
@@ -667,13 +678,16 @@ void InitEffectsManager()
 {
     debugW("InitEffectsManager...");
 
-    std::unique_ptr<DynamicJsonDocument> pJsonDoc;
+    std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
 
     if (LoadJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, pJsonDoc))
     {
         debugI("Creating EffectManager from JSON config");
 
-        g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+        if (g_ptrEffectManager == nullptr)
+            g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+        else
+            g_ptrEffectManager->DeserializeFromJSON(pJsonDoc->as<JsonObjectConst>());
 
         if (g_ptrEffectManager->EffectCount() == 0)
         {
@@ -685,9 +699,13 @@ void InitEffectsManager()
     else
     {
         debugI("Creating EffectManager using default effects");
-        
+
         std::vector<std::shared_ptr<LEDStripEffect>> effects = CreateDefaultEffects();
-        g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(effects, g_aptrDevices);
+
+        if (g_ptrEffectManager == nullptr)
+            g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(effects, g_aptrDevices);
+        else
+            g_ptrEffectManager->LoadEffectArray(effects);
     }
 
     if (false == g_ptrEffectManager->Init())

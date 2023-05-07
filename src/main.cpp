@@ -1,8 +1,8 @@
 //+--------------------------------------------------------------------------
 //
-// File:        main.cpp  
+// File:        main.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -27,7 +27,7 @@
 //    external dependencies.
 //
 //    NightDriver is an LED display project composed of a client app
-//    that runs on the ESP32 and an optional server that can run on 
+//    that runs on the ESP32 and an optional server that can run on
 //    a variety of platforms (anywhere .Net CORE works, like the Pi).
 //    The app controls WS2812B style LEDs.  The number of LEDs in a
 //    row is unbounded but realistically limited to about 1000 which
@@ -35,7 +35,7 @@
 //    can be 8 such channels connected to 8 different pins.
 //    By default NightDriver draws client effects, and there many
 //    built in, from marquees to fire.  But it can also receive color
-//    data from a server.  So it firsts checks to see if there is 
+//    data from a server.  So it firsts checks to see if there is
 //    data coming in, and if so, draws that.  If not it falls back
 //    to internal drawing.  The server sends a simple packet with
 //    an LED count, timestamp, and then the color data for the LEDs.
@@ -47,7 +47,7 @@
 //
 //    Both client and server require reliable access to an SNTP server
 //    to keep their clocks in sync.  The client sets its time every
-//    few hours to combat clock drifts on the ESP32.  Since all the 
+//    few hours to combat clock drifts on the ESP32.  Since all the
 //    clients (and the server) have the same clock, they can sync
 //    shows across multiple clients.  Imagine a setup where a dozen
 //    LED matrixes are arranged to form a small "jumbotron".  This
@@ -59,12 +59,12 @@
 //    of sound-reactive and beat-driven effects built in.
 //
 //    In addition to simple trips, the app handles matrixes as well.
-//    It also handles groups of rings.  In one incarnation, 10 RGB 
+//    It also handles groups of rings.  In one incarnation, 10 RGB
 //    LED PC fans are connected in a LianLi case plus the 32 or so
 //    on the front of the case.  The fans are grouped into NUM_FANS
 //    fans.  It also suports concentrically nested rings of varying
 //    size, which I use for a Christmas-tree project where each tree
-//    is made up of a "stack" of rings - 32 leds, 18, 10, 4, 1.  
+//    is made up of a "stack" of rings - 32 leds, 18, 10, 4, 1.
 //    It's up to individual effects to take advantage of them but
 //    the drawing code provides APIs for "draw to LED x of RING q on
 //    FAZN number z" and so on for convenience.
@@ -88,8 +88,8 @@
 //    code (optionally) receives color data over Wifi.  If it hasn't had
 //    any for a bit of time, it falls back to rotating through a table
 //    of internal effects.
-//    
-//    A number of worker threads are created which:  
+//
+//    A number of worker threads are created which:
 //
 //      1) Draw the TFT and display stats like framerate and IP addr
 //      2) Sync the clock periodically
@@ -105,42 +105,42 @@
 //
 // License:
 //
-// NightDriver is an open source embedded application governed by the terms 
-// of the General Public License (GPL). This requires that anyone modifying 
-// the NightDriver code (for anything other than personal use) or building 
-// applications based on NightDriver code must also make their derived 
-// product available under the same open source GPL terms. By purchasing 
-// a license for NightDriver, you would not then be bound by the GPL and 
-// you would gain an extended feature set and various levels of support.  
-// Think commas, not zeros, when discussing product volumes and license 
-// pricing.  
+// NightDriver is an open source embedded application governed by the terms
+// of the General Public License (GPL). This requires that anyone modifying
+// the NightDriver code (for anything other than personal use) or building
+// applications based on NightDriver code must also make their derived
+// product available under the same open source GPL terms. By purchasing
+// a license for NightDriver, you would not then be bound by the GPL and
+// you would gain an extended feature set and various levels of support.
+// Think commas, not zeros, when discussing product volumes and license
+// pricing.
 //
-// Without restricting the author protections found in the GPL, Plummer's 
+// Without restricting the author protections found in the GPL, Plummer's
 // Software LLC, its programmers, representatives and agents, etc.,
-// specifically disclaim any liability related to safety or suitability 
+// specifically disclaim any liability related to safety or suitability
 // for any purpose whatsoever.  Hypothetical example so we all know what
 // I mean:  If the code that limits LED power consumption has a horribly
 // negligent bug that burns down your village, you have my sympathy but
 // not my liability. It's not that I don't care, there's just no world
-// where I'd casually release code that I was responsible for in that 
+// where I'd casually release code that I was responsible for in that
 // manner without suitable engineering and testing, none of which this
 // code has had.  Not sure?  Turn and flee.  By proceeding, you agree.
 //
 // License Purchases
 //
-// NightDriver is an open source embedded application governed by the 
-// terms of the General Public License (GPL).  If you follow that license 
+// NightDriver is an open source embedded application governed by the
+// terms of the General Public License (GPL).  If you follow that license
 // it's yours at the amazing price of 'completely free'.
 //
-// If, on the other hand, you are building a commercial application for 
+// If, on the other hand, you are building a commercial application for
 // internal use or resale:
 //
-// Anyone building applications based on NightDriver code, or modifying 
-// the NightDriver code, must also make their derived product available 
-// under the same open source GPL terms. Commercial licenses may be 
-// purchased from Plummer's Software LLC if you do not wish to be bound 
+// Anyone building applications based on NightDriver code, or modifying
+// the NightDriver code, must also make their derived product available
+// under the same open source GPL terms. Commercial licenses may be
+// purchased from Plummer's Software LLC if you do not wish to be bound
 // by the GPL terms. These licenses are valid for a specified term.
-// 
+//
 // Contact Plummer's Software LLC for volume pricing and support questions.
 //
 // History:     Jul-12-2018         Davepl      Created
@@ -171,11 +171,11 @@ extern float g_Brite;
 
 NightDriverTaskManager g_TaskManager;
 
-// The one and only instance of ImprovSerial.  We instantiate is as the type needed 
+// The one and only instance of ImprovSerial.  We instantiate is as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
 
-ImprovSerial<typeof(Serial)> g_ImprovSerial; 
+ImprovSerial<typeof(Serial)> g_ImprovSerial;
 
 //
 // Global Variables
@@ -183,9 +183,9 @@ ImprovSerial<typeof(Serial)> g_ImprovSerial;
 
 #if NUM_INFO_PAGES > 0
 DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;                                  // Default to last page
-#else                               
+#else
 DRAM_ATTR uint8_t giInfoPage = 0;                                                   // Default to first page
-#endif                              
+#endif
 
 DRAM_ATTR WiFiUDP g_Udp;                                                            // UDP object used for NNTP, etc
 DRAM_ATTR uint32_t g_FPS = 0;                                                       // Our global framerate
@@ -203,17 +203,17 @@ extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
-// 
+//
 // Imagine a setup of 5 christmas trees, where each tree was made up of 4 concentric rings of descreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
-DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] = 
-{ 
-    RING_SIZE_0, 
-    RING_SIZE_1, 
-    RING_SIZE_2, 
-    RING_SIZE_3, 
-    RING_SIZE_4 
+DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
+{
+    RING_SIZE_0,
+    RING_SIZE_1,
+    RING_SIZE_2,
+    RING_SIZE_3,
+    RING_SIZE_4
 };
 
 //
@@ -245,7 +245,7 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
 
 #if ENABLE_WIFI
 void IRAM_ATTR DebugLoopTaskEntry(void *)
-{    
+{
     //debugI(">> DebugLoopTaskEntry\n");
 
    // Initialize RemoteDebug
@@ -268,9 +268,9 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
         {
             Debug.handle();
         }
-        
-        delay(10);        
-    }    
+
+        delay(10);
+    }
 }
 #endif
 
@@ -287,14 +287,14 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
     #define SUB_CHECK_INTERVAL 60000
     #define SUB_CHECK_ERROR_INTERVAL 10000
-    #define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4" 
+    #define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
 
     WiFiClient http;
     YouTubeSight sight(CHANNEL_GUID, http);
 #endif
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
-{    
+{
     //debugI(">> NetworkHandlingLoopEntry\n");
 
 #if ENABLE_WIFI
@@ -361,10 +361,10 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                 {
                     debugV("Refreshing Time from Server...");
                     NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-                    
+
                 }
             }
-        #endif     
+        #endif
 
         delay(50);
     }
@@ -420,7 +420,7 @@ void PrintOutputHeader()
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
     #endif
 
-    debugI("Version %u: Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u", 
+    debugI("Version %u: Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u",
             FLASH_VERSION, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
     debugI("ESP32 Clock Freq : %d MHz", ESP.getCpuFreqMHz());
 }
@@ -434,7 +434,7 @@ void TerminateHandler()
     debugE("-------------------------------------------------------------------------------------");
     debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
     debugE("-------------------------------------------------------------------------------------");
-    
+
     PrintOutputHeader();
 
     try {
@@ -459,7 +459,7 @@ Bounce2::Button Button2;
 //
 // Invoked once at boot, does initial chip setup and application initial init, then spins off worker tasks and returns
 // control to the system so it can invoke the main loop() function.
-// 
+//
 // Threads (tasks) created here can include:
 //
 // DebugLoopTaskEntry           - Run a little debug console accessible via telnet and serial
@@ -473,12 +473,12 @@ Bounce2::Button Button2;
 void setup()
 {
     // Initialize Serial output
-    Serial.begin(115200);      
+    Serial.begin(115200);
 
     uzlib_init();
     heap_caps_malloc_extmem_enable(1024);
 
-    if (!SPIFFS.begin(true)) 
+    if (!SPIFFS.begin(true))
         Serial.println("WARNING: SPIFFs could not be intialized!");
 
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
@@ -486,7 +486,7 @@ void setup()
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
-    // Set the unhandled exception handler to be our own special exit function                 
+    // Set the unhandled exception handler to be our own special exit function
     std::set_terminate(TerminateHandler);
 
     // Display a simple statup header on the serial port
@@ -541,14 +541,14 @@ void setup()
     // If we have a remote control enabled, set the direction on its input pin accordingly
 
     #if ENABLE_REMOTE
-        pinMode(IR_REMOTE_PIN, INPUT);             
+        pinMode(IR_REMOTE_PIN, INPUT);
     #endif
 
     #if ENABLE_AUDIO
         #if INPUT_PIN
             pinMode(INPUT_PIN, INPUT);
         #endif
-        #if TTGO                                    
+        #if TTGO
             pinMode(37, OUTPUT);            // This pin layout allows for mounting a MAX4466 to the backside
             digitalWrite(37, LOW);          //   of a TTGO with the OUT pin on 36, GND on 37, and Vcc on 38
             pinMode(38, OUTPUT);
@@ -611,7 +611,7 @@ void setup()
     // Set up bitmap drawing for those that need it
 
     // Without these two magic lines, you get no picture, which is pretty annoying...
-    
+
     #ifndef TFT_BL
       #define TFT_BL 5 // LED back-light
     #endif
@@ -628,15 +628,15 @@ void setup()
     g_pDisplay->setRotation(1);
 
     uint8_t x = g_pDisplay->readcommand8(ILI9341_RDMODE);
-    debugI("Display Power Mode: %x", x); 
+    debugI("Display Power Mode: %x", x);
     x = g_pDisplay->readcommand8(ILI9341_RDMADCTL);
-    debugI("MADCTL Mode: %x", x); 
+    debugI("MADCTL Mode: %x", x);
     x = g_pDisplay->readcommand8(ILI9341_RDPIXFMT);
-    debugI("Pixel Format: %x", x); 
+    debugI("Pixel Format: %x", x);
     x = g_pDisplay->readcommand8(ILI9341_RDIMGFMT);
-    debugI("Image Format: %x", x); 
+    debugI("Image Format: %x", x);
     x = g_pDisplay->readcommand8(ILI9341_RDSELFDIAG);
-    debugI("Self Diagnostic: %x", x); 
+    debugI("Self Diagnostic: %x", x);
 
 #endif
 
@@ -660,7 +660,7 @@ void setup()
     #endif
 
     TJpgDec.setJpgScale(1);
-    TJpgDec.setCallback(bitmap_output);        
+    TJpgDec.setCallback(bitmap_output);
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -693,7 +693,7 @@ void setup()
     CheckHeap();
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
-    // Onboard PWM LED 
+    // Onboard PWM LED
 
     #if ONBOARD_LED_R
         ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
@@ -709,10 +709,10 @@ void setup()
 
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
-            
-            
+
+
             FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[0]->leds, g_aptrDevices[0]->GetLEDCount());
-            //FastLED.setMaxRefreshRate(100, false); 
+            //FastLED.setMaxRefreshRate(100, false);
             pinMode(LED_PIN0, OUTPUT);
         #endif
 
@@ -753,13 +753,13 @@ void setup()
             pinMode(LED_PIN7, OUTPUT);
             FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[7]->leds,g_aptrDevices[7]->GetLEDCount());
         #endif
-           
+
         #ifdef POWER_LIMIT_MW
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
         #endif
 
             g_Brightness = 255;
-            
+
         #if ATOMLIGHT
             pinMode(4, INPUT);
             pinMode(12, INPUT);
@@ -769,11 +769,17 @@ void setup()
         #endif
     #endif
 
-    debugI("Initializing effects manager...");
-    InitEffectsManager();
+    // Show splash effect on matrix
+    #if USE_MATRIX
+        debugI("Initializing splash effect manager...");
+        InitSplashEffectManager();
+    #else
+        debugI("Initializing effects manager...");
+        InitEffectsManager();
+    #endif
 
     // Microphone stuff
-    #if ENABLE_AUDIO    
+    #if ENABLE_AUDIO
         pinMode(INPUT_PIN, INPUT);
         // The audio sampler task might as well be on a different core from the LED stuff
         g_TaskManager.StartAudioThread();
@@ -817,6 +823,12 @@ void setup()
     debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
     g_TaskManager.StartDrawThread();
     CheckHeap();
+
+    // Do proper effects manager initialization now that splash effect is running
+    #if USE_MATRIX
+        debugI("Initializing regular effects manager...");
+        InitEffectsManager();
+    #endif
 
     debugV("Saving effect manager config...");
     SaveEffectManagerConfig();
@@ -892,10 +904,10 @@ void loop()
             #endif
 
             strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
-            
+
             Serial.println(strOutput);
         }
 
-        delay(1);        
+        delay(1);
     }
 }
