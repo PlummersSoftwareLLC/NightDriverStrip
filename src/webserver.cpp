@@ -86,10 +86,12 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         j["effectInterval"]        = g_ptrEffectManager->GetInterval();
         j["enabledCount"]          = g_ptrEffectManager->EnabledCount();
 
+        auto effectsList = g_ptrEffectManager->EffectsList();
+
         for (int i = 0; i < g_ptrEffectManager->EffectCount(); i++)
         {
             StaticJsonDocument<256> effectDoc;
-            effectDoc["name"]    = g_ptrEffectManager->EffectsList()[i]->FriendlyName();
+            effectDoc["name"]    = effectsList[i]->FriendlyName();
             effectDoc["enabled"] = g_ptrEffectManager->IsEffectEnabled(i);
 
             if (!j["Effects"].add(effectDoc))

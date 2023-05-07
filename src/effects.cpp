@@ -684,7 +684,7 @@ void InitEffectsManager()
     {
         debugI("Creating EffectManager from JSON config");
 
-        if (g_ptrEffectManager == nullptr)
+        if (!g_ptrEffectManager)
             g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
         else
             g_ptrEffectManager->DeserializeFromJSON(pJsonDoc->as<JsonObjectConst>());
@@ -693,7 +693,7 @@ void InitEffectsManager()
         {
             debugW("JSON deserialization of EffectManager yielded no effects, so falling back to default list");
             std::vector<std::shared_ptr<LEDStripEffect>> vDefaultEffects = CreateDefaultEffects();
-            g_ptrEffectManager->LoadEffectArray(vDefaultEffects);
+            g_ptrEffectManager->LoadEffects(vDefaultEffects);
         }
     }
     else
@@ -702,10 +702,10 @@ void InitEffectsManager()
 
         std::vector<std::shared_ptr<LEDStripEffect>> effects = CreateDefaultEffects();
 
-        if (g_ptrEffectManager == nullptr)
+        if (!g_ptrEffectManager)
             g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(effects, g_aptrDevices);
         else
-            g_ptrEffectManager->LoadEffectArray(effects);
+            g_ptrEffectManager->LoadEffects(effects);
     }
 
     if (false == g_ptrEffectManager->Init())

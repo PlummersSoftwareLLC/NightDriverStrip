@@ -338,5 +338,3 @@ class LEDStripEffect : public IJSONSerializable
 
 };
 
-typedef LEDStripEffect* EffectPointerArray[];
-

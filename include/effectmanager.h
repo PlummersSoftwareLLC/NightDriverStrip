@@ -125,7 +125,7 @@ public:
     {
         debugV("EffectManager Constructor");
 
-        LoadEffectArray(effects);
+        LoadEffects(effects);
     }
 
     EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> gfx [])
@@ -142,7 +142,7 @@ public:
         ClearEffects();
     }
 
-    void LoadEffectArray(const std::vector<std::shared_ptr<LEDStripEffect>> & effects)
+    void LoadEffects(const std::vector<std::shared_ptr<LEDStripEffect>> & effects)
     {
         _vEffects = effects;
 
