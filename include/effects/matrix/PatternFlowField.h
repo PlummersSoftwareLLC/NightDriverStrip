@@ -77,7 +77,7 @@ public:
 
     uint8_t hue = 0;
 
-    virtual void Start()
+    virtual void Start() override
     {
         x = random16();
         y = random16();
@@ -85,24 +85,24 @@ public:
 
         for (int i = 0; i < count; i++)
         {
-            graphics()->boids[i] = Boid(random(MATRIX_WIDTH), 0);
+            g()->_boids[i] = Boid(random(MATRIX_WIDTH), 0);
         }
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 16;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        graphics()->DimAll(240);
+        g()->DimAll(240);
 
         // CRGB color = effects.ColorFromCurrentPalette(hue);
 
         for (int i = 0; i < count; i++)
         {
-            Boid *boid = &(graphics()->boids[i]);
+            Boid *boid = &(g()->_boids[i]);
 
             int ioffset = scale * boid->location.x;
             int joffset = scale * boid->location.y;
@@ -113,7 +113,7 @@ public:
             boid->velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);
             boid->update();
 
-            graphics()->drawPixel(boid->location.x, boid->location.y, graphics()->ColorFromCurrentPalette(angle + hue)); // color
+            g()->drawPixel(boid->location.x, boid->location.y, g()->ColorFromCurrentPalette(angle + hue)); // color
 
             if (boid->location.x < 0 || boid->location.x >= MATRIX_WIDTH ||
                 boid->location.y < 0 || boid->location.y >= MATRIX_HEIGHT)

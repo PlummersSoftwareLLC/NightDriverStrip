@@ -207,10 +207,8 @@ public:
         bStuckInLoop = 0;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto graphics = (GFXBase *) _GFX[0].get();
-
         if (cGeneration == 0)
             Reset();
 
@@ -221,9 +219,9 @@ public:
             for (int i = 0; i < MATRIX_WIDTH; i++) {
                 for (int j = 0; j < MATRIX_HEIGHT; j++) {
                     if (world[i][j].brightness > 0)
-                        graphics->leds[graphics->xy(i, j)] += graphics->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
+                        g()->leds[g()->xy(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
                     else
-                        graphics->leds[graphics->xy(i, j)] = CRGB::Black;
+                        g()->leds[g()->xy(i, j)] = CRGB::Black;
                 }
             }
         }
@@ -256,9 +254,9 @@ public:
             if (elapsed < flashTime)
             {
                 auto whiteColor = CRGB(0x60, 0x00, 0x00);
-                graphics->fillRectangle(0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, whiteColor);
+                g()->fillRectangle(0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, whiteColor);
             }
-            graphics->DimAll(255 - 255*elapsed/resetTime);
+            g()->DimAll(255 - 255*elapsed/resetTime);
 
             for (int x = 0; x < MATRIX_WIDTH; x++)
                 for (int y = 0; y < MATRIX_HEIGHT; y++)

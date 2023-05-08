@@ -47,9 +47,9 @@ class LEDBuffer
   private:
     
     std::unique_ptr<CRGB []> _leds;
-    uint32_t            _pixelCount;
-    uint64_t            _timeStampMicroseconds;
-    uint64_t            _timeStampSeconds;
+    uint32_t                 _pixelCount;
+    uint64_t                 _timeStampMicroseconds;
+    uint64_t                 _timeStampSeconds;
    
   public:
 
@@ -59,13 +59,7 @@ class LEDBuffer
                  _timeStampMicroseconds(0),
                  _timeStampSeconds(0)
     {
-        #if USE_PSRAM
-            //psram_allocator<CRGB []> alloc = psram_allocator<CRGB []>();
-            // _leds = psram_allocator<CRGB>().allocate(NUM_LEDS);
-            _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
-        #else
-            _leds = std::make_unique<CRGB []>(NUM_LEDS);
-        #endif
+        _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
 
         for (int i = 0; i < NUM_LEDS; i++)
             _leds[i] = CRGB::Yellow;
@@ -91,7 +85,7 @@ class LEDBuffer
         return false;
     }
 
-    bool UpdateFromWire(uint8_t * payloadData, size_t payloadLength)
+    bool UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
     {
         if (payloadLength < 24)                 // Our header size
         {
@@ -135,7 +129,7 @@ class LEDBuffer
         
         CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
 
-        memcpy((void *)_leds.get(), pRGB, length32 * sizeof(CRGB));
+        memcpy(_leds.get(), pRGB, length32 * sizeof(CRGB));
         debugV("seconds, micros: %llu.%llu", seconds, micros);
         debugV("Color0: %08x", (uint32_t) _leds[0]);
         return true;
@@ -145,7 +139,7 @@ class LEDBuffer
     {
         _timeStampMicroseconds = 0;
         _timeStampSeconds      = 0;
-        _pStrand->fillLeds(_leds.get());
+        _pStrand->fillLeds(_leds);
     }
 };
 
@@ -162,8 +156,8 @@ class LEDBufferManager
     size_t                                               _iNextBuffer;        // Head pointer index
     size_t                                               _iLastBuffer;        // Tail pointer index
     uint32_t                                             _cBuffers;           // Number of buffers
-    float                                               _BufferAgeOldest = 0;
-    float                                               _BufferAgeNewest = 0;
+    float                                                _BufferAgeOldest = 0;
+    float                                                _BufferAgeNewest = 0;
    
   public:
 
@@ -178,13 +172,7 @@ class LEDBufferManager
         // are returned back out to callers so they must be shared pointers.
 
         for (int i = 0; i < _cBuffers; i++)
-        {
-            #if USE_PSRAM
-                _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
-            #else
-                _ppBuffers[i] = std::make_shared<LEDBuffer>(pGFX);
-            #endif
-        }
+            _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
     }
 
     float AgeOfOldestBuffer()

@@ -37,7 +37,7 @@
 
 extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
 #if ENABLE_AUDIO
 
@@ -77,7 +77,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         auto peaks = g_Analyzer.GetPeakData();
 
@@ -120,7 +120,7 @@ class VUMeterEffect
     //
     // Draw i-th pixel in row y
 
-    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
+    void DrawVUPixels(std::shared_ptr<GFXBase> pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
     {
         if (g_Analyzer.MicMode() == PeakData::PCREMOTE)
             pPalette = &vuPaletteBlue;
@@ -140,7 +140,7 @@ class VUMeterEffect
 
   public:
 
-    inline void EraseVUMeter(GFXBase * pGFXChannel, int start, int yVU) const
+    inline void EraseVUMeter(std::shared_ptr<GFXBase> pGFXChannel, int start, int yVU) const
     {
         int xHalf = pGFXChannel->width()/2;
         for (int i = start; i <= xHalf; i++)
@@ -150,7 +150,7 @@ class VUMeterEffect
         }
     }
 
-    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette16 * pPalette = nullptr)
+    void DrawVUMeter(std::shared_ptr<GFXBase> pGFXChannel, int yVU, const CRGBPalette16 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
 
@@ -202,7 +202,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     float _peak1DecayRate;
     float _peak2DecayRate;
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 60;
     }
@@ -279,15 +279,13 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int yOffset2  = pGFXChannel->height() - value2;
 
         if (_fadeRate == 0)
-        {
             for (int y = 1; y < yOffset2; y++)
                 for (int x = xOffset; x < xOffset + barWidth; x++)
-                    graphics()->setPixel(x, y, CRGB::Black);
-        }
+                    g()->setPixel(x, y, CRGB::Black);
 
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
-                graphics()->setPixel(x, y, baseColor);
+                g()->setPixel(x, y, baseColor);
 
         const int PeakFadeTime_ms = 1000;
 
@@ -378,14 +376,14 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
 
         g_Analyzer.g_peak1DecayRate = _peak1DecayRate;
         g_Analyzer.g_peak2DecayRate = _peak2DecayRate;
 
-        auto pGFXChannel = _GFX[0].get();
+        auto pGFXChannel = _GFX[0];
 
         if (_scrollSpeed > 0)
         {
@@ -397,9 +395,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
-
-        //if (_bShowVU)
-        //    DrawVUMeter(pGFXChannel, 0);
 
         for (int i = 0; i < _numBars; i++)
         {
@@ -462,7 +457,7 @@ class WaveformEffect : public LEDStripEffect
         v = std::min(v, 1.0f);
         v = std::max(v, 0.0f);
 
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_ptrEffectManager->g();
 
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
@@ -495,17 +490,17 @@ class WaveformEffect : public LEDStripEffect
 
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         // I found a pleasing scroll speed to be 24-30, not much faster or its too mesmerizing :-)
         return 24;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_ptrEffectManager->g();
 
-        int top = g_aptrEffectManager->IsVUVisible() ? 1 : 0;
+        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         DrawSpike(63, g_Analyzer._VURatio/2.0);
         DrawSpike(0, g_Analyzer._VURatio/2.0);
@@ -558,21 +553,20 @@ class GhostWave : public WaveformEffect
 
     virtual bool RequiresDoubleBuffering() const
     {
-        // If the effect entirely erases each frame, it doesn't need double buffering or preserving the old frame
-        return !_erase;
+        return true;
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         // Looks cool at the low-50s it can actually achieve
         return _blur > 0 ? 60 : 30;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_ptrEffectManager->g();
 
-        int top = g_aptrEffectManager->IsVUVisible() ? 1 : 0;
+        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
 
         g->DimAll(250 - _fade * g_Analyzer._VURatio);
         g->MoveOutwardsX(top);

@@ -96,9 +96,10 @@ public:
         construct();
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto graphics = (GFXBase *) _GFX[0].get();
+        auto graphics = g();
+        
         int n = 0;
 
         switch (rotation) {

@@ -51,10 +51,8 @@ class PatternClock : public LEDStripEffect
     {
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = graphics();
-
         // Get the hours, minutes, and seconds of hte current time
 
         time_t currentTime;
@@ -67,9 +65,9 @@ class PatternClock : public LEDStripEffect
 
         // Draw the clock face, outer ring and inner dot where the hands mount
 
-        g->Clear();
-        g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius, GREEN16);
-        g->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, GREEN16);
+        g()->Clear();
+        g()->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius, GREEN16);
+        g()->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, GREEN16);
 
         // Draw the hour ticks around the outside of the clock every 30 degrees
 
@@ -82,7 +80,7 @@ class PatternClock : public LEDStripEffect
             int y2 = (MATRIX_CENTER_Y - (cos(angle) * radius));
             int x3 = (MATRIX_CENTER_X + (sin(angle) * (radius - 2)));
             int y3 = (MATRIX_CENTER_Y - (cos(angle) * (radius - 2)));
-            g->drawLine(x2, y2, x3, y3, CRGB::Red);
+            g()->drawLine(x2, y2, x3, y3, CRGB::Red);
         }
 
         // Draw the second hand
@@ -91,7 +89,7 @@ class PatternClock : public LEDStripEffect
         angle = (angle / 57.29577951); // Convert degrees to radians
         int x3 = (MATRIX_CENTER_X + (sin(angle) * (radius)));
         int y3 = (MATRIX_CENTER_Y - (cos(angle) * (radius)));
-        g->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::White);
+        g()->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::White);
 
         // Draw the minute hand
 
@@ -99,7 +97,7 @@ class PatternClock : public LEDStripEffect
         angle = (angle / 57.29577951); // Convert degrees to radians
         x3 = (MATRIX_CENTER_X + (sin(angle) * (radius - 3)));
         y3 = (MATRIX_CENTER_Y - (cos(angle) * (radius - 3)));
-        g->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::Yellow);
+        g()->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::Yellow);
 
         // Draw the  hour hand
 
@@ -107,7 +105,7 @@ class PatternClock : public LEDStripEffect
         angle = (angle / 57.29577951); // Convert degrees to radians
         x3 = (MATRIX_CENTER_X + (sin(angle) * (radius / 2 )));
         y3 = (MATRIX_CENTER_Y - (cos(angle) * (radius / 2 )));
-        g->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::Yellow);
+        g()->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::Yellow);
     }
 };
 

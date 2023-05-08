@@ -85,12 +85,12 @@ public:
         matrix.setBrightness(percent);
     }
     
-    inline virtual uint16_t xy(uint16_t x, uint16_t y) const
+    virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         return y * MATRIX_WIDTH + x;    
     }
 
-    inline void setLeds(CRGB *pLeds)
+    void setLeds(CRGB *pLeds)
     {
         leds = pLeds;
     }
@@ -125,6 +125,42 @@ public:
         captionDuration = duration;
         strCaption = str;
         captionStartTime = millis();
+    }
+
+    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    {
+        // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+        // out in order to do the scroll with memmove rather than row by column pixel
+        // lookups.          
+        for (int y = startY; y <= endY; y++)
+        {
+            auto pLinemem = leds + y * MATRIX_WIDTH;
+            auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+            memmove(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memmove(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));                
+        }
+    }
+
+    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    {
+        // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+        // out in order to do the scroll with memmove rather than row by column pixel
+        // lookups.  
+        for (int y = startY; y <= endY; y++)
+        {
+            auto pLinemem = leds + y * MATRIX_WIDTH;
+            auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+            memmove(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memmove(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+        }
+    }
+
+    virtual void fillLeds(const CRGB *pLEDs)
+    {
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
+        // so we do it the "slow" way for other matrices
+
+        memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
     }
 
     // Matrix interop

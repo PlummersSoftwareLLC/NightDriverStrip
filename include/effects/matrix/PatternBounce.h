@@ -72,7 +72,7 @@ public:
     {
     }
 
-    virtual void Start()
+    virtual void Start() override
     {
         unsigned int colorWidth = 256 / count;
         for (int i = 0; i < count; i++)
@@ -83,26 +83,25 @@ public:
             boid.colorIndex = colorWidth * i;
             boid.maxforce = 10;
             boid.maxspeed = 10;
-            graphics()->boids[i] = boid;
+            g()->_boids[i] = boid;
         }
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
         // dim all pixels on the display
 
         // Blue columns only, and skip the first row of each column if the VU meter is being shown so we don't blend it onto ourselves
-        g->blurColumns(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_aptrEffectManager->IsVUVisible() ? 1 : 0, 200);
-        g->DimAll(250);
+        g()->blurColumns(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_ptrEffectManager->IsVUVisible() ? 1 : 0, 200);
+        g()->DimAll(250);
 
         for (int i = 0; i < count; i++)
         {
-            Boid boid = graphics()->boids[i];
+            Boid boid = g()->_boids[i];
             boid.applyForce(gravity);
             boid.update();
 
-            g->setPixel(boid.location.x, boid.location.y, g->ColorFromCurrentPalette(boid.colorIndex));
+            g()->setPixel(boid.location.x, boid.location.y, g()->ColorFromCurrentPalette(boid.colorIndex));
 
             if (boid.location.y >= MATRIX_HEIGHT - 1)
             {
@@ -110,7 +109,7 @@ public:
                 boid.velocity.y *= -1.0;
             }
 
-            graphics()->boids[i] = boid;
+            g()->_boids[i] = boid;
         }
     }
 };

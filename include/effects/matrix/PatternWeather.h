@@ -99,7 +99,7 @@ private:
         return false;
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 25;
     }
@@ -324,17 +324,16 @@ public:
         vTaskDelete(weatherTask);
     }
 
-    // We re-render the entire display every frame
-    virtual void Draw()
+    virtual void Draw() override
     {
         const int fontHeight = 7;
         const int fontWidth  = 5;
         const int xHalf      = MATRIX_WIDTH / 2 - 1;
 
-        graphics()->fillScreen(CRGB(0, 0, 0));
-        graphics()->fillRect(0, 0, MATRIX_WIDTH, 9, graphics()->to16bit(CRGB(0,0,128)));
+        g()->fillScreen(CRGB(0, 0, 0));
+        g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
 
-        graphics()->setFont(&Apple5x7);
+        g()->setFont(&Apple5x7);
 
         if (WiFi.isConnected())
         {
@@ -385,14 +384,14 @@ public:
 
         int x = 0;
         int y = fontHeight + 1;
-        graphics()->setCursor(x, y);
-        graphics()->setTextColor(WHITE16);
+        g()->setCursor(x, y);
+        g()->setTextColor(WHITE16);
         String showLocation = strLocation;
         showLocation.toUpperCase();
         if (g_aptrDeviceConfig->GetOpenWeatherAPIKey().isEmpty())
-            graphics()->print("No API Key");
+            g()->print("No API Key");
         else
-            graphics()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
+            g()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
 
         // Display the temperature, right-justified
 
@@ -400,17 +399,17 @@ public:
         {
             String strTemp((int)temperature);
             x = MATRIX_WIDTH - fontWidth * strTemp.length();
-            graphics()->setCursor(x, y);
-            graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
-            graphics()->print(strTemp);
+            g()->setCursor(x, y);
+            g()->setTextColor(g()->to16bit(CRGB(192,192,192)));
+            g()->print(strTemp);
         }
 
         // Draw the separator lines
 
         y+=1;
 
-        graphics()->drawLine(0, y, MATRIX_WIDTH-1, y, CRGB(0,0,128));
-        graphics()->drawLine(xHalf, y, xHalf, MATRIX_HEIGHT-1, CRGB(0,0,128));
+        g()->drawLine(0, y, MATRIX_WIDTH-1, y, CRGB(0,0,128));
+        g()->drawLine(xHalf, y, xHalf, MATRIX_HEIGHT-1, CRGB(0,0,128));
         y+=2 + fontHeight;
 
         // Figure out which day of the week it is
@@ -422,17 +421,17 @@ public:
 
         // Draw the day of the week and tomorrow's day as well
 
-        graphics()->setTextColor(WHITE16);
-        graphics()->setCursor(0, MATRIX_HEIGHT);
-        graphics()->print(pszToday);
-        graphics()->setCursor(xHalf+2, MATRIX_HEIGHT);
-        graphics()->print(pszTomorrow);
+        g()->setTextColor(WHITE16);
+        g()->setCursor(0, MATRIX_HEIGHT);
+        g()->print(pszToday);
+        g()->setCursor(xHalf+2, MATRIX_HEIGHT);
+        g()->print(pszTomorrow);
 
         // Draw the temperature in lighter white
 
         if (dataReady)
         {
-            graphics()->setTextColor(graphics()->to16bit(CRGB(192,192,192)));
+            g()->setTextColor(g()->to16bit(CRGB(192,192,192)));
             String strHi((int) highToday);
             String strLo((int) loToday);
 
@@ -440,12 +439,12 @@ public:
 
             x = xHalf - fontWidth * strHi.length();
             y = MATRIX_HEIGHT - fontHeight;
-            graphics()->setCursor(x,y);
-            graphics()->print(strHi);
+            g()->setCursor(x,y);
+            g()->print(strHi);
             x = xHalf - fontWidth * strLo.length();
             y+= fontHeight;
-            graphics()->setCursor(x,y);
-            graphics()->print(strLo);
+            g()->setCursor(x,y);
+            g()->print(strLo);
 
             // Draw tomorrow's HI and LO temperatures
 
@@ -453,12 +452,12 @@ public:
             strLo = String((int)loTomorrow);
             x = MATRIX_WIDTH - fontWidth * strHi.length();
             y = MATRIX_HEIGHT - fontHeight;
-            graphics()->setCursor(x,y);
-            graphics()->print(strHi);
+            g()->setCursor(x,y);
+            g()->print(strHi);
             x = MATRIX_WIDTH - fontWidth * strLo.length();
             y+= fontHeight;
-            graphics()->setCursor(x,y);
-            graphics()->print(strLo);
+            g()->setCursor(x,y);
+            g()->print(strLo);
         }
     }
 };

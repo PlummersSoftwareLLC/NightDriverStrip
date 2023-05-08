@@ -61,7 +61,7 @@ void RemoveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_ptrDevices[NUM_CHANNELS];
-LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
+std::shared_ptr<LEDStripEffect> CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 
 // EffectManager
 //
@@ -70,7 +70,7 @@ LEDStripEffect* CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 template <typename GFXTYPE>
 class EffectManager : public IJSONSerializable
 {
-    std::vector<LEDStripEffect*> _vEffects;
+    std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
     size_t _cEnabled = 0;
 
     size_t _iCurrentEffect = 0;
@@ -79,19 +79,19 @@ class EffectManager : public IJSONSerializable
     bool _bPlayAll;
     bool _bShowVU = true;
     CRGB lastManualColor = CRGB::Red;
-    bool _clearRemoteEffectWhenExpired = false;
+    bool _clearTempEffectWhenExpired = false;
 
     std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
-    std::shared_ptr<LEDStripEffect> _ptrRemoteEffect;
+    std::shared_ptr<LEDStripEffect> _tempEffect;
 
-    void construct(bool clearRemoteEffect)
+    void construct(bool clearTempEffect)
     {
         _bPlayAll = false;
 
-        if (clearRemoteEffect && _ptrRemoteEffect)
+        if (clearTempEffect && _tempEffect)
         {
-            _clearRemoteEffectWhenExpired = true;
+            _clearTempEffectWhenExpired = true;
 
             // This is a hacky way to ensure that we start the correct effect after the temporary one
             _iCurrentEffect--;
@@ -100,9 +100,6 @@ class EffectManager : public IJSONSerializable
 
     void ClearEffects()
     {
-        for (auto effect : _vEffects)
-            delete effect;
-
         _vEffects.clear();
         _abEffectEnabled.reset();
         _cEnabled = 0;
@@ -112,26 +109,26 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(LEDStripEffect *pEffect, std::shared_ptr<GFXTYPE> *gfx)
+    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::shared_ptr<GFXTYPE> gfx [])
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
 
-        if (pEffect->Init(_gfx))
-            _ptrRemoteEffect = std::shared_ptr<LEDStripEffect>(pEffect);
+        if (effect->Init(_gfx))
+            _tempEffect = effect;
 
         construct(false);
     }
 
-    EffectManager(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects, std::shared_ptr<GFXTYPE> *gfx)
+    EffectManager(const std::vector<std::shared_ptr<LEDStripEffect>> & effects, std::shared_ptr<GFXTYPE> gfx [])
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
 
-        LoadEffectArray(pEffects, cEffects);
+        LoadEffects(effects);
     }
 
-    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> *gfx)
+    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> gfx [])
         : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
@@ -145,15 +142,9 @@ public:
         ClearEffects();
     }
 
-    void LoadEffectArray(const std::unique_ptr<EffectPointerArray> &pEffects, size_t cEffects)
+    void LoadEffects(const std::vector<std::shared_ptr<LEDStripEffect>> & effects)
     {
-        ClearEffects();
-        _vEffects.reserve(cEffects);
-
-        for (int i = 0; i < cEffects; i++)
-        {
-            _vEffects.push_back(pEffects[i]);
-        }
+        _vEffects = effects;
 
         _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
@@ -179,9 +170,9 @@ public:
 
         for (auto effectObject : effectsArray)
         {
-            LEDStripEffect *pEffect = CreateEffectFromJSON(effectObject);
-            if (pEffect != nullptr)
-                _vEffects.push_back(pEffect);
+            std::shared_ptr<LEDStripEffect> ptrEffect = CreateEffectFromJSON(effectObject);
+            if (ptrEffect != nullptr)
+                _vEffects.emplace_back(ptrEffect);
         }
 
         // Check if we have at least one deserialized effect
@@ -229,7 +220,7 @@ public:
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
-        for (auto effect : _vEffects)
+        for (auto & effect : _vEffects)
         {
             JsonObject effectObject = effectsArray.createNestedObject();
             if (!(effect->SerializeToJSON(effectObject)))
@@ -245,7 +236,7 @@ public:
     }
 
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
-    inline std::shared_ptr<GFXTYPE> graphics() const
+    inline std::shared_ptr<GFXTYPE> g() const
     {
         return _gfx[0];
     }
@@ -283,7 +274,7 @@ public:
         lastManualColor = color;
 
         #if (USE_MATRIX)
-                GFXBase *pMatrix = (*this)[0].get();
+                auto pMatrix = g();
                 pMatrix->setPalette(CRGBPalette16(oldColor, color));
                 pMatrix->PausePalette(true);
         #else
@@ -305,7 +296,7 @@ public:
 
             if (effect->Init(g_aptrDevices))
             {
-                _ptrRemoteEffect = effect;
+                _tempEffect = effect;
                 StartEffect();
             }
         #endif
@@ -314,10 +305,10 @@ public:
     void ClearRemoteColor(bool retainRemoteEffect = false)
     {
         if (!retainRemoteEffect)
-            _ptrRemoteEffect = nullptr;
+            _tempEffect = nullptr;
 
         #if (USE_MATRIX)
-            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
+            auto pMatrix = (*this)[0];
             pMatrix->PausePalette(false);
         #endif
     }
@@ -327,15 +318,15 @@ public:
         // If there's a temporary effect override from the remote control active, we start that, else
         // we start the current regular effect
 
-        LEDStripEffect *pEffect = _ptrRemoteEffect ? _ptrRemoteEffect.get() : _vEffects[_iCurrentEffect];
+        std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
         #if USE_MATRIX
-            LEDMatrixGFX *pMatrix = (LEDMatrixGFX *)(*this)[0].get();
-            pMatrix->SetCaption(pEffect->FriendlyName(), 3000);
+            auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
+            pMatrix->SetCaption(effect->FriendlyName(), 3000);
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
-        pEffect->Start();
+        effect->Start();
 
         _effectStartTime = millis();
     }
@@ -409,9 +400,9 @@ public:
             SaveEffectManagerConfig();
     }
 
-    const LEDStripEffect *const *EffectsList() const
+    const std::vector<std::shared_ptr<LEDStripEffect>> & EffectsList() const
     {
-        return &_vEffects[0];
+        return _vEffects;
     }
 
     const size_t EffectCount() const
@@ -429,15 +420,15 @@ public:
         return _iCurrentEffect;
     }
 
-    LEDStripEffect *GetCurrentEffect() const
+    const std::shared_ptr<LEDStripEffect> GetCurrentEffect() const
     {
-        return _ptrRemoteEffect ? _ptrRemoteEffect.get() : _vEffects[_iCurrentEffect];
+        return _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
     }
 
     const String & GetCurrentEffectName() const
     {
-        if (_ptrRemoteEffect)
-            return _ptrRemoteEffect->FriendlyName();
+        if (_tempEffect)
+            return _tempEffect->FriendlyName();
 
         return _vEffects[_iCurrentEffect]->FriendlyName();
     }
@@ -489,10 +480,10 @@ public:
 
         if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
         {
-            if (_clearRemoteEffectWhenExpired)
+            if (_clearTempEffectWhenExpired)
             {
-                _ptrRemoteEffect.reset();
-                _clearRemoteEffectWhenExpired = false;
+                _tempEffect.reset();
+                _clearTempEffectWhenExpired = false;
             }
 
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
@@ -509,7 +500,7 @@ public:
 
     void PreviousPalette()
     {
-        auto g = _gfx[0].get();
+        auto g = _gfx[0];
         g->CyclePalette(-1);
     }
     // Update to the next effect and abort the current effect.
@@ -580,8 +571,8 @@ public:
 
         // If a remote control effect is set, we draw that, otherwise we draw the regular effect
 
-        if (_ptrRemoteEffect)
-            _ptrRemoteEffect->Draw();
+        if (_tempEffect)
+            _tempEffect->Draw();
         else
             _vEffects[_iCurrentEffect]->Draw(); // Draw the currently active effect
 
@@ -618,4 +609,4 @@ public:
     }
 };
 
-extern std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;

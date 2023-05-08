@@ -77,18 +77,18 @@ public:
   {
   }
 
-  virtual void Start()
+  virtual void Start() override
   {
-      auto g = g_aptrEffectManager->graphics();
+      auto g = g_ptrEffectManager->g();
       x = leftMargin;
       y = topMargin;
       g->Clear();
       debugW("Starting AlienText...");
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
-    GFXBase * graphics = (GFXBase *) _GFX[0].get();
+    std::shared_ptr<GFXBase> graphics = _GFX[0];
 
     graphics->DimAll(245);
 

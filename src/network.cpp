@@ -86,17 +86,6 @@ extern uint32_t g_FPS;
             #if INCOMING_WIFI_ENABLED
                 debugI("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             #endif
-
-            // Print out a buffer log with timestamps and deltas
-
-            for (size_t i = 0; i < g_aptrBufferManager[0]->Depth(); i++)
-            {
-                auto pBufferManager = g_aptrBufferManager[0].get();
-                std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
-                float t = pBuffer->Seconds() + (float) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
-                debugI("Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
-            }
-
         }
     }
 #endif
@@ -297,7 +286,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 // as this code does not validate!  This is where the commands and pixel data are received
 // from the server.
 
-bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
+bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
 {
     #if !INCOMING_WIFI_ENABLED
         return false;
@@ -328,7 +317,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                     seconds,
                     micros);
 
-                PeakData peaks((double *)(payloadData + STANDARD_DATA_HEADER_SIZE));
+                PeakData peaks((double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
                 peaks.ApplyScalars(PeakData::PCREMOTE);
                 g_Analyzer.SetPeakData(peaks);
             #endif

@@ -61,40 +61,4 @@ public:
         free(leds);
         leds = nullptr;
     }
-
-    virtual size_t GetLEDCount() const
-    {
-        return NUM_LEDS;
-    }
-    
-    inline uint16_t getPixelIndex(int16_t x, int16_t y) const
-    {
-        if (x & 0x01)
-        {
-          // Odd rows run backwards
-          uint8_t reverseY = (_height - 1) - y;
-          return (x * _height) + reverseY;
-        }
-        else
-        {
-          // Even rows run forwards
-          return (x * _height) + y;
-        }
-    }
-
-    inline CRGB getPixel(int16_t x) const
-    {
-        if (x >= 0 && x < MATRIX_WIDTH * MATRIX_HEIGHT)
-            return leds[x];
-        else
-            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, NUM_LEDS=%d", x, NUM_LEDS).c_str());
-    }
-
-    inline CRGB getPixel(int16_t x, int16_t y) const
-    {
-        if (x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT)
-            return leds[xy(x, y)];
-        else
-            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
-    }
 };

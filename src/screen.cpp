@@ -30,7 +30,7 @@
 
 #include "globals.h"
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
 float g_Brite;
 uint32_t g_Watts;
@@ -245,7 +245,7 @@ void CurrentEffectSummary(bool bRedraw)
     // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
     // last time and check each time to see if its any different before drawing.
 
-    static auto lasteffect = g_aptrEffectManager->GetCurrentEffectIndex();
+    static auto lasteffect = g_ptrEffectManager->GetCurrentEffectIndex();
     static auto sip = WiFi.localIP().toString();
     static auto lastFPS = g_FPS;
     static auto lastFullDraw = 0;
@@ -257,7 +257,7 @@ void CurrentEffectSummary(bool bRedraw)
     {
         lastFullDraw = millis();
         if (bRedraw != false ||
-            lasteffect != g_aptrEffectManager->GetCurrentEffectIndex() ||
+            lasteffect != g_ptrEffectManager->GetCurrentEffectIndex() ||
             sip != WiFi.localIP().toString())
         {
             Screen::fillRect(0, 0, Screen::screenWidth(), Screen::TopMargin, backColor);
@@ -265,7 +265,7 @@ void CurrentEffectSummary(bool bRedraw)
             Screen::fillRect(0, Screen::TopMargin - 1, Screen::screenWidth(), 1, BLUE16);
             Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin + 1, Screen::screenWidth(), 1, BLUE16);
 
-            lasteffect = g_aptrEffectManager->GetCurrentEffectIndex();
+            lasteffect = g_ptrEffectManager->GetCurrentEffectIndex();
             sip = WiFi.localIP().toString();
             lastFPS = g_FPS;
 
@@ -273,13 +273,13 @@ void CurrentEffectSummary(bool bRedraw)
 
             Screen::setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
-                             String(g_aptrEffectManager->GetCurrentEffectIndex() + 1) +
+                             String(g_ptrEffectManager->GetCurrentEffectIndex() + 1) +
                              String("/") +
-                             String(g_aptrEffectManager->EffectCount());
+                             String(g_ptrEffectManager->EffectCount());
             Screen::drawString(sEffect.c_str(), yh);
             yh += Screen::fontHeight();
             // get effect name length and switch text size accordingly
-            int effectnamelen = g_aptrEffectManager->GetCurrentEffectName().length();
+            int effectnamelen = g_ptrEffectManager->GetCurrentEffectName().length();
 
 #if M5STICKCPLUS || M5STACKCORE2
             Screen::setTextSize(Screen::MEDIUM);
@@ -287,7 +287,7 @@ void CurrentEffectSummary(bool bRedraw)
             Screen::setTextSize(Screen::SMALL);
 #endif
             Screen::setTextColor(WHITE16, backColor);
-            Screen::drawString(g_aptrEffectManager->GetCurrentEffectName(), yh);
+            Screen::drawString(g_ptrEffectManager->GetCurrentEffectName(), yh);
             yh += Screen::fontHeight();
             Screen::setTextSize(Screen::SMALL);
 
@@ -449,7 +449,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         Button2.update();
         if (Button2.pressed())
         {
-            g_aptrEffectManager->NextEffect();
+            g_ptrEffectManager->NextEffect();
             bRedraw = true;
         }
 #endif

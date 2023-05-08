@@ -1687,6 +1687,12 @@ inline static float randomfloat(float lower, float upper)
     return result;
 }
 
+inline static double randomdouble(double lower, double upper)
+{
+    double result = (lower + ((upper - lower) * rand()) / (double)RAND_MAX);
+    return result;
+}
+
 template<typename T> inline float map(T x, T in_min, T in_max, T out_min, T out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;

@@ -141,12 +141,11 @@ private:
             }
         }
 
-        void draw(GFXBase * graphics, CRGB colors[SNAKE_LENGTH])
+        void draw(std::shared_ptr<GFXBase> graphics, CRGB colors[SNAKE_LENGTH])
         {
             for (uint8_t i = 0; i < SNAKE_LENGTH; i++)
-            {
                 graphics->leds[graphics->xy(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH / 4));
-            }
+
             uint8_t m = random(20, 100);
             graphics->leds[graphics->xy(pixels[SNAKE_LENGTH - 1].x, pixels[SNAKE_LENGTH - 1].y)] = CRGB(0, m, 0); // End tail with random dark green
             graphics->leds[graphics->xy(pixels[0].x, pixels[0].y)] = CRGB::White;                                 // Head end bright white dot
@@ -181,17 +180,15 @@ public:
 
     void start()
     {
-        auto graphics = (GFXBase *)_GFX[0].get();
-
         for (int i = 0; i < snakeCount; i++)
             snakes[i].reset();
         msStart = millis();
-        graphics->Clear();
+        g()->Clear();
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_ptrEffectManager->g();
 
         // Reset after 20 seconds
         if (millis() - msStart > 20000)
@@ -216,7 +213,7 @@ public:
             }
 
             path->move();
-            path->draw(g.get(), colors);
+            path->draw(g, colors);
         }
     }
 };

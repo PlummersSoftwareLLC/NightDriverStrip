@@ -103,12 +103,12 @@ class PatternPongClock : public LEDStripEffect
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 35;
     }
 
-    virtual void Start()
+    virtual void Start() override
     {
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
@@ -124,9 +124,9 @@ class PatternPongClock : public LEDStripEffect
             hours = 12;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_ptrEffectManager->g();
 
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);

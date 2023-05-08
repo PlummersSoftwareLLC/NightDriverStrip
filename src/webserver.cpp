@@ -81,16 +81,18 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         response->addHeader("Server","NightDriverStrip");
         auto j = response->getRoot();
 
-        j["currentEffect"]         = g_aptrEffectManager->GetCurrentEffectIndex();
-        j["millisecondsRemaining"] = g_aptrEffectManager->GetTimeRemainingForCurrentEffect();
-        j["effectInterval"]        = g_aptrEffectManager->GetInterval();
-        j["enabledCount"]          = g_aptrEffectManager->EnabledCount();
+        j["currentEffect"]         = g_ptrEffectManager->GetCurrentEffectIndex();
+        j["millisecondsRemaining"] = g_ptrEffectManager->GetTimeRemainingForCurrentEffect();
+        j["effectInterval"]        = g_ptrEffectManager->GetInterval();
+        j["enabledCount"]          = g_ptrEffectManager->EnabledCount();
 
-        for (int i = 0; i < g_aptrEffectManager->EffectCount(); i++)
+        auto effectsList = g_ptrEffectManager->EffectsList();
+
+        for (int i = 0; i < g_ptrEffectManager->EffectCount(); i++)
         {
             StaticJsonDocument<256> effectDoc;
-            effectDoc["name"]    = g_aptrEffectManager->EffectsList()[i]->FriendlyName();
-            effectDoc["enabled"] = g_aptrEffectManager->IsEffectEnabled(i);
+            effectDoc["name"]    = effectsList[i]->FriendlyName();
+            effectDoc["enabled"] = g_ptrEffectManager->IsEffectEnabled(i);
 
             if (!j["Effects"].add(effectDoc))
             {
@@ -150,35 +152,35 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
 void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
 {
     debugV("SetCurrentEffectIndex");
-    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_aptrEffectManager->SetCurrentEffectIndex(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_ptrEffectManager->SetCurrentEffectIndex(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("EnableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_aptrEffectManager->EnableEffect(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrEffectManager->EnableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("DisableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_aptrEffectManager->DisableEffect(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrEffectManager->DisableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::NextEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("NextEffect");
-    g_aptrEffectManager->NextEffect();
+    g_ptrEffectManager->NextEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("PreviousEffect");
-    g_aptrEffectManager->PreviousEffect();
+    g_ptrEffectManager->PreviousEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -192,7 +194,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     JsonObject jsonObject = root.to<JsonObject>();
 
     g_aptrDeviceConfig->SerializeToJSON(jsonObject);
-    jsonObject["effectInterval"] = g_aptrEffectManager->GetInterval();
+    jsonObject["effectInterval"] = g_ptrEffectManager->GetInterval();
 
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
@@ -201,7 +203,7 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 {
     debugV("SetSettings");
 
-    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_aptrEffectManager->SetInterval(value)));
+    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrEffectManager->SetInterval(value)));
     PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_aptrDeviceConfig->SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_aptrDeviceConfig->SetLocationIsZip(value)));
     PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_aptrDeviceConfig->SetCountryCode(value)));
