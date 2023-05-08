@@ -1,5 +1,7 @@
 # NightDriverStrip
 
+DEVELOPERS WANTED!  We are searching for talented React and C++ developers to help out on this project.  Check out the code and if you're interest, contact davepl@davepl.com
+
 ![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
 
 <!-- markdownlint-disable MD033 /no-inline-html -->
