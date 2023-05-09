@@ -113,7 +113,7 @@ class PatternPongClock : public LEDStripEffect
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
 
-        bool ampm = !g_aptrDeviceConfig->Use24HourClock();
+        bool ampm = !g_ptrDeviceConfig->Use24HourClock();
 
         // update score / time
         mins = local_time->tm_min;
@@ -463,7 +463,7 @@ class PatternPongClock : public LEDStripEffect
             restart = 1;
 
             // update score / time
-            bool ampm = !g_aptrDeviceConfig->Use24HourClock();
+            bool ampm = !g_ptrDeviceConfig->Use24HourClock();
 
             mins = local_time->tm_min;
             hours = local_time->tm_hour;

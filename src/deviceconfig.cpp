@@ -31,7 +31,7 @@
 #include "globals.h"
 #include "deviceconfig.h"
 
-DRAM_ATTR std::unique_ptr<DeviceConfig> g_aptrDeviceConfig;
+DRAM_ATTR std::unique_ptr<DeviceConfig> g_ptrDeviceConfig;
 extern const char timezones_start[] asm("_binary_config_timezones_json_start");
 
 DRAM_ATTR size_t g_DeviceConfigJSONBufferSize = 0;

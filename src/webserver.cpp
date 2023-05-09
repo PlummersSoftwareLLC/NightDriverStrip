@@ -193,7 +193,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     auto root = response->getRoot();
     JsonObject jsonObject = root.to<JsonObject>();
 
-    g_aptrDeviceConfig->SerializeToJSON(jsonObject);
+    g_ptrDeviceConfig->SerializeToJSON(jsonObject);
     jsonObject["effectInterval"] = g_ptrEffectManager->GetInterval();
 
     AddCORSHeaderAndSendResponse(pRequest, response);
@@ -204,13 +204,13 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
     debugV("SetSettings");
 
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrEffectManager->SetInterval(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_aptrDeviceConfig->SetLocation(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_aptrDeviceConfig->SetLocationIsZip(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_aptrDeviceConfig->SetCountryCode(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OpenWeatherApiKeyTag, SET_VALUE(g_aptrDeviceConfig->SetOpenWeatherAPIKey(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_aptrDeviceConfig->SetTimeZone(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_aptrDeviceConfig->Set24HourClock(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_aptrDeviceConfig->SetUseCelsius(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_ptrDeviceConfig->SetLocation(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_ptrDeviceConfig->SetLocationIsZip(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_ptrDeviceConfig->SetCountryCode(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OpenWeatherApiKeyTag, SET_VALUE(g_ptrDeviceConfig->SetOpenWeatherAPIKey(value)));
+    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_ptrDeviceConfig->SetTimeZone(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_ptrDeviceConfig->Set24HourClock(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
 
     // We return the current config in response
     GetSettings(pRequest);
@@ -221,7 +221,7 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
     if (IsPostParamTrue(pRequest, "deviceConfig"))
     {
         debugI("Removing DeviceConfig");
-        g_aptrDeviceConfig->RemovePersisted();
+        g_ptrDeviceConfig->RemovePersisted();
     }
 
     if (IsPostParamTrue(pRequest, "effectsConfig"))

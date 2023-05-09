@@ -615,9 +615,9 @@ public:
         _SamplingFrequency = SAMPLING_FREQUENCY;
         _MaxSamples = MAX_SAMPLES;
 
-        _vReal = (double *)malloc(_MaxSamples * sizeof(_vReal[0]));
-        _vImaginary = (double *)malloc(_MaxSamples * sizeof(_vImaginary[0]));
-        _vPeaks = (double *)malloc(_BandCount * sizeof(_vPeaks[0]));
+        _vReal = (double *)PreferPSRAMAlloc(_MaxSamples * sizeof(_vReal[0]));
+        _vImaginary = (double *)PreferPSRAMAlloc(_MaxSamples * sizeof(_vImaginary[0]));
+        _vPeaks = (double *)PreferPSRAMAlloc(_BandCount * sizeof(_vPeaks[0]));
 
         _oldVU = 0.0f;
         _oldPeakVU = 0.0f;

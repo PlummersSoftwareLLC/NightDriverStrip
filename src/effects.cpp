@@ -31,7 +31,7 @@
 #include "SPIFFS.h"
 #include "effectdependencies.h"
 
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
+extern std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 #if USE_MATRIX
     volatile long PatternSubscribers::cSubscribers;
@@ -264,7 +264,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
+const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 {
     // The default effects table
     static const std::vector<std::shared_ptr<LEDStripEffect>> defaultEffects =

@@ -509,7 +509,7 @@ void setup()
     ESP_ERROR_CHECK(err);
 
     // Create and load device config from NVS if possible
-    g_aptrDeviceConfig = std::make_unique<DeviceConfig>();
+    g_ptrDeviceConfig = std::make_unique<DeviceConfig>();
 
 #if ENABLE_WIFI
 
