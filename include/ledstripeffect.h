@@ -326,7 +326,7 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Serialize this effects paramters to a JSON document
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
