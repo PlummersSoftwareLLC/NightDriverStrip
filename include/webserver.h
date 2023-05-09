@@ -99,7 +99,7 @@ class CWebServer
         if (!pRequest->hasParam(paramName, true, false))
             return;
 
-        debugV("found %s", paramName.c_str());
+        debugW("found %s", paramName.c_str());
 
         AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
 
@@ -110,7 +110,7 @@ class CWebServer
     template<typename Tv>
     static void PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter)
     {
-        PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr { return param->value(); });
+        PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) { return param->value(); });
     }
 
     // AddCORSHeaderAndSend(OK)Response

@@ -204,15 +204,15 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
     debugV("SetSettings");
 
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrEffectManager->SetInterval(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_ptrDeviceConfig->SetLocation(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_ptrDeviceConfig->SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_ptrDeviceConfig->SetLocationIsZip(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_ptrDeviceConfig->SetCountryCode(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::OpenWeatherApiKeyTag, SET_VALUE(g_ptrDeviceConfig->SetOpenWeatherAPIKey(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_ptrDeviceConfig->SetTimeZone(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_ptrDeviceConfig->SetCountryCode(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::OpenWeatherApiKeyTag, SET_VALUE(g_ptrDeviceConfig->SetOpenWeatherAPIKey(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_ptrDeviceConfig->SetTimeZone(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_ptrDeviceConfig->Set24HourClock(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::YouTubeChannelGuidTag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelGuid(value)));
-    PushPostParamIfPresent<const String&>(pRequest, DeviceConfig::YouTubeChannelName1Tag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelName1(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelGuidTag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelGuid(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelName1Tag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelName1(value)));
 
     // We return the current config in response
     GetSettings(pRequest);
