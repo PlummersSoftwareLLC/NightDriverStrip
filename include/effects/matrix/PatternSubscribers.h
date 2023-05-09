@@ -34,6 +34,7 @@
 
 #include "deviceconfig.h"
 
+#define SUB_CHECK_WIFI_WAIT 5000
 #define SUB_CHECK_INTERVAL 60000
 #define SUB_CHECK_ERROR_INTERVAL 20000
 
@@ -47,7 +48,7 @@ class PatternSubscribers : public LEDStripEffect
     long views              = 0;
     String strChannelGuid;
 
-    unsigned long millisLastCheck  = 0;
+    unsigned long millisLastCheck;
     bool succeededBefore    = false;
 
     TaskHandle_t sightTask   = nullptr;
@@ -83,7 +84,15 @@ class PatternSubscribers : public LEDStripEffect
 
     void UpdateSubscribers()
     {
-        if (!sight || UpdateGuid())
+        bool guidUpdated = UpdateGuid();
+
+        while(!WiFi.isConnected())
+        {
+            debugI("Delaying Subscriber update, waiting for WiFi...");
+            delay(SUB_CHECK_WIFI_WAIT);
+        }
+
+        if (!sight || guidUpdated)
             sight = std::make_unique<YouTubeSight>(strChannelGuid, http);
 
         // Use the YouTubeSight API call to get the current channel stats
@@ -99,7 +108,7 @@ class PatternSubscribers : public LEDStripEffect
         }
     }
 
-    void SetConfigIfUnset()
+    void construct()
     {
         if (g_ptrDeviceConfig->GetYouTubeChannelGuid().isEmpty())
             g_ptrDeviceConfig->SetYouTubeChannelGuid(DEFAULT_CHANNEL_GUID);
@@ -112,36 +121,36 @@ class PatternSubscribers : public LEDStripEffect
 
     PatternSubscribers() : LEDStripEffect(EFFECT_MATRIX_SUBSCRIBERS, "Subs")
     {
+        construct();
     }
 
     PatternSubscribers(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
+        construct();
+    }
+
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    {
+        millisLastCheck = millis();
+
+        debugW("Spawning thread to get subscriber data...");
+        xTaskCreatePinnedToCore(SightTaskEntryPoint, "Subs", 4096, (void *) this, NET_PRIORITY, &sightTask, NET_CORE);
+
+        return LEDStripEffect::Init(gfx);
     }
 
     virtual void Draw() override
     {
-        if (WiFi.isConnected())
+        unsigned long millisSinceLastCheck = millis() - millisLastCheck;
+        // If we've never succeeded, we try every 20 seconds, but then we settle down to the SUBCHECK_INTERVAL
+        if ((!succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL) || millisSinceLastCheck > SUBCHECK_INTERVAL)
         {
-            unsigned long millisSinceLastCheck = millis() - millisLastCheck;
-            // If we've never succeeded, we try every 20 seconds, but then we settle down to the SUBCHECK_INTERVAL
-            if (millisLastCheck == 0 || (!succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL) || (millisSinceLastCheck > SUBCHECK_INTERVAL))
-            {
-                millisLastCheck = millis();
+            millisLastCheck = millis();
 
-                // Lazily create the subscriber update task the first time we need it
-                if (sightTask == nullptr)
-                {
-                    debugW("Spawning thread to get subscriber data...");
-                    xTaskCreatePinnedToCore(SightTaskEntryPoint, "Weather", 4096, (void *) this, NET_PRIORITY, &sightTask, NET_CORE);
-                }
-                else
-                {
-                    debugW("Triggering thread to get subscriber data now...");
-                    // Resume the subscriber task. If it's not suspended then there's an update running and this will do nothing,
-                    //   so we'll silently skip the update this would otherwise trigger.
-                    vTaskResume(sightTask);
-                }
-            }
+            debugW("Triggering thread to get subscriber data now...");
+            // Resume the subscriber task. If it's not suspended then there's an update running and this will do nothing,
+            //   so we'll silently skip the update this would otherwise trigger.
+            vTaskResume(sightTask);
         }
 
         LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(0, 16, 64));
