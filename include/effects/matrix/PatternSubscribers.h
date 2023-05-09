@@ -68,8 +68,12 @@ class PatternSubscribers : public LEDStripEffect
             bool guidUpdated = pObj->UpdateGuid();
             unsigned long millisSinceLastCheck = millis() - pObj->millisLastCheck;
 
-            if (guidUpdated || pObj->millisLastCheck == 0 || (!pObj->succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL) || millisSinceLastCheck > SUBCHECK_INTERVAL)
+            if (guidUpdated || !pObj->millisLastCheck
+                || (!pObj->succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
+                || millisSinceLastCheck > SUBCHECK_INTERVAL)
+            {
                 pObj->UpdateSubscribers(guidUpdated);
+            }
 
             // Sleep for a few seconds before we recheck if the GUID has changed
             vTaskDelay(SUB_CHECK_GUID_INTERVAL / portTICK_PERIOD_MS);
