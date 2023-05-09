@@ -36,6 +36,7 @@
 
 #define SUB_CHECK_WIFI_WAIT 5000
 #define SUB_CHECK_INTERVAL 60000
+#define SUB_CHECK_GUID_INTERVAL 5000
 #define SUB_CHECK_ERROR_INTERVAL 20000
 
 #define DEFAULT_CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
@@ -64,10 +65,14 @@ class PatternSubscribers : public LEDStripEffect
 
         for(;;)
         {
-            pObj->UpdateSubscribers();
+            bool guidUpdated = pObj->UpdateGuid();
+            unsigned long millisSinceLastCheck = millis() - pObj->millisLastCheck;
 
-            // Suspend ourself until Draw() wakes us up
-            vTaskSuspend(NULL);
+            if (guidUpdated || (!pObj->succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL) || millisSinceLastCheck > SUBCHECK_INTERVAL)
+                pObj->UpdateSubscribers(guidUpdated);
+
+            // Sleep for a few seconds before we recheck if the GUID has changed
+            vTaskDelay(SUB_CHECK_GUID_INTERVAL / portTICK_PERIOD_MS);
         }
     }
 
@@ -82,17 +87,17 @@ class PatternSubscribers : public LEDStripEffect
         return true;
     }
 
-    void UpdateSubscribers()
+    void UpdateSubscribers(bool useNewSight)
     {
-        bool guidUpdated = UpdateGuid();
-
         while(!WiFi.isConnected())
         {
             debugI("Delaying Subscriber update, waiting for WiFi...");
-            delay(SUB_CHECK_WIFI_WAIT);
+            vTaskDelay(SUB_CHECK_WIFI_WAIT / portTICK_PERIOD_MS);
         }
 
-        if (!sight || guidUpdated)
+        millisLastCheck = millis();
+
+        if (!sight || useNewSight)
             sight = std::make_unique<YouTubeSight>(strChannelGuid, http);
 
         // Use the YouTubeSight API call to get the current channel stats
@@ -129,6 +134,11 @@ class PatternSubscribers : public LEDStripEffect
         construct();
     }
 
+    ~PatternSubscribers()
+    {
+        vTaskDelete(sightTask);
+    }
+
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         millisLastCheck = millis();
@@ -141,18 +151,6 @@ class PatternSubscribers : public LEDStripEffect
 
     virtual void Draw() override
     {
-        unsigned long millisSinceLastCheck = millis() - millisLastCheck;
-        // If we've never succeeded, we try every 20 seconds, but then we settle down to the SUBCHECK_INTERVAL
-        if ((!succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL) || millisSinceLastCheck > SUBCHECK_INTERVAL)
-        {
-            millisLastCheck = millis();
-
-            debugW("Triggering thread to get subscriber data now...");
-            // Resume the subscriber task. If it's not suspended then there's an update running and this will do nothing,
-            //   so we'll silently skip the update this would otherwise trigger.
-            vTaskResume(sightTask);
-        }
-
         LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(0, 16, 64));
         LEDMatrixGFX::backgroundLayer.setFont(font5x7);
 
