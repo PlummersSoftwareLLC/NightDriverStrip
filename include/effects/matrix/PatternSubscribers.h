@@ -84,6 +84,7 @@ class PatternSubscribers : public LEDStripEffect
             return false;
 
         strChannelGuid = configChannelGuid;
+        succeededBefore = false;
         return true;
     }
 
