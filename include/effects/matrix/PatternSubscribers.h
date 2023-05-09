@@ -68,7 +68,7 @@ class PatternSubscribers : public LEDStripEffect
             bool guidUpdated = pObj->UpdateGuid();
             unsigned long millisSinceLastCheck = millis() - pObj->millisLastCheck;
 
-            if (guidUpdated || (!pObj->succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL) || millisSinceLastCheck > SUBCHECK_INTERVAL)
+            if (guidUpdated || pObj->millisLastCheck == 0 || (!pObj->succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL) || millisSinceLastCheck > SUBCHECK_INTERVAL)
                 pObj->UpdateSubscribers(guidUpdated);
 
             // Sleep for a few seconds before we recheck if the GUID has changed
@@ -142,8 +142,6 @@ class PatternSubscribers : public LEDStripEffect
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
-        millisLastCheck = millis();
-
         debugW("Spawning thread to get subscriber data...");
         xTaskCreatePinnedToCore(SightTaskEntryPoint, "Subs", 4096, (void *) this, NET_PRIORITY, &sightTask, NET_CORE);
 
