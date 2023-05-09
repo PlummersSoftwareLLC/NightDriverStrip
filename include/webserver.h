@@ -99,7 +99,7 @@ class CWebServer
         if (!pRequest->hasParam(paramName, true, false))
             return;
 
-        debugW("found %s", paramName.c_str());
+        debugV("found %s", paramName.c_str());
 
         AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
 
