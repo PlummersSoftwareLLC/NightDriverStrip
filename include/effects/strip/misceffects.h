@@ -131,7 +131,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         lastms = millis();
 
         hue += (float) msElapsed / _speedDivisor;
-        hue = fmod(hue, 256.0);
+        hue = fmod(hue, 256.0f);
         fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
 
         if (random(0, 1) == 0)
@@ -277,7 +277,7 @@ class SplashLogoEffect : public LEDStripEffect
 
     virtual size_t MaximumEffectTime() const override
     {
-        return 10.0 * MILLIS_PER_SECOND;
+        return 5.0 * MILLIS_PER_SECOND;
     }
 
     virtual bool CanDisplayVUMeter() const override
@@ -291,8 +291,19 @@ class SplashLogoEffect : public LEDStripEffect
         if (JDR_OK != TJpgDec.drawFsJpg(0, 0, pszLogoFile))        // Draw the image
             debugW("Could not display logoo %s", pszLogoFile);
     }
-}
-;
+};
+
+// StatusEffect
+//
+// Effect that shows every 10th LED in a particular color, depending on the state of the system:
+//
+// Color     Meaning
+// -----------------------------------
+// Red       No WiFi
+// Purple    OTA Update in progress
+// Green     WiFi working but no clock yet
+// White     Ready!
+
 class StatusEffect : public LEDStripEffect
 {
   protected:
@@ -450,17 +461,5 @@ class TwinkleEffect : public LEDStripEffect
         {
             fadeToBlackBy(FastLED.leds(), NUM_LEDS, _fadeFactor);
         }
-    }
-};
-
-class PoliceEffect : public LEDStripEffect
-{
-    typedef enum { INNERRED, OUTERRED, INNERBLUE, OUTERBLUE, MIXED, STROBE } lampStates;
-    const lampStates highestState = STROBE;
-
-    virtual void Draw() override
-    {
-
-
     }
 };

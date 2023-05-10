@@ -171,7 +171,7 @@ extern float g_Brite;
 
 NightDriverTaskManager g_TaskManager;
 
-// The one and only instance of ImprovSerial.  We instantiate is as the type needed
+// The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
 
@@ -220,7 +220,6 @@ DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
 // External Variables
 //
 
-extern DRAM_ATTR LEDStripEffect * g_apEffects[];      // Main table of internal events in effects.cpp
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 
 //
@@ -282,7 +281,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 // Data for Dave's Garage as an example,
 
 #if USE_MATRIX
-    const char PatternSubscribers::szChannelID[] = "UCNzszbnvQeFzObW0ghk0Ckw";
+    const char PatternSubscribers::szChannelID[]    = "UCNzszbnvQeFzObW0ghk0Ckw";
     const char PatternSubscribers::szChannelName1[] = "Daves Garage";
 
     #define SUB_CHECK_INTERVAL 60000
@@ -292,6 +291,10 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
     WiFiClient http;
     YouTubeSight sight(CHANNEL_GUID, http);
 #endif
+
+// NetworkHandlingLoopEntry
+//
+// Thead entry point for the Networking task
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {
@@ -391,7 +394,6 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
     }
 #endif
 
-
 // CheckHeap
 //
 // Quick and dirty debug test to make sure the heap has not been corrupted
@@ -431,9 +433,9 @@ void PrintOutputHeader()
 
 void TerminateHandler()
 {
-    debugE("-------------------------------------------------------------------------------------");
-    debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
-    debugE("-------------------------------------------------------------------------------------");
+    Serial.println("-------------------------------------------------------------------------------------");
+    Serial.println("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
+    Serial.println("-------------------------------------------------------------------------------------");
 
     PrintOutputHeader();
 

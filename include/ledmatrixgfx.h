@@ -85,10 +85,14 @@ public:
         matrix.setBrightness(percent);
     }
     
-    virtual uint16_t xy(uint16_t x, uint16_t y) const
+    virtual uint16_t xy(uint16_t x, uint16_t y) const override
     {
         return y * MATRIX_WIDTH + x;    
     }
+
+    // Whereas an LEDStripGFX would track it's own memory for the CRGB array, we simply point to the buffer already used for
+    // the matrix display memory.  That also eliminated having a local draw buffer that is then copied, because the effects
+    // can render directly to the right back buffer automatically.  
 
     void setLeds(CRGB *pLeds)
     {
@@ -127,7 +131,7 @@ public:
         captionStartTime = millis();
     }
 
-    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll with memmove rather than row by column pixel
@@ -141,7 +145,7 @@ public:
         }
     }
 
-    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll with memmove rather than row by column pixel
@@ -155,12 +159,12 @@ public:
         }
     }
 
-    virtual void fillLeds(const CRGB *pLEDs)
+    virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs) override
     {
         // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
         // so we do it the "slow" way for other matrices
 
-        memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
+        memcpy(leds, pLEDs.get(), sizeof(CRGB) * _width * _height);
     }
 
     // Matrix interop

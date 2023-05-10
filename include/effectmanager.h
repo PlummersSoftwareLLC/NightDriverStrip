@@ -46,7 +46,7 @@
 #include "effects/strip/fireeffect.h"
 #include "jsonserializer.h"
 
-#define MAX_EFFECTS 32
+#define MAX_EFFECTS 32                  // BUGBUG Not used - needed?  
 #define JSON_FORMAT_VERSION 1
 
 extern uint8_t g_Brightness;
