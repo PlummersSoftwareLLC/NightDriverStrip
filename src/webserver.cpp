@@ -31,25 +31,52 @@
 #include "globals.h"
 #include "webserver.h"
 
+// Static member initializers
+
+const std::vector<const char *> CWebServer::knownSettings
+{
+    "effectInterval",
+    DeviceConfig::LocationTag,
+    DeviceConfig::LocationIsZipTag,
+    DeviceConfig::CountryCodeTag,
+    DeviceConfig::OpenWeatherApiKeyTag,
+    DeviceConfig::TimeZoneTag,
+    DeviceConfig::Use24HourClockTag,
+    DeviceConfig::UseCelsiusTag,
+    DeviceConfig::YouTubeChannelGuidTag,
+    DeviceConfig::YouTubeChannelName1Tag,
+};
+
+// Maps settings for which a validator is available to the invocation thereof
+const std::map<const char *, CWebServer::ValueValidator> CWebServer::settingValidators
+{
+    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrDeviceConfig->ValidateOpenWeatherAPIKey(value); } }
+};
+
 // Member function template specialzations
 
+// Push param that represents a bool. Values considered true are text "true" and any whole number not equal to 0
 template<>
-void CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
+bool CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
 {
-    PushPostParamIfPresent<bool>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
-        {
-            const String& value = param->value();
-            return value == "true" || strtol(value.c_str(), NULL, 10);
-        }
-    );
+    return PushPostParamIfPresent<bool>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
+    {
+        const String& value = param->value();
+        return value == "true" || strtol(value.c_str(), NULL, 10);
+    });
 }
 
+// Push param that represents a size_t
 template<>
-void CWebServer::PushPostParamIfPresent<size_t>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
+bool CWebServer::PushPostParamIfPresent<size_t>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
 {
-    PushPostParamIfPresent<size_t>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr { return strtoul(param->value().c_str(), NULL, 10); });
+    return PushPostParamIfPresent<size_t>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
+    {
+        return strtoul(param->value().c_str(), NULL, 10);
+    });
 }
 
+// Add CORS header to and send JSON response
 template<>
 void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse)
 {
@@ -63,7 +90,7 @@ bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String 
 {
     bool returnValue = false;
 
-    PushPostParamIfPresent<bool>(pRequest, paramName, [&returnValue](auto value) { returnValue = value; });
+    PushPostParamIfPresent<bool>(pRequest, paramName, [&returnValue](auto value) { returnValue = value; return true; });
 
     return returnValue;
 }
@@ -184,6 +211,7 @@ void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
+// Responds with current config, excluding any sensitive values
 void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 {
     debugV("GetSettings");
@@ -193,16 +221,17 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     auto root = response->getRoot();
     JsonObject jsonObject = root.to<JsonObject>();
 
-    g_ptrDeviceConfig->SerializeToJSON(jsonObject);
+    // We get the serialized JSON for the device config, without any sensitive values
+    g_ptrDeviceConfig->SerializeToJSON(jsonObject, false);
     jsonObject["effectInterval"] = g_ptrEffectManager->GetInterval();
 
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
-void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
+// Support function that silently sets whatever settings are included in the request passed.
+//   Composing a response is left to the invoker!
+void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
 {
-    debugV("SetSettings");
-
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrEffectManager->SetInterval(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_ptrDeviceConfig->SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_ptrDeviceConfig->SetLocationIsZip(value)));
@@ -213,11 +242,73 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelGuidTag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelGuid(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelName1Tag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelName1(value)));
+}
+
+// Set settings and return resulting config
+void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
+{
+    debugV("SetSettings");
+
+    SetSettingsIfPresent(pRequest);
 
     // We return the current config in response
     GetSettings(pRequest);
 }
 
+// Validate and set one setting. If no validator is available in settingValidators for the setting, validation is skipped.
+//   Requests containing more than one known setting are malformed and rejected.
+void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
+{
+    const char *paramName = nullptr;
+
+    for (auto knownSetting : knownSettings)
+    {
+        if (pRequest->hasParam(knownSetting, true))
+        {
+            if (!paramName)
+                paramName = knownSetting;
+            else
+            // We found multiple known settings in the request, which we don't allow
+            {
+                String responseText = "{\"message\": \"Malformed request\"}";
+                auto pResponse = pRequest->beginResponse(400, "text/json", responseText);
+                AddCORSHeaderAndSendResponse(pRequest, pResponse);
+                return;
+            }
+        }
+    }
+
+    // No known setting in the request, so we can stop processing and go on with our business
+    if (!paramName)
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+        return;
+    }
+
+    auto validator = settingValidators.find(paramName);
+    if (validator != settingValidators.end())
+    {
+        const String &paramValue = pRequest->getParam(paramName, true)->value();
+        bool isValid;
+        String validationMessage;
+
+        std::tie(isValid, validationMessage) = validator->second(paramValue);
+
+        if (!isValid)
+        {
+            String responseText = "{\"message\": \"" + validationMessage + "\"}";
+            auto pResponse = pRequest->beginResponse(400, "text/json", responseText);
+            AddCORSHeaderAndSendResponse(pRequest, pResponse);
+            return;
+        }
+    }
+
+    // Process the setting as per usual
+    SetSettingsIfPresent(pRequest);
+    AddCORSHeaderAndSendOKResponse(pRequest);
+}
+
+// Reset effect config, device config and/or the board itself
 void CWebServer::Reset(AsyncWebServerRequest * pRequest)
 {
     if (IsPostParamTrue(pRequest, "deviceConfig"))
@@ -238,6 +329,7 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
 
     if (boardResetRequested)
     {
+        debugW("Resetting device at API request!");
         delay(1000);    // Give the response a second to be sent
         throw new std::runtime_error("Resetting device at API request");
     }

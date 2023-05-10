@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <vector>
+#include <tuple>
 #include "jsonserializer.h"
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
@@ -74,6 +75,8 @@ class DeviceConfig : public IJSONSerializable
 
   public:
 
+    using ValidateResponse = std::pair<bool, String>;
+
     static constexpr const char * LocationTag = NAME_OF(location);
     static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
     static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
@@ -88,17 +91,24 @@ class DeviceConfig : public IJSONSerializable
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
+        return SerializeToJSON(jsonObject, true);
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
+    {
         AllocatedJsonDocument jsonDoc(1024);
 
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;
         jsonDoc[CountryCodeTag] = countryCode;
-        jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
         jsonDoc[TimeZoneTag] = timeZone;
         jsonDoc[Use24HourClockTag] = use24HourClock;
         jsonDoc[UseCelsiusTag] = useCelsius;
         jsonDoc[YouTubeChannelGuidTag] = youtubeChannelGuid;
         jsonDoc[YouTubeChannelName1Tag] = youtubeChannelName1;
+
+        if (includeSensitive)
+            jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -184,6 +194,8 @@ class DeviceConfig : public IJSONSerializable
     {
         return openWeatherApiKey;
     }
+
+    ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
 
     void SetOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
     {

@@ -28,6 +28,7 @@
 //
 //---------------------------------------------------------------------------
 
+#include <HTTPClient.h>
 #include "globals.h"
 #include "deviceconfig.h"
 
@@ -108,6 +109,46 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
         SaveToJSON();
 
     return true;
+}
+
+DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
+{
+    HTTPClient http;
+
+    String url = "http://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=" + newOpenWeatherAPIKey;
+
+    http.begin(url);
+
+    switch (http.GET())
+    {
+        // OK
+        case 200:
+        {
+            http.end();
+            return { true, "" };
+        }
+
+        // Unauthorized
+        case 401:
+        {
+            AllocatedJsonDocument jsonDoc(1024);
+            deserializeJson(jsonDoc, http.getString());
+
+            String message = "";
+            if (jsonDoc.containsKey("message"))
+                message = jsonDoc["message"].as<String>();
+
+            http.end();
+            return { false, message };
+        }
+
+        // Anything else
+        default:
+        {
+            http.end();
+            return { false, "Unable to validate" };
+        }
+    }
 }
 
 /* Commented out because NVS seems to run out of space way too soon
