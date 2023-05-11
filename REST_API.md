@@ -155,7 +155,7 @@ Any parameters that are not provided are considered to be `false`.
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/validated` |
+| URL | `/reset` |
 | Method | POST | |
 | Parameters | `deviceConfig` | A boolean value indicating if device settings should be reset to defaults (`true`/1) or not (`false`/0). |
 | | `effectsConfig` | A boolean value indicating if effect configuration information should be reset to defaults (`true`/1) or not (`false`/0). |
