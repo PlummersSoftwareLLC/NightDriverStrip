@@ -121,15 +121,13 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
 
     switch (http.GET())
     {
-        // OK
-        case 200:
+        case HTTP_CODE_OK:
         {
             http.end();
             return { true, "" };
         }
 
-        // Unauthorized
-        case 401:
+        case HTTP_CODE_UNAUTHORIZED:
         {
             AllocatedJsonDocument jsonDoc(1024);
             deserializeJson(jsonDoc, http.getString());

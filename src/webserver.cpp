@@ -271,7 +271,7 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
             // We found multiple known settings in the request, which we don't allow
             {
                 String responseText = "{\"message\": \"Malformed request\"}";
-                auto pResponse = pRequest->beginResponse(400, "text/json", responseText);
+                auto pResponse = pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json", responseText);
                 AddCORSHeaderAndSendResponse(pRequest, pResponse);
                 return;
             }
@@ -297,7 +297,7 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
         if (!isValid)
         {
             String responseText = "{\"message\": \"" + validationMessage + "\"}";
-            auto pResponse = pRequest->beginResponse(400, "text/json", responseText);
+            auto pResponse = pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json", responseText);
             AddCORSHeaderAndSendResponse(pRequest, pResponse);
             return;
         }

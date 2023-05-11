@@ -47,6 +47,7 @@
 #include <Arduino.h>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
+#include <HTTPClient.h>
 #include "deviceconfig.h"
 #include "jsonbase.h"
 #include "effects.h"
@@ -140,7 +141,7 @@ class CWebServer
     // Version for empty response, normally used to finish up things that don't return anything, like "NextEffect"
     static void AddCORSHeaderAndSendOKResponse(AsyncWebServerRequest * pRequest)
     {
-        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(200));
+        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_OK));
     }
 
     // Straightforward support functions
@@ -241,10 +242,10 @@ class CWebServer
         _server.onNotFound([](AsyncWebServerRequest *request)
         {
             if (request->method() == HTTP_OPTIONS) {
-                request->send(200);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
+                request->send(HTTP_CODE_OK);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
             } else {
                    debugW("Failed GET for %s\n", request->url().c_str() );
-                request->send(404);
+                request->send(HTTP_CODE_NOT_FOUND);
             }
         });
 
