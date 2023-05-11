@@ -1,4 +1,20 @@
-# On-board REST-like API
+# On-board REST-like API <!-- omit in toc -->
+
+## Table of Contents <!-- omit in toc -->
+
+- [Introduction](#introduction)
+- [Endpoints](#endpoints)
+  - [Get effect list information](#get-effect-list-information)
+  - [Set current effect](#set-current-effect)
+  - [Next effect](#next-effect)
+  - [Previous effect](#previous-effect)
+  - [Disable effect](#disable-effect)
+  - [Enable effect](#enable-effect)
+  - [Get effect configuration information](#get-effect-configuration-information)
+  - [Settings](#settings)
+  - [Set setting with validation](#set-setting-with-validation)
+  - [Reset configuration and/or device](#reset-configuration-andor-device)
+
 
 ## Introduction
 
