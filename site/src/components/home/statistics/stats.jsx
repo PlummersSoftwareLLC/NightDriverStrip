@@ -12,10 +12,10 @@ const StatsPanel = withStyles(statsStyle)(props => {
         NightDriver: false
     });
 
-    const getStats = (aborter) => fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/getStatistics`,{signal:aborter.signal})
+    const getStats = (aborter) => fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/statistics`,{signal:aborter.signal})
                             .then(resp => resp.json())
                             .then(stats => {
-                                setAbortControler(undefined); 
+                                setAbortControler(undefined);
                                 return {
                                     CPU:{
                                         CPU: {
@@ -106,20 +106,20 @@ const StatsPanel = withStyles(statsStyle)(props => {
         if (open) {
             const aborter = new AbortController();
             setAbortControler(aborter);
-    
+
             getStats(aborter)
                 .then(setStatistics)
                 .catch(err => addNotification("Error","Service","Get Statistics",err));
-    
+
             if (timer) {
                 clearTimeout(timer);
                 setTimer(undefined);
             }
-    
+
             if (statsRefreshRate.value && open) {
                 setTimer(setTimeout(() => setLastRefreshDate(Date.now()),statsRefreshRate.value*1000));
             }
-    
+
             return () => {
                 timer && clearTimeout(timer);
                 abortControler && abortControler.abort();
@@ -131,11 +131,11 @@ const StatsPanel = withStyles(statsStyle)(props => {
         return <Box>Loading...</Box>
     }
 
-    return statistics && 
+    return statistics &&
     <Box className={`${classes.root} ${!open && classes.hidden}`}>
-        {Object.entries(statistics).map(category => 
+        {Object.entries(statistics).map(category =>
         <Box key={category[0]} className={`${classes.category} ${!openedCategories[category[0]] && classes.detailedStats}`}>
-            {openedCategories[category[0]] ? 
+            {openedCategories[category[0]] ?
             <Box className={classes.statCatergoryHeader} key="header">
                 <Typography variant="h5">{category[0]}</Typography>
                 <IconButton onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>minimize</Icon></IconButton>
@@ -145,25 +145,25 @@ const StatsPanel = withStyles(statsStyle)(props => {
             </Box>}
             <Box className={classes.categoryStats}>
             {Object.entries(category[1])
-               .filter(entry=> entry[1].static) 
+               .filter(entry=> entry[1].static)
                .map(entry=>
-                <Box 
+                <Box
                   key={`entry-${entry[0]}`}
-                  className={!openedCategories[category[0]] && classes.summaryStats }  
+                  className={!openedCategories[category[0]] && classes.summaryStats }
                   onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}>
                     <StaticStatsPanel
                         key={`static-${entry[0]}`}
                         detail={openedCategories[category[0]]}
                         name={entry[0]}
-                        stat={entry[1]}/>                
+                        stat={entry[1]}/>
                 </Box>)}
                 <Box className={classes.categoryStats} key="charts">
                     {Object.entries(category[1])
-                        .filter(entry=> !entry[1].static) 
-                        .map((entry)=>  
+                        .filter(entry=> !entry[1].static)
+                        .map((entry)=>
                             <Box key={`chart-${entry[0]}`}
                                  sx={{cursor:"pointer"}}
-                                 onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})} 
+                                 onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}
                                  className={`${classes.chartArea} ${!openedCategories[category[0]] && classes.summaryStats}`}>
                                     {category[1][entry[0]].idleField && <BarStat
                                         key={`Bar-${entry[0]}`}
