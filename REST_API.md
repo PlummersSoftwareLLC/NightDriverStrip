@@ -4,7 +4,7 @@
 
 On devices with WiFi and the webserver enabled, NightDriverStrip publishes a REST-like API. The API includes a number of endpoints to:
 
-- Restrieve information about the device and the effects it runs
+- Retrieve information about the device and the effects it runs
 - Changing the effect that's running
 - Disable and enable effects
 - Retrieve and change settings
@@ -122,7 +122,7 @@ When changing settings:
 |-|-|-|
 | URL | `/settings` |
 | Method | POST | |
-| Parameters | `countryCode` | The [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code for the country that the device is located. Used by the Weather effect. |
+| Parameters | `countryCode` | The [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code for the country that the device is located in. Used by the Weather effect. |
 | | `location` | The location (city or postal code) where the device is located. Used by the Weather effect. |
 | | `locationIsZip` | A boolean indicating if the value in the `location` setting is a postal code (`true`/1) or not (`false`/0). |
 | | `openWeatherApiKey` | The API key for the [Weather API provided by Open Weather Map](https://openweathermap.org/api). Used by the Weather effect. |
