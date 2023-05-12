@@ -33,11 +33,6 @@
 
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
-#if USE_MATRIX
-    volatile long PatternSubscribers::cSubscribers;
-    volatile long PatternSubscribers::cViews;
-#endif
-
 // Palettes
 //
 // Palettes that are referenced by effects need to be instantiated first

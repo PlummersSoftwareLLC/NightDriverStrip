@@ -35,6 +35,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <HTTPClient.h>
+#include <UrlEncode.h>
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
 #include <secrets.h>
@@ -116,7 +117,7 @@ private:
 
     inline float KelvinToLocal(float K)
     {
-        if (g_aptrDeviceConfig->UseCelsius())
+        if (g_ptrDeviceConfig->UseCelsius())
             return KelvinToCelsius(K);
         else
             return KelvinToFarenheit(K);
@@ -130,14 +131,16 @@ private:
         if (!HasLocationChanged())
             return false;
 
-        const String& configLocation = g_aptrDeviceConfig->GetLocation();
-        const String& configCountryCode = g_aptrDeviceConfig->GetCountryCode();
-        const bool configLocationIsZip = g_aptrDeviceConfig->IsLocationZip();
+        const String& configLocation = g_ptrDeviceConfig->GetLocation();
+        const String& configCountryCode = g_ptrDeviceConfig->GetCountryCode();
+        const bool configLocationIsZip = g_ptrDeviceConfig->IsLocationZip();
 
         if (configLocationIsZip)
-            url = "http://api.openweathermap.org/geo/1.0/zip?zip=" + configLocation + "," + configCountryCode + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+            url = "http://api.openweathermap.org/geo/1.0/zip"
+                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
         else
-            url = "http://api.openweathermap.org/geo/1.0/direct?q=" + configLocation + "," + configCountryCode + "&limit=1&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+            url = "http://api.openweathermap.org/geo/1.0/direct"
+                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
 
         http.begin(url);
         int httpResponseCode = http.GET();
@@ -171,7 +174,8 @@ private:
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
         HTTPClient http;
-        String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+        String url = "http://api.openweathermap.org/data/2.5/forecast"
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -231,7 +235,8 @@ private:
     {
         HTTPClient http;
 
-        String url = "http://api.openweathermap.org/data/2.5/weather?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_aptrDeviceConfig->GetOpenWeatherAPIKey();
+        String url = "http://api.openweathermap.org/data/2.5/weather"
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -303,8 +308,8 @@ private:
 
     bool HasLocationChanged()
     {
-        String configLocation = g_aptrDeviceConfig->GetLocation();
-        String configCountryCode = g_aptrDeviceConfig->GetCountryCode();
+        String configLocation = g_ptrDeviceConfig->GetLocation();
+        String configCountryCode = g_ptrDeviceConfig->GetCountryCode();
 
         return strLocation != configLocation || strCountryCode != configCountryCode;
     }
@@ -388,7 +393,7 @@ public:
         g()->setTextColor(WHITE16);
         String showLocation = strLocation;
         showLocation.toUpperCase();
-        if (g_aptrDeviceConfig->GetOpenWeatherAPIKey().isEmpty())
+        if (g_ptrDeviceConfig->GetOpenWeatherAPIKey().isEmpty())
             g()->print("No API Key");
         else
             g()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
