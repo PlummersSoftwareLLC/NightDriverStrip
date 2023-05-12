@@ -37,7 +37,7 @@ To use the installer, follow these steps:
 
 1. Connect your device to your computer with a USB cable.
 
-2. Navigate to the following URL in your browser: <https://plummerssoftwarellc.github.io/NightDriverStrip>. It should then show a screen that looks like this:  
+2. Navigate to the following URL in your browser: <https://plummerssoftwarellc.github.io/NightDriverStrip>. It should then show a screen that looks like this:
    ![Installer start screen](assets/installer-start.png)
 
 3. Select your device (like "M5StickC Plus") from the drop-down list. A second drop-down with supported projects on that device will then appear.
@@ -55,6 +55,16 @@ To use the installer, follow these steps:
 9. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again, visit the device's web application, change the WiFi settings, and show the device's logs & console. Note that if you flashed a device image that includes a web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
 
 The images included in the installer are built using the current state of the source code in this repository. If there's anything you'd like to change in (the configuration of) the project you want to use, then it is time to move to the next stage and start interacting with the source code itself.
+
+## Device web UI and API
+
+On devices with WiFi, NightDriverStrip can start a webserver that hosts the web UI that is part of the project. It can be used to view and change what effect is running, and get live performance statistics of the device.
+
+When the device is started with the webserver enabled, the web UI can be accessed by opening a web browser and typing the IP address of your device in the address bar. Once loaded, the icons at the left of the screen can be used to toggle views within the UI on and off.
+
+More information about the web UI can be found [in its own README.md](site/README.md).
+
+Besides the web UI, the webserver also publishes a REST-like API. More information about it is available in [REST_API.md](./REST_API.md).
 
 ## Getting Started with the Source Code
 
@@ -84,7 +94,7 @@ This can also be configured in the platformio.ini file, as described in the [Fea
 
 ## File system
 
-To build and upload the file system that is used by some effects (currently the [Weather effect](include/effects/matrix/PatternWeather.h) to be specific), you will need to build and upload the SPIFFS image to your board's flash using platformio.  
+To build and upload the file system that is used by some effects (currently the [Weather effect](include/effects/matrix/PatternWeather.h) to be specific), you will need to build and upload the SPIFFS image to your board's flash using platformio.
 You can do this using the platformio user interface, or using the pio command line tool:
 
 ```ShellConsole

@@ -156,7 +156,7 @@ public:
         construct(true);
     }
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         ClearEffects();
 
@@ -204,7 +204,7 @@ public:
         return true;
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;

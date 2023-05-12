@@ -702,7 +702,7 @@ public:
   {
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject)
+  virtual bool SerializeToJSON(JsonObject& jsonObject) override
   {
     AllocatedJsonDocument jsonDoc(512);
 
@@ -777,7 +777,7 @@ public:
   {
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject)
+  virtual bool SerializeToJSON(JsonObject& jsonObject) override
   {
     StaticJsonDocument<128> jsonDoc;
 
@@ -1023,7 +1023,7 @@ public:
     abHeat = std::make_unique<uint8_t[]>(CellCount());
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject)
+  virtual bool SerializeToJSON(JsonObject& jsonObject) override
   {
     AllocatedJsonDocument jsonDoc(512);
 

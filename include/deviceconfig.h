@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <vector>
+#include <tuple>
 #include "jsonserializer.h"
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
@@ -45,6 +46,8 @@ class DeviceConfig : public IJSONSerializable
     String openWeatherApiKey;
     bool use24HourClock;
     bool useCelsius;
+    String youtubeChannelGuid;
+    String youtubeChannelName1;
 
 /*
     void WriteToNVS(const String& name, const String& value);
@@ -72,6 +75,8 @@ class DeviceConfig : public IJSONSerializable
 
   public:
 
+    using ValidateResponse = std::pair<bool, String>;
+
     static constexpr const char * LocationTag = NAME_OF(location);
     static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
     static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
@@ -79,25 +84,36 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * TimeZoneTag = NAME_OF(timeZone);
     static constexpr const char * Use24HourClockTag = NAME_OF(use24HourClock);
     static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
+    static constexpr const char * YouTubeChannelGuidTag = NAME_OF(youtubeChannelGuid);
+    static constexpr const char * YouTubeChannelName1Tag = NAME_OF(youtubeChannelName1);
 
     DeviceConfig();
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        return SerializeToJSON(jsonObject, true);
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
     {
         AllocatedJsonDocument jsonDoc(1024);
 
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;
         jsonDoc[CountryCodeTag] = countryCode;
-        jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
         jsonDoc[TimeZoneTag] = timeZone;
         jsonDoc[Use24HourClockTag] = use24HourClock;
         jsonDoc[UseCelsiusTag] = useCelsius;
+        jsonDoc[YouTubeChannelGuidTag] = youtubeChannelGuid;
+        jsonDoc[YouTubeChannelName1Tag] = youtubeChannelName1;
+
+        if (includeSensitive)
+            jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         return DeserializeFromJSON(jsonObject, false);
     }
@@ -110,6 +126,8 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, openWeatherApiKey, OpenWeatherApiKeyTag);
         SetIfPresentIn(jsonObject, use24HourClock, Use24HourClockTag);
         SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
+        SetIfPresentIn(jsonObject, youtubeChannelGuid, YouTubeChannelGuidTag);
+        SetIfPresentIn(jsonObject, youtubeChannelName1, YouTubeChannelName1Tag);
 
         if (jsonObject.containsKey(TimeZoneTag))
             return SetTimeZone(jsonObject[TimeZoneTag], true);
@@ -177,6 +195,8 @@ class DeviceConfig : public IJSONSerializable
         return openWeatherApiKey;
     }
 
+    ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
+
     void SetOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
     {
         SetAndSave(openWeatherApiKey, newOpenWeatherAPIKey);
@@ -191,6 +211,28 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(useCelsius, newUseCelsius);
     }
+
+    const String &GetYouTubeChannelGuid() const
+    {
+        return youtubeChannelGuid;
+    }
+
+    void SetYouTubeChannelGuid(const String &newYouTubeChannelGuid)
+    {
+        if (!newYouTubeChannelGuid.isEmpty())
+            SetAndSave(youtubeChannelGuid, newYouTubeChannelGuid);
+    }
+
+    const String &GetYouTubeChannelName1() const
+    {
+        return youtubeChannelName1;
+    }
+
+    void SetYouTubeChannelName1(const String &newYouTubeChannelName1)
+    {
+        if (!newYouTubeChannelName1.isEmpty())
+            SetAndSave(youtubeChannelName1, newYouTubeChannelName1);
+    }
 };
 
-extern DRAM_ATTR std::unique_ptr<DeviceConfig> g_aptrDeviceConfig;
+extern DRAM_ATTR std::unique_ptr<DeviceConfig> g_ptrDeviceConfig;
