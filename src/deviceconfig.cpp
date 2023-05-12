@@ -29,6 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include <HTTPClient.h>
+#include <UrlEncode.h>
 #include "globals.h"
 #include "deviceconfig.h"
 
@@ -115,7 +116,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
 {
     HTTPClient http;
 
-    String url = "http://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=" + newOpenWeatherAPIKey;
+    String url = "http://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=" + urlEncode(newOpenWeatherAPIKey);
 
     http.begin(url);
 

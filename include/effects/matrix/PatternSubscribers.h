@@ -32,6 +32,7 @@
 #ifndef PatternSub_H
 #define PatternSub_H
 
+#include <UrlEncode.h>
 #include "deviceconfig.h"
 
 #define SUB_CHECK_WIFI_WAIT 5000
@@ -103,7 +104,7 @@ class PatternSubscribers : public LEDStripEffect
         millisLastCheck = millis();
 
         if (!sight || useNewSight)
-            sight = std::make_unique<YouTubeSight>(strChannelGuid, http);
+            sight = std::make_unique<YouTubeSight>(urlEncode(strChannelGuid), http);
 
         // Use the YouTubeSight API call to get the current channel stats
         if (sight->getData())
