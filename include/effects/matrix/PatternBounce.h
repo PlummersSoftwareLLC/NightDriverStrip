@@ -72,6 +72,11 @@ public:
     {
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;
+    }
+
     virtual void Start() override
     {
         unsigned int colorWidth = 256 / count;

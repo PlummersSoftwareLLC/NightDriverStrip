@@ -290,8 +290,6 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 
     #elif MESMERIZER
 
-//        new SplashLogoEffect(),
-
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum 3",   32,            spectrumBasicColors, 100, 0, 0.25, 1.25),
@@ -305,7 +303,6 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<PatternSubscribers>(),
         std::make_shared<PatternWeather>(),
 
-        // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
         std::make_shared<GhostWave>("GhostWave", 0, 24, false),
         std::make_shared<WaveformEffect>("WaveIn", 8),
         std::make_shared<GhostWave>("WaveOut", 0, 0, true, 0),
@@ -395,9 +392,6 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 
         std::make_shared<ColorBeatOverRed>("ColorBeatOverRed"),
 
-        //        std::make_shared<HueFireFanEffect>(NUM_LEDS, 1, 12, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_GREEN),
-        //        std::make_shared<HueFireFanEffect>(NUM_LEDS, 2, 10, 200, 2, NUM_LEDS / 2, Sequential, false, true, false, HUE_BLUE),
-
         std::make_shared<ColorCycleEffect>(BottomUp, 6),
         std::make_shared<ColorCycleEffect>(BottomUp, 2),
 
@@ -410,29 +404,10 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<StarryNightEffect<LongLifeSparkleStar>>("Red Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Red),         // Blue Sparkle
         std::make_shared<StarryNightEffect<LongLifeSparkleStar>>("Blue Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Blue),       // Blue Sparkle
 
-        //        std::make_shared<VUFlameEffect>("Multicolor Sound Flame", VUFlameEffect::GREENX, 50, true),
-        //        std::make_shared<VUFlameEffect>("Multicolor Sound Flame", VUFlameEffect::BLUEX, 50, true),
-        //        std::make_shared<VUFlameEffect>("Multicolor Sound Flame", VUFlameEffect::REDX, 50, true),
-        //       std::make_shared<VUFlameEffect>("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR, 50, true),
-
-        // std::make_shared<StarryNightEffect<LongLifeSparkleStar>>("Blue Sparkle Stars", BlueColors_p, 10.0, 1, LINEARBLEND, 2.0, 0.0, 0.0),        // Blue Sparkle
-
-        // std::make_shared<StarryNightEffect<Star>>()
-        /*
-        std::make_shared<SparklySpinningMusicEffect>("SparklySpinningMusical", RainbowColors_p),
-        std::make_shared<ColorBeatOverRed>("ColorBeatOnRedBkgnd"),
-        std::make_shared<MoltenGlassOnVioletBkgnd>("MoltenGlassOnViolet", RainbowColors_p),
-        std::make_shared<ColorBeatWithFlash>("ColorBeatWithFlash"),
-        std::make_shared<MusicalHotWhiteInsulatorEffect>("MusicalHotWhite"),
-
-        std::make_shared<SimpleInsulatorBeatEffect2>("SimpleInsulatorColorBeat"),
-        std::make_shared<InsulatorSpectrumEffect>("InsulatorSpectrumEffect"),
-        */
         std::make_shared<PaletteEffect>(rainbowPalette, 256 / 16, .2, 0)
 
     #elif INSULATORS
 
-        //        std::make_shared<MusicFireEffect>(NUM_LEDS, 1, 10, 100, 0, NUM_LEDS),
         std::make_shared<InsulatorSpectrumEffect>("Spectrum Effect", RainbowColors_p),
         std::make_shared<NewMoltenGlassOnVioletBkgnd>("Molten Glass", RainbowColors_p),
         std::make_shared<StarryNightEffect<MusicStar>>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
@@ -440,14 +415,6 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<PaletteReelEffect>("PaletteReelEffect"),
         std::make_shared<ColorBeatOverRed>("ColorBeatOverRed"),
         std::make_shared<TapeReelEffect>("TapeReelEffect"),
-
-    // std::make_shared<SparklySpinningMusicEffect>(RainbowColors_p),
-    // std::make_shared<SparklySpinningMusicEffect>("Blu Sprkl Spin", BlueColors_p),
-    // std::make_shared<ColorBeatOverRed>("ColorBeatOverRed"),
-    // std::make_shared<ColorBeatWithFlash>("ColorBeatFlash"),
-    // std::make_shared<MusicalHotWhiteInsulatorEffect>("Hot White"),
-    // std::make_shared<SimpleInsulatorBeatEffect2>("Simple Beat 2"),
-    // std::make_shared<SparklySpinningMusicEffect>("Sparkle Spin", RainbowColors_p),
 
     #elif CUBE
         // Simple rainbow pallette
@@ -508,63 +475,6 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<MeteorEffect>(1, 1, 5, .15, .25),
         std::make_shared<MeteorEffect>(), // Rainbow palette
 
-/* Commented out because no project definition sets the defines, and some sections refer to non-existent effects.
-   Effect instantiations will have to be reviewed if this section is uncommented.
-
-    #elif FIRESTICK
-
-        std::make_shared<BouncingBallEffect>(),
-        std::make_shared<VUFlameEffect>("Multicolor Sound Flame", VUFlameEffect::MULTICOLOR),
-        std::make_shared<PaletteFlameEffect>("Smooth Red Fire", heatmap_pal),
-        // std::make_shared<ClassicFireEffect>(),
-
-        std::make_shared<StarryNightEffect<MusicStar>>("RGB Music Bubbles", RGBColors_p, 0.5, 1, NOBLEND, 15.0, 0.0, 75.0), // RGB Music Bubbles
-        // std::make_shared<StarryNightEffect<MusicPulseStar>>("RGB Pulse", RainbowColors_p, 0.02, 20, NOBLEND, 5.0, 0.0, 75.0), // RGB Music Bubbles
-
-        std::make_shared<PaletteFlameEffect>("Smooth Purple Fire", purpleflame_pal),
-
-        std::make_shared<MeteorEffect>(),                                                                                                                                           // Our overlapping color meteors
-        std::make_shared<StarryNightEffect<BubblyStar>>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
-        std::make_shared<StarryNightEffect<BubblyStar>>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),                                                    // Blooming Rainbow Stars
-        std::make_shared<StarryNightEffect<BubblyStar>>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),                                                                         // Neon Bars
-
-        std::make_shared<StarryNightEffect<MusicStar>>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),      // RGB Music Blur - Can You Hear Me Knockin'
-        std::make_shared<StarryNightEffect<MusicStar>>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0), // Rainbow Music Star
-
-        //        std::make_shared<VUFlameEffect("Sound Flame >(Green)",    VUFlameEffect::GREEN),
-        //       std::make_shared<VUFlameEffect("Sound Flame >(Blue)",     VUFlameEffect::BLUE),
-
-        std::make_shared<SimpleRainbowTestEffect>(8, 4),                                                                                                                  // Rainbow palette simple test of walking pixels
-        std::make_shared<PaletteEffect>(RainbowColors_p),                                                                                                                 // Rainbow palette
-        std::make_shared<StarryNightEffect<QuietStar>>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
-        std::make_shared<StarryNightEffect<Star>>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),        // Blue Sparkle
-
-        std::make_shared<StarryNightEffect<QuietStar>>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                             // Red Twinkle
-        std::make_shared<StarryNightEffect<Star>>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                    // Lava Stars
-        std::make_shared<StarryNightEffect<QuietStar>>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
-        std::make_shared<DoublePaletteEffect>(),
-        std::make_shared<VUEffect>()
-
-    #elif FLAMEBULB
-        std::make_shared<PaletteFlameEffect>("Smooth Red Fire", heatmap_pal, true, 4.5, 1, 1, 255, 4, false),
-    #elif BIGMATRIX
-        std::make_shared<SimpleRainbowTestEffect>(8, 1),  // Rainbow palette simple test of walking pixels
-        std::make_shared<PaletteEffect>(RainbowColors_p), // Rainbow palette
-        std::make_shared<RainbowFillEffect>(24, 0),
-        std::make_shared<RainbowFillEffect>(),
-
-        std::make_shared<StarryNightEffect<MusicStar>>("RGB Music Bubbles", RGBColors_p, 0.25, 1, NOBLEND, 3.0, 0.0, 75.0),                                                         // RGB Music Bubbles
-        std::make_shared<StarryNightEffect<HotWhiteStar>>("Lava Stars", HeatColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                  // Lava Stars
-        std::make_shared<StarryNightEffect<BubblyStar>>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
-        std::make_shared<StarryNightEffect<QuietStar>>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),           // Green Twinkle
-        std::make_shared<StarryNightEffect<QuietStar>>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),                                                                 // Red Twinkle
-        std::make_shared<StarryNightEffect<QuietStar>>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),       // Rainbow Twinkle
-        std::make_shared<BouncingBallEffect>(),
-        std::make_shared<VUEffect>()
-
-    #elif RINGSET
-        std::make_shared<MusicalInsulatorEffect2>("Musical Effect 2"),
-*/
     #elif FANSET
 
         std::make_shared<RainbowFillEffect>(24, 0),
@@ -602,46 +512,10 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
         std::make_shared<FireFanEffect>(HeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
         std::make_shared<FireFanEffect>(HeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
 
-
-    #elif BROOKLYNROOM
-
-        std::make_shared<RainbowFillEffect>(24, 0),
-        std::make_shared<RainbowFillEffect>(32, 1),
-        std::make_shared<SimpleRainbowTestEffect>(8, 1),  // Rainbow palette simple test of walking pixels
-        std::make_shared<SimpleRainbowTestEffect>(8, 4),  // Rainbow palette simple test of walking pixels
-        std::make_shared<PaletteEffect>(MagentaColors_p), // Rainbow palette
-        std::make_shared<DoublePaletteEffect>(),
-
-        std::make_shared<MeteorEffect>(), // Our overlapping color meteors
-
-        std::make_shared<StarryNightEffect<QuietStar>>("Magenta Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Green Twinkle
-        std::make_shared<StarryNightEffect<Star>>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),          // Blue Sparkle
-
-        std::make_shared<StarryNightEffect<QuietStar>>("Red Twinkle Stars", MagentaColors_p, 1.0, 1, LINEARBLEND, 2.0),                                                       // Red Twinkle
-        std::make_shared<StarryNightEffect<Star>>("Lava Stars", MagentaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),                 // Lava Stars
-        std::make_shared<StarryNightEffect<QuietStar>>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Rainbow Twinkle
-
-        std::make_shared<StarryNightEffect<BubblyStar>>("Little Blooming Rainbow Stars", MagentaColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR), // Blooming Little Rainbow Stars
-        std::make_shared<StarryNightEffect<BubblyStar>>("Big Blooming Rainbow Stars", MagentaColors_p, 2, 12, LINEARBLEND, 1.0),                                                       // Blooming Rainbow Stars
-        std::make_shared<StarryNightEffect<BubblyStar>>("Neon Bars", MagentaColors_p, 0.5, 64, NOBLEND, 0),                                                                            // Neon Bars
-
-        std::make_shared<ClassicFireEffect>(true),
-
     #elif LEDSTRIP
 
         std::make_shared<StatusEffect>(CRGB::White)
 
-/* Commented out because no project definition sets the define. Effect instantiations may need to be reviewed if
-   this section is uncommented.
-
-    #elif HOODORNAMENT
-
-        std::make_shared<RainbowFillEffect>(24, 0),
-        std::make_shared<RainbowFillEffect>(32, 1),
-        std::make_shared<SimpleRainbowTestEffect>(8, 1),              // Rainbow palette simple test of walking pixels
-        std::make_shared<PaletteEffect>(MagentaColors_p),             // Rainbow palette
-        std::make_shared<DoublePaletteEffect>(),
-*/
     #else
 
         std::make_shared<RainbowFillEffect>(6, 2),                    // Simple effect if not otherwise defined above

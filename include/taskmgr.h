@@ -206,7 +206,7 @@ private:
     TaskHandle_t _taskSerial = nullptr;
 
 public:
-
+  
     void StartScreenThread()
     {
         debugW(">> Launching Screen Thread");

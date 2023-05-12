@@ -46,9 +46,7 @@ public:
     {
         leds = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
         if(!leds)
-        {
             throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
-        }
     }
 
     CRGB * GetLEDBuffer() const

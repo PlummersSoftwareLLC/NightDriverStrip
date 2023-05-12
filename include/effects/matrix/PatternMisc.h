@@ -113,6 +113,11 @@ class PatternRose : public LEDStripEffect
         return 60;
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;
+    }
+
     virtual void Draw() override
     {
       uint8_t dim = beatsin8(2, 170, 250);
@@ -266,6 +271,11 @@ public:
     virtual size_t DesiredFramesPerSecond() const override
     {
         return 16;
+    }
+
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
     }
 
     virtual void Draw() override

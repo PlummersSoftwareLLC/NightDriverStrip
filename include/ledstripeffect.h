@@ -137,7 +137,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // RequiresDoubleBuffering
     //
-    // If a matrix effect requires the state of the last buffer be preserved, then it requires float buffering.
+    // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
     // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
     // and it can override this method and return false;
 

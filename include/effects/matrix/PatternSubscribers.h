@@ -51,6 +51,11 @@ class PatternSubscribers : public LEDStripEffect
   static const char szChannelID[];
   static const char szChannelName1[];
 
+  virtual bool RequiresDoubleBuffering() const
+  {
+      return false;
+  }
+
   virtual void Draw() override
   {
       LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(0, 16, 64));

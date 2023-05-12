@@ -476,9 +476,11 @@ void setup()
 {
     // Initialize Serial output
     Serial.begin(115200);
+    // Re-route debug output to the serial port
+    Debug.setSerialEnabled(true);
 
+    heap_caps_malloc_extmem_enable(128);
     uzlib_init();
-    heap_caps_malloc_extmem_enable(1024);
 
     if (!SPIFFS.begin(true))
         Serial.println("WARNING: SPIFFs could not be intialized!");
@@ -536,9 +538,6 @@ void setup()
     }
 
 #endif
-
-    // Re-route debug output to the serial port
-    Debug.setSerialEnabled(true);
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 

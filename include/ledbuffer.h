@@ -60,9 +60,6 @@ class LEDBuffer
                  _timeStampSeconds(0)
     {
         _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
-
-        for (int i = 0; i < NUM_LEDS; i++)
-            _leds[i] = CRGB::Yellow;
     }
 
     ~LEDBuffer()
@@ -84,6 +81,10 @@ class LEDBuffer
         
         return false;
     }
+
+    // UpdateFromWire
+    //
+    // Parse and deposit a WiFi packet into a buffer
 
     bool UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
     {
@@ -184,7 +185,7 @@ class LEDBufferManager
         }
         else
         {
-            return 0.0;
+            return 0.0f;
         }
     }
 
@@ -197,7 +198,7 @@ class LEDBufferManager
         }
         else
         {
-            return 0.0;
+            return 0.0f;
         }
     }
 
