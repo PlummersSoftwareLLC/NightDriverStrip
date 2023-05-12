@@ -14,7 +14,7 @@
   - [Settings](#settings)
   - [Set setting with validation](#set-setting-with-validation)
   - [Reset configuration and/or device](#reset-configuration-andor-device)
-
+- [Postman collection](#postman-collection)
 
 ## Introduction
 
@@ -138,7 +138,8 @@ When changing settings:
 |-|-|-|
 | URL | `/settings` |
 | Method | POST | |
-| Parameters | `countryCode` | The [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code for the country that the device is located in. Used by the Weather effect. |
+| Parameters | `effectInterval` | The duration in milliseconds that an individual effect runs, before NightDriverStrip activates the next effect. |
+| | `countryCode` | The [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code for the country that the device is located in. Used by the Weather effect. |
 | | `location` | The location (city or postal code) where the device is located. Used by the Weather effect. |
 | | `locationIsZip` | A boolean indicating if the value in the `location` setting is a postal code (`true`/1) or not (`false`/0). |
 | | `openWeatherApiKey` | The API key for the [Weather API provided by Open Weather Map](https://openweathermap.org/api). Used by the Weather effect. |
@@ -177,3 +178,9 @@ Any parameters that are not provided are considered to be `false`.
 | | `effectsConfig` | A boolean value indicating if effect configuration information should be reset to defaults (`true`/1) or not (`false`/0). |
 | | `board` | A boolean value indicating if the device should be restarted (`true`/1) or not (`false`/0). |
 | Response | 200 (OK) | An empty OK response. |
+
+## Postman collection
+
+To aid in the use and testing of the endpoints discussed in this document - and particularly those not used by the NightDriverStrip web UI - a [Postman collection file](tools/NightDriverStrip.postman_collection.json) has been provided.
+
+It can be used with the Postman API Client, a free version of which can be [downloaded from the Postman website](https://www.postman.com/downloads/).
