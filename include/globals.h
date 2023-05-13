@@ -1006,6 +1006,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN     26
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW    5000
+    #define ENABLE_OTA        0
 
     #define NOISE_CUTOFF   75
     #define NOISE_FLOOR    200.0f

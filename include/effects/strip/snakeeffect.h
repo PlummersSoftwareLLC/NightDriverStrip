@@ -80,7 +80,7 @@ class SnakeEffect : public LEDStripEffect
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 

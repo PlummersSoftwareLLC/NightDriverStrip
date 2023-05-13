@@ -89,7 +89,7 @@ public:
         return 30;
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return false;
     }
