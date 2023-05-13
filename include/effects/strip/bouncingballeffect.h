@@ -92,7 +92,7 @@ private:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 

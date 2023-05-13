@@ -61,7 +61,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
         debugV("SimpleRainbowTestEffect JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -109,7 +109,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         debugV("RainbowFill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -172,7 +172,7 @@ protected:
         debugV("RainbowFill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -403,7 +403,7 @@ class TwinkleEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 

@@ -35,6 +35,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <HTTPClient.h>
+#include <UrlEncode.h>
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
 #include <secrets.h>
@@ -104,7 +105,7 @@ private:
         return 25;
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return false;
     }
@@ -140,9 +141,11 @@ private:
         const bool configLocationIsZip = g_ptrDeviceConfig->IsLocationZip();
 
         if (configLocationIsZip)
-            url = "http://api.openweathermap.org/geo/1.0/zip?zip=" + configLocation + "," + configCountryCode + "&appid=" + g_ptrDeviceConfig->GetOpenWeatherAPIKey();
+            url = "http://api.openweathermap.org/geo/1.0/zip"
+                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
         else
-            url = "http://api.openweathermap.org/geo/1.0/direct?q=" + configLocation + "," + configCountryCode + "&limit=1&appid=" + g_ptrDeviceConfig->GetOpenWeatherAPIKey();
+            url = "http://api.openweathermap.org/geo/1.0/direct"
+                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
 
         http.begin(url);
         int httpResponseCode = http.GET();
@@ -176,7 +179,8 @@ private:
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
         HTTPClient http;
-        String url = "http://api.openweathermap.org/data/2.5/forecast?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_ptrDeviceConfig->GetOpenWeatherAPIKey();
+        String url = "http://api.openweathermap.org/data/2.5/forecast"
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -236,7 +240,8 @@ private:
     {
         HTTPClient http;
 
-        String url = "http://api.openweathermap.org/data/2.5/weather?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + g_ptrDeviceConfig->GetOpenWeatherAPIKey();
+        String url = "http://api.openweathermap.org/data/2.5/weather"
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)

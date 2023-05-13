@@ -57,7 +57,7 @@ class DoublePaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(896);
 

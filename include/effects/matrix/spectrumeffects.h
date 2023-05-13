@@ -65,7 +65,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -207,7 +207,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return 60;
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return _fadeRate != 0;
     }
@@ -301,7 +301,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         // We draw the bottom row in bar color even when only 1 pixel high so as not to have a white
         // strip as the bottom row (all made up of highlights)
-        
+
         if (value == 0)
             colorHighlight = baseColor;
 
@@ -362,7 +362,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -445,7 +445,7 @@ class WaveformEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -542,7 +542,7 @@ class GhostWave : public WaveformEffect
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -556,7 +556,7 @@ class GhostWave : public WaveformEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return true;
     }

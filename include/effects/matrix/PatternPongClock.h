@@ -108,7 +108,7 @@ class PatternPongClock : public LEDStripEffect
         return 35;
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return false;
     }
