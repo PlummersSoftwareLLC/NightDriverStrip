@@ -46,7 +46,6 @@
 #include "effects/strip/fireeffect.h"
 #include "jsonserializer.h"
 
-#define MAX_EFFECTS 32
 #define JSON_FORMAT_VERSION 1
 
 extern uint8_t g_Brightness;
@@ -60,7 +59,7 @@ void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_ptrDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 std::shared_ptr<LEDStripEffect> CreateEffectFromJSON(const JsonObjectConst& jsonObject);
 
 // EffectManager
@@ -156,6 +155,30 @@ public:
         construct(true);
     }
 
+    // DeserializeFromJSON
+    //
+    // This function deserializes LED strip effects from a provided JSON object.
+    //
+    // It first clears any existing effects and then attempts to populate the effects vector from
+    // the provided JSON object, which should contain an array of effects configurations ("efs").
+    //
+    // The function also reserves memory for the effects vector based on the size of the JSON array.
+    // For each effect in the JSON array, it attempts to create an effect from its JSON configuration.
+    // If an effect is successfully created, it's added to the effects vector.
+    //
+    // If no effects are successfully created (i.e., the effects vector is empty), the function returns false.
+    //
+    // The function also initializes an array to track the enabled state of each effect, defaulting to "enabled".
+    // If the JSON object includes an "eef" array, the function attempts to load each effect's enabled state from it.
+    // If not, or if the index exceeds the "eef" array's size, the effect is enabled by default.
+    //
+    // The function also sets the effect interval from the "ivl" field in the JSON object, defaulting to a pre-defined value if the field isn't present.
+    //
+    // If the JSON object includes a "cei" field, the function sets the current effect index to this value.
+    // If the value is greater than or equal to the number of effects, it defaults to the last effect in the vector.
+    //
+    // Lastly, the function calls the construct() method, indicating successful deserialization.
+
     virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         ClearEffects();
@@ -203,6 +226,26 @@ public:
 
         return true;
     }
+
+    // SerializeToJSON - Serialize effects to a JSON object.
+    //
+    // This function serializes the current state of the LED strip effects into a JSON object.
+    // It starts by setting the JSON format version ("PTY_VERSION") to a predefined value ("JSON_FORMAT_VERSION")
+    // that helps in detecting and managing potential future incompatible structural updates.
+    //
+    // The function then sets the "ivl" and "cei" fields in the JSON object to the current effect interval
+    // and the current effect index, respectively.
+    //
+    // The function creates a nested array ("eef") in the JSON object to store the enabled state of each effect.
+    // It iterates through all effects, and for each effect, it adds a value of 1 to the array if the effect
+    // is enabled, and 0 if it is not.
+    //
+    // Next, the function creates another nested array ("efs") in the JSON object to store the effects themselves.
+    // It iterates through all effects, and for each effect, it creates a nested object in the effects array
+    // and attempts to serialize the effect into this object. If serialization of any effect fails, the function
+    // immediately returns false.
+    //
+    // If all effects are successfully serialized, the function returns true, indicating successful serialization.
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {

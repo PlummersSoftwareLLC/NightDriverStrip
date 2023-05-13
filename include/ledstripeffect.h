@@ -83,6 +83,9 @@ class LEDStripEffect : public IJSONSerializable
         return true;
     }
 
+    virtual void Start() {}                                         // Optional method called when time to clean/init the effect
+    virtual void Draw() = 0;                                        // Your effect must implement these
+
     inline std::shared_ptr<GFXBase> g() const
     {
         return _GFX[0];
@@ -91,14 +94,11 @@ class LEDStripEffect : public IJSONSerializable
     // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
 
     #if USE_MATRIX
-    static std::shared_ptr<LEDMatrixGFX> mg()
-    {
+      static std::shared_ptr<LEDMatrixGFX> mg()
+      {
         return std::static_pointer_cast<LEDMatrixGFX>(g_aptrDevices[0]);
-    }
-#endif
-
-    virtual void Start() {}                                         // Optional method called when time to clean/init the effect
-    virtual void Draw() = 0;                                        // Your effect must implement these
+      }
+    #endif
 
     virtual bool CanDisplayVUMeter() const
     {
@@ -137,7 +137,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // RequiresDoubleBuffering
     //
-    // If a matrix effect requires the state of the last buffer be preserved, then it requires float buffering.
+    // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
     // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
     // and it can override this method and return false;
 
@@ -150,7 +150,6 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Returns a random color of the rainbow
     // BUGBUG Should likely be in GFXBase, not in LEDStripEffect
-
 
     static CRGB RandomRainbowColor()
     {

@@ -89,6 +89,10 @@ public:
         return 30;
     }
 
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
 
     virtual void Start() override
     {

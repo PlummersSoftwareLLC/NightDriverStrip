@@ -93,7 +93,7 @@ void MatrixPreDraw()
 
         auto graphics = (*g_ptrEffectManager)[0];
 
-        LEDMatrixGFX::matrix.setRefreshRate(95);
+        LEDMatrixGFX::matrix.setRefreshRate(200);
 
         auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());

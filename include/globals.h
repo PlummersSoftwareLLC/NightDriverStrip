@@ -784,47 +784,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define POWER_LIMIT_MW (3000)                 // 100W transformer for an 8M strip max
     #define DEFAULT_EFFECT_INTERVAL     (1000*60*60*24)
 
-#elif BROOKLYNROOM
-
-    // A decorative strip for a rec room or similar
-
-    #ifndef PROJECT_NAME
-    #define PROJECT_NAME            "Brooklyn Room"
-    #endif
-
-    #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
-
-    #define NUM_CHANNELS    1
-    #define NUM_LEDS        600
-    #define MATRIX_WIDTH    (NUM_LEDS)
-    #define MATRIX_HEIGHT   1
-    #define ENABLE_REMOTE   1                     // IR Remote Control
-    #define FAN_SIZE        1
-    #define NUM_FANS        1
-    #define ENABLE_AUDIO    1
-    #define LED_FAN_OFFSET_BU  0
-    #define LED_FAN_OFFSET_TD  0
-    #define LED_FAN_OFFSET_LR  0
-    #define LED_FAN_OFFSET_RL  0
-    #define IR_REMOTE_PIN 36
-    #define POWER_LIMIT_MW (1000 * 12 * 8)
-    #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
-    #define NUM_BANDS      16
-
-    #if M5STICKC || M5STICKCPLUS
-        #define LED_PIN0 26
-    #else
-        #define LED_PIN0 5
-    #endif
-
-    #define DEFAULT_EFFECT_INTERVAL     (5*60*24)
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
-
 #elif SPECTRUM
 
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
@@ -1426,54 +1385,6 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
     extern std::unique_ptr<TFT_eSPI> g_pDisplay;
 #endif
 
-// str_snprintf
-//
-// va-args style printf that returns the formatted string as a reuslt
-
-inline String str_snprintf(const char *fmt, size_t len, ...)
-{
-    std::string str;
-    va_list args;
-
-    // Make the string buffer big enough to hold the stated size
-    str.resize(len);
-
-    va_start(args, len);
-    size_t out_length = vsnprintf(&str[0], len + 1, fmt, args) + 1;
-    va_end(args);
-
-    // If it wound up being smaller than the max buffer size, resize down to actual string length
-    if (out_length < len)
-        str.resize(out_length);
-
-    return String(str.c_str());
-}
-
-// str_snprintf
-//
-// va-args style printf that returns the formatted string as a reuslt
-
-inline String str_sprintf(const char *fmt, ...)
-{
-    std::string str;
-    va_list args, args2;
-    va_start(args, fmt);
-    va_copy(args2, args);
-
-    int requiredLen = vsnprintf(NULL, 0, fmt, args) + 1;
-    if (requiredLen > 1)
-    {
-        str.resize(requiredLen);
-        size_t out_length = vsnprintf(&str[0], requiredLen, fmt, args2) + 1;
-        if (out_length < requiredLen)
-            str.resize(out_length);
-    }
-
-    va_end(args2);
-    va_end(args);
-    return String(str.c_str());
-}
-
 // FPS
 //
 // Given a time value for when the last frame took place and the current timestamp returns the number of
@@ -1609,6 +1520,34 @@ public:
     }
 };
 
+// str_snprintf
+//
+// va-args style printf that returns the formatted string as a reuslt
+
+inline String str_sprintf(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    va_list args_copy;
+    va_copy(args_copy, args);
+
+    int requiredLen = vsnprintf(nullptr, 0, fmt, args) + 1;
+    va_end(args);
+
+    if (requiredLen <= 0) {
+        va_end(args_copy);
+        return {};
+    }
+
+    std::unique_ptr<char []> str = std::make_unique<char []>(requiredLen);
+    vsnprintf(str.get(), requiredLen, fmt, args_copy);
+    va_end(args_copy);
+
+    return String(str.get());
+}
+
+
 // AppTime
 //
 // A class that keeps track of the clock, how long the last frame took, calculating FPS, etc.
@@ -1723,23 +1662,6 @@ inline uint16_t WORDFromMemory(uint8_t * payloadData)
 {
     return  (uint16_t)payloadData[1] << 8   |
             (uint16_t)payloadData[0];
-}
-
-inline bool CheckBlueBuffer(CRGB * prgb, size_t count)
-{
-    bool bOK = true;
-    for (int i = 0; i < count; i++)
-    {
-        if (bOK)
-        {
-            if (prgb[i].r > 0 || prgb[i].g > 0)
-            {
-                Serial.printf("Other color detected at offset %d\n", i);
-                bOK = false;
-            }
-        }
-    }
-    return bOK;
 }
 
 // 16-bit (5:6:5) color definitions for common colors

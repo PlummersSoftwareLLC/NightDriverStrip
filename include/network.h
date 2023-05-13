@@ -61,7 +61,8 @@
     #define WL_DISCONNECTED     "WL_DISCONNECTED"
     #define WL_UNKNOWN_STATUS   "WL_UNKNOWN_STATUS"
 
-    inline static const char* WLtoString(wl_status_t status) {
+    inline static const char* WLtoString(wl_status_t status) 
+    {
       switch (status) {
         case 255: return WL_NO_SHIELD;
         case 0: return   WL_IDLE_STATUS;

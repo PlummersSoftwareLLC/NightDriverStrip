@@ -106,7 +106,7 @@ private:
         return true;
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return false;
     }

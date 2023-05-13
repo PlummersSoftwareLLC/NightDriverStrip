@@ -105,6 +105,11 @@ private:
         return 25;
     }
 
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
+
     inline float KelvinToFarenheit(float K)
     {
         return (K - 273.15) * 9.0f/5.0f + 32;
