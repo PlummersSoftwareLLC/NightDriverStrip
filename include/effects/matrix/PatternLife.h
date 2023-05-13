@@ -78,7 +78,10 @@ public:
   uint8_t brightness;
 };
 
-#define CRC_LENGTH std::max(MATRIX_HEIGHT, MATRIX_WIDTH)                           // Depth of loop check buffer
+// We check for loops by keeping a number of hashes of previous frames.  A walker that goes up and across
+// the screen cycles every 2 times it crosses, so max dimension times 2 is a good place to start
+
+#define CRC_LENGTH (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 2)
 
 class PatternLife : public LEDStripEffect
 {
@@ -96,11 +99,10 @@ private:
     {
         LEDStripEffect::Init(gfx);
 
-        // Note: placing the world in PSRAM is possible, but its not made for random
-        // access.  SPI prefers sequential, so just as we don't use it for decompression,
-        // we don't use it to hold the Life world either, as it's very random-access.
+        // Note: placing the world in PSRAM may slow this effect down, but it's currently running
+        //       fast enough (30+ fps) that we can afford to use it
 
-        world     = std::make_unique<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
+        world.reset(psram_allocator<Cell [MATRIX_HEIGHT]>().allocate(MATRIX_WIDTH)) ;
         checksums.reset(psram_allocator<uint32_t>().allocate(CRC_LENGTH));
 
         return true;
@@ -111,10 +113,9 @@ private:
         return false;
     }
 
-    // A table of seed vs generation count (in a comment).  These are seeds that net long
-    // runs of at leat 3000 generations.
+    // A table of seed vs generation count.  These are seeds that net long runs of at leat 3000 generations.
     //
-    // Seed: 92465, Generations: 1626
+    // Example:  Seed: 92465, Generations: 1626
 
     static constexpr long bakedInSeeds[] =
     {
@@ -214,15 +215,12 @@ public:
 
         // Display current generation
 
-        EVERY_N_MILLIS(MILLIS_PER_FRAME)
-        {
-            for (int i = 0; i < MATRIX_WIDTH; i++) {
-                for (int j = 0; j < MATRIX_HEIGHT; j++) {
-                    if (world[i][j].brightness > 0)
-                        g()->leds[g()->xy(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
-                    else
-                        g()->leds[g()->xy(i, j)] = CRGB::Black;
-                }
+        for (int i = 0; i < MATRIX_WIDTH; i++) {
+            for (int j = 0; j < MATRIX_HEIGHT; j++) {
+                if (world[i][j].brightness > 0)
+                    g()->leds[g()->xy(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
+                else
+                    g()->leds[g()->xy(i, j)] = CRGB::Black;
             }
         }
 

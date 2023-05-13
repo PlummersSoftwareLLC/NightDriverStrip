@@ -909,6 +909,6 @@ void loop()
             Serial.println(strOutput);
         }
 
-        delay(1);
+        delay(10);
     }
 }
