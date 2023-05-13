@@ -145,6 +145,11 @@ class PatternSubscribers : public LEDStripEffect
         vTaskDelete(sightTask);
     }
 
+  virtual bool RequiresDoubleBuffering() const override
+  {
+      return false;
+  }
+
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         debugW("Spawning thread to get subscriber data...");

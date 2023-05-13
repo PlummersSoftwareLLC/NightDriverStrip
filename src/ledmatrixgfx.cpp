@@ -55,10 +55,11 @@ void LEDMatrixGFX::StartMatrix()
   matrix.addLayer(&titleLayer);
 
   // When the matrix starts, you can ask it to leave N bytes of memory free, and this amount must be tuned.  Too much free 
-  // will cause a dim panel with a low refresh, too little will starve other things.  100K seems a good starting point.
+  // will cause a dim panel with a low refresh, too little will starve other things.  We currently have enough RAM for
+  // use so begin() is not being called with a reserve paramter, but it can be if memory becomes scarce.
   
   matrix.setRefreshRate(200);
-  matrix.begin(50000);
+  matrix.begin();
 
   Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
 

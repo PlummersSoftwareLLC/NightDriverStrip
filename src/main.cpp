@@ -171,7 +171,7 @@ extern float g_Brite;
 
 NightDriverTaskManager g_TaskManager;
 
-// The one and only instance of ImprovSerial.  We instantiate is as the type needed
+// The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
 
@@ -220,7 +220,6 @@ DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
 // External Variables
 //
 
-extern DRAM_ATTR LEDStripEffect * g_apEffects[];      // Main table of internal events in effects.cpp
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 
 //
@@ -276,11 +275,9 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
 // NetworkHandlingLoopEntry
 //
+// Thead entry point for the Networking task
 // Pumps the various network loops and sets the time periodically, as well as reconnecting
 // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
-
-// Data for Dave's Garage as an example,
-
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {
@@ -349,7 +346,6 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
     }
 #endif
 
-
 // CheckHeap
 //
 // Quick and dirty debug test to make sure the heap has not been corrupted
@@ -389,9 +385,9 @@ void PrintOutputHeader()
 
 void TerminateHandler()
 {
-    debugE("-------------------------------------------------------------------------------------");
-    debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
-    debugE("-------------------------------------------------------------------------------------");
+    Serial.println("-------------------------------------------------------------------------------------");
+    Serial.println("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
+    Serial.println("-------------------------------------------------------------------------------------");
 
     PrintOutputHeader();
 
@@ -432,9 +428,11 @@ void setup()
 {
     // Initialize Serial output
     Serial.begin(115200);
+    // Re-route debug output to the serial port
+    Debug.setSerialEnabled(true);
 
+    heap_caps_malloc_extmem_enable(128);
     uzlib_init();
-    heap_caps_malloc_extmem_enable(1024);
 
     if (!SPIFFS.begin(true))
         Serial.println("WARNING: SPIFFs could not be intialized!");
@@ -492,9 +490,6 @@ void setup()
     }
 
 #endif
-
-    // Re-route debug output to the serial port
-    Debug.setSerialEnabled(true);
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 

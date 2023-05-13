@@ -180,9 +180,7 @@ class RemoteControl
         static uint lastResult = 0;
 
         if (!_IR_Receive.decode(&results))
-        {
             return;
-        }
 
         uint result = results.value;
         _IR_Receive.resume();
@@ -223,7 +221,6 @@ class RemoteControl
         {
             g_ptrEffectManager->ClearRemoteColor();
             g_ptrEffectManager->NextEffect();
-            
             return;
         }
         else if (IR_BMINUS == result)

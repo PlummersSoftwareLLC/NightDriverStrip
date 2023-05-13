@@ -207,7 +207,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return 60;
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return _fadeRate != 0;
     }
@@ -278,11 +278,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
 
-        if (_fadeRate == 0)
-            for (int y = 1; y < yOffset2; y++)
-                for (int x = xOffset; x < xOffset + barWidth; x++)
-                    g()->setPixel(x, y, CRGB::Black);
-
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
                 g()->setPixel(x, y, baseColor);
@@ -297,7 +292,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
         uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
 
-        colorHighlight = CRGB(CRGB::White).fadeToBlackBy(fadeAmount);
+        // We draw the highlight in white, but if its falling at a different rate than the bar itself,
+        // it indicates a free-floating highlight, and those get faded out based on age
+
+        colorHighlight = CRGB(CRGB::White);
+        if (g_Analyzer.g_peak1Decay != g_Analyzer.g_peak2Decay)
+            colorHighlight = colorHighlight.fadeToBlackBy(fadeAmount);
+
+        // We draw the bottom row in bar color even when only 1 pixel high so as not to have a white
+        // strip as the bottom row (all made up of highlights)
 
         if (value == 0)
             colorHighlight = baseColor;
@@ -395,6 +398,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
+        else
+            pGFXChannel->Clear();
 
         for (int i = 0; i < _numBars; i++)
         {
@@ -551,7 +556,7 @@ class GhostWave : public WaveformEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return true;
     }

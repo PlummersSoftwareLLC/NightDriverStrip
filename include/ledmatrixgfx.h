@@ -60,7 +60,7 @@ public:
     static const uint8_t kRefreshDepth = COLOR_DEPTH;                                   // known working: 24, 36, 48
     static const uint8_t kDmaBufferRows = 4;                                            // known working: 2-4, use 2 to save memory, more to keep from dropping frames and automatically lowering refresh rate
     static const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;                // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
-    static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING /* | SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1 */); // see http://docs.pixelmatix.com/SmartMatrix for options
+    static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING   /* | SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1 */); // see http://docs.pixelmatix.com/SmartMatrix for options
     static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
     static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
     static const rgb24 defaultBackgroundColor;
@@ -85,14 +85,26 @@ public:
         matrix.setBrightness(percent);
     }
     
-    virtual uint16_t xy(uint16_t x, uint16_t y) const
+    virtual uint16_t xy(uint16_t x, uint16_t y) const override
     {
         return y * MATRIX_WIDTH + x;    
     }
 
+    // Whereas an LEDStripGFX would track it's own memory for the CRGB array, we simply point to the buffer already used for
+    // the matrix display memory.  That also eliminated having a local draw buffer that is then copied, because the effects
+    // can render directly to the right back buffer automatically.  
+
     void setLeds(CRGB *pLeds)
     {
         leds = pLeds;
+    }
+
+    virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
+    {
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
+        // so we do it the "slow" way for other matrices
+
+        memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }
 
     const String & GetCaption()
@@ -127,40 +139,36 @@ public:
         captionStartTime = millis();
     }
 
-    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
-        // out in order to do the scroll with memmove rather than row by column pixel
-        // lookups.          
+        // out in order to do the scroll.  We should technically use memmove instead
+        // of memcpy since the regions are overlapping but this is faster and seems
+        // to work!
+
         for (int y = startY; y <= endY; y++)
         {
             auto pLinemem = leds + y * MATRIX_WIDTH;
             auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
-            memmove(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-            memmove(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));                
+            memcpy(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));                
         }
     }
 
-    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
-        // out in order to do the scroll with memmove rather than row by column pixel
-        // lookups.  
+        // out in order to do the scroll.  We should technically use memmove instead
+        // of memcpy since the regions are overlapping but this is faster and seems
+        // to work!
+
         for (int y = startY; y <= endY; y++)
         {
             auto pLinemem = leds + y * MATRIX_WIDTH;
             auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
-            memmove(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-            memmove(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memcpy(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memcpy(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
         }
-    }
-
-    virtual void fillLeds(const CRGB *pLEDs)
-    {
-        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
-        // so we do it the "slow" way for other matrices
-
-        memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
     }
 
     // Matrix interop

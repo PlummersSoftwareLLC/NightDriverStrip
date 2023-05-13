@@ -110,10 +110,10 @@ class IdleTask
         // If the measurement failed to even get a chance to run, this core is maxed and there was no idle time
 
         if (millis() - _lastMeasurement > kMillisPerCalc)
-            return 100.0;
+            return 100.0f;
 
         // Otherwise, whatever cycles we were able to burn in the idle loop counts as "would have been idle" time
-        return 100.0-100*_idleRatio;
+        return 100.0f-100*_idleRatio;
     }
 
     // Stub entry point for calling into it without a THIS pointer
@@ -206,7 +206,7 @@ private:
     TaskHandle_t _taskSerial = nullptr;
 
 public:
-
+  
     void StartScreenThread()
     {
         debugW(">> Launching Screen Thread");

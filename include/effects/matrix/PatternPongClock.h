@@ -108,6 +108,11 @@ class PatternPongClock : public LEDStripEffect
         return 35;
     }
 
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
+
     virtual void Start() override
     {
         time_t ttime = time(0);
