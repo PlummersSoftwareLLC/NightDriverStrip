@@ -142,6 +142,7 @@ When changing settings:
 | | `countryCode` | The [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code for the country that the device is located in. Used by the Weather effect. |
 | | `location` | The location (city or postal code) where the device is located. Used by the Weather effect. |
 | | `locationIsZip` | A boolean indicating if the value in the `location` setting is a postal code (`true`/1) or not (`false`/0). |
+| | `ntpServer` | The hostname or IP address of the NTP server to be used for time synchronization. Used by effects that require the current time. |
 | | `openWeatherApiKey` | The API key for the [Weather API provided by Open Weather Map](https://openweathermap.org/api). Used by the Weather effect. |
 | | `timeZone` | The timezone the device resides in, in [tz database](https://en.wikipedia.org/wiki/Tz_database) format. The list of available timezone identifiers can be found in the [timezones.json](config/timezones.json) file. Used by effects that show a clock. |
 | | `use24HourClock` | A boolean that indicates if time should be shown in 24-hour format (`true`/1) or 12-hour AM/PM format (`false`/0). Used by effects that show a digital clock. |

@@ -33,14 +33,8 @@
 #define cszSSID              "Your SSID"
 #define cszPassword          "Your PASS"
 #define cszHostname          "NightDriverStrip"
-#define cszOpenWeatherAPIKey ""                     // Your OpenWeatherMap APIKEY Goes Here
+#define cszOpenWeatherAPIKey ""                     // Your OpenWeatherMap API key goes Here
 #define cszLocation          "98074"
 #define bLocationIsZip       true
 #define cszCountryCode       "us"                   // Look up the Alpha-2 code for your country at https://www.iban.com/country-codes
 #define cszTimeZone          "America/Los_Angeles"
-
-// define the NTP server to connect too (replace . [dots] in IP addresses with , [commas])
-#define cszNTPServer  94, 199, 173, 123     // 0.pool.ntp.org
-//#define cszNTPServer  192, 168, 1, 2
-//#define cszNTPServer 216, 239, 35, 12     // google time
-//#define cszNTPServer 17, 253, 16, 253     // apple time

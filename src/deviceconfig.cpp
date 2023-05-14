@@ -65,6 +65,7 @@ DeviceConfig::DeviceConfig()
         useCelsius = false;
         youtubeChannelGuid = "";
         youtubeChannelName1 = "";
+        ntpServer = DEFAULT_NTP_SERVER;
 
         SetTimeZone(cszTimeZone, true);
 
