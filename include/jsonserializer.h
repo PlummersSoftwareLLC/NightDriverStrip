@@ -133,6 +133,9 @@ bool RemoveJSONFile(const char *fileName);
 
 class JSONWriter
 {
+  private:
+
+    // Writer function and flag combo
     struct WriterEntry
     {
         std::atomic_bool flag = false;
@@ -152,39 +155,6 @@ class JSONWriter
     SemaphoreHandle_t writerSemaphore;
     StaticSemaphore_t writerSemaphoreBuffer;
 
-  public:
-    JSONWriter()
-    {
-        writerSemaphore = xSemaphoreCreateBinaryStatic(&writerSemaphoreBuffer);
-        xSemaphoreTake(writerSemaphore, 0); // Make sure the semaphore is not set
-        xTaskCreatePinnedToCore(WriterInvokerEntryPoint, "JSONWriter", 4096, (void *) this, NET_PRIORITY, &writerTask, NET_CORE);
-    }
-
-    ~JSONWriter()
-    {
-        vTaskDelete(writerTask);
-        vSemaphoreDelete(writerSemaphore);
-    }
-
-    size_t RegisterWriter(std::function<void()> writer)
-    {
-        // Add the writer with its flag unset
-        writers.emplace_back(writer);
-        return writers.size() - 1;
-    }
-
-    void FlagWriter(size_t index)
-    {
-        // Check if we received a valid writer index
-        if (index >= writers.size())
-            return;
-
-        writers[index].flag = true;
-
-        // Wake up the writer invoker task if it's sleeping
-        xSemaphoreGive(writerSemaphore);
-    }
-
     static void WriterInvokerEntryPoint(void * pv)
     {
         JSONWriter * pObj = (JSONWriter *) pv;
@@ -203,6 +173,41 @@ class JSONWriter
                 }
             }
         }
+    }
+
+  public:
+    JSONWriter()
+    {
+        writerSemaphore = xSemaphoreCreateBinaryStatic(&writerSemaphoreBuffer);
+        xSemaphoreTake(writerSemaphore, 0); // Make sure the semaphore is not set
+        xTaskCreatePinnedToCore(WriterInvokerEntryPoint, "JSONWriter", 4096, (void *) this, NET_PRIORITY, &writerTask, NET_CORE);
+    }
+
+    ~JSONWriter()
+    {
+        vTaskDelete(writerTask);
+        vSemaphoreDelete(writerSemaphore);
+    }
+
+    // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
+    size_t RegisterWriter(std::function<void()> writer)
+    {
+        // Add the writer with its flag unset
+        writers.emplace_back(writer);
+        return writers.size() - 1;
+    }
+
+    // Flag a writer for invocation and wake up the task that calls them
+    void FlagWriter(size_t index)
+    {
+        // Check if we received a valid writer index
+        if (index >= writers.size())
+            return;
+
+        writers[index].flag = true;
+
+        // Wake up the writer invoker task if it's sleeping
+        xSemaphoreGive(writerSemaphore);
     }
 };
 
