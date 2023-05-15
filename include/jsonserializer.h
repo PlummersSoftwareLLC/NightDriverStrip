@@ -207,7 +207,7 @@ class JSONWriter
 
         writers[index].flag = true;
 
-        // Wake up the writer invoker task if it's sleeping
+        // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
         xSemaphoreGive(writerSemaphore);
     }
 };
