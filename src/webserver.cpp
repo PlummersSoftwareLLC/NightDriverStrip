@@ -45,6 +45,7 @@ const std::vector<const char *> CWebServer::knownSettings
     DeviceConfig::UseCelsiusTag,
     DeviceConfig::YouTubeChannelGuidTag,
     DeviceConfig::YouTubeChannelName1Tag,
+    DeviceConfig::NTPServerTag,
 };
 
 // Maps settings for which a validator is available to the invocation thereof
@@ -242,6 +243,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelGuidTag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelGuid(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelName1Tag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelName1(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(g_ptrDeviceConfig->SetNTPServer(value)));
 }
 
 // Set settings and return resulting config

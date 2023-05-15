@@ -464,7 +464,10 @@ void setup()
     }
     ESP_ERROR_CHECK(err);
 
-    // Create and load device config from NVS if possible
+    // Create the JSON writer
+    g_ptrJSONWriter = std::make_unique<JSONWriter>();
+
+    // Create and load device config from SPIFFS if possible
     g_ptrDeviceConfig = std::make_unique<DeviceConfig>();
 
 #if ENABLE_WIFI

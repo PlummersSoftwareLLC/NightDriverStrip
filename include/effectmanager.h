@@ -488,10 +488,10 @@ public:
         _iCurrentEffect = i;
         _effectStartTime = millis();
 
+        StartEffect();
+
         if (!skipSave)
             SaveEffectManagerConfig();
-
-        StartEffect();
     }
 
     uint GetTimeUsedByCurrentEffect() const
@@ -557,8 +557,8 @@ public:
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
-        SaveEffectManagerConfig();
         StartEffect();
+        SaveEffectManagerConfig();
     }
 
     // Go back to the previous effect and abort the current one.
@@ -574,8 +574,8 @@ public:
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
-        SaveEffectManagerConfig();
         StartEffect();
+        SaveEffectManagerConfig();
     }
 
     bool Init()

@@ -36,6 +36,7 @@
 #include "jsonserializer.h"
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
+#define DEFAULT_NTP_SERVER "0.pool.ntp.org"
 
 class DeviceConfig : public IJSONSerializable
 {
@@ -48,7 +49,9 @@ class DeviceConfig : public IJSONSerializable
     bool useCelsius;
     String youtubeChannelGuid;
     String youtubeChannelName1;
+    String ntpServer;
 
+    size_t writerIndex;
 /*
     void WriteToNVS(const String& name, const String& value);
     void WriteToNVS(const String& name, bool value);
@@ -86,6 +89,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
     static constexpr const char * YouTubeChannelGuidTag = NAME_OF(youtubeChannelGuid);
     static constexpr const char * YouTubeChannelName1Tag = NAME_OF(youtubeChannelName1);
+    static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
 
     DeviceConfig();
 
@@ -106,6 +110,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[UseCelsiusTag] = useCelsius;
         jsonDoc[YouTubeChannelGuidTag] = youtubeChannelGuid;
         jsonDoc[YouTubeChannelName1Tag] = youtubeChannelName1;
+        jsonDoc[NTPServerTag] = ntpServer;
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
@@ -128,6 +133,10 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
         SetIfPresentIn(jsonObject, youtubeChannelGuid, YouTubeChannelGuidTag);
         SetIfPresentIn(jsonObject, youtubeChannelName1, YouTubeChannelName1Tag);
+        SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
+
+        if (ntpServer.isEmpty())
+            ntpServer = DEFAULT_NTP_SERVER;
 
         if (jsonObject.containsKey(TimeZoneTag))
             return SetTimeZone(jsonObject[TimeZoneTag], true);
@@ -233,6 +242,17 @@ class DeviceConfig : public IJSONSerializable
         if (!newYouTubeChannelName1.isEmpty())
             SetAndSave(youtubeChannelName1, newYouTubeChannelName1);
     }
+
+    const String &GetNTPServer() const
+    {
+        return ntpServer;
+    }
+
+    void SetNTPServer(const String &newNTPServer)
+    {
+        SetAndSave(ntpServer, newNTPServer);
+    }
+
 };
 
 extern DRAM_ATTR std::unique_ptr<DeviceConfig> g_ptrDeviceConfig;
