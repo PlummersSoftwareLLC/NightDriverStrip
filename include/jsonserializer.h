@@ -168,8 +168,9 @@ class JSONWriter
             {
                 if (entry.flag)
                 {
-                    entry.writer();
+                    // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing.
                     entry.flag = false;
+                    entry.writer();
                 }
             }
         }
