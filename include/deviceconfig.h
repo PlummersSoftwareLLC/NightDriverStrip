@@ -51,6 +51,7 @@ class DeviceConfig : public IJSONSerializable
     String youtubeChannelName1;
     String ntpServer;
 
+    size_t writerIndex;
 /*
     void WriteToNVS(const String& name, const String& value);
     void WriteToNVS(const String& name, bool value);
