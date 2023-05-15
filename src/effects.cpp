@@ -527,6 +527,7 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
+DRAM_ATTR size_t g_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
 
 #if USE_MATRIX
 
@@ -546,6 +547,10 @@ DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 void InitEffectsManager()
 {
     debugW("InitEffectsManager...");
+
+    g_EffectsManagerJSONWriterIndex = g_ptrJSONWriter->RegisterWriter(
+        []() { SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_ptrEffectManager); }
+    );
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
 
@@ -583,7 +588,8 @@ void InitEffectsManager()
 
 void SaveEffectManagerConfig()
 {
-    SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_ptrEffectManager);
+    // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
+    g_ptrJSONWriter->FlagWriter(g_EffectsManagerJSONWriterIndex);
 }
 
 void RemoveEffectManagerConfig()

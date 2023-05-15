@@ -40,11 +40,15 @@ DRAM_ATTR size_t g_DeviceConfigJSONBufferSize = 0;
 
 void DeviceConfig::SaveToJSON()
 {
-    SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this);
+    g_ptrJSONWriter->FlagWriter(writerIndex);
 }
 
 DeviceConfig::DeviceConfig()
 {
+    writerIndex = g_ptrJSONWriter->RegisterWriter(
+        [this]() { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
+    );
+
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
 
     if (LoadJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, pJsonDoc))
@@ -65,6 +69,7 @@ DeviceConfig::DeviceConfig()
         useCelsius = false;
         youtubeChannelGuid = "";
         youtubeChannelName1 = "";
+        ntpServer = DEFAULT_NTP_SERVER;
 
         SetTimeZone(cszTimeZone, true);
 

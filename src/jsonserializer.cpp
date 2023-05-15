@@ -31,6 +31,8 @@
 #include "SPIFFS.h"
 #include "jsonserializer.h"
 
+DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter = nullptr;
+
 bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;

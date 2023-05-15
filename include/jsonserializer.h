@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <ArduinoJson.h>
 #include "jsonbase.h"
 #include "FastLED.h"
@@ -128,3 +129,84 @@ bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<Allo
 bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable& object);
 bool RemoveJSONFile(const char *fileName);
 
+//
+
+class JSONWriter
+{
+  private:
+
+    // Writer function and flag combo
+    struct WriterEntry
+    {
+        std::atomic_bool flag = false;
+        std::function<void()> writer;
+
+        WriterEntry(std::function<void()> writer) :
+            writer(writer)
+        {}
+
+        WriterEntry(WriterEntry&& entry) : WriterEntry(entry.writer)
+        {}
+    };
+
+    std::vector<WriterEntry> writers;
+
+    TaskHandle_t writerTask;
+    SemaphoreHandle_t writerSemaphore;
+    StaticSemaphore_t writerSemaphoreBuffer;
+
+    static void WriterInvokerEntryPoint(void * pv)
+    {
+        JSONWriter * pObj = (JSONWriter *) pv;
+
+        for(;;)
+        {
+            // Wait until we're woken up by a writer being flagged
+            xSemaphoreTake(pObj->writerSemaphore, portMAX_DELAY);
+
+            for (auto &entry : pObj->writers)
+            {
+                // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing.
+                if (entry.flag.exchange(false))
+                    entry.writer();
+            }
+        }
+    }
+
+  public:
+    JSONWriter()
+    {
+        writerSemaphore = xSemaphoreCreateBinaryStatic(&writerSemaphoreBuffer);
+        xSemaphoreTake(writerSemaphore, 0); // Make sure the semaphore is not set
+        xTaskCreatePinnedToCore(WriterInvokerEntryPoint, "JSONWriter", 4096, (void *) this, NET_PRIORITY, &writerTask, NET_CORE);
+    }
+
+    ~JSONWriter()
+    {
+        vTaskDelete(writerTask);
+        vSemaphoreDelete(writerSemaphore);
+    }
+
+    // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
+    size_t RegisterWriter(std::function<void()> writer)
+    {
+        // Add the writer with its flag unset
+        writers.emplace_back(writer);
+        return writers.size() - 1;
+    }
+
+    // Flag a writer for invocation and wake up the task that calls them
+    void FlagWriter(size_t index)
+    {
+        // Check if we received a valid writer index
+        if (index >= writers.size())
+            return;
+
+        writers[index].flag = true;
+
+        // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
+        xSemaphoreGive(writerSemaphore);
+    }
+};
+
+extern DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter;
