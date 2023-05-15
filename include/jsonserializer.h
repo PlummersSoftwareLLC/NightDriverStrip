@@ -166,12 +166,9 @@ class JSONWriter
 
             for (auto &entry : pObj->writers)
             {
-                if (entry.flag)
-                {
-                    // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing.
-                    entry.flag = false;
+                // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing.
+                if (entry.flag.exchange(false))
                     entry.writer();
-                }
             }
         }
     }
