@@ -253,6 +253,8 @@ protected:
     }
 };
 
+#if USE_MATRIX
+
 // SplashLogoEffect
 //
 // Displays the NightDriver logo on the screen
@@ -298,6 +300,8 @@ class SplashLogoEffect : public LEDStripEffect
             debugW("Could not display logo");
     }
 };
+
+#endif // USE_MATRIX
 
 // StatusEffect
 //
