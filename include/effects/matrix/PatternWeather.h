@@ -298,10 +298,10 @@ private:
 
         for(;;)
         {
-            pObj->UpdateWeather();
-
             // Suspend ourself until Draw() wakes us up
             vTaskSuspend(NULL);
+
+            pObj->UpdateWeather();
         }
     }
 
@@ -373,7 +373,7 @@ public:
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
 
         g()->setFont(&Apple5x7);
-/*
+
         time_t now;
         time(&now);
 
@@ -390,7 +390,7 @@ public:
             //   so we'll silently skip the update this would otherwise trigger.
             vTaskResume(weatherTask);
         }
-*/
+
         // Draw the graphics
         if (iconToday >= 0)
         {
