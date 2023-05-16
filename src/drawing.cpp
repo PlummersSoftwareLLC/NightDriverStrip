@@ -198,7 +198,7 @@ uint16_t LocalDraw()
     if (nullptr == g_ptrEffectManager)
     {
         debugW("Drawing before g_pEffectManager is ready, so delaying...");
-        delay(100);
+        vTaskDelay(pdMS_TO_TICKS(100));
         return 0;
     }
     else if (g_ptrEffectManager->EffectCount() > 0)
@@ -241,7 +241,7 @@ void ShowStrip(uint16_t numToShow)
     if (FastLED.count() == 0)
     {
         debugW("Draw loop is drawing before LEDs are ready, so delaying 100ms...");
-        delay(100);
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
     else
     {
@@ -282,7 +282,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         if (elapsed < minimumFrameTime)
         {
             g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed));
-            delay(g_FreeDrawTime * MILLIS_PER_SECOND);
+            vTaskDelay(pdMS_TO_TICKS(g_FreeDrawTime * MILLIS_PER_SECOND));
         }
     }
     else if (wifiPixelsDrawn > 0)
@@ -299,7 +299,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
 
         g_FreeDrawTime = t;
         if (g_FreeDrawTime > 0.0)
-            delay(g_FreeDrawTime * MILLIS_PER_SECOND);
+            vTaskDelay(pdMS_TO_TICKS(g_FreeDrawTime * MILLIS_PER_SECOND));
         else
             g_FreeDrawTime = 0.0;
     }
@@ -308,7 +308,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
         g_FreeDrawTime = .001;
-        delay(1);
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 
 #endif
@@ -442,12 +442,12 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // so we'll slow down to share the CPU a bit once the update has begun
 
         if (g_bUpdateStarted)
-            delay(100);
+            vTaskDelay(pdMS_TO_TICKS(100));
 
         // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
         // whose time has come.  yield() alone did not solve it, likely since our priority is higher than the idle
         // task so you can still starve the watchdog if you're always busy
 
-        delay(1);
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }

@@ -149,3 +149,16 @@
 #define PTY_VERSION         "ver"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"
+
+struct EmbeddedFile
+{
+    // Embedded file size in bytes
+    const size_t length;
+    // Contents as bytes
+    const uint8_t *const contents;
+
+    EmbeddedFile(const uint8_t start[], const uint8_t end[]) :
+        length(end - start),
+        contents(start)
+    {}
+};

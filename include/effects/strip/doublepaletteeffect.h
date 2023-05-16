@@ -72,7 +72,7 @@ class DoublePaletteEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         LEDStripEffect::Init(gfx);
         if (!_PaletteEffect1.Init(gfx) || !_PaletteEffect2.Init(gfx))

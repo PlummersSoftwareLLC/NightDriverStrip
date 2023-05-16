@@ -81,18 +81,13 @@ class CWebServer
     };
 
     // Properties of files baked into the image
-    struct EmbeddedFile
+    struct EmbeddedWebFile : public EmbeddedFile
     {
-        // Embedded file size in bytes
-        const size_t length;
-        // Contents as bytes
-        const uint8_t *const contents;
         // Added to hold the file's MIME type, but could be used for other type types, if desired
         const char *const type;
 
-        EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
-            length(end - start),
-            contents(start),
+        EmbeddedWebFile(const uint8_t start[], const uint8_t end[], const char type[]) :
+            EmbeddedFile(start, end),
             type(type)
         {}
     };
@@ -166,7 +161,7 @@ class CWebServer
     void GetStatistics(AsyncWebServerRequest * pRequest);
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
-    void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
+    void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {
@@ -226,10 +221,10 @@ class CWebServer
 
         _server.on("/reset",                 HTTP_POST, [](AsyncWebServerRequest * pRequest)        { Reset(pRequest); });
 
-        EmbeddedFile html_file(html_start, html_end, "text/html");
-        EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
-        EmbeddedFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
-        EmbeddedFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
+        EmbeddedWebFile html_file(html_start, html_end, "text/html");
+        EmbeddedWebFile jsx_file(jsx_start, jsx_end, "application/javascript");
+        EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
+        EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
 
         debugI("Embedded html file size: %d", html_file.length);
         debugI("Embedded jsx file size: %d", jsx_file.length);
