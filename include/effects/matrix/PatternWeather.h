@@ -392,25 +392,20 @@ public:
         }
 
         // Draw the graphics
-        if (iconToday >= 0)
+        auto iconEntry = weatherIcons.find(iconToday);
+        if (iconEntry != weatherIcons.end())
         {
-            auto iconEntry = weatherIcons.find(iconToday);
-            if (iconEntry != weatherIcons.end())
-            {
-                auto icon = iconEntry->second;
-                if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
-                    debugW("Could not display icon %d", iconToday);
-            }
+            auto icon = iconEntry->second;
+            if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
+                debugW("Could not display icon %d", iconToday);
         }
-        if (iconTomorrow >= 0)
+
+        iconEntry = weatherIcons.find(iconTomorrow);
+        if (iconEntry != weatherIcons.end())
         {
-            auto iconEntry = weatherIcons.find(iconTomorrow);
-            if (iconEntry != weatherIcons.end())
-            {
-                auto icon = iconEntry->second;
-                if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
-                    debugW("Could not display icon %d", iconTomorrow);
-            }
+            auto icon = iconEntry->second;
+            if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
+                debugW("Could not display icon %d", iconTomorrow);
         }
 
         // Print the town/city name
