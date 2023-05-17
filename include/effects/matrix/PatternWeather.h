@@ -47,26 +47,42 @@
 #include "jsonserializer.h"
 #include <FontGfx_apple5x7.h>
 #include <thread>
+#include <map>
+#include "effects.h"
 
 #define WEATHER_INTERVAL_SECONDS (10*60)
+#define WEATHER_CHECK_WIFI_WAIT 5000
+
+extern const uint8_t brokenclouds_start[] asm("_binary_assets_bmp_brokenclouds_jpg_start");
+extern const uint8_t brokenclouds_end[] asm("_binary_assets_bmp_brokenclouds_jpg_end");
+extern const uint8_t clearsky_start[] asm("_binary_assets_bmp_clearsky_jpg_start");
+extern const uint8_t clearsky_end[] asm("_binary_assets_bmp_clearsky_jpg_end");
+extern const uint8_t fewclouds_start[] asm("_binary_assets_bmp_fewclouds_jpg_start");
+extern const uint8_t fewclouds_end[] asm("_binary_assets_bmp_fewclouds_jpg_end");
+extern const uint8_t rain_start[] asm("_binary_assets_bmp_rain_jpg_start");
+extern const uint8_t rain_end[] asm("_binary_assets_bmp_rain_jpg_end");
+extern const uint8_t scatteredclouds_start[] asm("_binary_assets_bmp_scatteredclouds_jpg_start");
+extern const uint8_t scatteredclouds_end[] asm("_binary_assets_bmp_scatteredclouds_jpg_end");
+extern const uint8_t showerrain_start[] asm("_binary_assets_bmp_showerrain_jpg_start");
+extern const uint8_t showerrain_end[] asm("_binary_assets_bmp_showerrain_jpg_end");
+extern const uint8_t snow_start[] asm("_binary_assets_bmp_snow_jpg_start");
+extern const uint8_t snow_end[] asm("_binary_assets_bmp_snow_jpg_end");
+extern const uint8_t thunderstorm_start[] asm("_binary_assets_bmp_thunderstorm_jpg_start");
+extern const uint8_t thunderstorm_end[] asm("_binary_assets_bmp_thunderstorm_jpg_end");
 
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
-static const char * pszWeatherIcons[] = {   "",                                 // 00 Unused
-                                            "/bmp/clearsky.jpg",                // 01
-                                            "/bmp/fewclouds.jpg",               // 02
-                                            "/bmp/scatteredclouds.jpg",         // 03
-                                            "/bmp/brokenclouds.jpg",            // 04
-                                            "/bmp/testcloud.jpg",               // Unused slots
-                                            "",
-                                            "",
-                                            ""
-                                            "/bmp/showerrain.jpg",              // 09
-                                            "/bmp/rain.jpg",                    // 10
-                                            "/bmp/thunderstorm.jpg",            // 11
-                                            "",
-                                            "/bmp/snow.jpg",                    // 13
-                                        };
+static std::map<int, EmbeddedFile> weatherIcons =
+{
+    { 1, EmbeddedFile(clearsky_start, clearsky_end) },
+    { 2, EmbeddedFile(fewclouds_start, fewclouds_end) },
+    { 3, EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
+    { 4, EmbeddedFile(brokenclouds_start, brokenclouds_end) },
+    { 9, EmbeddedFile(showerrain_start, showerrain_end) },
+    { 10, EmbeddedFile(rain_start, rain_end) },
+    { 11, EmbeddedFile(thunderstorm_start, thunderstorm_end) },
+    { 13, EmbeddedFile(snow_start, snow_end) }
+};
 
 class PatternWeather : public LEDStripEffect
 {
@@ -214,8 +230,6 @@ private:
 
                     String iconIdTomorrow = entry["weather"][0]["icon"];
                     iconTomorrow = iconIdTomorrow.toInt();
-                    if (iconTomorrow < 1 || iconTomorrow >= ARRAYSIZE(pszWeatherIcons))
-                        iconTomorrow = -1;
 
                     debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, iconTomorrow);
                     break;
@@ -261,8 +275,6 @@ private:
             String iconIndex = jsonDoc["weather"][0]["icon"];
             iconToday = iconIndex.toInt();
             debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %d", (int)temperature, (int)loToday, (int)highToday, iconToday);
-            if (iconToday < 1 || iconToday >= ARRAYSIZE(pszWeatherIcons))
-                iconToday = -1;
 
             const char * pszName = jsonDoc["name"];
             if (pszName)
@@ -286,15 +298,21 @@ private:
 
         for(;;)
         {
-            pObj->UpdateWeather();
-
             // Suspend ourself until Draw() wakes us up
             vTaskSuspend(NULL);
+
+            pObj->UpdateWeather();
         }
     }
 
     void UpdateWeather()
     {
+        while(!WiFi.isConnected())
+        {
+            debugI("Delaying Weather update, waiting for WiFi...");
+            vTaskDelay(pdMS_TO_TICKS(WEATHER_CHECK_WIFI_WAIT));
+        }
+
         updateCoordinates();
 
         if (getWeatherData())
@@ -334,6 +352,17 @@ public:
         vTaskDelete(weatherTask);
     }
 
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    {
+        if (!LEDStripEffect::Init(gfx))
+            return false;
+
+        debugW("Spawning thread to check weather...");
+        xTaskCreatePinnedToCore(WeatherTaskEntryPoint, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
+
+        return true;
+    }
+
     virtual void Draw() override
     {
         const int fontHeight = 7;
@@ -345,49 +374,38 @@ public:
 
         g()->setFont(&Apple5x7);
 
-        if (WiFi.isConnected())
+        time_t now;
+        time(&now);
+
+        auto secondsSinceLastUpdate = now - latestUpdate;
+
+        // If location and/or country have changed, trigger an update regardless of timer, but
+        // not more than once every half a minute
+        if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= 30))
         {
-            static CEveryNSeconds timingObj(WEATHER_INTERVAL_SECONDS);
+            latestUpdate = now;
 
-            time_t now;
-            time(&now);
-
-            // If location and/or country have changed, trigger an update regardless of timer, but
-            // not more than once every half a minute
-            if ((timingObj || HasLocationChanged()) && (now - latestUpdate) >= 30)
-            {
-                latestUpdate = now;
-
-                // Lazily create the weather update task the first time we need it
-                if (weatherTask == nullptr)
-                {
-                    debugW("Spawning thread to check weather...");
-                    xTaskCreatePinnedToCore(WeatherTaskEntryPoint, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
-                }
-                else
-                {
-                    debugW("Triggering thread to check weather now...");
-                    // Resume the weather task. If it's not suspended then there's an update running and this will do nothing,
-                    //   so we'll silently skip the update this would otherwise trigger.
-                    vTaskResume(weatherTask);
-                }
-            }
+            debugW("Triggering thread to check weather now...");
+            // Resume the weather task. If it's not suspended then there's an update running and this will do nothing,
+            //   so we'll silently skip the update this would otherwise trigger.
+            vTaskResume(weatherTask);
         }
 
         // Draw the graphics
-        if (iconToday >= 0)
+        auto iconEntry = weatherIcons.find(iconToday);
+        if (iconEntry != weatherIcons.end())
         {
-            auto filename = pszWeatherIcons[iconToday];
-            if (strlen(filename))
-                if (JDR_OK != TJpgDec.drawFsJpg(0, 10, filename))        // Draw the image
-                    debugW("Could not display %s", filename);
+            auto icon = iconEntry->second;
+            if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
+                debugW("Could not display icon %d", iconToday);
         }
-        if (iconTomorrow >= 0)
+
+        iconEntry = weatherIcons.find(iconTomorrow);
+        if (iconEntry != weatherIcons.end())
         {
-            auto filename = pszWeatherIcons[iconTomorrow];
-            if (strlen(filename))
-                if (JDR_OK != TJpgDec.drawFsJpg(xHalf+1, 10, filename))  // Draw the image
-                    debugW("Could not display %s", filename);
+            auto icon = iconEntry->second;
+            if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
+                debugW("Could not display icon %d", iconTomorrow);
         }
 
         // Print the town/city name

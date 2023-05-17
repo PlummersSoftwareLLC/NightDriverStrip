@@ -96,8 +96,6 @@ std::map<int, JsonEffectFactory> g_JsonEffectFactories =
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<StatusEffect>(jsonObject); } },
     { EFFECT_STRIP_TWINKLE,
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<TwinkleEffect>(jsonObject); } },
-    { EFFECT_STRIP_SPLASH_LOGO,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<SplashLogoEffect>(jsonObject); } },
 
 #if ENABLE_AUDIO
     { EFFECT_STRIP_COLOR_BEAT_OVER_RED,
@@ -134,6 +132,8 @@ std::map<int, JsonEffectFactory> g_JsonEffectFactories =
 #endif
 
 #if USE_MATRIX
+    { EFFECT_STRIP_SPLASH_LOGO,
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<SplashLogoEffect>(jsonObject); } },
     { EFFECT_MATRIX_ALIEN_TEXT,
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<PatternAlienText>(jsonObject); } },
     { EFFECT_MATRIX_BOUNCE,
