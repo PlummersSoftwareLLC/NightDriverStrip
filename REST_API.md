@@ -122,6 +122,7 @@ When changing settings:
 
 - All parameters are optional. Only settings that are sent in the POST parameters are modified. All other settings are unchanged.
 - No validation of values provided takes place. There is a [separate endpoint with which an individual setting can be changed after validation](#set-setting-with-validation).
+- Changed settings will be applied immediately, but it takes a few seconds before they are persisted beyond restarts.
 
 #### Retrieve
 

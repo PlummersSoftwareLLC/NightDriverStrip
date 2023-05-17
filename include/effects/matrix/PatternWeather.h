@@ -98,7 +98,6 @@ private:
     int    iconToday         = -1;
     int    iconTomorrow      = -1;
     float  temperature       = 0.0f;
-    float  pressure          = 0.0f;
     float  highToday         = 0.0f;
     float  loToday           = 0.0f;
     float  highTomorrow      = 0.0f;

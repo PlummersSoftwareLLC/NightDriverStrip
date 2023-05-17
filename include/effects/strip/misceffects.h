@@ -278,7 +278,7 @@ class SplashLogoEffect : public LEDStripEffect
 
     SplashLogoEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
-      logo(logo_start, logo_end)
+        logo(logo_start, logo_end)
     {
         debugV("Splash logo JSON constructor");
     }

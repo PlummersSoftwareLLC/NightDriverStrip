@@ -77,6 +77,7 @@ DeviceConfig::DeviceConfig()
     }
 }
 
+// The timezone JSON file used by this logic is generated using tools/gen-tz-json.py
 bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
 {
     String quotedTZ = "\n\"" + newTimeZone + '"';
