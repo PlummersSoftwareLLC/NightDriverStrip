@@ -98,7 +98,7 @@ class PatternSubscribers : public LEDStripEffect
         while(!WiFi.isConnected())
         {
             debugI("Delaying Subscriber update, waiting for WiFi...");
-            vTaskDelay(SUB_CHECK_WIFI_WAIT / portTICK_PERIOD_MS);
+            vTaskDelay(pdMS_TO_TICKS(SUB_CHECK_WIFI_WAIT));
         }
 
         millisLastCheck = millis();
@@ -152,10 +152,13 @@ class PatternSubscribers : public LEDStripEffect
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
+        if (!LEDStripEffect::Init(gfx))
+            return false;
+
         debugW("Spawning thread to get subscriber data...");
         xTaskCreatePinnedToCore(SightTaskEntryPoint, "Subs", 4096, (void *) this, NET_PRIORITY, &sightTask, NET_CORE);
 
-        return LEDStripEffect::Init(gfx);
+        return true;
     }
 
     virtual void Draw() override

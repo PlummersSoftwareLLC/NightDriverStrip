@@ -95,7 +95,7 @@ private:
     unsigned long seed;
 
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         LEDStripEffect::Init(gfx);
 

@@ -543,7 +543,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
