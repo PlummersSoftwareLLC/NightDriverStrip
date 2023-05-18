@@ -192,29 +192,6 @@ void IRAM_ATTR SocketServerTaskEntry(void *);
 void IRAM_ATTR RemoteLoopEntry(void *);
 void IRAM_ATTR JSONWriterTaskEntry(void *);
 
-class EffectTaskParams
-{
-  private:
-    std::function<void(LEDStripEffect&)> _function;
-    LEDStripEffect* _effect;
-
-  public:
-    EffectTaskParams(std::function<void(LEDStripEffect&)> function, LEDStripEffect* effect)
-      : _function(function),
-        _effect(effect)
-    {}
-
-    std::function<void(LEDStripEffect&)> function() const
-    {
-        return _function;
-    }
-
-    LEDStripEffect* effect() const
-    {
-        return _effect;
-    }
-};
-
 #define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
 
 class NightDriverTaskManager : public TaskManager
@@ -234,6 +211,28 @@ private:
 
     std::vector<TaskHandle_t> _vEffectTasks;
 
+    class EffectTaskParams
+    {
+    private:
+        std::function<void(LEDStripEffect&)> _function;
+        LEDStripEffect* _effect;
+
+    public:
+        EffectTaskParams(std::function<void(LEDStripEffect&)> function, LEDStripEffect* effect)
+        : _function(function),
+            _effect(effect)
+        {}
+
+        std::function<void(LEDStripEffect&)> function() const
+        {
+            return _function;
+        }
+
+        LEDStripEffect* effect() const
+        {
+            return _effect;
+        }
+    };
 
     static void EffectTaskEntry(void *pVoid)
     {

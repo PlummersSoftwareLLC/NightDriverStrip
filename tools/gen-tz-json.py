@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-# Generate a JSON object with timezone information from Linux tzdata.
+# Generate a JSON object with timezone information from Linux tzdata and write it
+# to a file.
 #
 # This script is based on the one in https://github.com/nayarsystems/posix_tz_db.
-# As such, this script is subject to the MIT license.
+# As such, it's subject to the MIT license.
 #
-# The script expects to be started from the project root, i.e. be executing
+# The script expects to be started from the project root, i.e. by executing
 # "tools/gen-tz-json.py". As it relies on the presence of the Linux
 # /usr/share/zoneinfo tzdata tree, it can only be used on a (virtualized) Linux
 # environment.
