@@ -197,26 +197,30 @@ void IRAM_ATTR JSONWriterTaskEntry(void *);
 
 class NightDriverTaskManager : public TaskManager
 {
+public:
+
+    using EffectTaskFunction = std::function<void(LEDStripEffect&)>;
+
 private:
 
     class EffectTaskParams
     {
     private:
-        std::function<void(LEDStripEffect&)> _function;
+        EffectTaskFunction _function;
         LEDStripEffect* _effect;
 
     public:
-        EffectTaskParams(std::function<void(LEDStripEffect&)> function, LEDStripEffect* effect)
+        EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
         : _function(function),
-            _effect(effect)
+            _effect(pEffect)
         {}
 
-        std::function<void(LEDStripEffect&)> function() const
+        EffectTaskFunction function() const
         {
             return _function;
         }
 
-        LEDStripEffect* effect() const
+        LEDStripEffect* effectPointer() const
         {
             return _effect;
         }
@@ -239,13 +243,13 @@ private:
     {
         EffectTaskParams *pTaskParams = (EffectTaskParams *)pVoid;
 
-        std::function<void(LEDStripEffect&)> function = pTaskParams->function();
-        LEDStripEffect* effect = pTaskParams->effect();
+        EffectTaskFunction function = pTaskParams->function();
+        LEDStripEffect* pEffect = pTaskParams->effectPointer();
 
         // Delete the params object before we invoke the actual function; they tend to run indefinitely
         delete pTaskParams;
 
-        function(*effect);
+        function(*pEffect);
     }
 
 public:
@@ -345,10 +349,10 @@ public:
 
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show
-    TaskHandle_t StartEffectThread(std::function<void(LEDStripEffect&)> function, LEDStripEffect* effect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
+    TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
     {
         // We use a raw pointer here just to cross the thread/task bounary. The EffectTaskEntry method deletes the object as soon as it can.
-        EffectTaskParams* pTaskParams = new EffectTaskParams(function, effect);
+        EffectTaskParams* pTaskParams = new EffectTaskParams(function, pEffect);
         TaskHandle_t effectTask = nullptr;
 
         debugW(">> Launching %s Effect Thread", name);
