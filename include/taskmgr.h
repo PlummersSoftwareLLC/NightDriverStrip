@@ -211,7 +211,7 @@ private:
 
     public:
         EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
-        : _function(function),
+          : _function(function),
             _effect(pEffect)
         {}
 
