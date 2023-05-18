@@ -23,7 +23,6 @@ ZONES_DIRS = [
     "Etc"
 ]
 
-
 def traverse_directory_trees(parent_directory, directory_list):
     contents = []
 
@@ -69,5 +68,9 @@ if __name__ == "__main__":
     timezones_list = traverse_directory_trees(ZONES_ROOT, ZONES_DIRS)
     timezones_dict = make_timezones_dict(timezones_list)
 
-    with open(os.path.join("config", "timezones.json"), "w") as jsonfile:
-        json.dump(timezones_dict, jsonfile, indent=0, sort_keys=False, separators=(",", ":"))
+    json_file_path = os.path.join("config", "timezones.json")
+
+    with open(json_file_path, "w") as json_file:
+        json.dump(timezones_dict, json_file, indent=0, sort_keys=False, separators=(",", ":"))
+
+    print(f"JSON tzdata file written to {json_file_path}.")
