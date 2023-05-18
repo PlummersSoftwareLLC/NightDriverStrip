@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 # This script is based on the one in https://github.com/nayarsystems/posix_tz_db. As such, this script is subject to the
-# MIT license.
+# MIT license. As the script relies on the presence of the Linux /usr/share/zoneinfo tzdata tree, it can only be used on
+# a (virtualized) Linux environment.
 
 import json
 import os
+import platform
 
 ZONES_ROOT = "/usr/share/zoneinfo"
 ZONES_DIRS = [
@@ -56,6 +58,14 @@ def make_timezones_dict(timezones):
 
 
 if __name__ == "__main__":
+
+    if platform.system() == 'Windows':
+        print("This script can only be run in a Linux environment. You can probably use a WSL distribution under Windows.")
+        exit()
+    elif platform.system() != 'Linux':
+        print("This script can only be run in a Linux environment. You may be able to use a virtual machine for this.")
+        exit()
+
     timezones_list = traverse_directory_trees(ZONES_ROOT, ZONES_DIRS)
     timezones_dict = make_timezones_dict(timezones_list)
 
