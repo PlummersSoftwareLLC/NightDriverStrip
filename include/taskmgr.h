@@ -335,6 +335,9 @@ public:
 
     void NotifyJSONWriterThread()
     {
+        if (_taskJSONWriter == nullptr)
+            return;
+
         debugW(">> Notifying JSON Writer Thread");
         // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
         xTaskNotifyGive(_taskJSONWriter);

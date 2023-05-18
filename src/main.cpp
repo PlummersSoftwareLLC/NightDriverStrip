@@ -462,8 +462,9 @@ void setup()
     }
     ESP_ERROR_CHECK(err);
 
-    // Create the JSON writer
+    // Create the JSON writer and start its background thread
     g_ptrJSONWriter = std::make_unique<JSONWriter>();
+    g_TaskManager.StartJSONWriterThread();
 
     // Create and load device config from SPIFFS if possible
     g_ptrDeviceConfig = std::make_unique<DeviceConfig>();

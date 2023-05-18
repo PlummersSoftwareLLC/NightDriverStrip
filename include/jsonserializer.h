@@ -157,8 +157,6 @@ class JSONWriter
 
   public:
 
-    JSONWriter();
-
     // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
     size_t RegisterWriter(std::function<void()> writer);
 

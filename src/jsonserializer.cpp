@@ -147,11 +147,6 @@ bool RemoveJSONFile(const char *fileName)
     return SPIFFS.remove(fileName);
 }
 
-JSONWriter::JSONWriter()
-{
-    g_TaskManager.StartJSONWriterThread();
-}
-
 size_t JSONWriter::RegisterWriter(std::function<void()> writer)
 {
     // Add the writer with its flag unset
