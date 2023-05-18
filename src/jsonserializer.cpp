@@ -30,6 +30,7 @@
 #include "globals.h"
 #include "SPIFFS.h"
 #include "jsonserializer.h"
+#include "taskmgr.h"
 
 DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter = nullptr;
 
@@ -144,4 +145,62 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
 bool RemoveJSONFile(const char *fileName)
 {
     return SPIFFS.remove(fileName);
+}
+
+JSONWriter::JSONWriter()
+{
+    g_TaskManager.StartJSONWriterThread();
+}
+
+size_t JSONWriter::RegisterWriter(std::function<void()> writer)
+{
+    // Add the writer with its flag unset
+    writers.emplace_back(writer);
+    return writers.size() - 1;
+}
+
+void JSONWriter::FlagWriter(size_t index)
+{
+    // Check if we received a valid writer index
+    if (index >= writers.size())
+        return;
+
+    writers[index].flag = true;
+    latestFlagMs = millis();
+
+    g_TaskManager.NotifyJSONWriterThread();
+}
+
+// JSONWriterTaskEntry
+//
+// Invoke functions that write serialized JSON objects to SPIFFS at request, with some delay
+void IRAM_ATTR JSONWriterTaskEntry(void *)
+{
+    for(;;)
+    {
+        TickType_t notifyWait = portMAX_DELAY;
+
+        for (;;)
+        {
+            // Wait until we're woken up by a writer being flagged, or until we've reached the hold point
+            ulTaskNotifyTake(pdTRUE, notifyWait);
+
+            if (!g_ptrJSONWriter)
+                continue;
+
+            unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs + JSON_WRITER_DELAY;
+            unsigned long now = millis();
+            if (now >= holdUntil)
+                break;
+
+            notifyWait = pdMS_TO_TICKS(holdUntil - now);
+        }
+
+        for (auto &entry : g_ptrJSONWriter->writers)
+        {
+            // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing
+            if (entry.flag.exchange(false))
+                entry.writer();
+        }
+    }
 }

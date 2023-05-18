@@ -346,17 +346,12 @@ public:
     {
     }
 
-    ~PatternWeather()
-    {
-        vTaskDelete(weatherTask);
-    }
-
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        g_TaskManager.StartEffectThread(WeatherTaskEntryPoint, this, "Weather");
+        weatherTask = g_TaskManager.StartEffectThread(WeatherTaskEntryPoint, this, "Weather");
 
         return true;
     }

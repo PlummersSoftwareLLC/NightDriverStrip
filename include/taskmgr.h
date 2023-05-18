@@ -45,9 +45,10 @@
 
 #include <Arduino.h>
 #include <esp_task_wdt.h>
+#include "ledstripeffect.h"
 
-#define IDLE_STACK_SIZE 2048
 // Stack size for the taskmgr's idle threads
+#define IDLE_STACK_SIZE 2048
 
 class IdleTask
 {
@@ -198,19 +199,6 @@ class NightDriverTaskManager : public TaskManager
 {
 private:
 
-    TaskHandle_t _taskScreen     = nullptr;
-    TaskHandle_t _taskSync       = nullptr;
-    TaskHandle_t _taskDraw       = nullptr;
-    TaskHandle_t _taskDebug      = nullptr;
-    TaskHandle_t _taskAudio      = nullptr;
-    TaskHandle_t _taskNet        = nullptr;
-    TaskHandle_t _taskRemote     = nullptr;
-    TaskHandle_t _taskSocket     = nullptr;
-    TaskHandle_t _taskSerial     = nullptr;
-    TaskHandle_t _taskJSONWriter = nullptr;
-
-    std::vector<TaskHandle_t> _vEffectTasks;
-
     class EffectTaskParams
     {
     private:
@@ -233,6 +221,19 @@ private:
             return _effect;
         }
     };
+
+    TaskHandle_t _taskScreen     = nullptr;
+    TaskHandle_t _taskSync       = nullptr;
+    TaskHandle_t _taskDraw       = nullptr;
+    TaskHandle_t _taskDebug      = nullptr;
+    TaskHandle_t _taskAudio      = nullptr;
+    TaskHandle_t _taskNet        = nullptr;
+    TaskHandle_t _taskRemote     = nullptr;
+    TaskHandle_t _taskSocket     = nullptr;
+    TaskHandle_t _taskSerial     = nullptr;
+    TaskHandle_t _taskJSONWriter = nullptr;
+
+    std::vector<TaskHandle_t> _vEffectTasks;
 
     static void EffectTaskEntry(void *pVoid)
     {
@@ -332,13 +333,20 @@ public:
         xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
     }
 
+    void NotifyJSONWriterThread()
+    {
+        debugW(">> Notifying JSON Writer Thread");
+        // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
+        xTaskNotifyGive(_taskJSONWriter);
+    }
+
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show
-    void StartEffectThread(std::function<void(LEDStripEffect&)> function, LEDStripEffect* effect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
+    TaskHandle_t StartEffectThread(std::function<void(LEDStripEffect&)> function, LEDStripEffect* effect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
     {
         // We use a raw pointer here just to cross the thread/task bounary. The EffectTaskEntry method deletes the object as soon as it can.
         EffectTaskParams* pTaskParams = new EffectTaskParams(function, effect);
-        TaskHandle_t effectTask;
+        TaskHandle_t effectTask = nullptr;
 
         debugW(">> Launching %s Effect Thread", name);
 
@@ -347,6 +355,8 @@ public:
         else
             // Clean up the task params object if the thread was not actually created
             delete pTaskParams;
+
+        return effectTask;
     }
 };
 

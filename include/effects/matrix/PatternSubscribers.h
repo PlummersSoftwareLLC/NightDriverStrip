@@ -140,23 +140,17 @@ class PatternSubscribers : public LEDStripEffect
         construct();
     }
 
-    ~PatternSubscribers()
+    virtual bool RequiresDoubleBuffering() const override
     {
-        vTaskDelete(sightTask);
+        return false;
     }
-
-  virtual bool RequiresDoubleBuffering() const override
-  {
-      return false;
-  }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        debugW("Spawning thread to get subscriber data...");
-        g_TaskManager.StartEffectThread(SightTaskEntryPoint, this, "Subs");
+        sightTask = g_TaskManager.StartEffectThread(SightTaskEntryPoint, this, "Subs");
 
         return true;
     }
