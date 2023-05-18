@@ -291,16 +291,16 @@ private:
     }
 
     // Thread entry point so we can update the weather data asynchronously
-    static void WeatherTaskEntryPoint(void * pv)
+    static void WeatherTaskEntryPoint(LEDStripEffect &effect)
     {
-        PatternWeather * pObj = (PatternWeather *) pv;
+        PatternWeather& weatherEffect = static_cast<PatternWeather&>(effect);
 
         for(;;)
         {
             // Suspend ourself until Draw() wakes us up
             vTaskSuspend(NULL);
 
-            pObj->UpdateWeather();
+            weatherEffect.UpdateWeather();
         }
     }
 
@@ -356,8 +356,7 @@ public:
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        debugW("Spawning thread to check weather...");
-        xTaskCreatePinnedToCore(WeatherTaskEntryPoint, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
+        g_TaskManager.StartEffectThread(WeatherTaskEntryPoint, this, "Weather");
 
         return true;
     }

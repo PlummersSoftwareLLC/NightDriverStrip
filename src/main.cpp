@@ -346,6 +346,15 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
     }
 #endif
 
+// JSONWriterTaskEntry
+//
+// Invoke functions that write serialized JSON objects to SPIFFS at request, with some delay
+
+void IRAM_ATTR JSONWriterTaskEntry(void *)
+{
+    JSONWriter::WriterInvokerEntryPoint(*g_ptrJSONWriter);
+}
+
 // CheckHeap
 //
 // Quick and dirty debug test to make sure the heap has not been corrupted
@@ -464,8 +473,9 @@ void setup()
     }
     ESP_ERROR_CHECK(err);
 
-    // Create the JSON writer
+    // Create the JSON writer and start its background thread
     g_ptrJSONWriter = std::make_unique<JSONWriter>();
+    g_TaskManager.StartJSONWriterThread();
 
     // Create and load device config from SPIFFS if possible
     g_ptrDeviceConfig = std::make_unique<DeviceConfig>();

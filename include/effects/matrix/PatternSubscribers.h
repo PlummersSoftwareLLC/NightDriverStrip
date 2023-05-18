@@ -60,20 +60,20 @@ class PatternSubscribers : public LEDStripEffect
     std::unique_ptr<YouTubeSight> sight = nullptr;
 
     // Thread entry point so we can update the subscriber data asynchronously
-    static void SightTaskEntryPoint(void * pv)
+    static void SightTaskEntryPoint(LEDStripEffect& effect)
     {
-        PatternSubscribers * pObj = (PatternSubscribers *) pv;
+        PatternSubscribers& subsEffect = static_cast<PatternSubscribers&>(effect);
 
         for(;;)
         {
-            bool guidUpdated = pObj->UpdateGuid();
-            unsigned long millisSinceLastCheck = millis() - pObj->millisLastCheck;
+            bool guidUpdated = subsEffect.UpdateGuid();
+            unsigned long millisSinceLastCheck = millis() - subsEffect.millisLastCheck;
 
-            if (guidUpdated || !pObj->millisLastCheck
-                || (!pObj->succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
+            if (guidUpdated || !subsEffect.millisLastCheck
+                || (!subsEffect.succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
                 || millisSinceLastCheck > SUBCHECK_INTERVAL)
             {
-                pObj->UpdateSubscribers(guidUpdated);
+                subsEffect.UpdateSubscribers(guidUpdated);
             }
 
             // Sleep for a few seconds before we recheck if the GUID has changed
@@ -156,7 +156,7 @@ class PatternSubscribers : public LEDStripEffect
             return false;
 
         debugW("Spawning thread to get subscriber data...");
-        xTaskCreatePinnedToCore(SightTaskEntryPoint, "Subs", 4096, (void *) this, NET_PRIORITY, &sightTask, NET_CORE);
+        g_TaskManager.StartEffectThread(SightTaskEntryPoint, this, "Subs");
 
         return true;
     }

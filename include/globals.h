@@ -185,7 +185,7 @@
 
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+3
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+2
-#define JSONSERIAL_PRIORITY     tskIDLE_PRIORITY+2
+#define JSONWRITER_PRIORITY     tskIDLE_PRIORITY+2
 
 // If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1.
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
@@ -209,7 +209,7 @@
 #define DEBUG_CORE              1
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
-#define JSONSERIAL_CORE         0
+#define JSONWRITER_CORE         0
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
