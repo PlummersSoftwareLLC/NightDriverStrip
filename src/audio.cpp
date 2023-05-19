@@ -338,7 +338,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
     }
 }
 
-#endif // EMABLE_AUDIOSERIAL
+#endif // ENABLE_AUDIOSERIAL
 
 #endif
 

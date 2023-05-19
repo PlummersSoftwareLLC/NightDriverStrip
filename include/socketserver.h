@@ -117,7 +117,7 @@ public:
         _server_fd(0),
         _cbReceived(0)
     {
-        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );
+        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE+1));        // +1 for uzlib one byte overreach bug
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -135,7 +135,7 @@ public:
 
     bool begin()
     {
-        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );
+        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );              
 
         _cbReceived = 0;
 
@@ -214,21 +214,6 @@ public:
                 return false;
             }
         } while (_cbReceived < cbNeeded);
-        return true;
-    }
-
-    // SendResponseToServer
-    //
-    // After successfully processing a packet of color data, sends a response back to the server with stats and results
-
-    bool SendResponseToServer(int socket, void * pData, size_t cbSize)
-    {
-        // Send a response back to the server
-        if (cbSize != write(socket, pData, cbSize))
-        {
-            debugW("Could not write to socket\n");
-            return false;
-        }
         return true;
     }
 
@@ -476,6 +461,9 @@ public:
         d.source_read_cb = nullptr;
         d.dest_start     = pOutput;
         d.dest           = pOutput;
+        
+        // There's an "off by one" bug/feature in uzlib that reaches one byte past the end.  Took forever
+        // to find it... 
         d.dest_limit     = pOutput + expectedOutputSize + 1;
 
         int res = uzlib_zlib_parse_header(&d);

@@ -92,8 +92,8 @@ class CWebServer
         {}
     };
 
-    static const std::vector<const char *> knownSettings;
-    static const std::map<const char *, ValueValidator> settingValidators;
+    static const std::vector<String> knownSettings;
+    static const std::map<String, ValueValidator> settingValidators;
 
     AsyncWebServer _server;
     StaticStatistics _staticStats;

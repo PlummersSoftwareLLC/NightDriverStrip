@@ -86,17 +86,17 @@ class LEDStripEffect : public IJSONSerializable
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
 
-    inline std::shared_ptr<GFXBase> g() const
+    std::shared_ptr<GFXBase> g(size_t channel = 0) const
     {
-        return _GFX[0];
+        return _GFX[channel];
     }
 
     // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
 
     #if USE_MATRIX
-      static std::shared_ptr<LEDMatrixGFX> mg()
+      std::shared_ptr<LEDMatrixGFX> mg(size_t channel = 0)
       {
-        return std::static_pointer_cast<LEDMatrixGFX>(g_aptrDevices[0]);
+        return std::static_pointer_cast<LEDMatrixGFX>(_GFX[channel]);
       }
     #endif
 

@@ -421,6 +421,23 @@ class SoundAnalyzer : public AudioVariables
         }
     }
 
+    // UpdateVU
+    //
+    // This function is responsible for updating the Volume Unit (VU) values: the current VU (_VU), 
+    // the peak VU (_PeakVU), and the minimum VU (_MinVU). 
+    //
+    // Firstly, it updates the current VU (_VU) based on the new incoming value (newval).
+    // If the new value is greater than the old VU (_oldVU), it assigns the new value to _VU.
+    // Otherwise, it applies a damping calculation that drifts _VU towards the new value.
+    //
+    // Then, it updates the peak VU (_PeakVU) by checking if the current VU (_VU) has exceeded the previous peak.
+    // If it has, it updates _PeakVU to the current VU.
+    // Otherwise, it applies a damping calculation that drifts the peak VU towards the current VU.
+    //
+    // Lastly, it updates the minimum VU (_MinVU) by checking if the current VU has dipped below the previous minimum.
+    // If it has, it updates _MinVU to the current VU.
+    // Otherwise, it applies another damping calculation that drifts the minimum VU towards the current VU.
+
     void UpdateVU(float newval)
     {
         if (newval > _oldVU)
@@ -536,9 +553,8 @@ class SoundAnalyzer : public AudioVariables
             auto peaks = GetPeakData();
             debugV("Audio Data -- Sum: %0.2f, _MinVU: %f0.2, _PeakVU: %f0.2, _VU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
         }
-
-        PeakData peaks = GetBandPeaks();
-        return peaks;
+    
+        return PeakData(_vPeaks);
     }
 
     //
@@ -579,16 +595,6 @@ class SoundAnalyzer : public AudioVariables
     const int *BandCutoffTable(int bandCount)
     {
         return _cutOffsBand;
-    }
-
-    // SampleBuffer::GetBandPeaks
-    //
-    // Once the FFT processing is complete you can call this function to get a copy of what each of the
-    // peaks in the various bands is
-
-    PeakData GetBandPeaks()
-    {
-        return PeakData(_vPeaks);
     }
 
 public:
