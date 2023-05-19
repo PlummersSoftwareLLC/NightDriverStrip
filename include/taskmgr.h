@@ -203,27 +203,15 @@ public:
 
 private:
 
-    class EffectTaskParams
+    struct EffectTaskParams
     {
-    private:
-        EffectTaskFunction _function;
-        LEDStripEffect* _effect;
+        EffectTaskFunction function;
+        LEDStripEffect* pEffect;
 
-    public:
         EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
-          : _function(function),
-            _effect(pEffect)
+          : function(function),
+            pEffect(pEffect)
         {}
-
-        EffectTaskFunction function() const
-        {
-            return _function;
-        }
-
-        LEDStripEffect* effectPointer() const
-        {
-            return _effect;
-        }
     };
 
     TaskHandle_t _taskScreen     = nullptr;
@@ -243,8 +231,8 @@ private:
     {
         EffectTaskParams *pTaskParams = (EffectTaskParams *)pVoid;
 
-        EffectTaskFunction function = pTaskParams->function();
-        LEDStripEffect* pEffect = pTaskParams->effectPointer();
+        EffectTaskFunction function = pTaskParams->function;
+        LEDStripEffect* pEffect = pTaskParams->pEffect;
 
         // Delete the params object before we invoke the actual function; they tend to run indefinitely
         delete pTaskParams;
@@ -351,7 +339,8 @@ public:
     //   because effect threads tend to pull things from the Internet that they want to show
     TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
     {
-        // We use a raw pointer here just to cross the thread/task bounary. The EffectTaskEntry method deletes the object as soon as it can.
+        // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method
+        //   deletes the object as soon as it can.
         EffectTaskParams* pTaskParams = new EffectTaskParams(function, pEffect);
         TaskHandle_t effectTask = nullptr;
 
