@@ -183,7 +183,7 @@ class LEDStripEffect : public IJSONSerializable
 
     static CRGB GetBlackBodyHeatColor(float temp)
     {
-        temp = min(1.0f, temp);
+        temp = std::clamp(temp, 0.0f, 1.0f);
         uint8_t temperature = (uint8_t)(255 * temp);
         uint8_t t192 = (uint8_t)((temperature / 255.0f) * 191);
 
