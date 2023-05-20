@@ -245,15 +245,6 @@ public:
             _Level[i] *= GetBandScalar(mic, i);
         }
     }
-    float Ratio(std::size_t n) const
-    {
-        return _Ratio[n];
-    }
-
-    float Max(std::size_t n) const
-    {
-        return _Max[n];
-    }
 
     void SetData(double *pDoubles)
     {
@@ -325,13 +316,9 @@ class SoundAnalyzer : public AudioVariables
         }
 
         if (band < 0)
-        {
             band = 0;
-        }
         else if (band >= NUM_BANDS)
-        {
             band = NUM_BANDS - 1;
-        }
 
         return band;
     }
@@ -382,8 +369,6 @@ class SoundAnalyzer : public AudioVariables
     {
         return (_cSamples >= _MaxSamples);
     }
-
-
 
     void FillBufferI2S()
     {
