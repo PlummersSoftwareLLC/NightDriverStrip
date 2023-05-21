@@ -374,9 +374,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     PrepareOnboardPixel();
 
-    for (int i = 0; i < NUM_CHANNELS; i++)
-        (*g_ptrEffectManager)[i]->Setup();
-
 #if USE_MATRIX
     // We don't need color correction on the title layer, but we want it on the main background
 
