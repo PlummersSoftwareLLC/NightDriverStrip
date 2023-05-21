@@ -174,7 +174,7 @@ class PatternSubscribers : public LEDStripEffect
         LEDMatrixGFX::backgroundLayer.drawRectangle(0, 1, MATRIX_WIDTH-1, MATRIX_HEIGHT-2, rgb24(160,160,255));
 
         // Draw the channel name
-        LEDMatrixGFX::backgroundLayer.drawString(2, 3, rgb24(255,255,255), g_ptrDeviceConfig->GetYouTubeChannelName1().c_str());
+        LEDMatrixGFX::backgroundLayer.drawString(2, 3, rgb24(255,255,255), youtubeChannelName.c_str());
 
         // Start in the middle of the panel and then back up a half a row to center vertically,
         // then back up left one half a char for every 10s digit in the subscriber count.  This
@@ -205,7 +205,7 @@ class PatternSubscribers : public LEDStripEffect
         return true;
     }
 
-    virtual bool SerializeSettings(JsonObject& jsonObject) override
+    virtual bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -218,10 +218,10 @@ class PatternSubscribers : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void SetSetting(String name, String value) override
+    virtual bool SetSetting(const String& name, const String& value) override
     {
         RETURN_IF_SET(name, NAME_OF(youtubeChannelGuid), youtubeChannelGuid, value);
-        SetIfSelected(name, NAME_OF(youtubeChannelName), youtubeChannelName, value);
+        return SetIfSelected(name, NAME_OF(youtubeChannelName), youtubeChannelName, value);
     }
 };
 

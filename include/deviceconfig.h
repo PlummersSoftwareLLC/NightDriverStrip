@@ -47,8 +47,6 @@ class DeviceConfig : public IJSONSerializable
     String openWeatherApiKey;
     bool use24HourClock;
     bool useCelsius;
-    String youtubeChannelGuid;
-    String youtubeChannelName1;
     String ntpServer;
 
     size_t writerIndex;
@@ -87,8 +85,6 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * TimeZoneTag = NAME_OF(timeZone);
     static constexpr const char * Use24HourClockTag = NAME_OF(use24HourClock);
     static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
-    static constexpr const char * YouTubeChannelGuidTag = NAME_OF(youtubeChannelGuid);
-    static constexpr const char * YouTubeChannelName1Tag = NAME_OF(youtubeChannelName1);
     static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
 
     DeviceConfig();
@@ -108,8 +104,6 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[TimeZoneTag] = timeZone;
         jsonDoc[Use24HourClockTag] = use24HourClock;
         jsonDoc[UseCelsiusTag] = useCelsius;
-        jsonDoc[YouTubeChannelGuidTag] = youtubeChannelGuid;
-        jsonDoc[YouTubeChannelName1Tag] = youtubeChannelName1;
         jsonDoc[NTPServerTag] = ntpServer;
 
         if (includeSensitive)
@@ -131,8 +125,6 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, openWeatherApiKey, OpenWeatherApiKeyTag);
         SetIfPresentIn(jsonObject, use24HourClock, Use24HourClockTag);
         SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
-        SetIfPresentIn(jsonObject, youtubeChannelGuid, YouTubeChannelGuidTag);
-        SetIfPresentIn(jsonObject, youtubeChannelName1, YouTubeChannelName1Tag);
         SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
 
         if (ntpServer.isEmpty())
@@ -219,28 +211,6 @@ class DeviceConfig : public IJSONSerializable
     void SetUseCelsius(bool newUseCelsius)
     {
         SetAndSave(useCelsius, newUseCelsius);
-    }
-
-    const String &GetYouTubeChannelGuid() const
-    {
-        return youtubeChannelGuid;
-    }
-
-    void SetYouTubeChannelGuid(const String &newYouTubeChannelGuid)
-    {
-        if (!newYouTubeChannelGuid.isEmpty())
-            SetAndSave(youtubeChannelGuid, newYouTubeChannelGuid);
-    }
-
-    const String &GetYouTubeChannelName1() const
-    {
-        return youtubeChannelName1;
-    }
-
-    void SetYouTubeChannelName1(const String &newYouTubeChannelName1)
-    {
-        if (!newYouTubeChannelName1.isEmpty())
-            SetAndSave(youtubeChannelName1, newYouTubeChannelName1);
     }
 
     const String &GetNTPServer() const

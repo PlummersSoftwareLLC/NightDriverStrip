@@ -129,6 +129,7 @@ class CWebServer
     template<typename Tr>
     static void AddCORSHeaderAndSendResponse(AsyncWebServerRequest * pRequest, Tr * pResponse)
     {
+        pResponse->addHeader("Server","NightDriverStrip");
         pResponse->addHeader("Access-Control-Allow-Origin", "*");
         pRequest->send(pResponse);
     }
@@ -141,14 +142,20 @@ class CWebServer
 
     // Straightforward support functions
 
-    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName);
+    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
     static void SetSettingsIfPresent(AsyncWebServerRequest * pRequest);
+    static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
+    static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
+    static void ComposeEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect);
 
     // Endpoint member functions
 
     static void GetEffectListText(AsyncWebServerRequest * pRequest);
     static void GetSettings(AsyncWebServerRequest * pRequest);
     static void SetSettings(AsyncWebServerRequest * pRequest);
+    static void GetEffectSettingSpecs(AsyncWebServerRequest * pRequest);
+    static void GetEffectSettings(AsyncWebServerRequest * pRequest);
+    static void SetEffectSettings(AsyncWebServerRequest * pRequest);
     static void ValidateAndSetSetting(AsyncWebServerRequest * pRequest);
     static void Reset(AsyncWebServerRequest * pRequest);
     static void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest);
@@ -218,6 +225,9 @@ class CWebServer
         _server.on("/settings",              HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettings(pRequest); });
         _server.on("/settings",              HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetSettings(pRequest); });
         _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE, "text/json"); });
+        _server.on("/settings/effect",       HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettings(pRequest); });
+        _server.on("/settings/effect",       HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetEffectSettings(pRequest); });
+        _server.on("/settings/effect/specs", HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettingSpecs(pRequest); });
 
         _server.on("/reset",                 HTTP_POST, [](AsyncWebServerRequest * pRequest)        { Reset(pRequest); });
 

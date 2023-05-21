@@ -39,6 +39,7 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 struct EffectSetting
 {
+    // Note that if this enum is expanded, ToName() must be also!
     enum class SettingType : int
     {
         Integer,
@@ -66,7 +67,7 @@ struct EffectSetting
     }
 };
 
-#define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return
+#define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return true
 
 // LEDStripEffect
 //
@@ -85,7 +86,7 @@ class LEDStripEffect : public IJSONSerializable
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
 
     template<typename Tv>
-    bool SetIfSelected(String settingName, String propertyName, Tv& property, Tv value)
+    bool SetIfSelected(String settingName, const String& propertyName, Tv& property, const Tv& value)
     {
         if (settingName == propertyName)
         {
@@ -403,12 +404,14 @@ class LEDStripEffect : public IJSONSerializable
         return _settingSpecs;
     }
 
-    virtual bool SerializeSettings(JsonObject& jsonObject)
+    virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
     {
         return true;
     }
 
-    virtual void SetSetting(String name, String value)
-    {}
+    virtual bool SetSetting(const String& name, const String& value)
+    {
+        return false;
+    }
 };
 

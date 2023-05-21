@@ -80,7 +80,6 @@ class EffectManager : public IJSONSerializable
     CRGB lastManualColor = CRGB::Red;
     bool _clearTempEffectWhenExpired = false;
 
-    std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
 
@@ -100,7 +99,6 @@ class EffectManager : public IJSONSerializable
     void ClearEffects()
     {
         _vEffects.clear();
-        _abEffectEnabled.reset();
         _cEnabled = 0;
     }
 
@@ -144,8 +142,6 @@ public:
     void LoadEffects(const std::vector<std::shared_ptr<LEDStripEffect>> & effects)
     {
         _vEffects = effects;
-
-        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
 
         for (int i = 0; i < _vEffects.size(); i++)
             EnableEffect(i, true);
@@ -202,7 +198,7 @@ public:
         if (_vEffects.size() == 0)
             return false;
 
-        if (jsonObject.containsKey["eef"])
+        if (jsonObject.containsKey("eef"))
         {
             // Try to load effect enabled state from JSON also, default to "enabled" otherwise
             JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();

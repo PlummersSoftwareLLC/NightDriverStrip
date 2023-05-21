@@ -67,8 +67,6 @@ DeviceConfig::DeviceConfig()
         openWeatherApiKey = cszOpenWeatherAPIKey;
         use24HourClock = false;
         useCelsius = false;
-        youtubeChannelGuid = "";
-        youtubeChannelName1 = "";
         ntpServer = DEFAULT_NTP_SERVER;
 
         SetTimeZone(cszTimeZone, true);

@@ -43,8 +43,6 @@ const std::vector<const char *> CWebServer::knownSettings
     DeviceConfig::TimeZoneTag,
     DeviceConfig::Use24HourClockTag,
     DeviceConfig::UseCelsiusTag,
-    DeviceConfig::YouTubeChannelGuidTag,
-    DeviceConfig::YouTubeChannelName1Tag,
     DeviceConfig::NTPServerTag,
 };
 
@@ -87,7 +85,7 @@ void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerR
 
 // Member function implementations
 
-bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName)
+bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName)
 {
     bool returnValue = false;
 
@@ -95,6 +93,15 @@ bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String 
 
     return returnValue;
 }
+
+long CWebServer::GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post)
+{
+    if (!pRequest->hasParam("effectIndex", post, false))
+        return -1;
+
+    return strtol(pRequest->getParam("effectIndex")->value().c_str(), NULL, 10);
+}
+
 
 void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 {
@@ -105,8 +112,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
     do
     {
         bufferOverflow = false;
-        std::unique_ptr<AsyncJsonResponse> response(new AsyncJsonResponse(false, jsonBufferSize));
-        response->addHeader("Server","NightDriverStrip");
+        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
         auto j = response->getRoot();
 
         j["currentEffect"]         = g_ptrEffectManager->GetCurrentEffectIndex();
@@ -145,7 +151,6 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     debugV("GetStatistics");
 
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
-    response->addHeader("Server","NightDriverStrip");
     auto j = response->getRoot();
 
     j["LED_FPS"]               = g_FPS;
@@ -244,8 +249,6 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_ptrDeviceConfig->SetTimeZone(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_ptrDeviceConfig->Set24HourClock(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelGuidTag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelGuid(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelName1Tag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelName1(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(g_ptrDeviceConfig->SetNTPServer(value)));
 }
 
@@ -258,6 +261,120 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 
     // We return the current config in response
     GetSettings(pRequest);
+}
+
+bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post)
+{
+    auto effectsList = g_ptrEffectManager->EffectsList();
+    auto effectIndex = GetEffectIndexFromParam(pRequest, post);
+
+    if (effectIndex < 0 || effectIndex >= effectsList.size() || !effectsList[effectIndex]->HasSettings())
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+        return false;
+    }
+
+    effect = effectsList[effectIndex];
+
+    return true;
+}
+
+void CWebServer::GetEffectSettingSpecs(AsyncWebServerRequest * pRequest)
+{
+    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+    std::shared_ptr<LEDStripEffect> effect;
+
+    if (!CheckAndGetSettingsEffect(pRequest, effect))
+        return;
+
+    auto settingSpecs = effect->GetSettingSpecs();
+    bool bufferOverflow;
+
+    do
+    {
+        bufferOverflow = false;
+        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
+        auto jsonArray = response->getRoot().to<JsonArray>();
+
+        for (auto& spec : settingSpecs)
+        {
+            auto specObject = jsonArray.createNestedObject();
+
+            StaticJsonDocument<128> jsonDoc;
+
+            jsonDoc["name"] = spec.Name;
+            jsonDoc["type"] = to_value(spec.Type);
+            jsonDoc["typeName"] = spec.ToName(spec.Type);
+
+            if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
+            {
+                bufferOverflow = true;
+                jsonBufferSize += JSON_BUFFER_INCREMENT;
+                debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+                break;
+            }
+        }
+
+        if (!bufferOverflow)
+            AddCORSHeaderAndSendResponse(pRequest, response.release());
+
+    } while (bufferOverflow);
+}
+
+void CWebServer::ComposeEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect)
+{
+    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+
+    do
+    {
+        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
+        auto jsonObject = response->getRoot().to<JsonObject>();
+
+        if (effect->SerializeSettingsToJSON(jsonObject))
+        {
+            AddCORSHeaderAndSendResponse(pRequest, response.release());
+            return;
+        }
+
+        jsonBufferSize += JSON_BUFFER_INCREMENT;
+        debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+    } while (true);
+}
+
+void CWebServer::GetEffectSettings(AsyncWebServerRequest * pRequest)
+{
+    debugV("GetEffectSettings");
+
+    std::shared_ptr<LEDStripEffect> effect;
+
+    if (!CheckAndGetSettingsEffect(pRequest, effect))
+        return;
+
+    ComposeEffectSettingsResponse(pRequest, effect);
+}
+
+void CWebServer::SetEffectSettings(AsyncWebServerRequest * pRequest)
+{
+    debugV("SetEffectSettings");
+
+    std::shared_ptr<LEDStripEffect> effect;
+
+    if (!CheckAndGetSettingsEffect(pRequest, effect, true))
+        return;
+
+    bool settingChanged = false;
+
+    for (auto& settingSpec : effect->GetSettingSpecs())
+    {
+        const String& settingName = settingSpec.Name;
+        settingChanged = PushPostParamIfPresent<String>(pRequest, settingName, [&](auto value) { return effect->SetSetting(settingName, value); })
+            || settingChanged;
+    }
+
+    if (settingChanged)
+        SaveEffectManagerConfig();
+
+    ComposeEffectSettingsResponse(pRequest, effect);
 }
 
 // Validate and set one setting. If no validator is available in settingValidators for the setting, validation is skipped.
