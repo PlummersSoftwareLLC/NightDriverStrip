@@ -285,6 +285,7 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 
     #elif MESMERIZER
 
+       
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0),
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum 2",   32,            spectrumBasicColors, 100, 0, 1.25, 1.25),
         std::make_shared<SpectrumAnalyzerEffect>("Spectrum 3",   32,            spectrumBasicColors, 100, 0, 0.25, 1.25),
@@ -319,6 +320,7 @@ const std::vector<std::shared_ptr<LEDStripEffect>> CreateDefaultEffects()
 
         std::make_shared<PatternPulsar>(),
 
+        std::make_shared<PatternMaze>(),
         std::make_shared<PatternBounce>(),
         std::make_shared<PatternCube>(),
         std::make_shared<PatternSpiro>(),

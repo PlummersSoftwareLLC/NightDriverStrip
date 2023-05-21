@@ -58,12 +58,13 @@ void LEDMatrixGFX::StartMatrix()
   // will cause a dim panel with a low refresh, too little will starve other things.  We currently have enough RAM for
   // use so begin() is not being called with a reserve paramter, but it can be if memory becomes scarce.
   
-  matrix.setRefreshRate(200);
+  matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
+  matrix.setRefreshRate(MATRIX_REFRESH_RATE);
   matrix.begin();
 
   Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
 
-  backgroundLayer.setRefreshRate(200);
+  //backgroundLayer.setRefreshRate(100);
   backgroundLayer.fillScreen(rgb24(0, 64, 0));
   backgroundLayer.setFont(font6x10);
   backgroundLayer.drawString(8, kMatrixHeight / 2 - 6, rgb24(255, 255, 255), "NightDriver");
@@ -84,8 +85,8 @@ void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
 {
   // If an effect redraws itself entirely ever frame, it can skip saving the most recent buffer, so
   // can swap without waiting for a copy.
-  matrix.setRefreshRate(200);
-  backgroundLayer.setRefreshRate(200);
+  matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
+  matrix.setRefreshRate(MATRIX_REFRESH_RATE);
   matrix.setMaxCalculationCpuPercentage(100);
 
   backgroundLayer.swapBuffers(bSwapBackground);

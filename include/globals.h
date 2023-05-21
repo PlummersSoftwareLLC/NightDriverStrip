@@ -1210,6 +1210,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define ENABLE_REMOTE 0
 #endif
 
+#ifndef MATRIX_REFRESH_RATE
+#define MATRIX_REFRESH_RATE 100
+#endif
+
+#ifndef MATRIX_CALC_DIVIDER 
+#define MATRIX_CALC_DIVIDER 1
+#endif
+
+
 // Power Limit
 //
 // The limit, in watts, that the power supply for your project can supply.  If your demands

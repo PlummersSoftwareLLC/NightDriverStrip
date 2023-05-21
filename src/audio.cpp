@@ -92,7 +92,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         unsigned long elapsed = millis() - lastFrame;
         const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(max(5.0, targetDelay - elapsed));
+        delay(max(10.0, targetDelay - elapsed));
 
         g_Analyzer._AudioFPS = FPS(lastFrame, millis());
     }

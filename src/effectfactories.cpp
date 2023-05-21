@@ -190,6 +190,9 @@ std::map<int, JsonEffectFactory> g_JsonEffectFactories =
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<PatternWave>(jsonObject); } },
     { EFFECT_MATRIX_WEATHER,
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<PatternWeather>(jsonObject); } },
+    { EFFECT_MATRIX_MAZE,
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<PatternMaze>(jsonObject); } },
+
 #endif
 };
 
