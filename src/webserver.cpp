@@ -119,8 +119,11 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         for (int i = 0; i < g_ptrEffectManager->EffectCount(); i++)
         {
             StaticJsonDocument<256> effectDoc;
-            effectDoc["name"]    = effectsList[i]->FriendlyName();
-            effectDoc["enabled"] = g_ptrEffectManager->IsEffectEnabled(i);
+
+            auto effect = effectsList[i];
+            effectDoc["name"]    = effect->FriendlyName();
+            effectDoc["enabled"] = effect->IsEnabled();
+            effectDoc["hasSettings"] = effect->HasSettings();
 
             if (!j["Effects"].add(effectDoc))
             {

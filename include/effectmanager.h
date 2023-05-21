@@ -202,19 +202,23 @@ public:
         if (_vEffects.size() == 0)
             return false;
 
-        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
-
-        // Try to load effect enabled state from JSON also, default to "enabled" otherwise
-        JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
-        int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
-
-        for (int i = 0; i < _vEffects.size(); i++)
+        if (jsonObject.containsKey["eef"])
         {
-            if (i >= enabledSize || enabledArray[i] == 1)
-                EnableEffect(i, true);
+            // Try to load effect enabled state from JSON also, default to "enabled" otherwise
+            JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
+            int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
+
+            for (int i = 0; i < _vEffects.size(); i++)
+            {
+                if (i >= enabledSize || enabledArray[i] == 1)
+                    EnableEffect(i, true);
+                else
+                    DisableEffect(i, true);
+            }
         }
 
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
+
         if (jsonObject.containsKey("cei"))
         {
             _iCurrentEffect = jsonObject["cei"];
@@ -254,12 +258,6 @@ public:
 
         jsonObject["ivl"] = _effectInterval;
         jsonObject["cei"] = _iCurrentEffect;
-
-        // Serialize enabled state first. That way we'll still find out if we run out of memory, later
-        JsonArray enabledArray = jsonObject.createNestedArray("eef");
-
-        for (int i = 0; i < EffectCount(); i++)
-            enabledArray.add(IsEffectEnabled(i) ? 1 : 0);
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
@@ -382,9 +380,11 @@ public:
             return;
         }
 
-        if (!_abEffectEnabled[i])
+        auto effect = _vEffects[i];
+
+        if (!effect->IsEnabled())
         {
-            _abEffectEnabled[i] = true;
+            effect->SetEnabled(true);
 
             if (_cEnabled < 1)
             {
@@ -405,9 +405,11 @@ public:
             return;
         }
 
-        if (_abEffectEnabled[i])
+        auto effect = _vEffects[i];
+
+        if (effect->IsEnabled())
         {
-            _abEffectEnabled[i] = false;
+            effect->SetEnabled(false);
 
             _cEnabled--;
             if (_cEnabled < 1)
@@ -427,7 +429,7 @@ public:
             debugW("Invalid index for IsEffectEnabled");
             return false;
         }
-        return _abEffectEnabled[i];
+        return _vEffects[i]->IsEnabled();
     }
 
     void PlayAll(bool bPlayAll)
