@@ -662,7 +662,6 @@ void setup()
 
     #if USESTRIP
 
-
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
 
@@ -714,7 +713,7 @@ void setup()
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
         #endif
 
-            g_Brightness = 255;
+        g_Brightness = 255;
 
         #if ATOMLIGHT
             pinMode(4, INPUT);

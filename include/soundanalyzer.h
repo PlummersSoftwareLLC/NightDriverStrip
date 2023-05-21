@@ -117,15 +117,12 @@ protected:
     static double _Min[NUM_BANDS];
     static double _Max[NUM_BANDS];
     static double _Last[NUM_BANDS];
-    static double _allBandsMax;
 
     double _Level[NUM_BANDS];
-    double _Ratio[NUM_BANDS];
 
     void UpdateMinMax()
     {
         const bool bScaleAllBands = true;
-        _allBandsMax = 0.0f;
         for (int band = 0; band < NUM_BANDS; band++)
         {
             // If new peak is above the max, it becomes the new max.  Otherwise we drift
@@ -150,28 +147,11 @@ protected:
                 _Min[band] = (_Min[band] * GAINDAMPEN + _Level[band]) / (GAINDAMPEN + 1);
 
             _Min[band] = min(_Min[band], 0.4);
-
-            // Keep track of the highest peak in any band above its own min
-
-            if (_Max[band] - _Min[band] > _allBandsMax)
-                _allBandsMax = _Max[band] - _Min[band];
-        }
-
-        debugV("_allBandsMax: %f", _allBandsMax);
-
-        for (int band = 0; band < NUM_BANDS; band++)
-        {
-            float denominator = bScaleAllBands ? _allBandsMax : _Max[band] - _Min[band];
-            if (denominator <= 0.0f)
-                _Ratio[band] = 0.0f;
-            else
-                _Ratio[band] = (_Max[band] - _Min[band]) / denominator;
         }
 
         debugV("Min:    %f, %f, %f, %f", _Min[0], _Min[1], _Min[2], _Min[3]);
         debugV("Max:    %f, %f, %f, %f", _Max[0], _Max[1], _Max[2], _Max[3]);
         debugV("Level:  %f, %f, %f, %f", _Level[0], _Level[1], _Level[2], _Level[3]);
-        debugV("Ratio:  %f, %f, %f, %f", _Ratio[0], _Ratio[1], _Ratio[2], _Ratio[3]);
         debugV("======");
     }
 
@@ -185,26 +165,19 @@ public:
 
     PeakData()
     {
-        for (int i = 0; i < NUM_BANDS; i++)
-            _Level[i] = _Ratio[i] = 0.0f;
+        for (auto & i: _Level)
+            i = 0.0f;
     }
 
     PeakData(double *pDoubles)
     {
-        for (int i = 0; i < NUM_BANDS; i++)
-            _Level[i] = _Ratio[i] = 0.0f;
-
         SetData(pDoubles);
     }
 
     PeakData &operator=(const PeakData &other)
     {
         for (int i = 0; i < NUM_BANDS; i++)
-        {
             _Level[i] = other._Level[i];
-            _Ratio[i] = other._Ratio[i];
-        }
-        _allBandsMax = other._allBandsMax;
         return *this;
     }
 
@@ -215,8 +188,8 @@ public:
 
     static float GetBandScalar(MicrophoneType mic, int i)
     {
-        switch (mic)
-        {
+      switch (mic)
+      {
         case MESMERIZERMIC:
         {
             static const float Scalars16[16] = {3.0, .35, 0.4, 0.7, 0.8, 0.7, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
@@ -235,23 +208,19 @@ public:
             float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
-        }
+      }
     }
 
     void ApplyScalars(MicrophoneType mic)
     {
         for (int i = 0; i < NUM_BANDS; i++)
-        {
             _Level[i] *= GetBandScalar(mic, i);
-        }
     }
 
     void SetData(double *pDoubles)
     {
         for (int i = 0; i < NUM_BANDS; i++)
-        {
             _Level[i] = pDoubles[i];
-        }
         UpdateMinMax();
     }
 };
@@ -300,27 +269,16 @@ class SoundAnalyzer : public AudioVariables
 
         int iOffset = iBucket - 2;
         return _cutOffsBand[iOffset];
-        // return iOffset * (_SamplingFrequency / 2) / (_MaxSamples / 2);
     }
 
     int GetBandIndex(float frequency)
     {
-        int band = -1;
         for (int i = 0; i < NUM_BANDS; i++)
-        {
             if (frequency < _cutOffsBand[i])
-            {
-                band = i;
-                break;
-            }
-        }
-
-        if (band < 0)
-            band = 0;
-        else if (band >= NUM_BANDS)
-            band = NUM_BANDS - 1;
-
-        return band;
+                return i;
+                   
+        // If we never found a band that includes the freq under its limit, it's in the top bar
+        return NUM_BANDS-1;
     }
 
     float GetBucketFrequency(int bin_index)
@@ -365,7 +323,7 @@ class SoundAnalyzer : public AudioVariables
         _FFT.MajorPeak();
     }
 
-    inline bool IsBufferFull() const __attribute__((always_inline))
+    bool IsBufferFull() const
     {
         return (_cSamples >= _MaxSamples);
     }
@@ -590,9 +548,9 @@ public:
         _SamplingFrequency = SAMPLING_FREQUENCY;
         _MaxSamples = MAX_SAMPLES;
 
-        _vReal = (double *)PreferPSRAMAlloc(_MaxSamples * sizeof(_vReal[0]));
+        _vReal      = (double *)PreferPSRAMAlloc(_MaxSamples * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(_MaxSamples * sizeof(_vImaginary[0]));
-        _vPeaks = (double *)PreferPSRAMAlloc(_BandCount * sizeof(_vPeaks[0]));
+        _vPeaks     = (double *)PreferPSRAMAlloc(_BandCount  * sizeof(_vPeaks[0]));
 
         _oldVU = 0.0f;
         _oldPeakVU = 0.0f;
@@ -767,7 +725,7 @@ public:
         }
     }
 
-    inline PeakData GetPeakData()
+    inline PeakData GetPeakData() const
     {
         return _Peaks;
     }
