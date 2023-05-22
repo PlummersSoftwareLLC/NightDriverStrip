@@ -111,7 +111,7 @@ public:
 
     // Many of the Aurora effects need direct access to these from external classes
 
-    CRGB * leds;
+    CRGB * leds = nullptr;
     std::unique_ptr<Boid []> _boids;
 
     GFXBase(int w, int h) : Adafruit_GFX(w, h),

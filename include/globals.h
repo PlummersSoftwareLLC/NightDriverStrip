@@ -324,9 +324,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
     #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -364,9 +361,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN     25
     #define LED_FAN_OFFSET_BU 12
     #define POWER_LIMIT_MW    20000
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 2
@@ -438,9 +432,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
-
-    #define NOISE_CUTOFF   20
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
@@ -531,10 +522,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   22
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (1 * 5 * 1000)         // Expects at least a 5V, 1A supply
-
-    #define NOISE_CUTOFF   10                     // Using a MAX4466
-    #define NOISE_FLOOR    100.0f
-
+    
     #define TOGGLE_BUTTON_1         35
     #define NUM_INFO_PAGES          4
     #define ONSCREEN_SPECTRUM_PAGE  2   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -576,9 +564,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   25
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON_1         37
     #define TOGGLE_BUTTON_2         39
@@ -833,9 +818,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define NOISE_CUTOFF   20
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -966,9 +948,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW    50000
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -1009,9 +988,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW    5000
     #define ENABLE_OTA        0
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 1
@@ -1118,7 +1094,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NOISE_FLOOR 6000.0
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF   2000
+        #define NOISE_CUTOFF   1
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again

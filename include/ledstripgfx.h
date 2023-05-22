@@ -39,7 +39,6 @@
 
 class LEDStripGFX : public GFXBase 
 {
-  
 public:
 
     LEDStripGFX(size_t w, size_t h) : GFXBase(w, h)
@@ -49,12 +48,7 @@ public:
             throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
     }
 
-    CRGB * GetLEDBuffer() const
-    {
-        return leds;
-    }
-
-    ~LEDStripGFX()
+    virtual ~LEDStripGFX()
     {
         free(leds);
         leds = nullptr;

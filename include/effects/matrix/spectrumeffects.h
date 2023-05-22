@@ -289,15 +289,16 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         if (msPeakAge > PeakFadeTime_ms)
             msPeakAge = PeakFadeTime_ms;
 
-        float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
-        uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
-
         // We draw the highlight in white, but if its falling at a different rate than the bar itself,
         // it indicates a free-floating highlight, and those get faded out based on age
 
-        colorHighlight = CRGB(CRGB::White);
+        colorHighlight = CRGB::White;
         if (g_Analyzer.g_peak1Decay != g_Analyzer.g_peak2Decay)
-            colorHighlight = colorHighlight.fadeToBlackBy(fadeAmount);
+        {
+            float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
+            uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
+            //colorHighlight.fadeToBlackBy(fadeAmount);
+        }
 
         // We draw the bottom row in bar color even when only 1 pixel high so as not to have a white
         // strip as the bottom row (all made up of highlights)

@@ -809,7 +809,10 @@ void loop()
     while(true)
     {
         #if ENABLE_WIFI
-            g_ImprovSerial.loop();
+            EVERY_N_MILLIS(10)
+            {
+                g_ImprovSerial.loop();
+            }
         #endif
 
         #if ENABLE_OTA
