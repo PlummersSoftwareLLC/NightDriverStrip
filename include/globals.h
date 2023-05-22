@@ -463,6 +463,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     #define SUBCHECK_INTERVAL  600000   // Update subscriber count every N seconds
+    #define SCALE_AUDIO_EXPONENTIAL 0   
+    #define ENABLE_AUDIO_SMOOTHING  1
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0
@@ -1094,7 +1096,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NOISE_FLOOR 6000.0
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF   1
+        #define NOISE_CUTOFF   2000
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again

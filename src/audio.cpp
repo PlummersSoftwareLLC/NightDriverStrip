@@ -46,10 +46,6 @@ extern uint32_t g_Watts;
 extern float g_Brite;
 extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
-double PeakData::_Min[NUM_BANDS] = { 0.0 };
-double PeakData::_Max[NUM_BANDS] = { 0.0 }; 
-double PeakData::_Last[NUM_BANDS] = { 0.0 }; 
-
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
 

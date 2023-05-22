@@ -114,46 +114,8 @@ class PeakData
 {
 
 protected:
-    static double _Min[NUM_BANDS];
-    static double _Max[NUM_BANDS];
-    static double _Last[NUM_BANDS];
 
     double _Level[NUM_BANDS];
-
-    void UpdateMinMax()
-    {
-        const bool bScaleAllBands = true;
-        for (int band = 0; band < NUM_BANDS; band++)
-        {
-            // If new peak is above the max, it becomes the new max.  Otherwise we drift
-            // towards it using a weighted average.
-
-            if (_Level[band] < _Last[band])
-                _Level[band] = (_Last[band] * GAINDAMPEN + _Level[band]) / (GAINDAMPEN + 1);
-
-            if (_Level[band] > _Max[band])
-                _Max[band] = _Level[band];
-            else
-                _Max[band] = (_Max[band] * GAINDAMPEN + _Level[band]) / (GAINDAMPEN + 1);
-
-            //_Max[band] = max(_Max[band], 0.6f);
-
-            // If new peak is below the min, it becomes the new min. Otherwise we drift
-            // toward it using a weighted average
-
-            if (_Level[band] < _Min[band])
-                _Min[band] = _Level[band];
-            else
-                _Min[band] = (_Min[band] * GAINDAMPEN + _Level[band]) / (GAINDAMPEN + 1);
-
-            _Min[band] = min(_Min[band], 0.4);
-        }
-
-        debugV("Min:    %f, %f, %f, %f", _Min[0], _Min[1], _Min[2], _Min[3]);
-        debugV("Max:    %f, %f, %f, %f", _Max[0], _Max[1], _Max[2], _Max[3]);
-        debugV("Level:  %f, %f, %f, %f", _Level[0], _Level[1], _Level[2], _Level[3]);
-        debugV("======");
-    }
 
 public:
     typedef enum
@@ -221,7 +183,6 @@ public:
     {
         for (int i = 0; i < NUM_BANDS; i++)
             _Level[i] = pDoubles[i];
-        UpdateMinMax();
     }
 };
 
@@ -249,7 +210,6 @@ class SoundAnalyzer : public AudioVariables
     float    _oldVU;
     float    _oldPeakVU;
     float    _oldMinVU;
-    uint8_t  _inputPin; // Which hardware pin do we actually sample audio from?
     PeakData _Peaks;
 
     PeakData::MicrophoneType _MicMode = PeakData::M5;
@@ -285,7 +245,6 @@ class SoundAnalyzer : public AudioVariables
         return frequency;
     }
 
-    volatile int _cSamples;
     double * _vReal;
     double * _vImaginary;
 
@@ -295,7 +254,6 @@ class SoundAnalyzer : public AudioVariables
 
     void Reset()
     {
-        _cSamples = 0;
         for (int i = 0; i < MAX_SAMPLES; i++)
         {
             _vReal[i] = 0.0;
@@ -333,7 +291,6 @@ class SoundAnalyzer : public AudioVariables
             ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
         #endif
 
-        _cSamples = MAX_SAMPLES;
         if (bytesRead != sizeof(sampleBuffer))
         {
             debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, sizeof(sampleBuffer));
@@ -341,13 +298,7 @@ class SoundAnalyzer : public AudioVariables
         }
 
         for (int i = 0; i < ARRAYSIZE(sampleBuffer); i++)
-        {
-            #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
-                _vReal[i] = ::map(sampleBuffer[i], INT16_MIN, INT16_MAX, 0, MAX_VU);
-            #else
-                _vReal[i] = sampleBuffer[i];
-            #endif
-        }
+            _vReal[i] = sampleBuffer[i];
     }
 
     // UpdateVU
@@ -403,7 +354,6 @@ class SoundAnalyzer : public AudioVariables
         // Find the peak and the average
 
         float averageSum = 0.0f;
-        float samplesPeak = 0.0f;
 
         int hitCount[NUM_BANDS] = {0};
         for (int i = 0; i < NUM_BANDS; i++)
@@ -417,8 +367,6 @@ class SoundAnalyzer : public AudioVariables
                 // Track the average and the peak value
 
                 averageSum += _vReal[i];
-                if (_vReal[i] > samplesPeak)
-                    samplesPeak = _vReal[i];
 
                 // If it's above the noise floor, figure out which band this belongs to and
                 // if it's a new peak for that band, record that fact
@@ -682,8 +630,8 @@ public:
         #if ENABLE_AUDIO_SMOOTHING
             for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
             {
-                g_peak1Decay[iBand] = (g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 2;
-                g_peak2Decay[iBand] = (g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 2;
+                g_peak1Decay[iBand] = (g_peak1Decay[iBand] + g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 3;
+                g_peak2Decay[iBand] = (g_peak1Decay[iBand] + g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 3;
             }
         #endif
     }
