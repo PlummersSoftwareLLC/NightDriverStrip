@@ -616,8 +616,8 @@ public:
 
     inline void DecayPeaks()
     {
-        float decayAmount1 = std::max(0.0, g_AppTime.DeltaTime() * g_peak1DecayRate);
-        float decayAmount2 = std::max(0.0, g_AppTime.DeltaTime() * g_peak2DecayRate);
+        float decayAmount1 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak1DecayRate);
+        float decayAmount2 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak2DecayRate);
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
         {

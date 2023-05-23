@@ -91,7 +91,7 @@ public:
 
     virtual void UpdatePosition()
     {
-        _iPos += _velocity * g_AppTime.DeltaTime();
+        _iPos += _velocity * g_AppTime.LastFrameTime();
     }
 };
 
@@ -566,7 +566,7 @@ class SpinningPaletteRingParticle : public FadingObject
         if (_bErase)
           _pGFX[0]->setPixelsF(_start, _length, CRGB::Black, false);
 
-        float deltaTime = g_AppTime.DeltaTime();
+        float deltaTime = g_AppTime.LastFrameTime();
         float increment = (deltaTime * _LEDSPerSecond);
         const int totalSize = _gapSize + _lightSize + 1;
         _startIndex   = totalSize > 1 ? fmodf(_startIndex + increment, totalSize) : 0;
@@ -777,7 +777,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
 
       uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       BeatEffectBase::ProcessAudio();
@@ -867,7 +867,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
        uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
@@ -928,7 +928,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
       uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 2500.0 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0, 2500.0 * g_AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       BeatEffectBase::ProcessAudio();
@@ -973,7 +973,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
 
       uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0,1000.0 * g_AppTime.DeltaTime())));
+      _baseColor.fadeToBlackBy((min(255.0,1000.0 * g_AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
       setAllOnAllChannels(0,0,0);
 

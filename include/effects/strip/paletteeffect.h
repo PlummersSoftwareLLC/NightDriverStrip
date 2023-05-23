@@ -120,7 +120,7 @@ class PaletteEffect : public LEDStripEffect
         if (_bErase)
           setAllOnAllChannels(0,0,0);
 
-        float deltaTime = g_AppTime.DeltaTime();
+        float deltaTime = g_AppTime.LastFrameTime();
         float increment = (deltaTime * _LEDSPerSecond);
         const int totalSize = _gapSize + _lightSize + 1;
         _startIndex   = totalSize > 1 ? fmodf(_startIndex + increment, totalSize) : 0;

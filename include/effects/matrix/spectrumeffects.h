@@ -92,7 +92,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         ProcessAudio();
         ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
 
-        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.DeltaTime()));
+        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.LastFrameTime()));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)

@@ -34,9 +34,6 @@
 #include "jsonserializer.h"
 #include <memory>
 
-extern bool                               g_bUpdateStarted;
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
 // LEDStripEffect
 //
 // Base class for an LED strip effect.  At a minimum they must draw themselves and provide a unique name.

@@ -94,6 +94,7 @@
 #include <math.h>
 #include <deque>
 #include <algorithm>
+#include <numeric>
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
@@ -1093,7 +1094,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 6000.0
+        #define NOISE_FLOOR 10000.0
     #endif
     #ifndef NOISE_CUTOFF
         #define NOISE_CUTOFF   2000
@@ -1605,7 +1606,7 @@ class AppTime
         return tv;
     }
 
-    double DeltaTime() const
+    double LastFrameTime() const
     {
         return _deltaTime;
     }
