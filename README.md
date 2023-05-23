@@ -31,7 +31,7 @@ across reboots. This is largely in preparation for future updates to NightDriver
 This makes that:
 
 - An override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the friendly name and effect number. Those two properties are (de)serialized from/to JSON by `LEDStripEffect` by default.
-- The effect config JSON needs to currenly be reset for a new effect to show on a device on which the effect list has already been persisted. This can be done by either clearing the SPIFFS partition using `esptool erase_flash` or by using the [reset endpoint on the device API](REST_API.md#reset-configuration-andor-device), whith `effectsConfig` and `board` set to `true`.
+- The effect config JSON file needs to currenly be reset/cleared for a new effect to show on a device on which the effect list has already been persisted. This can be done by either clearing the SPIFFS partition using `esptool erase_flash` or by using the [reset endpoint on the device API](REST_API.md#reset-configuration-andor-device), whith `effectsConfig` and `board` set to `true`.
 
 Each channel of LEDs has an `LEDStripGfx` instance associated with it. `_GFX[0]` is the `LEDStripGfx` associated with `LED_PIN0`, and so on. You can get the LED buffer of Pin0 by calling `_GFX[0]->leds()`, and it will contain `_GFX[0]->GetLEDCount` pixels. You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
 
