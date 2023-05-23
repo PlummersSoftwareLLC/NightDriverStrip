@@ -19,9 +19,19 @@ NightDriverStrip is a source code package for building a flash program that you 
 
 More recently, a web installer has been added to the project with which most of the NightDriver projects can be flashed on supported devices, using nothing but a web browser. Please refer to the section called [Using the Web Installer](#using-the-web-installer) if this is how you'd like to get started.
 
-To add new effects, you derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`. Add your class to the `AllEffects` table in `effects.cpp` (under your build configuration section, like `DEMO`). Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet. Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately. Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
+To add new effects, you derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`. Add your class to the effect list created in the `CreateDefaultEffects()`
+function in `effects.cpp` (under your build configuration section, like `DEMO`). Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet. Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately. Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
 
-There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`. Effects are not notified when they go active or not, they're just asked to draw when needed.
+There is a global `EffectsManager` instance that is passed and reads the effects table created in the `CreateDefaultEffects()`
+function in `effect.cpp` if the effect table has not yet been persised to JSON. It then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`. Effects are not notified when they go active or not, they're just asked to draw when needed.
+
+Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list)
+across reboots. This is largely in preparation for future updates to NightDriverStrip, where the configuration of individual effects can be changed using the device API, and eventually the device web application (see [Device web UI and API](#device-web-ui-and-api), below.)
+
+This makes that:
+
+- An override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the friendly name and effect number. Those two properties are (de)serialized from/to JSON by `LEDStripEffect` by default.
+- The effect config JSON file needs to currenly be reset/cleared for a new effect to show on a device on which the effect list has already been persisted. This can be done by either clearing the SPIFFS partition using `esptool erase_flash` or by using the [reset endpoint on the device API](REST_API.md#reset-configuration-andor-device), whith `effectsConfig` and `board` set to `true`.
 
 Each channel of LEDs has an `LEDStripGfx` instance associated with it. `_GFX[0]` is the `LEDStripGfx` associated with `LED_PIN0`, and so on. You can get the LED buffer of Pin0 by calling `_GFX[0]->leds()`, and it will contain `_GFX[0]->GetLEDCount` pixels. You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
 
