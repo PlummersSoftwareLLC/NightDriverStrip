@@ -32,10 +32,13 @@
 
 #include "effects.h"
 #include "jsonserializer.h"
+#include "types.h"
 #include <memory>
 
 extern bool                               g_bUpdateStarted;
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
+
+#define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return true
 
 // LEDStripEffect
 //
@@ -48,8 +51,22 @@ class LEDStripEffect : public IJSONSerializable
     size_t _cLEDs;
     String _friendlyName;
     int    _effectNumber;
+    bool   _enabled = true;
+    std::vector<SettingSpec> _settingSpecs;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
+
+    template<typename Tv>
+    bool SetIfSelected(String settingName, const String& propertyName, Tv& property, const Tv& value)
+    {
+        if (settingName == propertyName)
+        {
+            property = value;
+            return true;
+        }
+
+        return false;
+    }
 
   public:
 
@@ -64,6 +81,8 @@ class LEDStripEffect : public IJSONSerializable
         : _effectNumber(jsonObject[PTY_EFFECTNR]),
           _friendlyName(jsonObject["fn"].as<String>())
     {
+        if (jsonObject.containsKey("es"))
+            _enabled = jsonObject["es"].as<int>() == 1;
     }
 
     virtual ~LEDStripEffect()
@@ -331,9 +350,39 @@ class LEDStripEffect : public IJSONSerializable
 
         jsonDoc[PTY_EFFECTNR] = _effectNumber;
         jsonDoc["fn"]         = _friendlyName;
+        jsonDoc["es"]         = _enabled ? 1 : 0;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
+    virtual bool IsEnabled() const
+    {
+        return _enabled;
+    }
+
+    virtual void SetEnabled(bool enabled)
+    {
+        _enabled = enabled;
+    }
+
+    virtual bool HasSettings() const
+    {
+        return false;
+    }
+
+    virtual const std::vector<SettingSpec>& GetSettingSpecs() const
+    {
+        return _settingSpecs;
+    }
+
+    virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
+    {
+        return true;
+    }
+
+    virtual bool SetSetting(const String& name, const String& value)
+    {
+        return false;
+    }
 };
 

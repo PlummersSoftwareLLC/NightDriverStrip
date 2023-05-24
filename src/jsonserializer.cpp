@@ -83,20 +83,15 @@ bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<Allo
     return jsonReadSuccessful;
 }
 
-bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable& object)
+void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction)
 {
-    if (bufferSize == 0)
-        bufferSize = JSON_BUFFER_BASE_SIZE;
-
-    std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
-
     // Loop is here to deal with out of memory conditions
     while(true)
     {
         pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
         JsonObject jsonObject = pJsonDoc->to<JsonObject>();
 
-        if (object.SerializeToJSON(jsonObject))
+        if (serializationFunction(jsonObject))
             break;
 
         pJsonDoc.reset(nullptr);
@@ -104,6 +99,16 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
 
         debugW("Out of memory serializing object - increasing buffer to %zu bytes", bufferSize);
     }
+}
+
+bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable& object)
+{
+    if (bufferSize == 0)
+        bufferSize = JSON_BUFFER_BASE_SIZE;
+
+    std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
+
+    SerializeWithBufferSize(pJsonDoc, bufferSize, [&object](JsonObject& jsonObject) { return object.SerializeToJSON(jsonObject); });
 
     SPIFFS.remove(fileName);
 

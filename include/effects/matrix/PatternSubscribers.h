@@ -41,14 +41,16 @@
 #define SUB_CHECK_ERROR_INTERVAL 20000
 
 #define DEFAULT_CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
-#define DEFAULT_CHANNEL_NAME1 "Daves Garage"
+#define DEFAULT_CHANNEL_NAME "Daves Garage"
 
 class PatternSubscribers : public LEDStripEffect
 {
   private:
-    long subscribers        = 0;
-    long views              = 0;
-    String strChannelGuid;
+    long subscribers          = 0;
+    long views                = 0;
+    String youtubeChannelGuid = DEFAULT_CHANNEL_GUID;
+    String youtubeChannelName = DEFAULT_CHANNEL_NAME;
+    bool guidUpdated          = true;
 
     unsigned long millisLastCheck;
     bool succeededBefore    = false;
@@ -66,14 +68,13 @@ class PatternSubscribers : public LEDStripEffect
 
         for(;;)
         {
-            bool guidUpdated = subsEffect.UpdateGuid();
             unsigned long millisSinceLastCheck = millis() - subsEffect.millisLastCheck;
 
-            if (guidUpdated || !subsEffect.millisLastCheck
+            if (subsEffect.guidUpdated || !subsEffect.millisLastCheck
                 || (!subsEffect.succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
                 || millisSinceLastCheck > SUBCHECK_INTERVAL)
             {
-                subsEffect.UpdateSubscribers(guidUpdated);
+                subsEffect.UpdateSubscribers();
             }
 
             // Sleep for a few seconds before we recheck if the GUID has changed
@@ -81,19 +82,7 @@ class PatternSubscribers : public LEDStripEffect
         }
     }
 
-    bool UpdateGuid()
-    {
-        const String &configChannelGuid = g_ptrDeviceConfig->GetYouTubeChannelGuid();
-
-        if (strChannelGuid == configChannelGuid)
-            return false;
-
-        strChannelGuid = configChannelGuid;
-        succeededBefore = false;
-        return true;
-    }
-
-    void UpdateSubscribers(bool useNewSight)
+    void UpdateSubscribers()
     {
         while(!WiFi.isConnected())
         {
@@ -103,8 +92,13 @@ class PatternSubscribers : public LEDStripEffect
 
         millisLastCheck = millis();
 
-        if (!sight || useNewSight)
-            sight = std::make_unique<YouTubeSight>(urlEncode(strChannelGuid), http);
+        if (!sight || guidUpdated)
+        {
+            sight = std::make_unique<YouTubeSight>(urlEncode(youtubeChannelGuid), http);
+            succeededBefore = false;
+        }
+
+        guidUpdated = false;
 
         // Use the YouTubeSight API call to get the current channel stats
         if (sight->getData())
@@ -121,11 +115,17 @@ class PatternSubscribers : public LEDStripEffect
 
     void construct()
     {
-        if (g_ptrDeviceConfig->GetYouTubeChannelGuid().isEmpty())
-            g_ptrDeviceConfig->SetYouTubeChannelGuid(DEFAULT_CHANNEL_GUID);
-
-        if (g_ptrDeviceConfig->GetYouTubeChannelName1().isEmpty())
-            g_ptrDeviceConfig->SetYouTubeChannelName1(DEFAULT_CHANNEL_NAME1);
+        _settingSpecs.emplace_back(
+            NAME_OF(youtubeChannelGuid),
+            "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
+            "the effect should show subscriber information.",
+            SettingSpec::SettingType::String
+        );
+        _settingSpecs.emplace_back(
+            NAME_OF(youtubeChannelName),
+            "The name of the channel for which the effect should show subscriber information.",
+            SettingSpec::SettingType::String
+        );
     }
 
   public:
@@ -137,7 +137,26 @@ class PatternSubscribers : public LEDStripEffect
 
     PatternSubscribers(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
+        if (jsonObject.containsKey("ycg"))
+            youtubeChannelGuid = jsonObject["ycg"].as<String>();
+
+        if (jsonObject.containsKey("ycn"))
+            youtubeChannelName = jsonObject["ycn"].as<String>();
+
         construct();
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<256> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["ycg"] = youtubeChannelGuid;
+        jsonDoc["ycn"] = youtubeChannelName;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual bool RequiresDoubleBuffering() const override
@@ -164,7 +183,7 @@ class PatternSubscribers : public LEDStripEffect
         LEDMatrixGFX::backgroundLayer.drawRectangle(0, 1, MATRIX_WIDTH-1, MATRIX_HEIGHT-2, rgb24(160,160,255));
 
         // Draw the channel name
-        LEDMatrixGFX::backgroundLayer.drawString(2, 3, rgb24(255,255,255), g_ptrDeviceConfig->GetYouTubeChannelName1().c_str());
+        LEDMatrixGFX::backgroundLayer.drawString(2, 3, rgb24(255,255,255), youtubeChannelName.c_str());
 
         // Start in the middle of the panel and then back up a half a row to center vertically,
         // then back up left one half a char for every 10s digit in the subscriber count.  This
@@ -188,6 +207,27 @@ class PatternSubscribers : public LEDStripEffect
         LEDMatrixGFX::backgroundLayer.drawString(x,   y-1, rgb24(0,0,0),          pszText);
         LEDMatrixGFX::backgroundLayer.drawString(x,   y+1, rgb24(0,0,0),          pszText);
         LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
+    }
+
+    virtual bool HasSettings() const override
+    {
+        return true;
+    }
+
+    virtual bool SerializeSettingsToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<256> jsonDoc;
+
+        jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
+        jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual bool SetSetting(const String& name, const String& value) override
+    {
+        RETURN_IF_SET(name, NAME_OF(youtubeChannelGuid), youtubeChannelGuid, value);
+        return SetIfSelected(name, NAME_OF(youtubeChannelName), youtubeChannelName, value);
     }
 };
 

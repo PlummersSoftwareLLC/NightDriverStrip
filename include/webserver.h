@@ -92,8 +92,8 @@ class CWebServer
         {}
     };
 
-    static const std::vector<const char *> knownSettings;
-    static const std::map<const char *, ValueValidator> settingValidators;
+    static std::vector<SettingSpec> deviceSettingSpecs;
+    static const std::map<String, ValueValidator> settingValidators;
 
     AsyncWebServer _server;
     StaticStatistics _staticStats;
@@ -129,6 +129,7 @@ class CWebServer
     template<typename Tr>
     static void AddCORSHeaderAndSendResponse(AsyncWebServerRequest * pRequest, Tr * pResponse)
     {
+        pResponse->addHeader("Server","NightDriverStrip");
         pResponse->addHeader("Access-Control-Allow-Origin", "*");
         pRequest->send(pResponse);
     }
@@ -141,14 +142,23 @@ class CWebServer
 
     // Straightforward support functions
 
-    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName);
+    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
+    static const std::vector<SettingSpec> & LoadDeviceSettingSpecs();
+    static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<SettingSpec> & settingSpecs);
     static void SetSettingsIfPresent(AsyncWebServerRequest * pRequest);
+    static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
+    static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
+    static void SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect);
 
     // Endpoint member functions
 
     static void GetEffectListText(AsyncWebServerRequest * pRequest);
+    static void GetSettingSpecs(AsyncWebServerRequest * pRequest);
     static void GetSettings(AsyncWebServerRequest * pRequest);
     static void SetSettings(AsyncWebServerRequest * pRequest);
+    static void GetEffectSettingSpecs(AsyncWebServerRequest * pRequest);
+    static void GetEffectSettings(AsyncWebServerRequest * pRequest);
+    static void SetEffectSettings(AsyncWebServerRequest * pRequest);
     static void ValidateAndSetSetting(AsyncWebServerRequest * pRequest);
     static void Reset(AsyncWebServerRequest * pRequest);
     static void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest);
@@ -175,8 +185,7 @@ class CWebServer
 
     CWebServer()
         : _server(80)
-    {
-    }
+    {}
 
     // begin - register page load handlers and start serving pages
     void begin()
@@ -214,7 +223,11 @@ class CWebServer
         _server.on("/enableEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { EnableEffect(pRequest); });
         _server.on("/disableEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DisableEffect(pRequest); });
 
+        _server.on("/settings/effect/specs", HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettingSpecs(pRequest); });
+        _server.on("/settings/effect",       HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettings(pRequest); });
+        _server.on("/settings/effect",       HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetEffectSettings(pRequest); });
         _server.on("/settings/validated",    HTTP_POST, [](AsyncWebServerRequest * pRequest)        { ValidateAndSetSetting(pRequest); });
+        _server.on("/settings/specs",        HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettingSpecs(pRequest); });
         _server.on("/settings",              HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettings(pRequest); });
         _server.on("/settings",              HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetSettings(pRequest); });
         _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE, "text/json"); });
