@@ -80,9 +80,9 @@ public:
     {
     }
 
-    void SetBrightness(byte percent)
+    void SetBrightness(byte amount)
     {
-        matrix.setBrightness(percent);
+        matrix.setBrightness(amount);
     }
     
     virtual uint16_t xy(uint16_t x, uint16_t y) const override
@@ -176,10 +176,5 @@ public:
     static void StartMatrix();
     static CRGB *GetMatrixBackBuffer();
     static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
-
-    SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
-    {
-        return backgroundLayer;
-    }
 };
 #endif

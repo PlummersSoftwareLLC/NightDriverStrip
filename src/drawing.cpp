@@ -93,7 +93,8 @@ void MatrixPreDraw()
 
         auto graphics = (*g_ptrEffectManager)[0];
 
-        LEDMatrixGFX::matrix.setRefreshRate(200);
+        LEDMatrixGFX::matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
+        LEDMatrixGFX::matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
         auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
@@ -373,9 +374,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     // Initialize our graphics and the first effect
 
     PrepareOnboardPixel();
-
-    for (int i = 0; i < NUM_CHANNELS; i++)
-        (*g_ptrEffectManager)[i]->Setup();
 
 #if USE_MATRIX
     // We don't need color correction on the title layer, but we want it on the main background

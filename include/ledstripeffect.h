@@ -34,9 +34,6 @@
 #include "jsonserializer.h"
 #include <memory>
 
-extern bool                               g_bUpdateStarted;
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
 // LEDStripEffect
 //
 // Base class for an LED strip effect.  At a minimum they must draw themselves and provide a unique name.
@@ -86,17 +83,17 @@ class LEDStripEffect : public IJSONSerializable
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
 
-    inline std::shared_ptr<GFXBase> g() const
+    std::shared_ptr<GFXBase> g(size_t channel = 0) const
     {
-        return _GFX[0];
+        return _GFX[channel];
     }
 
     // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
 
     #if USE_MATRIX
-      static std::shared_ptr<LEDMatrixGFX> mg()
+      std::shared_ptr<LEDMatrixGFX> mg(size_t channel = 0)
       {
-        return std::static_pointer_cast<LEDMatrixGFX>(g_aptrDevices[0]);
+        return std::static_pointer_cast<LEDMatrixGFX>(_GFX[channel]);
       }
     #endif
 
@@ -183,7 +180,7 @@ class LEDStripEffect : public IJSONSerializable
 
     static CRGB GetBlackBodyHeatColor(float temp)
     {
-        temp = min(1.0f, temp);
+        temp = std::clamp(temp, 0.0f, 1.0f);
         uint8_t temperature = (uint8_t)(255 * temp);
         uint8_t t192 = (uint8_t)((temperature / 255.0f) * 191);
 

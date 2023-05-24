@@ -33,7 +33,7 @@
 
 // Static member initializers
 
-const std::vector<const char *> CWebServer::knownSettings
+const std::vector<String> CWebServer::knownSettings
 {
     "effectInterval",
     DeviceConfig::LocationTag,
@@ -49,7 +49,7 @@ const std::vector<const char *> CWebServer::knownSettings
 };
 
 // Maps settings for which a validator is available to the invocation thereof
-const std::map<const char *, CWebServer::ValueValidator> CWebServer::settingValidators
+const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
     { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrDeviceConfig->ValidateOpenWeatherAPIKey(value); } }
 };
@@ -63,7 +63,7 @@ bool CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, 
     return PushPostParamIfPresent<bool>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
     {
         const String& value = param->value();
-        return value == "true" || strtol(value.c_str(), NULL, 10);
+        return value == "true" || value.toInt();
     });
 }
 
@@ -261,13 +261,13 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 //   Requests containing more than one known setting are malformed and rejected.
 void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
 {
-    const char *paramName = nullptr;
+    String paramName;
 
     for (auto knownSetting : knownSettings)
     {
         if (pRequest->hasParam(knownSetting, true))
         {
-            if (!paramName)
+            if (paramName.isEmpty())
                 paramName = knownSetting;
             else
             // We found multiple known settings in the request, which we don't allow

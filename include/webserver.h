@@ -92,8 +92,8 @@ class CWebServer
         {}
     };
 
-    static const std::vector<const char *> knownSettings;
-    static const std::map<const char *, ValueValidator> settingValidators;
+    static const std::vector<String> knownSettings;
+    static const std::map<String, ValueValidator> settingValidators;
 
     AsyncWebServer _server;
     StaticStatistics _staticStats;
@@ -102,7 +102,7 @@ class CWebServer
 
     // Convert param value to a specific type and forward it to a setter function that expects that type as an argument
     template<typename Tv>
-    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
+    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
     {
         if (!pRequest->hasParam(paramName, true, false))
             return false;
@@ -118,7 +118,7 @@ class CWebServer
     // Generic param value forwarder. The type argument must be implicitly convertable from String!
     //   Some specializations of this are included in the CPP file
     template<typename Tv>
-    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter)
+    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter)
     {
         return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) { return param->value(); });
     }
@@ -141,7 +141,7 @@ class CWebServer
 
     // Straightforward support functions
 
-    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName);
+    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
     static void SetSettingsIfPresent(AsyncWebServerRequest * pRequest);
 
     // Endpoint member functions
@@ -161,7 +161,7 @@ class CWebServer
     void GetStatistics(AsyncWebServerRequest * pRequest);
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
-    void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
+    void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile & file)
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {

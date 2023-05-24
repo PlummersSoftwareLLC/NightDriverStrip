@@ -94,6 +94,7 @@
 #include <math.h>
 #include <deque>
 #include <algorithm>
+#include <numeric>
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
@@ -324,9 +325,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
     #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -364,9 +362,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN     25
     #define LED_FAN_OFFSET_BU 12
     #define POWER_LIMIT_MW    20000
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 2
@@ -439,9 +434,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define NOISE_CUTOFF   20
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -472,6 +464,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     #define SUBCHECK_INTERVAL  600000   // Update subscriber count every N seconds
+    #define SCALE_AUDIO_EXPONENTIAL 0   
+    #define ENABLE_AUDIO_SMOOTHING  1
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0
@@ -531,10 +525,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   22
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (1 * 5 * 1000)         // Expects at least a 5V, 1A supply
-
-    #define NOISE_CUTOFF   10                     // Using a MAX4466
-    #define NOISE_FLOOR    100.0f
-
+    
     #define TOGGLE_BUTTON_1         35
     #define NUM_INFO_PAGES          4
     #define ONSCREEN_SPECTRUM_PAGE  2   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -576,9 +567,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   25
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON_1         37
     #define TOGGLE_BUTTON_2         39
@@ -833,9 +821,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define NOISE_CUTOFF   20
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -966,9 +951,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW    50000
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -1009,9 +991,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW    5000
     #define ENABLE_OTA        0
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 1
@@ -1115,7 +1094,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 6000.0
+        #define NOISE_FLOOR 10000.0
     #endif
     #ifndef NOISE_CUTOFF
         #define NOISE_CUTOFF   2000
@@ -1209,6 +1188,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #ifndef ENABLE_REMOTE
 #define ENABLE_REMOTE 0
 #endif
+
+#ifndef MATRIX_REFRESH_RATE
+#define MATRIX_REFRESH_RATE 100
+#endif
+
+#ifndef MATRIX_CALC_DIVIDER 
+#define MATRIX_CALC_DIVIDER 1
+#endif
+
 
 // Power Limit
 //
@@ -1618,7 +1606,7 @@ class AppTime
         return tv;
     }
 
-    double DeltaTime() const
+    double LastFrameTime() const
     {
         return _deltaTime;
     }
