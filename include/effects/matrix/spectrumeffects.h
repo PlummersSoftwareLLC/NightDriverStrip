@@ -287,25 +287,28 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         // We draw the bottom row in bar color even when only 1 pixel high so as not to have a white
         // strip as the bottom row (all made up of highlights)
 
-        CRGB colorHighlight = value > 0 ? CRGB::White : baseColor;
+        CRGB colorHighlight = value > 1 ? CRGB::White : baseColor;
 
         // If a decay rate has been defined and it's different than the rate at which the bar falls
-        if (_peak1DecayRate >= 0.0f && _peak1DecayRate != _peak2DecayRate)
+        if (_peak1DecayRate >= 0.0f)
         {
-            const int PeakFadeTime_ms = 1000;
+            if (_peak1DecayRate != _peak2DecayRate)
+            {
+                const int PeakFadeTime_ms = 1000;
 
-            unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
-            if (msPeakAge > PeakFadeTime_ms)
-                msPeakAge = PeakFadeTime_ms;
+                unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
+                if (msPeakAge > PeakFadeTime_ms)
+                    msPeakAge = PeakFadeTime_ms;
 
-            float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
-            uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
-            colorHighlight.fadeToBlackBy(fadeAmount);
-            pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
-        }
-        else
-        {
-            pGFXChannel->drawLine(xOffset, max(0, yOffset2-1), xOffset + barWidth - 1, max(0, yOffset2-1), colorHighlight);
+                float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
+                uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
+                colorHighlight.fadeToBlackBy(fadeAmount);
+                pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
+            }
+            else
+            {
+                pGFXChannel->drawLine(xOffset, max(0, yOffset2-1), xOffset + barWidth - 1, max(0, yOffset2-1), colorHighlight);
+            }
         }
     }
 
