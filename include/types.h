@@ -61,16 +61,18 @@ struct SettingSpec
     };
 
     String Name;
+    String FriendlyName;
     String Description;
     SettingType Type;
 
-    SettingSpec(const String& name, const String& description, SettingType type)
+    SettingSpec(const String& name, const String& friendlyName, const String& description, SettingType type)
       : Name(name),
+        FriendlyName(friendlyName),
         Description(description),
         Type(type)
     {}
 
-    SettingSpec(const String& name, SettingType type) : SettingSpec(name, "", type)
+    SettingSpec(const String& name, const String& friendlyName, SettingType type) : SettingSpec(name, friendlyName, "", type)
     {}
 
     SettingSpec()

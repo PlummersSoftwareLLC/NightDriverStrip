@@ -117,12 +117,14 @@ class PatternSubscribers : public LEDStripEffect
     {
         _settingSpecs.emplace_back(
             NAME_OF(youtubeChannelGuid),
+            "YouTube channel GUID",
             "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
             "the effect should show subscriber information.",
             SettingSpec::SettingType::String
         );
         _settingSpecs.emplace_back(
             NAME_OF(youtubeChannelName),
+            "YouTube channel name",
             "The name of the channel for which the effect should show subscriber information.",
             SettingSpec::SettingType::String
         );

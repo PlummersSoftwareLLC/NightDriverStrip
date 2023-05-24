@@ -221,9 +221,10 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
         {
             auto specObject = jsonArray.createNestedObject();
 
-            StaticJsonDocument<256> jsonDoc;
+            StaticJsonDocument<384> jsonDoc;
 
             jsonDoc["name"] = spec.Name;
+            jsonDoc["friendlyName"] = spec.FriendlyName;
             jsonDoc["description"] = spec.Description;
             jsonDoc["type"] = to_value(spec.Type);
             jsonDoc["typeName"] = spec.ToName(spec.Type);
@@ -250,6 +251,7 @@ const std::vector<SettingSpec> & CWebServer::LoadDeviceSettingSpecs()
         auto deviceConfigSpecs = g_ptrDeviceConfig->GetSettingSpecs();
         deviceSettingSpecs.emplace_back(
             "effectInterval",
+            "Effect interval",
             "The duration in milliseconds that an individual effect runs, before the next effect is activated.",
             SettingSpec::SettingType::PositiveBigInteger
         );
