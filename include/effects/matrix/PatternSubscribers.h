@@ -115,8 +115,17 @@ class PatternSubscribers : public LEDStripEffect
 
     void construct()
     {
-        _settingSpecs.emplace_back(NAME_OF(youtubeChannelGuid), EffectSetting::SettingType::String);
-        _settingSpecs.emplace_back(NAME_OF(youtubeChannelName), EffectSetting::SettingType::String);
+        _settingSpecs.emplace_back(
+            NAME_OF(youtubeChannelGuid),
+            "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
+            "the effect should show subscriber information.",
+            SettingSpec::SettingType::String
+        );
+        _settingSpecs.emplace_back(
+            NAME_OF(youtubeChannelName),
+            "The name of the channel for which the effect should show subscriber information.",
+            SettingSpec::SettingType::String
+        );
     }
 
   public:
@@ -208,9 +217,6 @@ class PatternSubscribers : public LEDStripEffect
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
-
-        JsonObject root = jsonDoc.to<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
         jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;

@@ -38,8 +38,24 @@
 #define DEVICE_CONFIG_FILE "/device.cfg"
 #define DEFAULT_NTP_SERVER "0.pool.ntp.org"
 
+// DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should
+// be managed using overrides of the respective methods in LEDStripEffect (HasSettings(), GetSettingSpecs(),
+// SerializeSettingsToJSON() and SetSetting()).
+//
+// Adding a setting to the list of known/saved settings requires the following:
+// 1. Adding the setting variable to the list at the top of the class definition
+// 2. Adding a corresponding Tag to the list of static constexpr const char * strings further below
+// 3. Adding a corresponding SettingSpec at the top of the DeviceConfig() constructor (in deviceconfig.cpp)
+// 4. In the same constructor, adding logic to set a default in case the JSON load isn't possible
+// 5. Adding (de)serialization logic for the setting to the SerializeToJSON()/DeserializeFromJSON() methods
+// 6. Adding a Get/Set method for the setting (and, where applicable, their implementation in deviceconfig.cpp)
+//
+// For the first 5 points, a comment has been added to the respective place in the existing code.
+// Generally speaking, one will also want to add logic to the webserver to retrieve and set the setting.
+
 class DeviceConfig : public IJSONSerializable
 {
+    // Add variables for additional settings to this list
     String location;
     bool locationIsZip;
     String countryCode;
@@ -49,6 +65,7 @@ class DeviceConfig : public IJSONSerializable
     bool useCelsius;
     String ntpServer;
 
+    std::vector<SettingSpec> settingSpecs;
     size_t writerIndex;
 /*
     void WriteToNVS(const String& name, const String& value);
@@ -78,6 +95,7 @@ class DeviceConfig : public IJSONSerializable
 
     using ValidateResponse = std::pair<bool, String>;
 
+    // Add additional setting Tags to this list
     static constexpr const char * LocationTag = NAME_OF(location);
     static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
     static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
@@ -98,6 +116,7 @@ class DeviceConfig : public IJSONSerializable
     {
         AllocatedJsonDocument jsonDoc(1024);
 
+        // Add serialization logic for additionl settings to this code
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;
         jsonDoc[CountryCodeTag] = countryCode;
@@ -119,6 +138,7 @@ class DeviceConfig : public IJSONSerializable
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
+        // Add deserialization logic for additional settings to this code
         SetIfPresentIn(jsonObject, location, LocationTag);
         SetIfPresentIn(jsonObject, locationIsZip, LocationIsZipTag);
         SetIfPresentIn(jsonObject, countryCode, CountryCodeTag);
@@ -142,6 +162,11 @@ class DeviceConfig : public IJSONSerializable
     void RemovePersisted()
     {
         RemoveJSONFile(DEVICE_CONFIG_FILE);
+    }
+
+    virtual const std::vector<SettingSpec>& GetSettingSpecs() const
+    {
+        return settingSpecs;
     }
 
     const String &GetTimeZone() const

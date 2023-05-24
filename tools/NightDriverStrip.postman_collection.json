@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "bed322ee-1fb8-4d8c-a6dd-539481594e7a",
+		"_postman_id": "61d9d779-3c0c-4ed6-a14b-94bc94906cea",
 		"name": "NightDriverStrip endpoints",
 		"description": "Call configurations to use/test some of the endpoints in the NightDriverStrip on-device API - basically those not yet covered by the web UI. These have been confirmed to work with the Mesmerizer board/project and the Spectrum project on the M5StickC Plus.\n\nNotes:\n\n- Before using the call configurations in this collection, make sure to update the value of the \"device_ip\" variable in the Variables tab of this collection. Make sure to Save the collection after doing this, because otherwise your change will not be applied.\n- The parameters for POST call configurations are listed in the Body tab of the respective configurations. As with the collection's \"device_ip\" variable, Save a configuration if you want to persist changes to its parameters.\n- By default, all parameters for all configurations are unchecked, which means nothing will be sent unless at least one parameter is checked.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -8,7 +8,44 @@
 	},
 	"item": [
 		{
-			"name": "Get config",
+			"name": "Get effects list",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{device_ip}}/effects",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"effects"
+					]
+				},
+				"description": "Retrieve basic information about the NightDriverStrip effects on the device."
+			},
+			"response": []
+		},
+		{
+			"name": "Get device config specs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{device_ip}}/settings/specs",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"settings",
+						"specs"
+					]
+				},
+				"description": "Retrieve specifications for device-wide settings used by NightDriverStrip effects."
+			},
+			"response": []
+		},
+		{
+			"name": "Get device config",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -26,7 +63,7 @@
 			"response": []
 		},
 		{
-			"name": "Set config",
+			"name": "Set device config",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -96,6 +133,7 @@
 						{
 							"key": "nonsense",
 							"value": "gobbledygook",
+							"description": "Included to test if irrelevant parameters are correctly ignored",
 							"type": "text",
 							"disabled": true
 						},
@@ -121,7 +159,7 @@
 			"response": []
 		},
 		{
-			"name": "Set config with validation",
+			"name": "Set device config with validation",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -155,6 +193,7 @@
 						{
 							"key": "nonsense",
 							"value": "gobbledygook",
+							"description": "Included to test if irrelevant parameters are correctly ignored",
 							"type": "text",
 							"disabled": true
 						}
@@ -171,6 +210,108 @@
 					]
 				},
 				"description": "Validates and changes exactly one known setting. The new setting value is only applied if validation succeeds.\n\nNotes:\n\n- Providing more than one known setting (i.e. sending more than one known parameter) is an error.\n- If a validation error occurs, the call will return a message indicating the nature of the problem.\n- Validation is not implemented for all settings. The validation step is skipped for settings for which no validation is available."
+			},
+			"response": []
+		},
+		{
+			"name": "Get effect config specs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{device_ip}}/settings/effect/specs?effectIndex=7",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"settings",
+						"effect",
+						"specs"
+					],
+					"query": [
+						{
+							"key": "effectIndex",
+							"value": "7",
+							"description": "Index of the effect to retrieve effect setting specs for"
+						}
+					]
+				},
+				"description": "Retrieve the specifications for settings that are available for a specific effect."
+			},
+			"response": []
+		},
+		{
+			"name": "Get effect config",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{device_ip}}/settings/effect?effectIndex=7",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"settings",
+						"effect"
+					],
+					"query": [
+						{
+							"key": "effectIndex",
+							"value": "7",
+							"description": "Index of the effect to retrieve effect settings for"
+						}
+					]
+				},
+				"description": "Retrieve the effect-specific settings for one effect."
+			},
+			"response": []
+		},
+		{
+			"name": "Set effect config",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "effectIndex",
+							"value": "7",
+							"description": "Index of the effect to set effect settings for",
+							"type": "text"
+						},
+						{
+							"key": "youtubeChannelGuid",
+							"value": "9558daa1-eae8-482f-8066-17fa787bc0e4",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "youtubeChannelName",
+							"value": "Daves Garage",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "nonsense",
+							"value": "gobbledygook",
+							"description": "Included to test if irrelevant parameters are correctly ignored",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{device_ip}}/settings/effect",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"settings",
+						"effect"
+					]
+				},
+				"description": "Change effect-specific settings for one effect.\n\nNotes:\n\n- Only parameters that are sent are actually changed.\n- All parameters are optional.\n- The call will return the current setting values for the effect, after those included in the call have been applied."
 			},
 			"response": []
 		},

@@ -45,6 +45,50 @@ void DeviceConfig::SaveToJSON()
 
 DeviceConfig::DeviceConfig()
 {
+    // Add SettingSpec for additional settings to this list
+    settingSpecs.emplace_back(
+        NAME_OF(location),
+        "The location (city or postal code) where the device is located.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(locationIsZip),
+        "A boolean indicating if the value in the 'location' setting is a postal code ('true'/1) or not ('false'/0).",
+        SettingSpec::SettingType::Boolean
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(countryCode),
+        "The <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">ISO 3166-1 alpha-2</a> country "
+        "code for the country that the device is located in.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(openWeatherApiKey),
+        "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(timeZone),
+        "The timezone the device resides in, in <a href=\"https://en.wikipedia.org/wiki/Tz_database\">tz database</a> format. "
+        "The list of available timezone identifiers can be found in the <a href=\"/timezones.json\">timezones.json</a> file.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(use24HourClock),
+        "A boolean that indicates if time should be shown in 24-hour format ('true'/1) or 12-hour AM/PM format ('false'/0).",
+        SettingSpec::SettingType::Boolean
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(useCelsius),
+        "A boolean that indicates if temperatures should be shown in degrees Celsius ('true'/1) or degrees Fahrenheit ('false'/0).",
+        SettingSpec::SettingType::Boolean
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(ntpServer),
+        "The hostname or IP address of the NTP server to be used for time synchronization.",
+        SettingSpec::SettingType::String
+    );
+
     writerIndex = g_ptrJSONWriter->RegisterWriter(
         [this]() { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
     );
@@ -61,6 +105,7 @@ DeviceConfig::DeviceConfig()
     {
         debugW("DeviceConfig could not be loaded from JSON, using defaults");
 
+        // Set default for additional settings in this code
         location = cszLocation;
         locationIsZip = bLocationIsZip;
         countryCode = cszCountryCode;

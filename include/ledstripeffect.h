@@ -32,40 +32,11 @@
 
 #include "effects.h"
 #include "jsonserializer.h"
+#include "types.h"
 #include <memory>
 
 extern bool                               g_bUpdateStarted;
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
-struct EffectSetting
-{
-    // Note that if this enum is expanded, ToName() must be also!
-    enum class SettingType : int
-    {
-        Integer,
-        Float,
-        Boolean,
-        String,
-        Palette
-    };
-
-    String Name;
-    SettingType Type;
-
-    EffectSetting(String name, SettingType type)
-      : Name(name),
-        Type(type)
-    {}
-
-    EffectSetting()
-    {}
-
-    String static ToName(SettingType type)
-    {
-        String names[] = { "Integer", "Float", "Boolean", "String", "Palette" };
-        return names[(int)type];
-    }
-};
 
 #define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return true
 
@@ -81,7 +52,7 @@ class LEDStripEffect : public IJSONSerializable
     String _friendlyName;
     int    _effectNumber;
     bool   _enabled = true;
-    std::vector<EffectSetting> _settingSpecs;
+    std::vector<SettingSpec> _settingSpecs;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
 
@@ -399,7 +370,7 @@ class LEDStripEffect : public IJSONSerializable
         return false;
     }
 
-    virtual const std::vector<EffectSetting>& GetSettingSpecs() const
+    virtual const std::vector<SettingSpec>& GetSettingSpecs() const
     {
         return _settingSpecs;
     }
