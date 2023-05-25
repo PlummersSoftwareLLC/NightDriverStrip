@@ -92,7 +92,7 @@ class CWebServer
         {}
     };
 
-    static const std::vector<String> knownSettings;
+    static std::vector<SettingSpec> deviceSettingSpecs;
     static const std::map<String, ValueValidator> settingValidators;
 
     AsyncWebServer _server;

@@ -33,20 +33,6 @@
 
 // Static member initializers
 
-const std::vector<String> CWebServer::knownSettings
-{
-    "effectInterval",
-    DeviceConfig::LocationTag,
-    DeviceConfig::LocationIsZipTag,
-    DeviceConfig::CountryCodeTag,
-    DeviceConfig::OpenWeatherApiKeyTag,
-    DeviceConfig::TimeZoneTag,
-    DeviceConfig::Use24HourClockTag,
-    DeviceConfig::UseCelsiusTag,
-    DeviceConfig::YouTubeChannelGuidTag,
-    DeviceConfig::YouTubeChannelName1Tag,
-    DeviceConfig::NTPServerTag,
-};
 
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators

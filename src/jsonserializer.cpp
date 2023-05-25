@@ -101,7 +101,7 @@ void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, s
     }
 }
 
-bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable& object)
+bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializable& object)
 {
     if (bufferSize == 0)
         bufferSize = JSON_BUFFER_BASE_SIZE;
