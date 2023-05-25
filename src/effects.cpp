@@ -293,8 +293,8 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
     []()->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(jsonObject); })
 
-#define ADD_STARRY_NIGHT_EFFECT(effectSubType, ...) g_EffectFactories.AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
-    []()->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<effectSubType>>(__VA_ARGS__); }, \
+#define ADD_STARRY_NIGHT_EFFECT(starType, ...) g_EffectFactories.AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
+    []()->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<starType>>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); })
 
 void LoadEffectFactories()
