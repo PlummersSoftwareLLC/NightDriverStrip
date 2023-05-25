@@ -217,15 +217,13 @@ public:
     // It first clears any existing effects and then attempts to populate the effects vector from
     // the provided JSON object, which should contain an array of effects configurations ("efs").
     //
-    // The function also reserves memory for the effects vector based on the size of the JSON array.
     // For each effect in the JSON array, it attempts to create an effect from its JSON configuration.
     // If an effect is successfully created, it's added to the effects vector.
     //
-    // If no effects are successfully created (i.e., the effects vector is empty), the function returns false.
+    // If no effects are successfully loaded from JSON, it loads the default effects.
     //
-    // The function also initializes an array to track the enabled state of each effect, defaulting to "enabled".
     // If the JSON object includes an "eef" array, the function attempts to load each effect's enabled state from it.
-    // If not, or if the index exceeds the "eef" array's size, the effect is enabled by default.
+    // If the index exceeds the "eef" array's size, the effect is enabled by default.
     //
     // The function also sets the effect interval from the "ivl" field in the JSON object, defaulting to a pre-defined value if the field isn't present.
     //
@@ -241,9 +239,12 @@ public:
         // "efs" is the array of serialized effect objects
         JsonArrayConst effectsArray = jsonObject["efs"].as<JsonArrayConst>();
 
-        // Check if the object actually contained an effect config array
+        // Check if the object actually contained an effect config array. If not, load the default effects.
         if (effectsArray.isNull())
-            return false;
+        {
+            LoadDefaultEffects();
+            return true;
+        }
 
         LoadJSONAndMissingEffects(effectsArray);
 
