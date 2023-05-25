@@ -661,7 +661,6 @@ void setup()
 
     #if USESTRIP
 
-
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
 
@@ -713,7 +712,7 @@ void setup()
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
         #endif
 
-            g_Brightness = 255;
+        g_Brightness = 255;
 
         #if ATOMLIGHT
             pinMode(4, INPUT);
@@ -809,7 +808,10 @@ void loop()
     while(true)
     {
         #if ENABLE_WIFI
-            g_ImprovSerial.loop();
+            EVERY_N_MILLIS(10)
+            {
+                g_ImprovSerial.loop();
+            }
         #endif
 
         #if ENABLE_OTA
@@ -863,6 +865,6 @@ void loop()
             Serial.println(strOutput);
         }
 
-        delay(1);
+        delay(10);
     }
 }

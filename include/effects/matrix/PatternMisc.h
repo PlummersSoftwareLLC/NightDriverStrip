@@ -124,7 +124,7 @@ class PatternRose : public LEDStripEffect
       g()->DimAll(dim);
 
 
-      for (uint8_t i = 0; i < 32; i++)
+      for (uint8_t i = 0; i < MATRIX_HEIGHT; i++)
       {
         CRGB color;
 

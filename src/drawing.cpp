@@ -93,7 +93,8 @@ void MatrixPreDraw()
 
         auto graphics = (*g_ptrEffectManager)[0];
 
-        LEDMatrixGFX::matrix.setRefreshRate(200);
+        LEDMatrixGFX::matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
+        LEDMatrixGFX::matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
         auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
@@ -265,11 +266,11 @@ void ShowStrip(uint16_t numToShow)
     }
 }
 
-// DelayUntilNextFrame
+// CalcDelayUntilNextFrame
 //
-// Waits patiently until its time to draw the next frame, up to one second max
+// Returns the amount of time to wait patiently until its time to draw the next frame, up to one second max
 
-void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
     // Delay enough to slow down to the desired framerate
 
@@ -281,8 +282,8 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         double elapsed = g_AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
         {
-            g_FreeDrawTime = std::min(1.0, (minimumFrameTime - elapsed));
-            delay(g_FreeDrawTime * MILLIS_PER_SECOND);
+            g_FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
+            return (g_FreeDrawTime * MILLIS_PER_SECOND);
         }
     }
     else if (wifiPixelsDrawn > 0)
@@ -299,7 +300,7 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
 
         g_FreeDrawTime = t;
         if (g_FreeDrawTime > 0.0)
-            delay(g_FreeDrawTime * MILLIS_PER_SECOND);
+            return (g_FreeDrawTime * MILLIS_PER_SECOND);
         else
             g_FreeDrawTime = 0.0;
     }
@@ -308,9 +309,9 @@ void DelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint1
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
         g_FreeDrawTime = .001;
-        delay(1);
     }
 
+    return 1;
 #endif
 }
 
@@ -374,9 +375,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     PrepareOnboardPixel();
 
-    for (int i = 0; i < NUM_CHANNELS; i++)
-        (*g_ptrEffectManager)[i]->Setup();
-
 #if USE_MATRIX
     // We don't need color correction on the title layer, but we want it on the main background
 
@@ -436,18 +434,14 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         ShowOnboardPixel();
         ShowOnboardRGBLED();
 
-        DelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn);
+        // Delay at least 1ms and not more than 1s until next frame is due
+        
+        delay( CalcDelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn) );
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
         // so we'll slow down to share the CPU a bit once the update has begun
 
         if (g_bUpdateStarted)
             delay(100);
-
-        // If we didn't draw anything, we near-busy-wait so that we are continually checking the clock for an packet
-        // whose time has come.  yield() alone did not solve it, likely since our priority is higher than the idle
-        // task so you can still starve the watchdog if you're always busy
-
-        delay(1);
     }
 }

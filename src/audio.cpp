@@ -46,11 +46,6 @@ extern uint32_t g_Watts;
 extern float g_Brite;
 extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
-double PeakData::_Min[NUM_BANDS] = { 0.0 };
-double PeakData::_Max[NUM_BANDS] = { 0.0 }; 
-double PeakData::_Last[NUM_BANDS] = { 0.0 }; 
-double PeakData::_allBandsMax = 1.0;
-
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
 
@@ -93,7 +88,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         unsigned long elapsed = millis() - lastFrame;
         const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(max(5.0, targetDelay - elapsed));
+        delay(max(10.0, targetDelay - elapsed));
 
         g_Analyzer._AudioFPS = FPS(lastFrame, millis());
     }
@@ -338,7 +333,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
     }
 }
 
-#endif // EMABLE_AUDIOSERIAL
+#endif // ENABLE_AUDIOSERIAL
 
 #endif
 

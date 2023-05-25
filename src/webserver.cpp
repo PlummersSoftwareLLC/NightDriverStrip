@@ -31,6 +31,23 @@
 #include "globals.h"
 #include "webserver.h"
 
+// Static member initializers
+
+const std::vector<String> CWebServer::knownSettings
+{
+    "effectInterval",
+    DeviceConfig::LocationTag,
+    DeviceConfig::LocationIsZipTag,
+    DeviceConfig::CountryCodeTag,
+    DeviceConfig::OpenWeatherApiKeyTag,
+    DeviceConfig::TimeZoneTag,
+    DeviceConfig::Use24HourClockTag,
+    DeviceConfig::UseCelsiusTag,
+    DeviceConfig::YouTubeChannelGuidTag,
+    DeviceConfig::YouTubeChannelName1Tag,
+    DeviceConfig::NTPServerTag,
+};
+
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
@@ -48,7 +65,7 @@ bool CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, 
     return PushPostParamIfPresent<bool>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
     {
         const String& value = param->value();
-        return value == "true" || strtol(value.c_str(), NULL, 10);
+        return value == "true" || value.toInt();
     });
 }
 

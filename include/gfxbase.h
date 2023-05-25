@@ -111,7 +111,7 @@ public:
 
     // Many of the Aurora effects need direct access to these from external classes
 
-    CRGB * leds;
+    CRGB * leds = nullptr;
     std::unique_ptr<Boid []> _boids;
 
     GFXBase(int w, int h) : Adafruit_GFX(w, h),
@@ -120,7 +120,12 @@ public:
     {
         _boids.reset( psram_allocator<Boid>().allocate(_width) );
         _ptrNoise.reset( psram_allocator<Noise>().allocate(1) );
-        assert(_ptrNoise);
+        assert(_ptrNoise && _boids);
+        
+        loadPalette(0);
+        NoiseVariablesSetup();
+        FillGetNoise();
+        ResetOscillators();        
     }
 
     virtual ~GFXBase()
@@ -139,7 +144,7 @@ public:
 
     virtual size_t GetLEDCount() const
     {
-        return NUM_LEDS;
+        return _width * _height;
     }
     
     virtual CRGB getPixel(int16_t x, int16_t y) const
@@ -152,7 +157,7 @@ public:
 
     virtual CRGB getPixel(int16_t i) const 
     {
-        if (i >= 0 && i < _width * _height)
+        if (i >= 0 && i < GetLEDCount())
             return leds[i];
         else
             throw std::runtime_error("Pixel out of range in getPixel(x)");
@@ -220,17 +225,13 @@ public:
     // 
     //     0 >  1 >  2 >  3 >  4
     //                         |
-    //     .----<----<----<----'
-    //     |
-    //     5 >  6 >  7 >  8 >  9
-    //                         |
-    //     .----<----<----<----'
+    //     9 <  8 <  7 <  6 <  5
     //     |
     //    10 > 11 > 12 > 13 > 14
     //                         |
-    //     .----<----<----<----'
+    //    19 < 18 < 17 < 16 < 15
     //     |
-    //    15 > 16 > 17 > 18 > 19
+    //    (etc)
     //
     // If your matrix uses a different approach, you can override this function and implement it 
     // in the xy() function of your class
@@ -449,15 +450,6 @@ public:
     {
         // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
         blur2d(leds, _width, 0, _height, 1, amount);
-    }
-
-    virtual void Setup()
-    {
-        debugW(">> GFXBase::Setup\n");
-        loadPalette(0);
-        NoiseVariablesSetup();
-        FillGetNoise();
-        ResetOscillators();
     }
 
     void CyclePalette(int offset = 1)

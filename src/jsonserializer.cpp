@@ -34,7 +34,7 @@
 
 DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter = nullptr;
 
-bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;
 
@@ -147,7 +147,7 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
     return true;
 }
 
-bool RemoveJSONFile(const char *fileName)
+bool RemoveJSONFile(const String & fileName)
 {
     return SPIFFS.remove(fileName);
 }
