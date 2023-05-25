@@ -168,13 +168,11 @@ extern float g_Brite;
 //
 // Task Handles to our running threads
 //
-
 NightDriverTaskManager g_TaskManager;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
-
 ImprovSerial<typeof(Serial)> g_ImprovSerial;
 
 //
@@ -464,8 +462,9 @@ void setup()
     }
     ESP_ERROR_CHECK(err);
 
-    // Create the JSON writer
+    // Create the JSON writer and start its background thread
     g_ptrJSONWriter = std::make_unique<JSONWriter>();
+    g_TaskManager.StartJSONWriterThread();
 
     // Create and load device config from SPIFFS if possible
     g_ptrDeviceConfig = std::make_unique<DeviceConfig>();

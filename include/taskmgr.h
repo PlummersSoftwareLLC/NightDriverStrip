@@ -45,9 +45,10 @@
 
 #include <Arduino.h>
 #include <esp_task_wdt.h>
+#include "ledstripeffect.h"
 
-#define IDLE_STACK_SIZE 2048
 // Stack size for the taskmgr's idle threads
+#define IDLE_STACK_SIZE 2048
 
 class IdleTask
 {
@@ -190,23 +191,74 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *);
 void IRAM_ATTR DebugLoopTaskEntry(void *);
 void IRAM_ATTR SocketServerTaskEntry(void *);
 void IRAM_ATTR RemoteLoopEntry(void *);
+void IRAM_ATTR JSONWriterTaskEntry(void *);
+
+#define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
 
 class NightDriverTaskManager : public TaskManager
 {
+public:
+
+    using EffectTaskFunction = std::function<void(LEDStripEffect&)>;
+
 private:
 
-    TaskHandle_t _taskScreen = nullptr;
-    TaskHandle_t _taskSync   = nullptr;
-    TaskHandle_t _taskDraw   = nullptr;
-    TaskHandle_t _taskDebug  = nullptr;
-    TaskHandle_t _taskAudio  = nullptr;
-    TaskHandle_t _taskNet    = nullptr;
-    TaskHandle_t _taskRemote = nullptr;
-    TaskHandle_t _taskSocket = nullptr;
-    TaskHandle_t _taskSerial = nullptr;
+    struct EffectTaskParams
+    {
+        EffectTaskFunction function;
+        LEDStripEffect* pEffect;
+
+        EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
+          : function(function),
+            pEffect(pEffect)
+        {}
+    };
+
+    TaskHandle_t _taskScreen     = nullptr;
+    TaskHandle_t _taskSync       = nullptr;
+    TaskHandle_t _taskDraw       = nullptr;
+    TaskHandle_t _taskDebug      = nullptr;
+    TaskHandle_t _taskAudio      = nullptr;
+    TaskHandle_t _taskNet        = nullptr;
+    TaskHandle_t _taskRemote     = nullptr;
+    TaskHandle_t _taskSocket     = nullptr;
+    TaskHandle_t _taskSerial     = nullptr;
+    TaskHandle_t _taskJSONWriter = nullptr;
+
+    std::vector<TaskHandle_t> _vEffectTasks;
+
+    static void EffectTaskEntry(void *pVoid)
+    {
+        EffectTaskParams *pTaskParams = (EffectTaskParams *)pVoid;
+
+        EffectTaskFunction function = pTaskParams->function;
+        LEDStripEffect* pEffect = pTaskParams->pEffect;
+
+        // Delete the params object before we invoke the actual function; they tend to run indefinitely
+        delete pTaskParams;
+
+        function(*pEffect);
+    }
 
 public:
-  
+
+    ~NightDriverTaskManager()
+    {
+        for (auto& task : _vEffectTasks)
+            vTaskDelete(task);
+
+        DELETE_TASK(_taskDraw);
+        DELETE_TASK(_taskScreen);
+        DELETE_TASK(_taskRemote);
+        DELETE_TASK(_taskSerial);
+        DELETE_TASK(_taskAudio);
+        DELETE_TASK(_taskSocket);
+        DELETE_TASK(_taskSync);
+        DELETE_TASK(_taskNet);
+        DELETE_TASK(_taskJSONWriter);
+        DELETE_TASK(_taskDebug);
+    }
+
     void StartScreenThread()
     {
         debugW(">> Launching Screen Thread");
@@ -220,7 +272,6 @@ public:
             xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);
         #endif
     }
-
 
     void StartDrawThread()
     {
@@ -266,6 +317,42 @@ public:
             debugW(">> Launching Remote Thread");
             xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
         #endif
+    }
+
+    void StartJSONWriterThread()
+    {
+        debugW(">> Launching JSON Writer Thread");
+        xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
+    }
+
+    void NotifyJSONWriterThread()
+    {
+        if (_taskJSONWriter == nullptr)
+            return;
+
+        debugW(">> Notifying JSON Writer Thread");
+        // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
+        xTaskNotifyGive(_taskJSONWriter);
+    }
+
+    // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
+    //   because effect threads tend to pull things from the Internet that they want to show
+    TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
+    {
+        // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method
+        //   deletes the object as soon as it can.
+        EffectTaskParams* pTaskParams = new EffectTaskParams(function, pEffect);
+        TaskHandle_t effectTask = nullptr;
+
+        debugW(">> Launching %s Effect Thread", name);
+
+        if (xTaskCreatePinnedToCore(EffectTaskEntry, name, STACK_SIZE, pTaskParams, priority, &effectTask, core) == pdPASS)
+            _vEffectTasks.push_back(effectTask);
+        else
+            // Clean up the task params object if the thread was not actually created
+            delete pTaskParams;
+
+        return effectTask;
     }
 };
 

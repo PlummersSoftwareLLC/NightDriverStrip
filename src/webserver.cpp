@@ -31,28 +31,13 @@
 #include "globals.h"
 #include "webserver.h"
 
-// Static member initializers
-
-const std::vector<const char *> CWebServer::knownSettings
-{
-    "effectInterval",
-    DeviceConfig::LocationTag,
-    DeviceConfig::LocationIsZipTag,
-    DeviceConfig::CountryCodeTag,
-    DeviceConfig::OpenWeatherApiKeyTag,
-    DeviceConfig::TimeZoneTag,
-    DeviceConfig::Use24HourClockTag,
-    DeviceConfig::UseCelsiusTag,
-    DeviceConfig::YouTubeChannelGuidTag,
-    DeviceConfig::YouTubeChannelName1Tag,
-    DeviceConfig::NTPServerTag,
-};
-
 // Maps settings for which a validator is available to the invocation thereof
-const std::map<const char *, CWebServer::ValueValidator> CWebServer::settingValidators
+const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
     { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrDeviceConfig->ValidateOpenWeatherAPIKey(value); } }
 };
+
+std::vector<SettingSpec> CWebServer::deviceSettingSpecs{};
 
 // Member function template specialzations
 
@@ -87,13 +72,21 @@ void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerR
 
 // Member function implementations
 
-bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName)
+bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName)
 {
     bool returnValue = false;
 
     PushPostParamIfPresent<bool>(pRequest, paramName, [&returnValue](auto value) { returnValue = value; return true; });
 
     return returnValue;
+}
+
+long CWebServer::GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post)
+{
+    if (!pRequest->hasParam("effectIndex", post, false))
+        return -1;
+
+    return strtol(pRequest->getParam("effectIndex", post, false)->value().c_str(), NULL, 10);
 }
 
 void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
@@ -105,8 +98,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
     do
     {
         bufferOverflow = false;
-        std::unique_ptr<AsyncJsonResponse> response(new AsyncJsonResponse(false, jsonBufferSize));
-        response->addHeader("Server","NightDriverStrip");
+        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
         auto j = response->getRoot();
 
         j["currentEffect"]         = g_ptrEffectManager->GetCurrentEffectIndex();
@@ -119,8 +111,11 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         for (int i = 0; i < g_ptrEffectManager->EffectCount(); i++)
         {
             StaticJsonDocument<256> effectDoc;
-            effectDoc["name"]    = effectsList[i]->FriendlyName();
-            effectDoc["enabled"] = g_ptrEffectManager->IsEffectEnabled(i);
+
+            auto effect = effectsList[i];
+            effectDoc["name"]    = effect->FriendlyName();
+            effectDoc["enabled"] = effect->IsEnabled();
+            effectDoc["hasSettings"] = effect->HasSettings();
 
             if (!j["Effects"].add(effectDoc))
             {
@@ -142,7 +137,6 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     debugV("GetStatistics");
 
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
-    response->addHeader("Server","NightDriverStrip");
     auto j = response->getRoot();
 
     j["LED_FPS"]               = g_FPS;
@@ -212,6 +206,66 @@ void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
+void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<SettingSpec> & settingSpecs)
+{
+    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+    bool bufferOverflow;
+
+    do
+    {
+        bufferOverflow = false;
+        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
+        auto jsonArray = response->getRoot().to<JsonArray>();
+
+        for (auto& spec : settingSpecs)
+        {
+            auto specObject = jsonArray.createNestedObject();
+
+            StaticJsonDocument<384> jsonDoc;
+
+            jsonDoc["name"] = spec.Name;
+            jsonDoc["friendlyName"] = spec.FriendlyName;
+            jsonDoc["description"] = spec.Description;
+            jsonDoc["type"] = to_value(spec.Type);
+            jsonDoc["typeName"] = spec.ToName(spec.Type);
+
+            if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
+            {
+                bufferOverflow = true;
+                jsonBufferSize += JSON_BUFFER_INCREMENT;
+                debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+                break;
+            }
+        }
+
+        if (!bufferOverflow)
+            AddCORSHeaderAndSendResponse(pRequest, response.release());
+
+    } while (bufferOverflow);
+}
+
+const std::vector<SettingSpec> & CWebServer::LoadDeviceSettingSpecs()
+{
+    if (deviceSettingSpecs.size() == 0)
+    {
+        auto deviceConfigSpecs = g_ptrDeviceConfig->GetSettingSpecs();
+        deviceSettingSpecs.emplace_back(
+            "effectInterval",
+            "Effect interval",
+            "The duration in milliseconds that an individual effect runs, before the next effect is activated.",
+            SettingSpec::SettingType::PositiveBigInteger
+        );
+        deviceSettingSpecs.insert(deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
+    }
+
+    return deviceSettingSpecs;
+}
+
+void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
+{
+    SendSettingSpecsResponse(pRequest, LoadDeviceSettingSpecs());
+}
+
 // Responds with current config, excluding any sensitive values
 void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 {
@@ -241,8 +295,6 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_ptrDeviceConfig->SetTimeZone(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_ptrDeviceConfig->Set24HourClock(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelGuidTag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelGuid(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::YouTubeChannelName1Tag, SET_VALUE(g_ptrDeviceConfig->SetYouTubeChannelName1(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(g_ptrDeviceConfig->SetNTPServer(value)));
 }
 
@@ -257,18 +309,103 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
     GetSettings(pRequest);
 }
 
+bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post)
+{
+    auto effectsList = g_ptrEffectManager->EffectsList();
+    auto effectIndex = GetEffectIndexFromParam(pRequest, post);
+
+    if (effectIndex < 0 || effectIndex >= effectsList.size() || !effectsList[effectIndex]->HasSettings())
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+
+        return false;
+    }
+
+    effect = effectsList[effectIndex];
+
+    return true;
+}
+
+void CWebServer::GetEffectSettingSpecs(AsyncWebServerRequest * pRequest)
+{
+    std::shared_ptr<LEDStripEffect> effect;
+
+    if (!CheckAndGetSettingsEffect(pRequest, effect))
+        return;
+
+    auto settingSpecs = effect->GetSettingSpecs();
+
+    SendSettingSpecsResponse(pRequest, settingSpecs);
+}
+
+void CWebServer::SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect)
+{
+    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+
+    do
+    {
+        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
+        auto jsonObject = response->getRoot().to<JsonObject>();
+
+        if (effect->SerializeSettingsToJSON(jsonObject))
+        {
+            AddCORSHeaderAndSendResponse(pRequest, response.release());
+            return;
+        }
+
+        jsonBufferSize += JSON_BUFFER_INCREMENT;
+        debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+    } while (true);
+}
+
+void CWebServer::GetEffectSettings(AsyncWebServerRequest * pRequest)
+{
+    debugV("GetEffectSettings");
+
+    std::shared_ptr<LEDStripEffect> effect;
+
+    if (!CheckAndGetSettingsEffect(pRequest, effect))
+        return;
+
+    SendEffectSettingsResponse(pRequest, effect);
+}
+
+void CWebServer::SetEffectSettings(AsyncWebServerRequest * pRequest)
+{
+    debugV("SetEffectSettings");
+
+    std::shared_ptr<LEDStripEffect> effect;
+
+    if (!CheckAndGetSettingsEffect(pRequest, effect, true))
+        return;
+
+    bool settingChanged = false;
+
+    for (auto& settingSpec : effect->GetSettingSpecs())
+    {
+        const String& settingName = settingSpec.Name;
+        settingChanged = PushPostParamIfPresent<String>(pRequest, settingName, [&](auto value) { return effect->SetSetting(settingName, value); })
+            || settingChanged;
+    }
+
+    if (settingChanged)
+        SaveEffectManagerConfig();
+
+    SendEffectSettingsResponse(pRequest, effect);
+}
+
 // Validate and set one setting. If no validator is available in settingValidators for the setting, validation is skipped.
 //   Requests containing more than one known setting are malformed and rejected.
 void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
 {
-    const char *paramName = nullptr;
+    String paramName;
 
-    for (auto knownSetting : knownSettings)
+    for (auto settingSpec : LoadDeviceSettingSpecs())
     {
-        if (pRequest->hasParam(knownSetting, true))
+        if (pRequest->hasParam(settingSpec.Name, true))
         {
-            if (!paramName)
-                paramName = knownSetting;
+            if (paramName.isEmpty())
+                paramName = settingSpec.Name;
             else
             // We found multiple known settings in the request, which we don't allow
             {
@@ -281,7 +418,7 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
     }
 
     // No known setting in the request, so we can stop processing and go on with our business
-    if (!paramName)
+    if (paramName.isEmpty())
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
         return;

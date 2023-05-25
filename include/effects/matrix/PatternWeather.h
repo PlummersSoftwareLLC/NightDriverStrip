@@ -59,6 +59,8 @@ extern const uint8_t clearsky_start[] asm("_binary_assets_bmp_clearsky_jpg_start
 extern const uint8_t clearsky_end[] asm("_binary_assets_bmp_clearsky_jpg_end");
 extern const uint8_t fewclouds_start[] asm("_binary_assets_bmp_fewclouds_jpg_start");
 extern const uint8_t fewclouds_end[] asm("_binary_assets_bmp_fewclouds_jpg_end");
+extern const uint8_t mist_start[] asm("_binary_assets_bmp_mist_jpg_start");
+extern const uint8_t mist_end[] asm("_binary_assets_bmp_mist_jpg_end");
 extern const uint8_t rain_start[] asm("_binary_assets_bmp_rain_jpg_start");
 extern const uint8_t rain_end[] asm("_binary_assets_bmp_rain_jpg_end");
 extern const uint8_t scatteredclouds_start[] asm("_binary_assets_bmp_scatteredclouds_jpg_start");
@@ -81,7 +83,8 @@ static std::map<int, EmbeddedFile> weatherIcons =
     { 9, EmbeddedFile(showerrain_start, showerrain_end) },
     { 10, EmbeddedFile(rain_start, rain_end) },
     { 11, EmbeddedFile(thunderstorm_start, thunderstorm_end) },
-    { 13, EmbeddedFile(snow_start, snow_end) }
+    { 13, EmbeddedFile(snow_start, snow_end) },
+    { 50, EmbeddedFile(mist_start, mist_end) }
 };
 
 class PatternWeather : public LEDStripEffect
@@ -98,7 +101,6 @@ private:
     int    iconToday         = -1;
     int    iconTomorrow      = -1;
     float  temperature       = 0.0f;
-    float  pressure          = 0.0f;
     float  highToday         = 0.0f;
     float  loToday           = 0.0f;
     float  highTomorrow      = 0.0f;
@@ -292,16 +294,16 @@ private:
     }
 
     // Thread entry point so we can update the weather data asynchronously
-    static void WeatherTaskEntryPoint(void * pv)
+    static void WeatherTaskEntryPoint(LEDStripEffect &effect)
     {
-        PatternWeather * pObj = (PatternWeather *) pv;
+        PatternWeather& weatherEffect = static_cast<PatternWeather&>(effect);
 
         for(;;)
         {
             // Suspend ourself until Draw() wakes us up
             vTaskSuspend(NULL);
 
-            pObj->UpdateWeather();
+            weatherEffect.UpdateWeather();
         }
     }
 
@@ -347,18 +349,12 @@ public:
     {
     }
 
-    ~PatternWeather()
-    {
-        vTaskDelete(weatherTask);
-    }
-
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        debugW("Spawning thread to check weather...");
-        xTaskCreatePinnedToCore(WeatherTaskEntryPoint, "Weather", 4096, (void *) this, NET_PRIORITY, &weatherTask, NET_CORE);
+        weatherTask = g_TaskManager.StartEffectThread(WeatherTaskEntryPoint, this, "Weather");
 
         return true;
     }

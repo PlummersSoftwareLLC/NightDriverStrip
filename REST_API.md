@@ -11,8 +11,11 @@
   - [Disable effect](#disable-effect)
   - [Enable effect](#enable-effect)
   - [Get effect configuration information](#get-effect-configuration-information)
-  - [Settings](#settings)
+  - [Device setting specifications](#device-setting-specifications)
+  - [Device settings](#device-settings)
   - [Set setting with validation](#set-setting-with-validation)
+  - [Effect setting specifications](#effect-setting-specifications)
+  - [Effect settings](#effect-settings)
   - [Reset configuration and/or device](#reset-configuration-andor-device)
 - [Postman collection](#postman-collection)
 
@@ -98,7 +101,7 @@ With this endpoint a previously disabled effect can be enabled. From that moment
 |-|-|-|
 | URL | `/enableEffect` |
 | Method | POST | |
-| Parameters | `effectIndex` | the (zero-based) integer index of the effect to enable in the device's effect list. |
+| Parameters | `effectIndex` | The (zero-based) integer index of the effect to enable in the device's effect list. |
 | Response | 200 (OK) | An empty OK response. |
 
 ### Get effect configuration information
@@ -112,7 +115,18 @@ This endpoint returns a JSON document with information about the detailed config
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with detailed configuration information about the device's effects. |
 
-### Settings
+### Device setting specifications
+
+This endpoint can be used to retrieve the list of known device configuration settings.
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/settings/specs` |
+| Method | GET | |
+| Parameters | | |
+| Response | 200 (OK) | A JSON array with the known device configuration settings. The specifications include the name, description, type identifier and type name for each setting. |
+
+### Device settings
 
 This endpoint can be used to retrieve and change device configuration settings.
 
@@ -122,8 +136,9 @@ When changing settings:
 
 - All parameters are optional. Only settings that are sent in the POST parameters are modified. All other settings are unchanged.
 - No validation of values provided takes place. There is a [separate endpoint with which an individual setting can be changed after validation](#set-setting-with-validation).
+- Changed settings will be applied immediately, but it takes a few seconds before they are persisted beyond restarts.
 
-#### Retrieve
+#### Retrieve device settings
 
 | Property| Value | Explanation |
 |-|-|-|
@@ -132,28 +147,18 @@ When changing settings:
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings. |
 
-#### Change
+#### Change device settings
 
 | Property| Value | Explanation |
 |-|-|-|
 | URL | `/settings` |
 | Method | POST | |
-| Parameters | `effectInterval` | The duration in milliseconds that an individual effect runs, before NightDriverStrip activates the next effect. |
-| | `countryCode` | The [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code for the country that the device is located in. Used by the Weather effect. |
-| | `location` | The location (city or postal code) where the device is located. Used by the Weather effect. |
-| | `locationIsZip` | A boolean indicating if the value in the `location` setting is a postal code (`true`/1) or not (`false`/0). |
-| | `ntpServer` | The hostname or IP address of the NTP server to be used for time synchronization. Used by effects that require the current time. |
-| | `openWeatherApiKey` | The API key for the [Weather API provided by Open Weather Map](https://openweathermap.org/api). Used by the Weather effect. |
-| | `timeZone` | The timezone the device resides in, in [tz database](https://en.wikipedia.org/wiki/Tz_database) format. The list of available timezone identifiers can be found in the [timezones.json](config/timezones.json) file. Used by effects that show a clock. |
-| | `use24HourClock` | A boolean that indicates if time should be shown in 24-hour format (`true`/1) or 12-hour AM/PM format (`false`/0). Used by effects that show a digital clock. |
-| | `useCelsius` | A boolean that indicates if temperatures should be shown in degrees Celsius (`true`/1) or degrees Fahrenheit ( `false`/0). Used by the Weather effect. |
-| | `youtubeChannelGuid` | The [YouTube Sight](http://tools.tastethecode.com/youtube-sight) GUID of the channel for which the Subscriber effect should show subscriber information. |
-| | `youtubeChannelName1` | The name of the channel for which the Subscriber effect should show subscriber information. |
+| Parameters | | One or more settings that have been returned by the [Device setting specifications endpoint](#device-setting-specifications). |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Set setting with validation
 
-This endpoint can be used to validate the value for one device configuration setting, and set it if validation succeeds. Note that this endpoint will accept only one of the known configuration settings (listed as the parameters of [the Settings endpoint](#settings).)
+This endpoint can be used to validate the value for one device configuration setting, and set it if validation succeeds. Note that this endpoint will accept only one of the known configuration settings (listed as the parameters of [the Device settings endpoint](#device-settings).)
 
 Note that validation is not implemented for all settings; the validation step is skipped for settings for which validation is not available.
 
@@ -161,13 +166,55 @@ Note that validation is not implemented for all settings; the validation step is
 |-|-|-|
 | URL | `/settings/validated` |
 | Method | POST | |
-| Parameters | | Exactly one of the known settings may be provided. The known settings are listed as the parameters of [the Settings endpoint](#settings). |
+| Parameters | | Exactly one setting that has been returned by the [Device setting specifications endpoint](#device-setting-specifications). |
 | Response | 200 (OK) | Validation succeeded and the provided value has been set. |
 | | 400 (Bad Request) | More than one known setting was provided, or validation failed. The applicable message is returned in a JSON blob. |
 
+### Effect setting specifications
+
+This endpoint can be used to retrieve the list of known effect-specific configuration settings for an individual effect.
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/settings/effect/specs` |
+| Method | GET | |
+| Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the setting specifications for. |
+| Response | 200 (OK) | A JSON array with the known effect-specific configuration settings for the effect with index `effectIndex`. The specifications include the name, description, type identifier and type name for each setting. The response is empty if the effect does not have any configurable settings. |
+
+### Effect settings
+
+This endpoint can be used to retrieve and change effect-specific configuration settings.
+
+When retrieving settings, sensitive properties (like API keys) are not returned.
+
+When changing settings:
+
+- All parameters are optional. Only settings that are sent in the POST parameters are modified. All other settings are unchanged.
+- No validation of values provided takes place, and isn't currently supported for effect-specific settings.
+- Changed settings will be applied immediately, but it takes a few seconds before they are persisted beyond restarts.
+
+#### Retrieve effect settings
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/settings/effect` |
+| Method | GET | |
+| Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the settings for. |
+| Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings. The response is empty if the effect does not have any configurable settings. |
+
+#### Change effect settings
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/settings` |
+| Method | POST | |
+| Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to change settings for. |
+| | | One or more settings that have been returned by the [Effect setting specifications endpoint](#effect-setting-specifications). |
+| Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings, after applying the values in the request's POST parameters. The response is empty if the effect does not have any configurable settings. |
+
 ### Reset configuration and/or device
 
-This endpoint can be used to reset effect configuration (see [Get effect configuration information](#get-effect-configuration-information)), device settings (see [Settings](#settings)), and/or the board itself - i.e. restart it.
+This endpoint can be used to reset effect configuration (see [Get effect configuration information](#get-effect-configuration-information)), device settings (see [Device settings](#device-settings)), and/or the board itself - i.e. restart it.
 
 Any parameters that are not provided are considered to be `false`.
 

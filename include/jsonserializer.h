@@ -133,6 +133,9 @@ bool RemoveJSONFile(const char *fileName);
 
 class JSONWriter
 {
+    // We allow the main JSON Writer task entry point function to access private members
+    friend void IRAM_ATTR JSONWriterTaskEntry(void *);
+
   private:
 
     // Writer function and flag combo
@@ -151,70 +154,14 @@ class JSONWriter
 
     std::vector<WriterEntry> writers;
     std::atomic_ulong latestFlagMs;
-    TaskHandle_t writerTask;
-
-    static void WriterInvokerEntryPoint(void * pv)
-    {
-        JSONWriter * pObj = (JSONWriter *) pv;
-
-        for(;;)
-        {
-            TickType_t notifyWait = portMAX_DELAY;
-
-            for (;;)
-            {
-                // Wait until we're woken up by a writer being flagged, or until we've reached the hold point
-                ulTaskNotifyTake(pdTRUE, notifyWait);
-
-                unsigned long holdUntil = pObj->latestFlagMs + JSON_WRITER_DELAY;
-                unsigned long now = millis();
-                if (now >= holdUntil)
-                    break;
-
-                notifyWait = pdMS_TO_TICKS(holdUntil - now);
-            }
-
-            for (auto &entry : pObj->writers)
-            {
-                // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing
-                if (entry.flag.exchange(false))
-                    entry.writer();
-            }
-        }
-    }
 
   public:
-    JSONWriter()
-    {
-        xTaskCreatePinnedToCore(WriterInvokerEntryPoint, "JSONWriter", 4096, (void *) this, JSONSERIAL_PRIORITY, &writerTask, JSONSERIAL_CORE);
-    }
-
-    ~JSONWriter()
-    {
-        vTaskDelete(writerTask);
-    }
 
     // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
-    size_t RegisterWriter(std::function<void()> writer)
-    {
-        // Add the writer with its flag unset
-        writers.emplace_back(writer);
-        return writers.size() - 1;
-    }
+    size_t RegisterWriter(std::function<void()> writer);
 
     // Flag a writer for invocation and wake up the task that calls them
-    void FlagWriter(size_t index)
-    {
-        // Check if we received a valid writer index
-        if (index >= writers.size())
-            return;
-
-        writers[index].flag = true;
-        latestFlagMs = millis();
-
-        // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
-        xTaskNotifyGive(writerTask);
-    }
+    void FlagWriter(size_t index);
 };
 
 extern DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter;
