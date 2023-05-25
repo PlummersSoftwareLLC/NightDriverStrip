@@ -34,6 +34,7 @@
 
 #include <UrlEncode.h>
 #include "deviceconfig.h"
+#include "YouTubeSight.h"
 
 #define SUB_CHECK_WIFI_WAIT 5000
 #define SUB_CHECK_INTERVAL 60000

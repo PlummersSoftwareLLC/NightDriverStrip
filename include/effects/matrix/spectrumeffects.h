@@ -31,9 +31,9 @@
 
 #pragma once
 
-
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
+#include "effectmanager.h"
 
 extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown

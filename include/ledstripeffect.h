@@ -57,7 +57,7 @@ class LEDStripEffect : public IJSONSerializable
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
 
     template<typename Tv>
-    bool SetIfSelected(String settingName, const String& propertyName, Tv& property, const Tv& value)
+    bool SetIfSelected(const String& settingName, const String& propertyName, Tv& property, const Tv& value)
     {
         if (settingName == propertyName)
         {
