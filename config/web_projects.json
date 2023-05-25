@@ -16,7 +16,7 @@
             "chipfamily": "ESP32",
             "name": "ESP32",
             "projects": [
-                {   
+                {
                     "tag": "demo",
                     "name":"Demo"
                 },
@@ -39,7 +39,7 @@
             "chipfamily": "ESP32-S3",
             "name": "ESP32ESP32-S3-DevKitC-1",
             "projects": [
-                {   
+                {
                     "tag": "panlee",
                     "name":"Panlee"
                 }
@@ -70,10 +70,6 @@
                     "name": "Atom Light"
                 },
                 {
-                    "tag": "brooklynroom",
-                    "name": "Brooklyn Room"
-                },
-                {   
                     "tag": "heltecdemo",
                     "name":"Demo"
                 },
@@ -88,7 +84,7 @@
             "chipfamily": "ESP32",
             "name": "Heltec Wifi Kit 32 (V2)",
             "projects": [
-                {   
+                {
                     "tag": "heltecv2demo",
                     "name":"Demo"
                 }
@@ -99,7 +95,7 @@
             "chipfamily": "ESP32",
             "name": "M5StickC",
             "projects": [
-                {   
+                {
                     "tag": "m5demo",
                     "name":"Demo"
                 },
@@ -122,7 +118,7 @@
                     "tag": "cube",
                     "name": "Cube"
                 },
-                {   
+                {
                     "tag": "m5plusdemo",
                     "name":"Demo"
                 },
@@ -164,7 +160,7 @@
             "chipfamily": "ESP32",
             "name": "TinyPICO",
             "projects": [
-                {   
+                {
                     "tag": "chieftain",
                     "name":"Chieftain"
                 },

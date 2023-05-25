@@ -191,7 +191,7 @@ class MeteorEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -207,7 +207,7 @@ class MeteorEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))

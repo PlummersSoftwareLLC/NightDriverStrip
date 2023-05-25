@@ -168,13 +168,11 @@ extern float g_Brite;
 //
 // Task Handles to our running threads
 //
-
 NightDriverTaskManager g_TaskManager;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
-
 ImprovSerial<typeof(Serial)> g_ImprovSerial;
 
 //
@@ -275,26 +273,9 @@ void IRAM_ATTR DebugLoopTaskEntry(void *)
 
 // NetworkHandlingLoopEntry
 //
+// Thead entry point for the Networking task
 // Pumps the various network loops and sets the time periodically, as well as reconnecting
 // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
-
-// Data for Dave's Garage as an example,
-
-#if USE_MATRIX
-    const char PatternSubscribers::szChannelID[]    = "UCNzszbnvQeFzObW0ghk0Ckw";
-    const char PatternSubscribers::szChannelName1[] = "Daves Garage";
-
-    #define SUB_CHECK_INTERVAL 60000
-    #define SUB_CHECK_ERROR_INTERVAL 10000
-    #define CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
-
-    WiFiClient http;
-    YouTubeSight sight(CHANNEL_GUID, http);
-#endif
-
-// NetworkHandlingLoopEntry
-//
-// Thead entry point for the Networking task
 
 void IRAM_ATTR NetworkHandlingLoopEntry(void *)
 {
@@ -324,38 +305,7 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *)
                     #endif
                 }
             }
-
-            // Get Subscriber Count when wifi first connects, then every 60 seconds (or whatever the interval is set to)
-
-            #if (SUB_CHECK_INTERVAL > 0)
-                if (WiFi.isConnected())
-                {
-                    static int millisLastCheck = 0;
-                    static bool succeededBefore = false;
-
-                    // If we've never succeeded, we try every 20 seconds, but then we settle down to the SUBCHECK_INTERVAL
-                    if (millisLastCheck == 0 || (!succeededBefore && (millis() - millisLastCheck > 60000)) || (millis() - millisLastCheck > SUBCHECK_INTERVAL))
-                    {
-                        millisLastCheck = millis();
-                        sight._debug = false;
-
-                        // Use the YouTubeSight API call to get the current channel stats
-
-                        if (sight.getData())
-                        {
-                            PatternSubscribers::cSubscribers = atol(sight.channelStats.subscribers_count.c_str());
-                            PatternSubscribers::cViews       = atol(sight.channelStats.views.c_str());
-                            succeededBefore = true;
-                        }
-                        else
-                        {
-                            debugW("YouTubeSight Subscriber API failed\n");
-                        }
-                    }
-                }
-            #endif
         #endif
-
 
         #if ENABLE_WIFI && ENABLE_NTP
             EVERY_N_MILLIS(TIME_CHECK_INTERVAL_MS)
@@ -476,9 +426,11 @@ void setup()
 {
     // Initialize Serial output
     Serial.begin(115200);
+    // Re-route debug output to the serial port
+    Debug.setSerialEnabled(true);
 
+    heap_caps_malloc_extmem_enable(128);
     uzlib_init();
-    heap_caps_malloc_extmem_enable(1024);
 
     if (!SPIFFS.begin(true))
         Serial.println("WARNING: SPIFFs could not be intialized!");
@@ -510,7 +462,11 @@ void setup()
     }
     ESP_ERROR_CHECK(err);
 
-    // Create and load device config from NVS if possible
+    // Create the JSON writer and start its background thread
+    g_ptrJSONWriter = std::make_unique<JSONWriter>();
+    g_TaskManager.StartJSONWriterThread();
+
+    // Create and load device config from SPIFFS if possible
     g_ptrDeviceConfig = std::make_unique<DeviceConfig>();
 
 #if ENABLE_WIFI
@@ -536,9 +492,6 @@ void setup()
     }
 
 #endif
-
-    // Re-route debug output to the serial port
-    Debug.setSerialEnabled(true);
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 

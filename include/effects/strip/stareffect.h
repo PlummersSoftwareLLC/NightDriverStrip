@@ -467,7 +467,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -601,7 +601,7 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         LEDStripEffect::Init(gfx);
         for (int i = 0; i < NUM_TWINKLES; i++)

@@ -56,15 +56,15 @@ extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
 
 struct AudioVariables
 {
-    float _VURatio = 1.0;         // Current VU as a ratio to its recent min and max
-    float _VURatioFade = 1.0;     // Same as gVURatio but with a slow decay
-    float _VU = 0.0;              // Instantaneous read of VU value
-    float _PeakVU = MAX_VU;       // How high our peak VU scale is in live mode
-    float _MinVU = 0.0;           // How low our peak VU scale is in live mode
-    unsigned long _cSamples = 0U; // Total number of samples successfully collected
-    int _AudioFPS = 0;            // Framerate of the audio sampler
-    int _serialFPS = 0;           // How many serial packets are processed per second
-    uint _msLastRemote = 0;       // When the last Peak data came in from external (ie: WiFi)
+    float _VURatio          = 1.0;          // Current VU as a ratio to its recent min and max
+    float _VURatioFade      = 1.0;          // Same as gVURatio but with a slow decay
+    float _VU               = 0.0;          // Instantaneous read of VU value
+    float _PeakVU           = MAX_VU;       // How high our peak VU scale is in live mode
+    float _MinVU            = 0.0;          // How low our peak VU scale is in live mode
+    unsigned long _cSamples = 0U;           // Total number of samples successfully collected
+    int _AudioFPS           = 0;            // Framerate of the audio sampler
+    int _serialFPS          = 0;            // How many serial packets are processed per second
+    uint _msLastRemote      = 0;            // When the last Peak data came in from external (ie: WiFi)
 };
 
 #if !ENABLE_AUDIO
@@ -75,11 +75,7 @@ class SoundAnalyzer : public AudioVariables // Non-audio case.  Inherits only th
 #else // Audio case
 
 #define EXAMPLE_I2S_NUM (I2S_NUM_0)
-#define EXAMPLE_I2S_SAMPLE_BITS (I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_STAND_MSB)
-#define EXAMPLE_I2S_BUF_DEBUG (0)                                                               // enable display buffer for debug
-#define EXAMPLE_I2S_READ_LEN (MAX_SAMPLES)                                                      // I2S read buffer length
 #define EXAMPLE_I2S_FORMAT (I2S_CHANNEL_FMT_RIGHT_LEFT)                                         // I2S data format
-#define EXAMPLE_I2S_CHANNEL_NUM ((EXAMPLE_I2S_FORMAT < I2S_CHANNEL_FMT_ONLY_RIGHT) ? (2) : (1)) // I2S channel number
 #define I2S_ADC_UNIT ADC_UNIT_1                                                                 // I2S built-in ADC unit
 #define I2S_ADC_CHANNEL ADC1_CHANNEL_0                                                          // I2S built-in ADC channel
 
@@ -91,21 +87,20 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
 // results are simplified down to this small class of band peaks.
 
-// The MAX9814 mic has different sensitivity than th M5's mic, so each needs its own value here
+// The MAX9814 mic has different sensitivity than the M5's mic, so each needs its own value here
 
 #if (M5STICKC || M5STICKCPLUS || M5STACKCORE2)
-#define MIN_VU 128
+    #define MIN_VU 128
 #else
-#define MIN_VU 512
+    #define MIN_VU 512
 #endif
 
 #ifndef GAINDAMPEN
-#define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
-#define GAINDAMPENMIN 1000 //   We want the quiet part to adjust quite slowly
+    #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
 #endif
 
 #ifndef VUDAMPEN
-#define VUDAMPEN 0 // How slowly VU reacts
+    #define VUDAMPEN 0 // How slowly VU reacts
 #endif
 
 #define VUDAMPENMIN 1 // How slowly VU min creeps up to test noise floor
@@ -510,10 +505,10 @@ class SoundAnalyzer : public AudioVariables
         //
         //
 
-#if SCALE_AUDIO_EXPONENTIAL
-        for (int i = 0; i < NUM_BANDS; i++)
-            _vPeaks[i] = powf(_vPeaks[i], 2.0);
-#endif
+        #if SCALE_AUDIO_EXPONENTIAL
+            for (int i = 0; i < NUM_BANDS; i++)
+                _vPeaks[i] = powf(_vPeaks[i], 2.0);
+        #endif
 
         double allBandsPeak = 0;
         for (int i = 0; i < _BandCount; i++)
@@ -525,13 +520,7 @@ class SoundAnalyzer : public AudioVariables
         allBandsPeak = std::max((double)NOISE_FLOOR, allBandsPeak);
         debugV("All Bands Peak: %f", allBandsPeak);
 
-        auto multiplier = map(_VURatio, 0.0, 2.0, 1.5, 1.0);
-
-#if MESERMIZER
-        // Visual hand-tweaking to get the display to look a little taller
-        allBandsPeak *= 1.0;
-#endif
-
+        // Normalize all the bands relative to allBandsPeak
         for (int i = 0; i < _BandCount; i++)
             _vPeaks[i] /= allBandsPeak;
 
@@ -581,11 +570,6 @@ class SoundAnalyzer : public AudioVariables
                 debugV("BAND %d: %d\n", i, _cutOffsBand[i]);
             }
         }
-    }
-
-    PeakData GetSamplePassPeaks()
-    {
-        return _Peaks;
     }
 
     // BandCutoffTable
@@ -703,7 +687,7 @@ public:
         i2s_config.dma_buf_len = MAX_SAMPLES;
         i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
         i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
-        i2s_config.use_apll = false,
+        i2s_config.use_apll = false;
         i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
         i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
         i2s_config.dma_buf_count = 2;
@@ -753,14 +737,8 @@ public:
 
     inline void DecayPeaks()
     {
-        // REVIEW(davepl) Can be updated to use the frame timers from g_AppTime
-
-        static unsigned long lastDecay = 0;
-        float seconds = (millis() - lastDecay) / (float)MS_PER_SECOND;
-        lastDecay = millis();
-
-        float decayAmount1 = std::max(0.0f, seconds * g_peak1DecayRate);
-        float decayAmount2 = std::max(0.0f, seconds * g_peak2DecayRate);
+        float decayAmount1 = std::max(0.0, g_AppTime.DeltaTime() * g_peak1DecayRate);
+        float decayAmount2 = std::max(0.0, g_AppTime.DeltaTime() * g_peak2DecayRate);
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
         {
@@ -768,15 +746,15 @@ public:
             g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);
         }
 
-        /* Manual smoothing if desired */
+        // Manual smoothing if desired 
 
-#if ENABLE_AUDIO_SMOOTHING
-        for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
-        {
-            g_peak1Decay[iBand] = (g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 2;
-            g_peak2Decay[iBand] = (g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 2;
-        }
-#endif
+        #if ENABLE_AUDIO_SMOOTHING
+            for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
+            {
+                g_peak1Decay[iBand] = (g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 2;
+                g_peak2Decay[iBand] = (g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 2;
+            }
+        #endif
     }
 
     // Update the local band peaks from the global sound data.  If we establish a new peak in any band,
@@ -819,11 +797,11 @@ public:
     {
         if (millis() - _msLastRemote > AUDIO_PEAK_REMOTE_TIMEOUT)
         {
-#if M5STICKC || M5STICKCPLUS || M5STACKCORE2
-            _MicMode = PeakData::M5;
-#else
-            _MicMode = PeakData::MESMERIZERMIC;
-#endif
+            #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
+                _MicMode = PeakData::M5;
+            #else
+                _MicMode = PeakData::MESMERIZERMIC;
+            #endif
 
             Reset();
             FillBufferI2S();
@@ -832,14 +810,14 @@ public:
         }
         else
         {
-            // Calculate an average VU from the band data
+            // Calculate a total VU from the band data
             float sum = 0.0f;
             for (int i = 0; i < NUM_BANDS; i++)
                 sum += _Peaks[i];
 
             // Scale it so that its not always in the top red
             _MicMode = PeakData::PCREMOTE;
-            UpdateVU(0.25 * MAX_VU * sum / NUM_BANDS);
+            UpdateVU(sum);
         }
     }
 };

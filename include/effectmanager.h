@@ -38,15 +38,14 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <iostream>
-#include <memory>
-#include <vector>
+#include <set>
+#include <algorithm>
 #include <math.h>
 
+#include "effectfactories.h"
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
-#include "jsonserializer.h"
 
-#define MAX_EFFECTS 32                  // BUGBUG Not used - needed?  
 #define JSON_FORMAT_VERSION 1
 
 extern uint8_t g_Brightness;
@@ -60,8 +59,7 @@ void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_ptrDevices[NUM_CHANNELS];
-std::shared_ptr<LEDStripEffect> CreateEffectFromJSON(const JsonObjectConst& jsonObject);
+extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 // EffectManager
 //
@@ -81,7 +79,6 @@ class EffectManager : public IJSONSerializable
     CRGB lastManualColor = CRGB::Red;
     bool _clearTempEffectWhenExpired = false;
 
-    std::unique_ptr<bool[]> _abEffectEnabled;
     std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
 
@@ -98,10 +95,64 @@ class EffectManager : public IJSONSerializable
         }
     }
 
+    void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
+    {
+        std::set<int> loadedEffectNumbers;
+
+        // Create effects from JSON objects, using the respective factories in g_EffectFactories
+        auto& jsonFactories = g_EffectFactories.GetJSONFactories();
+
+        for (auto effectObject : effectsArray)
+        {
+            int effectNumber = effectObject[PTY_EFFECTNR];
+            auto factoryEntry = jsonFactories.find(effectNumber);
+
+            if (factoryEntry == jsonFactories.end())
+                continue;
+
+            auto pEffect = factoryEntry->second(effectObject);
+
+            if (pEffect != nullptr)
+            {
+                _vEffects.push_back(pEffect);
+                loadedEffectNumbers.insert(effectNumber);
+            }
+        }
+
+        // Now add missing effects from the default factory list
+        auto &defaultFactories = g_EffectFactories.GetDefaultFactories();
+
+        // We iterate manually, so we can use where we are as the starting point for a later inner loop
+        for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
+        {
+            int effectNumber = iter->EffectNumber;
+
+            // If we've already loaded this effect (number) from JSON, we can move on to check the next one
+            if (loadedEffectNumbers.count(effectNumber))
+                continue;
+
+            // We found an effect (number) in the default list that we have not yet loaded from JSON.
+            //   So, we go through the rest of the default factory list to create and add to our effects
+            //   list all instances of this effect.
+            std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
+                {
+                    if (numberedFactory.EffectNumber != effectNumber)
+                        return;
+
+                    auto pEffect = numberedFactory.Factory();
+                    if (pEffect != nullptr)
+                        _vEffects.push_back(pEffect);
+                }
+            );
+
+            // Register that we added this effect number, so we don't add the respective effects more than once
+            loadedEffectNumbers.insert(effectNumber);
+        }
+    }
+
     void ClearEffects()
     {
         _vEffects.clear();
-        _abEffectEnabled.reset();
         _cEnabled = 0;
     }
 
@@ -120,12 +171,12 @@ public:
         construct(false);
     }
 
-    EffectManager(const std::vector<std::shared_ptr<LEDStripEffect>> & effects, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(std::shared_ptr<GFXTYPE> gfx [])
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
 
-        LoadEffects(effects);
+        LoadDefaultEffects();
     }
 
     EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> gfx [])
@@ -142,11 +193,14 @@ public:
         ClearEffects();
     }
 
-    void LoadEffects(const std::vector<std::shared_ptr<LEDStripEffect>> & effects)
+    void LoadDefaultEffects()
     {
-        _vEffects = effects;
-
-        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
+        for (auto &numberedFactory : g_EffectFactories.GetDefaultFactories())
+        {
+            auto pEffect = numberedFactory.Factory();
+            if (pEffect != nullptr)
+                _vEffects.push_back(pEffect);
+        }
 
         for (int i = 0; i < _vEffects.size(); i++)
             EnableEffect(i, true);
@@ -156,42 +210,65 @@ public:
         construct(true);
     }
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    // DeserializeFromJSON
+    //
+    // This function deserializes LED strip effects from a provided JSON object.
+    //
+    // It first clears any existing effects and then attempts to populate the effects vector from
+    // the provided JSON object, which should contain an array of effects configurations ("efs").
+    //
+    // For each effect in the JSON array, it attempts to create an effect from its JSON configuration.
+    // If an effect is successfully created, it's added to the effects vector.
+    //
+    // If no effects are successfully loaded from JSON, it loads the default effects.
+    //
+    // If the JSON object includes an "eef" array, the function attempts to load each effect's enabled state from it.
+    // If the index exceeds the "eef" array's size, the effect is enabled by default.
+    //
+    // The function also sets the effect interval from the "ivl" field in the JSON object, defaulting to a pre-defined value if the field isn't present.
+    //
+    // If the JSON object includes a "cei" field, the function sets the current effect index to this value.
+    // If the value is greater than or equal to the number of effects, it defaults to the last effect in the vector.
+    //
+    // Lastly, the function calls the construct() method, indicating successful deserialization.
+
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         ClearEffects();
 
+        // "efs" is the array of serialized effect objects
         JsonArrayConst effectsArray = jsonObject["efs"].as<JsonArrayConst>();
 
-        // Check if the object actually contained an effect config array
+        // Check if the object actually contained an effect config array. If not, load the default effects.
         if (effectsArray.isNull())
-            return false;
-
-        _vEffects.reserve(effectsArray.size());
-
-        for (auto effectObject : effectsArray)
         {
-            std::shared_ptr<LEDStripEffect> ptrEffect = CreateEffectFromJSON(effectObject);
-            if (ptrEffect != nullptr)
-                _vEffects.emplace_back(ptrEffect);
+            LoadDefaultEffects();
+            return true;
         }
 
-        // Check if we have at least one deserialized effect
-        if (_vEffects.size() == 0)
-            return false;
+        LoadJSONAndMissingEffects(effectsArray);
 
-        _abEffectEnabled = std::make_unique<bool[]>(_vEffects.size());
-
-        // Try to load effect enabled state from JSON also, default to "enabled" otherwise
-        JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
-        int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
-
-        for (int i = 0; i < _vEffects.size(); i++)
+        // "eef" was the array of effect enabled flags. They have now been integrated in the effects themselves;
+        //   this code is there to "migrate" users who already had a serialized effect config on their device
+        if (jsonObject.containsKey("eef"))
         {
-            if (i >= enabledSize || enabledArray[i] == 1)
-                EnableEffect(i, true);
+            // Try to load effect enabled state from JSON also, default to "enabled" otherwise
+            JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
+            int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
+
+            for (int i = 0; i < _vEffects.size(); i++)
+            {
+                if (i >= enabledSize || enabledArray[i] == 1)
+                    EnableEffect(i, true);
+                else
+                    DisableEffect(i, true);
+            }
         }
 
+        // "ivl" contains the effect interval in ms
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
+
+        // "cei" contains the current effect index
         if (jsonObject.containsKey("cei"))
         {
             _iCurrentEffect = jsonObject["cei"];
@@ -204,19 +281,33 @@ public:
         return true;
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    // SerializeToJSON - Serialize effects to a JSON object.
+    //
+    // This function serializes the current state of the LED strip effects into a JSON object.
+    // It starts by setting the JSON format version ("PTY_VERSION") to a predefined value ("JSON_FORMAT_VERSION")
+    // that helps in detecting and managing potential future incompatible structural updates.
+    //
+    // The function then sets the "ivl" and "cei" fields in the JSON object to the current effect interval
+    // and the current effect index, respectively.
+    //
+    // The function creates a nested array ("eef") in the JSON object to store the enabled state of each effect.
+    // It iterates through all effects, and for each effect, it adds a value of 1 to the array if the effect
+    // is enabled, and 0 if it is not.
+    //
+    // Next, the function creates another nested array ("efs") in the JSON object to store the effects themselves.
+    // It iterates through all effects, and for each effect, it creates a nested object in the effects array
+    // and attempts to serialize the effect into this object. If serialization of any effect fails, the function
+    // immediately returns false.
+    //
+    // If all effects are successfully serialized, the function returns true, indicating successful serialization.
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
 
         jsonObject["ivl"] = _effectInterval;
         jsonObject["cei"] = _iCurrentEffect;
-
-        // Serialize enabled state first. That way we'll still find out if we run out of memory, later
-        JsonArray enabledArray = jsonObject.createNestedArray("eef");
-
-        for (int i = 0; i < EffectCount(); i++)
-            enabledArray.add(IsEffectEnabled(i) ? 1 : 0);
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
@@ -339,9 +430,11 @@ public:
             return;
         }
 
-        if (!_abEffectEnabled[i])
+        auto& effect = _vEffects[i];
+
+        if (!effect->IsEnabled())
         {
-            _abEffectEnabled[i] = true;
+            effect->SetEnabled(true);
 
             if (_cEnabled < 1)
             {
@@ -362,9 +455,11 @@ public:
             return;
         }
 
-        if (_abEffectEnabled[i])
+        auto effect = _vEffects[i];
+
+        if (effect->IsEnabled())
         {
-            _abEffectEnabled[i] = false;
+            effect->SetEnabled(false);
 
             _cEnabled--;
             if (_cEnabled < 1)
@@ -384,7 +479,7 @@ public:
             debugW("Invalid index for IsEffectEnabled");
             return false;
         }
-        return _abEffectEnabled[i];
+        return _vEffects[i]->IsEnabled();
     }
 
     void PlayAll(bool bPlayAll)
@@ -445,10 +540,10 @@ public:
         _iCurrentEffect = i;
         _effectStartTime = millis();
 
+        StartEffect();
+
         if (!skipSave)
             SaveEffectManagerConfig();
-
-        StartEffect();
     }
 
     uint GetTimeUsedByCurrentEffect() const
@@ -514,8 +609,8 @@ public:
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
-        SaveEffectManagerConfig();
         StartEffect();
+        SaveEffectManagerConfig();
     }
 
     // Go back to the previous effect and abort the current one.
@@ -531,8 +626,8 @@ public:
             _effectStartTime = millis();
         } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
-        SaveEffectManagerConfig();
         StartEffect();
+        SaveEffectManagerConfig();
     }
 
     bool Init()
@@ -609,4 +704,4 @@ public:
     }
 };
 
-extern std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;

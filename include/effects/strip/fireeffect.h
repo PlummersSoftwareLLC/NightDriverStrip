@@ -99,7 +99,7 @@ class FireEffect : public LEDStripEffect
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -246,7 +246,7 @@ public:
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -349,7 +349,7 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -524,7 +524,7 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -543,7 +543,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
@@ -696,7 +696,7 @@ class BaseFireEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 

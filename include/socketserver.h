@@ -46,15 +46,14 @@ extern "C"
 
 #define STANDARD_DATA_HEADER_SIZE   24                                              // Size of the header for expanded data
 #define COMPRESSED_HEADER_SIZE      16                                              // Size of the header for compressed data
-#define LED_DATA_SIZE                3                                              // Data size of an LED (24 bits or 3 bytes)
+#define LED_DATA_SIZE               sizeof(CRGB)                                    // Data size of an LED (24 bits or 3 bytes)
 
 // We allocate whatever the max packet is, and use it to validate incoming packets, so right now it's set to the maxiumum
 // LED data packet you could have (header plus 3 RGBs per NUM_LED)
 
-#define MAXIUMUM_PACKET_SIZE \
-            (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS)                  // Header plus 24 bits per actual LED
-
+#define MAXIUMUM_PACKET_SIZE (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS) // Header plus 24 bits per actual LED
 #define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header
+
 bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
 
 #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
@@ -79,6 +78,7 @@ struct SocketResponse
 
 static_assert(sizeof(double) == 8);             // SocketResponse on wire uses 8 byte floats
 static_assert(sizeof(float)  == 4);             // PeakData on wire uses 4 byte floats
+
 // Two things must be true for this to work and interop with the C# side:  floats must be 8 bytes, not the default
 // of 4 for Arduino.  So that must be set in 'platformio.ini', and you must ensure that you align things such that
 // floats land on byte multiples of 8, otherwise you'll get packing bytes inserted.  Welcome to my world! Once upon
@@ -100,16 +100,16 @@ class SocketServer
 {
 private:
 
-    int                    _port;
-    int                    _numLeds;
-    int                    _server_fd;
-    struct sockaddr_in     _address;
+    int                         _port;
+    int                         _numLeds;
+    int                         _server_fd;
+    struct sockaddr_in          _address;
     std::unique_ptr<uint8_t []> _pBuffer;
     std::unique_ptr<uint8_t []> _abOutputBuffer;
 
 public:
 
-    size_t              _cbReceived;
+    size_t                      _cbReceived;
 
     SocketServer(int port, int numLeds) :
         _port(port),
@@ -271,6 +271,7 @@ public:
         {
             debugW("Unable to set read timeout on socket!");
             close(new_socket);
+            ResetReadBuffer();
             return false;
         }
 
@@ -431,7 +432,6 @@ public:
             // If we make it to this point, it should be success, so we consume
 
             ResetReadBuffer();
-            delay(1);
 
             if (bSendResponsePacket)
             {

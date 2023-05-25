@@ -1,6 +1,6 @@
 # NightDriverStrip
 
-DEVELOPERS WANTED!  We are searching for talented React and C++ developers to help out on this project.  Check out the code and if you're interest, contact davepl@davepl.com
+DEVELOPERS WANTED!  We are searching for talented React and C++ developers to help out on this project.  Check out the code and if you're interested, contact <davepl@davepl.com>.
 
 ![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
 
@@ -19,13 +19,24 @@ NightDriverStrip is a source code package for building a flash program that you 
 
 More recently, a web installer has been added to the project with which most of the NightDriver projects can be flashed on supported devices, using nothing but a web browser. Please refer to the section called [Using the Web Installer](#using-the-web-installer) if this is how you'd like to get started.
 
-To add new effects, you derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`. Add your class to the `AllEffects` table in `effects.cpp` (under your build configuration section, like `DEMO`). Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet. Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately. Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
+## Adding new effects
 
-There is a global `EffectsManager` instance that reads the `AllEffects` table in `effect.cpp` and then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`. Effects are not notified when they go active or not, they're just asked to draw when needed.
+To add new effects, you:
+
+1. Derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`.
+Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet. Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately. Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
+2. Add an effect number `#define` for your effect to `effects.h`. Make sure it's not already used by another effect!
+3. Add your class to the effect list created in the `LoadEffectFactories()` function in `effects.cpp` (under your build configuration section, like `DEMO`). The `ADD_EFFECT()` macro expects the effect number and type name of your new effect as parameters. Any additional parameters are passed to the effect's constructor when it's created.
+
+There is a global `EffectManager` instance that first creates the effect table from a JSON file on SPIFFS, if present. Then it adds any other effects that are registered in `LoadEffectFactories()` but not included in the JSON file. It then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`. Effects are not notified when they go active or not, they're just asked to draw when needed.
 
 Each channel of LEDs has an `LEDStripGfx` instance associated with it. `_GFX[0]` is the `LEDStripGfx` associated with `LED_PIN0`, and so on. You can get the LED buffer of Pin0 by calling `_GFX[0]->leds()`, and it will contain `_GFX[0]->GetLEDCount` pixels. You can draw into the buffer without ever touching the raw bytes by calling `fill_solid`, `fill_rainbow`, `setPixel`, and other drawing functions.
 
-The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32. It boots up, finds a single `PaletteEffect` object in the `AllEffects` table, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs. If working correctly it should draw a scrolling rainbow palette on your LED strip.
+The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32. It boots up, finds a single `RainbowFillEffect` in the `LoadEffectFactories()` function, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs. If working correctly it should draw a scrolling rainbow palette on your LED strip.
+
+Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the configuration of individual effects can be changed using the device API, and eventually the device web application (see [Device web UI and API](#device-web-ui-and-api), below.)
+
+This makes that an override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the friendly name and effect number. Those two properties are (de)serialized from/to JSON by `LEDStripEffect` by default.
 
 ## Using the Web Installer
 
@@ -37,7 +48,7 @@ To use the installer, follow these steps:
 
 1. Connect your device to your computer with a USB cable.
 
-2. Navigate to the following URL in your browser: <https://plummerssoftwarellc.github.io/NightDriverStrip>. It should then show a screen that looks like this:  
+2. Navigate to the following URL in your browser: <https://plummerssoftwarellc.github.io/NightDriverStrip>. It should then show a screen that looks like this:
    ![Installer start screen](assets/installer-start.png)
 
 3. Select your device (like "M5StickC Plus") from the drop-down list. A second drop-down with supported projects on that device will then appear.
@@ -55,6 +66,16 @@ To use the installer, follow these steps:
 9. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again, visit the device's web application, change the WiFi settings, and show the device's logs & console. Note that if you flashed a device image that includes a web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
 
 The images included in the installer are built using the current state of the source code in this repository. If there's anything you'd like to change in (the configuration of) the project you want to use, then it is time to move to the next stage and start interacting with the source code itself.
+
+## Device web UI and API
+
+On devices with WiFi, NightDriverStrip can start a webserver that hosts the web UI that is part of the project. It can be used to view and change what effect is running, and get live performance statistics of the device.
+
+When the device is started with the webserver enabled, the web UI can be accessed by opening a web browser and typing the IP address of your device in the address bar. Once loaded, the icons at the left of the screen can be used to toggle views within the UI on and off.
+
+More information about the web UI can be found [in its own README.md](site/README.md).
+
+Besides the web UI, the webserver also publishes a REST-like API. More information about it is available in [REST_API.md](./REST_API.md).
 
 ## Getting Started with the Source Code
 
@@ -84,7 +105,7 @@ This can also be configured in the platformio.ini file, as described in the [Fea
 
 ## File system
 
-To build and upload the file system that is used by some effects (currently the [Weather effect](include/effects/matrix/PatternWeather.h) to be specific), you will need to build and upload the SPIFFS image to your board's flash using platformio.  
+To build and upload the file system that is used by some effects (currently the [Weather effect](include/effects/matrix/PatternWeather.h) to be specific), you will need to build and upload the SPIFFS image to your board's flash using platformio.
 You can do this using the platformio user interface, or using the pio command line tool:
 
 ```ShellConsole

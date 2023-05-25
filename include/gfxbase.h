@@ -231,7 +231,10 @@ public:
     //     .----<----<----<----'
     //     |
     //    15 > 16 > 17 > 18 > 19
-
+    //
+    // If your matrix uses a different approach, you can override this function and implement it 
+    // in the xy() function of your class
+    
     virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         if (x & 0x01)

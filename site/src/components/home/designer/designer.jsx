@@ -19,13 +19,13 @@ const DesignerPanel = withStyles(designStyle)(props => {
             const timer = setTimeout(()=>{
                 setNextRefreshDate(Date.now());
             },3000);
-    
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/getEffectList`,{signal:aborter.signal})
+
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/effects`,{signal:aborter.signal})
                 .then(resp => resp.json())
                 .then(setEffects)
                 .then(()=>clearTimeout(timer))
                 .catch(err => addNotification("Error","Service","Get Effect List",err));
-    
+
             return () => {
                 abortControler && abortControler.abort();
                 clearTimeout(timer);
@@ -35,8 +35,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
 
     const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
 
-    const chipRequest = (url,options,operation) => 
-        new Promise((resolve,reject) => 
+    const chipRequest = (url,options,operation) =>
+        new Promise((resolve,reject) =>
             fetch(url,options)
                 .then(resolve)
                 .catch(err => {addNotification("Error",operation,err);reject(err)}));
@@ -44,11 +44,11 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const navigateTo = (idx)=>{
         return new Promise((resolve,reject)=>{
             setRequestRunning(true);
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/setCurrentEffectIndex?`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})}, "navigateTo")
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/currentEffect`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})}, "navigateTo")
                 .then(resolve)
                 .then(requestRefresh)
                 .catch(reject)
-                .finally(()=>setRequestRunning(false));    
+                .finally(()=>setRequestRunning(false));
         });
     };
 
@@ -59,7 +59,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 .then(resolve)
                 .then(requestRefresh)
                 .catch(reject)
-                .finally(()=>setRequestRunning(false));    
+                .finally(()=>setRequestRunning(false));
         });
     };
 
@@ -70,7 +70,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 .then(resolve)
                 .then(requestRefresh)
                 .catch(reject)
-                .finally(()=>setRequestRunning(false));    
+                .finally(()=>setRequestRunning(false));
         });
     };
 
@@ -84,7 +84,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
             },"updateEventInterval").then(resolve)
               .then(requestRefresh)
               .catch(reject)
-              .finally(()=>setRequestRunning(false));    
+              .finally(()=>setRequestRunning(false));
         });
     };
 
@@ -112,10 +112,10 @@ const DesignerPanel = withStyles(designStyle)(props => {
 
     return effects && <Box className={`${classes.root} ${!open && classes.hidden}`}>
         <Box className={classes.effectsHeader}>
-            {editing ? 
+            {editing ?
             editingHeader():
             displayHeader()}
-            <Countdown 
+            <Countdown
                 label="Time Remaining"
                 requestRefresh={requestRefresh}
                 millisecondsRemaining={effects.millisecondsRemaining}/>
@@ -126,10 +126,10 @@ const DesignerPanel = withStyles(designStyle)(props => {
             </Box>}
         </Box>
         <Box className={classes.effects}>
-            {effects.Effects.map((effect,idx) => <Effect 
+            {effects.Effects.map((effect,idx) => <Effect
                                                     key={`effect-${idx}`}
-                                                    effect={effect} 
-                                                    effectIndex={idx} 
+                                                    effect={effect}
+                                                    effectIndex={idx}
                                                     navigateTo={navigateTo}
                                                     requestRunning={requestRunning}
                                                     effectEnable={effectEnable}

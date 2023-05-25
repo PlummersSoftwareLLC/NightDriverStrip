@@ -61,7 +61,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
         debugV("SimpleRainbowTestEffect JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -109,7 +109,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         debugV("RainbowFill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -172,7 +172,7 @@ protected:
         debugV("RainbowFill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -253,24 +253,32 @@ protected:
     }
 };
 
+#if USE_MATRIX
+
 // SplashLogoEffect
 //
 // Displays the NightDriver logo on the screen
 
-static const char * pszLogoFile = "/bmp/LowResLogo.jpg";
+extern const uint8_t logo_start[] asm("_binary_assets_bmp_lowreslogo_jpg_start");
+extern const uint8_t logo_end[] asm("_binary_assets_bmp_lowreslogo_jpg_end");
 
 class SplashLogoEffect : public LEDStripEffect
 {
+  private:
+    EmbeddedFile logo;
+
   public:
 
     SplashLogoEffect()
-      : LEDStripEffect(EFFECT_STRIP_SPLASH_LOGO, "NightDriver")
+      : LEDStripEffect(EFFECT_STRIP_SPLASH_LOGO, "NightDriver"),
+        logo(logo_start, logo_end)
     {
         debugV("Splash logo constructor");
     }
 
     SplashLogoEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject)
+      : LEDStripEffect(jsonObject),
+        logo(logo_start, logo_end)
     {
         debugV("Splash logo JSON constructor");
     }
@@ -288,10 +296,12 @@ class SplashLogoEffect : public LEDStripEffect
     virtual void Draw() override
     {
         fillSolidOnAllChannels(CRGB::Black);
-        if (JDR_OK != TJpgDec.drawFsJpg(0, 0, pszLogoFile))        // Draw the image
-            debugW("Could not display logoo %s", pszLogoFile);
+        if (JDR_OK != TJpgDec.drawJpg(0, 0, logo.contents, logo.length))        // Draw the image
+            debugW("Could not display logo");
     }
 };
+
+#endif // USE_MATRIX
 
 // StatusEffect
 //
@@ -403,7 +413,7 @@ class TwinkleEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 

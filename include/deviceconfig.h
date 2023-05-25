@@ -32,12 +32,30 @@
 
 #include <memory>
 #include <vector>
+#include <tuple>
 #include "jsonserializer.h"
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
+#define DEFAULT_NTP_SERVER "0.pool.ntp.org"
+
+// DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should
+// be managed using overrides of the respective methods in LEDStripEffect (HasSettings(), GetSettingSpecs(),
+// SerializeSettingsToJSON() and SetSetting()).
+//
+// Adding a setting to the list of known/saved settings requires the following:
+// 1. Adding the setting variable to the list at the top of the class definition
+// 2. Adding a corresponding Tag to the list of static constexpr const char * strings further below
+// 3. Adding a corresponding SettingSpec at the top of the DeviceConfig() constructor (in deviceconfig.cpp)
+// 4. In the same constructor, adding logic to set a default in case the JSON load isn't possible
+// 5. Adding (de)serialization logic for the setting to the SerializeToJSON()/DeserializeFromJSON() methods
+// 6. Adding a Get/Set method for the setting (and, where applicable, their implementation in deviceconfig.cpp)
+//
+// For the first 5 points, a comment has been added to the respective place in the existing code.
+// Generally speaking, one will also want to add logic to the webserver to retrieve and set the setting.
 
 class DeviceConfig : public IJSONSerializable
 {
+    // Add variables for additional settings to this list
     String location;
     bool locationIsZip;
     String countryCode;
@@ -45,7 +63,10 @@ class DeviceConfig : public IJSONSerializable
     String openWeatherApiKey;
     bool use24HourClock;
     bool useCelsius;
+    String ntpServer;
 
+    std::vector<SettingSpec> settingSpecs;
+    size_t writerIndex;
 /*
     void WriteToNVS(const String& name, const String& value);
     void WriteToNVS(const String& name, bool value);
@@ -72,6 +93,9 @@ class DeviceConfig : public IJSONSerializable
 
   public:
 
+    using ValidateResponse = std::pair<bool, String>;
+
+    // Add additional setting Tags to this list
     static constexpr const char * LocationTag = NAME_OF(location);
     static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
     static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
@@ -79,37 +103,52 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * TimeZoneTag = NAME_OF(timeZone);
     static constexpr const char * Use24HourClockTag = NAME_OF(use24HourClock);
     static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
+    static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
 
     DeviceConfig();
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject)
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        return SerializeToJSON(jsonObject, true);
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
     {
         AllocatedJsonDocument jsonDoc(1024);
 
+        // Add serialization logic for additionl settings to this code
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;
         jsonDoc[CountryCodeTag] = countryCode;
-        jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
         jsonDoc[TimeZoneTag] = timeZone;
         jsonDoc[Use24HourClockTag] = use24HourClock;
         jsonDoc[UseCelsiusTag] = useCelsius;
+        jsonDoc[NTPServerTag] = ntpServer;
+
+        if (includeSensitive)
+            jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject)
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         return DeserializeFromJSON(jsonObject, false);
     }
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
+        // Add deserialization logic for additional settings to this code
         SetIfPresentIn(jsonObject, location, LocationTag);
         SetIfPresentIn(jsonObject, locationIsZip, LocationIsZipTag);
         SetIfPresentIn(jsonObject, countryCode, CountryCodeTag);
         SetIfPresentIn(jsonObject, openWeatherApiKey, OpenWeatherApiKeyTag);
         SetIfPresentIn(jsonObject, use24HourClock, Use24HourClockTag);
         SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
+        SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
+
+        if (ntpServer.isEmpty())
+            ntpServer = DEFAULT_NTP_SERVER;
 
         if (jsonObject.containsKey(TimeZoneTag))
             return SetTimeZone(jsonObject[TimeZoneTag], true);
@@ -123,6 +162,11 @@ class DeviceConfig : public IJSONSerializable
     void RemovePersisted()
     {
         RemoveJSONFile(DEVICE_CONFIG_FILE);
+    }
+
+    virtual const std::vector<SettingSpec>& GetSettingSpecs() const
+    {
+        return settingSpecs;
     }
 
     const String &GetTimeZone() const
@@ -177,6 +221,8 @@ class DeviceConfig : public IJSONSerializable
         return openWeatherApiKey;
     }
 
+    ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
+
     void SetOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
     {
         SetAndSave(openWeatherApiKey, newOpenWeatherAPIKey);
@@ -191,6 +237,17 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(useCelsius, newUseCelsius);
     }
+
+    const String &GetNTPServer() const
+    {
+        return ntpServer;
+    }
+
+    void SetNTPServer(const String &newNTPServer)
+    {
+        SetAndSave(ntpServer, newNTPServer);
+    }
+
 };
 
 extern DRAM_ATTR std::unique_ptr<DeviceConfig> g_ptrDeviceConfig;

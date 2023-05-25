@@ -39,6 +39,7 @@
 
 #pragma once
 
+#include <map>
 #include <WiFi.h>
 #include <FS.h>
 #include <AsyncTCP.h>
@@ -46,6 +47,7 @@
 #include <Arduino.h>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
+#include <HTTPClient.h>
 #include "deviceconfig.h"
 #include "jsonbase.h"
 #include "effects.h"
@@ -53,7 +55,18 @@
 class CWebServer
 {
   private:
+    // Template for param to value converter function, used by PushPostParamIfPresent()
+    template<typename Tv>
+    using ParamValueGetter = std::function<Tv(AsyncWebParameter *param)>;
 
+    // Template for value setting forwarding function, used by PushPostParamIfPresent()
+    template<typename Tv>
+    using ValueSetter = std::function<bool(Tv)>;
+
+    // Value validating function type, as used by DeviceConfig (and possible others)
+    using ValueValidator = std::function<DeviceConfig::ValidateResponse(const String&)>;
+
+    // Device stats that don't change after startup
     struct StaticStatistics
     {
         uint32_t HeapSize;
@@ -67,58 +80,56 @@ class CWebServer
         uint32_t FlashChipSize;
     };
 
-    struct EmbeddedFile
+    // Properties of files baked into the image
+    struct EmbeddedWebFile : public EmbeddedFile
     {
-        // Embedded file size in bytes
-        const size_t length;
-        // Contents as bytes
-        const uint8_t *const contents;
         // Added to hold the file's MIME type, but could be used for other type types, if desired
         const char *const type;
 
-        EmbeddedFile(const uint8_t start[], const uint8_t end[], const char type[]) :
-            length(end - start),
-            contents(start),
+        EmbeddedWebFile(const uint8_t start[], const uint8_t end[], const char type[]) :
+            EmbeddedFile(start, end),
             type(type)
         {}
     };
+
+    static std::vector<SettingSpec> deviceSettingSpecs;
+    static const std::map<String, ValueValidator> settingValidators;
 
     AsyncWebServer _server;
     StaticStatistics _staticStats;
 
     // Helper functions/templates
-    template<typename Tv>
-    using ParamValueGetter = std::function<Tv(AsyncWebParameter *param)>;
 
+    // Convert param value to a specific type and forward it to a setter function that expects that type as an argument
     template<typename Tv>
-    using ValueSetter = std::function<void(Tv)>;
-
-    template<typename Tv>
-    static void PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
+    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
     {
         if (!pRequest->hasParam(paramName, true, false))
-            return;
+            return false;
 
         debugV("found %s", paramName.c_str());
 
         AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
 
         // Extract the value and pass it off to the setter
-        setter(getter(param));
+        return setter(getter(param));
     }
 
+    // Generic param value forwarder. The type argument must be implicitly convertable from String!
+    //   Some specializations of this are included in the CPP file
     template<typename Tv>
-    static void PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter)
+    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<Tv> setter)
     {
-        PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr { return param->value(); });
+        return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) { return param->value(); });
     }
 
     // AddCORSHeaderAndSend(OK)Response
     //
-    // Sends a response with CORS headers
+    // Sends a response with CORS headers added
     template<typename Tr>
     static void AddCORSHeaderAndSendResponse(AsyncWebServerRequest * pRequest, Tr * pResponse)
     {
+        pResponse->addHeader("Server","NightDriverStrip");
         pResponse->addHeader("Access-Control-Allow-Origin", "*");
         pRequest->send(pResponse);
     }
@@ -126,32 +137,41 @@ class CWebServer
     // Version for empty response, normally used to finish up things that don't return anything, like "NextEffect"
     static void AddCORSHeaderAndSendOKResponse(AsyncWebServerRequest * pRequest)
     {
-        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(200));
+        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_OK));
     }
 
-    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &paramName);
+    // Straightforward support functions
 
-  public:
-
-    CWebServer()
-        : _server(80)
-    {
-    }
+    static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
+    static const std::vector<SettingSpec> & LoadDeviceSettingSpecs();
+    static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<SettingSpec> & settingSpecs);
+    static void SetSettingsIfPresent(AsyncWebServerRequest * pRequest);
+    static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
+    static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
+    static void SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect);
 
     // Endpoint member functions
-    void GetEffectListText(AsyncWebServerRequest * pRequest);
+
+    static void GetEffectListText(AsyncWebServerRequest * pRequest);
+    static void GetSettingSpecs(AsyncWebServerRequest * pRequest);
+    static void GetSettings(AsyncWebServerRequest * pRequest);
+    static void SetSettings(AsyncWebServerRequest * pRequest);
+    static void GetEffectSettingSpecs(AsyncWebServerRequest * pRequest);
+    static void GetEffectSettings(AsyncWebServerRequest * pRequest);
+    static void SetEffectSettings(AsyncWebServerRequest * pRequest);
+    static void ValidateAndSetSetting(AsyncWebServerRequest * pRequest);
+    static void Reset(AsyncWebServerRequest * pRequest);
+    static void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest);
+    static void EnableEffect(AsyncWebServerRequest * pRequest);
+    static void DisableEffect(AsyncWebServerRequest * pRequest);
+    static void NextEffect(AsyncWebServerRequest * pRequest);
+    static void PreviousEffect(AsyncWebServerRequest * pRequest);
+
+    // Not static because it uses member _staticStats
     void GetStatistics(AsyncWebServerRequest * pRequest);
-    void GetSettings(AsyncWebServerRequest * pRequest);
-    void SetSettings(AsyncWebServerRequest * pRequest);
-    void Reset(AsyncWebServerRequest * pRequest);
-    void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest);
-    void EnableEffect(AsyncWebServerRequest * pRequest);
-    void DisableEffect(AsyncWebServerRequest * pRequest);
-    void NextEffect(AsyncWebServerRequest * pRequest);
-    void PreviousEffect(AsyncWebServerRequest * pRequest);
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
-    void ServeEmbeddedFile(const char strUri[], EmbeddedFile &file)
+    void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {
@@ -160,6 +180,12 @@ class CWebServer
             request->send(response);
         });
     }
+
+  public:
+
+    CWebServer()
+        : _server(80)
+    {}
 
     // begin - register page load handlers and start serving pages
     void begin()
@@ -185,25 +211,33 @@ class CWebServer
 
         debugI("Connecting Web Endpoints");
 
-        _server.on("/getEffectList",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetEffectListText(pRequest); });
+        _server.on("/effects",               HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectListText(pRequest); });
+        _server.on("/getEffectList",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectListText(pRequest); });
+        _server.on("/statistics",            HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
         _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
-        _server.on("/nextEffect",            HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->NextEffect(pRequest); });
-        _server.on("/previousEffect",        HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->PreviousEffect(pRequest); });
+        _server.on("/nextEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { NextEffect(pRequest); });
+        _server.on("/previousEffect",        HTTP_POST, [](AsyncWebServerRequest * pRequest)        { PreviousEffect(pRequest); });
 
-        _server.on("/setCurrentEffectIndex", HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetCurrentEffectIndex(pRequest); });
-        _server.on("/enableEffect",          HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->EnableEffect(pRequest); });
-        _server.on("/disableEffect",         HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->DisableEffect(pRequest); });
+        _server.on("/currentEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
+        _server.on("/setCurrentEffectIndex", HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
+        _server.on("/enableEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { EnableEffect(pRequest); });
+        _server.on("/disableEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DisableEffect(pRequest); });
 
-        _server.on("/settings",              HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetSettings(pRequest); });
-        _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->SetSettings(pRequest); });
+        _server.on("/settings/effect/specs", HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettingSpecs(pRequest); });
+        _server.on("/settings/effect",       HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettings(pRequest); });
+        _server.on("/settings/effect",       HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetEffectSettings(pRequest); });
+        _server.on("/settings/validated",    HTTP_POST, [](AsyncWebServerRequest * pRequest)        { ValidateAndSetSetting(pRequest); });
+        _server.on("/settings/specs",        HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettingSpecs(pRequest); });
+        _server.on("/settings",              HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettings(pRequest); });
+        _server.on("/settings",              HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetSettings(pRequest); });
         _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE, "text/json"); });
 
-        _server.on("/reset",                 HTTP_POST, [this](AsyncWebServerRequest * pRequest)    { this->Reset(pRequest); });
+        _server.on("/reset",                 HTTP_POST, [](AsyncWebServerRequest * pRequest)        { Reset(pRequest); });
 
-        EmbeddedFile html_file(html_start, html_end, "text/html");
-        EmbeddedFile jsx_file(jsx_start, jsx_end, "application/javascript");
-        EmbeddedFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
-        EmbeddedFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
+        EmbeddedWebFile html_file(html_start, html_end, "text/html");
+        EmbeddedWebFile jsx_file(jsx_start, jsx_end, "application/javascript");
+        EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
+        EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
 
         debugI("Embedded html file size: %d", html_file.length);
         debugI("Embedded jsx file size: %d", jsx_file.length);
@@ -219,10 +253,10 @@ class CWebServer
         _server.onNotFound([](AsyncWebServerRequest *request)
         {
             if (request->method() == HTTP_OPTIONS) {
-                request->send(200);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
+                request->send(HTTP_CODE_OK);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
             } else {
                    debugW("Failed GET for %s\n", request->url().c_str() );
-                request->send(404);
+                request->send(HTTP_CODE_NOT_FOUND);
             }
         });
 
@@ -232,4 +266,9 @@ class CWebServer
     }
 };
 
-#define SET_VALUE(functionCall) [](auto value) { functionCall; }
+// Set value in lambda using a forwarding function. Always returns true
+#define SET_VALUE(functionCall) [](auto value) { functionCall; return true; }
+
+// Set value in lambda using a forwarding function. Reports success based on function's return value,
+//   which must be implicitly convertable to bool
+#define CONFIRM_VALUE(functionCall) [](auto value)->bool { return functionCall; }

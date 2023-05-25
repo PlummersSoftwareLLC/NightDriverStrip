@@ -28,6 +28,8 @@
 //
 //---------------------------------------------------------------------------
 
+#include <HTTPClient.h>
+#include <UrlEncode.h>
 #include "globals.h"
 #include "deviceconfig.h"
 
@@ -38,11 +40,67 @@ DRAM_ATTR size_t g_DeviceConfigJSONBufferSize = 0;
 
 void DeviceConfig::SaveToJSON()
 {
-    SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this);
+    g_ptrJSONWriter->FlagWriter(writerIndex);
 }
 
 DeviceConfig::DeviceConfig()
 {
+    // Add SettingSpec for additional settings to this list
+    settingSpecs.emplace_back(
+        NAME_OF(location),
+        "Location",
+        "The location (city or postal code) where the device is located.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(locationIsZip),
+        "Location is postal code",
+        "A boolean indicating if the value in the 'location' setting is a postal code ('true'/1) or not ('false'/0).",
+        SettingSpec::SettingType::Boolean
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(countryCode),
+        "Country code",
+        "The <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">ISO 3166-1 alpha-2</a> country "
+        "code for the country that the device is located in.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(openWeatherApiKey),
+        "Open Weather API key",
+        "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(timeZone),
+        "Time zone",
+        "The timezone the device resides in, in <a href=\"https://en.wikipedia.org/wiki/Tz_database\">tz database</a> format. "
+        "The list of available timezone identifiers can be found in the <a href=\"/timezones.json\">timezones.json</a> file.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(use24HourClock),
+        "Use 24 hour clock",
+        "A boolean that indicates if time should be shown in 24-hour format ('true'/1) or 12-hour AM/PM format ('false'/0).",
+        SettingSpec::SettingType::Boolean
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(useCelsius),
+        "Use degrees Celsius",
+        "A boolean that indicates if temperatures should be shown in degrees Celsius ('true'/1) or degrees Fahrenheit ('false'/0).",
+        SettingSpec::SettingType::Boolean
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(ntpServer),
+        "NTP server address",
+        "The hostname or IP address of the NTP server to be used for time synchronization.",
+        SettingSpec::SettingType::String
+    );
+
+    writerIndex = g_ptrJSONWriter->RegisterWriter(
+        [this]() { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
+    );
+
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
 
     if (LoadJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, pJsonDoc))
@@ -55,18 +113,22 @@ DeviceConfig::DeviceConfig()
     {
         debugW("DeviceConfig could not be loaded from JSON, using defaults");
 
+        // Set default for additional settings in this code
         location = cszLocation;
         locationIsZip = bLocationIsZip;
         countryCode = cszCountryCode;
         openWeatherApiKey = cszOpenWeatherAPIKey;
         use24HourClock = false;
         useCelsius = false;
+        ntpServer = DEFAULT_NTP_SERVER;
+
         SetTimeZone(cszTimeZone, true);
 
         SaveToJSON();
     }
 }
 
+// The timezone JSON file used by this logic is generated using tools/gen-tz-json.py
 bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
 {
     String quotedTZ = "\n\"" + newTimeZone + '"';
@@ -105,6 +167,44 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
         SaveToJSON();
 
     return true;
+}
+
+DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
+{
+    HTTPClient http;
+
+    String url = "http://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=" + urlEncode(newOpenWeatherAPIKey);
+
+    http.begin(url);
+
+    switch (http.GET())
+    {
+        case HTTP_CODE_OK:
+        {
+            http.end();
+            return { true, "" };
+        }
+
+        case HTTP_CODE_UNAUTHORIZED:
+        {
+            AllocatedJsonDocument jsonDoc(1024);
+            deserializeJson(jsonDoc, http.getString());
+
+            String message = "";
+            if (jsonDoc.containsKey("message"))
+                message = jsonDoc["message"].as<String>();
+
+            http.end();
+            return { false, message };
+        }
+
+        // Anything else
+        default:
+        {
+            http.end();
+            return { false, "Unable to validate" };
+        }
+    }
 }
 
 /* Commented out because NVS seems to run out of space way too soon

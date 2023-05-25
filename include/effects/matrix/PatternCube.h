@@ -187,6 +187,12 @@ class PatternCube : public LEDStripEffect
         return 40;
     }
 
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
+
+
     void construct()
     {
       make(cubeWidth);
@@ -201,11 +207,6 @@ class PatternCube : public LEDStripEffect
     PatternCube(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
       construct();
-    }
-
-    virtual bool RequiresDoubleBuffering() const
-    {
-        return false;
     }
 
     virtual void Draw() override
