@@ -501,7 +501,7 @@ public:
             _iCurrentEffect = to;
         else if (from < _iCurrentEffect && to >= _iCurrentEffect)
             _iCurrentEffect--;
-        else if (from > _iCurrentEffect && to <= _iCurrentEffect)
+        else if (/*from > _iCurrentEffect &&*/ to <= _iCurrentEffect)
             _iCurrentEffect++;
 
         SaveEffectManagerConfig();
