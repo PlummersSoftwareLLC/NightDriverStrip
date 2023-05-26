@@ -269,8 +269,8 @@ class CWebServer
 };
 
 // Set value in lambda using a forwarding function. Always returns true
-#define SET_VALUE(functionCall) [&](auto value) { functionCall; return true; }
+#define SET_VALUE(functionCall) [=](auto value) { functionCall; return true; }
 
 // Set value in lambda using a forwarding function. Reports success based on function's return value,
 //   which must be implicitly convertable to bool
-#define CONFIRM_VALUE(functionCall) [&](auto value)->bool { return functionCall; }
+#define CONFIRM_VALUE(functionCall) [=](auto value)->bool { return functionCall; }
