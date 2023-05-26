@@ -192,6 +192,18 @@ void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
+void CWebServer::MoveEffect(AsyncWebServerRequest * pRequest)
+{
+    debugV("MoveEffect");
+
+    auto fromIndex = GetEffectIndexFromParam(pRequest, true);
+    if (fromIndex == -1)
+        return;
+
+    PushPostParamIfPresent<size_t>(pRequest, "newIndex", SET_VALUE(g_ptrEffectManager->MoveEffect(fromIndex, value)));
+    AddCORSHeaderAndSendOKResponse(pRequest);
+}
+
 void CWebServer::NextEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("NextEffect");

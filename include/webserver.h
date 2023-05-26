@@ -164,6 +164,7 @@ class CWebServer
     static void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest);
     static void EnableEffect(AsyncWebServerRequest * pRequest);
     static void DisableEffect(AsyncWebServerRequest * pRequest);
+    static void MoveEffect(AsyncWebServerRequest * pRequest);
     static void NextEffect(AsyncWebServerRequest * pRequest);
     static void PreviousEffect(AsyncWebServerRequest * pRequest);
 
@@ -222,6 +223,7 @@ class CWebServer
         _server.on("/setCurrentEffectIndex", HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
         _server.on("/enableEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { EnableEffect(pRequest); });
         _server.on("/disableEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DisableEffect(pRequest); });
+        _server.on("/moveEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { MoveEffect(pRequest); });
 
         _server.on("/settings/effect/specs", HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettingSpecs(pRequest); });
         _server.on("/settings/effect",       HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettings(pRequest); });
@@ -267,8 +269,8 @@ class CWebServer
 };
 
 // Set value in lambda using a forwarding function. Always returns true
-#define SET_VALUE(functionCall) [](auto value) { functionCall; return true; }
+#define SET_VALUE(functionCall) [&](auto value) { functionCall; return true; }
 
 // Set value in lambda using a forwarding function. Reports success based on function's return value,
 //   which must be implicitly convertable to bool
-#define CONFIRM_VALUE(functionCall) [](auto value)->bool { return functionCall; }
+#define CONFIRM_VALUE(functionCall) [&](auto value)->bool { return functionCall; }
