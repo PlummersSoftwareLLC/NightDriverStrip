@@ -503,6 +503,8 @@ public:
             _iCurrentEffect--;
         else if (from > _iCurrentEffect && to <= _iCurrentEffect)
             _iCurrentEffect++;
+
+        SaveEffectManagerConfig();
     }
 
     void PlayAll(bool bPlayAll)
