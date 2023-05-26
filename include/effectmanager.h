@@ -492,12 +492,12 @@ public:
 
         if (from == to)
             return;
-        else if (from > to)
-            std::rotate(_vEffects.rend() - from - 1, _vEffects.rend() - from, _vEffects.rend() - to);
-        else // from < to
+        else if (from < to)
             std::rotate(_vEffects.begin() + from, _vEffects.begin() + from + 1, _vEffects.begin() + to + 1);
+        else // from > to
+            std::rotate(_vEffects.rend() - from - 1, _vEffects.rend() - from, _vEffects.rend() - to);
 
-        if (_iCurrentEffect == from)
+        if (from == _iCurrentEffect)
             _iCurrentEffect = to;
         else if (from < _iCurrentEffect && to >= _iCurrentEffect)
             _iCurrentEffect--;
