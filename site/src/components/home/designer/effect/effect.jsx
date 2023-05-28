@@ -6,7 +6,7 @@ const Effect = withStyles(effectStyle)(props => {
     useEffect(() => {
         if (millisecondsRemaining && selected) {
             const timeReference = Date.now()+millisecondsRemaining;
-            var timeRemaining = timeReference-Date.now();
+            let timeRemaining = timeReference-Date.now();
             const interval = setInterval(()=>{
                 const remaining = timeReference-Date.now();
                 if (remaining >= 0) {
@@ -21,7 +21,7 @@ const Effect = withStyles(effectStyle)(props => {
         }
     },[millisecondsRemaining,selected]);
 
-    return <Card variant="outlined" className={classes.effect}>
+    return <Card variant="outlined" className={[classes.effect,effect.enabled?null:classes.disabled]}>
                 <CardHeader
                     avatar={
                         <Avatar aria-label={effect.name}>
@@ -33,9 +33,13 @@ const Effect = withStyles(effectStyle)(props => {
                     className={classes.cardheader}
                 /> 
                 <CardContent>
-                    {selected && <LinearProgress disabled={requestRunning} variant="determinate" sx={{transition: 'none'}} value={progress}/>}
-                    {!selected && <Button disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)} variant="outlined" startIcon={<Icon >{effect.enabled?"stop":"circle"}</Icon>}>{effect.enabled?"Disable":"Enable"}</Button>}
-                    {!selected && effect.enabled && <Button disabled={requestRunning} onClick={()=>navigateTo(effectIndex)} variant="outlined" startIcon={<Icon >start</Icon>}>Trigger</Button>}
+                    {selected && 
+                        <div className={classes.circularProgress}>
+                            <CircularProgress variant="determinate" value={progress} color="text.primary"/>
+                            <Typography className={classes.circularProgressText} color="textSecondary" variant="little">{Math.floor(progress)}</Typography>
+                        </div>}
+                    {!selected && <IconButton color="secondary" disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
+                    {!selected && effect.enabled && <IconButton color="secondary" disabled={requestRunning} onClick={()=>navigateTo(effectIndex)}><Icon>play_circle_outline</Icon></IconButton>}
                 </CardContent>
                 <CardActions disableSpacing>
                     <IconButton

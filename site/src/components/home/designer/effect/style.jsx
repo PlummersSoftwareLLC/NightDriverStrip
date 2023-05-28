@@ -4,8 +4,6 @@ const effectStyle = theme => ({
         "flex-direction": "column",
         padding: "10px",
     },
-    cardheader: {
-    },
     hidden: {
         display: "none"
     },
@@ -15,6 +13,7 @@ const effectStyle = theme => ({
         flexDirection: "column",
         flexWrap: "nowrap",
         justifyContent: "space-between",
+        alignItems: "center",
     },
     effectPannel: {
         display: "flex",
@@ -31,5 +30,16 @@ const effectStyle = theme => ({
     },
     selected: {
         backgroundColor: theme.palette.background.paper,
+    },
+    circularProgress: {
+
+    },
+    circularProgressText: {
+        position: "relative",
+        left: "-29px",
+        top:" -15px"    
+    },
+    disabled: {
+        opacity: "50%"
     }
 });
