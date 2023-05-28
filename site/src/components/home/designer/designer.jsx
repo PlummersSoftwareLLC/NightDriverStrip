@@ -50,7 +50,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 .catch(reject)
                 .finally(()=>setRequestRunning(false));    
         });
-    }
+    };
 
     const effectEnable = (idx,enable)=>{
         return new Promise((resolve,reject)=>{
@@ -61,7 +61,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 .catch(reject)
                 .finally(()=>setRequestRunning(false));    
         });
-    }
+    };
 
     const navigate = (up)=>{
         return new Promise((resolve,reject)=>{
@@ -72,7 +72,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 .catch(reject)
                 .finally(()=>setRequestRunning(false));    
         });
-    }
+    };
 
     const updateEventInterval = (interval)=>{
         return new Promise((resolve,reject)=>{
@@ -86,14 +86,14 @@ const DesignerPanel = withStyles(designStyle)(props => {
               .catch(reject)
               .finally(()=>setRequestRunning(false));    
         });
-    }
+    };
 
     const displayHeader = ()=>{
         return <Box className={classes.effectsHeaderValue}>
             <Typography variant="little" color="textPrimary">Interval</Typography>:
             <Link href="#" variant="little" color="textSecondary" onClick={() => setEditing(true)}>{effects.effectInterval}</Link>
         </Box>;
-    }
+    };
 
     const editingHeader = ()=>{
         return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);}}>
@@ -104,7 +104,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 defaultValue={effects.effectInterval}
                 onChange={event => setPendingInterval(event.target.value)} />
         </Box></ClickAwayListener>;
-    }
+    };
 
     if (!effects && open){
         return <Box>Loading....</Box>;

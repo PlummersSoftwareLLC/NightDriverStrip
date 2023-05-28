@@ -91,5 +91,5 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                 <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
                 <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
             </Box>
-        </Box>;
+        </Box>
 });
