@@ -34,6 +34,7 @@
 #include "jsonserializer.h"
 #include "types.h"
 #include <memory>
+#include <stdlib.h>
 
 extern bool                               g_bUpdateStarted;
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
@@ -52,6 +53,7 @@ class LEDStripEffect : public IJSONSerializable
     String _friendlyName;
     int    _effectNumber;
     bool   _enabled = true;
+    size_t _maximumEffectTime = SIZE_MAX;
     std::vector<SettingSpec> _settingSpecs;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
@@ -66,6 +68,11 @@ class LEDStripEffect : public IJSONSerializable
         }
 
         return false;
+    }
+
+    bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
+    {
+        return SetIfSelected<size_t>(settingName, propertyName, property, strtoul(value.c_str(), NULL, 10));
     }
 
   public:
@@ -141,7 +148,7 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual size_t MaximumEffectTime() const                // For splash screens and similar, a max display time for the effect
     {
-        return SIZE_MAX;
+        return _maximumEffectTime;
     }
 
     virtual bool HasMaximumEffectTime() const
@@ -377,12 +384,18 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
     {
-        return true;
+        StaticJsonDocument<128> jsonDoc;
+
+        jsonDoc[String(NAME_OF(_friendlyName)).substring(1)] = _friendlyName;
+        jsonDoc[String(NAME_OF(_maximumEffectTime)).substring(1)] = _maximumEffectTime;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual bool SetSetting(const String& name, const String& value)
     {
-        return false;
+        RETURN_IF_SET(name, String(NAME_OF(_friendlyName)).substring(1), _friendlyName, value);
+        return SetIfSelected<size_t>(name, String(NAME_OF(_maximumEffectTime)).substring(1), _maximumEffectTime, strtoul(value.c_str(), NULL, 10));
     }
 };
 

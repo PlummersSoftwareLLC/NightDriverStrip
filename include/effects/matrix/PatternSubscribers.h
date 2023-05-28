@@ -219,7 +219,7 @@ class PatternSubscribers : public LEDStripEffect
 
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<256> jsonDoc;
+        StaticJsonDocument<384> jsonDoc;
 
         jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
         jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;
