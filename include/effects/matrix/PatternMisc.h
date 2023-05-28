@@ -58,59 +58,71 @@
 
 #include "Geometry.h"
 
-class PatternSunburst : public LEDStripEffect 
+class PatternSunburst : public LEDStripEffect
 {
   public:
 
-    PatternSunburst() : LEDStripEffect("Sunburst")
+    PatternSunburst() : LEDStripEffect(EFFECT_MATRIX_SUNBURST, "Sunburst")
     {
     }
 
- 
-    virtual size_t DesiredFramesPerSecond() const
+    PatternSunburst(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 60;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
       uint8_t dim = beatsin8(2, 210, 250);
-      graphics()->DimAll(dim); 
+      g()->DimAll(dim);
 
       for (int i = 2; i <= MATRIX_WIDTH / 2; i++)
       {
-        CRGB color = graphics()->ColorFromCurrentPalette((i - 2) * (240 / (MATRIX_WIDTH / 2)));
+        CRGB color = g()->ColorFromCurrentPalette((i - 2) * (240 / (MATRIX_WIDTH / 2)));
 
-        // The LIB8TION library defines beatsin8, but this needed beatcos8 which did not exist, so I 
+        // The LIB8TION library defines beatsin8, but this needed beatcos8 which did not exist, so I
         // added it to the graphics interface rathe than adding it to a custom version of lib8tion
 
-        uint8_t x = graphics()->beatcos8((17 - i) * 2, MATRIX_CENTER_X - i, MATRIX_CENTER_X + i);
+        uint8_t x = g()->beatcos8((17 - i) * 2, MATRIX_CENTER_X - i, MATRIX_CENTER_X + i);
         uint8_t y = beatsin8((17 - i) * 2, MATRIX_CENTER_Y - i, MATRIX_CENTER_Y + i);
 
         if (color.r != 0 || color.g != 0 || color.b !=0 )
-          graphics()->setPixel(x, y, color);
+          g()->setPixel(x, y, color);
       }
     }
 };
 
-class PatternRose : public LEDStripEffect 
+class PatternRose : public LEDStripEffect
 {
   public:
-    
-    PatternRose() : LEDStripEffect("Rose")
+
+    PatternRose() : LEDStripEffect(EFFECT_MATRIX_ROSE, "Rose")
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    PatternRose(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 60;
     }
 
-    virtual void Draw()
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
+
+    virtual void Draw() override
     {
       uint8_t dim = beatsin8(2, 170, 250);
-      graphics()->DimAll(dim); 
-      
+      g()->DimAll(dim);
+
 
       for (uint8_t i = 0; i < 32; i++)
       {
@@ -120,18 +132,18 @@ class PatternRose : public LEDStripEffect
         uint8_t y = 0;
 
         if (i < 16) {
-          x = graphics()->beatcos8((i + 1) * 2, i, MATRIX_HEIGHT - i) + 16;
+          x = g()->beatcos8((i + 1) * 2, i, MATRIX_HEIGHT - i) + 16;
           y = beatsin8((i + 1) * 2, i, MATRIX_HEIGHT - i);
-          color = graphics()->ColorFromCurrentPalette(i * 14);
+          color = g()->ColorFromCurrentPalette(i * 14);
         }
         else
         {
           x = beatsin8((32 - i) * 2, MATRIX_WIDTH - i, i + 1) + 16;
-          y = graphics()->beatcos8((32 - i) * 2, MATRIX_WIDTH - i, i + 1);
-          color = graphics()->ColorFromCurrentPalette((31 - i) * 14);
+          y = g()->beatcos8((32 - i) * 2, MATRIX_WIDTH - i, i + 1);
+          color = g()->ColorFromCurrentPalette((31 - i) * 14);
         }
 
-        graphics()->setPixel(x, y, color);
+        g()->setPixel(x, y, color);
       }
     }
 };
@@ -139,26 +151,30 @@ class PatternRose : public LEDStripEffect
 class PatternPinwheel : public LEDStripEffect
 {
   public:
-    
-    PatternPinwheel() : LEDStripEffect("Pinwheel")
+
+    PatternPinwheel() : LEDStripEffect(EFFECT_MATRIX_PINWHEEL, "Pinwheel")
     {
     }
 
-    virtual void Start()
+    PatternPinwheel(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
-      graphics()->Clear();
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual void Start() override
+    {
+      g()->Clear();
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 45;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-      uint8_t dim = beatsin8(2, 120, 220);
-      graphics()->DimAll(dim); 
-      //Serial.printf("Dimming by %d\n", dim);
+      uint8_t dim = beatsin8(2, 30, 70);
+      fadeAllChannelsToBlackBy(dim);
+
       for (uint8_t i = 0; i < 64; i++)
       {
         CRGB color;
@@ -167,24 +183,27 @@ class PatternPinwheel : public LEDStripEffect
         uint8_t y = 0;
 
         x = beatsin8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1) + 16;
-        y = graphics()->beatcos8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1);
-        color = graphics()->ColorFromCurrentPalette((64 - i) * 14);
+        y = g()->beatcos8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1);
+        color = g()->ColorFromCurrentPalette((64 - i) * 14);
 
-        graphics()->setPixel(x, y, color);
+        g()->setPixel(x, y, color);
       }
-
     }
 };
 
-class PatternInfinity : public LEDStripEffect 
+class PatternInfinity : public LEDStripEffect
 {
 public:
 
-    PatternInfinity() : LEDStripEffect("Infinity")
+    PatternInfinity() : LEDStripEffect(EFFECT_MATRIX_INFINITY, "Infinity")
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    PatternInfinity(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 30;
     }
@@ -192,28 +211,28 @@ public:
     int _lastX = -1;
     int _lastY = -1;;
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        // dim all pixels on the display slightly 
+        // dim all pixels on the display slightly
         // to 250/255 (98%) of their current brightness
-        graphics()->DimAll(250); 
-        
+        g()->DimAll(250);
+
         // the Effects class has some sample oscillators
         // that move from 0 to 255 at different speeds
-        graphics()->MoveOscillators();
+        g()->MoveOscillators();
 
         // the horizontal position of the head of the infinity sign
         // oscillates from 0 to the maximum horizontal and back
-        int x = (MATRIX_WIDTH - 1) - graphics()->p[1];
+        int x = (MATRIX_WIDTH - 1) - g()->p[1];
 
         // the vertical position of the head oscillates up and down
 
         const int ymargin = 6 ;
-        int y = map8(sin8(graphics()->osci[3]), ymargin, MATRIX_HEIGHT - ymargin);
+        int y = map8(sin8(g()->osci[3]), ymargin, MATRIX_HEIGHT - ymargin);
 
         // the hue oscillates from 0 to 255, overflowing back to 0
 
-        uint8_t hue = sin8(graphics()->osci[5]);
+        uint8_t hue = sin8(g()->osci[5]);
 
         // draw a pixel at x,y using a color from the current palette
         if (_lastX == -1)
@@ -222,17 +241,17 @@ public:
           _lastY = y;
         }
 
-        graphics()->drawLine(_lastX, _lastY, x, y, graphics()->ColorFromCurrentPalette(hue));
+        g()->drawLine(_lastX, _lastY, x, y, g()->ColorFromCurrentPalette(hue));
         _lastX = x;
         _lastY = y;
 
-        //graphics()->setPixel(x, y, graphics()->ColorFromCurrentPalette(hue));
-      
+        //g()->setPixel(x, y, g()->ColorFromCurrentPalette(hue));
+
     }
 };
 
 
-class PatternMunch : public LEDStripEffect 
+class PatternMunch : public LEDStripEffect
 {
 private:
     uint8_t count = 0;
@@ -241,36 +260,45 @@ private:
     uint8_t generation = 0;
 
 public:
-    PatternMunch() : LEDStripEffect("Munch")
+    PatternMunch() : LEDStripEffect(EFFECT_MATRIX_MUNCH, "Munch")
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    PatternMunch(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 16;
     }
 
-    virtual void Draw()
+    virtual bool RequiresDoubleBuffering() const override
     {
-       
+        return false;
+    }
+
+    virtual void Draw() override
+    {
+
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
             for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
-                graphics()->leds[graphics()->xy(x, y)] = 
-                  (x ^ y ^ flip) < count ? 
-                      graphics()->ColorFromCurrentPalette(((x ^ y) << 2) + generation) 
+                g()->leds[g()->xy(x, y)] =
+                  (x ^ y ^ flip) < count ?
+                      g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)
                     : CRGB::Black;
 
                 // The below is more pleasant
                // effects.leds[XY(x, y)] = effects.ColorFromCurrentPalette(((x ^ y) << 2) + generation) ;
             }
         }
-        
+
         count += dir;
-        
+
         if (count <= 0 || count >= MATRIX_WIDTH) {
           dir = -dir;
         }
-        
+
         if (count <= 0) {
           if (flip == 0)
             flip = MATRIX_WIDTH-1;

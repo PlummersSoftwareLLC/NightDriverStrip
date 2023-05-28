@@ -1,0 +1,12 @@
+# ESP-IDF Partition Table
+# This gives us some additional space for code. 
+# It should also fix the OTA regression.  
+# Name,   Type, SubType,     Offset,      Size, Flags
+
+# Note that our NVS code assumes name 'storage' for the NVS partition
+
+nvs,        data,   nvs,     0x00b000,    0x002000,
+otadata,    data,   ota,     0x00d000,    0x002000,
+app0,       app,    ota_0,   0x010000,    0x190000,
+app1,       app,    ota_1,   0x1A0000,    0x190000,
+storage,    data,   spiffs,  0x330000,    0x0D0000 

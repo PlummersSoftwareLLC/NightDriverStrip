@@ -2,7 +2,7 @@
 //
 // File:        BouncingBallEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -25,11 +25,12 @@
 //    Draws bouncing balls using a kinematics formula
 //
 // History:     Apr-17-2019         Davepl      Adapted from NightDriver
-//              
+//
 //---------------------------------------------------------------------------
 
 #pragma once
 
+#include "effects.h"
 
 extern AppTime g_AppTime;
 
@@ -60,21 +61,21 @@ private:
     static const int BallCount = 3;
     const bool _bErase;
 
-    double Gravity = -9.81;
-    double StartHeight = 1;
-    double ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
-    
-    std::vector<double> ClockTimeSinceLastBounce;
-    std::vector<double> TimeSinceLastBounce;
-    std::vector<double> Height;
-    std::vector<double> ImpactVelocity;
-    std::vector<double> Dampening;
+    float Gravity = -9.81;
+    float StartHeight = 1;
+    float ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
+
+    std::vector<float> ClockTimeSinceLastBounce;
+    std::vector<float> TimeSinceLastBounce;
+    std::vector<float> Height;
+    std::vector<float> ImpactVelocity;
+    std::vector<float> Dampening;
     std::vector<CRGB>   Colors;
-    
+
   public:
 
     BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
-        : LEDStripEffect("Bouncing Balls"),
+        : LEDStripEffect(EFFECT_STRIP_BOUNCING_BALL, "Bouncing Balls"),
           _cBalls(ballCount),
           _cBallSize(ballSize),
           _bMirrored(bMirrored),
@@ -82,12 +83,36 @@ private:
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    BouncingBallEffect(const JsonObjectConst&  jsonObject)
+        : LEDStripEffect(jsonObject),
+          _cBalls(jsonObject["blc"]),
+          _cBallSize(jsonObject["bls"]),
+          _bMirrored(jsonObject[PTY_MIRORRED]),
+          _bErase(jsonObject[PTY_ERASE])
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["blc"] = _cBalls;
+        jsonDoc["bls"] = _cBallSize;
+        jsonDoc[PTY_MIRORRED] = _bMirrored;
+        jsonDoc[PTY_ERASE] = _bErase;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 61;
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -109,15 +134,15 @@ private:
             Dampening[i]                = 1.0 - i / pow(_cBalls, 2);               // Was 0.9
             TimeSinceLastBounce[i]      = 0;
             Colors[i]                   = ballColors[i % ARRAYSIZE(ballColors)];
-        }           
-        return true; 
+        }
+        return true;
     }
 
     // Draw
     //
     // Draw each of the balls.  When any ball gets too little energy it would just sit at the base so it is re-kicked with new energy.#pragma endregion
-    
-    virtual void Draw()
+
+    virtual void Draw() override
     {
         // Erase the drawing area
         if (_bErase)
@@ -128,13 +153,13 @@ private:
         {
             for (int j = 0; j<_cLength; j++)                            // fade brightness all LEDs one step
             {
-                if (randomDouble(0, 10)>5) 
+                if (randomfloat(0, 10)>5)
                 {
                     CRGB c = _GFX[0]->getPixel(j);
                     c.fadeToBlackBy(10);
                     setPixelsOnAllChannels(j, 1, c, false);
                 }
-            }            
+            }
         }
 
         // Draw each of the the balls

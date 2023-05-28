@@ -61,11 +61,15 @@ private:
   uint8_t hueoffset = 0;
 
 public:
-  PatternRadar() : LEDStripEffect("Radar")
+  PatternRadar() : LEDStripEffect(EFFECT_MATRIX_RADAR, "Radar")
   {
   }
 
-  virtual void Draw()
+  PatternRadar(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  {
+  }
+
+  virtual void Draw() override
   {
     auto graphics = (GFXBase *)_GFX[0].get();
     graphics->DimAll(254);

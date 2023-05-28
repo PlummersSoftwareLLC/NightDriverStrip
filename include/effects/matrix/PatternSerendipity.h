@@ -94,11 +94,15 @@ private:
     }
 
 public:
-    PatternSerendipity() : LEDStripEffect("Serendipity")
+    PatternSerendipity() : LEDStripEffect(EFFECT_MATRIX_SERENDIPITY, "Serendipity")
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])   
+    PatternSerendipity(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -140,13 +144,13 @@ public:
         multiTimer[4].up = MATRIX_HEIGHT - 1;
         multiTimer[4].down = 0;
         multiTimer[4].count = 0;
-    
+
         return true;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto graphics = (GFXBase *) _GFX[0].get();
+        auto graphics = g();
 
         // manage the Oszillators
         UpdateTimers();

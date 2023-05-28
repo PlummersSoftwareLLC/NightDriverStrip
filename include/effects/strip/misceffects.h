@@ -2,7 +2,7 @@
 //
 // File:        misceffects.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -26,10 +26,12 @@
 //    Draws bouncing balls using a kinematics formula
 //
 // History:     Apr-17-2019         Davepl      Adapted from NightDriver
-//              
+//
 //---------------------------------------------------------------------------
 
 #pragma once
+
+#include "effects.h"
 
 // SimpleRainbowTestEffect
 //
@@ -42,20 +44,41 @@ class SimpleRainbowTestEffect : public LEDStripEffect
     uint8_t     _SpeedDivisor;
 
   public:
-  
+
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
-      : LEDStripEffect("Simple Rainbow"),
+      : LEDStripEffect(EFFECT_STRIP_SIMPLE_RAINBOW_TEST, "Simple Rainbow"),
           _EveryNth(everyNthPixel),
-        _SpeedDivisor(speedDivisor)
+          _SpeedDivisor(speedDivisor)
     {
         debugV("SimpleRainbowTestEffect constructor");
     }
 
-    virtual void Draw() 
+    SimpleRainbowTestEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+          _EveryNth(jsonObject[PTY_EVERYNTH]),
+          _SpeedDivisor(jsonObject[PTY_SPEEDDIVISOR])
+    {
+        debugV("SimpleRainbowTestEffect JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_EVERYNTH] = _EveryNth;
+        jsonDoc[PTY_SPEEDDIVISOR] = _SpeedDivisor;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual void Draw() override
     {
         fillRainbowAllChannels(0, _cLEDs, beatsin16(4, 0, 256), 8, _EveryNth);
         delay(10);
-    }   
+    }
 };
 
 // SimpleRainbowTestEffect
@@ -69,16 +92,37 @@ class RainbowTwinkleEffect : public LEDStripEffect
     int   _deltaHue;
 
   public:
-  
+
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect("Rainbow Twinkle"),
+      : LEDStripEffect(EFFECT_STRIP_RAINBOW_TWINKLE, "Rainbow Twinkle"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
         debugV("RainbowFill constructor");
     }
 
-    virtual void Draw()
+    RainbowTwinkleEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _speedDivisor(jsonObject[PTY_SPEEDDIVISOR]),
+        _deltaHue(jsonObject[PTY_DELTAHUE])
+    {
+        debugV("RainbowFill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_SPEEDDIVISOR] = _speedDivisor;
+        jsonDoc[PTY_DELTAHUE] = _deltaHue;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual void Draw() override
     {
         static float hue = 0.0f;
         static unsigned long lastms = millis();
@@ -87,7 +131,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         lastms = millis();
 
         hue += (float) msElapsed / _speedDivisor;
-        hue = fmod(hue, 256.0);
+        hue = fmod(hue, 256.0f);
         fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
 
         if (random(0, 1) == 0)
@@ -111,16 +155,37 @@ protected:
     int   _deltaHue;
 
   public:
-    
+
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect("RainobwFill Rainbow"),
+      : LEDStripEffect(EFFECT_STRIP_RAINBOW_FILL, "RainobwFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
         debugV("RainbowFill constructor");
     }
 
-    virtual void Draw()
+    RainbowFillEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _speedDivisor(jsonObject[PTY_SPEEDDIVISOR]),
+        _deltaHue(jsonObject[PTY_DELTAHUE])
+    {
+        debugV("RainbowFill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_SPEEDDIVISOR] = _speedDivisor;
+        jsonDoc[PTY_DELTAHUE] = _deltaHue;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual void Draw() override
     {
         static float hue = 0.0f;
         static unsigned long lastms = millis();
@@ -150,22 +215,104 @@ protected:
     CRGB _color;
 
   public:
-    
+
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
-      : LEDStripEffect("Color Fill"),
+      : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, "Color Fill"),
         _everyNth(everyNth),
         _color(color)
     {
         debugV("Color Fill constructor");
     }
 
-    virtual void Draw()
+    ColorFillEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _everyNth(jsonObject[PTY_EVERYNTH]),
+        _color(jsonObject[PTY_COLOR].as<CRGB>())
+    {
+        debugV("Color Fill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_EVERYNTH] = _everyNth;
+        jsonDoc[PTY_COLOR] = _color;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual void Draw() override
     {
         if (_everyNth != 1)
-          fillSolidOnAllChannels(CRGB::Black);                    
+          fillSolidOnAllChannels(CRGB::Black);
         fillSolidOnAllChannels(_color);
     }
 };
+
+#if USE_MATRIX
+
+// SplashLogoEffect
+//
+// Displays the NightDriver logo on the screen
+
+extern const uint8_t logo_start[] asm("_binary_assets_bmp_lowreslogo_jpg_start");
+extern const uint8_t logo_end[] asm("_binary_assets_bmp_lowreslogo_jpg_end");
+
+class SplashLogoEffect : public LEDStripEffect
+{
+  private:
+    EmbeddedFile logo;
+
+  public:
+
+    SplashLogoEffect()
+      : LEDStripEffect(EFFECT_STRIP_SPLASH_LOGO, "NightDriver"),
+        logo(logo_start, logo_end)
+    {
+        debugV("Splash logo constructor");
+    }
+
+    SplashLogoEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        logo(logo_start, logo_end)
+    {
+        debugV("Splash logo JSON constructor");
+    }
+
+    virtual size_t MaximumEffectTime() const override
+    {
+        return 5.0 * MILLIS_PER_SECOND;
+    }
+
+    virtual bool CanDisplayVUMeter() const override
+    {
+        return false;
+    }
+
+    virtual void Draw() override
+    {
+        fillSolidOnAllChannels(CRGB::Black);
+        if (JDR_OK != TJpgDec.drawJpg(0, 0, logo.contents, logo.length))        // Draw the image
+            debugW("Could not display logo");
+    }
+};
+
+#endif // USE_MATRIX
+
+// StatusEffect
+//
+// Effect that shows every 10th LED in a particular color, depending on the state of the system:
+//
+// Color     Meaning
+// -----------------------------------
+// Red       No WiFi
+// Purple    OTA Update in progress
+// Green     WiFi working but no clock yet
+// White     Ready!
 
 class StatusEffect : public LEDStripEffect
 {
@@ -175,16 +322,37 @@ class StatusEffect : public LEDStripEffect
     CRGB _color;
 
   public:
-    
+
     StatusEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
-      : LEDStripEffect("Status Fill"),
+      : LEDStripEffect(EFFECT_STRIP_STATUS, "Status Fill"),
         _everyNth(everyNth),
         _color(color)
     {
         debugV("Status Fill constructor");
     }
 
-    virtual void Draw()
+    StatusEffect(const JsonObjectConst& jsonObject)     // Warmer: CRGB(246,200,160)
+      : LEDStripEffect(jsonObject),
+        _everyNth(jsonObject[PTY_EVERYNTH]),
+        _color(jsonObject[PTY_COLOR].as<CRGB>())
+    {
+        debugV("Status Fill JSON constructor");
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_EVERYNTH] = _everyNth;
+        jsonDoc[PTY_COLOR] = _color;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual void Draw() override
     {
         CRGB color = _color;
 
@@ -202,7 +370,7 @@ class StatusEffect : public LEDStripEffect
 };
 
 #if CLASSIC_GE_C9
-static const CRGB TwinkleColors[] = 
+static const CRGB TwinkleColors[] =
 {
     CRGB(238, 51, 39),      // Red
     CRGB(0, 172, 87),       // Green
@@ -210,7 +378,7 @@ static const CRGB TwinkleColors[] =
     CRGB(0, 131, 203)       // Blue
 };
 #else
-static const CRGB TwinkleColors[] = 
+static const CRGB TwinkleColors[] =
 {
     CRGB::Red,
     CRGB::Green,
@@ -228,13 +396,35 @@ class TwinkleEffect : public LEDStripEffect
     int  _updateSpeed;
 
   public:
-    
+
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
-      : LEDStripEffect("Twinkle"),
-          _countToDraw(countToDraw),
+      : LEDStripEffect(EFFECT_STRIP_TWINKLE, "Twinkle"),
+        _countToDraw(countToDraw),
         _fadeFactor(fadeFactor),
         _updateSpeed(updateSpeed)
     {
+    }
+
+    TwinkleEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _countToDraw(jsonObject["ctd"]),
+        _fadeFactor(jsonObject[PTY_FADE]),
+        _updateSpeed(jsonObject[PTY_SPEED])
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["ctd"] = _countToDraw;
+        jsonDoc[PTY_FADE] = _fadeFactor;
+        jsonDoc[PTY_SPEED] = _updateSpeed;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     const int Count = 99;
@@ -242,7 +432,7 @@ class TwinkleEffect : public LEDStripEffect
 
     std::deque<size_t> litPixels;
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         EVERY_N_MILLISECONDS(_updateSpeed)
         {
@@ -252,7 +442,7 @@ class TwinkleEffect : public LEDStripEffect
                 litPixels.pop_back();
                 _GFX[0]->setPixel(i, CRGB::Black);
             }
-        
+
             // Pick a random pixel and put it in the TOP slot
             int iNew = -1;
             for (int iPass = 0; iPass < NUM_LEDS * 10; iPass++)
@@ -266,12 +456,12 @@ class TwinkleEffect : public LEDStripEffect
                 break;
             }
             if (iNew == -1)             // No empty slot could be found!
-            {   
+            {
                 litPixels.clear();
                 setAllOnAllChannels(0,0,0);
                 return;
             }
-            
+
             assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
             setPixelOnAllChannels(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
             litPixels.push_front(iNew);
@@ -281,17 +471,5 @@ class TwinkleEffect : public LEDStripEffect
         {
             fadeToBlackBy(FastLED.leds(), NUM_LEDS, _fadeFactor);
         }
-    }
-};
-
-class PoliceEffect : public LEDStripEffect
-{
-    typedef enum { INNERRED, OUTERRED, INNERBLUE, OUTERBLUE, MIXED, STROBE } lampStates;
-    const lampStates highestState = STROBE;
-
-    virtual void Draw()
-    {
-        
-
     }
 };

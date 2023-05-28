@@ -182,25 +182,36 @@ class PatternCube : public LEDStripEffect
     uint8_t hue = 0;
     int step = 0;
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
-        return 60;
+        return 40;
     }
 
-  public:
-    PatternCube() : LEDStripEffect("Cubes")
-    {
-      make(cubeWidth);
-    }
-
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
-    virtual void Draw()
+
+    void construct()
     {
-      auto g = g_aptrEffectManager->graphics();
+      make(cubeWidth);
+    }
+
+  public:
+    PatternCube() : LEDStripEffect(EFFECT_MATRIX_CUBE, "Cubes")
+    {
+      construct();
+    }
+
+    PatternCube(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+      construct();
+    }
+
+    virtual void Draw() override
+    {
+      auto g = g_ptrEffectManager->g();
 
       //uint8_t blurAmount = beatsin8(2, 250, 255);
       g->Clear();

@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include "effects.h"
 #include "paletteeffect.h"
 
 // Simple definitions of what direction we're talking about
@@ -90,7 +91,7 @@ inline int16_t GetRingPixelPosition(float fPos, int16_t ringSize)
     debugW("GetRingPixelPosition called with negative value %f", fPos);
     return 0;
   }
-  
+
   int pos = fPos;
   if (pos & 1)
     return ringSize - 1 - pos / 2;
@@ -362,7 +363,7 @@ class EmptyEffect : public LEDStripEffect
 {
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -376,9 +377,17 @@ class EmptyEffect : public LEDStripEffect
 
 class FanBeatEffect : public LEDStripEffect
 {
-  using LEDStripEffect::LEDStripEffect;
+public:
 
-  virtual void Draw()
+  FanBeatEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_FAN_BEAT, strName)
+  {
+  }
+
+  FanBeatEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  {
+  }
+
+  virtual void Draw() override
   {
     fadeToBlackBy(FastLED.leds(), NUM_LEDS, 20);
     DrawEffect();
@@ -387,7 +396,7 @@ class FanBeatEffect : public LEDStripEffect
 
   void OnBeat()
   {
-    int passes = random(1, mapDouble(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
+    int passes = random(1, map(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
     passes = g_Analyzer._VURatio;
     for (int iPass = 0; iPass < passes; iPass++)
     {
@@ -404,7 +413,7 @@ class FanBeatEffect : public LEDStripEffect
     CRGB c = CHSV(random(0, 255), 255, 255);
     for (int i = NUM_FANS * FAN_SIZE; i < NUM_LEDS; i++)
     {
-      graphics()->setPixel(i, c);
+      g()->setPixel(i, c);
     }
   }
 
@@ -429,7 +438,7 @@ class FanBeatEffect : public LEDStripEffect
     {
       if (g_Analyzer._VURatio > 1.5)
       {
-        if (randomDouble(1.0, 3.0) < g_Analyzer._VURatio)
+        if (randomfloat(1.0, 3.0) < g_Analyzer._VURatio)
         {
           latch = false;
           OnBeat();
@@ -448,7 +457,7 @@ class CountEffect : public LEDStripEffect
   const int DRAW_LEN = 16;
   const int OPEN_LEN = NUM_FANS * FAN_SIZE - DRAW_LEN;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     static float i = 0;
     EVERY_N_MILLISECONDS(30)
@@ -488,9 +497,15 @@ private:
   float ReelDir[NUM_FANS] = {0};
 
 public:
-  using LEDStripEffect::LEDStripEffect;
+  TapeReelEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_TAPE_REEL, strName)
+  {
+  }
 
-  virtual void Draw()
+  TapeReelEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  {
+  }
+
+  virtual void Draw() override
   {
     EVERY_N_MILLISECONDS(250)
     {
@@ -569,9 +584,15 @@ private:
   int ColorOffset[NUM_FANS] = {0};
 
 public:
-  using LEDStripEffect::LEDStripEffect;
+  PaletteReelEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_PALETTE_REEL, strName)
+  {
+  }
 
-  virtual void Draw()
+  PaletteReelEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  {
+  }
+
+  virtual void Draw() override
   {
     EVERY_N_MILLISECONDS(250)
     {
@@ -656,21 +677,46 @@ public:
 
 class PaletteSpinEffect : public LEDStripEffect
 {
-  const CRGBPalette256 _Palette;
+  const CRGBPalette16 _Palette;
   bool _bReplaceMagenta;
-  double _sparkleChance;
+  float _sparkleChance;
 
 private:
   float ReelPos[NUM_FANS] = {0};
   int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteSpinEffect(const String &strName, const CRGBPalette256 &palette, bool bReplace, double sparkleChance = 0.0)
-      : LEDStripEffect(strName), _Palette(palette), _bReplaceMagenta(bReplace), _sparkleChance(sparkleChance)
+  PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
+      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName),
+        _Palette(palette),
+        _bReplaceMagenta(bReplace),
+        _sparkleChance(sparkleChance)
   {
   }
 
-  virtual void Draw()
+  PaletteSpinEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        _bReplaceMagenta(jsonObject["rpm"]),
+        _sparkleChance(jsonObject["sch"])
+  {
+  }
+
+  virtual bool SerializeToJSON(JsonObject& jsonObject) override
+  {
+    AllocatedJsonDocument jsonDoc(512);
+
+    JsonObject root = jsonDoc.to<JsonObject>();
+    LEDStripEffect::SerializeToJSON(root);
+
+    jsonDoc[PTY_PALETTE] = _Palette;
+    jsonDoc["rpm"] = _bReplaceMagenta;
+    jsonDoc["sch"] = _sparkleChance;
+
+    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+  }
+
+  virtual void Draw() override
   {
     EVERY_N_MILLISECONDS(20) // Update the reels based on the direction
     {
@@ -702,7 +748,7 @@ public:
         CRGB c = ColorFromPalette(_Palette, 255.0 * q / FAN_SIZE, 255, NOBLEND);
         if (_bReplaceMagenta && c == CRGB(CRGB::Magenta))
           c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
-        if (randomDouble(0, 1) < _sparkleChance)
+        if (randomfloat(0, 1) < _sparkleChance)
           c = CRGB::White;
         DrawFanPixels(x, 1, c, Sequential, i);
       }
@@ -717,11 +763,34 @@ class ColorCycleEffect : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  ColorCycleEffect(PixelOrder order = Sequential, int step = 8) : LEDStripEffect("ColorCylceEffect"), _order(order), _step(step)
+  ColorCycleEffect(PixelOrder order = Sequential, int step = 8)
+    : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"),
+      _order(order),
+      _step(step)
   {
   }
 
-  virtual void Draw()
+  ColorCycleEffect(const JsonObjectConst& jsonObject)
+    : LEDStripEffect(jsonObject),
+      _order((PixelOrder)jsonObject[PTY_ORDER]),
+      _step(jsonObject["stp"])
+  {
+  }
+
+  virtual bool SerializeToJSON(JsonObject& jsonObject) override
+  {
+    StaticJsonDocument<128> jsonDoc;
+
+    JsonObject root = jsonDoc.to<JsonObject>();
+    LEDStripEffect::SerializeToJSON(root);
+
+    jsonDoc[PTY_ORDER] = to_value(_order);
+    jsonDoc["stp"] = _step;
+
+    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+  }
+
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -745,7 +814,7 @@ class ColorCycleEffectBottomUp : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -769,7 +838,7 @@ class ColorCycleEffectTopDown : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -793,7 +862,7 @@ class ColorCycleEffectSequential : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -819,7 +888,7 @@ class SpinningPaletteEffect : public PaletteEffect
 public:
   using PaletteEffect::PaletteEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     PaletteEffect::Draw();
     for (int i = 0; i < NUM_FANS; i++)
@@ -840,7 +909,7 @@ class ColorCycleEffectRightLeft : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -862,7 +931,7 @@ class ColorCycleEffectLeftRight : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -890,7 +959,7 @@ protected:
   int Sparking;    // Probability of a spark each attempt
   bool bReversed;  // If reversed we draw from 0 outwards
   bool bMirrored;  // If mirrored we split and duplicate the drawing
-  CRGBPalette256 Palette;
+  CRGBPalette16 Palette;
 
   PixelOrder Order;
 
@@ -909,7 +978,7 @@ protected:
   int CellCount() const { return LEDCount * CellsPerLED; }
 
 public:
-  FireFanEffect(CRGBPalette256 palette,
+  FireFanEffect(CRGBPalette16 palette,
                 int ledCount,
                 int cellsPerLED = 1,
                 int cooling = 20,
@@ -919,7 +988,7 @@ public:
                 PixelOrder order = Sequential,
                 bool breversed = false,
                 bool bmirrored = false)
-      : LEDStripEffect("FireFanEffect"),
+      : LEDStripEffect(EFFECT_STRIP_FIRE_FAN, "FireFanEffect"),
         Palette(palette),
         LEDCount(ledCount),
         CellsPerLED(cellsPerLED),
@@ -933,7 +1002,46 @@ public:
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
+    abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
+  }
+
+  FireFanEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        CellsPerLED(jsonObject[PTY_CELLSPERLED]),
+        Cooling(jsonObject[PTY_COOLING]),
+        Sparks(jsonObject[PTY_SPARKS]),
+        SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+        Sparking(jsonObject[PTY_SPARKING]),
+        bReversed(jsonObject[PTY_REVERSED]),
+        bMirrored(jsonObject[PTY_MIRORRED]),
+        Order((PixelOrder)jsonObject[PTY_ORDER])
+  {
+    if (bMirrored)
+      LEDCount = LEDCount / 2;
     abHeat = std::make_unique<uint8_t[]>(CellCount());
+  }
+
+  virtual bool SerializeToJSON(JsonObject& jsonObject) override
+  {
+    AllocatedJsonDocument jsonDoc(512);
+
+    jsonDoc[PTY_PALETTE] = Palette;
+    jsonDoc[PTY_LEDCOUNT] = LEDCount;
+    jsonDoc[PTY_CELLSPERLED] = CellsPerLED;
+    jsonDoc[PTY_COOLING] = Cooling;
+    jsonDoc[PTY_SPARKS] = Sparks;
+    jsonDoc[PTY_SPARKHEIGHT] = SparkHeight;
+    jsonDoc[PTY_SPARKING] = Sparking;
+    jsonDoc[PTY_REVERSED] = bReversed;
+    jsonDoc[PTY_MIRORRED] = bMirrored;
+    jsonDoc[PTY_ORDER] = to_value(Order);
+
+    JsonObject root = jsonDoc.as<JsonObject>();
+    LEDStripEffect::SerializeToJSON(root);
+
+    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
   virtual CRGB GetBlackBodyHeatColor(byte temp)
@@ -941,13 +1049,13 @@ public:
     return ColorFromPalette(Palette, temp, 255);
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear(false);
     DrawFire(Order);
   }
 
-  virtual size_t DesiredFramesPerSecond() const
+  virtual size_t DesiredFramesPerSecond() const override
   {
     return 60;
   }
@@ -1067,7 +1175,7 @@ public:
     DrawFanPixels(q, lineLen, color, BottomUp);
   }
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear();
     DrawColor(CRGB::Red, 0);
@@ -1083,7 +1191,7 @@ class HueTest : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw()
+  virtual void Draw() override
   {
     FastLED.clear();
     int iFan = 0;
@@ -1098,11 +1206,15 @@ class RingTestEffect : public LEDStripEffect
 {
 private:
 public:
-  RingTestEffect() : LEDStripEffect("Ring Test")
+  RingTestEffect() : LEDStripEffect(EFFECT_STRIP_RING_TEST, "Ring Test")
   {
   }
 
-  virtual void Draw()
+  RingTestEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  {
+  }
+
+  virtual void Draw() override
   {
     for (int i = 0; i < NUM_FANS; i++)
     {
@@ -1123,13 +1235,13 @@ public:
 
 class LanternParticle
 {
-  const int minPeturbation = 1000;
-  const int maxPeterbation = 2500;
-  const int perterbationIncrement = 2;
-  const int maxDeviation = 35;
+  const int minPeturbation = 100;
+  const int maxPeterbation = 3500;
+  const int perterbationIncrement = 1;
+  const int maxDeviation = 100;
 
-  int centerX = maxDeviation;
-  int centery = maxDeviation / 2;
+  int centerX = maxDeviation / 2;
+  int centerY = maxDeviation / 2;
 
   int velocityX = 0;
   int velocityY = 0;
@@ -1140,6 +1252,12 @@ class LanternParticle
   float rotation = 0.0f;
 
 protected:
+
+  float distance(float x1, float y1, float x2, float y2)
+  {
+    return std::sqrt(std::pow(x1-x2, 2) + std::pow(y1 - y2, 2));
+  }
+
   CRGB flameColor(int val)
   {
     val = min(val, 255);
@@ -1151,13 +1269,39 @@ protected:
 #endif
   }
 
+  // Generate a vector of how bright each of the surrounding 8 LEDs on the unit circle should be
+
+  std::vector<float> led_brightness(float wandering_x, float wandering_y)
+  {
+    constexpr float sqrt2 = std::sqrt(2);
+
+    const std::vector<std::pair<float, float>> unit_circle_coords = {
+        {1, 0},
+        { 1 / sqrt2,  1 / sqrt2},
+        {0, 1},
+        {-1 / sqrt2,  1 / sqrt2},
+        {-1, 0},
+        {-1 / sqrt2, -1 / sqrt2},
+        {0, -1},
+        { 1 / sqrt2, -1 / sqrt2}
+    };
+
+    std::vector<float> brightness_values;
+
+    for (const auto& coord : unit_circle_coords) {
+        float d = distance(wandering_x, wandering_y, coord.first, coord.second);
+        float brightness = std::max(1.0f - d, 0.0f);
+        brightness_values.push_back(brightness);
+    }
+
+    return brightness_values;
+}
+
 public:
   void Draw()
   {
     // random trigger brightness oscillation, if at least half uncalm
 
-    EVERY_N_MILLISECONDS(15)
-    {
       int movx = 0;
       int movy = 0;
 
@@ -1183,20 +1327,32 @@ public:
       // Move center of flame around by the current velocity
 
       centerX += movx + (velocityX / 7);
-      centery += movy + (velocityY / 7);
+      centerY += movy + (velocityY / 7);
 
       // Enforce some range limits
       if (centerX < -maxDeviation)
+      {
         centerX = -maxDeviation;
+        velocityX *= -0.5;
+      }
 
       if (centerX > maxDeviation)
+      {
         centerX = maxDeviation;
+        velocityX *= -0.5;
+      }
 
-      if (centery < -maxDeviation)
-        centery = -maxDeviation;
+      if (centerY < -maxDeviation)
+      {
+        centerY = -maxDeviation;
+        velocityY *= -0.5;
+      }
 
-      if (centery > maxDeviation)
-        centery = maxDeviation;
+      if (centerY > maxDeviation)
+      {
+        centerY = maxDeviation;
+        velocityY *= -0.5;
+      }
 
       // Dampen the velocity down a fraction
 
@@ -1206,37 +1362,34 @@ public:
       // Apply Hooke's law of spring motion to accelerate back towards rest/center
 
       velocityX -= centerX;
-      velocityY -= centery;
-    }
+      velocityY -= centerY;
+
 
     rotation += 0.0;
 
-#ifdef LANTERN
-    float scalar = .75 + g_Analyzer._VURatio / 2;
-#else
-    float scalar = 1.35;
-#endif
+    float scalar = 1; // .5 + g_Analyzer._VURatio / 2;
 
     // Draw four outer pixels in second ring outwards.  We draw 1.05 to take advantage of the non-linear red response in
     // the second pixels (when drawn at 5%, the red will show up more, depending on color correction).
 
-    DrawRingPixels(fmod(rotation + 0, RING_SIZE_2), 1.05, flameColor(128 - centerX * scalar - centery * scalar), 0, 2);
-    DrawRingPixels(fmod(rotation + 4, RING_SIZE_2), 1.05, flameColor(128 + centerX * scalar - centery * scalar), 0, 2);
-    DrawRingPixels(fmod(rotation + 2, RING_SIZE_2), 1.05, flameColor(128 + centerX * scalar + centery * scalar), 0, 2);
-    DrawRingPixels(fmod(rotation + 6, RING_SIZE_2), 1.15, flameColor(128 - centerX * scalar + centery * scalar), 0, 2);
+    float xRatio = map(centerX, 0.0f, maxDeviation, -1.0f, 1.0f);
+    float yRatio = map(centerY, 0.0f, maxDeviation, -1.0f, 1.0f);
+
+    auto brightness = led_brightness(xRatio, yRatio);
+    for (int i = 0; i < 8; i++)
+    {
+      CRGB pixelColor = flameColor(255 * brightness[i]);
+      pixelColor.fadeToBlackBy(255 * (3.0 - brightness[i]));
+      DrawRingPixels(i, 1, pixelColor, 0, 2, true);
+    }
 
     // Now draw a center pixel which is dimmed proportional to the distance the center is from actual
 
     CRGB centerColor = CRGB(255, 12, 0);
-    centerColor.fadeToBlackBy((centerX * centerX + centery * centery) / 25);
+    centerColor.fadeToBlackBy(distance(xRatio, yRatio, 0, 0) * 128);
     DrawRingPixels(0, 1.0, centerColor, 0, 3);
 
-    /* Additional LED ring, up to your preference
-    DrawRingPixels(fmod(rotation + 0, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    DrawRingPixels(fmod(rotation + 3, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    DrawRingPixels(fmod(rotation + 6, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    DrawRingPixels(fmod(rotation + 9, RING_SIZE_1), 1.05, centerColor, 0, 1);
-    */
+    debugV("X,Y = %f, %f\n", xRatio, yRatio);
   }
 };
 
@@ -1248,18 +1401,22 @@ private:
   LanternParticle _particles[_maxParticles];
 
 public:
-  LanternEffect() : LEDStripEffect("LanternEffect")
+  LanternEffect() : LEDStripEffect(EFFECT_STRIP_LANTERN, "LanternEffect")
   {
   }
 
-  virtual size_t DesiredFramesPerSecond() const
+  LanternEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
-    return 24;
   }
 
-  virtual void Draw()
+  virtual size_t DesiredFramesPerSecond() const override
   {
-    setAllOnAllChannels(0, 0, 0);
+    return 30;
+  }
+
+  virtual void Draw() override
+  {
+    fadeAllChannelsToBlackBy(20);
     for (int i = 0; i < _maxParticles; i++)
       _particles[i].Draw();
   }

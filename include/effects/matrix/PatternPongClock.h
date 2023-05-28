@@ -66,6 +66,8 @@
 #ifndef PatternPongClock_H
 #define PatternPongClock_H
 
+#include "deviceconfig.h"
+
 #define BAT1_X 2 // Pong left bat x pos (this is where the ball collision occurs, the bat is drawn 1 behind these coords)
 #define BAT2_X (MATRIX_WIDTH - 4)
 #define BAT_HEIGHT (MATRIX_HEIGHT / 4)
@@ -93,42 +95,46 @@ class PatternPongClock : public LEDStripEffect
 
   public:
 
-    PatternPongClock() : LEDStripEffect("PongClock")
+    PatternPongClock() : LEDStripEffect(EFFECT_MATRIX_PONG_CLOCK, "PongClock")
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    PatternPongClock(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 35;
     }
-     
-    virtual void Start()
+
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
+
+    virtual void Start() override
     {
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
-        local_time->tm_hour = (local_time->tm_hour+19)%24;           // BUGBUG: Hardcoded to PST for now
 
-        int ampm = true;                                            // BUGBUG: Eurofolks prefer 24-hour time
+        bool ampm = !g_ptrDeviceConfig->Use24HourClock();
+
         // update score / time
         mins = local_time->tm_min;
         hours = local_time->tm_hour;
-        if (hours > 12)
-        {
-            hours = hours - ampm * 12;
-        }
-        if (hours < 1)
-        {
-            hours = hours + ampm * 12;
-        }
+        if (hours > 12 && ampm)
+            hours -= 12;
+        else if (hours == 0 && ampm)
+            hours = 12;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto g = g_aptrEffectManager->graphics();
+        auto g = g_ptrEffectManager->g();
 
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
-        local_time->tm_hour = (local_time->tm_hour+19)%24;           // BUGBUG: Hardcoded to PST for now
 
         g->Clear();
 
@@ -143,7 +149,7 @@ class PatternPongClock : public LEDStripEffect
             g->setPixel(MATRIX_WIDTH / 2, 4, RED16);
             g->setPixel(MATRIX_WIDTH / 2, 6, RED16);
         }
-        
+
         LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
         char buffer[3];
 
@@ -161,7 +167,7 @@ class PatternPongClock : public LEDStripEffect
             ballpos_x = MATRIX_WIDTH / 2;
             ballpos_y = random(4, MATRIX_HEIGHT-4);
             ballvel_x = 0;
-            
+
             // pick random ball direction
             if (random(0, 2) > 0)
             {
@@ -219,9 +225,9 @@ class PatternPongClock : public LEDStripEffect
         constexpr float leftEdge  = MATRIX_WIDTH / 2 - MAXSPEED * LOOKAHEAD;
         constexpr float rightEdge = MATRIX_WIDTH / 2 + MAXSPEED * LOOKAHEAD;
 
-        // If ball going leftwards towards BAT1, 
+        // If ball going leftwards towards BAT1,
 
-        if (ballvel_x < 0 && ballpos_x > leftEdge  && ballpos_x < rightEdge)   
+        if (ballvel_x < 0 && ballpos_x > leftEdge  && ballpos_x < rightEdge)
         {
 
             uint8_t end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
@@ -254,10 +260,10 @@ class PatternPongClock : public LEDStripEffect
         // if positive velocity then predict for right bat - first just match ball height
         // when the ball is closer to the right bat, run the ball maths to find out where it will land
 
-        if (ballvel_x > 0 && ballpos_x > leftEdge && ballpos_x < rightEdge) 
+        if (ballvel_x > 0 && ballpos_x > leftEdge && ballpos_x < rightEdge)
         {
             uint8_t end_ball_y = pong_get_ball_endpoint(ballpos_x, ballpos_y, ballvel_x, ballvel_y);
-            
+
             // if flag set to miss, move bat out way of ball
             if (bat2miss == 1)
             {
@@ -333,7 +339,7 @@ class PatternPongClock : public LEDStripEffect
 
         if (ballpos_y >= MATRIX_HEIGHT)
         {
-            ballpos_y = 2 * MATRIX_HEIGHT - ballpos_y; 
+            ballpos_y = 2 * MATRIX_HEIGHT - ballpos_y;
             ballvel_y *= -1;
         }
 
@@ -462,22 +468,22 @@ class PatternPongClock : public LEDStripEffect
             restart = 1;
 
             // update score / time
-            int ampm = true;
+            bool ampm = !g_ptrDeviceConfig->Use24HourClock();
 
             mins = local_time->tm_min;
             hours = local_time->tm_hour;
-            if (hours > 12)
-                hours = hours - ampm * 12;
-            if (hours < 1)
-                hours = hours + ampm * 12;
+            if (hours > 12 && ampm)
+                hours -= 12;
+            else if (hours == 0 && ampm)
+                hours = 12;
         }
     }
 
     float pong_get_ball_endpoint(float xpos, float ypos, float xspeed, float yspeed)
     {
         // In the following, the fabs() mirrors it over the bottom wall.  The fmod wraps it when it exceeds twice
-        // the top wall.  If the ball ends up in the top half of the double height section, we reflect it back 
-        // 
+        // the top wall.  If the ball ends up in the top half of the double height section, we reflect it back
+        //
         // auto deltaX = (xspeed > 0) ? (BAT2_X - xpos) : -(xpos - BAT1_X);        // How far from ball to opponent bat
         // auto slope = yspeed / xspeed;                                           // Rise over run, ie: deltaY per X
         // float newY = fmod(fabs(ypos + deltaX * slope), (2 * MATRIX_HEIGHT));    // New Y, but wrappped every 2*height

@@ -59,9 +59,14 @@
 #include "Geometry.h"
 #include "qrcode.h"
 
-
-class PatternQR : public LEDStripEffect 
+class PatternQR : public LEDStripEffect
 {
+    void construct()
+    {
+        qrcodeData = (uint8_t *) PreferPSRAMAlloc(qrcode_getBufferSize(qrVersion));
+        lastData = "";
+    }
+
 protected:
 
     String lastData;
@@ -71,9 +76,14 @@ protected:
 
 public:
 
-    PatternQR() : LEDStripEffect("QR")
+    PatternQR() : LEDStripEffect(EFFECT_MATRIX_QR, "QR")
     {
-        qrcodeData = (uint8_t *) PreferPSRAMAlloc(qrcode_getBufferSize(qrVersion));
+        construct();
+    }
+
+    PatternQR(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+        construct();
     }
 
     virtual ~PatternQR()
@@ -81,43 +91,42 @@ public:
         free(qrcodeData);
     }
 
-    virtual void Start()
+    virtual void Start() override
     {
-        graphics()->fillScreen(graphics()->to16bit(CRGB::DarkBlue));
     }
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 20;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         String sIP = WiFi.isConnected() ? "http://" + WiFi.localIP().toString() : "No Wifi";
         if (sIP != lastData)
         {
             lastData = sIP;
-            qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW, sIP.c_str());  
-
-            const int leftMargin = MATRIX_CENTER_X - qrcode.size / 2;
-            const int topMargin = 4;
-            const int borderSize = 2;
-            const uint16_t foregroundColor = WHITE16;
-            const uint16_t backgroundColor = graphics()->to16bit(CRGB(0,0,144));
-            const uint16_t borderColor = BLUE16;
-            if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
-            throw std::runtime_error("Matrix can't hold the QR code height");
-
-            int w = qrcode.size + borderSize * 2;
-            int h = w;
-
-            graphics()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, BLACK16);
-            graphics()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, borderColor);
-
-            for (uint8_t y = 0; y < qrcode.size; y++) 
-            for (uint8_t x = 0; x < qrcode.size; x++) 
-                graphics()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : BLACK16));
+            qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW, sIP.c_str());
         }
+        g()->fillScreen(g()->to16bit(CRGB::DarkBlue));
+        const int leftMargin = MATRIX_CENTER_X - qrcode.size / 2;
+        const int topMargin = 4;
+        const int borderSize = 2;
+        const uint16_t foregroundColor = WHITE16;
+        const uint16_t backgroundColor = g()->to16bit(CRGB(0,0,144));
+        const uint16_t borderColor = BLUE16;
+        if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
+        throw std::runtime_error("Matrix can't hold the QR code height");
+
+        int w = qrcode.size + borderSize * 2;
+        int h = w;
+
+        g()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, BLACK16);
+        g()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, borderColor);
+
+        for (uint8_t y = 0; y < qrcode.size; y++)
+            for (uint8_t x = 0; x < qrcode.size; x++)
+                g()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : BLACK16));
     }
 };
 

@@ -57,12 +57,16 @@
 #ifndef PatternSpark_H
 #define PatternSpark_H
 
-class PatternSpark : public LEDStripEffect 
+class PatternSpark : public LEDStripEffect
 {
   private:
 
   public:
-    PatternSpark() : LEDStripEffect("Spark")
+    PatternSpark() : LEDStripEffect(EFFECT_MATRIX_SPARK, "Spark")
+    {
+    }
+
+    PatternSpark(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
@@ -84,8 +88,8 @@ class PatternSpark : public LEDStripEffect
       // Add entropy to random number generator; we use a lot of it.
       random16_add_entropy( random16());
 
-      graphics()->DimAll(235);
-      for (uint8_t x = 0; x < MATRIX_WIDTH; x++) 
+      g()->DimAll(235);
+      for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
       {
         // Step 1.  Cool down every cell a little
         for (int y = 0; y < MATRIX_HEIGHT; y++) {
@@ -126,18 +130,18 @@ class PatternSpark : public LEDStripEffect
       }
 
       // Noise
-      noise_x += 1000;
-      noise_y += 1000;
-      noise_z += 1000;
-      noise_scale_x = 4000;
-      noise_scale_y = 4000;
-      effects.FillNoise();
+      g()->GetNoise().noise_x += 1000;
+      g()->GetNoise().noise_y += 1000;
+      g()->GetNoise().noise_z += 1000;
+      g()->GetNoise().noise_scale_x = 4000;
+      g()->GetNoise().noise_scale_y = 4000;
+      effects.FillGetNoise();
 
       effects.MoveX(3);
       effects.MoveFractionalNoiseX(4);
 
       effects.ShowFrame();
-      
+
       return 15;
     }
 };

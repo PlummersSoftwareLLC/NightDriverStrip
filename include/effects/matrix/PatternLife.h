@@ -64,28 +64,27 @@
 
 #include <bitset>
 
-extern "C" 
+extern "C"
 {
     #include "uzlib/src/uzlib.h"
 }
 
-class Cell 
+class Cell
 {
 public:
   uint8_t alive : 1;
   uint8_t prev  : 1;
-  uint8_t hue;  
+  uint8_t hue;
   uint8_t brightness;
 };
 
-#define CRC_LENGTH 130                           // Depth of loop check buffer
+#define CRC_LENGTH std::max(MATRIX_HEIGHT, MATRIX_WIDTH)                           // Depth of loop check buffer
 
-class PatternLife : public LEDStripEffect 
+class PatternLife : public LEDStripEffect
 {
 private:
-    
-    Cell (*world)[MATRIX_HEIGHT];
-    uint32_t * checksums;
+    std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
+    std::unique_ptr<uint32_t []> checksums;
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
     unsigned int density = 50;
@@ -93,20 +92,21 @@ private:
     unsigned long seed;
 
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])               
+    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         LEDStripEffect::Init(gfx);
 
-        // BUGBUG (Davepl)  Although this saves us on base mem, access to the PSRAM is fairly random which is
-        //                  not ideal and slows this down to about 23 fps.  If you need more, you'll need to go
-        //                  to regular RAM.
-        
-        world =  (Cell (*)[MATRIX_HEIGHT]) PreferPSRAMAlloc( sizeof(Cell) * MATRIX_WIDTH * MATRIX_HEIGHT);        
-        checksums = (uint32_t *) PreferPSRAMAlloc( CRC_LENGTH * sizeof(uint32_t) );
+        // Note: placing the world in PSRAM is possible, but its not made for random
+        // access.  SPI prefers sequential, so just as we don't use it for decompression,
+        // we don't use it to hold the Life world either, as it's very random-access.
+
+        world     = std::make_unique<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
+        checksums.reset(psram_allocator<uint32_t>().allocate(CRC_LENGTH));
+
         return true;
     }
-    
-    virtual bool RequiresDoubleBuffering() const
+
+    virtual bool RequiresDoubleBuffering() const override
     {
         return false;
     }
@@ -117,7 +117,7 @@ private:
     // Seed: 92465, Generations: 1626
 
     static constexpr long bakedInSeeds[] =
-    { 
+    {
         130908,         // 3253
         1576,           // 3125
         275011,         // 3461
@@ -140,11 +140,11 @@ private:
     };
 
 
-    void randomFillWorld() 
+    void randomFillWorld()
     {
         // Some fraction of the time we pick a pre-baked seed that we know lasts for a lot
         // of generations.  Otherwise we pick a random seed and run with that.
-        
+
         srand(millis());
         if (random(0, 4) == 0)
         {
@@ -152,7 +152,7 @@ private:
             debugI("Prebaked Seed: %lu", seed);
         }
         else
-        {   
+        {
             seed = random();
             debugI("Randomized Seed: %lu", seed);
         }
@@ -190,7 +190,11 @@ private:
 
 public:
 
-    PatternLife() : LEDStripEffect("Life")
+    PatternLife() : LEDStripEffect(EFFECT_MATRIX_LIFE, "Life")
+    {
+    }
+
+    PatternLife(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
@@ -203,11 +207,9 @@ public:
         bStuckInLoop = 0;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
-        auto graphics = (GFXBase *) _GFX[0].get();
-        
-        if (cGeneration == 0) 
+        if (cGeneration == 0)
             Reset();
 
         // Display current generation
@@ -217,21 +219,21 @@ public:
             for (int i = 0; i < MATRIX_WIDTH; i++) {
                 for (int j = 0; j < MATRIX_HEIGHT; j++) {
                     if (world[i][j].brightness > 0)
-                        graphics->leds[graphics->xy(i, j)] += graphics->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
+                        g()->leds[g()->xy(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
                     else
-                        graphics->leds[graphics->xy(i, j)] = CRGB::Black;
+                        g()->leds[g()->xy(i, j)] = CRGB::Black;
                 }
             }
         }
 
         // We maintain a scrolling window of the last N crcs and if the current crc makes it all
         // the way down to the bototm half we assume we're stuck in a loop and restart.
-        // We have to first extract the alive bits alone because we don't want the hue and brightness 
+        // We have to first extract the alive bits alone because we don't want the hue and brightness
         // data to mess with the CRC.
 
         bool alive[MATRIX_WIDTH][MATRIX_HEIGHT];
-        for (int i = 0; i < MATRIX_WIDTH; i++) 
-            for (int j = 0; j < MATRIX_HEIGHT; j++) 
+        for (int i = 0; i < MATRIX_WIDTH; i++)
+            for (int j = 0; j < MATRIX_HEIGHT; j++)
                 alive[i][j] = world[i][j].alive;
 
         auto crc = uzlib_crc32(alive, sizeof(alive), 0xffffffff);
@@ -241,7 +243,7 @@ public:
 
 
         // Look for any occurance of the current CRC in the first half of the window, which would mean
-        // a loop has occured.  If 
+        // a loop has occured.  If
 
         if (bStuckInLoop)
         {
@@ -252,12 +254,12 @@ public:
             if (elapsed < flashTime)
             {
                 auto whiteColor = CRGB(0x60, 0x00, 0x00);
-                graphics->fillRectangle(0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, whiteColor);
+                g()->fillRectangle(0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, whiteColor);
             }
-            graphics->DimAll(255 - 255*elapsed/resetTime);
+            g()->DimAll(255 - 255*elapsed/resetTime);
 
-            for (int x = 0; x < MATRIX_WIDTH; x++) 
-                for (int y = 0; y < MATRIX_HEIGHT; y++) 
+            for (int x = 0; x < MATRIX_WIDTH; x++)
+                for (int y = 0; y < MATRIX_HEIGHT; y++)
                         world[x][y].brightness *= 0.9;
             if (elapsed > resetTime)
                 Reset();
@@ -282,7 +284,7 @@ public:
                 // Default is for cell to stay the same
                 if (world[x][y].brightness > 0 && world[x][y].prev == 0)
                   world[x][y].brightness *= 0.75;
-                  
+
                 int count = neighbours(x, y);
                 if (count == 3 && world[x][y].prev == 0) {
                     // A new cell is born

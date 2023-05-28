@@ -74,33 +74,41 @@ private:
     int16_t dsy;
 
 public:
-    PatternMandala() : LEDStripEffect("MRI")
+    PatternMandala() : LEDStripEffect(EFFECT_MATRIX_MANDALA, "MRI")
+    {
+    }
+
+    PatternMandala(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
     /// Generate an 8-bit random number
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
-        return 45;
+        return 30;
     }
 
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
 
-    virtual void Start()
+    virtual void Start() override
     {
         // set to reasonable values to avoid a black out
-        graphics()->noisesmoothing = 100;
+        g()->GetNoise().noisesmoothing = 100;
 
         // just any free input pin
         // random16_add_entropy(analogRead(18));
 
         // fill coordinates with random values
         // set zoom levels
-        graphics()->noise_x = random16();
-        graphics()->noise_y = random16();
-        graphics()->noise_z = random16();
-        graphics()->noise_scale_x = 6000;
-        graphics()->noise_scale_y = 6000;
+        g()->GetNoise().noise_x = random16();
+        g()->GetNoise().noise_y = random16();
+        g()->GetNoise().noise_z = random16();
+        g()->GetNoise().noise_scale_x = 6000;
+        g()->GetNoise().noise_scale_y = 6000;
 
         // for the random movement
         dx = random8();
@@ -110,7 +118,7 @@ public:
         dsy = random8();
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         // a new parameter set every 15 seconds
         EVERY_N_SECONDS(15)
@@ -119,19 +127,19 @@ public:
             dy = random16(500) - 250; // random16(2000) - 1000 is pretty fast but works fine, too
             dx = random16(500) - 250;
             dz = random16(500) - 250;
-            graphics()->noise_scale_x = random16(10000) + 2000;
-            graphics()->noise_scale_y = random16(10000) + 2000;
+            g()->GetNoise().noise_scale_x = random16(10000) + 2000;
+            g()->GetNoise().noise_scale_y = random16(10000) + 2000;
         }
 
-        graphics()->noise_y += dy * 4;
-        graphics()->noise_x += dx * 4;
-        graphics()->noise_z += dz * 4;
+        g()->GetNoise().noise_y += dy * 4;
+        g()->GetNoise().noise_x += dx * 4;
+        g()->GetNoise().noise_z += dz * 4;
 
-        graphics()->FillNoise();
+        g()->FillGetNoise();
         ShowNoiseLayer(0, 1, 0);
 
-        graphics()->Caleidoscope3();
-        graphics()->Caleidoscope1();
+        g()->Caleidoscope3();
+        g()->Caleidoscope1();
     }
 
     // show just one layer
@@ -142,14 +150,14 @@ public:
             for (uint8_t j = 0; j < MATRIX_HEIGHT; j++)
             {
 
-                uint8_t color = graphics()->noise[i][j];
+                uint8_t color = g()->GetNoise().noise[i][j];
 
                 uint8_t bri = color;
 
                 // assign a color depending on the actual palette
-                CRGB pixel = ColorFromPalette(graphics()->currentPalette, colorrepeat * (color + colorshift), bri);
+                CRGB pixel = ColorFromPalette(g()->GetCurrentPalette(), colorrepeat * (color + colorshift), bri);
 
-                graphics()->leds[graphics()->xy(i, j)] = pixel;
+                g()->leds[g()->xy(i, j)] = pixel;
             }
         }
     }

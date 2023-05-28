@@ -2,7 +2,7 @@
 //
 // File:        taskmgr.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -28,8 +28,8 @@
 //    to not timeslice with them.
 //
 //    Since this totally starves those system idle tasks, the watchdog must
-//    be turned off for them, which we do in begin().  We then turn the 
-//    watchdog on for our own idle tasks, and feed the watchdog in 
+//    be turned off for them, which we do in begin().  We then turn the
+//    watchdog on for our own idle tasks, and feed the watchdog in
 //    ProcessIdleTime as we consume all available idle time.
 //
 //    BUGBUG(davepl): I think this means that vTaskDelete is never called
@@ -45,20 +45,21 @@
 
 #include <Arduino.h>
 #include <esp_task_wdt.h>
+#include "ledstripeffect.h"
 
-#define IDLE_STACK_SIZE 2048        
 // Stack size for the taskmgr's idle threads
+#define IDLE_STACK_SIZE 2048
 
 class IdleTask
 {
   private:
 
-    double _idleRatio = 0;
+    float _idleRatio = 0;
     unsigned long _lastMeasurement;
 
     const int kMillisPerLoop = 1;
     const int kMillisPerCalc = 1000;
-    
+
     unsigned long counter = 0;
 
   public:
@@ -75,16 +76,16 @@ class IdleTask
             int delta = millis() - _lastMeasurement;
             if (delta >= kMillisPerCalc)
             {
-                //Serial.printf("Core %u Spent %lu in delay during a window of %d for a ratio of %f\n", 
-                //  xPortGetCoreID(), counter, delta, (double)counter/delta);
-                _idleRatio = ((double) counter  / delta);
+                //Serial.printf("Core %u Spent %lu in delay during a window of %d for a ratio of %f\n",
+                //  xPortGetCoreID(), counter, delta, (float)counter/delta);
+                _idleRatio = ((float) counter  / delta);
                 _lastMeasurement = millis();
                 counter = 0;
             }
             else
             {
                 esp_task_wdt_reset();
-                delayMicroseconds(kMillisPerLoop*1000);        
+                delayMicroseconds(kMillisPerLoop*1000);
                 counter += kMillisPerLoop;
             }
         }
@@ -105,15 +106,15 @@ class IdleTask
     //
     // Returns 100 less the amount of idle time that we were able to squander.
 
-    double GetCPUUsage() const
+    float GetCPUUsage() const
     {
         // If the measurement failed to even get a chance to run, this core is maxed and there was no idle time
 
         if (millis() - _lastMeasurement > kMillisPerCalc)
-            return 100.0;
+            return 100.0f;
 
         // Otherwise, whatever cycles we were able to burn in the idle loop counts as "would have been idle" time
-        return 100.0-100*_idleRatio;
+        return 100.0f-100*_idleRatio;
     }
 
     // Stub entry point for calling into it without a THIS pointer
@@ -141,7 +142,7 @@ class TaskManager
 
 public:
 
-    double GetCPUUsagePercent(int iCore = -1) const
+    float GetCPUUsagePercent(int iCore = -1) const
     {
         if (iCore < 0)
             return (_taskIdle0.GetCPUUsage() + _taskIdle1.GetCPUUsage()) / 2;
@@ -179,7 +180,7 @@ public:
 };
 
 // NightDriverTaskManager
-// 
+//
 // A superclass of the base TaskManager that knows how to start and track the tasks specific to this project
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
@@ -190,22 +191,73 @@ void IRAM_ATTR NetworkHandlingLoopEntry(void *);
 void IRAM_ATTR DebugLoopTaskEntry(void *);
 void IRAM_ATTR SocketServerTaskEntry(void *);
 void IRAM_ATTR RemoteLoopEntry(void *);
+void IRAM_ATTR JSONWriterTaskEntry(void *);
+
+#define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
 
 class NightDriverTaskManager : public TaskManager
 {
+public:
+
+    using EffectTaskFunction = std::function<void(LEDStripEffect&)>;
+
 private:
 
-    TaskHandle_t _taskScreen = nullptr;
-    TaskHandle_t _taskSync   = nullptr;
-    TaskHandle_t _taskDraw   = nullptr;
-    TaskHandle_t _taskDebug  = nullptr;
-    TaskHandle_t _taskAudio  = nullptr;
-    TaskHandle_t _taskNet    = nullptr;
-    TaskHandle_t _taskRemote = nullptr;
-    TaskHandle_t _taskSocket = nullptr;
-    TaskHandle_t _taskSerial = nullptr;
+    struct EffectTaskParams
+    {
+        EffectTaskFunction function;
+        LEDStripEffect* pEffect;
+
+        EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
+          : function(function),
+            pEffect(pEffect)
+        {}
+    };
+
+    TaskHandle_t _taskScreen     = nullptr;
+    TaskHandle_t _taskSync       = nullptr;
+    TaskHandle_t _taskDraw       = nullptr;
+    TaskHandle_t _taskDebug      = nullptr;
+    TaskHandle_t _taskAudio      = nullptr;
+    TaskHandle_t _taskNet        = nullptr;
+    TaskHandle_t _taskRemote     = nullptr;
+    TaskHandle_t _taskSocket     = nullptr;
+    TaskHandle_t _taskSerial     = nullptr;
+    TaskHandle_t _taskJSONWriter = nullptr;
+
+    std::vector<TaskHandle_t> _vEffectTasks;
+
+    static void EffectTaskEntry(void *pVoid)
+    {
+        EffectTaskParams *pTaskParams = (EffectTaskParams *)pVoid;
+
+        EffectTaskFunction function = pTaskParams->function;
+        LEDStripEffect* pEffect = pTaskParams->pEffect;
+
+        // Delete the params object before we invoke the actual function; they tend to run indefinitely
+        delete pTaskParams;
+
+        function(*pEffect);
+    }
 
 public:
+
+    ~NightDriverTaskManager()
+    {
+        for (auto& task : _vEffectTasks)
+            vTaskDelete(task);
+
+        DELETE_TASK(_taskDraw);
+        DELETE_TASK(_taskScreen);
+        DELETE_TASK(_taskRemote);
+        DELETE_TASK(_taskSerial);
+        DELETE_TASK(_taskAudio);
+        DELETE_TASK(_taskSocket);
+        DELETE_TASK(_taskSync);
+        DELETE_TASK(_taskNet);
+        DELETE_TASK(_taskJSONWriter);
+        DELETE_TASK(_taskDebug);
+    }
 
     void StartScreenThread()
     {
@@ -217,15 +269,14 @@ public:
     {
         #if ENABLE_SERIAL
             debugW(">> Launching Serial Thread");
-            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);    
+            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);
         #endif
     }
-    
 
     void StartDrawThread()
     {
         debugW(">> Launching Draw Thread");
-        xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);    
+        xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);
     }
 
     void StartAudioThread()
@@ -235,12 +286,12 @@ public:
             xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
         #endif
     }
-    
+
     void StartNetworkThread()
     {
         #if ENABLE_WIFI
             debugW(">> Launching Network Thread");
-            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);    
+            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);
         #endif
     }
 
@@ -248,10 +299,10 @@ public:
     {
         #if ENABLE_WIFI
             debugW(">> Launching Debug Thread");
-            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);    
+            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
         #endif
     }
-    
+
     void StartSocketThread()
     {
         #if ENABLE_WIFI
@@ -266,6 +317,42 @@ public:
             debugW(">> Launching Remote Thread");
             xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
         #endif
+    }
+
+    void StartJSONWriterThread()
+    {
+        debugW(">> Launching JSON Writer Thread");
+        xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
+    }
+
+    void NotifyJSONWriterThread()
+    {
+        if (_taskJSONWriter == nullptr)
+            return;
+
+        debugW(">> Notifying JSON Writer Thread");
+        // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
+        xTaskNotifyGive(_taskJSONWriter);
+    }
+
+    // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
+    //   because effect threads tend to pull things from the Internet that they want to show
+    TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
+    {
+        // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method
+        //   deletes the object as soon as it can.
+        EffectTaskParams* pTaskParams = new EffectTaskParams(function, pEffect);
+        TaskHandle_t effectTask = nullptr;
+
+        debugW(">> Launching %s Effect Thread", name);
+
+        if (xTaskCreatePinnedToCore(EffectTaskEntry, name, STACK_SIZE, pTaskParams, priority, &effectTask, core) == pdPASS)
+            _vEffectTasks.push_back(effectTask);
+        else
+            // Clean up the task params object if the thread was not actually created
+            delete pTaskParams;
+
+        return effectTask;
     }
 };
 

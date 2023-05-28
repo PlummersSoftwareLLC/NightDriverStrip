@@ -2,7 +2,7 @@
 //
 // File:        network.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -46,8 +46,10 @@ DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 
 std::mutex g_buffer_mutex;
+String WiFi_ssid;
+String WiFi_password;
 
-// processRemoteDebugCmd() 
+// processRemoteDebugCmd()
 //
 // This is where we can add our own custom debugger commands
 
@@ -55,66 +57,35 @@ extern AppTime  g_AppTime;
 extern uint32_t g_FPS;
 
 // processRemoteDebugCmd
-// 
+//
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
 #if ENABLE_WIFI
-    void processRemoteDebugCmd() 
+    void processRemoteDebugCmd()
     {
         String str = Debug.getLastCommand();
         if (str.equalsIgnoreCase("clock"))
         {
             debugI("Refreshing Time from Server...");
-
-            digitalWrite(BUILTIN_LED_PIN, 1);
             NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-            digitalWrite(BUILTIN_LED_PIN, 0);
         }
         else if (str.equalsIgnoreCase("stats"))
         {
             debugI("Displaying statistics....");
 
-            char szBuffer[256];
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
-            debugI("%s", szBuffer);
-
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "%sdB:%s\n", 
-                                                    String(WiFi.RSSI()).substring(1).c_str(), 
-                                                    WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            debugI("%s", szBuffer);
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d [%dfps]\n", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
-            debugI("%s", szBuffer);
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+04.2lf-%+04.2lf\n", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
-            debugI("%s", szBuffer);
-
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%.2lf\n", g_AppTime.CurrentTime());
-            debugI("%s", szBuffer);
+            debugI("%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugI("%sdB:%s\n",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            debugI("BUFR:%02d/%02d [%dfps]\n", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
+            debugI("DATA:%+04.2lf-%+04.2lf\n", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
 
             #if ENABLE_AUDIO
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
-                debugI("%s", szBuffer);
+                debugI("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
             #endif
 
-            #if INCOMING_WIFI_ENABLEDgVUR
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), "Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
-            debugI("%s", szBuffer);
+            #if INCOMING_WIFI_ENABLED
+                debugI("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             #endif
-
-            // Print out a buffer log with timestamps and deltas 
-            
-            for (size_t i = 0; i < g_aptrBufferManager[0]->Depth(); i++)
-            {
-                auto pBufferManager = g_aptrBufferManager[0].get();
-                std::shared_ptr<LEDBuffer> pBuffer = (*pBufferManager)[i];
-                double t = pBuffer->Seconds() + (double) pBuffer->MicroSeconds() / MICROS_PER_SECOND;
-                snprintf(szBuffer, ARRAYSIZE(szBuffer), "Frame: %03d, Clock: %lf, Offset: %lf", i, t, g_AppTime.CurrentTime() - t);
-                debugI("%s", szBuffer);
-            }
-
         }
     }
 #endif
@@ -144,17 +115,17 @@ void SetupOTA(const String & strHostname)
                 type = "filesystem";
 
             debugI("Stopping IR remote");
-            #if ENABLE_REMOTE            
+            #if ENABLE_REMOTE
             g_RemoteControl.end();
-            #endif        
-            
+            #endif
+
             debugI("Start updating from OTA ");
             debugI("%s", type.c_str());
         })
         .onEnd([]() {
             debugI("\nEnd OTA");
         })
-        .onProgress([](unsigned int progress, unsigned int total) 
+        .onProgress([](unsigned int progress, unsigned int total)
         {
             static uint last_time = millis();
             if (millis() - last_time > 1000)
@@ -166,7 +137,7 @@ void SetupOTA(const String & strHostname)
             {
                 debugV("Progress: %u%%\r", (progress / (total / 100)));
             }
-            
+
         })
         .onError([](ota_error_t error) {
             debugW("Error[%u]: ", error);
@@ -208,72 +179,70 @@ extern RemoteControl g_RemoteControl;
 
 void IRAM_ATTR RemoteLoopEntry(void *)
 {
-    debugW(">> RemoteLoopEntry\n");
+    //debugW(">> RemoteLoopEntry\n");
 
     g_RemoteControl.begin();
     while (true)
     {
         g_RemoteControl.handle();
-        delay(50);        
+        delay(20);
     }
 }
 #endif
 
 // ConnectToWiFi
 //
-// Connect to the pre-configured WiFi network.  
+// Connect to the pre-configured WiFi network.
 
 #if ENABLE_WIFI
 
-    #define WIFI_RETRIES 5
-
     bool ConnectToWiFi(uint cRetries)
     {
+        static bool bPreviousConnection = false;
+
         // Already connected, Go no further.
         if (WiFi.isConnected())
-        {
             return true;
-        }
-        
+
         debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
 
-    #if USE_WIFI_MANAGER
-        g_WifiManager.setDebugOutput(true);
-        g_WifiManager.autoConnect("NightDriverWiFi");
-    #else
+        if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+        {
+            debugW("WiFi Credentials not set, cannot connect");
+            return false;
+        }
+
         for (uint iPass = 0; iPass < cRetries; iPass++)
         {
             Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                iPass, cRetries, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+                iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
-            //WiFi.disconnect();
-            WiFi.begin(cszSSID, cszPassword);
+            WiFi.disconnect();
+            WiFi.mode(WIFI_STA);
+            WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
-            for (uint i = 0; i < WIFI_RETRIES; i++)
+            // Give the module a few seconds to connect
+            delay(4000 + iPass * 1000);
+
+            if (WiFi.isConnected())
             {
-                if (WiFi.isConnected())
-                {
-                    Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
-                    break;
-                }
-                else
-                {
-                    delay(1000);
-                }
-            }
-
-            if (WiFi.isConnected()) {
+                Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
                 break;
-            } 
+            }
         }
-    #endif
+
         // Additional Services onwwards reliant on network so close if not up.
         if (false == WiFi.isConnected())
         {
             debugW("Giving up on WiFi\n");
             return false;
         }
+
         debugW("Received IP: %s", WiFi.localIP().toString().c_str());
+
+        // If we were connected before, network-dependent services will have been started already
+        if (bPreviousConnection)
+            return true;
 
         #if INCOMING_WIFI_ENABLED
             // Start listening for incoming data
@@ -305,48 +274,11 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
         #endif
 
-        /*
-        {
-            WiFiClientSecure secClient;
-
-            secClient.setInsecure();
-
-            Serial.println("\nStarting secure connection to server...");
-            uint32_t start = millis();
-            int r = secClient.connect("google.com", 443, 5000);
-            Serial.printf("Connection took: %lums\n", millis()-start);
-            if(!r) 
-            {
-                Serial.println("Connection failed!");
-            } 
-            else 
-            {
-                Serial.println("Connected!  Sending GET!");
-                secClient.println("GET https://www.google.com/search?q=tsla+stock+quote HTTP/1.0");
-                secClient.println("Host: www.google.com");
-                secClient.println("Connection: close");
-                secClient.println();
-                
-                while (secClient.connected()) 
-                {
-                    String line = secClient.readStringUntil('\n');
-                    secClient.printf("Data: %s", line.c_str());
-                    if (line == "\r") {
-                        Serial.println("headers received");
-                        break;
-                    }
-                }
-            }
-            secClient.stop();
-        }
-        */
-
+        bPreviousConnection = true;
         return true;
     }
-    
+
 #endif
-
-
 
 // ProcessIncomingData
 //
@@ -354,7 +286,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 // as this code does not validate!  This is where the commands and pixel data are received
 // from the server.
 
-bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
+bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
 {
     #if !INCOMING_WIFI_ENABLED
         return false;
@@ -369,6 +301,31 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
 
     switch (command16)
     {
+        // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
+
+        case WIFI_COMMAND_PEAKDATA:
+        {
+            #if ENABLE_AUDIO
+                uint16_t numbands  = WORDFromMemory(&payloadData[2]);
+                uint32_t length32  = DWORDFromMemory(&payloadData[4]);
+                uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
+                uint64_t micros    = ULONGFromMemory(&payloadData[16]);
+
+                debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
+                    numbands,
+                    length32,
+                    seconds,
+                    micros);
+
+                PeakData peaks((double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
+                peaks.ApplyScalars(PeakData::PCREMOTE);
+                g_Analyzer.SetPeakData(peaks);
+            #endif
+            return true;
+        }
+
+        // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
+
         case WIFI_COMMAND_PIXELDATA64:
         {
             uint16_t channel16 = WORDFromMemory(&payloadData[2]);
@@ -377,14 +334,14 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
 
-            debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ", 
-                   channel16, 
-                   length32, 
-                   seconds, 
+            debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
+                   channel16,
+                   length32,
+                   seconds,
                    micros);
 
             // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
-            
+
             if (channel16 == 0)
                 channel16 = 1;
 
@@ -401,7 +358,7 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
                 if ((channelMask & channel16) != 0)
                 {
                     debugV("Processing for Channel %d", iChannel);
-                    
+
                     bool bDone = false;
                     if (!g_aptrBufferManager[iChannel]->IsEmpty())
                     {
@@ -434,3 +391,103 @@ bool ProcessIncomingData(uint8_t *payloadData, size_t payloadLength)
     #endif
 }
 
+// Non-volatile Storage for WiFi Credentials
+
+// ReadWiFiConfig
+//
+// Attempts to read the WiFi ssid and password from NVS storage strings.  The keys
+// for those name-value pairs are made from the variable names (WiFi_ssid, WiFi_Password)
+// directly.  Limited to 63 characters in both cases, which is the WPA2 ssid limit.
+
+#define MAX_PASSWORD_LEN 63
+
+bool ReadWiFiConfig()
+{
+    char szBuffer[MAX_PASSWORD_LEN+1];
+
+    nvs_handle_t nvsROHandle;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &nvsROHandle);
+    if (err != ESP_OK)
+    {
+        debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        return false;
+    }
+    else
+    {
+        // Read the SSID and Password from the NVS partition name/value keypair set
+
+        auto len = ARRAYSIZE(szBuffer);
+        err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_ssid), szBuffer, &len);
+        if (ESP_OK != err)
+        {
+            debugE("Coud not read WiFi_ssid from NVS");
+            nvs_close(nvsROHandle);
+            return false;
+        }
+        WiFi_ssid = szBuffer;
+
+        len = ARRAYSIZE(szBuffer);
+        err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_password), szBuffer, &len);
+        if (ESP_OK != err)
+        {
+            debugE("Coud not read WiFi_password from NVS");
+            nvs_close(nvsROHandle);
+            return false;
+        }
+        WiFi_password = szBuffer;
+
+        // Don't check in changes that would display the password in logs, etc.
+        debugW("Retrieved SSID and Password from NVS: %s, %s", WiFi_ssid, "********");
+
+        nvs_close(nvsROHandle);
+        return true;
+    }
+}
+
+// WriteWiFiConfig
+//
+// Attempts to write the WiFi ssid and password to NVS storage strings.  The keys
+// for those name-value pairs are made from the variable names (WiFi_ssid, WiFi_Password)
+// directly.  It's not transactional, so it could conceivably succeed at writing
+// the ssid and not the password (but will still report failure).  Does not
+// enforce length limits on values given, so conceivable you could write longer
+// pairs than you could read, but they wouldn't work on WiFi anyway.
+
+bool WriteWiFiConfig()
+{
+    nvs_handle_t nvsRWHandle;
+
+    // The "storage" string must match NVS partition name in partition table
+
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsRWHandle);
+    if (err != ESP_OK)
+    {
+        debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        return false;
+    }
+
+    bool success = true;
+
+    err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_ssid), WiFi_ssid.c_str());
+    if (ESP_OK != err)
+    {
+        debugW("Error (%s) storing ssid!\n", esp_err_to_name(err));
+        success = false;
+    }
+
+    err = nvs_set_str(nvsRWHandle, NAME_OF(WiFi_password), WiFi_password.c_str());
+    if (ESP_OK != err)
+    {
+        debugW("Error (%s) storing password!\n", esp_err_to_name(err));
+        success = false;
+    }
+
+    if (success)
+        // Do not check in code that displays the password in logs, etc.
+        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid);
+
+    nvs_commit(nvsRWHandle);
+    nvs_close(nvsRWHandle);
+
+    return true;
+}

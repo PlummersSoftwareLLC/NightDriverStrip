@@ -2,7 +2,7 @@
 //
 // File:        NTPTimeClient.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -36,7 +36,7 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <mutex>
-#include "secrets.h"
+#include "deviceconfig.h"
 
 // NTPTimeClient
 //
@@ -46,13 +46,13 @@
 
 class NTPTimeClient
 {
-    static bool _bClockSet; 
+    static bool        _bClockSet;
     static std::mutex  _clockMutex;
 
   public:
 
     NTPTimeClient()
-    { 
+    {
     }
 
     static inline bool HasClockBeenSet()
@@ -72,14 +72,14 @@ class NTPTimeClient
         std::lock_guard<std::mutex> guard(_clockMutex);
 
         char chNtpPacket[NTP_PACKET_LENGTH];
-        memset(chNtpPacket, 0, NTP_PACKET_LENGTH);      
-        
+        memset(chNtpPacket, 0, NTP_PACKET_LENGTH);
+
         // Send ntp time request.
         // Initialize ntp packet.
 
 
         // Set the ll (leap indicator), vvv (version number) and mmm (mode) bits.
-        //  
+        //
         //  These bits are contained in the first byte of chNtpPacker and are in
         // the following format:  llvvvmmm
         //
@@ -91,9 +91,11 @@ class NTPTimeClient
 
         chNtpPacket[0] = 0b00011011;
 
-        // Send the ntp packet.
-        IPAddress ipNtpServer(cszNTPServer);
+        IPAddress ipNtpServer;
+        if (WiFi.hostByName(g_ptrDeviceConfig->GetNTPServer().c_str(), ipNtpServer) != 1)
+            ipNtpServer.fromString("216.239.35.12"); // Use Google Time as default. The pool.ntp.org servers (IPs) don't necessarily last very long.
 
+        // Send the ntp packet.
         while (pUDP->parsePacket() != 0)
             pUDP->flush();
 
@@ -146,7 +148,7 @@ class NTPTimeClient
         }
 
         debugV("NTP clock: Raw values sec=%u, usec=%u", frac, microsecs);
-        
+
         tvNew.tv_sec = ((unsigned long)chNtpPacket[40] << 24) +       // bits 24 through 31 of ntp time
             ((unsigned long)chNtpPacket[41] << 16) +                        // bits 16 through 23 of ntp time
             ((unsigned long)chNtpPacket[42] << 8) +                         // bits  8 through 15 of ntp time
@@ -158,12 +160,12 @@ class NTPTimeClient
         timeval tvOld;
         gettimeofday(&tvOld, nullptr);
 
-        double dOld = tvOld.tv_sec + (tvOld.tv_usec / (double) MICROS_PER_SECOND);
-        double dNew = tvNew.tv_sec + (tvNew.tv_usec / (double) MICROS_PER_SECOND);
+        float dOld = tvOld.tv_sec + (tvOld.tv_usec / (float) MICROS_PER_SECOND);
+        float dNew = tvNew.tv_sec + (tvNew.tv_usec / (float) MICROS_PER_SECOND);
 
         // If the clock is off by more than a quarter second, update it
 
-        auto delta = abs(dNew - dOld);
+        auto delta = fabs(dNew - dOld);
         if (delta < 0.25)
         {
             debugV("Clock is only off by %lf so not updating the RTC.", delta);
@@ -182,13 +184,13 @@ class NTPTimeClient
         char chBuffer[64];
         struct tm * tmPointer = localtime(&tvNew.tv_sec);
         strftime(chBuffer, sizeof(chBuffer), "%d %b %y %H:%M:%S", tmPointer);
-        debugV("NTP clock: response received, time written to ESP32 rtc: %ld.%ld, DELTA: %lf\n", 
-                tvNew.tv_sec, 
-                tvNew.tv_usec, 
+        debugV("NTP clock: response received, time written to ESP32 rtc: %ld.%ld, DELTA: %lf\n",
+                tvNew.tv_sec,
+                tvNew.tv_usec,
                 dNew - dOld );
-        
+
         _bClockSet = true;  // Clock has been set at least once
-        
+
         return true;
     }
 };

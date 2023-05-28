@@ -2,7 +2,7 @@
 //
 // File:        spectrumeffects.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,19 +10,19 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
 //
 // Description:
 //
-//   Classes for moving and fading little render objects over time, 
+//   Classes for moving and fading little render objects over time,
 //   used as a base for the star and insulator effects
 //
 // History:     Jul-7-2021         Davepl      Commented
@@ -31,13 +31,13 @@
 
 #pragma once
 
-
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
+#include "effectmanager.h"
 
 extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
 #if ENABLE_AUDIO
 
@@ -46,22 +46,42 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
-    
+
   public:
 
-    InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) : 
-        LEDStripEffect(strName),
-        BeatEffectBase(0.25, 1.75, .25),
+    InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) :
+        LEDStripEffect(EFFECT_MATRIX_INSULATOR_SPECTRUM, strName),
+        BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
     {
     }
 
-    virtual void Draw()
+    InsulatorSpectrumEffect(const JsonObjectConst& jsonObject) :
+        LEDStripEffect(jsonObject),
+        BeatEffectBase(1.50, 0.25),
+        ParticleSystem<SpinningPaletteRingParticle>(),
+        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        AllocatedJsonDocument jsonDoc(512);
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_PALETTE] = _Palette;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual void Draw() override
     {
         auto peaks = g_Analyzer.GetPeakData();
 
-        for (int band = 0; band < min(NUM_BANDS, NUM_FANS); band++) 
+        for (int band = 0; band < min(NUM_BANDS, NUM_FANS); band++)
         {
             CRGB color = ColorFromPalette(_Palette, ::map(band, 0, min(NUM_BANDS, NUM_FANS), 0, 255) + beatsin8(1) );
             color = color.fadeToBlackBy(255 - 255 * peaks[band]);
@@ -70,13 +90,12 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         }
 
         ProcessAudio();
-        ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);        
-      
-        fadeAllChannelsToBlackBy(min(255.0,2000 * g_AppTime.DeltaTime()));
-        delay(30);
+        ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
+
+        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.DeltaTime()));
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, double span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span)
     {
         int iInsulator;
         do
@@ -84,7 +103,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
           iInsulator = random(0, NUM_FANS);
         } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
         _iLastInsulator = iInsulator;
-        
+
 
         // REVIEW(davepl) This might look interesting if it didn't erase...
         bool bFlash = g_Analyzer._VURatio > 1.99 && span > 1.9 && elapsed > 0.25;
@@ -93,7 +112,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     }
 };
 
-class VUMeterEffect 
+class VUMeterEffect
 {
   protected:
 
@@ -101,8 +120,11 @@ class VUMeterEffect
     //
     // Draw i-th pixel in row y
 
-    void DrawVUPixels(GFXBase * pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette256 * pPalette = nullptr)
+    void DrawVUPixels(std::shared_ptr<GFXBase> pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
     {
+        if (g_Analyzer.MicMode() == PeakData::PCREMOTE)
+            pPalette = &vuPaletteBlue;
+
         int xHalf = pGFXChannel->width()/2;
         pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
         pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
@@ -110,44 +132,49 @@ class VUMeterEffect
 
 
     // DrawVUMeter
-    // 
+    //
     // Draws the symmetrical VU meter along with its fading peaks up at the top of the display.
-    
+
     int iPeakVUy = 0;                 // size (in LED pixels) of the VU peak
     unsigned long msPeakVU = 0;       // timestamp in ms when that peak happened so we know how old it is
-    
+
   public:
 
-    inline void EraseVUMeter(GFXBase * pGFXChannel, int yVU) const
+    inline void EraseVUMeter(std::shared_ptr<GFXBase> pGFXChannel, int start, int yVU) const
     {
-        pGFXChannel->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
+        int xHalf = pGFXChannel->width()/2;
+        for (int i = start; i <= xHalf; i++)
+        {
+            pGFXChannel->setPixel(xHalf-i,   yVU, CRGB::Black);
+            pGFXChannel->setPixel(xHalf-1+i,   yVU, CRGB::Black);
+        }
     }
 
-    void DrawVUMeter(GFXBase * pGFXChannel, int yVU, const CRGBPalette256 * pPalette = nullptr)
+    void DrawVUMeter(std::shared_ptr<GFXBase> pGFXChannel, int yVU, const CRGBPalette16 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
-
-        EraseVUMeter(pGFXChannel, yVU);
-
-        if (iPeakVUy > 1)
-        {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND;
-            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade, pPalette);
-            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade, pPalette);
-        }
 
         int xHalf = pGFXChannel->width()/2-1;
         int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; // map(g_Analyzer._VU, 0, MAX_VU/8, 1, xHalf);
         bars = min(bars, xHalf);
 
-        if (bars > iPeakVUy)
+        EraseVUMeter(pGFXChannel, bars, yVU);
+
+        if (bars >= iPeakVUy)
         {
             msPeakVU = millis();
             iPeakVUy = bars;
         }
-        else if (millis() - msPeakVU > MS_PER_SECOND)
+        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
         {
             iPeakVUy = 0;
+        }
+
+        if (iPeakVUy > 1)
+        {
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
+            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade);
+            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade);
         }
 
         for (int i = 0; i < bars; i++)
@@ -175,12 +202,12 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     float _peak1DecayRate;
     float _peak2DecayRate;
 
-    virtual size_t DesiredFramesPerSecond() const
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 60;
     }
 
-    virtual bool RequiresDoubleBuffering() const
+    virtual bool RequiresDoubleBuffering() const override
     {
         return _fadeRate != 0;
     }
@@ -207,42 +234,42 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             if (iBar % 4 == 0)
             {
                 value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-                value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();            
+                value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
             }
             else if (iBar % 4 == 1)
             {
                 value  = (g_Analyzer.g_peak1Decay[iBand] * 3 + g_Analyzer.g_peak1Decay[iNextBand] * 1 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 3 + g_Analyzer.g_peak2Decay[iNextBand] * 1 ) / 4 *  pGFXChannel->height();            
+                value2 = (g_Analyzer.g_peak2Decay[iBand] * 3 + g_Analyzer.g_peak2Decay[iNextBand] * 1 ) / 4 *  pGFXChannel->height();
             }
             else if (iBar % 4 == 2)
             {
                 value  = (g_Analyzer.g_peak1Decay[iBand] * 2 + g_Analyzer.g_peak1Decay[iNextBand] * 2 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 2 + g_Analyzer.g_peak2Decay[iNextBand] * 2 ) / 4 *  pGFXChannel->height();            
+                value2 = (g_Analyzer.g_peak2Decay[iBand] * 2 + g_Analyzer.g_peak2Decay[iNextBand] * 2 ) / 4 *  pGFXChannel->height();
             }
             else if (iBar % 4 == 3)
             {
                 value  = (g_Analyzer.g_peak1Decay[iBand] * 1 + g_Analyzer.g_peak1Decay[iNextBand] * 3) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 1 + g_Analyzer.g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();            
+                value2 = (g_Analyzer.g_peak2Decay[iBand] * 1 + g_Analyzer.g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();
             }
         }
         else if ((_numBars > NUM_BANDS) && (iBar % 2 == 1))
-        {   
-            // For odd bars, average the bars to the left and right of this one 
+        {
+            // For odd bars, average the bars to the left and right of this one
             value  = ((g_Analyzer.g_peak1Decay[iBand] + g_Analyzer.g_peak1Decay[iNextBand]) / 2) * (pGFXChannel->height() - 1);
-            value2 = ((g_Analyzer.g_peak2Decay[iBand] + g_Analyzer.g_peak2Decay[iNextBand]) / 2) *  pGFXChannel->height();            
+            value2 = ((g_Analyzer.g_peak2Decay[iBand] + g_Analyzer.g_peak2Decay[iNextBand]) / 2) *  pGFXChannel->height();
         }
         else
         {
             // One to one case
             value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-            value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();            
+            value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
         }
 
         debugV("Band: %d, Value: %f\n", iBar, g_Analyzer.g_peak1Decay[iBar] );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
-    
+
         if (value2 > pGFXChannel->height())
             value2 = pGFXChannel->height();
 
@@ -250,27 +277,35 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         int xOffset   = iBar * barWidth;
         int yOffset   = pGFXChannel->height() - value;
         int yOffset2  = pGFXChannel->height() - value2;
-    
+
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
-                graphics()->setPixel(x, y, baseColor);
-        
+                g()->setPixel(x, y, baseColor);
+
         const int PeakFadeTime_ms = 1000;
 
         CRGB colorHighlight = CRGB(CRGB::White);
         unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
         if (msPeakAge > PeakFadeTime_ms)
             msPeakAge = PeakFadeTime_ms;
-        
+
         float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
         uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
 
-        colorHighlight = CRGB(CRGB::White).fadeToBlackBy(fadeAmount);
+        // We draw the highlight in white, but if its falling at a different rate than the bar itself,
+        // it indicates a free-floating highlight, and those get faded out based on age
+
+        colorHighlight = CRGB(CRGB::White);
+        if (g_Analyzer.g_peak1Decay != g_Analyzer.g_peak2Decay)
+            colorHighlight = colorHighlight.fadeToBlackBy(fadeAmount);
+
+        // We draw the bottom row in bar color even when only 1 pixel high so as not to have a white
+        // strip as the bottom row (all made up of highlights)
 
         if (value == 0)
             colorHighlight = baseColor;
 
-        // if decay rate is less than zero we interpret that here to mean "don't draw it at all".  
+        // if decay rate is less than zero we interpret that here to mean "don't draw it at all".
 
         if (_peak1DecayRate >= 0.0f)
             pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
@@ -278,19 +313,17 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
   public:
 
-    SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
-                           bool                   bShowVU,
+    SpectrumAnalyzerEffect(const char   * pszFriendlyName,
                            int                    cNumBars = 12,
-                           const CRGBPalette16  & palette = spectrumBasicColors, 
-                           uint16_t           scrollSpeed = 0, 
+                           const CRGBPalette16  & palette = spectrumBasicColors,
+                           uint16_t           scrollSpeed = 0,
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0)
-        : LEDStripEffect(pszFriendlyName),
-          _bShowVU(bShowVU),
+        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
-          _scrollSpeed(scrollSpeed), 
+          _scrollSpeed(scrollSpeed),
           _fadeRate(fadeRate),
           _palette(palette),
           _peak1DecayRate(peak1DecayRate),
@@ -298,18 +331,16 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     {
     }
 
-    SpectrumAnalyzerEffect(const char   * pszFriendlyName, 
-                           bool                   bShowVU, 
+    SpectrumAnalyzerEffect(const char   * pszFriendlyName,
                            int                    cNumBars = 12,
-                           CRGB                 baseColor = CRGB::Red, 
-                           uint8_t               fadeRate = 0,
-                           float           peak1DecayRate = 1.0,
-                           float           peak2DecayRate = 1.0)
-        : LEDStripEffect(pszFriendlyName), 
-          _bShowVU(bShowVU),        
+                           const CRGB &          baseColor = CRGB::Red,
+                           uint8_t                fadeRate = 0,
+                           float            peak1DecayRate = 1.0,
+                           float            peak2DecayRate = 1.0)
+        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
-          _scrollSpeed(0), 
+          _scrollSpeed(0),
           _fadeRate(fadeRate),
           _palette(baseColor),
           _peak1DecayRate(peak1DecayRate),
@@ -318,14 +349,44 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     {
     }
 
-    virtual void Draw()
+    SpectrumAnalyzerEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
+          _numBars(jsonObject["nmb"]),
+          _colorOffset(0),
+          _scrollSpeed(jsonObject[PTY_SPEED]),
+          _fadeRate(jsonObject["frt"]),
+          _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+          _peak1DecayRate(jsonObject["pd1"]),
+          _peak2DecayRate(jsonObject["pd2"])
+
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        AllocatedJsonDocument jsonDoc(512);
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_PALETTE] = _palette;
+        jsonDoc["nmb"] = _numBars;
+        jsonDoc[PTY_SPEED] = _scrollSpeed;
+        jsonDoc["frt"] = _fadeRate;
+        jsonDoc["pd1"] = _peak1DecayRate;
+        jsonDoc["pd2"] = _peak2DecayRate;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual void Draw() override
     {
         // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
 
         g_Analyzer.g_peak1DecayRate = _peak1DecayRate;
         g_Analyzer.g_peak2DecayRate = _peak2DecayRate;
 
-        auto pGFXChannel = _GFX[0].get();
+        auto pGFXChannel = _GFX[0];
 
         if (_scrollSpeed > 0)
         {
@@ -338,26 +399,20 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         if (_fadeRate)
             fadeAllChannelsToBlackBy(_fadeRate);
         else
-            fillSolidOnAllChannels(CRGB::Black);
+            pGFXChannel->Clear();
 
-  
-        std::lock_guard<std::mutex> guard(Screen::_screenMutex);
-
-        if (_bShowVU)
-            DrawVUMeter(pGFXChannel, 0);
-        
         for (int i = 0; i < _numBars; i++)
         {
             // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one
             if (pGFXChannel->IsPalettePaused())
             {
-                int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 255, 255, NOBLEND));
+                int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
+                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 240, 255, LINEARBLEND));
             }
             else
             {
                 int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, NOBLEND));
+                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, LINEARBLEND));
             }
         }
     }
@@ -371,27 +426,43 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 class WaveformEffect : public LEDStripEffect
 {
   protected:
-    const TProgmemRGBPalette16 * _pPalette = nullptr;
     uint8_t                      _iColorOffset = 0;
     uint8_t                      _increment = 0;
-    double                       _iPeakVUy = 0;
+    float                        _iPeakVUy = 0;
     unsigned long                _msPeakVU = 0;
 
   public:
-    
-    WaveformEffect(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0) 
-        : LEDStripEffect(pszFriendlyName)
+
+    WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
+        : LEDStripEffect(EFFECT_MATRIX_WAVEFORM, pszFriendlyName),
+          _increment(increment)
     {
-        _pPalette = pPalette;
-        _increment = increment;
     }
 
-    void DrawSpike(int x, double v, bool bErase = true) 
+    WaveformEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
+          _increment(jsonObject["inc"])
     {
-        v = std::min(v, 1.0);
-        v = std::max(v, 0.0);
+    }
 
-        auto g = g_aptrEffectManager->graphics();
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["inc"] = _increment;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    void DrawSpike(int x, float v, bool bErase = true)
+    {
+        v = std::min(v, 1.0f);
+        v = std::max(v, 0.0f);
+
+        auto g = g_ptrEffectManager->g();
 
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
@@ -414,21 +485,27 @@ class WaveformEffect : public LEDStripEffect
                 if (y < 2 || y > (MATRIX_HEIGHT - 2))
                     color  = CRGB::Red;
                 else
-                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND); 
+                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
             }
 
             bErase ? g->setPixel(x, y, color) : g->drawPixel(x, y, color);
-            
+
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
 
     }
 
-    virtual void Draw()
+    virtual size_t DesiredFramesPerSecond() const override
     {
-        auto g = g_aptrEffectManager->graphics();
-        
-        int top = g_aptrEffectManager->IsVUVisible() ? 1 : 0;
+        // I found a pleasing scroll speed to be 24-30, not much faster or its too mesmerizing :-)
+        return 24;
+    }
+
+    virtual void Draw() override
+    {
+        auto g = g_ptrEffectManager->g();
+
+        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         DrawSpike(63, g_Analyzer._VURatio/2.0);
         DrawSpike(0, g_Analyzer._VURatio/2.0);
@@ -440,31 +517,75 @@ class GhostWave : public WaveformEffect
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;
+
+    void construct()
+    {
+        _effectNumber = EFFECT_MATRIX_GHOST_WAVE;
+    }
   public:
 
-    GhostWave(const String & pszFriendlyName, const TProgmemRGBPalette16 * pPalette = nullptr, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20) 
-        : WaveformEffect(pszFriendlyName, pPalette, increment),
+    GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20)
+        : WaveformEffect(pszFriendlyName, increment),
           _blur(blur),
           _erase(erase),
           _fade(fade)
     {
+        construct();
     }
 
-    virtual void Draw()
+    GhostWave(const JsonObjectConst& jsonObject)
+        : WaveformEffect(jsonObject),
+          _blur(jsonObject[PTY_BLUR]),
+          _erase(jsonObject[PTY_ERASE]),
+          _fade(jsonObject[PTY_FADE])
     {
-        auto g = g_aptrEffectManager->graphics();
+        construct();
+    }
 
-        int top = g_aptrEffectManager->IsVUVisible() ? 1 : 0;
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_BLUR] = _blur;
+        jsonDoc[PTY_ERASE] = _erase;
+        jsonDoc[PTY_FADE] = _fade;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return true;
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
+    {
+        // Looks cool at the low-50s it can actually achieve
+        return _blur > 0 ? 60 : 30;
+    }
+
+    virtual void Draw() override
+    {
+        auto g = g_ptrEffectManager->g();
+
+        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
 
         g->DimAll(250 - _fade * g_Analyzer._VURatio);
         g->MoveOutwardsX(top);
 
         if (_blur)
             g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
-            
+
+        // VURatio is too fast, VURatioFade looks too slow, but averaged is just right
+
+        float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
+
         // Offsetting by 0.5, which is a very low ratio, helps keep the line thin when sound is low
-        DrawSpike(MATRIX_WIDTH/2, (g_Analyzer._VURatio - 0.5) / 1.5, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, (g_Analyzer._VURatio - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.5) / 1.5, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.5) / 1.5, _erase);
     }
 };
 

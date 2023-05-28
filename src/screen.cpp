@@ -28,12 +28,11 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-
 #include "globals.h"
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_aptrEffectManager;
+extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
-double g_Brite;
+float g_Brite;
 uint32_t g_Watts;
 
 #if USE_OLED
@@ -67,7 +66,7 @@ extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern volatile double g_FreeDrawTime;           // Idle drawing time
+extern volatile double g_FreeDrawTime;  // Idle drawing time
 
 DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
 
@@ -79,18 +78,18 @@ bool g_ShowFPS = true; // Indicates whether little lcd should show FPS
 
 void BasicInfoSummary(bool bRedraw)
 {
-    #ifdef ARDUINO_HELTEC_WIFI_KIT_32
-        // No border will be drawn so no inset margin needed
-        const int xMargin = 0;
-        const int yMargin = 0;
-    #else
-        const int xMargin = 10;
-        const int yMargin = 6;
-    #endif
+#ifdef ARDUINO_HELTEC_WIFI_KIT_32
+    // No border will be drawn so no inset margin needed
+    const int xMargin = 0;
+    const int yMargin = 0;
+#else
+    const int xMargin = 10;
+    const int yMargin = 6;
+#endif
 
     // Blue Theme
 
-    const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);  
+    const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);
     const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
     const uint16_t textColor = Screen::to16bit(CRGB::White);
 
@@ -102,13 +101,13 @@ void BasicInfoSummary(bool bRedraw)
 
     // bRedraw is set for full redraw, in which case we fill the screen
 
-    #if USE_OLED
-        if (bRedraw)
-            Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
-    #else
-        if (bRedraw)
-            Screen::fillRect(1, 1, Screen::screenWidth() - 2, Screen::screenHeight() - 2, bkgndColor);
-    #endif
+#if USE_OLED
+    if (bRedraw)
+        Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
+#else
+    if (bRedraw)
+        Screen::fillRect(1, 1, Screen::screenWidth() - 2, Screen::screenHeight() - 2, bkgndColor);
+#endif
 
     // Status line 1
 
@@ -119,87 +118,76 @@ void BasicInfoSummary(bool bRedraw)
     cStatus++;
 
     Screen::setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
-    Screen::setTextSize(Screen::SMALL);
+    Screen::setTextSize(Screen::screenWidth() < 240 ? Screen::SMALL : Screen::MEDIUM);
 
-    char szBuffer[256];
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024);
     Screen::setCursor(xMargin, yMargin);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
 
     // WiFi info line 2
 
+    auto lineHeight = Screen::fontHeight();
+    Screen::setCursor(xMargin + 0, yMargin + lineHeight);
+
     if (WiFi.isConnected() == false)
     {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "No Wifi");
+        Screen::println("No Wifi");
     }
     else
     {
         const IPAddress address = WiFi.localIP();
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "%ddB:%d.%d.%d.%d",
-                (int)labs(WiFi.RSSI()), // skip sign in first character
-                address[0], address[1], address[2], address[3]);
+        Screen::println(str_sprintf("%ddB:%d.%d.%d.%d",
+                                    (int)labs(WiFi.RSSI()), // skip sign in first character
+                                    address[0], address[1], address[2], address[3]));
     }
-    
-    auto lineHeight = Screen::fontHeight();
-    Screen::setCursor(xMargin + 0, yMargin + lineHeight);
-    Screen::println(szBuffer);
 
     // Buffer Status Line 3
 
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "BUFR:%02d/%02d %dfps ", 
-        g_aptrBufferManager[0]->Depth(), 
-        g_aptrBufferManager[0]->BufferCount(), 
-        g_FPS);
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 4);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("BUFR:%02d/%02d %dfps ",
+                                g_aptrBufferManager[0]->Depth(),
+                                g_aptrBufferManager[0]->BufferCount(),
+                                g_FPS));
 
     // Data Status Line 4
 
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "DATA:%+06.2lf-%+06.2lf", 
-        min(99.99, g_aptrBufferManager[0]->AgeOfOldestBuffer()), 
-        min(99.99, g_aptrBufferManager[0]->AgeOfNewestBuffer())
-    );
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
+                                min(99.99f, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
+                                min(99.99f, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
 
-    // Clock info Line 5 
+    // Clock info Line 5
     //
     // Get the current clock time in HH:MM:SS format
 
     time_t t;
     time(&t);
     struct tm *tmp = localtime(&t);
-    tmp->tm_hour = (tmp->tm_hour+5)%24;           // BUGBUG: Hardcoded to PST for now
     char szTime[16];
     strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
 
-    snprintf(szBuffer, ARRAYSIZE(szBuffer), "CLCK:%s %04.3lf", 
-        g_AppTime.CurrentTime() > 100000 ? szTime : "Unset", 
-        g_FreeDrawTime);
     Screen::setCursor(xMargin + 0, yMargin + lineHeight * 3);
-    Screen::println(szBuffer);
+    Screen::println(str_sprintf("CLCK:%s %04.3lf",
+                                g_AppTime.CurrentTime() > 100000 ? szTime : "Unset",
+                                g_FreeDrawTime));
 
     // LED Power Info Line 6 - only if display tall enough
 
     if (Screen::screenHeight() >= lineHeight * 5 + Screen::fontHeight())
     {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "POWR:%3.0lf%% %4uW\n",
-                g_Brite,
-                g_Watts);
         Screen::setCursor(xMargin + 0, yMargin + lineHeight * 5);
-        Screen::println(szBuffer);
+        Screen::println(str_sprintf("POWR:%3.0lf%% %4uW\n",
+                                    g_Brite,
+                                    g_Watts));
     }
-
 
     // PSRAM Info Line 7 - only if display tall enough
 
     if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
     {
-        snprintf(szBuffer, ARRAYSIZE(szBuffer), "PRAM:%dK/%dK\n", 
-            ESP.getFreePsram() / 1024, 
-            ESP.getPsramSize() / 1024);
         Screen::setCursor(xMargin + 0, yMargin + lineHeight * 6);
-        Screen::println(szBuffer);
+        Screen::println(str_sprintf("PRAM:%dK/%dK\n",
+                                    ESP.getFreePsram() / 1024,
+                                    ESP.getPsramSize() / 1024));
     }
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
@@ -210,13 +198,13 @@ void BasicInfoSummary(bool bRedraw)
         int top = yMargin + lineHeight * 7 + 1;
         int height = lineHeight - 5;
         int width = Screen::screenWidth() - xMargin * 2;
-        double ratio = (double) g_aptrBufferManager[0]->Depth() / (double) g_aptrBufferManager[0]->BufferCount();
-        ratio = std::min(1.0, ratio);
+        float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
+        ratio = std::min(1.0f, ratio);
         int filled = (width - 2) * ratio;
 
         // Color bar red/yellow/green depending on buffer fill
 
-        uint16_t color = RED16;           
+        uint16_t color = RED16;
         if (ratio > 0.25)
         {
             color = Screen::to16bit(CRGB::Orange);
@@ -231,15 +219,15 @@ void BasicInfoSummary(bool bRedraw)
                 }
             }
         }
-        
-        Screen::fillRect(xMargin+1, top+1, filled, height-2, color);
-        Screen::fillRect(xMargin+filled, top+1, width-filled, height-2, bkgndColor);
-        Screen::drawRect(xMargin, top, width,  height, WHITE16);
+
+        Screen::fillRect(xMargin + 1, top + 1, filled, height - 2, color);
+        Screen::fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
+        Screen::drawRect(xMargin, top, width, height, WHITE16);
     }
 
-    #ifndef ARDUINO_HELTEC_WIFI_KIT_32
-        Screen::drawRect(0, 0, Screen::screenWidth(), Screen::screenHeight(), borderColor);
-    #endif        
+#ifndef ARDUINO_HELTEC_WIFI_KIT_32
+    Screen::drawRect(0, 0, Screen::screenWidth(), Screen::screenHeight(), borderColor);
+#endif
 }
 
 // CurrentEffectSummary
@@ -257,7 +245,7 @@ void CurrentEffectSummary(bool bRedraw)
     // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
     // last time and check each time to see if its any different before drawing.
 
-    static auto lasteffect = g_aptrEffectManager->GetCurrentEffectIndex();
+    static auto lasteffect = g_ptrEffectManager->GetCurrentEffectIndex();
     static auto sip = WiFi.localIP().toString();
     static auto lastFPS = g_FPS;
     static auto lastFullDraw = 0;
@@ -269,7 +257,7 @@ void CurrentEffectSummary(bool bRedraw)
     {
         lastFullDraw = millis();
         if (bRedraw != false ||
-            lasteffect != g_aptrEffectManager->GetCurrentEffectIndex() ||
+            lasteffect != g_ptrEffectManager->GetCurrentEffectIndex() ||
             sip != WiFi.localIP().toString())
         {
             Screen::fillRect(0, 0, Screen::screenWidth(), Screen::TopMargin, backColor);
@@ -277,33 +265,34 @@ void CurrentEffectSummary(bool bRedraw)
             Screen::fillRect(0, Screen::TopMargin - 1, Screen::screenWidth(), 1, BLUE16);
             Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin + 1, Screen::screenWidth(), 1, BLUE16);
 
-            lasteffect = g_aptrEffectManager->GetCurrentEffectIndex();
+            lasteffect = g_ptrEffectManager->GetCurrentEffectIndex();
             sip = WiFi.localIP().toString();
             lastFPS = g_FPS;
 
             Screen::setTextSize(Screen::SMALL);
+
             Screen::setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
-                             String(g_aptrEffectManager->GetCurrentEffectIndex() + 1) +
+                             String(g_ptrEffectManager->GetCurrentEffectIndex() + 1) +
                              String("/") +
-                             String(g_aptrEffectManager->EffectCount());
+                             String(g_ptrEffectManager->EffectCount());
             Screen::drawString(sEffect.c_str(), yh);
             yh += Screen::fontHeight();
             // get effect name length and switch text size accordingly
-            int effectnamelen = g_aptrEffectManager->GetCurrentEffectName().length();
+            int effectnamelen = g_ptrEffectManager->GetCurrentEffectName().length();
 
-#if M5STICKCPLUS
+#if M5STICKCPLUS || M5STACKCORE2
             Screen::setTextSize(Screen::MEDIUM);
 #else
             Screen::setTextSize(Screen::SMALL);
 #endif
             Screen::setTextColor(WHITE16, backColor);
-            Screen::drawString(g_aptrEffectManager->GetCurrentEffectName(), yh);
+            Screen::drawString(g_ptrEffectManager->GetCurrentEffectName(), yh);
             yh += Screen::fontHeight();
             Screen::setTextSize(Screen::SMALL);
 
             String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
-#if M5STICKCPLUS
+#if M5STICKCPLUS || M5STACKCORE2
             sIP += " - NightDriverLED.com";
 #endif
             Screen::setTextColor(YELLOW16, backColor);
@@ -318,11 +307,9 @@ void CurrentEffectSummary(bool bRedraw)
             lastSerial = g_Analyzer._serialFPS;
             lastAudio = g_Analyzer._AudioFPS;
             Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
-            char szBuffer[64];
             yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-            snprintf(szBuffer, ARRAYSIZE(szBuffer), " LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
             Screen::setTextColor(YELLOW16, backColor);
-            Screen::drawString(szBuffer, yh);
+            Screen::drawString(str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS), yh);
             yh += Screen::fontHeight();
         }
 #endif
@@ -338,7 +325,7 @@ void CurrentEffectSummary(bool bRedraw)
     int xHalf = Screen::screenWidth() / 2 - 1;   // xHalf is half the screen width
     float ySizeVU = Screen::screenHeight() / 16; // vu is 1/20th the screen height, height of each block
     int cPixels = 16;
-    float xSize = xHalf / cPixels + 1;               // xSize is count of pixels in each block
+    float xSize = xHalf / cPixels + 1;                          // xSize is count of pixels in each block
     int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
 
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
@@ -355,7 +342,7 @@ void CurrentEffectSummary(bool bRedraw)
 
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
     {
-        CRGB bandColor = ColorFromPalette(RainbowColors_p, (::map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
+        CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
         int bandWidth = Screen::screenWidth() / NUM_BANDS;
         auto color16 = Screen::to16bit(bandColor);
         auto topSection = bandHeight - bandHeight * g_Analyzer.g_peak2Decay[iBand];
@@ -365,16 +352,13 @@ void CurrentEffectSummary(bool bRedraw)
         assert(bandHeight * val <= bandHeight);
         Screen::fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }
-    
+
     // Draw horizontal lines so the bars look like they are made of segments
 
-    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += 5)
+    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += Screen::screenHeight() / 25)
         Screen::drawLine(0, iLine, Screen::screenWidth(), iLine, BLACK16);
 #endif
 }
-
-       
-
 
 // UpdateScreen
 //
@@ -392,28 +376,28 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
 
     std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-    #if USE_OLED
-        g_pDisplay->clearBuffer();
-    #endif
+#if USE_OLED
+    g_pDisplay->clearBuffer();
+#endif
 
-        switch (giInfoPage)
-        {
-            case 0:
-                BasicInfoSummary(bRedraw);
-                break;
+    switch (giInfoPage)
+    {
+    case 0:
+        BasicInfoSummary(bRedraw);
+        break;
 
-            case 1:
-                CurrentEffectSummary(bRedraw);
-                break;
+    case 1:
+        CurrentEffectSummary(bRedraw);
+        break;
 
-            default:
-                throw new std::runtime_error("Invalid info page in UpateScreen");
-                break;
-        }
+    default:
+        throw new std::runtime_error("Invalid info page in UpateScreen");
+        break;
+    }
 
-    #if USE_OLED
-        g_pDisplay->sendBuffer();
-    #endif
+#if USE_OLED
+    g_pDisplay->sendBuffer();
+#endif
 
 #endif
 }
@@ -434,46 +418,48 @@ extern Bounce2::Button Button2;
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 {
-    debugI(">> ScreenUpdateLoopEntry\n");
+    //debugI(">> ScreenUpdateLoopEntry\n");
 
-    #if USE_OLED
-        g_pDisplay->setDisplayRotation(SCREEN_ROTATION);
-        g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable default font
-        g_pDisplay->clear();
-    #endif
+#if USE_OLED
+    g_pDisplay->setDisplayRotation(SCREEN_ROTATION);
+    g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable default font
+    g_pDisplay->clear();
+#endif
 
-    bool bRedraw = true;                            
+    bool bRedraw = true;
     for (;;)
     {
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
-        
-        #ifdef TOGGLE_BUTTON_1
-            Button1.update();
-            if (Button1.pressed())
-            {
-                std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+#ifdef TOGGLE_BUTTON_1
+        Button1.update();
+        if (Button1.pressed())
+        {
+            std::lock_guard<std::mutex> guard(Screen::_screenMutex);
 
-                // When the button is pressed advance to the next information page on the little display
+            // When the button is pressed advance to the next information page on the little display
 
-                giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
-                bRedraw = true;
-            }
-        #endif
+            giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
+            bRedraw = true;
+        }
+#endif
 
-        #ifdef TOGGLE_BUTTON_2
-            Button2.update();
-            if (Button2.pressed())
-            {
-                g_aptrEffectManager->NextEffect();
-                bRedraw = true;
-            }
-        #endif
+#ifdef TOGGLE_BUTTON_2
+        Button2.update();
+        if (Button2.pressed())
+        {
+            g_ptrEffectManager->NextEffect();
+            bRedraw = true;
+        }
+#endif
 
         UpdateScreen(bRedraw);
-        delay(g_bUpdateStarted ? 200 : 30);
-        
+        if (g_bUpdateStarted)
+            delay(200);
+        else
+            delay(50);
+
         bRedraw = false;
     }
 }

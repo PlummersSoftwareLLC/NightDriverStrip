@@ -58,7 +58,7 @@
 #ifndef PatternWave_H
 #define PatternWave_H
 
-class PatternWave : public LEDStripEffect 
+class PatternWave : public LEDStripEffect
 {
 private:
     uint8_t thetaUpdate = 4;
@@ -78,16 +78,28 @@ private:
 
     uint8_t waveCount = 1;
 
-public:
-    PatternWave() : LEDStripEffect("Wave")
+    void construct()
     {
         rotation = random(0, 4);
         waveCount = random(1, 3);
     }
 
-    virtual void Draw()
+
+public:
+    PatternWave() : LEDStripEffect(EFFECT_MATRIX_WAVE, "Wave")
     {
-        auto graphics = (GFXBase *) _GFX[0].get();
+        construct();
+    }
+
+    PatternWave(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+        construct();
+    }
+
+    virtual void Draw() override
+    {
+        auto graphics = g();
+        
         int n = 0;
 
         switch (rotation) {

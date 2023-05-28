@@ -38,63 +38,6 @@
 #include <iostream>
 
 extern DRAM_ATTR AppTime g_AppTime;                       
-
-#ifdef USE_PSRAM
-
-// psram_allocator
-//
-// A C++ allocator that allocates from PSRAM instead of the regular heap. Initially
-// I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
-// with make_shared<> so I had to provide this allocator instead.
-//
-// When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
-// of them is still in base ram.
-
-template <typename T>
-class psram_allocator
-{
-public:
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef T value_type;
-
-    psram_allocator(){}
-    ~psram_allocator(){}
-
-    template <class U> struct rebind { typedef psram_allocator<U> other; };
-    template <class U> psram_allocator(const psram_allocator<U>&){}
-
-    pointer address(reference x) const {return &x;}
-    const_pointer address(const_reference x) const {return &x;}
-    size_type max_size() const throw() {return size_t(-1) / sizeof(value_type);}
-
-    pointer allocate(size_type n, const void * hint = 0)
-    {
-        return static_cast<pointer>(ps_malloc(n*sizeof(T)));
-    }
-
-    void deallocate(pointer p, size_type n)
-    {
-        free(p);
-    }
-
-    template< class U, class... Args >
-    void construct( U* p, Args&&... args )
-    {
-        ::new((void *) p ) U(std::forward<Args>(args)...);
-    }
-    
-    void destroy(pointer p)
-    {
-        p->~T();
-    }
-};
-#endif
-
 class LEDBuffer
 {
   public:
@@ -104,9 +47,9 @@ class LEDBuffer
   private:
     
     std::unique_ptr<CRGB []> _leds;
-    uint32_t            _pixelCount;
-    uint64_t            _timeStampMicroseconds;
-    uint64_t            _timeStampSeconds;
+    uint32_t                 _pixelCount;
+    uint64_t                 _timeStampMicroseconds;
+    uint64_t                 _timeStampSeconds;
    
   public:
 
@@ -116,17 +59,7 @@ class LEDBuffer
                  _timeStampMicroseconds(0),
                  _timeStampSeconds(0)
     {
-        #if USE_PSRAM
-            //psram_allocator<CRGB []> alloc = psram_allocator<CRGB []>();
-            // _leds = psram_allocator<CRGB>().allocate(NUM_LEDS);
-            _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
-        #else
-            _leds = std::make_unique<CRGB []>(NUM_LEDS);
-        #endif
-
-
-        for (int i = 0; i < ARRAYSIZE(_leds); i++)
-            _leds[i] = CRGB::Yellow;
+        _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
     }
 
     ~LEDBuffer()
@@ -149,7 +82,11 @@ class LEDBuffer
         return false;
     }
 
-    bool UpdateFromWire(uint8_t * payloadData, size_t payloadLength)
+    // UpdateFromWire
+    //
+    // Parse and deposit a WiFi packet into a buffer
+
+    bool UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
     {
         if (payloadLength < 24)                 // Our header size
         {
@@ -193,7 +130,7 @@ class LEDBuffer
         
         CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
 
-        memcpy((void *)_leds.get(), pRGB, length32 * sizeof(CRGB));
+        memcpy(_leds.get(), pRGB, length32 * sizeof(CRGB));
         debugV("seconds, micros: %llu.%llu", seconds, micros);
         debugV("Color0: %08x", (uint32_t) _leds[0]);
         return true;
@@ -203,7 +140,7 @@ class LEDBuffer
     {
         _timeStampMicroseconds = 0;
         _timeStampSeconds      = 0;
-        _pStrand->fillLeds(_leds.get());
+        _pStrand->fillLeds(_leds);
     }
 };
 
@@ -220,8 +157,8 @@ class LEDBufferManager
     size_t                                               _iNextBuffer;        // Head pointer index
     size_t                                               _iLastBuffer;        // Tail pointer index
     uint32_t                                             _cBuffers;           // Number of buffers
-    double                                               _BufferAgeOldest = 0;
-    double                                               _BufferAgeNewest = 0;
+    float                                                _BufferAgeOldest = 0;
+    float                                                _BufferAgeNewest = 0;
    
   public:
 
@@ -236,38 +173,32 @@ class LEDBufferManager
         // are returned back out to callers so they must be shared pointers.
 
         for (int i = 0; i < _cBuffers; i++)
-        {
-            #if USE_PSRAM
-                _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
-            #else
-                _ppBuffers[i] = std::make_shared<LEDBuffer>(pGFX);
-            #endif
-        }
+            _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
     }
 
-    double AgeOfOldestBuffer()
+    float AgeOfOldestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pOldest = PeekOldestBuffer();
-            return (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
         }
         else
         {
-            return 0.0;
+            return 0.0f;
         }
     }
 
-    double AgeOfNewestBuffer()
+    float AgeOfNewestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pNewest = PeekNewestBuffer();
-            return (pNewest->Seconds() + pNewest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pNewest->Seconds() + pNewest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
         }
         else
         {
-            return 0.0;
+            return 0.0f;
         }
     }
 

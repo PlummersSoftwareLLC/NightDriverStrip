@@ -63,7 +63,11 @@ private:
     const uint8_t borderWidth = 2;
 
 public:
-    PatternSwirl() : LEDStripEffect("Swirl")
+    PatternSwirl() : LEDStripEffect(EFFECT_MATRIX_SWIRL, "Swirl")
+    {
+    }
+
+    PatternSwirl(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
@@ -79,7 +83,7 @@ public:
         graphics->leds[graphics->xy(i, j)] += color;
     }
 
-    virtual void Draw()
+    virtual void Draw() override
     {
         auto graphics = _GFX[0];
 

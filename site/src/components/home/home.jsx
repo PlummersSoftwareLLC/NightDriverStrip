@@ -57,7 +57,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                         className={classes.toolbarTitle}
                         component="h1"
                         variant="h6">
-                        Night Driver Strip
+                        NightDriverStrip
                     </Typography>
                     {(notifications.length > 0) && <NotificationPanel notifications={notifications} clearNotifications={()=>setNotifications([])}/>}
                 </Toolbar>

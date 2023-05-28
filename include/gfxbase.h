@@ -67,6 +67,20 @@
 #include <stdexcept>
 #include "Adafruit_GFX.h"
 #include "pixeltypes.h"
+#include "effects/matrix/Boid.h"
+#include "effects/matrix/Vector.h"
+#include <memory>
+
+typedef struct 
+{
+    uint32_t noise_x;
+    uint32_t noise_y;
+    uint32_t noise_z;
+    uint32_t noise_scale_x;
+    uint32_t noise_scale_y;
+    uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT]; 
+    uint8_t  noisesmoothing;
+} Noise;
 
 class GFXBase : public Adafruit_GFX
 {
@@ -78,69 +92,73 @@ protected:
     static const uint8_t gamma5[];
     static const uint8_t gamma6[];
 
-    static const int paletteCount = 10;
-    int paletteIndex = -1;
-    TBlendType currentBlendType = LINEARBLEND;
-    CRGBPalette16 currentPalette;
-    CRGBPalette16 targetPalette;
-    uint lastSecond = 99;
-    String currentPaletteName;
-    bool palettePaused = false;
+    static const int _paletteCount = 10;
+    int              _paletteIndex = -1;
+    uint             _lastSecond = 99;
+    bool             _palettePaused = false;
 
-    static const int HeatColorsPaletteIndex = 6;
-    static const int RandomPaletteIndex = 9;
+    TBlendType       _currentBlendType = LINEARBLEND;
+    CRGBPalette16    _currentPalette;
+    CRGBPalette16    _targetPalette;
+    String           _currentPaletteName;
+    
+    std::unique_ptr<Noise> _ptrNoise;
 
-    // This class parties right on the noise variables, but I don't want to encourage that by making them public.
-    // THey should be turned into member variables, etc.
-
-    friend class PatternMandala;
-
-#if USE_MATRIX    
-    static uint32_t noise_x;
-    static uint32_t noise_y;
-    static uint32_t noise_z;
-    static uint32_t noise_scale_x;
-    static uint32_t noise_scale_y;
-    static uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
-    static uint8_t  noisesmoothing;
-#endif
+    static const int _heatColorsPaletteIndex = 6;
+    static const int _randomPaletteIndex = 9;
 
 public:
 
     // Many of the Aurora effects need direct access to these from external classes
 
     CRGB * leds;
-
-    int8_t zD;
-    int8_t zF;
-    uint32_t* effectX = nullptr;
-    uint32_t* effectY = nullptr;
-    uint32_t* effectZ = nullptr;
-    uint32_t* effectScaleX = nullptr;
-    uint32_t* effectScaleY = nullptr;
-    uint8_t eNs_noisesmooth = 0;
-    bool eNs_isSetupped = false;
+    std::unique_ptr<Boid []> _boids;
 
     GFXBase(int w, int h) : Adafruit_GFX(w, h),
                             _width(w),
                             _height(h)
     {
+        _boids.reset( psram_allocator<Boid>().allocate(_width) );
+        _ptrNoise.reset( psram_allocator<Noise>().allocate(1) );
+        assert(_ptrNoise);
     }
 
     virtual ~GFXBase()
     {
     }
 
-    inline static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
+    Noise & GetNoise()
     {
-        uint8_t r = gamma5[color >> 11];
-        uint8_t g = gamma6[(color >> 5) & 0x3F];
-        uint8_t b = gamma5[color & 0x1F];
-
-        return CRGB(r, g, b);
+        return *_ptrNoise;
     }
 
-    static inline uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
+    CRGBPalette16 & GetCurrentPalette()
+    {
+        return _currentPalette;
+    }
+
+    virtual size_t GetLEDCount() const
+    {
+        return NUM_LEDS;
+    }
+    
+    virtual CRGB getPixel(int16_t x, int16_t y) const
+    {
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
+            return leds[xy(x, y)];
+        else
+            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
+    }
+
+    virtual CRGB getPixel(int16_t i) const 
+    {
+        if (i >= 0 && i < _width * _height)
+            return leds[i];
+        else
+            throw std::runtime_error("Pixel out of range in getPixel(x)");
+    }
+
+    static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
     {
         uint8_t beat = beat8(beats_per_minute, timebase);
         uint8_t beatcos = cos8(beat + phase_offset);
@@ -150,7 +168,7 @@ public:
         return result;
     }
 
-    static inline uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
+    static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
     {
         uint8_t beatsin = sin8(theta);
         uint8_t rangewidth = highest - lowest;
@@ -159,7 +177,7 @@ public:
         return result;
     }
 
-    static inline uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
+    static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
     {
         uint8_t beatcos = cos8(theta);
         uint8_t rangewidth = highest - lowest;
@@ -167,24 +185,29 @@ public:
         uint8_t result = lowest + scaledbeat;
         return result;
     }
-    static inline uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) // Convert RGB -> 16bit 5:6:5
+
+    static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
+    {
+        uint8_t r = gamma5[color >> 11];
+        uint8_t g = gamma6[(color >> 5) & 0x3F];
+        uint8_t b = gamma5[color & 0x1F];
+
+        return CRGB(r, g, b);
+    }
+
+    static uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) // Convert RGB -> 16bit 5:6:5
     {
         return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
     }
 
-    static inline uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
+    static uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
         return ((rgb.r / 8) << 11) | ((rgb.g / 4) << 5) | (rgb.b / 8);
     }
 
-    static inline uint16_t to16bit(CRGB::HTMLColorCode code) // Convert HtmlColorCode -> 16 bit 5:6:5
+    static uint16_t to16bit(CRGB::HTMLColorCode code) // Convert HtmlColorCode -> 16 bit 5:6:5
     {
         return to16bit(CRGB(code));
-    }
-
-    virtual size_t GetLEDCount() const
-    {
-        return _width * _height;
     }
 
     virtual void Clear()
@@ -208,8 +231,11 @@ public:
     //     .----<----<----<----'
     //     |
     //    15 > 16 > 17 > 18 > 19
-
-    inline virtual uint16_t xy(uint16_t x, uint16_t y) const
+    //
+    // If your matrix uses a different approach, you can override this function and implement it 
+    // in the xy() function of your class
+    
+    virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         if (x & 0x01)
         {
@@ -224,84 +250,70 @@ public:
         }
     }
 
-    virtual CRGB getPixel(int16_t i) const 
-    {
-        if (i >= 0 && i < _width * _height)
-            return leds[i];
-        else
-            throw std::runtime_error("Pixel out of range in getPixel(x)");
-    }
-
     virtual void addColor(int16_t i, CRGB c)
     {
         if (i >= 0 && i < _width * _height)
             leds[i] += c;
     }
 
-    inline virtual CRGB getPixel(int16_t x, int16_t y) const
-    {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
-            return getPixel(xy(x, y));
-        else
-            throw std::runtime_error("Pixel out of range in getPixel(x,y)");
-
-    }
-
-    inline virtual void drawPixel(int16_t x, int16_t y, CRGB color)
+    virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
         addColor(xy(x, y), color);
-        //setPixel(x, y, color);
     }
 
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
         addColor(xy(x, y), from16Bit(color));
-        //setPixel(x, y, color);
     }
 
-    inline virtual void fillLeds(const CRGB *pLEDs)
+    virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs)
     {
-        memcpy(leds, pLEDs, sizeof(CRGB) * _width * _height);
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
+        // so we do it the "slow" way for other matrices
+
+        for (int x=0; x < _width; x++)
+            for (int y = 0; y < _height; y++)
+                setPixel(x, y, pLEDs[y * _width + x]);
     }
 
-    virtual inline void setPixel(int16_t x, int16_t y, uint16_t color)
+    virtual void setPixel(int16_t x, int16_t y, uint16_t color)
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
             leds[xy(x, y)] = from16Bit(color);
     }
 
+    void setPixel(int16_t x, int16_t y, CRGB color)
+    {
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
+            leds[xy(x, y)] = color;
+    }
+
     // Adafruit_GFX overrride
-    virtual void writePixel(int16_t x, int16_t y, uint16_t color)
+    void writePixel(int16_t x, int16_t y, uint16_t color)
     {
         setPixel(x, y, color);
     }
 
     // Adafruit_GFX overrride
-    virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+    void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
     {
         for (int p = y; p < y + h; p++)
             setPixel(x, p, color);
     }
 
     // Adafruit_GFX overrride
-    virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+    void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     {
         for (int p = x; p < x + w; p++)
             setPixel(p, y, color);
     }
 
-    inline virtual void setPixel(int16_t x, int16_t y, CRGB color)
-    {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
-            leds[xy(x, y)] = color;
-    }
-
-    inline virtual void setPixel(int16_t x, int r, int g, int b)
+    virtual void setPixel(int16_t x, int r, int g, int b)
     {
         setPixel(x, CRGB(r, g, b));
     }
 
-    inline virtual void setPixel(int x, CRGB color)
+    virtual void setPixel(int x, CRGB color)
     {
         if (x >= 0 && x < _width * _height)
             leds[x] = color;
@@ -324,7 +336,7 @@ public:
     //   We are now at pixel 5, frac2 = .75
     //   We fill pixel with .75 worth of color
 
-    inline void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false)
+    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false)
     {
         float frac1 = fPos - floor(fPos);                 // eg:   3.25 becomes 0.25
         float frac2 = fPos + count - floor(fPos + count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
@@ -357,6 +369,7 @@ public:
         if (p >= 0 && p < GetLEDCount())
             for (int i = 0; i < NUM_CHANNELS; i++)
                 leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
+                
         p = fPos + (1.0 - frac1);
         count -= (1.0 - frac1);
 
@@ -379,7 +392,7 @@ public:
     }
 
 
-    inline void blurRows(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
+    void blurRows(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
     {
         // blur rows same as columns, for irregular matrix
         uint8_t keep = 255 - blur_amount;
@@ -403,7 +416,7 @@ public:
     }
 
     // blurColumns: perform a blur1d on each column of a rectangular matrix
-    inline void blurColumns(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
+    void blurColumns(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
     {
         // blur columns
         uint8_t keep = 255 - blur_amount;
@@ -432,47 +445,49 @@ public:
         blurColumns(leds, width, height, firstRow, blur_amount);
     }
 
-    void Setup()
+    void BlurFrame(int amount)
+    {
+        // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
+        blur2d(leds, _width, 0, _height, 1, amount);
+    }
+
+    virtual void Setup()
     {
         debugW(">> GFXBase::Setup\n");
         loadPalette(0);
-
-#if USE_MATRIX
         NoiseVariablesSetup();
-        FillNoise();
-#endif
+        FillGetNoise();
         ResetOscillators();
-
     }
 
     void CyclePalette(int offset = 1)
     {
-        loadPalette(paletteIndex + offset);
+        loadPalette(_paletteIndex + offset);
     }
 
     void ChangePalettePeriodically()
     {
-        if (palettePaused)
+        if (_palettePaused)
             return;
 
         const int minutesPerPaletteCycle = 2;
         uint8_t secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
         
-        if( lastSecond != secondHand) 
+        if( _lastSecond != secondHand) 
         {
-            lastSecond = secondHand;
+            _lastSecond = secondHand;
             if( secondHand ==  0)  
-                { targetPalette = RainbowColors_p; }
+                { _targetPalette = RainbowColors_p; }
             if( secondHand == 10)  
-                { targetPalette = HeatColors_p; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
+                { _targetPalette = HeatColors_p; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
             if( secondHand == 20)  
-                { targetPalette = ForestColors_p; } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
+                { _targetPalette = ForestColors_p; } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
             if( secondHand == 30)  
-                { targetPalette = LavaColors_p; }       // Black gaps
+                { _targetPalette = LavaColors_p; }       // Black gaps
             if( secondHand == 40)  
-                { targetPalette = CloudColors_p; }
+                { _targetPalette = CloudColors_p; }
             if( secondHand == 50)  
-                { targetPalette = PartyColors_p; }
+                { _targetPalette = PartyColors_p; }
         }
     }
 
@@ -487,12 +502,12 @@ public:
     
     void PausePalette(bool bPaused)
     {
-        palettePaused = bPaused;
+        _palettePaused = bPaused;
     }
 
     bool IsPalettePaused()
     {
-        return palettePaused;
+        return _palettePaused;
     }    
 
     void UpdatePaletteCycle()
@@ -500,12 +515,12 @@ public:
 
         ChangePalettePeriodically();
         uint8_t maxChanges = 24; 
-        nblendPaletteTowardPalette( currentPalette, targetPalette, maxChanges);
+        nblendPaletteTowardPalette( _currentPalette, _targetPalette, maxChanges);
     }
 
     void RandomPalette()
     {
-        loadPalette(RandomPaletteIndex);
+        loadPalette(_randomPaletteIndex);
     }
 
     void fillRectangle(int x0, int y0, int x1, int y1, CRGB color)
@@ -517,72 +532,72 @@ public:
 
     void setPalette(CRGBPalette16 palette)
     {
-        currentPalette = palette;
-        targetPalette = palette;
-        currentPaletteName = "Custom";
+        _currentPalette = palette;
+        _targetPalette = palette;
+        _currentPaletteName = "Custom";
     }
 
     void loadPalette(int index)
     {
-        paletteIndex = index;
+        _paletteIndex = index;
 
-        if (paletteIndex >= paletteCount)
-            paletteIndex = 0;
-        else if (paletteIndex < 0)
-            paletteIndex = paletteCount - 1;
+        if (_paletteIndex >= _paletteCount)
+            _paletteIndex = 0;
+        else if (_paletteIndex < 0)
+            _paletteIndex = _paletteCount - 1;
 
-        switch (paletteIndex)
+        switch (_paletteIndex)
         {
         case 0:
-            targetPalette = RainbowColors_p;
-            currentPaletteName = "Rainbow";
+            _targetPalette = RainbowColors_p;
+            _currentPaletteName = "Rainbow";
             break;
             // case 1:
             //   targetPalette = RainbowStripeColors_p;
             //   currentPaletteName = "RainbowStripe";
             //   break;
         case 1:
-            targetPalette = OceanColors_p;
-            currentPaletteName = "Ocean";
+            _targetPalette = OceanColors_p;
+            _currentPaletteName = "Ocean";
             break;
         case 2:
-            targetPalette = CloudColors_p;
-            currentPaletteName = "Cloud";
+            _targetPalette = CloudColors_p;
+            _currentPaletteName = "Cloud";
             break;
         case 3:
-            targetPalette = ForestColors_p;
-            currentPaletteName = "Forest";
+            _targetPalette = ForestColors_p;
+            _currentPaletteName = "Forest";
             break;
         case 4:
-            targetPalette = PartyColors_p;
-            currentPaletteName = "Party";
+            _targetPalette = PartyColors_p;
+            _currentPaletteName = "Party";
             break;
         case 5:
             setupGrayscalePalette();
-            currentPaletteName = "Grey";
+            _currentPaletteName = "Grey";
             break;
-        case HeatColorsPaletteIndex:
-            targetPalette = HeatColors_p;
-            currentPaletteName = "Heat";
+        case _heatColorsPaletteIndex:
+            _targetPalette = HeatColors_p;
+            _currentPaletteName = "Heat";
             break;
         case 7:
-            targetPalette = LavaColors_p;
-            currentPaletteName = "Lava";
+            _targetPalette = LavaColors_p;
+            _currentPaletteName = "Lava";
             break;
         case 8:
             setupIcePalette();
-            currentPaletteName = "Ice";
+            _currentPaletteName = "Ice";
             break;
-        case RandomPaletteIndex:
-            loadPalette(random(0, paletteCount - 1));
-            paletteIndex = RandomPaletteIndex;
-            currentPaletteName = "Random";
+        case _randomPaletteIndex:
+            loadPalette(random(0, _paletteCount - 1));
+            _paletteIndex = _randomPaletteIndex;
+            _currentPaletteName = "Random";
             break;
         }
-        currentPalette = targetPalette;
+        _currentPalette = _targetPalette;
     }
 
-    inline void setPalette(String paletteName)
+    void setPalette(String paletteName)
     {
         if (paletteName == "Rainbow")
             loadPalette(0);
@@ -608,11 +623,11 @@ public:
             RandomPalette();
     }
 
-    inline void listPalettes() const
+    void listPalettes() const
     {
         Serial.println(F("{"));
         Serial.print(F("  \"count\": "));
-        Serial.print(paletteCount);
+        Serial.print(_paletteCount);
         Serial.println(",");
         Serial.println(F("  \"results\": ["));
 
@@ -629,11 +644,11 @@ public:
             "Ice",
             "Random"};
 
-        for (int i = 0; i < paletteCount; i++)
+        for (int i = 0; i < _paletteCount; i++)
         {
             Serial.print(F("    \""));
             Serial.print(paletteNames[i]);
-            if (i == paletteCount - 1)
+            if (i == _paletteCount - 1)
                 Serial.println(F("\""));
             else
                 Serial.println(F("\","));
@@ -643,19 +658,19 @@ public:
         Serial.println("}");
     }
 
-    inline void setupGrayscalePalette()
+    void setupGrayscalePalette()
     {
-        targetPalette = CRGBPalette16(CRGB::Black, CRGB::White);
+        _targetPalette = CRGBPalette16(CRGB::Black, CRGB::White);
     }
 
-    inline void setupIcePalette()
+    void setupIcePalette()
     {
-        targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White);
+        _targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White);
     }
 
     // write one pixel with the specified color from the current palette to coordinates
     
-    inline void Pixel(int x, int y, uint8_t colorIndex) 
+    void Pixel(int x, int y, uint8_t colorIndex) 
     {
         leds[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
     }
@@ -665,12 +680,12 @@ public:
     // the oscillators: linear ramps 0-255
     uint8_t osci[6];
 
-    // sin8(osci) swinging between 0 to MATRIX_WIDTH - 1
+    // sin8(osci) swinging between 0 to _width - 1
     uint8_t p[6];
 
     // set the speeds (and by that ratios) of the oscillators here
     
-    inline void MoveOscillators()
+    void MoveOscillators()
     {
         osci[0] = osci[0] + 5;
         osci[1] = osci[1] + 2;
@@ -681,60 +696,52 @@ public:
             osci[5] = osci[5] + 1; // .5
         for (int i = 0; i < 4; i++)
         {
-            p[i] = map8(sin8(osci[i]), 0, std::min(255, MATRIX_WIDTH - 1)); // why? to keep the result in the range of 0-MATRIX_WIDTH (matrix size)
+            p[i] = map8(sin8(osci[i]), 0, std::min(255U, _width - 1)); // why? to keep the result in the range of 0-_width (matrix size)
         }
     }
 
-    inline void ResetOscillators()
+    void ResetOscillators()
     {
         memset(osci, 0, sizeof(osci));
         memset(p, 0, sizeof(p));
     }    
-
-#if USE_MATRIX
-    inline void BlurFrame(int amount)
-    {
-        // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
-        blur2d(leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, amount);
-    }
-#endif
 
     // All the caleidoscope functions work directly within the screenbuffer (leds array).
     // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it arround.
 
     // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
 
-    inline void Caleidoscope1()
+    void Caleidoscope1()
     {
-        for (int x = 0; x < MATRIX_CENTER_X; x++)
+        for (int x = 0; x < ((_width + 1) / 2); x++)
         {
-            for (int y = 0; y < MATRIX_CENTER_Y; y++)
+            for (int y = 0; y < ((_height + 1) / 2); y++)
             {
-                leds[xy(MATRIX_WIDTH - 1 - x, y)] = leds[xy(x, y)];
-                leds[xy(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y)] = leds[xy(x, y)];
-                leds[xy(x, MATRIX_HEIGHT - 1 - y)] = leds[xy(x, y)];
+                leds[xy(_width - 1 - x, y)] = leds[xy(x, y)];
+                leds[xy(_width - 1 - x, _height - 1 - y)] = leds[xy(x, y)];
+                leds[xy(x, _height - 1 - y)] = leds[xy(x, y)];
             }
         }
     }
 
     // mirror the first 16x16 quadrant 3 times onto a 32x32
-    inline void Caleidoscope2()
+    void Caleidoscope2()
     {
-        for (int x = 0; x < MATRIX_CENTER_X; x++)
+        for (int x = 0; x < ((_width + 1) / 2); x++)
         {
-            for (int y = 0; y < MATRIX_CENTER_Y; y++)
+            for (int y = 0; y < ((_height + 1) / 2); y++)
             {
-                leds[xy(MATRIX_WIDTH - 1 - x, y)] = leds[xy(y, x)];
-                leds[xy(x, MATRIX_HEIGHT - 1 - y)] = leds[xy(y, x)];
-                leds[xy(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y)] = leds[xy(x, y)];
+                leds[xy(_width - 1 - x, y)] = leds[xy(y, x)];
+                leds[xy(x, _height - 1 - y)] = leds[xy(y, x)];
+                leds[xy(_width - 1 - x, _height - 1 - y)] = leds[xy(x, y)];
             }
         }
     }
 
     // copy one diagonal triangle into the other one within a 16x16
-    inline void Caleidoscope3()
+    void Caleidoscope3()
     {
-        for (int x = 0; x <= MATRIX_CENTER_X; x++)
+        for (int x = 0; x <= ((_width + 1) / 2); x++)
         {
             for (int y = 0; y <= x; y++)
             {
@@ -744,21 +751,21 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 16x16 (90 degrees rotated compared to Caleidoscope3)
-    inline void Caleidoscope4()
+    void Caleidoscope4()
     {
-        for (int x = 0; x <= MATRIX_CENTER_X; x++)
+        for (int x = 0; x <= ((_width + 1) / 2); x++)
         {
-            for (int y = 0; y <= MATRIX_CENTER_Y - x; y++)
+            for (int y = 0; y <= ((_height + 1) / 2) - x; y++)
             {
-                leds[xy(MATRIX_CENTER_Y - y, MATRIX_CENTER_X - x)] = leds[xy(x, y)];
+                leds[xy(((_height + 1) / 2) - y, ((_width + 1) / 2) - x)] = leds[xy(x, y)];
             }
         }
     }
 
     // copy one diagonal triangle into the other one within a 8x8
-    inline void Caleidoscope5()
+    void Caleidoscope5()
     {
-        for (int x = 0; x < MATRIX_WIDTH / 4; x++)
+        for (int x = 0; x < _width / 4; x++)
         {
             for (int y = 0; y <= x; y++)
             {
@@ -766,42 +773,42 @@ public:
             }
         }
 
-        for (int x = MATRIX_WIDTH / 4; x < MATRIX_WIDTH / 2; x++)
+        for (int x = _width / 4; x < _width / 2; x++)
         {
-            for (int y = MATRIX_HEIGHT / 4; y >= 0; y--)
+            for (int y = _height / 4; y >= 0; y--)
             {
                 leds[xy(x, y)] = leds[xy(y, x)];
             }
         }
     }
 
-    inline void Caleidoscope6()
+    void Caleidoscope6()
     {
-        for (int x = 1; x < MATRIX_CENTER_X; x++)
+        for (int x = 1; x < ((_width + 1) / 2); x++)
         {
             leds[xy(7 - x, 7)] = leds[xy(x, 0)];
         } // a
-        for (int x = 2; x < MATRIX_CENTER_X; x++)
+        for (int x = 2; x < ((_width + 1) / 2); x++)
         {
             leds[xy(7 - x, 6)] = leds[xy(x, 1)];
         } // b
-        for (int x = 3; x < MATRIX_CENTER_X; x++)
+        for (int x = 3; x < ((_width + 1) / 2); x++)
         {
             leds[xy(7 - x, 5)] = leds[xy(x, 2)];
         } // c
-        for (int x = 4; x < MATRIX_CENTER_X; x++)
+        for (int x = 4; x < ((_width + 1) / 2); x++)
         {
             leds[xy(7 - x, 4)] = leds[xy(x, 3)];
         } // d
-        for (int x = 5; x < MATRIX_CENTER_X; x++)
+        for (int x = 5; x < ((_width + 1) / 2); x++)
         {
             leds[xy(7 - x, 3)] = leds[xy(x, 4)];
         } // e
-        for (int x = 6; x < MATRIX_CENTER_X; x++)
+        for (int x = 6; x < ((_width + 1) / 2); x++)
         {
             leds[xy(7 - x, 2)] = leds[xy(x, 5)];
         } // f
-        for (int x = 7; x < MATRIX_CENTER_X; x++)
+        for (int x = 7; x < ((_width + 1) / 2); x++)
         {
             leds[xy(7 - x, 1)] = leds[xy(x, 6)];
         } // g
@@ -812,7 +819,7 @@ public:
     // create a square twister to the left or counter-clockwise
     // x and y for center, r for radius
     
-    inline void SpiralStream(int x, int y, int r, uint8_t dimm)
+    void SpiralStream(int x, int y, int r, uint8_t dimm)
     {
         for (int d = r; d >= 0; d--)
         { // from the outside to the inside
@@ -840,7 +847,7 @@ public:
     }
 
     // expand everything within a circle
-    inline void Expand(int centerX, int centerY, int radius, uint8_t dimm)
+    void Expand(int centerX, int centerY, int radius, uint8_t dimm)
     {
         if (radius == 0)
             return;
@@ -902,7 +909,7 @@ public:
     }
 
     // give it a linear tail to the right
-    inline void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT)
     {
         for (int x = fromX + 1; x < toX; x++)
         {
@@ -917,7 +924,7 @@ public:
     }
 
     // give it a linear tail to the left
-    inline void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT)
     {
         for (int x = toX; x < fromX; x++)
         {
@@ -932,80 +939,80 @@ public:
     }
 
     // give it a linear tail downwards
-    inline void StreamDown(uint8_t scale)
+    void StreamDown(uint8_t scale)
     {
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (int x = 0; x < _width; x++)
         {
-            for (int y = 1; y < MATRIX_HEIGHT; y++)
+            for (int y = 1; y < _height; y++)
             {
                 leds[xy(x, y)] += leds[xy(x, y - 1)];
                 leds[xy(x, y)].nscale8(scale);
             }
         }
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (int x = 0; x < _width; x++)
             leds[xy(x, 0)].nscale8(scale);
     }
 
     // give it a linear tail upwards
-    inline void StreamUp(uint8_t scale)
+    void StreamUp(uint8_t scale)
     {
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (int x = 0; x < _width; x++)
         {
-            for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
+            for (int y = _height - 2; y >= 0; y--)
             {
                 leds[xy(x, y)] += leds[xy(x, y + 1)];
                 leds[xy(x, y)].nscale8(scale);
             }
         }
-        for (int x = 0; x < MATRIX_WIDTH; x++)
-            leds[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
+        for (int x = 0; x < _width; x++)
+            leds[xy(x, _height - 1)].nscale8(scale);
     }
 
     // give it a linear tail up and to the left
-    inline void StreamUpAndLeft(uint8_t scale)
+    void StreamUpAndLeft(uint8_t scale)
     {
-        for (int x = 0; x < MATRIX_WIDTH - 1; x++)
+        for (int x = 0; x < _width - 1; x++)
         {
-            for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
+            for (int y = _height - 2; y >= 0; y--)
             {
                 leds[xy(x, y)] += leds[xy(x + 1, y + 1)];
                 leds[xy(x, y)].nscale8(scale);
             }
         }
-        for (int x = 0; x < MATRIX_WIDTH; x++)
-            leds[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
-        for (int y = 0; y < MATRIX_HEIGHT; y++)
-            leds[xy(MATRIX_WIDTH - 1, y)].nscale8(scale);
+        for (int x = 0; x < _width; x++)
+            leds[xy(x, _height - 1)].nscale8(scale);
+        for (int y = 0; y < _height; y++)
+            leds[xy(_width - 1, y)].nscale8(scale);
     }
 
     // give it a linear tail up and to the right
     
-    inline void StreamUpAndRight(uint8_t scale)
+    void StreamUpAndRight(uint8_t scale)
     {
-        for (int x = 0; x < MATRIX_WIDTH - 1; x++)
+        for (int x = 0; x < _width - 1; x++)
         {
-            for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
+            for (int y = _height - 2; y >= 0; y--)
             {
                 leds[xy(x + 1, y)] += leds[xy(x, y + 1)];
                 leds[xy(x, y)].nscale8(scale);
             }
         }
         // fade the bottom row
-        for (int x = 0; x < MATRIX_WIDTH; x++)
-            leds[xy(x, MATRIX_HEIGHT - 1)].nscale8(scale);
+        for (int x = 0; x < _width; x++)
+            leds[xy(x, _height - 1)].nscale8(scale);
 
         // fade the right column
-        for (int y = 0; y < MATRIX_HEIGHT; y++)
-            leds[xy(MATRIX_WIDTH - 1, y)].nscale8(scale);
+        for (int y = 0; y < _height; y++)
+            leds[xy(_width - 1, y)].nscale8(scale);
     }
 
     // just move everything one line down - BUGBUG (DAVEPL) Redundant with MoveX?
     
-    inline void MoveDown()
+    void MoveDown()
     {
-        for (int y = MATRIX_HEIGHT - 1; y > 0; y--)
+        for (int y = _height - 1; y > 0; y--)
         {
-            for (int x = 0; x < MATRIX_WIDTH; x++)
+            for (int x = 0; x < _width; x++)
             {
                 leds[xy(x, y)] = leds[xy(x, y - 1)];
             }
@@ -1014,11 +1021,11 @@ public:
 
     // just move everything one line down - BUGBUG (davepl) Redundant with MoveY?
     
-    inline void VerticalMoveFrom(int start, int end)  
+    void VerticalMoveFrom(int start, int end)  
     {
         for (int y = end; y > start; y--)
         {
-            for (int x = 0; x < MATRIX_WIDTH; x++)
+            for (int x = 0; x < _width; x++)
             {
                 leds[xy(x, y)] = leds[xy(x, y - 1)];
             }
@@ -1028,7 +1035,7 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
     
-    inline void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1039,10 +1046,10 @@ public:
         }
     }
 
-    // rotate + copy triangle (MATRIX_CENTER_X*MATRIX_CENTER_X)
-    inline void RotateTriangle()
+    // rotate + copy triangle (((_width + 1) / 2)*((_width + 1) / 2))
+    void RotateTriangle()
     {
-        for (int x = 1; x < MATRIX_CENTER_X; x++)
+        for (int x = 1; x < ((_width + 1) / 2); x++)
         {
             for (int y = 0; y < x; y++)
             {
@@ -1051,10 +1058,10 @@ public:
         }
     }
 
-    // mirror + copy triangle (MATRIX_CENTER_X*MATRIX_CENTER_X)
-    inline void MirrorTriangle()
+    // mirror + copy triangle (((_width + 1) / 2)*((_width + 1) / 2))
+    void MirrorTriangle()
     {
-        for (int x = 1; x < MATRIX_CENTER_X; x++)
+        for (int x = 1; x < ((_width + 1) / 2); x++)
         {
             for (int y = 0; y < x; y++)
             {
@@ -1063,12 +1070,12 @@ public:
         }
     }
 
-    // draw static rainbow triangle pattern (MATRIX_CENTER_XxWIDTH / 2)
+    // draw static rainbow triangle pattern (((_width + 1) / 2)xWIDTH / 2)
     // (just for debugging)
 
-    inline void RainbowTriangle()
+    void RainbowTriangle()
     {
-        for (int i = 0; i < MATRIX_CENTER_X; i++)
+        for (int i = 0; i < ((_width + 1) / 2); i++)
         {
             for (int j = 0; j <= i; j++)
             {
@@ -1077,7 +1084,7 @@ public:
         }
     }
 
-    inline void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
     {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
@@ -1101,13 +1108,13 @@ public:
         }
     }
 
-    inline void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
     {
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
 
 
-    inline void drawLine(int x0, int y0, int x1, int y1, CRGB color)
+    void drawLine(int x0, int y0, int x1, int y1, CRGB color)
     {
         BresenhamLine(x0, y0, x1, y1, color);
     }
@@ -1128,12 +1135,12 @@ public:
     }
     */
 
-    inline CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
+    CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
     {
-        return ColorFromPalette(currentPalette, index, brightness, currentBlendType);
+        return ColorFromPalette(_currentPalette, index, brightness, _currentBlendType);
     }
 
-    inline CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v) const
+    CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v) const
     {
         CHSV hsv = CHSV(h, s, v);
         CRGB rgb;
@@ -1141,140 +1148,135 @@ public:
         return rgb;
     }
 
-#if USE_MATRIX
-    inline void NoiseVariablesSetup()
+    void NoiseVariablesSetup()
     {
-        noisesmoothing = 200;
+        _ptrNoise->noisesmoothing = 200;
 
-        noise_x = random16();
-        noise_y = random16();
-        noise_z = random16();
-        noise_scale_x = 6000;
-        noise_scale_y = 6000;
+        _ptrNoise->noise_x = random16();
+        _ptrNoise->noise_y = random16();
+        _ptrNoise->noise_z = random16();
+        _ptrNoise->noise_scale_x = 6000;
+        _ptrNoise->noise_scale_y = 6000;
     }
 
-    inline void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
+    void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
     {
-        noise_x += nx;
-        noise_y += ny;
-        noise_z += nx;
-        noise_scale_x = sx;
-        noise_scale_y = sy;
+        _ptrNoise->noise_x += nx;
+        _ptrNoise->noise_y += ny;
+        _ptrNoise->noise_z += nx;
+        _ptrNoise->noise_scale_x = sx;
+        _ptrNoise->noise_scale_y = sy;
     }
 
-    inline void FillNoise()
+    void FillGetNoise()
     {
-        for (uint8_t i = 0; i < MATRIX_WIDTH; i++)
+        for (uint8_t i = 0; i < _width; i++)
         {
-            uint32_t ioffset = noise_scale_x * (i - MATRIX_CENTER_Y);
+            uint32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_height + 1) / 2));
 
-            for (uint8_t j = 0; j < MATRIX_HEIGHT; j++)
+            for (uint8_t j = 0; j < _height; j++)
             {
-                uint32_t joffset = noise_scale_y * (j - MATRIX_CENTER_Y);
+                uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
 
-                uint8_t data = inoise16(noise_x + ioffset, noise_y + joffset, noise_z) >> 8;
+                uint8_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
 
-                uint8_t olddata = noise[i][j];
-                uint8_t newdata = scale8(olddata, noisesmoothing) + scale8(data, 256 - noisesmoothing);
+                uint8_t olddata = _ptrNoise->noise[i][j];
+                uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
                 data = newdata;
 
-                noise[i][j] = data;
+                _ptrNoise->noise[i][j] = data;
             }
         }
     }
-#endif
 
-    inline void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
         for (int y = startY; y <= endY; y++)
         {
-            for (int x = MATRIX_WIDTH / 2; x > 0; x--)
+            for (int x = _width / 2; x > 0; x--)
                 leds[xy(x, y)] = leds[xy(x - 1, y)];
 
-            for (int x = MATRIX_WIDTH / 2; x < MATRIX_WIDTH; x++)
+            for (int x = _width / 2; x < _width; x++)
                 leds[xy(x, y)] = leds[xy(x + 1, y)];
         }
     }
 
-    inline void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
         for (int y = startY; y <= endY; y++)
         {
-            for (int x = 0; x < MATRIX_WIDTH / 2 - 1; x++)
+            for (int x = 0; x < _width / 2 - 1; x++)
             {
                 leds[xy(x, y)] = leds[xy(x + 1, y)];
-                leds[xy(MATRIX_WIDTH-x-1, y)] = leds[xy(MATRIX_WIDTH-x-2, y)];
-                //g->setPixel(x, y, g->getPixel(x+1, y));
-                //g->setPixel(MATRIX_WIDTH-x-1, y, g->getPixel(MATRIX_WIDTH-x-2, y));
+                leds[xy(_width-x-1, y)] = leds[xy(_width-x-2, y)];
             }
-        }       
+        }    
     }
 
     // MoveX - Shift the content on the matrix left or right
     
-    inline void MoveX(uint8_t delta)
+    void MoveX(uint8_t delta)
     {
-        for (int y = 0; y < MATRIX_HEIGHT; y++)
+        for (int y = 0; y < _height; y++)
         {
             // First part
-            for (int x = 0; x < MATRIX_WIDTH - delta; x++)  
+            for (int x = 0; x < _width - delta; x++)  
                 leds[xy(x, y)] = leds[xy(x + delta, y)];
             // Wrap around to second part
-            for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++)
-                leds[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
+            for (int x = _width - delta; x < _width; x++)
+                leds[xy(x, y)] = leds[xy(x + delta - _width, y)];
         }
     }
 
     // MoveY - Shifts the content on the matix up or down
     
-    inline void MoveY(uint8_t delta)
+    void MoveY(uint8_t delta)
     {
         CRGB tmp = 0;
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (int x = 0; x < _width; x++)
         {
             tmp = leds[xy(x, 0)];
             for (int m = 0; m < delta; m++) // moves
             {
                 // Do this delta time for each row... computationally expensive potentially.
-                for (int y = 0; y < MATRIX_HEIGHT - 1; y++)
+                for (int y = 0; y < _height - 1; y++)
                     leds[xy(x, y)] = leds[xy(x, y + 1)];
 
-                leds[xy(x, MATRIX_HEIGHT - 1)] = tmp;
+                leds[xy(x, _height - 1)] = tmp;
             }
         } // end column loop
     }     /// MoveY
 
-#if USE_MATRIX
     void MoveFractionalNoiseX(uint8_t amt = 16)
     {
         std::unique_ptr<CRGB []> ledsTemp = std::make_unique<CRGB []>(NUM_LEDS);
 
         // move delta pixelwise
-        for (int y = 0; y < MATRIX_HEIGHT; y++)
+        for (int y = 0; y < _height; y++)
         {
-            uint16_t amount = noise[0][y] * amt;
-            uint8_t delta = MATRIX_WIDTH - 1 - (amount / 256);
+            uint16_t amount = _ptrNoise->noise[0][y] * amt;
+            uint8_t delta = _width - 1 - (amount / 256);
 
             // Process up to the end less the dekta
-            for (int x = 0; x < MATRIX_WIDTH - delta; x++)
+            for (int x = 0; x < _width - delta; x++)
                 ledsTemp[xy(x, y)] = leds[xy(x + delta, y)];
 
             // Do the tail portion while wrapping around
-            for (int x = MATRIX_WIDTH - delta; x < MATRIX_WIDTH; x++)
-                ledsTemp[xy(x, y)] = leds[xy(x + delta - MATRIX_WIDTH, y)];
+            for (int x = _width - delta; x < _width; x++)
+                ledsTemp[xy(x, y)] = leds[xy(x + delta - _width, y)];
         }
 
         // move fractions
         CRGB PixelA;
         CRGB PixelB;
 
-        for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
+        for (uint8_t y = 0; y < _height; y++)
         {
-            uint16_t amount = noise[0][y] * amt;
-            uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
+            uint16_t amount   = _ptrNoise->noise[0][y] * amt;
+            uint8_t delta     = _height - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
-            for (uint8_t x = 1; x < MATRIX_WIDTH; x++)
+            for (uint8_t x = 1; x < _width; x++)
             {
                 PixelA = ledsTemp[xy(x, y)];
                 PixelB = ledsTemp[xy(x - 1, y)];
@@ -1286,7 +1288,7 @@ public:
             }
 
             PixelA = ledsTemp[xy(0, y)];
-            PixelB = ledsTemp[xy(MATRIX_WIDTH - 1, y)];
+            PixelB = ledsTemp[xy(_width - 1, y)];
 
             PixelA %= 255 - fractions;
             PixelB %= fractions;
@@ -1300,18 +1302,18 @@ public:
         std::unique_ptr<CRGB []> ledsTemp = std::make_unique<CRGB []>(NUM_LEDS);
 
         // move delta pixelwise
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (int x = 0; x < _width; x++)
         {
-            uint16_t amount = noise[x][0] * amt;
-            uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
+            uint16_t amount = _ptrNoise->noise[x][0] * amt;
+            uint8_t delta = _height - 1 - (amount / 256);
 
-            for (int y = 0; y < MATRIX_HEIGHT - delta; y++)
+            for (int y = 0; y < _height - delta; y++)
             {
                 ledsTemp[xy(x, y)] = leds[xy(x, y + delta)];
             }
-            for (int y = MATRIX_HEIGHT - delta; y < MATRIX_HEIGHT; y++)
+            for (int y = _height - delta; y < _height; y++)
             {
-                ledsTemp[xy(x, y)] = leds[xy(x, y + delta - MATRIX_HEIGHT)];
+                ledsTemp[xy(x, y)] = leds[xy(x, y + delta - _height)];
             }
         }
 
@@ -1319,13 +1321,13 @@ public:
         CRGB PixelA;
         CRGB PixelB;
 
-        for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
+        for (uint8_t x = 0; x < _width; x++)
         {
-            uint16_t amount = noise[x][0] * amt;
-            uint8_t delta = MATRIX_HEIGHT - 1 - (amount / 256);
+            uint16_t amount = _ptrNoise->noise[x][0] * amt;
+            uint8_t delta = _height - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
-            for (uint8_t y = 1; y < MATRIX_HEIGHT; y++)
+            for (uint8_t y = 1; y < _height; y++)
             {
                 PixelA = ledsTemp[xy(x, y)];
                 PixelB = ledsTemp[xy(x, y - 1)];
@@ -1337,7 +1339,7 @@ public:
             }
 
             PixelA = ledsTemp[xy(x, 0)];
-            PixelB = ledsTemp[xy(x, MATRIX_HEIGHT - 1)];
+            PixelB = ledsTemp[xy(x, _height - 1)];
 
             PixelA %= 255 - fractions;
             PixelB %= fractions;
@@ -1345,5 +1347,4 @@ public:
             leds[xy(x, 0)] = PixelA + PixelB;
         }
     }
-#endif
 };

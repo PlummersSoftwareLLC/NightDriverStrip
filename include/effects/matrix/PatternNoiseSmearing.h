@@ -58,136 +58,149 @@
 #ifndef PatternNoiseSmearing_H
 #define PatternNoiseSmearing_H
 
-uint8_t patternNoiseSmearingHue = 0;
-
-
-class PatternCurtain : public LEDStripEffect 
+class PatternCurtain : public LEDStripEffect
 {
 public:
-  PatternCurtain() : LEDStripEffect("Curtain")
+  PatternCurtain() : LEDStripEffect(EFFECT_MATRIX_CURTAIN, "Curtain")
   {
   }
 
-  virtual void Draw()
+  PatternCurtain(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
-    graphics()->DimAll(235); 
-    graphics()->BlurFrame(50);
+  }
+
+  virtual void Draw() override
+  {
+    g()->DimAll(235);
+    g()->BlurFrame(50);
 
     // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
 
     for (int x = 0; x < MATRIX_WIDTH; x++)
-      graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
+      g()->setPixel(x, 0, g()->getPixel(x, 1));
 
-    for (uint8_t i = 3; i < MATRIX_WIDTH - 3; i = i + 3) 
+    for (uint8_t i = 3; i < MATRIX_WIDTH - 3; i = i + 3)
     {
-      uint16_t color = graphics()->to16bit(graphics()->ColorFromCurrentPalette(i * 4));
-      graphics()->drawCircle(i, 2, 1, color);
-      graphics()->setPixel(i, 2, color);
+      uint16_t color = g()->to16bit(g()->ColorFromCurrentPalette(i * 4));
+      g()->drawCircle(i, 2, 1, color);
+      g()->setPixel(i, 2, color);
     }
 
-     
+
     // Noise
-    graphics()->SetNoise(3000, 3000, 3000, 2000 *(2.0 - g_Analyzer._VURatio), 2000 *(2.0 - g_Analyzer._VURatio));
-    graphics()->FillNoise();
+    g()->SetNoise(3000, 3000, 3000, 2000 *(2.0 - g_Analyzer._VURatio), 2000 *(2.0 - g_Analyzer._VURatio));
+    g()->FillGetNoise();
 
-    //graphics()->MoveX(3);
-    graphics()->MoveFractionalNoiseY(8);
+    //g()->MoveX(3);
+    g()->MoveFractionalNoiseY(8);
 
-    graphics()->MoveY(3);
-    //graphics()->MoveFractionalNoiseX(8);
+    g()->MoveY(3);
+    //g()->MoveFractionalNoiseX(8);
   }
 };
 
 class PatternGridLights : public LEDStripEffect {
 public:
-  PatternGridLights() : LEDStripEffect("Grid Dots")
+  PatternGridLights() : LEDStripEffect(EFFECT_MATRIX_GRID_LIGHTS, "Grid Dots")
   {
   }
 
-  virtual void Draw()
+  PatternGridLights(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
-    graphics()->DimAll(230); 
+  }
+
+  virtual void Draw() override
+  {
+    g()->DimAll(230);
 
     // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
 
     for (int x = 0; x < MATRIX_WIDTH; x++)
-      graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
+      g()->setPixel(x, 0, g()->getPixel(x, 1));
 
     // draw grid of rainbow dots on top of the dimmed image
-    for (uint8_t y = 1; y < MATRIX_HEIGHT - 6; y = y + 6) 
+    for (uint8_t y = 1; y < MATRIX_HEIGHT - 6; y = y + 6)
     {
-      for (uint8_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6) 
+      for (uint8_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6)
       {
-        graphics()->leds[graphics()->xy(x, y)] += graphics()->ColorFromCurrentPalette((x * y) / 2);
+        g()->leds[g()->xy(x, y)] += g()->ColorFromCurrentPalette((x * y) / 2);
       }
     }
 
     // Noise
-    graphics()->SetNoise(1000, 1000, 1000, 4000, 4000);
-    graphics()->FillNoise();
+    g()->SetNoise(1000, 1000, 1000, 4000, 4000);
+    g()->FillGetNoise();
 
-    graphics()->MoveX(3);
-    graphics()->MoveFractionalNoiseX(4);
+    g()->MoveX(3);
+    g()->MoveFractionalNoiseX(4);
 
-    graphics()->MoveY(3);
-    graphics()->MoveFractionalNoiseY(4);
+    g()->MoveY(3);
+    g()->MoveFractionalNoiseY(4);
   }
 };
 
-class PatternPaletteSmear : public LEDStripEffect 
+class PatternPaletteSmear : public LEDStripEffect
 {
 public:
-  PatternPaletteSmear() : LEDStripEffect("Smear")
+  PatternPaletteSmear() : LEDStripEffect(EFFECT_MATRIX_PALETTE_SMEAR, "Smear")
   {
   }
 
-  virtual void Draw()
+  PatternPaletteSmear(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
-    graphics()->DimAll(10);
-   
+  }
+
+  virtual void Draw() override
+  {
+    g()->DimAll(10);
+
     // draw a rainbow color palette
-    for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) 
+    for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
     {
-      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++) 
+      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++)
       {
-        graphics()->leds[graphics()->xy(x, y)] += graphics()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
+        g()->leds[g()->xy(x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
-      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++) 
+      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++)
       {
-        graphics()->leds[graphics()->xy(MATRIX_WIDTH - 1 - x, y)] += graphics()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
+        g()->leds[g()->xy(MATRIX_WIDTH - 1 - x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
 
     }
- 
+
     // Clear our area potentially drawn by the VU meter last frame; copy Row1 onto Row0 so it usually goes unnoticed
 
     // Noise
-graphics()->SetNoise(3000, 3000, 0, 4000, 4000);
- 
-    graphics()->FillNoise();
+    g()->SetNoise(3000, 3000, 0, 4000, 4000);
 
-    graphics()->MoveX(6);
-    graphics()->MoveFractionalNoiseY(4);
+    g()->FillGetNoise();
 
-    graphics()->MoveY(12);
-    graphics()->MoveFractionalNoiseX(16);
+    g()->MoveX(6);
+    g()->MoveFractionalNoiseY(4);
+
+    g()->MoveY(12);
+    g()->MoveFractionalNoiseX(16);
 
     for (int x = 0; x < MATRIX_WIDTH; x++)
-      graphics()->setPixel(x, 0, graphics()->getPixel(x, 1));
+      g()->setPixel(x, 0, g()->getPixel(x, 1));
 
   }
 };
 
-class PatternRainbowFlag : public LEDStripEffect 
+class PatternRainbowFlag : public LEDStripEffect
 {
 public:
-  PatternRainbowFlag() : LEDStripEffect("RainbowFlag")
+  PatternRainbowFlag() : LEDStripEffect(EFFECT_MATRIX_RAINBOW_FLAG, "RainbowFlag")
   {
   }
 
-  virtual void Draw()
+  PatternRainbowFlag(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
   {
-    graphics()->DimAll(10); 
+  }
+
+  virtual void Draw() override
+  {
+    g()->DimAll(10);
 
     CRGB rainbow[7] = {
       CRGB::Red,
@@ -202,9 +215,9 @@ public:
 
     for (uint8_t c = 0; c < 6; c++) {
       for (uint8_t j = 0; j < 5; j++) {
-        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) 
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {
-          graphics()->leds[graphics()->xy(x, y)] += rainbow[c];
+          g()->leds[g()->xy(x, y)] += rainbow[c];
         }
 
         y++;
@@ -214,14 +227,14 @@ public:
     }
 
     // Noise
-    graphics()->SetNoise(1000, 1000, 0, 4000, 4000);
-    graphics()->FillNoise();
+    g()->SetNoise(1000, 1000, 0, 4000, 4000);
+    g()->FillGetNoise();
 
-    graphics()->MoveX(8);
-    graphics()->MoveFractionalNoiseY(8);
+    g()->MoveX(8);
+    g()->MoveFractionalNoiseY(8);
 
-    graphics()->MoveY(3);
-    graphics()->MoveFractionalNoiseX(8);
+    g()->MoveY(3);
+    g()->MoveFractionalNoiseX(8);
 
 
   }
