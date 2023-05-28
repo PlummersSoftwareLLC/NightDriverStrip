@@ -10,6 +10,7 @@
   - [Previous effect](#previous-effect)
   - [Disable effect](#disable-effect)
   - [Enable effect](#enable-effect)
+  - [Move effect](#move-effect)
   - [Get effect configuration information](#get-effect-configuration-information)
   - [Device setting specifications](#device-setting-specifications)
   - [Device settings](#device-settings)
@@ -102,6 +103,18 @@ With this endpoint a previously disabled effect can be enabled. From that moment
 | URL | `/enableEffect` |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect to enable in the device's effect list. |
+| Response | 200 (OK) | An empty OK response. |
+
+### Move effect
+
+With this endpoint an effect can be moved within the effect list, changing its place in the effect visualisation cycle.
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/moveEffect` |
+| Method | POST | |
+| Parameters | `effectIndex` | The (zero-based) integer index of the effect to move in the device's effect list. |
+| | `newIndex` | The (zero-based) integer index of the place in the device's effect list the effect should be moved to. |
 | Response | 200 (OK) | An empty OK response. |
 
 ### Get effect configuration information

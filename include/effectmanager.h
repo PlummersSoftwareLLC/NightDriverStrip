@@ -482,6 +482,31 @@ public:
         return _vEffects[i]->IsEnabled();
     }
 
+    void MoveEffect(size_t from, size_t to)
+    {
+        if (from >= _vEffects.size() || to >= _vEffects.size())
+        {
+            debugW("Invalid index for MoveEffect");
+            return;
+        }
+
+        if (from == to)
+            return;
+        else if (from < to)
+            std::rotate(_vEffects.begin() + from, _vEffects.begin() + from + 1, _vEffects.begin() + to + 1);
+        else // from > to
+            std::rotate(_vEffects.rend() - from - 1, _vEffects.rend() - from, _vEffects.rend() - to);
+
+        if (from == _iCurrentEffect)
+            _iCurrentEffect = to;
+        else if (from < _iCurrentEffect && to >= _iCurrentEffect)
+            _iCurrentEffect--;
+        else if (from > _iCurrentEffect && to <= _iCurrentEffect)
+            _iCurrentEffect++;
+
+        SaveEffectManagerConfig();
+    }
+
     void PlayAll(bool bPlayAll)
     {
         _bPlayAll = bPlayAll;

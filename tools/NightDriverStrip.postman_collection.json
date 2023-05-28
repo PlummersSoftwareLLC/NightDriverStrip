@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "61d9d779-3c0c-4ed6-a14b-94bc94906cea",
+		"_postman_id": "1e0cc474-dcbe-4b92-9b28-4b8a48aa8ef8",
 		"name": "NightDriverStrip endpoints",
 		"description": "Call configurations to use/test some of the endpoints in the NightDriverStrip on-device API - basically those not yet covered by the web UI. These have been confirmed to work with the Mesmerizer board/project and the Spectrum project on the M5StickC Plus.\n\nNotes:\n\n- Before using the call configurations in this collection, make sure to update the value of the \"device_ip\" variable in the Variables tab of this collection. Make sure to Save the collection after doing this, because otherwise your change will not be applied.\n- The parameters for POST call configurations are listed in the Body tab of the respective configurations. As with the collection's \"device_ip\" variable, Save a configuration if you want to persist changes to its parameters.\n- By default, all parameters for all configurations are unchecked, which means nothing will be sent unless at least one parameter is checked.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -312,6 +312,39 @@
 					]
 				},
 				"description": "Change effect-specific settings for one effect.\n\nNotes:\n\n- Only parameters that are sent are actually changed.\n- All parameters are optional.\n- The call will return the current setting values for the effect, after those included in the call have been applied."
+			},
+			"response": []
+		},
+		{
+			"name": "Move effect",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "effectIndex",
+							"value": "7",
+							"type": "text"
+						},
+						{
+							"key": "newIndex",
+							"value": "2",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{device_ip}}/moveEffect",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"moveEffect"
+					]
+				},
+				"description": "Moves an effect to another place in the effect list."
 			},
 			"response": []
 		},
