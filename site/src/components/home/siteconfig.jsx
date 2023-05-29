@@ -26,13 +26,14 @@ const SiteConfig = () => {
             cfg=JSON.parse(scfg);
         }
         setConfig(cfg);
-        service.subscribe("subscription",sub=>service.emit("SiteConfig",cfg,sub.eventId));
+        const sub = service.subscribe("subscription",sub=>service.emit("SiteConfig",cfg,sub.eventId));
+        const changeConfigSub = service.subscribe("SetSiteConfig", (newConfig) => setConfig({...newConfig}));
+    
+        return ()=>{
+            service.unsubscribe(sub);
+            service.unsubscribe(changeConfigSub);
+        }
     }, [service]);
-
-    const changeConfigSub = service.subscribe("SetSiteConfig", (newConfig) => {
-        setConfig({...newConfig});
-        return service.unsubscribe(changeConfigSub);
-    });
 
     useEffect(() => {
         if (config !== undefined) {

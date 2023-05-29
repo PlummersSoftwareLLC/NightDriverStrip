@@ -9,7 +9,10 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const [ requestRunning, setRequestRunning ] = useState(false);
     const [ effectInterval, setEffectInterval ] = useState(effects && effects.effectInterval);
 
-    useEffect(() => {service.subscribe("ChipConfig",cfg=>setChipConfig(cfg))}, [service]);
+    useEffect(() => {
+        const sub=service.subscribe("ChipConfig",cfg=>setChipConfig(cfg));
+        return ()=>service.unsubscribe(sub);
+    }, [service]);
 
     useEffect(() => {
         if (open) {

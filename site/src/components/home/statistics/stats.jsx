@@ -13,7 +13,10 @@ const StatsPanel = withStyles(statsStyle)(props => {
         Memory: false,
         NightDriver: false
     });
-    useEffect(() => {service.subscribe("SiteConfig",cfg=>setSiteConfig(cfg))}, [service]);
+    useEffect(() => {
+        const sub=service.subscribe("SiteConfig",cfg=>setSiteConfig(cfg));
+        return service.unsubscribe(sub);
+    }, [service]);
 
     const getStats = (aborter) => fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/statistics`,{signal:aborter.signal})
                             .then(resp => resp.json())

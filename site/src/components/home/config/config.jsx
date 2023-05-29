@@ -3,7 +3,8 @@ const ConfigPanel = withStyles(configStyle)(props => {
   const [ service ] = useState(eventManager());
 
   useEffect(()=>{
-    service.subscribe("SiteConfig",(config)=>config && setSiteConfig(config));
+    const sub=service.subscribe("SiteConfig",(config)=>config && setSiteConfig(config));
+    return ()=>service.unsubscribe(sub);
   },[service]);
 
   return (

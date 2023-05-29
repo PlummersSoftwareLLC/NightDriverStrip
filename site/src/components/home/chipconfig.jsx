@@ -14,10 +14,14 @@ const ChipConfig = () => {
             .then(clearTimeout(timer))
             .catch(console.error);
 
-        service.subscribe("subscription",sub=>config&&service.emit("ChipConfig",config,sub.eventId))
+        const sub=service.subscribe("subscription",sub=>config&&service.emit("ChipConfig",config,sub.eventId));
+        const changeConfigSub = service.subscribe("SetChipConfig", updateConfig);
+
         return () => {
             aborter.abort();
             clearTimeout(timer);
+            service.unsubscribe(sub);
+            service.unsubscribe(changeConfigSub);
         };
     }, [service]);
 
@@ -39,10 +43,8 @@ const ChipConfig = () => {
         return () => {
             aborter.abort();
             clearTimeout(timer);
-            service.unsubscribe(changeConfigSub);
         };
     };
-    const changeConfigSub = service.subscribe("SetChipConfig", updateConfig);
 
     useEffect(() => {
         if (config !== undefined) {
