@@ -31,13 +31,10 @@ const effectStyle = theme => ({
     selected: {
         backgroundColor: theme.palette.background.paper,
     },
-    circularProgress: {
-
-    },
     circularProgressText: {
         position: "relative",
         left: "-29px",
-        top:" -15px"    
+        top:"-15px"    
     },
     disabled: {
         opacity: "50%"

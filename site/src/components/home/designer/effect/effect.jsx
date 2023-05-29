@@ -1,7 +1,9 @@
 const Effect = withStyles(effectStyle)(props => {
-    const { classes, effect, effectInterval, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
-    const [ progress, setProgress ] = useState(undefined);
-    const [expanded, setExpanded] = React.useState(false);
+    const [service] = useState(eventManager());
+
+    const { classes, effect, effectInterval, millisecondsRemaining, selected } = props;
+    const [ progress, setProgress ] = useState();
+    const [expanded, setExpanded] = React.useState(false); 
 
     useEffect(() => {
         if (millisecondsRemaining && selected) {
@@ -17,7 +19,7 @@ const Effect = withStyles(effectStyle)(props => {
             return ()=>clearInterval(interval);
         }
         if (!selected) {
-            setProgress(0);
+            setProgress(99);
         }
     },[millisecondsRemaining,selected]);
 
@@ -38,8 +40,8 @@ const Effect = withStyles(effectStyle)(props => {
                             <CircularProgress variant="determinate" value={progress} color="text.primary"/>
                             <Typography className={classes.circularProgressText} color="textSecondary" variant="little">{Math.floor(progress)}</Typography>
                         </div>}
-                    {!selected && <IconButton color="secondary" disabled={requestRunning} onClick={()=>effectEnable(!effect.enabled)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
-                    {!selected && effect.enabled && <IconButton color="secondary" disabled={requestRunning} onClick={()=>navigateTo()}><Icon>play_circle_outline</Icon></IconButton>}
+                    {!selected && <IconButton color="secondary" onClick={()=>service.emit("toggleEffect",effect)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
+                    {!selected && effect.enabled && <IconButton color="secondary" onClick={()=>service.emit("navigateTo",effect)}><Icon>play_circle_outline</Icon></IconButton>}
                 </CardContent>
                 <CardActions disableSpacing>
                     <IconButton

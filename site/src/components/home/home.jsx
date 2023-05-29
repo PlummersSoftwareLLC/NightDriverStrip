@@ -4,7 +4,7 @@ const MainApp = () => {
         () => getTheme(mode),[mode]);
     return <ThemeProvider theme={theme}>
             <CssBaseline />
-            <ChipConfig />
+            <Esp32 />
             <SiteConfig />
             <AppPannel mode={mode} setMode={setMode} />
            </ThemeProvider>

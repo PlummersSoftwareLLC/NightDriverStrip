@@ -15,6 +15,6 @@ const StaticStatsPanel = withStyles(staticStatStyle)(props => {
         {Object.entries(stat.stat)
                .filter(entry => stat.headerFields.includes(entry[0]))
                .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
-    </List>}
+        </List>}
     </Box>
 });
