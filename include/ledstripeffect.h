@@ -58,21 +58,81 @@ class LEDStripEffect : public IJSONSerializable
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
 
-    template<typename Tv>
-    bool SetIfSelected(const String& settingName, const String& propertyName, Tv& property, const Tv& value)
-    {
-        if (settingName == propertyName)
-        {
-            property = value;
-            return true;
-        }
+    #define SET_IF_NAMES_MATCH(firstName, secondName, property, value)  if (firstName == secondName) \
+    { \
+        property = (value); \
+        return true; \
+    } \
+    return false
 
-        return false;
+    // Helper functions for known setting types, as defined in SettingSpec::SettingType
+
+    bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
+    {
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toInt());
     }
 
     bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
     {
-        return SetIfSelected<size_t>(settingName, propertyName, property, strtoul(value.c_str(), NULL, 10));
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, value == "true" || strtoul(value.c_str(), NULL, 10));
+    }
+
+    bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
+    {
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toFloat());
+    }
+
+    bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
+    {
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtol(value.c_str(), NULL, 10));
+    }
+
+    bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
+    {
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, value);
+    }
+
+    bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
+    {
+        if (settingName != propertyName)
+            return false;
+
+        StaticJsonDocument<384> src;
+        deserializeJson(src, value);
+        CRGB colors[16];
+        int colorIndex = 0;
+
+        auto componentsArray = src.as<JsonArrayConst>();
+        for (auto value : componentsArray)
+            colors[colorIndex++] = value.as<CRGB>();
+
+        property = CRGBPalette16(colors);
+
+        return true;
+    }
+
+    bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
+    {
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
+    }
+
+  private:
+    void construct()
+    {
+        _settingSpecs.emplace_back(
+            ACTUAL_NAME_OF(_friendlyName),
+            "Friendly name",
+            "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
+            SettingSpec::SettingType::String
+        );
+        _settingSpecs.emplace_back(
+            ACTUAL_NAME_OF(_maximumEffectTime),
+            "Maximum effect time",
+            "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
+            "shorter than the default effect interval.",
+            SettingSpec::SettingType::PositiveBigInteger
+        );
+
     }
 
   public:
@@ -90,6 +150,8 @@ class LEDStripEffect : public IJSONSerializable
     {
         if (jsonObject.containsKey("es"))
             _enabled = jsonObject["es"].as<int>() == 1;
+        if (jsonObject.containsKey("mt"))
+            _maximumEffectTime = jsonObject["mt"];
     }
 
     virtual ~LEDStripEffect()
@@ -358,6 +420,7 @@ class LEDStripEffect : public IJSONSerializable
         jsonDoc[PTY_EFFECTNR] = _effectNumber;
         jsonDoc["fn"]         = _friendlyName;
         jsonDoc["es"]         = _enabled ? 1 : 0;
+        jsonDoc["mt"]         = _maximumEffectTime;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -372,11 +435,6 @@ class LEDStripEffect : public IJSONSerializable
         _enabled = enabled;
     }
 
-    virtual bool HasSettings() const
-    {
-        return false;
-    }
-
     virtual const std::vector<SettingSpec>& GetSettingSpecs() const
     {
         return _settingSpecs;
@@ -386,16 +444,16 @@ class LEDStripEffect : public IJSONSerializable
     {
         StaticJsonDocument<128> jsonDoc;
 
-        jsonDoc[String(NAME_OF(_friendlyName)).substring(1)] = _friendlyName;
-        jsonDoc[String(NAME_OF(_maximumEffectTime)).substring(1)] = _maximumEffectTime;
+        jsonDoc[ACTUAL_NAME_OF(_friendlyName)] = _friendlyName;
+        jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     virtual bool SetSetting(const String& name, const String& value)
     {
-        RETURN_IF_SET(name, String(NAME_OF(_friendlyName)).substring(1), _friendlyName, value);
-        return SetIfSelected<size_t>(name, String(NAME_OF(_maximumEffectTime)).substring(1), _maximumEffectTime, strtoul(value.c_str(), NULL, 10));
+        RETURN_IF_SET(name, ACTUAL_NAME_OF(_friendlyName), _friendlyName, value);
+        return SetIfSelected(name, ACTUAL_NAME_OF(_maximumEffectTime), _maximumEffectTime, value);
     }
 };
 

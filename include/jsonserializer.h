@@ -48,6 +48,11 @@ constexpr auto to_value(E e) noexcept
 	return static_cast<std::underlying_type_t<E>>(e);
 }
 
+bool BoolFromJSON(const String& text)
+{
+    return text == "true" || strtol(text.c_str(), NULL, 10);
+}
+
 #if USE_PSRAM
     struct JsonPsramAllocator
     {

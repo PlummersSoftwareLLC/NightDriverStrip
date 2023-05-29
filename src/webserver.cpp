@@ -115,7 +115,6 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
             auto effect = effectsList[i];
             effectDoc["name"]    = effect->FriendlyName();
             effectDoc["enabled"] = effect->IsEnabled();
-            effectDoc["hasSettings"] = effect->HasSettings();
 
             if (!j["Effects"].add(effectDoc))
             {
@@ -326,7 +325,7 @@ bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std
     auto effectsList = g_ptrEffectManager->EffectsList();
     auto effectIndex = GetEffectIndexFromParam(pRequest, post);
 
-    if (effectIndex < 0 || effectIndex >= effectsList.size() || !effectsList[effectIndex]->HasSettings())
+    if (effectIndex < 0 || effectIndex >= effectsList.size())
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
 
