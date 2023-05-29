@@ -443,12 +443,10 @@ public:
 
         if (!effect->IsEnabled())
         {
-            effect->SetEnabled(true);
-
-            if (EnabledCount() < 1)
-            {
+            if (!AreEffectsEnabled())
                 ClearRemoteColor(true);
-            }
+
+            effect->SetEnabled(true);
 
             if (!skipSave)
                 SaveEffectManagerConfig();
@@ -469,10 +467,8 @@ public:
         {
             effect->SetEnabled(false);
 
-            if (EnabledCount() < 1)
-            {
+            if (!AreEffectsEnabled())
                 SetGlobalColor(CRGB::Black);
-            }
 
             if (!skipSave)
                 SaveEffectManagerConfig();
@@ -612,15 +608,13 @@ public:
         return _vEffects.size();
     }
 
-    const size_t EnabledCount() const
+    const bool AreEffectsEnabled() const
     {
-        size_t enabledCount = 0;
-
         for (auto& pEffect : _vEffects)
             if (pEffect->IsEnabled())
-                enabledCount++;
+                return true;
 
-        return enabledCount;
+        return false;
     }
 
     const size_t GetCurrentEffectIndex() const
@@ -715,14 +709,14 @@ public:
 
     void NextEffect(bool skipSave = false)
     {
-        auto enabledCount = EnabledCount();
+        auto enabled = AreEffectsEnabled();
 
         do
         {
             _iCurrentEffect++; //   ... if so advance to next effect
             _iCurrentEffect %= EffectCount();
             _effectStartTime = millis();
-        } while (0 < enabledCount && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        } while (enabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
         if (!skipSave)
@@ -733,7 +727,7 @@ public:
 
     void PreviousEffect()
     {
-        auto enabledCount = EnabledCount();
+        auto enabled = AreEffectsEnabled();
 
         do
         {
@@ -742,7 +736,7 @@ public:
 
             _iCurrentEffect--;
             _effectStartTime = millis();
-        } while (0 < enabledCount && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        } while (enabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
         SaveEffectManagerConfig();

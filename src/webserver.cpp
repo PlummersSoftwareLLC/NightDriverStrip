@@ -103,7 +103,6 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         j["currentEffect"]         = g_ptrEffectManager->GetCurrentEffectIndex();
         j["millisecondsRemaining"] = g_ptrEffectManager->GetTimeRemainingForCurrentEffect();
         j["effectInterval"]        = g_ptrEffectManager->GetInterval();
-        j["enabledCount"]          = g_ptrEffectManager->EnabledCount();
 
         auto effectsList = g_ptrEffectManager->EffectsList();
 
