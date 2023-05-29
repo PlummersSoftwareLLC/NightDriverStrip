@@ -1,5 +1,8 @@
 const NotificationPanel = withStyles(notificationsStyle)(props => {
-    const { classes, notifications, clearNotifications } = props;
+    const [service] = useState(eventManager());
+
+    const { classes } = props;
+    const [notifications, setNotifications] = React.useState([]);
     const [numErrors, setNumErrors] = React.useState(undefined);
     const [errorTargets, setErrorTargets] = React.useState({});
     const [open, setOpen] = React.useState(false);
@@ -8,12 +11,21 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
 
     useEffect(()=>{
         setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
-        setErrorTargets(notifications.reduce((ret,notif) => 
-            {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
+        setErrorTargets(notifications.reduce((ret,notif) => {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
     },[notifications]);
 
+    useEffect(()=>{
+        service.subscribe("Error",props => {
+            const {level,type,target,notification} = props;
+            setNotifications(prevNotifs => {
+                const group = prevNotifs.find(notif=>(notif.level === level) && (notif.type == type) && (notif.target === target)) || {level,type,target,notifications:[]};
+                group.notifications.push({date:new Date(),notification});
+                return [...prevNotifs.filter(notif => notif !== group), group];
+            })});
+    },[service]);
+
     return (
-        <Box className={classes.root}>
+        (notifications.length > 0) && <Box className={classes.root}>
             <IconButton
                     id="notifications"
                     ref={inputRef}
@@ -57,7 +69,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                                        .map(error =>
                                 <Box key={error[0]}>
                                     <Box className={classes.errorHeader} key="header">
-                                        <Typography>{target[0]}</Typography>
+                                        <Typography>{`${target[0]}`}</Typography>
                                         <Typography color="textSecondary">{error[1].type}</Typography>
                                         <Typography>{error[1].level}</Typography>
                                     </Box>
@@ -72,7 +84,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                         )}
                     </CardContent>
                     <CardActions disableSpacing>
-                        <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
+                        <IconButton onClick={()=>setNotifications([])} aria-label="Clear Errors">
                             <Icon>delete</Icon>
                         </IconButton>
                     </CardActions>

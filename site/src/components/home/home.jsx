@@ -15,15 +15,6 @@ const AppPannel = withStyles(mainAppStyle)(props => {
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [stats, setStats] = useState(false);
     const [designer, setDesigner] = useState(false);
-    const [notifications, setNotifications] = useState([]);
-
-    const addNotification = (level,type,target,notification) => {
-        setNotifications(prevNotifs => {
-            const group = prevNotifs.find(notif=>(notif.level === level) && (notif.type == type) && (notif.target === target)) || {level,type,target,notifications:[]};
-            group.notifications.push({date:new Date(),notification});
-            return [...prevNotifs.filter(notif => notif !== group), group];
-        });
-    };
 
     return <Box className={classes.root}>
             <AppBar className={[classes.appbar,drawerOpened && classes.appbarOpened].join(" ")}>
@@ -40,7 +31,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                         variant="h6">
                         NightDriverStrip
                     </Typography>
-                    {(notifications.length > 0) && <NotificationPanel notifications={notifications} clearNotifications={()=>setNotifications([])}/>}
+                    <NotificationPanel/>
                 </Toolbar>
             </AppBar>
             <Drawer variant="permanent" 
@@ -69,8 +60,8 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel open={stats} addNotification={addNotification}/> 
-                <DesignerPanel open={designer} addNotification={addNotification}/>
+                <StatsPanel open={stats}/> 
+                <DesignerPanel open={designer}/>
             </Box>
         </Box>
 });

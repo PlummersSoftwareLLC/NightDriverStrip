@@ -1,12 +1,11 @@
 const StatsPanel = withStyles(statsStyle)(props => {
-    const [siteConfig, setSiteConfig] = useState();
+    const [siteConfig, setSiteConfig] = useState({});
     const [service] = useState(eventManager());
 
-    const { classes, open, addNotification } = props;
+    const { classes, open } = props;
     const [ statistics, setStatistics] = useState(undefined);
     const [ timer, setTimer ] = useState(undefined);
     const [ lastRefreshDate, setLastRefreshDate] = useState(undefined);
-    const [ abortControler, setAbortControler ] = useState(undefined);
     const [ openedCategories, setOpenedCategories ] = useState({
         Package:false,
         CPU: false,
@@ -14,124 +13,107 @@ const StatsPanel = withStyles(statsStyle)(props => {
         NightDriver: false
     });
     useEffect(() => {
-        const sub=service.subscribe("SiteConfig",cfg=>setSiteConfig(cfg));
-        return service.unsubscribe(sub);
-    }, [service]);
-
-    const getStats = (aborter) => fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/statistics`,{signal:aborter.signal})
-                            .then(resp => resp.json())
-                            .then(stats => {
-                                setAbortControler(undefined);
-                                return {
-                                    CPU:{
-                                        CPU: {
-                                            stat:{
-                                                CORE0: stats.CPU_USED_CORE0,
-                                                CORE1: stats.CPU_USED_CORE1,
-                                                IDLE: ((200.0 - stats.CPU_USED_CORE0 - stats.CPU_USED_CORE1)/200)*100.0,
-                                                USED: stats.CPU_USED
-                                            },
-                                            idleField: "IDLE",
-                                            ignored: ["USED"],
-                                            headerFields: ["USED"]
-                                        }
-                                    },
-                                    Memory: {
-                                        HEAP:{
-                                            stat:{
-                                                USED:stats.HEAP_SIZE-stats.HEAP_FREE,
-                                                FREE:stats.HEAP_FREE,
-                                                MIN:stats.HEAP_MIN,
-                                                SIZE: stats.HEAP_SIZE
-                                            },
-                                            idleField: "FREE",
-                                            headerFields: ["SIZE","MIN"],
-                                            ignored:["SIZE","MIN"]
-                                        },
-                                        DMA: {
-                                            stat:{
-                                                USED: stats.DMA_SIZE - stats.DMA_FREE,
-                                                FREE: stats.DMA_FREE,
-                                                MIN: stats.DMA_MIN,
-                                                SIZE: stats.DMA_SIZE
-                                            },
-                                            idleField: "FREE",
-                                            headerFields: ["SIZE","MIN"],
-                                            ignored:["SIZE","MIN"]
-                                        },
-                                        PSRAM: {
-                                            stat:{
-                                                USED: stats.PSRAM_SIZE - stats.PSRAM_FREE,
-                                                FREE: stats.PSRAM_FREE,
-                                                MIN: stats.PSRAM_MIN,
-                                                SIZE: stats.PSRAM_SIZE
-                                            },
-                                            idleField: "FREE",
-                                            headerFields: ["SIZE","MIN"],
-                                            ignored:["SIZE","MIN"]
-                                        },
-                                    },
-                                    NightDriver: {
-                                        FPS:{
-                                            stat:{
-                                                LED:stats.LED_FPS,
-                                                SERIAL:stats.SERIAL_FPS,
-                                                AUDIO:stats.AUDIO_FPS
-                                            }
-                                        },
-                                    },
-                                    Package: {
-                                        CHIP: {
-                                            stat:{
-                                                MODEL: stats.CHIP_MODEL,
-                                                CORES: stats.CHIP_CORES,
-                                                SPEED: stats.CHIP_SPEED,
-                                                PROG_SIZE: stats.PROG_SIZE
-                                            },
-                                            static: true,
-                                            headerFields: ["MODEL"]
-                                        },
-                                        CODE: {
-                                            stat:{
-                                                SIZE: stats.CODE_SIZE,
-                                                FREE: stats.CODE_FREE,
-                                                FLASH_SIZE: stats.FLASH_SIZE
-                                            },
-                                            static: true,
-                                            headerFields: ["SIZE"]
-                                        },
-                                    },
-                                };
-                            });
-
-    useEffect(() => {
-        if (abortControler) {
-            abortControler.abort();
+        const subs={
+            siteConfig:service.subscribe("SiteConfig",setSiteConfig),
+            stats:service.subscribe("statistics",stats=>{setStatistics(toGraphData(stats))})
+        };
+        function toGraphData(stats) {
+            return {
+                CPU: {
+                    CPU: {
+                        stat: {
+                            CORE0: stats.CPU_USED_CORE0,
+                            CORE1: stats.CPU_USED_CORE1,
+                            IDLE: ((200.0 - stats.CPU_USED_CORE0 - stats.CPU_USED_CORE1) / 200) * 100.0,
+                            USED: stats.CPU_USED
+                        },
+                        idleField: "IDLE",
+                        ignored: ["USED"],
+                        headerFields: ["USED"]
+                    }
+                },
+                Memory: {
+                    HEAP: {
+                        stat: {
+                            USED: stats.HEAP_SIZE - stats.HEAP_FREE,
+                            FREE: stats.HEAP_FREE,
+                            MIN: stats.HEAP_MIN,
+                            SIZE: stats.HEAP_SIZE
+                        },
+                        idleField: "FREE",
+                        headerFields: ["SIZE", "MIN"],
+                        ignored: ["SIZE", "MIN"]
+                    },
+                    DMA: {
+                        stat: {
+                            USED: stats.DMA_SIZE - stats.DMA_FREE,
+                            FREE: stats.DMA_FREE,
+                            MIN: stats.DMA_MIN,
+                            SIZE: stats.DMA_SIZE
+                        },
+                        idleField: "FREE",
+                        headerFields: ["SIZE", "MIN"],
+                        ignored: ["SIZE", "MIN"]
+                    },
+                    PSRAM: {
+                        stat: {
+                            USED: stats.PSRAM_SIZE - stats.PSRAM_FREE,
+                            FREE: stats.PSRAM_FREE,
+                            MIN: stats.PSRAM_MIN,
+                            SIZE: stats.PSRAM_SIZE
+                        },
+                        idleField: "FREE",
+                        headerFields: ["SIZE", "MIN"],
+                        ignored: ["SIZE", "MIN"]
+                    },
+                },
+                NightDriver: {
+                    FPS: {
+                        stat: {
+                            LED: stats.LED_FPS,
+                            SERIAL: stats.SERIAL_FPS,
+                            AUDIO: stats.AUDIO_FPS
+                        }
+                    },
+                },
+                Package: {
+                    CHIP: {
+                        stat: {
+                            MODEL: stats.CHIP_MODEL,
+                            CORES: stats.CHIP_CORES,
+                            SPEED: stats.CHIP_SPEED,
+                            PROG_SIZE: stats.PROG_SIZE
+                        },
+                        static: true,
+                        headerFields: ["MODEL"]
+                    },
+                    CODE: {
+                        stat: {
+                            SIZE: stats.CODE_SIZE,
+                            FREE: stats.CODE_FREE,
+                            FLASH_SIZE: stats.FLASH_SIZE
+                        },
+                        static: true,
+                        headerFields: ["SIZE"]
+                    },
+                },
+            };
         }
 
+        return ()=>Object.values(subs).forEach(service.unsubscribe);
+    }, [service]);
+
+    useEffect(() => {
         if (open) {
-            const aborter = new AbortController();
-            setAbortControler(aborter);
-
-            getStats(aborter)
-                .then(setStatistics)
-                .catch(err => addNotification("Error","Service","Get Statistics",err));
-
-            if (timer) {
-                clearTimeout(timer);
-                setTimer(undefined);
-            }
+            service.emit("refreshStatistics");
 
             if (siteConfig.statsRefreshRate.value && open) {
                 setTimer(setTimeout(() => setLastRefreshDate(Date.now()),siteConfig.statsRefreshRate.value*1000));
             }
 
-            return () => {
-                timer && clearTimeout(timer);
-                abortControler && abortControler.abort();
-            }
+            return () => {timer && clearTimeout(timer)};
         }
-    },[siteConfig !== undefined ? siteConfig.statsRefreshRate.value:null, lastRefreshDate, open]);
+    },[...siteConfig, lastRefreshDate, open]);
 
     if (!statistics && open) {
         return <Box>Loading...</Box>

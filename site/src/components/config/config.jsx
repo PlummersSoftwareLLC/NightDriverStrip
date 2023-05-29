@@ -1,26 +1,21 @@
 const ConfigPanel = withStyles(configStyle)(props => {
-  const [ siteConfig, setSiteConfig ] = useState();
-  const [ service ] = useState(eventManager());
+  const [siteConfig, setSiteConfig] = useState();
+  const [service] = useState(eventManager());
 
   useEffect(()=>{
-    const sub=service.subscribe("SiteConfig",(config)=>config && setSiteConfig(config));
-    return ()=>service.unsubscribe(sub);
+    const sub = service.subscribe("SiteConfig",cfg=>setSiteConfig(cfg));
+    return ()=>{service.unsubscribe(sub)};
   },[service]);
 
+  if (siteConfig === undefined) {
+    return <div>Loading...</div>
+  }
   return (
-    siteConfig ? 
       <List>
-        {Object.entries(siteConfig).map(entry => <ConfigItem 
-                                        name={entry[1].name}
-                                        key={entry[1].name}
-                                        datatype={entry[1].type}
-                                        value={entry[1].value}
-                                        configItemUpdated={value => {
-                                          entry[1].value=value;
-                                          service.emit("SetSiteConfig",{...siteConfig});
-                                        }} 
-                                        />)}
-      </List>:
-      <div>Loading...</div>
+        {siteConfig?Object.entries(siteConfig).map(entry => <ConfigItem 
+                                        key={entry[0]}
+                                        id={entry[0]}
+                                        {...entry[1]}/>):0}
+      </List>
   );
 });

@@ -4,38 +4,41 @@ const Esp32 = () => {
     const [service] = useState(eventManager());
 
     useEffect(() => {
-        const chipRequest = (url,options,operation) => new Promise((resolve,reject) => {
+        const chipRequest = (url,options,operation) => new Promise((resolve,_reject) => {
             const aborter = new AbortController();
             const timer = setTimeout(() => aborter.abort(), 3000);
     
             return fetch(`${httpPrefix !== undefined ? httpPrefix : ""}${url}`,{...options, signal: aborter.signal })
                 .then(resolve)
-                .catch((err)=>{service.emit("Error",operation,err);reject(err);})
+                .catch((err)=>service.emit("Error",{level:"error",type:options.method || "GET",target:operation,notification:err}))
                 .finally(()=>clearTimeout(timer));
         });
 
         chipRequest(`/settings`)
             .then(resp => resp.json())
-            .then(setConfig)
-            .catch(console.error);
+            .then(setConfig);
         
         const subs = {
             subscribers: service.subscribe("subscription",sub=>{
                 service.emit("ChipConfig",config,sub.eventId);
-                service.emit("effectList",effects,sub.eventId);
-            }),
-            changeConfigSub : service.subscribe("SetChipConfig", newConfig => 
-                chipRequest(`/settings`,{method: "POST", body:newConfig},"Set Chip Config")
+                service.emit("effectList",effects,sub.eventId);}),
+            changeConfigSub : service.subscribe("SetChipConfig", newConfig => {
+                const formData = new FormData();
+                Object.entries(newConfig).forEach(entry=>formData.append(entry[0],entry[1]));
+                chipRequest(`/settings`,{method: "POST", body:formData},"Set Chip Config")
                     .then(resp => resp.json())
-                    .then(setConfig)),
+                    .then(setConfig);}),
             effectList: service.subscribe("refreshEffectList",()=> 
                 chipRequest(`/effects`,{method:"GET"},"Get Effects")
                     .then(resp => resp.json())
                     .then(setEffects)),
             navigate: service.subscribe("navigate", (up)=> 
                 chipRequest(`/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"navigate")
-                    .then(service.emit("refreshEffectList"))
-                ),
+                    .then(()=>service.emit("refreshEffectList"))),
+            statsRefresh: service.subscribe("refreshStatistics",() => 
+                chipRequest(`/statistics`,{method:"GET"},"Update Stats")
+                    .then(resp =>resp.json())
+                    .then(stats=>service.emit("statistics",stats)))
         };
 
         service.subscribe("effectList", (effectList)=>{
@@ -59,10 +62,7 @@ const Esp32 = () => {
         };
     }, [service]);
 
-    useEffect(() => {
-        if (effects !== undefined){
-            service.emit("effectList", effects);
-        }}, ...(effects||{}));
+    useEffect(() => {(effects !== undefined) && service.emit("effectList", effects)}, ...(effects||{}));
     useEffect(() => {config !== undefined && service.emit("ChipConfig", config)}, ...(config||{}));
 
     return <div></div>;

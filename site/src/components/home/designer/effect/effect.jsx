@@ -2,7 +2,7 @@ const Effect = withStyles(effectStyle)(props => {
     const [service] = useState(eventManager());
 
     const { classes, effect, effectInterval, millisecondsRemaining, selected } = props;
-    const [ progress, setProgress ] = useState();
+    const [ progress, setProgress ] = useState(99);
     const [expanded, setExpanded] = React.useState(false); 
 
     useEffect(() => {
@@ -13,7 +13,7 @@ const Effect = withStyles(effectStyle)(props => {
                 const remaining = timeReference-Date.now();
                 if (remaining >= 0) {
                     timeRemaining = remaining;
-                    setProgress((timeRemaining/effectInterval)*100.0);
+                    setProgress((timeRemaining/effectInterval)*50.0);
                 }
             },300);
             return ()=>clearInterval(interval);
@@ -34,7 +34,7 @@ const Effect = withStyles(effectStyle)(props => {
                     subheader={effect.enabled?(selected?"Active":"") : "Disabled"}
                     className={classes.cardheader}
                 /> 
-                <CardContent>
+                <CardContent className={classes.cardcontent}>
                     {selected && 
                         <div className={classes.circularProgress}>
                             <CircularProgress variant="determinate" value={progress} color="text.primary"/>
@@ -43,7 +43,7 @@ const Effect = withStyles(effectStyle)(props => {
                     {!selected && <IconButton color="secondary" onClick={()=>service.emit("toggleEffect",effect)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
                     {!selected && effect.enabled && <IconButton color="secondary" onClick={()=>service.emit("navigateTo",effect)}><Icon>play_circle_outline</Icon></IconButton>}
                 </CardContent>
-                <CardActions disableSpacing>
+                <CardActions disableSpacing className={classes.cardactions}>
                     <IconButton
                         onClick={()=>setExpanded(!expanded)}
                         aria-label="show more">

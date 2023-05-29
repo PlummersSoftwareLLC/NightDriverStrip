@@ -1,5 +1,5 @@
 const SiteConfig = () => {
-    const [config, setConfig] = useState();
+    const [config, setConfig] = useState({});
     const [service] = useState(eventManager());
 
     useEffect(() => {
@@ -26,17 +26,21 @@ const SiteConfig = () => {
             cfg=JSON.parse(scfg);
         }
         setConfig(cfg);
-        const sub = service.subscribe("subscription",sub=>service.emit("SiteConfig",cfg,sub.eventId));
-        const changeConfigSub = service.subscribe("SetSiteConfig", (newConfig) => setConfig({...newConfig}));
-    
-        return ()=>{
-            service.unsubscribe(sub);
-            service.unsubscribe(changeConfigSub);
+        const subs = {
+            subscription:service.subscribe("subscription",sub=>service.emit("SiteConfig",cfg,sub.eventId)),
+            changeConfigSub: service.subscribe("SetSiteConfig", 
+                (newConfig) => setConfig(prevConfig => {return {...prevConfig,...newConfig}})),
+            setSiteConfigItem: service.subscribe("SetSiteConfigItem",({value, id})=>setConfig(prevConfig=>{
+                prevConfig[id].value=value;
+                return prevConfig;
+            }))
         }
+
+        return ()=>{Object.values(subs).forEach(service.unsubscribe)}
     }, [service]);
 
     useEffect(() => {
-        if (config !== undefined) {
+        if (config.effectInterval !== undefined) {
             window.sessionStorage.setItem("config",JSON.stringify(config));
             service.emit("SiteConfig", config);
         }
