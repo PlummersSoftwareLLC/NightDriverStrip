@@ -69,7 +69,6 @@ template <typename GFXTYPE>
 class EffectManager : public IJSONSerializable
 {
     std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
-    size_t _cEnabled = 0;
 
     size_t _iCurrentEffect = 0;
     uint _effectStartTime;
@@ -114,6 +113,9 @@ class EffectManager : public IJSONSerializable
 
             if (pEffect != nullptr)
             {
+                if (effectObject[PTY_COREEFFECT].as<int>())
+                    pEffect->MarkAsCoreEffect();
+
                 _vEffects.push_back(pEffect);
                 loadedEffectNumbers.insert(effectNumber);
             }
@@ -141,7 +143,11 @@ class EffectManager : public IJSONSerializable
 
                     auto pEffect = numberedFactory.Factory();
                     if (pEffect != nullptr)
+                    {
+                        // Effects in the default list are core effects. These can be disabled but not deleted.
+                        pEffect->MarkAsCoreEffect();
                         _vEffects.push_back(pEffect);
+                    }
                 }
             );
 
@@ -153,7 +159,6 @@ class EffectManager : public IJSONSerializable
     void ClearEffects()
     {
         _vEffects.clear();
-        _cEnabled = 0;
     }
 
 public:
@@ -199,7 +204,11 @@ public:
         {
             auto pEffect = numberedFactory.Factory();
             if (pEffect != nullptr)
+            {
+                // Effects in the default list are core effects. These can be disabled but not deleted.
+                pEffect->MarkAsCoreEffect();
                 _vEffects.push_back(pEffect);
+            }
         }
 
         for (int i = 0; i < _vEffects.size(); i++)
@@ -436,11 +445,10 @@ public:
         {
             effect->SetEnabled(true);
 
-            if (_cEnabled < 1)
+            if (EnabledCount() < 1)
             {
                 ClearRemoteColor(true);
             }
-            _cEnabled++;
 
             if (!skipSave)
                 SaveEffectManagerConfig();
@@ -461,8 +469,7 @@ public:
         {
             effect->SetEnabled(false);
 
-            _cEnabled--;
-            if (_cEnabled < 1)
+            if (EnabledCount() < 1)
             {
                 SetGlobalColor(CRGB::Black);
             }
@@ -507,6 +514,81 @@ public:
         SaveEffectManagerConfig();
     }
 
+    // Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
+    //   use the AppendEffect() function for that.
+    std::shared_ptr<LEDStripEffect> CopyEffect(size_t index)
+    {
+        if (index >= _vEffects.size())
+        {
+            debugW("Invalid index for CopyEffect");
+            return nullptr;
+        }
+
+        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+
+        auto& sourceEffect = _vEffects[index];
+
+        std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
+
+        SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
+            [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
+
+        auto jsonEffectFactories = g_EffectFactories.GetJSONFactories();
+        auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
+
+        if (factoryEntry == jsonEffectFactories.end())
+            return nullptr;
+
+        auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
+
+        if (copiedEffect == nullptr)
+            return nullptr;
+
+        copiedEffect->SetEnabled(false);
+
+        return copiedEffect;
+    }
+
+    // Adds an effect to the effect list and enables it. If an effect is added that is already in the effect list then the result
+    //   is undefined but potentially messy.
+    bool AppendEffect(std::shared_ptr<LEDStripEffect>& effect)
+    {
+        if (!effect->Init(_gfx))
+            return false;
+
+        _vEffects.push_back(effect);
+        EnableEffect(_vEffects.size() - 1);     // This will also trigger a JSON save
+
+        return true;
+    }
+
+    bool DeleteEffect(size_t index)
+    {
+        if (index >= _vEffects.size())
+        {
+            debugW("Invalid index for DeleteEffect");
+            return false;
+        }
+
+        // We don't allow core effects to be deleted
+        if (_vEffects[index]->IsCoreEffect())
+            return false;
+
+        if (index == _iCurrentEffect)
+            NextEffect();
+
+        DisableEffect(index, true);
+
+        _vEffects.erase(_vEffects.begin() + index);
+
+        if (index <= _iCurrentEffect)
+            _iCurrentEffect--;
+
+        SaveEffectManagerConfig();
+
+        return true;
+    }
+
     void PlayAll(bool bPlayAll)
     {
         _bPlayAll = bPlayAll;
@@ -532,7 +614,13 @@ public:
 
     const size_t EnabledCount() const
     {
-        return _cEnabled;
+        size_t enabledCount = 0;
+
+        for (auto& pEffect : _vEffects)
+            if (pEffect->IsEnabled())
+                enabledCount++;
+
+        return enabledCount;
     }
 
     const size_t GetCurrentEffectIndex() const
@@ -625,23 +713,28 @@ public:
     }
     // Update to the next effect and abort the current effect.
 
-    void NextEffect()
+    void NextEffect(bool skipSave = false)
     {
+        auto enabledCount = EnabledCount();
+
         do
         {
             _iCurrentEffect++; //   ... if so advance to next effect
             _iCurrentEffect %= EffectCount();
             _effectStartTime = millis();
-        } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        } while (0 < enabledCount && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
-        SaveEffectManagerConfig();
+        if (!skipSave)
+            SaveEffectManagerConfig();
     }
 
     // Go back to the previous effect and abort the current one.
 
     void PreviousEffect()
     {
+        auto enabledCount = EnabledCount();
+
         do
         {
             if (_iCurrentEffect == 0)
@@ -649,7 +742,7 @@ public:
 
             _iCurrentEffect--;
             _effectStartTime = millis();
-        } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        } while (0 < enabledCount && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
         SaveEffectManagerConfig();
@@ -667,10 +760,6 @@ public:
                 return false;
             }
             debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName());
-
-            // First time only, we ensure the data is cleared
-
-            //_vEffects[i]->setAll(0,0,0);
         }
         debugV("First Effect: %s", GetCurrentEffectName());
         return true;

@@ -192,7 +192,7 @@ This endpoint can be used to retrieve the list of known effect-specific configur
 | URL | `/settings/effect/specs` |
 | Method | GET | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the setting specifications for. |
-| Response | 200 (OK) | A JSON array with the known effect-specific configuration settings for the effect with index `effectIndex`. The specifications include the name, description, type identifier and type name for each setting. The response is empty if the effect does not have any configurable settings. |
+| Response | 200 (OK) | A JSON array with the known effect-specific configuration settings for the effect with index `effectIndex`. The specifications include the name, description, type identifier and type name for each setting. |
 
 ### Effect settings
 

@@ -47,6 +47,10 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 class LEDStripEffect : public IJSONSerializable
 {
+  private:
+
+    bool   _coreEffect = false;
+
   protected:
 
     size_t _cLEDs;
@@ -74,7 +78,7 @@ class LEDStripEffect : public IJSONSerializable
 
     bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, value == "true" || strtoul(value.c_str(), NULL, 10));
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), NULL, 10));
     }
 
     bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
@@ -84,7 +88,7 @@ class LEDStripEffect : public IJSONSerializable
 
     bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtol(value.c_str(), NULL, 10));
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, BoolFromText(value));
     }
 
     bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
@@ -132,6 +136,18 @@ class LEDStripEffect : public IJSONSerializable
             "shorter than the default effect interval.",
             SettingSpec::SettingType::PositiveBigInteger
         );
+        _settingSpecs.emplace_back(
+            "hasMaximumEffectTime",
+            "Has maximum effect time set",
+            "Indicates if the effect has a maximum effect time set (read only).",
+            SettingSpec::SettingType::Boolean
+        );
+        _settingSpecs.emplace_back(
+            "clearMaximumEffectTime",
+            "Clear maximum effect time",
+            "Clear maximum effect time (write only). Set to true to reset the maximum effect time to the default value.",
+            SettingSpec::SettingType::Boolean
+        );
 
     }
 
@@ -142,6 +158,8 @@ class LEDStripEffect : public IJSONSerializable
     {
         if (!strName.isEmpty())
             _friendlyName = strName;
+
+        construct();
     }
 
     LEDStripEffect(const JsonObjectConst&  jsonObject)
@@ -152,6 +170,8 @@ class LEDStripEffect : public IJSONSerializable
             _enabled = jsonObject["es"].as<int>() == 1;
         if (jsonObject.containsKey("mt"))
             _maximumEffectTime = jsonObject["mt"];
+
+        construct();
     }
 
     virtual ~LEDStripEffect()
@@ -293,7 +313,7 @@ class LEDStripEffect : public IJSONSerializable
     void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0, uint everyN = 1)
     {
         if (!_GFX[0])
-            throw std::runtime_error("Graphcis not set up properly");
+            throw std::runtime_error("Graphics not set up properly");
 
         if (numToFill == 0)
             numToFill = _cLEDs-iStart;
@@ -417,10 +437,14 @@ class LEDStripEffect : public IJSONSerializable
     {
         StaticJsonDocument<128> jsonDoc;
 
-        jsonDoc[PTY_EFFECTNR] = _effectNumber;
-        jsonDoc["fn"]         = _friendlyName;
-        jsonDoc["es"]         = _enabled ? 1 : 0;
-        jsonDoc["mt"]         = _maximumEffectTime;
+        jsonDoc[PTY_EFFECTNR]       = _effectNumber;
+        jsonDoc["fn"]               = _friendlyName;
+        jsonDoc["es"]               = _enabled ? 1 : 0;
+        // Only add the max effect time and core effect flag if they're not the default, to save space
+        if (HasMaximumEffectTime())
+            jsonDoc["mt"]           = _maximumEffectTime;
+        if (_coreEffect)
+            jsonDoc[PTY_COREEFFECT] = 1;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -435,6 +459,16 @@ class LEDStripEffect : public IJSONSerializable
         _enabled = enabled;
     }
 
+    void MarkAsCoreEffect()
+    {
+        _coreEffect = true;
+    }
+
+    bool IsCoreEffect() const
+    {
+        return _coreEffect;
+    }
+
     virtual const std::vector<SettingSpec>& GetSettingSpecs() const
     {
         return _settingSpecs;
@@ -446,6 +480,7 @@ class LEDStripEffect : public IJSONSerializable
 
         jsonDoc[ACTUAL_NAME_OF(_friendlyName)] = _friendlyName;
         jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;
+        jsonDoc["hasMaximumEffectTime"] = HasMaximumEffectTime();
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -453,7 +488,18 @@ class LEDStripEffect : public IJSONSerializable
     virtual bool SetSetting(const String& name, const String& value)
     {
         RETURN_IF_SET(name, ACTUAL_NAME_OF(_friendlyName), _friendlyName, value);
-        return SetIfSelected(name, ACTUAL_NAME_OF(_maximumEffectTime), _maximumEffectTime, value);
+        RETURN_IF_SET(name, ACTUAL_NAME_OF(_maximumEffectTime), _maximumEffectTime, value);
+
+        bool clearMaximumEffectTime = false;
+        if (SetIfSelected(name, "clearMaximumEffectTime", clearMaximumEffectTime, value))
+        {
+            if (clearMaximumEffectTime)
+                _maximumEffectTime = SIZE_MAX;
+
+            return true;
+        }
+
+        return false;
     }
 };
 
