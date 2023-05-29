@@ -1,6 +1,8 @@
 const StatsPanel = withStyles(statsStyle)(props => {
-    const { classes, siteConfig, open, addNotification } = props;
-    const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
+    const [siteConfig, setSiteConfig] = useState();
+    const [service] = useState(eventManager());
+
+    const { classes, open, addNotification } = props;
     const [ statistics, setStatistics] = useState(undefined);
     const [ timer, setTimer ] = useState(undefined);
     const [ lastRefreshDate, setLastRefreshDate] = useState(undefined);
@@ -11,6 +13,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
         Memory: false,
         NightDriver: false
     });
+    useEffect(() => {service.subscribe("SiteConfig",cfg=>setSiteConfig(cfg))}, [service]);
 
     const getStats = (aborter) => fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/statistics`,{signal:aborter.signal})
                             .then(resp => resp.json())
@@ -116,8 +119,8 @@ const StatsPanel = withStyles(statsStyle)(props => {
                 setTimer(undefined);
             }
 
-            if (statsRefreshRate.value && open) {
-                setTimer(setTimeout(() => setLastRefreshDate(Date.now()),statsRefreshRate.value*1000));
+            if (siteConfig.statsRefreshRate.value && open) {
+                setTimer(setTimeout(() => setLastRefreshDate(Date.now()),siteConfig.statsRefreshRate.value*1000));
             }
 
             return () => {
@@ -125,7 +128,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
                 abortControler && abortControler.abort();
             }
         }
-    },[statsRefreshRate.value, lastRefreshDate, open]);
+    },[siteConfig !== undefined ? siteConfig.statsRefreshRate.value:null, lastRefreshDate, open]);
 
     if (!statistics && open) {
         return <Box>Loading...</Box>
@@ -173,7 +176,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                         detail={openedCategories[category[0]]}
                                         rawvalue={entry[1].stat}
                                         idleField={ category[1][entry[0]].idleField }
-                                        statsAnimateChange={ statsAnimateChange.value }
+                                        statsAnimateChange={ siteConfig.statsAnimateChange.value }
                                         headerFields={ category[1][entry[0]].headerFields }
                                         ignored={ category[1][entry[0]].ignored || [] } />}
                                     <AreaStat
@@ -181,9 +184,9 @@ const StatsPanel = withStyles(statsStyle)(props => {
                                         name={entry[0]}
                                         category={category[0]}
                                         detail={openedCategories[category[0]]}
-                                        statsAnimateChange={ statsAnimateChange.value }
+                                        statsAnimateChange={ siteConfig.statsAnimateChange.value }
                                         rawvalue={entry[1].stat}
-                                        maxSamples={ maxSamples.value }
+                                        maxSamples={ siteConfig.maxSamples.value }
                                         idleField={ category[1][entry[0]].idleField }
                                         headerFields={ category[1][entry[0]].headerFields }
                                         ignored={ category[1][entry[0]].ignored || [] } />

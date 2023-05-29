@@ -1,20 +1,19 @@
 const DesignerPanel = withStyles(designStyle)(props => {
+    const [chipConfig, setChipConfig] = useState();
+    const [service] = useState(eventManager());
+
     const { classes, open, addNotification } = props;
     const [ effects, setEffects ] = useState(undefined);
-    const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
-    const [ pendingInterval, setPendingInterval ] = useState(effects && effects.effectInterval);
+    const [ effectInterval, setEffectInterval ] = useState(effects && effects.effectInterval);
+
+    useEffect(() => {service.subscribe("ChipConfig",cfg=>setChipConfig(cfg))}, [service]);
 
     useEffect(() => {
-        if (abortControler) {
-            abortControler.abort();
-        }
-
         if (open) {
             const aborter = new AbortController();
-            setAbortControler(aborter);
 
             const timer = setTimeout(()=>{
                 setNextRefreshDate(Date.now());
@@ -27,13 +26,13 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 .catch(err => addNotification("Error","Service","Get Effect List",err));
 
             return () => {
-                abortControler && abortControler.abort();
+                aborter.abort();
                 clearTimeout(timer);
             }
         }
     },[open,nextRefreshDate]);
 
-    const requestRefresh = () => setTimeout(()=>setNextRefreshDate(Date.now()),50);
+    const requestRefresh = () => setNextRefreshDate(Date.now());
 
     const chipRequest = (url,options,operation) =>
         new Promise((resolve,reject) =>
@@ -66,25 +65,11 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const navigate = (up)=>{
         return new Promise((resolve,reject)=>{
             setRequestRunning(true);
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"nvigate")
+            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"navigate")
                 .then(resolve)
                 .then(requestRefresh)
                 .catch(reject)
                 .finally(()=>setRequestRunning(false));
-        });
-    };
-
-    const updateEventInterval = (interval)=>{
-        return new Promise((resolve,reject)=>{
-            setRequestRunning(true);
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
-            {
-                method:"POST",
-                body: new URLSearchParams({effectInterval:interval})
-            },"updateEventInterval").then(resolve)
-              .then(requestRefresh)
-              .catch(reject)
-              .finally(()=>setRequestRunning(false));
         });
     };
 
@@ -96,14 +81,20 @@ const DesignerPanel = withStyles(designStyle)(props => {
     };
 
     const editingHeader = ()=>{
-        return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);}}>
-            <Box className={classes.effectsHeaderValue}>
-            <TextField label="Interval ms"
-                variant="outlined"
-                type="number"
-                defaultValue={effects.effectInterval}
-                onChange={event => setPendingInterval(event.target.value)} />
-        </Box></ClickAwayListener>;
+        return <ClickAwayListener onClickAway={()=>{
+                    service.emit("SetChipConfig",{...chipConfig,effectInterval});
+                    setEditing(false);
+                    setEffects((prev=>{return {...prev,effectInterval}}));
+                    setNextRefreshDate(Date.now());
+                    }}>
+                    <Box className={classes.effectsHeaderValue}>
+                        <TextField label="Interval ms"
+                            variant="outlined"
+                            type="number"
+                            defaultValue={effects.effectInterval}
+                            onChange={event => setEffectInterval(parseInt(event.target.value))} />
+                    </Box>
+                </ClickAwayListener>;
     };
 
     if (!effects && open){
@@ -129,10 +120,9 @@ const DesignerPanel = withStyles(designStyle)(props => {
             {effects.Effects.map((effect,idx) => <Effect
                                                     key={`effect-${idx}`}
                                                     effect={effect}
-                                                    effectIndex={idx}
-                                                    navigateTo={navigateTo}
+                                                    navigateTo={()=>navigateTo(idx)}
                                                     requestRunning={requestRunning}
-                                                    effectEnable={effectEnable}
+                                                    effectEnable={enabled=>effectEnable(idx,enabled)}
                                                     effectInterval={effects.effectInterval}
                                                     selected={idx === effects.currentEffect}
                                                     millisecondsRemaining={effects.millisecondsRemaining}/>)}

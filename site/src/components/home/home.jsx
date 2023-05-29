@@ -2,7 +2,12 @@ const MainApp = () => {
     const [mode, setMode] = useState('dark');
     const theme = React.useMemo(
         () => getTheme(mode),[mode]);
-    return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
+    return <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <ChipConfig />
+            <SiteConfig />
+            <AppPannel mode={mode} setMode={setMode} />
+           </ThemeProvider>
 };
 
 const AppPannel = withStyles(mainAppStyle)(props => {
@@ -10,31 +15,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [stats, setStats] = useState(false);
     const [designer, setDesigner] = useState(false);
-    const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
-    const [maxSamples, setMaxSamples ] = useState(50);
-    const [animateChart, setAnimateChart ] = useState(false);
     const [notifications, setNotifications] = useState([]);
-
-    const siteConfig = {
-        statsRefreshRate: {
-            name: "Refresh rate",
-            value: statsRefreshRate,
-            setter: setStatsRefreshRate,
-            type: "int"
-        },
-        statsAnimateChange: {
-            name: "Animate chart",
-            value: animateChart,
-            setter: setAnimateChart,
-            type: "boolean"
-        },
-        maxSamples: {
-            name: "Chart points",
-            value: maxSamples,
-            setter: setMaxSamples,
-            type: "int"
-        }
-    };
 
     const addNotification = (level,type,target,notification) => {
         setNotifications(prevNotifs => {
@@ -79,17 +60,17 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                      {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
                      {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item => 
                     <ListItem key={item.icon}>
-                        <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
+                        <ListItemIcon><IconButton onClick={() => item.setter(prevValue => !prevValue)}>
                             <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                         <ListItemText primary={item.caption}/>
-                        {drawerOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
+                        {drawerOpened && (item.icon === "settings") && <ConfigPanel/>}
                     </ListItem>)
                 }</List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
-                <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
+                <StatsPanel open={stats} addNotification={addNotification}/> 
+                <DesignerPanel open={designer} addNotification={addNotification}/>
             </Box>
         </Box>
 });

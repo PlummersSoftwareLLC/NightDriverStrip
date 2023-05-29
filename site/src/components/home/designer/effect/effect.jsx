@@ -1,5 +1,5 @@
 const Effect = withStyles(effectStyle)(props => {
-    const { classes, effect, effectInterval, effectIndex, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
+    const { classes, effect, effectInterval, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
     const [ progress, setProgress ] = useState(undefined);
     const [expanded, setExpanded] = React.useState(false);
 
@@ -29,7 +29,7 @@ const Effect = withStyles(effectStyle)(props => {
                         </Avatar>
                       }
                     title={effect.name}
-                    subheader={effect.enabled?(selected?"Active":"Waiting") : "Disabled"}
+                    subheader={effect.enabled?(selected?"Active":"") : "Disabled"}
                     className={classes.cardheader}
                 /> 
                 <CardContent>
@@ -38,8 +38,8 @@ const Effect = withStyles(effectStyle)(props => {
                             <CircularProgress variant="determinate" value={progress} color="text.primary"/>
                             <Typography className={classes.circularProgressText} color="textSecondary" variant="little">{Math.floor(progress)}</Typography>
                         </div>}
-                    {!selected && <IconButton color="secondary" disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
-                    {!selected && effect.enabled && <IconButton color="secondary" disabled={requestRunning} onClick={()=>navigateTo(effectIndex)}><Icon>play_circle_outline</Icon></IconButton>}
+                    {!selected && <IconButton color="secondary" disabled={requestRunning} onClick={()=>effectEnable(!effect.enabled)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
+                    {!selected && effect.enabled && <IconButton color="secondary" disabled={requestRunning} onClick={()=>navigateTo()}><Icon>play_circle_outline</Icon></IconButton>}
                 </CardContent>
                 <CardActions disableSpacing>
                     <IconButton

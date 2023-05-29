@@ -55,6 +55,7 @@ else:
 
 jsx.write(minimize(open(os.path.join(srcFolder, 'modules', 'modules.jsx'), encoding='utf-8').read()))
 jsx.write(minimize(getJsx(os.path.join(srcFolder, 'theme'), '*.jsx')))
+jsx.write(minimize(getJsx(os.path.join(srcFolder, 'services'), '*.jsx')))
 compFolder = os.path.join(srcFolder, 'components')
 jsx.write(minimize(getJsx(compFolder, 'style.jsx')))
 jsx.write(minimize(getJsx(compFolder, '*.jsx', 'style.jsx')))

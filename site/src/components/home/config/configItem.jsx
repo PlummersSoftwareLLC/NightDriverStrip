@@ -1,5 +1,5 @@
 const ConfigItem = withStyles(configStyle)(props => {
-    const { name, value, configItemUpdated, datatype, classes } = props;
+    const { name, value, configItemUpdated, datatype } = props;
     const [ editing, setEditing] = useState(false);
     const [ configValue, setConfigValue] = useState(value);
     const getConfigValue = (value, type) => {
@@ -16,7 +16,6 @@ const ConfigItem = withStyles(configStyle)(props => {
     if (datatype === "boolean") {
         return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
             <FormControlLabel
-                className={classes.cblabel}
                 label={name} 
                 labelPlacement="top"
                 control={<Checkbox 
@@ -29,7 +28,7 @@ const ConfigItem = withStyles(configStyle)(props => {
     }
 
     return <ClickAwayListener onClickAway={()=>{configItemUpdated(configValue);setEditing(false);}}><ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
-                {!editing && <ListItemText className={ classes.configDisplay }
+                {!editing && <ListItemText
                     primary={name}
                     secondary={configValue}/>}
                 {editing && <TextField label={name} 

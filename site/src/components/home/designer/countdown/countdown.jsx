@@ -6,7 +6,7 @@ const Countdown = withStyles(countdownStyle)(props => {
         if (millisecondsRemaining) {
             const timeReference = Date.now()+millisecondsRemaining;
             setTimeRemaining(timeReference-Date.now());
-            var requestSent = false;
+            let requestSent = false;
             const interval = setInterval(()=>{
                 const remaining = timeReference-Date.now();
                 if (remaining >= 0) {
