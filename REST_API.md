@@ -11,6 +11,8 @@
   - [Disable effect](#disable-effect)
   - [Enable effect](#enable-effect)
   - [Move effect](#move-effect)
+  - [Copy effect](#copy-effect)
+  - [Delete effect](#delete-effect)
   - [Get effect configuration information](#get-effect-configuration-information)
   - [Device setting specifications](#device-setting-specifications)
   - [Device settings](#device-settings)
@@ -117,6 +119,30 @@ With this endpoint an effect can be moved within the effect list, changing its p
 | | `newIndex` | The (zero-based) integer index of the place in the device's effect list the effect should be moved to. |
 | Response | 200 (OK) | An empty OK response. |
 
+### Copy effect
+
+With this endpoint an effect in the effect list can be copied. The created copy will be added to the end of the effect list. While copying the effect, supported effect settings on the copy can be set within the same call.
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/copyEffect` |
+| Method | POST | |
+| Parameters | `effectIndex` | The (zero-based) integer index of the effect of which a copy should be made. |
+| | | Zero, one or more settings that have been returned by the [Effect setting specifications endpoint](#effect-setting-specifications); also refer to the [Change effect settings endpoint](#change-effect-settings) for more information. |
+| Response | 200 (OK) | A JSON blob with the values for the copied effect's configuration settings, after applying the values in the request's POST parameters. |
+
+### Delete effect
+
+With this endpoint an effect from the effect list can be deleted. Only effects that are copies of the default set (see [Copy effect](#copy-effect)) can be deleted.
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/deleteEffect` |
+| Method | POST | |
+| Parameters | `effectIndex` | The (zero-based) integer index of the effect that should be deleted from the effect list. |
+| Response | 200 (OK) | An empty OK response if the effect was successfully deleted or the `effectIndex` was out of bounds. |
+| | 400 (Bad Request) | `effectIndex` points to an effect in the default set, that being an effect marked as `"core": true` in the output of the [Get effect list endpoint](#get-effect-list-information). |
+
 ### Get effect configuration information
 
 This endpoint returns a JSON document with information about the detailed configuration of the effects on the device. Note that this document currently has an internal purpose, and is as such not optimized for human inspection.
@@ -213,7 +239,7 @@ When changing settings:
 | URL | `/settings/effect` |
 | Method | GET | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the settings for. |
-| Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings. The response is empty if the effect does not have any configurable settings. |
+| Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings. |
 
 #### Change effect settings
 
@@ -223,7 +249,7 @@ When changing settings:
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to change settings for. |
 | | | One or more settings that have been returned by the [Effect setting specifications endpoint](#effect-setting-specifications). |
-| Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings, after applying the values in the request's POST parameters. The response is empty if the effect does not have any configurable settings. |
+| Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Reset configuration and/or device
 
