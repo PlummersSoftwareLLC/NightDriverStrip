@@ -217,6 +217,11 @@ void CWebServer::CopyEffect(AsyncWebServerRequest * pRequest)
     }
 
     auto effect = g_ptrEffectManager->CopyEffect(index);
+    if (!effect)
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+        return;
+    }
 
     ApplyEffectSettings(pRequest, effect);
 

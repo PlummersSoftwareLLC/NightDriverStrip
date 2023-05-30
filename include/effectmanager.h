@@ -537,7 +537,7 @@ public:
 
         auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
 
-        if (copiedEffect == nullptr)
+        if (!copiedEffect)
             return nullptr;
 
         copiedEffect->SetEnabled(false);
@@ -553,7 +553,9 @@ public:
             return false;
 
         _vEffects.push_back(effect);
-        EnableEffect(_vEffects.size() - 1);     // This will also trigger a JSON save
+        EnableEffect(_vEffects.size() - 1, true);
+
+        SaveEffectManagerConfig();
 
         return true;
     }
