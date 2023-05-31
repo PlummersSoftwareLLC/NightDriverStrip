@@ -107,7 +107,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
         if (open) {
             service.emit("refreshStatistics");
 
-            if (siteConfig.statsRefreshRate.value && open) {
+            if (siteConfig && (siteConfig.statsRefreshRate.value >= 0) && open) {
                 setTimer(setTimeout(() => setLastRefreshDate(Date.now()),siteConfig.statsRefreshRate.value*1000));
             }
 
@@ -115,11 +115,11 @@ const StatsPanel = withStyles(statsStyle)(props => {
         }
     },[...siteConfig, lastRefreshDate, open]);
 
-    if (!statistics && open) {
+    if ((!statistics || !siteConfig) && open) {
         return <Box>Loading...</Box>
     }
 
-    return statistics &&
+    return statistics && siteConfig && 
     <Box className={`${classes.root} ${!open && classes.hidden}`}>
         {Object.entries(statistics).map(category =>
         <Box key={category[0]} className={`${classes.category} ${!openedCategories[category[0]] && classes.detailedStats}`}>

@@ -46,18 +46,22 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                     </IconButton>
                 </Box>
                 <Divider/>
-                <List>{
+                <List className={classes.setting}>{[
                     [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
                      {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                     {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item => 
-                    <ListItem key={item.icon}>
+                     {flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item =>
+                    <ListItem className={classes.settingItem} key={item.icon}>
                         <ListItemIcon><IconButton onClick={() => item.setter(prevValue => !prevValue)}>
                             <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
-                        <ListItemText primary={item.caption}/>
-                        {drawerOpened && (item.icon === "settings") && <ConfigPanel/>}
-                    </ListItem>)
-                }</List>
+                    </ListItem>),
+                    drawerOpened && <ListItem key="setting">
+                        {!drawerOpened && <ListItemIcon><IconButton onClick={() => setDrawerOpened(prevValue => !prevValue)}>
+                            <Icon color="action" className={drawerOpened && classes.optionSelected}>config</Icon>
+                        </IconButton></ListItemIcon>}
+                        {drawerOpened &&<ConfigPanel/>}
+                    </ListItem>]}
+                </List>
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
                 <StatsPanel open={stats}/> 

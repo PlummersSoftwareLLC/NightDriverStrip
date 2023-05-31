@@ -40,10 +40,6 @@ const effectStyle = theme => ({
     disabled: {
         opacity: "50%"
     },
-    cardheader: {
-        paddingTop: "5px",
-        paddingBottom: "5px"
-    },
     cardcontent: {
         paddingTop: "5px",
         paddingBottom: "5px"

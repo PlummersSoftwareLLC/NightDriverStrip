@@ -13,7 +13,7 @@ const Effect = withStyles(effectStyle)(props => {
                 const remaining = timeReference-Date.now();
                 if (remaining >= 0) {
                     timeRemaining = remaining;
-                    setProgress((timeRemaining/effectInterval)*50.0);
+                    setProgress((timeRemaining/effectInterval)*100.0);
                 }
             },300);
             return ()=>clearInterval(interval);
@@ -43,17 +43,5 @@ const Effect = withStyles(effectStyle)(props => {
                     {!selected && <IconButton color="secondary" onClick={()=>service.emit("toggleEffect",effect)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
                     {!selected && effect.enabled && <IconButton color="secondary" onClick={()=>service.emit("navigateTo",effect)}><Icon>play_circle_outline</Icon></IconButton>}
                 </CardContent>
-                <CardActions disableSpacing className={classes.cardactions}>
-                    <IconButton
-                        onClick={()=>setExpanded(!expanded)}
-                        aria-label="show more">
-                        <Icon>settings</Icon>
-                    </IconButton>
-                </CardActions>
-                <Collapse in={expanded} timeout="auto" unmountOnExit>
-                    <CardContent>
-                        <TextField label="Option"/>
-                    </CardContent>
-                </Collapse>
             </Card>
 });

@@ -1,4 +1,4 @@
-const drawerWidth = 240;
+const drawerWidth = 300;
 
 const mainAppStyle = theme => ({
     root: {
@@ -84,6 +84,14 @@ const mainAppStyle = theme => ({
     },
     optionSelected: {
       color: theme.palette.text.primary
+    },
+    setting: {
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+    },
+    settingItem: {
+      width: "fit-content"
     }
   });
   

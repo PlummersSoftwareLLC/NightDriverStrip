@@ -59,7 +59,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
         return <Box>Loading....</Box>;
     }
 
-    return effects && <Box className={`${classes.root} ${!open && classes.hidden}`}>
+    return effects && effects.Effects && 
+    <Box className={`${classes.root} ${!open && classes.hidden}`}>
         <Box className={classes.effectsHeader}>
             {editing ?
             editingHeader():
