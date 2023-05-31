@@ -451,6 +451,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_STRIP_TAPE_REEL, TapeReelEffect, "TapeReelEffect");
 
     #elif CUBE
+
         // Simple rainbow pallette
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, rainbowPalette, 256 / 16, .2, 0);
 
@@ -489,6 +490,7 @@ void LoadEffectFactories()
         //std::make_shared<GhostWave>("GhostWave Rainbow", &rainbowPalette),
 
     #elif ATOMLIGHT
+
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, CRGB::White, 1);
         // std::make_shared<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
         // std::make_shared<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
