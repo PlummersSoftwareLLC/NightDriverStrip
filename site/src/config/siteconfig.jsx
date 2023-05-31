@@ -21,17 +21,24 @@ const SiteConfig = () => {
     
     useEffect(() => {
         const subs = {
-            subscription:service.subscribe("subscription",sub=>service.emit("SiteConfig",config,sub.eventId)),
             setSiteConfigItem: service.subscribe("SetSiteConfigItem",({id, value})=>setConfig(prevConfig=>{
-                prevConfig[id].value=value;
-                window.sessionStorage.setItem("config",JSON.stringify(prevConfig));
-                service.emit("SiteConfig",prevConfig);
-                return prevConfig;
+                if (prevConfig[id].value!==value){
+                    prevConfig[id].value=value;
+                    window.sessionStorage.setItem("config",JSON.stringify(prevConfig));
+                    service.emit("SiteConfig",prevConfig);
+                }
+                return {...prevConfig};
             }))
         }
 
         return ()=>Object.values(subs).forEach(service.unsubscribe);
     }, [service]);
+
+    useEffect(()=>{
+        const subscription=service.subscribe("subscription",sub=>service.emit("SiteConfig",config,sub.eventId));
+        service.emit("SiteConfig",config);
+        return ()=>service.unsubscribe(subscription);
+    },[config])
 
     return <div></div>;
 };

@@ -20,8 +20,7 @@ const configStyle = theme => ({
         display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
-        alignContent: "flex-start",
-        alignItems: "flex-start",
+        alignItems: "stretch",
         padding: "5px;",
     },
     configitem: {

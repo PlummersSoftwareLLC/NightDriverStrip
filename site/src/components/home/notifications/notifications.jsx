@@ -53,7 +53,7 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                         </Avatar>
                         }
                         action={
-                        <IconButton onClick={()=>setOpen(false)} aria-label="settings">
+                        <IconButton aria-label="Close" onClick={()=>setOpen(false)}>
                             <Icon>close</Icon>
                         </IconButton>
                         }

@@ -18,8 +18,7 @@ const eventManager = () => {
                 const eventId = generateId();
 
                 if (subscribers.has(eventName)) {
-                    const subs = subscribers.get(eventName);
-                    !Array.from(subs.values()).some(val => val.toString() === handler.toString()) && subs.set(eventId, handler);
+                    subscribers.get(eventName).set(eventId, handler);
                 } else {
                     subscribers.set(eventName, new Map().set(eventId,handler));
                 }

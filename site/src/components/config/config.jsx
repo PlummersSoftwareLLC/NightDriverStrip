@@ -1,8 +1,8 @@
 const ConfigPanel = withStyles(configStyle)(props => {
   const { classes } = props;
   const [siteConfig, setSiteConfig] = useState();
-  const [chipConfig, setChipConfig] = useState({});
-  const [chipConfigSpec, setChipConfigSpec] = useState({});
+  const [chipConfig, setChipConfig] = useState();
+  const [chipConfigSpec, setChipConfigSpec] = useState();
   const [service] = useState(eventManager());
 
   useEffect(()=>{
@@ -19,18 +19,22 @@ const ConfigPanel = withStyles(configStyle)(props => {
   }
   return (
     <List className={classes.configsection}>
-      <List className={classes.configsection} subheader={<Typography variant="overline" color="textSecondary">NightDriver Options</Typography>}>
+      <List className={classes.configsection} 
+            subheader={<Typography variant="overline" color="textSecondary">NightDriver</Typography>}>
+        <Divider />
         {chipConfig&&chipConfigSpec?Object.entries(chipConfig).map(entry => <ChipConfigItem 
                                         key={entry[0]}
                                         id={entry[0]}
                                         value={entry[1]}
-                                        {...chipConfigSpec.find(cs=>cs.name===entry[0])}/>):0}
+                                        {...chipConfigSpec.find(cs=>cs.name===entry[0])}/>):<div>Loading...</div>}
       </List>
-      <List className={classes.configsection} subheader={<Typography variant="overline" color="textSecondary">Site Options</Typography>}>
+      <List className={classes.configsection} 
+            subheader={<Typography variant="overline" color="textSecondary">Site</Typography>}>
+        <Divider />
         {siteConfig?Object.entries(siteConfig).map(entry => <SiteConfigItem 
                                         key={entry[0]}
                                         id={entry[0]}
-                                        {...entry[1]}/>):0}
+                                        {...entry[1]}/>):<div>Loading...</div>}
       </List>
     </List>
   );

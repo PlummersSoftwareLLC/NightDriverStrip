@@ -1,7 +1,7 @@
 const Esp32 = () => {
-    const [config, setConfig] = useState({});
-    const [configSpec, setConfigSpec] = useState([]);
-    const [effects, setEffects ] = useState({});
+    const [config, setConfig] = useState();
+    const [configSpec, setConfigSpec] = useState();
+    const [effects, setEffects ] = useState();
     const [service] = useState(eventManager());
 
     const chipRequest = (url,options,operation) => new Promise((resolve,_reject) => {
@@ -17,64 +17,69 @@ const Esp32 = () => {
     useEffect(() => {
         chipRequest(`/settings`,{method: "GET"},"Get Chip Setting")
             .then(resp => resp.json())
-            .then(setConfig)
+            .then(cfg=>setConfig({...cfg}))
             .then(()=>chipRequest(`/settings/specs`,{method:"GET"},"Get Chip Option Specs")
                         .then(resp => resp.json())
-                        .then(setConfigSpec));
+                        .then(cs=>setConfigSpec([...cs])));
         
         let subs = {
-            subscribers: service.subscribe("subscription",sub=>{
-                service.emit("ChipConfig",config,sub.eventId);
-                service.emit("ChipConfigSpec",configSpec,sub.eventId);
-                service.emit("effectList",effects,sub.eventId);}),
             changeConfigSub : service.subscribe("SetChipConfig", newConfig => {
                 const formData = new FormData();
                 Object.entries(newConfig).forEach(entry=>formData.append(entry[0],entry[1]));
                 chipRequest(`/settings`,{method: "POST", body:formData},"Set Chip Config")
                     .then(resp => resp.json())
-                    .then(setConfig);}),
+                    .then(cfg=>setConfig({...cfg}))}),
             effectList: service.subscribe("refreshEffectList",()=> 
                 chipRequest(`/effects`,{method:"GET"},"Get Effects")
                     .then(resp => resp.json())
-                    .then(setEffects)),
-            navigate: service.subscribe("navigate", (up)=> 
-                chipRequest(`/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"navigate")
-                    .then(()=>service.emit("refreshEffectList"))),
+                    .then(effects=>setEffects({...effects}))),
             statsRefresh: service.subscribe("refreshStatistics",() => 
                 chipRequest(`/statistics`,{method:"GET"},"Update Stats")
                     .then(resp =>resp.json())
-                    .then(stats=>service.emit("statistics",stats)))
+                    .then(stats=>service.emit("statistics",stats))),
         };
 
         return () => Object.values(subs).forEach(service.unsubscribe);
     }, [service]);
 
     useEffect(() => {
-        service.emit("effectList", effects);
-        const subs = {
-            navigateTo: service.subscribe("navigateTo", (effect)=>
-                chipRequest(`/currentEffect`,
-                    {method:"POST", body: new URLSearchParams({currentEffectIndex:effects.Effects.findIndex(eff=>eff===effect)})},"navigateTo")
-                    .then(service.emit("refreshEffectList"))),
-            toggleEffect: service.subscribe("toggleEffect", (effect) => 
-                chipRequest(`/${effect.enabled?"disable":"enable"}Effect`,
-                    {method:"POST", body:new URLSearchParams({effectIndex:effects.Effects.findIndex(eff=>eff===effect)})},"effectEnable")
-                    .then(service.emit("refreshEffectList"))),
-            subscription: service.subscribe("subscription",sub=>service.emit("effectList",effects,sub.eventId))
+        if (effects) {
+            service.emit("effectList", effects);
+
+            let subs = {
+                subscribers: service.subscribe("subscription",sub=>{
+                    service.emit("effectList",effects,sub.eventId);}),
+                navigate: service.subscribe("navigate", (up)=> 
+                    chipRequest(`/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"navigate")
+                        .then(()=>service.emit("refreshEffectList"))),
+                navigateTo: service.subscribe("navigateTo", (effect)=>
+                    chipRequest(`/currentEffect`,
+                        {method:"POST", body: new URLSearchParams({currentEffectIndex:effects.Effects.findIndex(eff=>eff===effect)})},"navigateTo")
+                        .then(service.emit("refreshEffectList"))),
+                toggleEffect: service.subscribe("toggleEffect", (effect) => 
+                    chipRequest(`/${effect.enabled?"disable":"enable"}Effect`,
+                        {method:"POST", body:new URLSearchParams({effectIndex:effects.Effects.findIndex(eff=>eff===effect)})},"effectEnable")
+                        .then(service.emit("refreshEffectList"))),
+            };
+    
+            return () => Object.values(subs).forEach(service.unsubscribe);
         }
-        return ()=>Object.values(subs).forEach(service.unsubscribe);
-    }, ...effects);
+    }, [effects]);
 
     useEffect(() => {
-        service.emit("ChipConfig", config);
-        const sub = service.subscribe("subscription",sub=>service.emit("ChipConfig",config,sub.eventId));
-        return ()=>service.unsubscribe(sub);
-    }, ...config);
+        if (config) {
+            service.emit("ChipConfig", config);
+            const subscribers= service.subscribe("subscription",sub=>{service.emit("ChipConfig",config,sub.eventId)});
+            return ()=>service.unsubscribe(subscribers);
+        }
+    }, [config]);
 
     useEffect(() => {
-        service.emit("ChipConfigSpec", configSpec)
-        const sub = service.subscribe("subscription",sub=>service.emit("ChipConfigSpec",configSpec,sub.eventId));
-        return ()=>service.unsubscribe(sub);
+        if(configSpec){
+            service.emit("ChipConfigSpec", configSpec);
+            const subscribers= service.subscribe("subscription",sub=>{service.emit("ChipConfigSpec",configSpec,sub.eventId)});
+            return ()=>service.unsubscribe(subscribers);
+        } 
     }, [configSpec]);
 
     return <div></div>;

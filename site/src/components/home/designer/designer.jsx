@@ -3,19 +3,18 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const [service] = useState(eventManager());
 
     const { classes, open } = props;
-    const [ effects, setEffects ] = useState(undefined);
-    const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
+    const [ effects, setEffects ] = useState();
+    const [ nextRefreshDate, setNextRefreshDate] = useState();
     const [ editing, setEditing ] = useState(false);
     const [ effectInterval, setEffectInterval ] = useState(effects && effects.effectInterval);
 
     useEffect(() => {
-        const configSub=service.subscribe("ChipConfig",cfg=>setChipConfig(cfg));
-        const effectsSub=service.subscribe("effectList",effectList=>setEffects(effectList));
-        
-        return ()=>{
-            service.unsubscribe(configSub);
-            service.unsubscribe(effectsSub);
+        const subs={
+            chipConfig:service.subscribe("ChipConfig",cfg=>{setChipConfig(cfg)}),
+            effectsSub:service.subscribe("effectList",effectList=>{setEffects(effectList)})
         };
+        
+        return ()=>Object.values(subs).forEach(service.unsubscribe);
     }, [service]);
 
     useEffect(() => {
@@ -70,9 +69,9 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 requestRefresh={requestRefresh}
                 millisecondsRemaining={effects.millisecondsRemaining}/>
             {(effects !== undefined) && <Box>
-                <IconButton onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>
-                <IconButton onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>
-                <IconButton onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
+                <IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>
+                <IconButton aria-label="Next" onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>
+                <IconButton aria-label="Refresh Effects" onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
             </Box>}
         </Box>
         <Box className={classes.effects}>

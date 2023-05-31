@@ -40,8 +40,8 @@ const Effect = withStyles(effectStyle)(props => {
                             <CircularProgress variant="determinate" value={progress} color="text.primary"/>
                             <Typography className={classes.circularProgressText} color="textSecondary" variant="little">{Math.floor(progress)}</Typography>
                         </div>}
-                    {!selected && <IconButton color="secondary" onClick={()=>service.emit("toggleEffect",effect)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
-                    {!selected && effect.enabled && <IconButton color="secondary" onClick={()=>service.emit("navigateTo",effect)}><Icon>play_circle_outline</Icon></IconButton>}
+                    {!selected && <IconButton aria-label="Toggle Effect" color="secondary" onClick={()=>service.emit("toggleEffect",effect)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}
+                    {!selected && effect.enabled && <IconButton aria-label="Select Effect" color="secondary" onClick={()=>service.emit("navigateTo",effect)}><Icon>play_circle_outline</Icon></IconButton>}
                 </CardContent>
             </Card>
 });

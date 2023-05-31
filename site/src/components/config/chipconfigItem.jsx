@@ -15,20 +15,23 @@ const ChipConfigItem = withStyles(configStyle)(props => {
                 return value;
         }
     };
+    useEffect(()=>{!editing && 
+                    value !== getConfigValue(configValue,typeName) &&
+                    service.emit("SetChipConfig",{[id]:getConfigValue(configValue,typeName)})},[configValue,editing]);
 
     if (typeName.toLowerCase() === "boolean") {
-        return <ListItem className={classes.configitem} button onClick={_evt=>!editing && setEditing(!editing)}>
+        return <ListItem aria-label={friendlyName} className={classes.configitem} button onClick={_evt=>setEditing(false)}>
             <FormControlLabel
                 sx={{ marginLeft: "0px" }}
                 label={<Typography variant="tiny">{friendlyName}</Typography>} 
                 labelPlacement="left"
                 control={<Checkbox 
                     defaultChecked={value}
-                    onChange={event => service.emit("SetChipConfig",{[id]:event.target.checked})}/>} />
+                    onChange={event => setConfigValue(event.target.checked)}/>} />
         </ListItem>;
     }
 
-    return <ClickAwayListener onClickAway={()=>{value !== getConfigValue(configValue,typeName) && service.emit("SetChipConfig",{[id]:getConfigValue(configValue,typeName)});setEditing(false);}}>
+    return <ClickAwayListener onClickAway={()=>{setEditing(false)}}>
                 <ListItem className={classes.configitem} button onClick={_evt=>!editing && setEditing(!editing)}>
                     {!editing && <ListItemText
                         primary={name}
@@ -36,7 +39,7 @@ const ChipConfigItem = withStyles(configStyle)(props => {
                     {editing && <TextField label={friendlyName} 
                                         variant="outlined"
                                         type={["int","float","PositiveBigInteger"].includes(typeName) ? "number" : "text"}
-                                        pattern={typeName.toLowerCase().indexOf("int") ? "^[0-9]+$" : (typeName === "float" ? "^[0-9]+[.0-9]*$" : ".*")}
+                                        pattern={typeName.toLowerCase().indexOf("int") >= 0 ? "^[0-9]+$" : (typeName === "float" ? "^[0-9]+[.0-9]*$" : ".*")}
                                         defaultValue={value}
                                         onChange={event => setConfigValue(getConfigValue(event.target.value,typeName)) } />}
                 </ListItem>

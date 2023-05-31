@@ -15,11 +15,10 @@ const SiteConfigItem = withStyles(configStyle)(props => {
                 return value;
         }
     };
-
     useEffect(()=>{!editing && service.emit("SetSiteConfigItem",{value:configValue, id})},[configValue,editing]);
 
     if (typeName.toLowerCase() === "boolean") {
-        return <ListItem className={classes.configitem} button onClick={_evt=>!editing && setEditing(!editing)}>
+        return <ListItem className={classes.configitem} button onClick={_evt=>setEditing(false)}>
             <FormControlLabel
                 sx={{ marginLeft: "0px" }}
                 label={<Typography variant="tiny">{name}</Typography>} 
@@ -30,7 +29,7 @@ const SiteConfigItem = withStyles(configStyle)(props => {
         </ListItem>;
     }
 
-    return <ClickAwayListener onClickAway={()=>setEditing(false)}>
+    return <ClickAwayListener onClickAway={()=>{value !== getConfigValue(configValue,typeName) && setEditing(false)}}>
                 <ListItem className={classes.configitem} button onClick={_evt=>!editing && setEditing(!editing)}>
                     {!editing && <ListItemText
                         primary={name}
