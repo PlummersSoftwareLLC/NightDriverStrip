@@ -110,8 +110,7 @@ class EffectManager : public IJSONSerializable
                 continue;
 
             auto pEffect = factoryEntry->second(effectObject);
-
-            if (pEffect != nullptr)
+            if (pEffect)
             {
                 if (effectObject[PTY_COREEFFECT].as<int>())
                     pEffect->MarkAsCoreEffect();
@@ -142,7 +141,7 @@ class EffectManager : public IJSONSerializable
                         return;
 
                     auto pEffect = numberedFactory.Factory();
-                    if (pEffect != nullptr)
+                    if (pEffect)
                     {
                         // Effects in the default list are core effects. These can be disabled but not deleted.
                         pEffect->MarkAsCoreEffect();
@@ -203,7 +202,7 @@ public:
         for (auto &numberedFactory : g_EffectFactories.GetDefaultFactories())
         {
             auto pEffect = numberedFactory.Factory();
-            if (pEffect != nullptr)
+            if (pEffect)
             {
                 // Effects in the default list are core effects. These can be disabled but not deleted.
                 pEffect->MarkAsCoreEffect();
