@@ -368,7 +368,7 @@
 						"copyEffect"
 					]
 				},
-				"description": "Moves an effect to another place in the effect list."
+				"description": "Creates a copy of an effect in the effect list and adds it to the end of the list. The new effect's settings can be set/modified in the same call."
 			},
 			"response": []
 		},
@@ -429,7 +429,7 @@
 						"deleteEffect"
 					]
 				},
-				"description": "Moves an effect to another place in the effect list."
+				"description": "Deletes an effect from the effect list. Only effects that are not part of the default set can be deleted."
 			},
 			"response": []
 		},
