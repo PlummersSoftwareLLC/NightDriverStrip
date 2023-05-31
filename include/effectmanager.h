@@ -571,10 +571,10 @@ public:
         if (_vEffects[index]->IsCoreEffect())
             return false;
 
+        DisableEffect(index, true);
+
         if (index == _iCurrentEffect)
             NextEffect();
-
-        DisableEffect(index, true);
 
         _vEffects.erase(_vEffects.begin() + index);
 
