@@ -3,7 +3,6 @@ const Effect = withStyles(effectStyle)(props => {
 
     const { classes, effect, effectInterval, millisecondsRemaining, selected } = props;
     const [ progress, setProgress ] = useState(99);
-    const [expanded, setExpanded] = React.useState(false); 
 
     useEffect(() => {
         if (millisecondsRemaining && selected) {
@@ -37,7 +36,7 @@ const Effect = withStyles(effectStyle)(props => {
                 <CardContent className={classes.cardcontent}>
                     {selected && 
                         <div className={classes.circularProgress}>
-                            <CircularProgress variant="determinate" value={progress} color="text.primary"/>
+                            <CircularProgress aria-label={Math.floor(progress)} variant="determinate" value={progress} color="text.primary"/>
                             <Typography className={classes.circularProgressText} color="textSecondary" variant="little">{Math.floor(progress)}</Typography>
                         </div>}
                     {!selected && <IconButton aria-label="Toggle Effect" color="secondary" onClick={()=>service.emit("toggleEffect",effect)}>{<Icon>{effect.enabled?"block":"add_alarm"}</Icon>}</IconButton >}

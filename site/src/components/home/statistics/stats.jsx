@@ -125,7 +125,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
         <Box key={category[0]} className={`${classes.category} ${!openedCategories[category[0]] && classes.detailedStats}`}>
             {openedCategories[category[0]] ?
             <Box className={classes.statCatergoryHeader} key="header">
-                <Typography variant="h5">{category[0]}</Typography>
+                <Typography>{category[0]}</Typography>
                 <IconButton aria-label="Minimize" onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>minimize</Icon></IconButton>
             </Box>:
             <Box>
