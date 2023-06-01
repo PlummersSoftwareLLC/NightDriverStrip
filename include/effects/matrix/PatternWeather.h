@@ -365,7 +365,7 @@ public:
         const int fontWidth  = 5;
         const int xHalf      = MATRIX_WIDTH / 2 - 1;
 
-        g()->fillScreen(CRGB(0, 0, 0));
+        g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
 
         g()->setFont(&Apple5x7);

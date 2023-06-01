@@ -34,6 +34,11 @@
 
 DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter = nullptr;
 
+bool BoolFromText(const String& text)
+{
+    return text == "true" || strtol(text.c_str(), NULL, 10);
+}
+
 bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;

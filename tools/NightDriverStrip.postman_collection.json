@@ -281,6 +281,24 @@
 							"type": "text"
 						},
 						{
+							"key": "friendlyName",
+							"value": "Subscribers",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "maximumEffectTime",
+							"value": "30000",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "clearMaximumEffectTime",
+							"value": "true",
+							"type": "text",
+							"disabled": true
+						},
+						{
 							"key": "youtubeChannelGuid",
 							"value": "9558daa1-eae8-482f-8066-17fa787bc0e4",
 							"type": "text",
@@ -316,6 +334,45 @@
 			"response": []
 		},
 		{
+			"name": "Copy effect",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "effectIndex",
+							"value": "0",
+							"type": "text"
+						},
+						{
+							"key": "friendlyName",
+							"value": "Spectrum Copy",
+							"type": "text"
+						},
+						{
+							"key": "maximumEffectTime",
+							"value": "30000",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{device_ip}}/copyEffect",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"copyEffect"
+					]
+				},
+				"description": "Creates a copy of an effect in the effect list and adds it to the end of the list. The new effect's settings can be set/modified in the same call."
+			},
+			"response": []
+		},
+		{
 			"name": "Move effect",
 			"request": {
 				"method": "POST",
@@ -345,6 +402,34 @@
 					]
 				},
 				"description": "Moves an effect to another place in the effect list."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete effect",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "effectIndex",
+							"value": "0",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{device_ip}}/deleteEffect",
+					"host": [
+						"{{device_ip}}"
+					],
+					"path": [
+						"deleteEffect"
+					]
+				},
+				"description": "Deletes an effect from the effect list. Only effects that are not part of the default set can be deleted."
 			},
 			"response": []
 		},
