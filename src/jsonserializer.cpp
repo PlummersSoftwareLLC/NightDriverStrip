@@ -176,6 +176,14 @@ void JSONWriter::FlagWriter(size_t index)
     g_TaskManager.NotifyJSONWriterThread();
 }
 
+void JSONWriter::FlushWrites(bool halt)
+{
+    flushRequested = true;
+    haltWrites = halt;
+
+    g_TaskManager.NotifyJSONWriterThread();
+}
+
 // JSONWriterTaskEntry
 //
 // Invoke functions that write serialized JSON objects to SPIFFS at request, with some delay
@@ -191,6 +199,17 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
             if (!g_ptrJSONWriter)
+                continue;
+
+            // If a flush was requested then we execute outstanding writes now
+            if (g_ptrJSONWriter->flushRequested)
+            {
+                g_ptrJSONWriter->flushRequested = false;
+                break;
+            }
+
+            // If writes are halted, we don't do anything
+            if (g_ptrJSONWriter->haltWrites)
                 continue;
 
             unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs + JSON_WRITER_DELAY;

@@ -51,7 +51,7 @@ extern "C"
 // We allocate whatever the max packet is, and use it to validate incoming packets, so right now it's set to the maxiumum
 // LED data packet you could have (header plus 3 RGBs per NUM_LED)
 
-#define MAXIUMUM_PACKET_SIZE (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS) // Header plus 24 bits per actual LED
+#define MAXIMUM_PACKET_SIZE (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS) // Header plus 24 bits per actual LED
 #define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header
 
 bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
@@ -117,7 +117,7 @@ public:
         _server_fd(0),
         _cbReceived(0)
     {
-        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );
+        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE) );
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -135,7 +135,7 @@ public:
 
     bool begin()
     {
-        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );
+        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE) );
 
         _cbReceived = 0;
 
@@ -188,7 +188,7 @@ public:
         // This test caps maximum packet size as a full buffer read of LED data.  If other packets wind up being longer,
         // the buffer itself and this test might need to change
 
-        if (cbNeeded > MAXIUMUM_PACKET_SIZE)
+        if (cbNeeded > MAXIMUM_PACKET_SIZE)
         {
             debugW("Unexpected request for %d bytes in ReadUntilNBytesReceived\n", cbNeeded);
             return false;
@@ -299,9 +299,9 @@ public:
                 uint32_t reserved       = _pBuffer[15] << 24 | _pBuffer[14] << 16 | _pBuffer[13] << 8 | _pBuffer[12];
                 debugV("Compressed Header: compressedSize: %u, expandedSize: %u, reserved: %u", compressedSize, expandedSize, reserved);
 
-                if (expandedSize > MAXIUMUM_PACKET_SIZE)
+                if (expandedSize > MAXIMUM_PACKET_SIZE)
                 {
-                    debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, MAXIUMUM_PACKET_SIZE);
+                    debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
                     break;
                 }
 
@@ -317,8 +317,8 @@ public:
                 // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
 
                 #if USE_PSRAM
-                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
-                    memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIUMUM_PACKET_SIZE);
+                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIMUM_PACKET_SIZE);
+                    memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIMUM_PACKET_SIZE);
                     auto pSourceBuffer = &_abTempBuffer[COMPRESSED_HEADER_SIZE];
                 #else
                     auto pSourceBuffer = &_pBuffer[COMPRESSED_HEADER_SIZE];
@@ -396,9 +396,9 @@ public:
                     debugW("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
 
                     size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
-                    if (totalExpected > MAXIUMUM_PACKET_SIZE)
+                    if (totalExpected > MAXIMUM_PACKET_SIZE)
                     {
-                        debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIUMUM_PACKET_SIZE);
+                        debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIMUM_PACKET_SIZE);
                         break;
                     }
 
