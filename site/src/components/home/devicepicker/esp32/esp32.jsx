@@ -1,9 +1,9 @@
-const Esp32 = (props) => {
+const Esp32 = withStyles(esp32Style)(props => {
     const [config, setConfig] = useState();
     const [configSpec, setConfigSpec] = useState();
     const [effects, setEffects ] = useState();
     const [service] = useState(eventManager());
-    const {activeHttpPrefix} = props;
+    const {classes, activeHttpPrefix, selected} = props;
 
     const chipRequest = (url,options,operation) => new Promise((resolve,_reject) => {
         const aborter = new AbortController();
@@ -20,31 +20,33 @@ const Esp32 = (props) => {
             .then(resp => resp.json())
             .then(cfg=>setConfig({...cfg}))
             .then(()=>chipRequest(`/settings/specs`,{method:"GET"},"Get Chip Option Specs")
-                        .then(resp => resp.json())
-                        .then(cs=>setConfigSpec([...cs])));
-        
-        let subs = {
-            changeConfigSub : service.subscribe("SetChipConfig", newConfig => {
-                const formData = new FormData();
-                Object.entries(newConfig).forEach(entry=>formData.append(entry[0],entry[1]));
-                chipRequest(`/settings`,{method: "POST", body:formData},"Set Chip Config")
-                    .then(resp => resp.json())
-                    .then(cfg=>setConfig({...cfg}))}),
-            effectList: service.subscribe("refreshEffectList",()=> 
-                chipRequest(`/effects`,{method:"GET"},"Get Effects")
-                    .then(resp => resp.json())
-                    .then(effects=>setEffects({...effects}))),
-            statsRefresh: service.subscribe("refreshStatistics",() => 
-                chipRequest(`/statistics`,{method:"GET"},"Update Stats")
-                    .then(resp =>resp.json())
-                    .then(stats=>service.emit("statistics",stats))),
-        };
+                .then(resp => resp.json())
+                .then(cs=>setConfigSpec([...cs])));
 
-        return () => Object.values(subs).forEach(service.unsubscribe);
-    }, [service]);
+        if (selected) {
+            let subs = {
+                changeConfigSub : service.subscribe("SetChipConfig", newConfig => {
+                    const formData = new FormData();
+                    Object.entries(newConfig).forEach(entry=>formData.append(entry[0],entry[1]));
+                    chipRequest(`/settings`,{method: "POST", body:formData},"Set Chip Config")
+                        .then(resp => resp.json())
+                        .then(cfg=>setConfig({...cfg}))}),
+                effectList: service.subscribe("refreshEffectList",()=> 
+                    chipRequest(`/effects`,{method:"GET"},"Get Effects")
+                        .then(resp => resp.json())
+                        .then(effects=>setEffects({...effects}))),
+                statsRefresh: service.subscribe("refreshStatistics",() => 
+                    chipRequest(`/statistics`,{method:"GET"},"Update Stats")
+                        .then(resp =>resp.json())
+                        .then(stats=>service.emit("statistics",stats))),
+            };
+
+            return () => Object.values(subs).forEach(service.unsubscribe);
+        }
+    }, [service,selected]);
 
     useEffect(() => {
-        if (effects) {
+        if (effects&&selected) {
             service.emit("effectList", effects);
 
             let subs = {
@@ -65,23 +67,26 @@ const Esp32 = (props) => {
     
             return () => Object.values(subs).forEach(service.unsubscribe);
         }
-    }, [effects]);
+    }, [effects, selected]);
 
     useEffect(() => {
-        if (config) {
+        if (config&&selected) {
             service.emit("ChipConfig", config);
             const subscribers= service.subscribe("subscription",sub=>{service.emit("ChipConfig",config,sub.eventId)});
             return ()=>service.unsubscribe(subscribers);
         }
-    }, [config]);
+    }, [config,selected]);
 
     useEffect(() => {
-        if(configSpec){
+        if(configSpec&&selected){
             service.emit("ChipConfigSpec", configSpec);
             const subscribers= service.subscribe("subscription",sub=>{service.emit("ChipConfigSpec",configSpec,sub.eventId)});
             return ()=>service.unsubscribe(subscribers);
         } 
-    }, [configSpec]);
+    }, [configSpec,selected]);
 
-    return <div></div>;
-}; 
+    return <div className={classes.esp32}>
+        {config ? <Icon className={classes.neticon}>settings_input_antenna</Icon> : <span/>}
+        <div>{activeHttpPrefix}</div>
+    </div>;
+}); 

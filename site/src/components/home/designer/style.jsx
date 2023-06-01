@@ -23,8 +23,8 @@ const designStyle = theme => ({
         flexDirection: "row",
         flexWrap: "wrap",
         padding: "10px",
-        columnGap: "15px",
-        rowGap: "15px",
+        columnGap: "10px",
+        rowGap: "10px",
         paddingTop: "20px",
     }
 });

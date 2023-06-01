@@ -14,7 +14,6 @@ const AppPannel = withStyles(mainAppStyle)(props => {
     return <ThemeProvider theme={theme}>
         <CssBaseline />
         <Box className={classes.root}>
-            <Esp32 activeHttpPrefix={activeDevice} />
             <SiteConfig />
             <AppBar className={[classes.appbar,drawerOpened && classes.appbarOpened].join(" ")}>
                 <Toolbar>

@@ -5,7 +5,8 @@ const DevicePicker = withStyles(devicePickerStyle)(props => {
     const [ netowrkDevices, setNetworkDevices ] = useState([activeDevice]);
     const [ effects, setEffects ] = useState();
     const [ statistics, setStatistics] = useState(undefined);
-    const [ netMask ] = useState("192.168.0.");
+    const [ netMask ] = useState([192,168,0]);
+    
     
     useEffect(() => {
         const subs={
@@ -36,7 +37,9 @@ const DevicePicker = withStyles(devicePickerStyle)(props => {
             value={activeDevice}
             label={activeDevice}
             onChange={event=>setActiveDevice(event.target.value)}>
-                {netowrkDevices.map(networkDevice=><MenuItem key={networkDevice} value={networkDevice}><em>{networkDevice}</em></MenuItem>)}
+                {netowrkDevices.map(networkDevice=><MenuItem key={networkDevice} value={networkDevice}>
+                    <em><Esp32 activeHttpPrefix={activeDevice} selected={activeDevice===networkDevice} /></em>
+                </MenuItem>)}
             </Select>
             <FormHelperText>{getHelperText()}</FormHelperText>
     </FormControl>;
