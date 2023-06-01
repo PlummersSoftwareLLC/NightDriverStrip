@@ -1,0 +1,2 @@
+const devicePickerStyle = theme => ({
+});

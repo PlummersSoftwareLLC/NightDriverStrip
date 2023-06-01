@@ -83,7 +83,10 @@ const mainAppStyle = theme => ({
       })
     },
     optionSelected: {
-      color: theme.palette.text.primary
+      color: theme.palette.primary.contrastText
+    },
+    optionUnselected: {
+      color: theme.palette.primary.main
     },
     setting: {
       display: "flex",

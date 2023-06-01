@@ -22,7 +22,11 @@ const Effect = withStyles(effectStyle)(props => {
         }
     },[millisecondsRemaining,selected]);
 
-    return <Card variant="outlined" className={[classes.effect,effect.enabled?null:classes.disabled]}>
+    return <Card variant="outlined" className={[
+        classes.effect,
+        effect.enabled?null:classes.disabled,
+        selected?classes.playing:null
+        ]}>
                 <CardHeader
                     avatar={
                         <Avatar aria-label={effect.name}>

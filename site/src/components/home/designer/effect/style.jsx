@@ -47,5 +47,9 @@ const effectStyle = theme => ({
     cardactions: {
         paddingTop: "5px",
         paddingBottom: "5px"
+    },
+    playing: {
+        borderColor: theme.palette.primary.contrastText,
+        borderWidth: "3px",
     }
 });

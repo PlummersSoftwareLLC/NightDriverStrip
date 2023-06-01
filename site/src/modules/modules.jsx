@@ -4,7 +4,7 @@ const { ThemeOptions, createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, Ico
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;
 const { Box, Dialog, Slide, Button, TextField, FormControlLabel, useTheme, LinearProgress, CircularProgress , Popover } = window.MaterialUI;
 const { Card, CardHeader, CardContent, Collapse, CardActions, CardActionArea, Avatar, Link, Paper } = window.MaterialUI;
-const { ExpandMore, ClickAwayListener, Skeleton } = window.MaterialUI;
+const { ExpandMore, ClickAwayListener, Skeleton, FormControl, InputLabel, Select, MenuItem, FormHelperText } = window.MaterialUI;
 
 const { AreaChart, BarChart, Area, Bar, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } = window.Recharts;
 

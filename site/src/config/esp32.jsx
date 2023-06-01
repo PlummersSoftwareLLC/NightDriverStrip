@@ -1,14 +1,15 @@
-const Esp32 = () => {
+const Esp32 = (props) => {
     const [config, setConfig] = useState();
     const [configSpec, setConfigSpec] = useState();
     const [effects, setEffects ] = useState();
     const [service] = useState(eventManager());
+    const {activeHttpPrefix} = props;
 
     const chipRequest = (url,options,operation) => new Promise((resolve,_reject) => {
         const aborter = new AbortController();
         const timer = setTimeout(() => aborter.abort(), 3000);
 
-        return fetch(`${httpPrefix !== undefined ? httpPrefix : ""}${url}`,{...options, signal: aborter.signal })
+        return fetch(`${activeHttpPrefix !== undefined ? activeHttpPrefix : ""}${url}`,{...options, signal: aborter.signal })
             .then(resolve)
             .catch((err)=>service.emit("Error",{level:"error",type:options.method || "GET",target:operation,notification:err}))
             .finally(()=>clearTimeout(timer));

@@ -1,22 +1,21 @@
 const MainApp = () => {
-    const [mode, setMode] = useState('dark');
-    const theme = React.useMemo(
-        () => getTheme(mode),[mode]);
-    return <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Esp32 />
-            <SiteConfig />
-            <AppPannel mode={mode} setMode={setMode} />
-           </ThemeProvider>
+    return <AppPannel/>
 };
 
 const AppPannel = withStyles(mainAppStyle)(props => {
-    const { classes, mode, setMode } = props;
+    const {classes} = props;
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [stats, setStats] = useState(false);
     const [designer, setDesigner] = useState(false);
+    const [mode, setMode] = useState('dark');
+    const [activeDevice, setActiveDevice] = useState(httpPrefix);
+    const theme = React.useMemo(() => getTheme(mode),[mode]);
 
-    return <Box className={classes.root}>
+    return <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box className={classes.root}>
+            <Esp32 activeHttpPrefix={activeDevice} />
+            <SiteConfig />
             <AppBar className={[classes.appbar,drawerOpened && classes.appbarOpened].join(" ")}>
                 <Toolbar>
                     <IconButton 
@@ -31,6 +30,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                         variant="h6">
                         NightDriverStrip
                     </Typography>
+                    <DevicePicker {...{activeDevice, setActiveDevice}} />
                     <NotificationPanel/>
                 </Toolbar>
             </AppBar>
@@ -52,12 +52,12 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                      {caption: "Configuration", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item =>
                     <ListItem className={classes.settingItem} key={item.icon}>
                         <ListItemIcon><IconButton aria-label={item.caption} onClick={() => item.setter(prevValue => !prevValue)}>
-                            <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
+                            <Icon color="action" className={item.flag ? classes.optionSelected : classes.optionUnselected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                     </ListItem>),
                     drawerOpened && <ListItem key="setting">
                         {!drawerOpened && <ListItemIcon><IconButton aria-label="Configuration" onClick={() => setDrawerOpened(prevValue => !prevValue)}>
-                            <Icon color="action" className={drawerOpened && classes.optionSelected}>config</Icon>
+                            <Icon color="action" className={drawerOpened ? classes.optionSelected : classes.optionUnselected}>config</Icon>
                         </IconButton></ListItemIcon>}
                         {drawerOpened &&<ConfigPanel/>}
                     </ListItem>]}
@@ -68,4 +68,5 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                 <DesignerPanel open={designer}/>
             </Box>
         </Box>
+    </ThemeProvider>
 });
