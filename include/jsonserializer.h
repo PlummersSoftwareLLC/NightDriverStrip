@@ -167,7 +167,7 @@ class JSONWriter
     // Flag a writer for invocation and wake up the task that calls them
     void FlagWriter(size_t index);
 
-    // Flush outstanding writes now
+    // Flush pending writes now
     void FlushWrites(bool halt = false);
 };
 

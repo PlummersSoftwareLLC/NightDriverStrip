@@ -663,7 +663,7 @@ void WriteCurrentEffectIndexFile()
 
     if (bytesWritten == 0)
     {
-        debugE("Unable to write JSON to file %s!", CURRENT_EFFECT_CONFIG_FILE);
+        debugE("Unable to write to file %s!", CURRENT_EFFECT_CONFIG_FILE);
         SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
     }
 }

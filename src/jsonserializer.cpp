@@ -201,7 +201,7 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             if (!g_ptrJSONWriter)
                 continue;
 
-            // If a flush was requested then we execute outstanding writes now
+            // If a flush was requested then we execute pending writes now
             if (g_ptrJSONWriter->flushRequested)
             {
                 g_ptrJSONWriter->flushRequested = false;
