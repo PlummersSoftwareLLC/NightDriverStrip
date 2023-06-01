@@ -47,7 +47,7 @@
 #include "effects/strip/fireeffect.h"
 
 #define JSON_FORMAT_VERSION         1
-#define CURRENT_EFFECT_CONFIG_FILE  "current.cfg"
+#define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
 extern uint8_t g_Brightness;
 extern uint8_t g_Fader;

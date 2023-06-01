@@ -57,14 +57,14 @@ class DeviceConfig : public IJSONSerializable
 {
     // Add variables for additional settings to this list
     String location;
-    bool locationIsZip;
+    bool locationIsZip = false;
     String countryCode;
     String timeZone;
     String openWeatherApiKey;
-    bool use24HourClock;
-    bool useCelsius;
+    bool use24HourClock = false;
+    bool useCelsius = false;
     String ntpServer;
-    bool rememberCurrentEffect;
+    bool rememberCurrentEffect = false;
 
     std::vector<SettingSpec> settingSpecs;
     size_t writerIndex;
