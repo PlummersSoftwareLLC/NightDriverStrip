@@ -475,6 +475,9 @@ void setup()
     String name = "NDESP32" + get_mac_address().substring(6);
     g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
 
+    // Star the color data server
+    g_TaskManager.StartColorDataThread();
+    
     // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
     if (!ReadWiFiConfig())

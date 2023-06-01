@@ -110,15 +110,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 #include <fcntl.h>
 
 /** Returns true on success, or false if there was an error */
-bool SetSocketBlockingEnabled(int fd, bool blocking)
-{
-   if (fd < 0) return false;
 
-   int flags = fcntl(fd, F_GETFL, 0);
-   if (flags == -1) return false;
-   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
-}
 
 class VICESocketServer
 {
