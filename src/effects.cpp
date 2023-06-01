@@ -639,8 +639,9 @@ void RemoveEffectManagerConfig()
 
 void SaveCurrentEffectIndex()
 {
-    // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-    g_ptrJSONWriter->FlagWriter(g_CurrentEffectWriterIndex);
+    if (g_ptrDeviceConfig->RememberCurrentEffect())
+        // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
+        g_ptrJSONWriter->FlagWriter(g_CurrentEffectWriterIndex);
 }
 
 void WriteCurrentEffectIndexFile()

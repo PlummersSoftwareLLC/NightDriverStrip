@@ -64,6 +64,7 @@ class DeviceConfig : public IJSONSerializable
     bool use24HourClock;
     bool useCelsius;
     String ntpServer;
+    bool rememberCurrentEffect;
 
     std::vector<SettingSpec> settingSpecs;
     size_t writerIndex;
@@ -104,6 +105,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * Use24HourClockTag = NAME_OF(use24HourClock);
     static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
     static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
+    static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
 
     DeviceConfig();
 
@@ -124,6 +126,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[Use24HourClockTag] = use24HourClock;
         jsonDoc[UseCelsiusTag] = useCelsius;
         jsonDoc[NTPServerTag] = ntpServer;
+        jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
@@ -146,6 +149,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, use24HourClock, Use24HourClockTag);
         SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
         SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
+        SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
 
         if (ntpServer.isEmpty())
             ntpServer = DEFAULT_NTP_SERVER;
@@ -247,6 +251,17 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(ntpServer, newNTPServer);
     }
+
+    bool RememberCurrentEffect() const
+    {
+        return rememberCurrentEffect;
+    }
+
+    void SetRememberCurrentEffect(bool newRememberCurrentEffect)
+    {
+        SetAndSave(rememberCurrentEffect, newRememberCurrentEffect);
+    }
+
 
 };
 

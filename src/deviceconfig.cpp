@@ -96,6 +96,13 @@ DeviceConfig::DeviceConfig()
         "The hostname or IP address of the NTP server to be used for time synchronization.",
         SettingSpec::SettingType::String
     );
+    settingSpecs.emplace_back(
+        NAME_OF(rememberCurrentEffect),
+        "Remember current effect",
+        "A boolean that indicates if the current effect index should be saved after an effect transition, so the device resumes "
+        "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
+        SettingSpec::SettingType::String
+    );
 
     writerIndex = g_ptrJSONWriter->RegisterWriter(
         [this]() { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
@@ -121,6 +128,7 @@ DeviceConfig::DeviceConfig()
         use24HourClock = false;
         useCelsius = false;
         ntpServer = DEFAULT_NTP_SERVER;
+        rememberCurrentEffect = false;
 
         SetTimeZone(cszTimeZone, true);
 
