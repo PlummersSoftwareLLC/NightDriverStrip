@@ -8,7 +8,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
     const [stats, setStats] = useState(false);
     const [designer, setDesigner] = useState(false);
     const [mode, setMode] = useState('dark');
-    const [activeDevice, setActiveDevice] = useState(httpPrefix);
+    const [activeDevice, setActiveDevice] = useState(httpPrefix||"Current Device");
     const theme = React.useMemo(() => getTheme(mode),[mode]);
 
     return <ThemeProvider theme={theme}>
@@ -64,7 +64,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             </Drawer>
             <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
                 <StatsPanel open={stats}/> 
-                <DesignerPanel open={designer}/>
+                <DesignerPanel open={designer} displayMode="summary"/>
             </Box>
         </Box>
     </ThemeProvider>

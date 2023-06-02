@@ -9,7 +9,7 @@ const Esp32 = withStyles(esp32Style)(props => {
         const aborter = new AbortController();
         const timer = setTimeout(() => aborter.abort(), 3000);
 
-        return fetch(`${activeHttpPrefix !== undefined ? activeHttpPrefix : ""}${url}`,{...options, signal: aborter.signal })
+        return fetch(`${activeHttpPrefix !== "Current Device" ? activeHttpPrefix : ""}${url}`,{...options, signal: aborter.signal })
             .then(resolve)
             .catch((err)=>service.emit("Error",{level:"error",type:options.method || "GET",target:operation,notification:err}))
             .finally(()=>clearTimeout(timer));
@@ -85,8 +85,17 @@ const Esp32 = withStyles(esp32Style)(props => {
         } 
     }, [configSpec,selected]);
 
+    function getDeviceShortName() {
+        const ipAddrPattern = /(https?:\/\/)(([12]?[0-9]{1,2}[.]){3}([12]?[0-9]{1,2})).*/g
+        if (activeHttpPrefix === "Current Device") {
+            return "Esp32";
+        } else {
+            return ipAddrPattern.exec(activeHttpPrefix)[2];
+        }
+    }
+
     return <div className={classes.esp32}>
         {config ? <Icon className={classes.neticon}>settings_input_antenna</Icon> : <span/>}
-        <div>{activeHttpPrefix}</div>
+        <Typography>{getDeviceShortName()}</Typography>
     </div>;
 }); 

@@ -3,6 +3,14 @@ const designStyle = theme => ({
         "display": "flex",
         "flex-direction": "column",
     },
+    summaryRoot: {
+        display: "flex",
+        flexDirection: "column",
+        width: "130px",
+        border: "solid 2px",
+        borderRadius: "10px",
+        padding: "5px",
+    },
     hidden: {
         display: "none"
     },
@@ -11,6 +19,14 @@ const designStyle = theme => ({
         flexDirection: "row",
         borderBottom: "solid 1px",
         columnGap: "5px",
+        justifyContent: "space-between",
+    },
+    controls: {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "flex-start",
+        alignItems: "center"
     },
     effectsHeaderValue: {
         display: "flex",
@@ -26,5 +42,22 @@ const designStyle = theme => ({
         columnGap: "10px",
         rowGap: "10px",
         paddingTop: "20px",
+    },
+    summaryEffects: {
+        display: "flex",
+        padding: "10px",
+        rowGap: "1px",
+        flexWrap: "wrap",
+        columnGap: "1px",
+        flexDirection: "row",
+        alignContent: "flex-start",
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
+    },
+    cardHeader: {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "space-between",
     }
 });

@@ -51,5 +51,21 @@ const effectStyle = theme => ({
     playing: {
         borderColor: theme.palette.primary.contrastText,
         borderWidth: "3px",
-    }
+    },
+    dot: {
+        height: "10px",
+        width: "10px",
+        borderRadius: "50%",
+        display: "inline-block",
+        borderStyle: "groove",
+        cursor: "pointer",
+    },
+    selected: {
+        borderColor: theme.palette.leds.active.outer,
+        backgroundColor: theme.palette.leds.active.inner,
+    },
+    waiting: {
+        borderColor: theme.palette.leds.waiting.outer,
+        backgroundColor: theme.palette.leds.waiting.inner,
+    },
 });

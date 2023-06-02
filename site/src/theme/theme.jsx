@@ -67,6 +67,16 @@ const getPalette = (mode) => {
             disabled: "rgba(255, 255, 255, 0.5)",
             icon: "rgba(255, 255, 255, 0.5)"
         },
+        leds: {
+            active: {
+                outer: "#93aff3",
+                inner: "#0005ff"
+            },
+            waiting: {
+                outer: "rgba(149,183,228,0.7)",
+                inner: "#03003a"
+            }
+        },
         divider: "rgba(255, 255, 255, 0.12)",
         background: {
             paper: "hwb(216deg 14% 73% / 99%)",

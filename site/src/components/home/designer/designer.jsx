@@ -7,6 +7,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const [ nextRefreshDate, setNextRefreshDate] = useState();
     const [ editing, setEditing ] = useState(false);
     const [ effectInterval, setEffectInterval ] = useState(effects && effects.effectInterval);
+    const [ hoverEffect, setHoverEffect ] = useState(undefined);
+    const [ displayMode, setDisplayMode ] = useState( props.displayMode );
 
     useEffect(() => {
         const subs={
@@ -59,28 +61,41 @@ const DesignerPanel = withStyles(designStyle)(props => {
     }
 
     return effects && effects.Effects && 
-    <Box className={`${classes.root} ${!open && classes.hidden}`}>
-        <Box className={classes.effectsHeader}>
-            {editing ?
-            editingHeader():
-            displayHeader()}
-            <Countdown
-                label="Time Remaining"
-                requestRefresh={requestRefresh}
-                millisecondsRemaining={effects.millisecondsRemaining}/>
-            {(effects !== undefined) && <Box>
-                <IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>
-                <IconButton aria-label="Next" onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>
-                <IconButton aria-label="Refresh Effects" onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
-            </Box>}
-        </Box>
-        <Box className={classes.effects}>
+    <Box className={`${displayMode === "summary" ? classes.summaryRoot : classes.root} ${!open && classes.hidden}`}>
+        {displayMode !== "summary" ? <Box className={classes.effectsHeader}>
+            <Box className={classes.controls}>
+                {editing ?
+                editingHeader():
+                displayHeader()}
+                <Countdown
+                    label="Time Remaining"
+                    requestRefresh={requestRefresh}
+                    millisecondsRemaining={effects.millisecondsRemaining}/>
+                {(effects !== undefined) && <Box>
+                    <IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>
+                    <IconButton aria-label="Next" onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>
+                    <IconButton aria-label="Refresh Effects" onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
+                </Box>}
+            </Box>
+            <IconButton aria-label="Next" onClick={()=>setDisplayMode("summary")}><Icon>minimize</Icon></IconButton>
+        </Box>:<div>
+            <Typography className={classes.cardHeader}>{`${effects.Effects.length} effects`}
+                <IconButton aria-label="Next" onClick={()=>setDisplayMode("detailed")}><Icon>maximize</Icon></IconButton>
+            </Typography>
+            <Typography>{`${effects.Effects[effects.currentEffect].name}`}</Typography>
+        </div>}
+        <Box className={displayMode === "summary" ? classes.summaryEffects : classes.effects}>
             {effects.Effects.map((effect,idx) => 
-                <Effect key={`effect-${idx}`}
+                <div onMouseEnter={()=>{setHoverEffect(effect)}}
+                     onMouseLeave={()=>{setHoverEffect(undefined)}}>
+                    <Effect key={`effect-${idx}`}
                         effect={effect}
+                        displayMode={displayMode}
                         effectInterval={effects.effectInterval}
                         selected={idx === effects.currentEffect}
-                        millisecondsRemaining={effects.millisecondsRemaining}/>)}
+                        millisecondsRemaining={effects.millisecondsRemaining}/>
+                </div>)}
         </Box>
+        {hoverEffect?<Typography variant="tiny">{hoverEffect.name}</Typography>:<br/>}
     </Box>
 });
