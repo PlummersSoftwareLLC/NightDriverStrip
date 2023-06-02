@@ -53,6 +53,7 @@ const designStyle = theme => ({
         alignContent: "flex-start",
         justifyContent: "flex-start",
         alignItems: "flex-start",
+        width: "130px",
     },
     cardHeader: {
         display: "flex",
