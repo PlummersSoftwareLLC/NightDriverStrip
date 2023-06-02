@@ -57,7 +57,8 @@ struct SettingSpec
         Float,
         Boolean,
         String,
-        Palette
+        Palette,
+        Color
     };
 
     String Name;
@@ -80,7 +81,7 @@ struct SettingSpec
 
     String static ToName(SettingType type)
     {
-        String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette" };
+        String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color" };
         return names[(int)type];
     }
 };
