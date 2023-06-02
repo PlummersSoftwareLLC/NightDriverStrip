@@ -77,7 +77,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                             millisecondsRemaining={effects.millisecondsRemaining}/>
                     </div>)}
             </Box>
-            {hoverEffect?<Typography variant="tiny">{hoverEffect.name}</Typography>:<br/>}
+            {hoverEffect?<Typography variant="tiny">{hoverEffect.name}</Typography>:<Typography variant="tiny">{effects.Effects[effects.currentEffect].name}</Typography>}
         </CardContent>
         <CardActions disableSpacing>
             <IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>
