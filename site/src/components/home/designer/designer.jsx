@@ -9,7 +9,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const [ effectInterval, setEffectInterval ] = useState(effects && effects.effectInterval);
     const [ hoverEffect, setHoverEffect ] = useState(undefined);
     const [ displayMode, setDisplayMode ] = useState( props.displayMode );
-    const [ progress, setProgress ] = useState(99);
+    const [ progress, setProgress ] = useState(0);
     
 
     useEffect(() => {
@@ -21,6 +21,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 if (remaining >= 0) {
                     timeRemaining = remaining;
                     setProgress((1-timeRemaining/effects.effectInterval)*100.0);
+                } else {
+                    service.emit("refreshEffectList")
                 }
             },300);
             return ()=>clearInterval(interval);
@@ -97,7 +99,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
             </Box>
             {hoverEffect?<Typography variant="tiny">{hoverEffect.name}</Typography>:<Typography variant="tiny">{effects.Effects[effects.currentEffect].name}</Typography>}
         </CardContent>
-        <LinearProgress variant="determinate" aria-label={Math.floor(progress)} value={progress} />
+        <LinearProgress className={classes.progress} variant="determinate" aria-label={Math.floor(progress)} value={progress} />
         <CardActions disableSpacing>
             <IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>
             <IconButton aria-label="Next" onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>

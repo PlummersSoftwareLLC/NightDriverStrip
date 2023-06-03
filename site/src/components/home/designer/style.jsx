@@ -60,5 +60,12 @@ const designStyle = theme => ({
         flexDirection: "row",
         flexWrap: "nowrap",
         justifyContent: "space-between",
+    },
+    progress: {
+        '&[aria-valuenow]': {
+            "& > .MuiLinearProgress-bar1Determinate": {
+              transition: ".1s"
+            }
+          }
     }
 });
