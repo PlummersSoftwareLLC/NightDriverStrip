@@ -31,15 +31,12 @@ const DevicePicker = withStyles(devicePickerStyle)(props => {
     }
 
     return <FormControl sx={{ m: 1, minWidth: 120 }}>
-            <InputLabel className={classes.deviceLabel} id="device-label">{getLabel()}</InputLabel>
             <Select
-            labelId="device-label"
             value={activeDevice}
             onChange={event=>setActiveDevice(event.target.value)}>
                 {netowrkDevices.map(networkDevice=><MenuItem key={networkDevice} value={networkDevice}>
                     <em><Esp32 activeHttpPrefix={activeDevice} selected={true} /></em>
                 </MenuItem>)}
             </Select>
-            <FormHelperText>{getHelperText()}</FormHelperText>
     </FormControl>;
 });

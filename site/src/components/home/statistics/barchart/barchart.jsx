@@ -24,23 +24,23 @@ const BarStat = withStyles(barChartStyle)(props => {
             <XAxis hide={true} dataKey="name" />
             <YAxis hide={true} />
             {Object.keys(rawvalue)
-                    .filter(field => !ignored.includes(field))
-                    .sort(sortStats)
-                    .map((field,idx) => <Bar dataKey={field} 
-                                                key={field}
-                                                stackId="a" 
-                                                fill={getFillColor({step: idx, isIdle: field === idleField})} 
-                                                isAnimationActive={statsAnimateChange}
-                                                type="monotone"
-                                                fillOpacity={1}/>)
+                   .filter(field => !ignored.includes(field))
+                   .sort(sortStats)
+                   .map((field,idx) => <Bar dataKey={field} 
+                                            key={field}
+                                            stackId="a" 
+                                            fill={getFillColor({step: idx, isIdle: field === idleField})} 
+                                            isAnimationActive={statsAnimateChange}
+                                            type="monotone"
+                                            fillOpacity={1}/>)
             }
         </BarChart>
-        <Typography variant="summary">{(Object.entries(rawvalue)
+        {detail?<Typography variant="summary">{(Object.entries(rawvalue)
                                              .filter(entry => ![idleField,...ignored].includes(entry[0]))
                                              .reduce((ret,stat)=>ret+stat[1],0.0)/
                                        Object.entries(rawvalue)
                                              .filter(entry => !ignored.includes(entry[0]))
-                                             .reduce((ret,stat)=>ret+stat[1],0.0)*100).toFixed(0)}%</Typography>
+                                             .reduce((ret,stat)=>ret+stat[1],0.0)*100).toFixed(0)}%</Typography>:null}
     </Box>)
 });
     

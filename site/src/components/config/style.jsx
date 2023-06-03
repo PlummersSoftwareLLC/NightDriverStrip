@@ -8,7 +8,7 @@ const configStyle = theme => ({
         "flex-direction": "column",
         "flex-wrap": "nowrap",
         "justify-content": "flex-start",
-        "align-items": "center",
+        "align-items": "flex-start",
     },
     cblabel: {
         "margin-left": "initial"

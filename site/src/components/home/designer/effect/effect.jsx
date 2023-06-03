@@ -2,7 +2,7 @@ const Effect = withStyles(effectStyle)(props => {
     const [service] = useState(eventManager());
 
     const { classes, effect, effectInterval, millisecondsRemaining, selected, displayMode } = props;
-    const [ progress, setProgress ] = useState(99);
+    const [ progress, setProgress ] = useState(0);
 
     useEffect(() => {
         if (millisecondsRemaining && selected) {

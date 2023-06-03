@@ -73,7 +73,9 @@ const mainAppStyle = theme => ({
       display: "flex",
       flexDirection: "row",
       flexWrap: "wrap",
-      rowGap: "10px"
+      rowGap: "10px",
+      columnGap: "10px",
+      alignItems: "flex-start",
     },
     contentShrinked: {
       "padding-left": drawerWidth + 10,

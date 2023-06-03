@@ -15,6 +15,12 @@ const statsStyle = theme => ({
     detiailedStats: {
         border: "solid 1px"
     },
+    headerStats: {
+        display: "flex",
+        flexDirection: "row",
+        width: "100%",
+        justifyContent: "space-between",
+    },
     chartArea: {
         "display": "flex",
         "flex-direction": "row",
@@ -53,7 +59,16 @@ const statsStyle = theme => ({
         "justify-content": "space-between",
         "align-items": "center",
         "border-bottom": "solid 1px",
-    }
+    },
+    smallgraphs: {
+        display: "flex",
+        zoom: 0.35
+    },
+    contentSummary: {
+        maxWidth: "300px",
+    },
+    contentDetails: {
+    },
 });
 
 const statStyle = theme => ({
