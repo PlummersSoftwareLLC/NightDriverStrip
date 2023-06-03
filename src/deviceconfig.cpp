@@ -68,9 +68,9 @@ DeviceConfig::DeviceConfig()
     settingSpecs.emplace_back(
         NAME_OF(openWeatherApiKey),
         "Open Weather API key",
-        "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
+        "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a> (write only).",
         SettingSpec::SettingType::String
-    );
+    ).HasValidation = true;
     settingSpecs.emplace_back(
         NAME_OF(timeZone),
         "Time zone",
@@ -94,6 +94,13 @@ DeviceConfig::DeviceConfig()
         NAME_OF(ntpServer),
         "NTP server address",
         "The hostname or IP address of the NTP server to be used for time synchronization.",
+        SettingSpec::SettingType::String
+    );
+    settingSpecs.emplace_back(
+        NAME_OF(rememberCurrentEffect),
+        "Remember current effect",
+        "A boolean that indicates if the current effect index should be saved after an effect transition, so the device resumes "
+        "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
         SettingSpec::SettingType::String
     );
 
@@ -121,6 +128,7 @@ DeviceConfig::DeviceConfig()
         use24HourClock = false;
         useCelsius = false;
         ntpServer = DEFAULT_NTP_SERVER;
+        rememberCurrentEffect = false;
 
         SetTimeZone(cszTimeZone, true);
 
