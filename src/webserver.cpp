@@ -47,8 +47,7 @@ bool CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, 
 {
     return PushPostParamIfPresent<bool>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
     {
-        const String& value = param->value();
-        return value == "true" || strtol(value.c_str(), NULL, 10);
+        return BoolFromText(param->value());
     });
 }
 
@@ -104,7 +103,6 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         j["currentEffect"]         = g_ptrEffectManager->GetCurrentEffectIndex();
         j["millisecondsRemaining"] = g_ptrEffectManager->GetTimeRemainingForCurrentEffect();
         j["effectInterval"]        = g_ptrEffectManager->GetInterval();
-        j["enabledCount"]          = g_ptrEffectManager->EnabledCount();
 
         auto effectsList = g_ptrEffectManager->EffectsList();
 
@@ -115,7 +113,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
             auto effect = effectsList[i];
             effectDoc["name"]    = effect->FriendlyName();
             effectDoc["enabled"] = effect->IsEnabled();
-            effectDoc["hasSettings"] = effect->HasSettings();
+            effectDoc["core"]    = effect->IsCoreEffect();
 
             if (!j["Effects"].add(effectDoc))
             {
@@ -198,9 +196,59 @@ void CWebServer::MoveEffect(AsyncWebServerRequest * pRequest)
 
     auto fromIndex = GetEffectIndexFromParam(pRequest, true);
     if (fromIndex == -1)
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
         return;
+    }
 
     PushPostParamIfPresent<size_t>(pRequest, "newIndex", SET_VALUE(g_ptrEffectManager->MoveEffect(fromIndex, value)));
+    AddCORSHeaderAndSendOKResponse(pRequest);
+}
+
+void CWebServer::CopyEffect(AsyncWebServerRequest * pRequest)
+{
+    debugV("CopyEffect");
+
+    auto index = GetEffectIndexFromParam(pRequest, true);
+    if (index == -1)
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+        return;
+    }
+
+    auto effect = g_ptrEffectManager->CopyEffect(index);
+    if (!effect)
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+        return;
+    }
+
+    ApplyEffectSettings(pRequest, effect);
+
+    if (g_ptrEffectManager->AppendEffect(effect))
+        SendEffectSettingsResponse(pRequest, effect);
+    else
+        AddCORSHeaderAndSendOKResponse(pRequest);
+}
+
+void CWebServer::DeleteEffect(AsyncWebServerRequest * pRequest)
+{
+    debugV("DeleteEffect");
+
+    auto index = GetEffectIndexFromParam(pRequest, true);
+    if (index == -1)
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+        return;
+    }
+
+    if (index < g_ptrEffectManager->EffectCount() && g_ptrEffectManager->EffectsList()[index]->IsCoreEffect())
+    {
+        AddCORSHeaderAndSendBadRequest(pRequest, "Can't delete core effect");
+        return;
+    }
+
+    g_ptrEffectManager->DeleteEffect(index);
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -284,7 +332,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     debugV("GetSettings");
 
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
-    response->addHeader("Server","NightDriverStrip");
+    response->addHeader("Server", "NightDriverStrip");
     auto root = response->getRoot();
     JsonObject jsonObject = root.to<JsonObject>();
 
@@ -326,7 +374,7 @@ bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std
     auto effectsList = g_ptrEffectManager->EffectsList();
     auto effectIndex = GetEffectIndexFromParam(pRequest, post);
 
-    if (effectIndex < 0 || effectIndex >= effectsList.size() || !effectsList[effectIndex]->HasSettings())
+    if (effectIndex < 0 || effectIndex >= effectsList.size())
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
 
@@ -382,15 +430,8 @@ void CWebServer::GetEffectSettings(AsyncWebServerRequest * pRequest)
     SendEffectSettingsResponse(pRequest, effect);
 }
 
-void CWebServer::SetEffectSettings(AsyncWebServerRequest * pRequest)
+bool CWebServer::ApplyEffectSettings(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect)
 {
-    debugV("SetEffectSettings");
-
-    std::shared_ptr<LEDStripEffect> effect;
-
-    if (!CheckAndGetSettingsEffect(pRequest, effect, true))
-        return;
-
     bool settingChanged = false;
 
     for (auto& settingSpec : effect->GetSettingSpecs())
@@ -400,7 +441,19 @@ void CWebServer::SetEffectSettings(AsyncWebServerRequest * pRequest)
             || settingChanged;
     }
 
-    if (settingChanged)
+    return settingChanged;
+}
+
+void CWebServer::SetEffectSettings(AsyncWebServerRequest * pRequest)
+{
+    debugV("SetEffectSettings");
+
+    std::shared_ptr<LEDStripEffect> effect;
+
+    if (!CheckAndGetSettingsEffect(pRequest, effect, true))
+        return;
+
+    if (ApplyEffectSettings(pRequest, effect))
         SaveEffectManagerConfig();
 
     SendEffectSettingsResponse(pRequest, effect);
@@ -421,9 +474,7 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
             else
             // We found multiple known settings in the request, which we don't allow
             {
-                String responseText = "{\"message\": \"Malformed request\"}";
-                auto pResponse = pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json", responseText);
-                AddCORSHeaderAndSendResponse(pRequest, pResponse);
+                AddCORSHeaderAndSendBadRequest(pRequest, "Malformed request");
                 return;
             }
         }
@@ -447,9 +498,7 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
 
         if (!isValid)
         {
-            String responseText = "{\"message\": \"" + validationMessage + "\"}";
-            auto pResponse = pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json", responseText);
-            AddCORSHeaderAndSendResponse(pRequest, pResponse);
+            AddCORSHeaderAndSendBadRequest(pRequest, validationMessage);
             return;
         }
     }
