@@ -631,7 +631,7 @@ public:
             for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
             {
                 g_peak1Decay[iBand] = (g_peak1Decay[iBand] + g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 3;
-                g_peak2Decay[iBand] = (g_peak1Decay[iBand] + g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 3;
+                g_peak2Decay[iBand] = (g_peak2Decay[iBand] + g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 3;
             }
         #endif
     }

@@ -387,7 +387,7 @@ public:
                         break;
                     }
 
-                    debugE("Expecting %d total bytes", totalExpected);
+                    debugV("Expecting %d total bytes", totalExpected);
                     if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
                         debugW("Error in getting pixel data from wifi\n");
