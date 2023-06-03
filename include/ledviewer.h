@@ -42,7 +42,8 @@
 typedef struct
 {
     uint32_t  header;         
-    uint32_t  count;   
+    uint32_t  width;   
+    uint32_t  height;   
     CRGB      colors[NUM_LEDS];  // Array of LED_COUNT CRGB values
 } ColorDataPacket;
 
