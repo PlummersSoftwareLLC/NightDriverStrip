@@ -534,7 +534,8 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
                 // Potentially too large for the stack, so we allocate it on the heap instead
                 std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
                 pPacket->header = COLOR_DATA_PACKET_HEADER;
-                pPacket->count  = NUM_LEDS;
+                pPacket->width  = g_ptrEffectManager->g()->width();
+                pPacket->height = g_ptrEffectManager->g()->height();
                 memcpy(pPacket->colors, (*g_ptrEffectManager)[0]->leds, sizeof(CRGB) * NUM_LEDS);
 
                 if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
