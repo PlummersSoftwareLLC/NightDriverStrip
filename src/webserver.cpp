@@ -285,9 +285,12 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
 
             jsonDoc["name"] = spec.Name;
             jsonDoc["friendlyName"] = spec.FriendlyName;
-            jsonDoc["description"] = spec.Description;
+            if (!spec.Description.isEmpty())
+                jsonDoc["description"] = spec.Description;
             jsonDoc["type"] = to_value(spec.Type);
             jsonDoc["typeName"] = spec.ToName(spec.Type);
+            if (spec.HasValidation)
+                jsonDoc["hasValidation"] = true;
 
             if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
             {

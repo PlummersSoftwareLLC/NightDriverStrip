@@ -68,9 +68,9 @@ DeviceConfig::DeviceConfig()
     settingSpecs.emplace_back(
         NAME_OF(openWeatherApiKey),
         "Open Weather API key",
-        "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
+        "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a> (write only).",
         SettingSpec::SettingType::String
-    );
+    ).HasValidation = true;
     settingSpecs.emplace_back(
         NAME_OF(timeZone),
         "Time zone",
