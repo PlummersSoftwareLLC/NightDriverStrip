@@ -55,9 +55,9 @@ const Esp32 = withStyles(esp32Style)(props => {
                 navigate: service.subscribe("navigate", (up)=> 
                     chipRequest(`/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"navigate")
                         .then(()=>service.emit("refreshEffectList"))),
-                navigateTo: service.subscribe("navigateTo", (effect)=>
+                navigateTo: service.subscribe("navigateTo", (index)=>
                     chipRequest(`/currentEffect`,
-                        {method:"POST", body: new URLSearchParams({currentEffectIndex:effects.Effects.findIndex(eff=>eff===effect)})},"navigateTo")
+                        {method:"POST", body: new URLSearchParams({currentEffectIndex:index})},"navigateTo")
                         .then(service.emit("refreshEffectList"))),
                 toggleEffect: service.subscribe("toggleEffect", (effect) => 
                     chipRequest(`/${effect.enabled?"disable":"enable"}Effect`,

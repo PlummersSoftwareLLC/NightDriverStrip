@@ -34,7 +34,6 @@ const DesignerPanel = withStyles(designStyle)(props => {
         const subs={
             chipConfig:service.subscribe("ChipConfig",cfg=>{setChipConfig(cfg)}),
             effectsSub:service.subscribe("effectList",effectList=>{setEffects(effectList)}),
-            screenSub:service.subscribe("effectList",effectList=>{setEffects(effectList)}),
         };
         
         return ()=>Object.values(subs).forEach(service.unsubscribe);
@@ -126,6 +125,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 <Effect
                     effect={effect}
                     displayMode={displayMode}
+                    index={idx}
+                    effects={effects}
                     detailMode={detailMode}
                     effectInterval={effects.effectInterval}
                     selected={idx === effects.currentEffect}
@@ -141,6 +142,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 effect={effect}
                 displayMode={displayMode}
                 detailMode={detailMode}
+                index={idx}
                 effectInterval={effects.effectInterval}
                 selected={idx === effects.currentEffect}
                 millisecondsRemaining={effects.millisecondsRemaining} />

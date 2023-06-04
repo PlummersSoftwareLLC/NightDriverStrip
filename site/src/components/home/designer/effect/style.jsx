@@ -105,5 +105,15 @@ const effectStyle = theme => ({
     listButtons: {
         display: "flex",
         flexDirection: "row"
+    },
+    effectTile: {
+        border: "inset 2px",
+        borderRadius: "5px",
+        borderColor: theme.palette.grey["A700"],
+        height: "55px",
+    },
+    settingicon: {
+        zoom: 0.7,
+        marginTop: "-60px"
     }
 });
