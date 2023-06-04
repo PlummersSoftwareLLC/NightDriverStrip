@@ -285,9 +285,12 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
 
             jsonDoc["name"] = spec.Name;
             jsonDoc["friendlyName"] = spec.FriendlyName;
-            jsonDoc["description"] = spec.Description;
+            if (!spec.Description.isEmpty())
+                jsonDoc["description"] = spec.Description;
             jsonDoc["type"] = to_value(spec.Type);
             jsonDoc["typeName"] = spec.ToName(spec.Type);
+            if (spec.HasValidation)
+                jsonDoc["hasValidation"] = true;
 
             if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
             {
@@ -356,6 +359,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_ptrDeviceConfig->Set24HourClock(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(g_ptrDeviceConfig->SetNTPServer(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(g_ptrDeviceConfig->SetRememberCurrentEffect(value)));
 }
 
 // Set settings and return resulting config
@@ -508,29 +512,46 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
+// Number of ms we wait after flushing pending writes
+#define WRITE_WAIT_DELAY
+
 // Reset effect config, device config and/or the board itself
 void CWebServer::Reset(AsyncWebServerRequest * pRequest)
 {
-    if (IsPostParamTrue(pRequest, "deviceConfig"))
+    bool boardResetRequested = IsPostParamTrue(pRequest, "board");
+    bool deviceConfigResetRequested = IsPostParamTrue(pRequest, "deviceConfig");
+    bool effectsConfigResetRequested = IsPostParamTrue(pRequest, "effectsConfig");
+
+    // We can now let the requester know we're taking care of things without making them wait longer
+    AddCORSHeaderAndSendOKResponse(pRequest);
+
+    if (boardResetRequested)
+    {
+        // Flush any pending writes and make sure nothing is written after. We do this to make sure
+        //   that what needs saving is written, but no further writes take place after any requested
+        //   config resets have happened.
+        g_ptrJSONWriter->FlushWrites(true);
+
+        // Give the device a few seconds to finish the requested writes - this also gives AsyncWebServer
+        //   time to push out the response to the request before the device resets
+        delay(3000);
+    }
+
+    if (deviceConfigResetRequested)
     {
         debugI("Removing DeviceConfig");
         g_ptrDeviceConfig->RemovePersisted();
     }
 
-    if (IsPostParamTrue(pRequest, "effectsConfig"))
+    if (effectsConfigResetRequested)
     {
         debugI("Removing EffectManager config");
         RemoveEffectManagerConfig();
     }
 
-    bool boardResetRequested = IsPostParamTrue(pRequest, "board");
-
-    AddCORSHeaderAndSendOKResponse(pRequest);
-
     if (boardResetRequested)
     {
         debugW("Resetting device at API request!");
-        delay(1000);    // Give the response a second to be sent
         throw new std::runtime_error("Resetting device at API request");
     }
 }

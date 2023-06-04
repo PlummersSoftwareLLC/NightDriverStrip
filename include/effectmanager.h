@@ -46,7 +46,8 @@
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
 
-#define JSON_FORMAT_VERSION 1
+#define JSON_FORMAT_VERSION         1
+#define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
 extern uint8_t g_Brightness;
 extern uint8_t g_Fader;
@@ -57,6 +58,9 @@ void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
+void SaveCurrentEffectIndex();
+bool ReadCurrentEffectIndex(size_t& index);
+
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
@@ -276,13 +280,13 @@ public:
         // "ivl" contains the effect interval in ms
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
-        // "cei" contains the current effect index
-        if (jsonObject.containsKey("cei"))
-        {
+        // Try to read the effectindex from its own file. If that fails, "cei" may contain the current effect index instead
+        if (!ReadCurrentEffectIndex(_iCurrentEffect) && jsonObject.containsKey("cei"))
             _iCurrentEffect = jsonObject["cei"];
-            if (_iCurrentEffect >= EffectCount())
-                _iCurrentEffect = EffectCount() - 1;
-        }
+
+        // Make sure that if we read an index, it's sane
+        if (_iCurrentEffect >= EffectCount())
+            _iCurrentEffect = EffectCount() - 1;
 
         construct(true);
 
@@ -315,7 +319,6 @@ public:
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
 
         jsonObject["ivl"] = _effectInterval;
-        jsonObject["cei"] = _iCurrentEffect;
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
@@ -500,11 +503,20 @@ public:
             std::rotate(_vEffects.rend() - from - 1, _vEffects.rend() - from, _vEffects.rend() - to);
 
         if (from == _iCurrentEffect)
+        {
             _iCurrentEffect = to;
+            SaveCurrentEffectIndex();
+        }
         else if (from < _iCurrentEffect && to >= _iCurrentEffect)
+        {
             _iCurrentEffect--;
+            SaveCurrentEffectIndex();
+        }
         else if (from > _iCurrentEffect && to <= _iCurrentEffect)
+        {
             _iCurrentEffect++;
+            SaveCurrentEffectIndex();
+        }
 
         SaveEffectManagerConfig();
     }
@@ -579,7 +591,10 @@ public:
         _vEffects.erase(_vEffects.begin() + index);
 
         if (index <= _iCurrentEffect)
+        {
             _iCurrentEffect--;
+            SaveCurrentEffectIndex();
+        }
 
         SaveEffectManagerConfig();
 
@@ -638,7 +653,7 @@ public:
 
     // Change the current effect; marks the state as needing attention so this get noticed next frame
 
-    void SetCurrentEffectIndex(size_t i, bool skipSave = false)
+    void SetCurrentEffectIndex(size_t i)
     {
         if (i >= _vEffects.size())
         {
@@ -650,8 +665,7 @@ public:
 
         StartEffect();
 
-        if (!skipSave)
-            SaveEffectManagerConfig();
+        SaveCurrentEffectIndex();
     }
 
     uint GetTimeUsedByCurrentEffect() const
@@ -720,8 +734,7 @@ public:
         } while (enabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
-        if (!skipSave)
-            SaveEffectManagerConfig();
+        SaveCurrentEffectIndex();
     }
 
     // Go back to the previous effect and abort the current one.
@@ -740,7 +753,7 @@ public:
         } while (enabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
-        SaveEffectManagerConfig();
+        SaveCurrentEffectIndex();
     }
 
     bool Init()

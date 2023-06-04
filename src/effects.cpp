@@ -567,6 +567,7 @@ void LoadEffectFactories()
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 DRAM_ATTR size_t g_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
+DRAM_ATTR size_t g_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
 
 #if USE_MATRIX
 
@@ -578,6 +579,10 @@ DRAM_ATTR size_t g_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::
     }
 
 #endif
+
+// Declare it here just so InitEffectsManager can refer to it. We define it a little further down
+
+void WriteCurrentEffectIndexFile();
 
 // InitEffectsManager
 //
@@ -592,6 +597,7 @@ void InitEffectsManager()
     g_EffectsManagerJSONWriterIndex = g_ptrJSONWriter->RegisterWriter(
         []() { SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_ptrEffectManager); }
     );
+    g_CurrentEffectWriterIndex = g_ptrJSONWriter->RegisterWriter(WriteCurrentEffectIndexFile);
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
 
@@ -627,6 +633,66 @@ void SaveEffectManagerConfig()
 void RemoveEffectManagerConfig()
 {
     RemoveJSONFile(EFFECTS_CONFIG_FILE);
+    // We take the liberty of also removing the file with the current effect config index
+    SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
+}
+
+void SaveCurrentEffectIndex()
+{
+    if (g_ptrDeviceConfig->RememberCurrentEffect())
+        // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
+        g_ptrJSONWriter->FlagWriter(g_CurrentEffectWriterIndex);
+}
+
+void WriteCurrentEffectIndexFile()
+{
+    SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
+
+    File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE, FILE_WRITE);
+
+    if (!file)
+    {
+        debugE("Unable to open file %s for writing!", CURRENT_EFFECT_CONFIG_FILE);
+        return;
+    }
+
+    auto bytesWritten = file.print(g_ptrEffectManager->GetCurrentEffectIndex());
+    debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, bytesWritten);
+
+    file.flush();
+    file.close();
+
+    if (bytesWritten == 0)
+    {
+        debugE("Unable to write to file %s!", CURRENT_EFFECT_CONFIG_FILE);
+        SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
+    }
+}
+
+bool ReadCurrentEffectIndex(size_t& index)
+{
+    File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE);
+    bool readIndex = false;
+
+    if (file)
+    {
+        if (file.size() > 0)
+        {
+            debugI("Attempting to read file %s", CURRENT_EFFECT_CONFIG_FILE);
+
+            auto valueString = file.readString();
+
+            if (!valueString.isEmpty())
+            {
+                index = strtoul(valueString.c_str(), NULL, 10);
+                readIndex = true;
+            }
+        }
+
+        file.close();
+    }
+
+    return readIndex;
 }
 
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
