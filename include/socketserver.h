@@ -51,7 +51,7 @@ extern "C"
 // We allocate whatever the max packet is, and use it to validate incoming packets, so right now it's set to the maxiumum
 // LED data packet you could have (header plus 3 RGBs per NUM_LED)
 
-#define MAXIUMUM_PACKET_SIZE (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS) // Header plus 24 bits per actual LED
+#define MAXIMUM_PACKET_SIZE (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS) // Header plus 24 bits per actual LED
 #define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header
 
 bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
@@ -117,7 +117,7 @@ public:
         _server_fd(-1),
         _cbReceived(0)
     {
-        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE+1));        // +1 for uzlib one byte overreach bug
+        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -135,7 +135,7 @@ public:
 
     bool begin()
     {
-        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );              
+        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE) );
         _cbReceived = 0;
 
         // Creating socket file descriptor
@@ -148,7 +148,7 @@ public:
 
         // When an error occurs and we close and reopen the port, we need to specify reuse flags
         // or it might be too soon to use the port again, since close doesn't actually close it
-        // until the socket is no longer in use.  
+        // until the socket is no longer in use.
 
         int opt = 1;
         if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
@@ -199,7 +199,7 @@ public:
         // This test caps maximum packet size as a full buffer read of LED data.  If other packets wind up being longer,
         // the buffer itself and this test might need to change
 
-        if (cbNeeded > MAXIUMUM_PACKET_SIZE)
+        if (cbNeeded > MAXIMUM_PACKET_SIZE)
         {
             debugW("Unexpected request for %d bytes in ReadUntilNBytesReceived\n", cbNeeded);
             return false;
@@ -295,9 +295,9 @@ public:
                 uint32_t reserved       = _pBuffer[15] << 24 | _pBuffer[14] << 16 | _pBuffer[13] << 8 | _pBuffer[12];
                 debugV("Compressed Header: compressedSize: %u, expandedSize: %u, reserved: %u", compressedSize, expandedSize, reserved);
 
-                if (expandedSize > MAXIUMUM_PACKET_SIZE)
+                if (expandedSize > MAXIMUM_PACKET_SIZE)
                 {
-                    debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, MAXIUMUM_PACKET_SIZE);
+                    debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
                     break;
                 }
 
@@ -313,8 +313,8 @@ public:
                 // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
 
                 #if USE_PSRAM
-                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIUMUM_PACKET_SIZE);
-                    memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIUMUM_PACKET_SIZE);
+                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIMUM_PACKET_SIZE);
+                    memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIMUM_PACKET_SIZE);
                     auto pSourceBuffer = &_abTempBuffer[COMPRESSED_HEADER_SIZE];
                 #else
                     auto pSourceBuffer = &_pBuffer[COMPRESSED_HEADER_SIZE];
@@ -392,9 +392,9 @@ public:
                     debugW("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
 
                     size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
-                    if (totalExpected > MAXIUMUM_PACKET_SIZE)
+                    if (totalExpected > MAXIMUM_PACKET_SIZE)
                     {
-                        debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIUMUM_PACKET_SIZE);
+                        debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIMUM_PACKET_SIZE);
                         break;
                     }
 
@@ -472,9 +472,9 @@ public:
         d.source_read_cb = nullptr;
         d.dest_start     = pOutput;
         d.dest           = pOutput;
-        
+
         // There's an "off by one" bug/feature in uzlib that reaches one byte past the end.  Took forever
-        // to find it... 
+        // to find it...
         d.dest_limit     = pOutput + expectedOutputSize + 1;
 
         int res = uzlib_zlib_parse_header(&d);

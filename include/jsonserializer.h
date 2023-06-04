@@ -125,6 +125,8 @@ namespace ArduinoJson
     };
 }
 
+bool BoolFromText(const String& text);
+void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction);
 bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
 bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializable& object);
 bool RemoveJSONFile(const String & fileName);
@@ -153,7 +155,9 @@ class JSONWriter
     };
 
     std::vector<WriterEntry> writers;
-    std::atomic_ulong latestFlagMs;
+    std::atomic_ulong        latestFlagMs;
+    std::atomic_bool         flushRequested;
+    std::atomic_bool         haltWrites;
 
   public:
 
@@ -162,6 +166,9 @@ class JSONWriter
 
     // Flag a writer for invocation and wake up the task that calls them
     void FlagWriter(size_t index);
+
+    // Flush pending writes now
+    void FlushWrites(bool halt = false);
 };
 
 extern DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter;

@@ -101,7 +101,7 @@ class FireEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<256> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -351,7 +351,7 @@ public:
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<256> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -698,7 +698,7 @@ class BaseFireEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<256> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
