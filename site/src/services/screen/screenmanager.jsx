@@ -3,12 +3,13 @@ const ScreenService = (() => {
         isDesktopOrLaptop : window.matchMedia('(min-width: 1224px)'),
         isBigScreen : window.matchMedia('(min-width: 1824px)' ),
         isTabletOrMobile : window.matchMedia('(max-width: 1224px)' ),
-        isPortrait : window.matchMedia('(orientation: portrait)' ),
+        isLandscape : window.matchMedia('(orientation:landscape)' ),
+        isPortrait : window.matchMedia('(orientation:portrait)' ),
         isRetina : window.matchMedia('(min-resolution: 2dppx)' ),
     };
 
     const isSmallScreen = () => {
-        return mediaQueries.isTabletOrMobile.matches && !mediaQueries.isPortrait.matches;
+        return mediaQueries.isTabletOrMobile.matches;
     };
     const service = eventManager();
 

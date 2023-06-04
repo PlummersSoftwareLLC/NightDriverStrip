@@ -94,6 +94,14 @@ const effectStyle = theme => ({
         padding: "5px",
         alignItems: "center"
     },
+    effectDetail: {
+        display: "flex"
+    },
+    effectName: {
+        display: "flex",
+        alignItems: "center",
+        columnGap: "10px"
+    },
     listButtons: {
         display: "flex",
         flexDirection: "row"

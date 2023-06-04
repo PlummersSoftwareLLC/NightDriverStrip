@@ -56,13 +56,15 @@ const Effect = withStyles(effectStyle)(props => {
                         {selected && <CircularProgress aria-label={Math.floor(progress)} variant="determinate" value={progress} color="text.primary" />}
                     </Box>
                 </Box>:<Box className={classes.line}>
-                    <Box>
-                        <Icon>{selected?"lightbulb":"lightbulb_outline"}</Icon>
-                        <Typography>{effect.name}</Typography>
+                    <Box className={classes.effectDetail}>
+                        {!selected && <Checkbox checked={effect.enabled} onChange={()=>service.emit("toggleEffect", effect)} />}
+                        <Box className={classes.effectName}>
+                            <Icon>{selected?"lightbulb":"lightbulb_outline"}</Icon>
+                            <Typography>{effect.name}</Typography>
+                        </Box>
                     </Box>
                     <Box className={classes.listButtons}>
                         {!selected && effect.enabled && <IconButton aria-label="Select Effect" color="secondary" onClick={() => service.emit("navigateTo", effect)}><Icon>play_circle_outline</Icon></IconButton>}
-                        {!selected && <IconButton aria-label="Toggle Effect" color="secondary" onClick={() => service.emit("toggleEffect", effect)}>{<Icon>{effect.enabled ? "block" : "add_alarm"}</Icon>}</IconButton>}
                         {selected && <CircularProgress aria-label={Math.floor(progress)} variant="determinate" value={progress} color="text.primary" />}
                     </Box>
                 </Box>}
