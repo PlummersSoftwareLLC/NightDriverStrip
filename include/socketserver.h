@@ -114,7 +114,7 @@ public:
     SocketServer(int port, int numLeds) :
         _port(port),
         _numLeds(numLeds),
-        _server_fd(0),
+        _server_fd(-1),
         _cbReceived(0)
     {
         _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE+1));        // +1 for uzlib one byte overreach bug
@@ -126,24 +126,34 @@ public:
         _pBuffer.release();
         _pBuffer = nullptr;
 
-        if (_server_fd)
+        if (_server_fd >= 0)
         {
             close(_server_fd);
-            _server_fd = 0;
+            _server_fd = -1;
         }
     }
 
     bool begin()
     {
         _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIUMUM_PACKET_SIZE) );              
-
         _cbReceived = 0;
 
         // Creating socket file descriptor
-
-        if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+        if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         {
             debugW("socket error\n");
+            release();
+            return false;
+        }
+
+        // When an error occurs and we close and reopen the port, we need to specify reuse flags
+        // or it might be too soon to use the port again, since close doesn't actually close it
+        // until the socket is no longer in use.  
+
+        int opt = 1;
+        if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+        {
+            perror("setsockopt");
             release();
             return false;
         }
@@ -155,18 +165,19 @@ public:
 
         if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port
         {
-            debugW("bind failed\n");
+            perror("bind failed\n");
             release();
             return false;
         }
         if (listen(_server_fd, 6) < 0)                                                  // Start listening for connections
         {
-            debugW("listen failed\n");
+            perror("listen failed\n");
             release();
             return false;
         }
         return true;
     }
+
 
     void ResetReadBuffer()
     {

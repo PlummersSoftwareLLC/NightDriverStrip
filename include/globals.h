@@ -187,6 +187,7 @@
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+3
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+2
 #define JSONWRITER_PRIORITY     tskIDLE_PRIORITY+2
+#define COLORDATA_PRIORITY      tskIDLE_PRIORITY+2
 
 // If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1.
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
@@ -211,6 +212,7 @@
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
 #define JSONWRITER_CORE         0
+#define COLORDATA_CORE          1
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
@@ -1190,11 +1192,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 100
+#define MATRIX_REFRESH_RATE 120
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER 
-#define MATRIX_CALC_DIVIDER 1
+#define MATRIX_CALC_DIVIDER 2
 #endif
 
 
@@ -1659,6 +1661,24 @@ inline uint16_t WORDFromMemory(uint8_t * payloadData)
             (uint16_t)payloadData[0];
 }
 
+// SetSocketBlockingEnabled
+//
+// In blocking mode, socket API calls wait until the operation is complete before returning control to the application. 
+// For example, a call to the send() function won't return until all data has been sent. This can lead to the application 
+// hanging if the operation takes a long time.
+
+// In contrast, in non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function returns an error (usually EWOULDBLOCK or EAGAIN). The application can then decide how to handle the situation, such as by retrying the operation later. This provides more control and can make the application more responsive. However, it also requires more sophisticated programming, as the application must be prepared to handle these error conditions.
+
+inline bool SetSocketBlockingEnabled(int fd, bool blocking)
+{
+   if (fd < 0) return false;
+
+   int flags = fcntl(fd, F_GETFL, 0);
+   if (flags == -1) return false;
+   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+}
+
 // 16-bit (5:6:5) color definitions for common colors
 
 #define BLACK16     0x0000
@@ -1682,7 +1702,8 @@ inline uint16_t WORDFromMemory(uint8_t * payloadData)
 #include "ledmatrixgfx.h"                       // For drawing to HUB75 matrices
 #include "ledstripeffect.h"                     // Defines base led effect classes
 #include "ntptimeclient.h"                      // setting the system clock from ntp
-#include "effectmanager.h"                      // For g_EffectManagerf
+#include "effectmanager.h"                      // For g_EffectManager
+#include "ledviewer.h"                          // For the LEDViewer task and object
 #include "network.h"                            // Networking
 #include "ledbuffer.h"                          // Buffer manager for strip
 #include "Bounce2.h"                            // For Bounce button class

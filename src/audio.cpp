@@ -2,7 +2,7 @@
 //
 // File:        audio.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,15 +10,15 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
-//    If not, see <https://www.gnu.org/licenses/>. 
+//    If not, see <https://www.gnu.org/licenses/>.
 //
 //
 // Description:
@@ -26,7 +26,7 @@
 //    Source files for NightDriverStrip's audio processing
 //
 // History:     Apr-13-2019         Davepl      Created for NightDriverStrip
-//              
+//
 //---------------------------------------------------------------------------
 
 #include "globals.h"
@@ -42,7 +42,7 @@ SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio ca
 
 extern NightDriverTaskManager g_TaskManager;
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
-extern uint32_t g_Watts; 
+extern uint32_t g_Watts;
 extern float g_Brite;
 extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
@@ -61,7 +61,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         uint64_t lastFrame = millis();
 
         g_Analyzer.RunSamplerPass();
-        g_Analyzer.UpdatePeakData();        
+        g_Analyzer.UpdatePeakData();
         g_Analyzer.DecayPeaks();
 
         // VURatio with a fadeout
@@ -78,8 +78,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         // Instantaneous VURatio
 
-        g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ? 
-                                0.0 : 
+        g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ?
+                                0.0 :
                                 (g_Analyzer._VU-g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
@@ -99,8 +99,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 // AudioSerial
 //
 // There is a project at https://github.com/PlummersSoftwareLLC/PETRock which allows you to connect the ESP to the USERPORT
-// of a Commodore 64 or PET (40 or 80 cols) and display the spectrum visualization on the computer's screen in assembly 
-// language.  
+// of a Commodore 64 or PET (40 or 80 cols) and display the spectrum visualization on the computer's screen in assembly
+// language.
 //
 // To support this, when enabled, this task repeatedly sends out copies of the latest data peaks, scaled to 20, which is
 // the max height of the PET/C64 spectrum bar.  This should manage around 24 fps at 2400baud.
@@ -109,16 +109,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
 #include <fcntl.h>
 
-/** Returns true on success, or false if there was an error */
-bool SetSocketBlockingEnabled(int fd, bool blocking)
-{
-   if (fd < 0) return false;
 
-   int flags = fcntl(fd, F_GETFL, 0);
-   if (flags == -1) return false;
-   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
-}
 
 class VICESocketServer
 {
@@ -126,7 +117,7 @@ private:
 
     int                         _port;
     int                         _server_fd;
-    struct sockaddr_in          _address; 
+    struct sockaddr_in          _address;
     std::unique_ptr<uint8_t []> _pBuffer;
     std::unique_ptr<uint8_t []> _abOutputBuffer;
 
@@ -134,12 +125,9 @@ private:
 
 public:
 
-    size_t              _cbReceived;
-
     VICESocketServer(int port) :
         _port(port),
-        _server_fd(0),
-        _cbReceived(0)
+        _server_fd(0)
     {
         _abOutputBuffer = std::make_unique<uint8_t []>(BUFFER_SIZE);
         memset(&_address, 0, sizeof(_address));
@@ -160,35 +148,34 @@ public:
     bool begin()
     {
         _pBuffer = std::make_unique<uint8_t []>(BUFFER_SIZE);
-        _cbReceived = 0;
-        
-        // Creating socket file descriptor 
 
-        if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
-        { 
+        // Creating socket file descriptor
+
+        if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+        {
             debugW("socket error\n");
             release();
             return false;
-        } 
+        }
         SetSocketBlockingEnabled(_server_fd, false);
 
         memset(&_address, 0, sizeof(_address));
-        _address.sin_family = AF_INET; 
-        _address.sin_addr.s_addr = INADDR_ANY; 
-        _address.sin_port = htons( _port ); 
-       
-        if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port 
-        { 
-            debugW("bind failed\n"); 
+        _address.sin_family = AF_INET;
+        _address.sin_addr.s_addr = INADDR_ANY;
+        _address.sin_port = htons( _port );
+
+        if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port
+        {
+            debugW("bind failed\n");
             release();
             return false;
-        } 
+        }
         if (listen(_server_fd, 6) < 0)                                                  // Start listening for connections
-        { 
-            debugW("listen failed\n"); 
+        {
+            debugW("listen failed\n");
             release();
             return false;
-        } 
+        }
         return true;
     }
 
@@ -196,14 +183,14 @@ public:
     {
         int new_socket = -1;
         // Accept a new incoming connnection
-        int addrlen = sizeof(_address); 
+        int addrlen = sizeof(_address);
         struct timeval to;
         to.tv_sec = 1;
-        to.tv_usec = 0;     
-        if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0) 
-        { 
+        to.tv_usec = 0;
+        if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0)
+        {
             return -1;
-        } 
+        }
         if (setsockopt(new_socket,SOL_SOCKET,SO_SNDTIMEO,&to,sizeof(to)) < 0)
         {
             debugW("Unable to set send timeout on socket!");
@@ -267,7 +254,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         unsigned long startTime = millis();
 
         SerialData data;
-            
+
         const int MAXPET = 16;                                      // Highest value that the PET can display in a bar
         data.header[0] = ((3 << 4) + 15);
         data.vu = map(g_Analyzer._VURatioFade, 0, 2, 1, 16);           // Convert VU to a 1-16 value
@@ -307,7 +294,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
 
         #if ENABLE_VICE_SERVER
             // If we have a socket open, send our packet to its virtual serial port now as well.
-        
+
             if (socket < 0)
                 socket = socketServer.CheckForConnection();
 
@@ -328,7 +315,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         auto elapsed = millis() - startTime;
         if (targetElapsed > elapsed)
             delay(targetElapsed - elapsed);
-        else    
+        else
             delay(1);
     }
 }

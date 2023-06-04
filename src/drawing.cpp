@@ -428,6 +428,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 ShowStrip(localPixelsDrawn);
         #endif
 
+        if (wifiPixelsDrawn + localPixelsDrawn > 0)
+            g_ptrEffectManager->SetNewFrameAvailable(true);
+
         // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
         // is on LED #0 of Channel #0.
 
