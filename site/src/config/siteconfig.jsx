@@ -14,7 +14,13 @@ const SiteConfig = () => {
             name: "Chart points",
             typeName: "int",
             value: 50
-        }};
+        },
+        UIMode: {
+            name: "UI Mode",
+            typeName: "string",
+            value: "dark"
+        }
+    };
 
     const [config, setConfig] = useState(JSON.parse(window.sessionStorage.getItem("config")) || defaultConfig);
     const [service] = useState(eventManager());

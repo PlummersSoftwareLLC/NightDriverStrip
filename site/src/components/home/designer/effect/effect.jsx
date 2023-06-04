@@ -1,7 +1,7 @@
 const Effect = withStyles(effectStyle)(props => {
     const [service] = useState(eventManager());
 
-    const { classes, effect, effectInterval, millisecondsRemaining, selected, displayMode } = props;
+    const { classes, effect, effectInterval, millisecondsRemaining, selected, displayMode, detailMode } = props;
     const [ progress, setProgress ] = useState(0);
 
     useEffect(() => {
@@ -22,11 +22,56 @@ const Effect = withStyles(effectStyle)(props => {
         }
     },[millisecondsRemaining,selected]);
 
-    if (displayMode === "summary") {
-        return <div className={`${classes.dot} ${selected ? classes.selected:classes.waiting}`} 
-                    onClick={() => service.emit("navigateTo", effect)}/>;
-    } 
-    return <Card variant="outlined" className={[
+    switch (displayMode) {
+        case "summary":
+            return summary();
+        case "detailed":
+            return detailed();
+    
+        default:
+            return <Typography>Site error, invalid display mode {displayMode}</Typography>;
+    }
+
+    function detailed() {
+        switch (detailMode) {
+            case "list":
+                return detailedList();
+            case "tile":
+                return detailedTile();
+            default:
+                return <Typography>Site error, invalid {detailMode}</Typography>;
+        }
+    }
+
+    function detailedList() {
+        return <ListItem className={`${classes.effectline} ${effect.enabled ? null : classes.disabled}`}>
+            <Paper className={classes.effectline}>
+                <Box className={selected ? classes.activelightbar : classes.lightbar}></Box>
+                {selected?<Box className={classes.line}>
+                    <Icon>{selected?"lightbulb":"lightbulb_outline"}</Icon>
+                    <Typography>{effect.name}</Typography>
+                    <Box className={classes.listButtons}>
+                        {!selected && effect.enabled && <IconButton aria-label="Select Effect" color="secondary" onClick={() => service.emit("navigateTo", effect)}><Icon>play_circle_outline</Icon></IconButton>}
+                        {!selected && <IconButton aria-label="Toggle Effect" color="secondary" onClick={() => service.emit("toggleEffect", effect)}>{<Icon>{effect.enabled ? "block" : "add_alarm"}</Icon>}</IconButton>}
+                        {selected && <CircularProgress aria-label={Math.floor(progress)} variant="determinate" value={progress} color="text.primary" />}
+                    </Box>
+                </Box>:<Box className={classes.line}>
+                    <Box>
+                        <Icon>{selected?"lightbulb":"lightbulb_outline"}</Icon>
+                        <Typography>{effect.name}</Typography>
+                    </Box>
+                    <Box className={classes.listButtons}>
+                        {!selected && effect.enabled && <IconButton aria-label="Select Effect" color="secondary" onClick={() => service.emit("navigateTo", effect)}><Icon>play_circle_outline</Icon></IconButton>}
+                        {!selected && <IconButton aria-label="Toggle Effect" color="secondary" onClick={() => service.emit("toggleEffect", effect)}>{<Icon>{effect.enabled ? "block" : "add_alarm"}</Icon>}</IconButton>}
+                        {selected && <CircularProgress aria-label={Math.floor(progress)} variant="determinate" value={progress} color="text.primary" />}
+                    </Box>
+                </Box>}
+            </Paper>
+        </ListItem>
+    }
+
+    function detailedTile() {
+        return <Card variant="outlined" className={[
             classes.effect,
             effect.enabled ? null : classes.disabled,
             selected ? classes.playing : null
@@ -48,4 +93,9 @@ const Effect = withStyles(effectStyle)(props => {
             </CardContent>
         </Card>;
     }
-);
+
+    function summary() {
+        return <div className={`${classes.dot} ${selected ? classes.selected : classes.waiting}`}
+            onClick={() => service.emit("navigateTo", effect)} />;
+    }
+});

@@ -1,4 +1,4 @@
-const { useState, useEffect, useMemo, useRef, StrictMode } = window.React;
+const { useState, useEffect, useMemo, useRef, StrictMode, Keyframe, Animated } = window.React;
 
 const { ThemeOptions, createTheme, ThemeProvider, Checkbox, AppBar, Toolbar, IconButton, Icon, MenuIcon, Typography } = window.MaterialUI;
 const { Badge, withStyles, CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } = window.MaterialUI;

@@ -6,6 +6,7 @@ const mainAppStyle = theme => ({
     },
     appbar: {
       zIndex: theme.zIndex.drawer + 1,
+      minHeight: "64px",
       transition: theme.transitions.create(['width', 'margin'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
@@ -14,6 +15,7 @@ const mainAppStyle = theme => ({
     appbarOpened: {
       marginLeft: drawerWidth,
       width: `calc(100% - ${drawerWidth}px)`,
+      minHeight: "64px",
       transition: theme.transitions.create(['width', 'margin'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.enteringScreen,
@@ -45,7 +47,7 @@ const mainAppStyle = theme => ({
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
       }),
-      width: theme.spacing.unit * 7,
+      width: theme.spacing.unit * 9,
       [theme.breakpoints.up('sm')]: {
         width: theme.spacing.unit * 9,
       },
@@ -65,20 +67,21 @@ const mainAppStyle = theme => ({
       "align-items": "center"
     },
     content: {
-      padding: theme.spacing.unit * 10,
+      padding: `64px 0 0 ${Math.floor(drawerWidth * 0.25)}px`,
       transition: theme.transitions.create('padding-left', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
       }),
       display: "flex",
-      flexDirection: "row",
+      flexDirection: "column",
       flexWrap: "wrap",
-      rowGap: "10px",
-      columnGap: "10px",
-      alignItems: "flex-start",
+      rowGap: "0px",
+      alignItems: "stretch",
+      width: "100%",
     },
     contentShrinked: {
       "padding-left": drawerWidth + 10,
+      rowGap: "10px",
       transition: theme.transitions.create('padding-left', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,

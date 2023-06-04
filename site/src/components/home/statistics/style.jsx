@@ -64,8 +64,14 @@ const statsStyle = theme => ({
         display: "flex",
         zoom: 0.35
     },
-    contentSummary: {
-        maxWidth: "300px",
+    contentSummaryBig: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between"
+    },
+    contentSummarySmall: {
+        display: "flex",
+        flexDirection: "column",
     },
     contentDetails: {
     },

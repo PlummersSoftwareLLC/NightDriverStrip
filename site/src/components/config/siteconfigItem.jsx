@@ -33,7 +33,7 @@ const SiteConfigItem = withStyles(configStyle)(props => {
                 <ListItem className={classes.configitem} button onClick={_evt=>!editing && setEditing(!editing)}>
                     {!editing && <ListItemText
                         primary={name}
-                        secondary={configValue}/>}
+                        secondary={value}/>}
                     {editing && <TextField label={name} 
                                         variant="outlined"
                                         type={["int","float","PositiveBigInteger"].includes(typeName) ? "number" : "text"}

@@ -14,6 +14,9 @@ const designStyle = theme => ({
     hidden: {
         display: "none"
     },
+    shownSome: {
+        width: "max-content",
+    },
     effectsHeader: {
         display: "flex",
         flexDirection: "row",
@@ -36,12 +39,8 @@ const designStyle = theme => ({
     },
     effects: {
         display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        padding: "10px",
-        columnGap: "10px",
-        rowGap: "10px",
-        paddingTop: "20px",
+        flexDirection: "column",
+        padding: "0"
     },
     summaryEffects: {
         display: "flex",

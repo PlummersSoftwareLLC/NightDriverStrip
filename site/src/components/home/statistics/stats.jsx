@@ -2,11 +2,10 @@ const StatsPanel = withStyles(statsStyle)(props => {
     const [siteConfig, setSiteConfig] = useState({});
     const [service] = useState(eventManager());
 
-    const { classes, open } = props;
+    const { classes, open, smallScreen } = props;
     const [ statistics, setStatistics] = useState(undefined);
     const [ timer, setTimer ] = useState(undefined);
     const [ lastRefreshDate, setLastRefreshDate] = useState(undefined);
-    const [ displayMode, setDisplayMode ] = useState( props.displayMode || "summary" );
     const [ openedCategories, setOpenedCategories ] = useState({
         Package:false,
         CPU: false,
@@ -122,9 +121,7 @@ const StatsPanel = withStyles(statsStyle)(props => {
 
     return statistics && siteConfig && 
     <Card variant="outlined" className={`${!open && classes.hidden}`}>
-        <CardHeader 
-                title={<Typography>System</Typography>}/>
-        <CardContent className={Object.values(openedCategories).some(category => category)?classes.contentDetails:classes.contentSummary}>
+        <CardContent className={Object.values(openedCategories).some(category => category)?classes.contentDetails:(smallScreen?classes.contentSummarySmall:classes.contentSummaryBig)}>
             {Object.entries(statistics).map(category =>
                 <Accordion key={category[0]}
                            expanded={openedCategories[category[0]]} 
@@ -192,71 +189,6 @@ const StatsPanel = withStyles(statsStyle)(props => {
                     </AccordionDetails>
                 </Accordion>)}
         </CardContent>
-        <CardActions disableSpacing>
-            <IconButton aria-label="Refresh Statistics" onClick={()=>service.emit("refreshStatistics")}><Icon>refresh</Icon></IconButton>
-        </CardActions>
     </Card>
-
-
-    // <Box className={`${classes.root} ${!open && classes.hidden}`}>
-    //     {Object.entries(statistics).map(category =>
-    //     <Box key={category[0]} className={`${classes.category} ${!openedCategories[category[0]] && classes.detailedStats}`}>
-    //         {openedCategories[category[0]] ?
-    //         <Box className={classes.statCatergoryHeader} key="header">
-    //             <Typography>{category[0]}</Typography>
-    //             <IconButton aria-label="Minimize" onClick={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}><Icon>minimize</Icon></IconButton>
-    //         </Box>:
-    //         <Box>
-    //             <Typography color="textPrimary">{category[0]}</Typography>
-    //         </Box>}
-    //         <Box className={classes.categoryStats}>
-    //         {Object.entries(category[1])
-    //            .filter(entry=> entry[1].static)
-    //            .map(entry=>
-    //             <Box
-    //               key={`entry-${entry[0]}`}
-    //               className={!openedCategories[category[0]] && classes.summaryStats }
-    //               onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}>
-    //                 <StaticStatsPanel
-    //                     key={`static-${entry[0]}`}
-    //                     detail={openedCategories[category[0]]}
-    //                     name={entry[0]}
-    //                     stat={entry[1]}/>
-    //             </Box>)}
-    //             <Box className={classes.categoryStats} key="charts">
-    //                 {Object.entries(category[1])
-    //                     .filter(entry=> !entry[1].static)
-    //                     .map((entry)=>
-    //                         <Box key={`chart-${entry[0]}`}
-    //                              sx={{cursor:"pointer"}}
-    //                              onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}
-    //                              className={`${classes.chartArea} ${!openedCategories[category[0]] && classes.summaryStats}`}>
-    //                                 {category[1][entry[0]].idleField && <BarStat
-    //                                     key={`Bar-${entry[0]}`}
-    //                                     name={entry[0]}
-    //                                     className={entry[0]}
-    //                                     category={category[0]}
-    //                                     detail={openedCategories[category[0]]}
-    //                                     rawvalue={entry[1].stat}
-    //                                     idleField={ category[1][entry[0]].idleField }
-    //                                     statsAnimateChange={ siteConfig.statsAnimateChange.value }
-    //                                     headerFields={ category[1][entry[0]].headerFields }
-    //                                     ignored={ category[1][entry[0]].ignored || [] } />}
-    //                                 <AreaStat
-    //                                     key={`Area-${entry[0]}`}
-    //                                     name={entry[0]}
-    //                                     category={category[0]}
-    //                                     detail={openedCategories[category[0]]}
-    //                                     statsAnimateChange={ siteConfig.statsAnimateChange.value }
-    //                                     rawvalue={entry[1].stat}
-    //                                     maxSamples={ siteConfig.maxSamples.value }
-    //                                     idleField={ category[1][entry[0]].idleField }
-    //                                     headerFields={ category[1][entry[0]].headerFields }
-    //                                     ignored={ category[1][entry[0]].ignored || [] } />
-    //                             </Box>)}
-    //             </Box>
-    //         </Box>
-    //     </Box>)}
-    // </Box>
 });
 

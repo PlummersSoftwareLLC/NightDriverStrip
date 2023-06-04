@@ -8,7 +8,6 @@ const effectStyle = theme => ({
         display: "none"
     },
     effect: {
-        width: "180px",
         height: "fit-content",
         display: "flex",
         flexDirection: "column",
@@ -31,6 +30,7 @@ const effectStyle = theme => ({
     },
     selected: {
         backgroundColor: theme.palette.background.paper,
+        borderColor: theme.palette.leds.active.outer,
     },
     circularProgressText: {
         position: "relative",
@@ -60,12 +60,42 @@ const effectStyle = theme => ({
         borderStyle: "groove",
         cursor: "pointer",
     },
-    selected: {
-        borderColor: theme.palette.leds.active.outer,
-        backgroundColor: theme.palette.leds.active.inner,
-    },
     waiting: {
         borderColor: theme.palette.leds.waiting.outer,
         backgroundColor: theme.palette.leds.waiting.inner,
     },
+    lightbar: {
+        background: "#fff",
+        background: "linear-gradient(90deg, green, blue, red, violet, aquamarine)",
+        width: "100%",
+        height: "5px",
+        borderRadius: "5px",
+        opacity: 0.1,
+    },
+    activelightbar: {
+        background: "#fff",
+        "-webkit-box-reflect": "below 0px linear-gradient(transparent, white)",
+        background: "linear-gradient(9deg, green, blue, red, violet, aquamarine)",
+        width: "100%",
+        height: "5px",
+        borderRadius: "5px"
+    },
+    effectline: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        padding: "0"
+    },
+    line: {
+        display: "flex",
+        flexDirection: "row",
+        margin: "10px",
+        justifyContent: "space-between",
+        padding: "5px",
+        alignItems: "center"
+    },
+    listButtons: {
+        display: "flex",
+        flexDirection: "row"
+    }
 });

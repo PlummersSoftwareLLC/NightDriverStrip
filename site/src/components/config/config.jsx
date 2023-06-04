@@ -17,6 +17,7 @@ const ConfigPanel = withStyles(configStyle)(props => {
   if (siteConfig === undefined) {
     return <div>Loading...</div>
   }
+
   return (
     <List className={classes.configsection}>
       <ListItem className={classes.configsection}>

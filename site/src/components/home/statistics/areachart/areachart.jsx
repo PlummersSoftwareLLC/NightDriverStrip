@@ -51,8 +51,8 @@ const AreaStat = withStyles(areaChartStyle)(props => {
     return <Box className={classes.root}>
         {detail && <Box className={classes.header}>
             <Typography className={classes.headerLine} color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
-                <Typography key={headerField} className={classes.headerField} color="textPrimary" variant="subtitle2">{headerField}: 
-                    <Typography color="textSecondary" variant="subtitle2">{rawvalue[headerField]}</Typography>
+                <Typography key={headerField} className={classes.headerField} color="textPrimary" variant="subtitle1">{headerField}: 
+                    <Typography color="textSecondary" variant="subtitle2">{Math.floor(rawvalue[headerField])}</Typography>
                 </Typography>)}
             </Typography>
             <List className={classes.stats}>
@@ -60,8 +60,8 @@ const AreaStat = withStyles(areaChartStyle)(props => {
                         .filter(entry=>!ignored.includes(entry[0]))
                         .map(entry=>
                     <ListItem className={classes.stats} key={entry[0]}>
-                        <Typography color="textPrimary" variant="little">{entry[0]}</Typography>:
-                        <Typography color="textSecondary" variant="little" >{getValue(entry[1])}</Typography>
+                        <Typography color="textPrimary" variant="subtitle1">{entry[0]}</Typography>:
+                        <Typography color="textSecondary" variant="subtitle2" >{getValue(entry[1])}</Typography>
                     </ListItem>)}
             </List>
         </Box>}

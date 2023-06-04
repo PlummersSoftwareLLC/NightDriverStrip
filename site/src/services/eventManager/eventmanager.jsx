@@ -27,7 +27,12 @@ const eventManager = () => {
                 return eventId;
             }
         },
-        unsubscribe: (eventId) => Array.from(subscribers.entries()).forEach(entry=>Array.from(entry[1]).forEach(map=>map[0]===eventId && entry[1].delete(eventId))),
+        unsubscribe: (eventId) => {
+            Array.from(subscribers.entries())
+                .forEach(entry=>Array.from(entry[1])
+                    .filter(map=>map[0]===eventId)
+                    .forEach(_map=>entry[1].delete(eventId)))
+        },
         emit
     };
 };

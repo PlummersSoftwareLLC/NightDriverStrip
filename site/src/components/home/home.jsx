@@ -6,11 +6,21 @@ const AppPannel = withStyles(mainAppStyle)(props => {
     const {classes} = props;
     const [drawerOpened, setDrawerOpened] = useState(false);
     const [stats, setStats] = useState(false);
-    const [designer, setDesigner] = useState(false);
+    const [designer, setDesigner] = useState(true);
     const [mode, setMode] = useState('dark');
     const [activeDevice, setActiveDevice] = useState(httpPrefix||"Current Device");
+    const [smallScreen, setSmallScreen ] = useState(false);
+    const [service] = useState(eventManager());
     const theme = React.useMemo(() => getTheme(mode),[mode]);
 
+    useEffect(()=>{
+        const subs = {
+            isSmallScreen: service.subscribe("isSmallScreen",setSmallScreen),
+            config: service.subscribe("SiteConfig",cfg => setMode(cfg.UIMode.value))
+        };
+        return ()=>Object.value(subs).forEach(sub=>service.unsubscribe(sub));
+    },[service]);
+    
     return <ThemeProvider theme={theme}>
         <CssBaseline />
         <Box className={classes.root}>
@@ -30,6 +40,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                         NightDriverStrip
                     </Typography>
                     <DevicePicker {...{activeDevice, setActiveDevice}} />
+                    <Icon>{smallScreen ?"smartphone":"computer"}</Icon>
                     <NotificationPanel/>
                 </Toolbar>
             </AppBar>
@@ -37,7 +48,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                     classes={{paper: [classes.drawer, !drawerOpened && classes.drawerClosed].join(" ")}}>
                 <Box className={classes.drawerHeader}>
                     <Box className={classes.displayMode}>
-                        <IconButton aria-label="Display Mode" onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
+                        <IconButton aria-label="Display Mode" onClick={()=>service.emit("SetSiteConfigItem",{value:mode==="dark"?"light":"dark", id:"UIMode"})} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
                         <ListItemText primary={(mode === "dark" ? "Dark" : "Light") + " mode"}/>
                     </Box>
                     <IconButton aria-label="Close Config" onClick={()=>setDrawerOpened(!drawerOpened)}>
@@ -62,9 +73,9 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                     </ListItem>]}
                 </List>
             </Drawer>
-            <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel open={stats}/> 
-                <DesignerPanel open={designer} displayMode="summary"/>
+            <Box className={[classes.content, drawerOpened ? classes.contentShrinked:"",smallScreen?classes.smallScreen:""].join(" ")}>
+                <StatsPanel open={stats} smallScreen={smallScreen} /> 
+                <DesignerPanel open={designer} displayMode="detailed"/>
             </Box>
         </Box>
     </ThemeProvider>
