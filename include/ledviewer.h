@@ -3,7 +3,7 @@
 //
 // File:        ledviewer.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -11,15 +11,15 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
-//    If not, see <https://www.gnu.org/licenses/>. 
+//    If not, see <https://www.gnu.org/licenses/>.
 //
 //
 // Description:
@@ -27,7 +27,7 @@
 //    Allows a client to monitor the current state of the LED CRGB array
 //
 // History:     May-30-2023         Davepl      Created for NightDriverStrip
-//              
+//
 //---------------------------------------------------------------------------
 
 #pragma once
@@ -41,9 +41,9 @@
 
 typedef struct
 {
-    uint32_t  header;         
-    uint32_t  width;   
-    uint32_t  height;   
+    uint32_t  header;
+    uint32_t  width;
+    uint32_t  height;
     CRGB      colors[NUM_LEDS];  // Array of LED_COUNT CRGB values
 } ColorDataPacket;
 
@@ -59,18 +59,15 @@ private:
 
     int                         _port;
     int                         _server_fd;
-    struct sockaddr_in          _address; 
+    struct sockaddr_in          _address;
 
     const int BUFFER_SIZE = 1024;
 
 public:
 
-    size_t              _cbReceived;
-
     LEDViewer(int port) :
         _port(port),
-        _server_fd(-1),
-        _cbReceived(0)
+        _server_fd(-1)
     {
         memset(&_address, 0, sizeof(_address));
     }
@@ -91,19 +88,19 @@ public:
 
     bool begin()
     {
-        // Creating socket file descriptor 
+        // Creating socket file descriptor
 
-        if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-        { 
+        if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
             debugW("Color data socket error\n");
             release();
             return false;
-        } 
+        }
         SetSocketBlockingEnabled(_server_fd, false);
 
         // When an error occurs and we close and reopen the port, we need to specify reuse flags
         // or it might be too soon to use the port again, since close doesn't actually close it
-        // until the socket is no longer in use.  
+        // until the socket is no longer in use.
 
         int opt = 1;
         if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
@@ -114,22 +111,22 @@ public:
         }
 
         memset(&_address, 0, sizeof(_address));
-        _address.sin_family = AF_INET; 
-        _address.sin_addr.s_addr = INADDR_ANY; 
-        _address.sin_port = htons( _port ); 
-       
-        if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port 
-        { 
-            perror("bind failed for color data\n"); 
+        _address.sin_family = AF_INET;
+        _address.sin_addr.s_addr = INADDR_ANY;
+        _address.sin_port = htons( _port );
+
+        if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port
+        {
+            perror("bind failed for color data\n");
             release();
             return false;
-        } 
+        }
         if (listen(_server_fd, 6) < 0)                                                  // Start listening for connections
-        { 
-            perror("listen failed for color data\n"); 
+        {
+            perror("listen failed for color data\n");
             release();
             return false;
-        } 
+        }
         return true;
     }
 
@@ -137,14 +134,14 @@ public:
     {
         int new_socket = -1;
         // Accept a new incoming connnection
-        int addrlen = sizeof(_address); 
+        int addrlen = sizeof(_address);
         struct timeval to;
         to.tv_sec = 1;
-        to.tv_usec = 0;     
-        if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0) 
-        { 
+        to.tv_usec = 0;
+        if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0)
+        {
             return -1;
-        } 
+        }
         if (setsockopt(new_socket,SOL_SOCKET,SO_SNDTIMEO,&to,sizeof(to)) < 0)
         {
             debugW("Unable to set send timeout on color data socket!");
@@ -166,7 +163,7 @@ public:
         // Send data to the emulator's virtual serial port
 
         const byte * pb = (byte *)pData;
-        debugV("Sending Packet:  %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X,...", 
+        debugV("Sending Packet:  %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X,...",
                                 pb[0], pb[1], pb[2], pb[3], pb[4], pb[5], pb[6], pb[7], pb[8], pb[9], pb[10], pb[11]);
 
         if (cbSize != write(socket, pData, cbSize))
