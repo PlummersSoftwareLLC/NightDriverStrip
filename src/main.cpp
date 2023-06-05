@@ -604,21 +604,30 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #ifdef USESTRIP
+    Screen::ScreenStatus("Initializing GFXBASE devices");
+
+    #if USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
-            g_aptrDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        {
+            debugW("Allocating LEDStripGFX for channel %d", i);
+            g_aptrDevices[i] = std::make_shared<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        }
     #endif
 
     #if USE_MATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_aptrDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i] = std::make_shared<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             g_aptrDevices[i]->loadPalette(0);
         }
     #endif
 
+    Screen::ScreenStatus("Setting JPG callback");
+
     TJpgDec.setJpgScale(1);
     TJpgDec.setCallback(bitmap_output);
+
+    Screen::ScreenStatus("Allocating LED Buffers");
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -661,6 +670,8 @@ void setup()
         ledcSetup(2, 12000, 8);
         ledcSetup(3, 12000, 8);
     #endif
+
+    Screen::ScreenStatus("Initializing LED strips");
 
     #if USESTRIP
 
@@ -726,6 +737,8 @@ void setup()
         #endif
     #endif
 
+    Screen::ScreenStatus("Initializing Effects Manager");
+
     // Show splash effect on matrix
     #if USE_MATRIX
         debugI("Initializing splash effect manager...");
@@ -735,6 +748,8 @@ void setup()
         InitEffectsManager();
     #endif
 
+    Screen::ScreenStatus("Initializing Audio");
+
     // Microphone stuff
     #if ENABLE_AUDIO
         pinMode(INPUT_PIN, INPUT);
@@ -742,6 +757,8 @@ void setup()
         g_TaskManager.StartAudioThread();
         CheckHeap();
     #endif
+
+    Screen::ScreenStatus("Initializing Screen Thread");
 
     #if USE_SCREEN
         g_TaskManager.StartScreenThread();

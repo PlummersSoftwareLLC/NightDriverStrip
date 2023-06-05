@@ -705,7 +705,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
 
     #define NUM_CHANNELS    1
-    #define MATRIX_WIDTH    (8*144)       // My naximum run, and about all you can do at 30fps
+    #define MATRIX_WIDTH    (8*144)     // My maximum run, and about all you can do at 30fps
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   0                     // IR Remote Control
@@ -1052,9 +1052,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
 #define TIME_CHECK_INTERVAL_MS (1000 * 60 * 5)   // How often in ms we resync the clock from NTP
-#define MIN_BRIGHTNESS  4
+#define MIN_BRIGHTNESS  10
 #define MAX_BRIGHTNESS  255
-#define BRIGHTNESS_STEP 10          // Amount to step brightness on each remote control repeat
+#define BRIGHTNESS_STEP 20          // Amount to step brightness on each remote control repeat
 #define MAX_RINGS       5
 
 
