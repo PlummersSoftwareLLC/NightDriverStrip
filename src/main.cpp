@@ -429,7 +429,14 @@ void setup()
     // Re-route debug output to the serial port
     Debug.setSerialEnabled(true);
 
-    heap_caps_malloc_extmem_enable(128);
+    // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
+    // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default 
+    // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
+
+    #if MESMERIZER
+        heap_caps_malloc_extmem_enable(1024);
+    #endif
+
     uzlib_init();
 
     if (!SPIFFS.begin(true))
@@ -475,9 +482,6 @@ void setup()
     String name = "NDESP32" + get_mac_address().substring(6);
     g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
 
-    // Star the color data server
-    g_TaskManager.StartColorDataThread();
-    
     // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
     if (!ReadWiFiConfig())
@@ -769,7 +773,7 @@ void setup()
     debugV("Initializing compression...");
     CheckHeap();
 
-    #if ENABLE_WIFI
+    #if ENABLE_WIFI 
         g_TaskManager.StartNetworkThread();
         CheckHeap();
     #endif
@@ -781,6 +785,8 @@ void setup()
     #endif
 
     #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+        // Start the color data server and other network services
+        g_TaskManager.StartColorDataThread();
         g_TaskManager.StartSocketThread();
     #endif
 
