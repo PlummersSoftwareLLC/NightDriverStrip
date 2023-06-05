@@ -190,22 +190,7 @@ class RemoteControl
         if (0xFFFFFFFF == result)
         {
             debugV("Remote Repeat; lastResult == %08x\n", lastResult);
-            if (lastResult == IR_BMINUS)
-            {
-                g_Brightness = std::max(MIN_BRIGHTNESS, g_Brightness - BRIGHTNESS_STEP);
-                debugV("Dimming to %d\n", g_Brightness);
-                return;
-            }
-            else if (lastResult == IR_BPLUS)
-            {
-                g_Brightness = std::min(MAX_BRIGHTNESS, g_Brightness + BRIGHTNESS_STEP);
-                debugV("Brightening to %d\n", g_Brightness);
-                return;
-            }
-        }
-        else
-        {
-            lastResult = result;
+            result = lastResult;
         }
 
         if (IR_ON == result)
@@ -215,6 +200,11 @@ class RemoteControl
             g_ptrEffectManager->SetInterval(0);
             g_ptrEffectManager->StartEffect();
             g_Brightness = 255;
+            return;
+        }
+        else if (IR_OFF == result)
+        {
+            g_Brightness = std::max(MIN_BRIGHTNESS, (int) g_Brightness - BRIGHTNESS_STEP);
             return;
         }
         else if (IR_BPLUS == result)

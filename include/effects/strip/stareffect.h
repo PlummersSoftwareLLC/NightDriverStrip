@@ -543,7 +543,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         }
         else
         {
-            blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, _blurFactor * 255);
+            g()->blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blurFactor * 255);
             fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer._VURatioFade));
         }
 

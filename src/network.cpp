@@ -214,19 +214,21 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+            debugV("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                    iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
             WiFi.disconnect();
             WiFi.mode(WIFI_STA);
             WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
+
+            debugV("Done Wifi.begin, waiting for connection...");
 
             // Give the module a few seconds to connect
             delay(4000 + iPass * 1000);
 
             if (WiFi.isConnected())
             {
-                Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
+                debugV("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
                 break;
             }
         }

@@ -98,7 +98,12 @@ void MatrixPreDraw()
 
         auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        pMatrix->SetBrightness(g_Fader);
+
+        // We set ouutselves to the lower of the fader value or the brightness value, 
+        // so that we can fade between effects without having to change the brightness
+        // setting. 
+
+        pMatrix->SetBrightness(min(g_Brightness, g_Fader));
 
         if (g_ptrEffectManager->GetCurrentEffect()->ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
