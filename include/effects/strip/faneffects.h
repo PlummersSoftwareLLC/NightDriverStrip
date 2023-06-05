@@ -1027,6 +1027,9 @@ public:
   {
     AllocatedJsonDocument jsonDoc(512);
 
+    JsonObject root = jsonDoc.to<JsonObject>();
+    LEDStripEffect::SerializeToJSON(root);
+
     jsonDoc[PTY_PALETTE] = Palette;
     jsonDoc[PTY_LEDCOUNT] = LEDCount;
     jsonDoc[PTY_CELLSPERLED] = CellsPerLED;
@@ -1037,9 +1040,6 @@ public:
     jsonDoc[PTY_REVERSED] = bReversed;
     jsonDoc[PTY_MIRORRED] = bMirrored;
     jsonDoc[PTY_ORDER] = to_value(Order);
-
-    JsonObject root = jsonDoc.as<JsonObject>();
-    LEDStripEffect::SerializeToJSON(root);
 
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }

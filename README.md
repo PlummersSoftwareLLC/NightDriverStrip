@@ -34,7 +34,7 @@ Each channel of LEDs has an `LEDStripGfx` instance associated with it. `_GFX[0]`
 
 The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32. It boots up, finds a single `RainbowFillEffect` in the `LoadEffectFactories()` function, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs. If working correctly it should draw a scrolling rainbow palette on your LED strip.
 
-Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the configuration of individual effects can be changed using the device API, and eventually the device web application (see [Device web UI and API](#device-web-ui-and-api), below.)
+Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the composition of the effect list configuration of individual effects can be changed using the device web application. The API endpoints to facilitate this are already available and ready for use (see [Device web UI and API](#device-web-ui-and-api), below.)
 
 This makes that an override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the friendly name and effect number. Those two properties are (de)serialized from/to JSON by `LEDStripEffect` by default.
 

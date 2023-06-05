@@ -140,6 +140,12 @@ class CWebServer
         AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_OK));
     }
 
+    static void AddCORSHeaderAndSendBadRequest(AsyncWebServerRequest * pRequest, const String& message)
+    {
+        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json",
+            "{\"message\": \"" + message + "\"}"));
+    }
+
     // Straightforward support functions
 
     static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String &  paramName);
@@ -149,6 +155,7 @@ class CWebServer
     static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
     static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
     static void SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect);
+    static bool ApplyEffectSettings(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect);
 
     // Endpoint member functions
 
@@ -164,6 +171,9 @@ class CWebServer
     static void SetCurrentEffectIndex(AsyncWebServerRequest * pRequest);
     static void EnableEffect(AsyncWebServerRequest * pRequest);
     static void DisableEffect(AsyncWebServerRequest * pRequest);
+    static void MoveEffect(AsyncWebServerRequest * pRequest);
+    static void CopyEffect(AsyncWebServerRequest * pRequest);
+    static void DeleteEffect(AsyncWebServerRequest * pRequest);
     static void NextEffect(AsyncWebServerRequest * pRequest);
     static void PreviousEffect(AsyncWebServerRequest * pRequest);
 
@@ -222,6 +232,9 @@ class CWebServer
         _server.on("/setCurrentEffectIndex", HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
         _server.on("/enableEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { EnableEffect(pRequest); });
         _server.on("/disableEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DisableEffect(pRequest); });
+        _server.on("/moveEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { MoveEffect(pRequest); });
+        _server.on("/copyEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { CopyEffect(pRequest); });
+        _server.on("/deleteEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DeleteEffect(pRequest); });
 
         _server.on("/settings/effect/specs", HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettingSpecs(pRequest); });
         _server.on("/settings/effect",       HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettings(pRequest); });
@@ -267,8 +280,8 @@ class CWebServer
 };
 
 // Set value in lambda using a forwarding function. Always returns true
-#define SET_VALUE(functionCall) [](auto value) { functionCall; return true; }
+#define SET_VALUE(functionCall) [=](auto value) { functionCall; return true; }
 
 // Set value in lambda using a forwarding function. Reports success based on function's return value,
 //   which must be implicitly convertable to bool
-#define CONFIRM_VALUE(functionCall) [](auto value)->bool { return functionCall; }
+#define CONFIRM_VALUE(functionCall) [=](auto value)->bool { return functionCall; }

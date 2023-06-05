@@ -144,6 +144,10 @@
 // C Helpers and Macros
 
 #define NAME_OF(x)          #x
+
+// NAME_OF with first character cut off - addresses underscore-prefixed (member) variables
+#define ACTUAL_NAME_OF(x)   ((#x) + 1)
+
 #define ARRAYSIZE(a)        (sizeof(a)/sizeof(a[0]))        // Returns the number of elements in an array
 #define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))    // Calculate period in microseconds (us) from frequency in Hz
 #define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
