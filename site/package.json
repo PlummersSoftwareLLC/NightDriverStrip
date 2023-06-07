@@ -3,12 +3,35 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
+        "@emotion/react": "^11.11.0",
+        "@emotion/styled": "^11.11.0",
+        "@mui/material": "5.13.2",
+        "@mui/styles": "^5.13.2",
+        "@types/d3-scale": "^4.0.3",
         "fs-watch-exec": "^1.1.2",
-        "serve": "^14.2.0"
+        "react": "18.2.0",
+        "react-dom": "18.2.0",
+        "react-router": "6.11.2",
+        "react-router-dom": "6.11.2",
+        "recharts": "2.6.2",
+        "serve": "^14.2.0",
+        "tss-react": "^4.8.6"
     },
     "scripts": {
-        "build": "cd .. && python tools/bake_site.py local && echo Build complete && sleep 1",
+        "build:new": "vite build --watch",
+        "preview": "vite preview",
+        "build": "cd .. && python tools/bake_site.py local",
         "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src npm run build",
-        "start": "(npm run rebuild& node ./node_modules/serve/build/main.js ./local)"
+        "start": "(npm run rebuild& node ./nodeq_modules/serve/build/main.js ./local)",
+        "dev": "vite --port 3000 --host 0.0.0.0"
+    },
+    "devDependencies": {
+        "@types/material-ui": "^0.21.12",
+        "@types/react": "18.2.0",
+        "@types/react-dom": "18.2.0",
+        "@vitejs/plugin-react": "^4.0.0",
+        "typescript": "^5.0.4",
+        "vite": "^4.3.8",
+        "vite-plugin-externals": "^0.6.2"
     }
 }
