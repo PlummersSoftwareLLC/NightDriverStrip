@@ -2,6 +2,8 @@ import { useTheme, Box, Typography, List, ListItem } from "@mui/material";
 import { useMemo, useState } from "react";
 import { AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Area } from "recharts";
 import { IStatSpec } from "../../../../models/stats/espstate";
+import { withStyles } from 'tss-react/mui';
+import { areaChartStyle } from "./style";
 
 interface IAreaChartProps { 
     name: string;
@@ -12,9 +14,11 @@ interface IAreaChartProps {
     headerFields: string[];
     idleField: string;
     category:string;
-    detail: boolean};
+    detail: boolean;
+    classes?: any;
+};
 
-export function AreaStat({ name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail }: IAreaChartProps) {
+export const AreaStat = withStyles(({ name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail, classes }: IAreaChartProps) => {
     const getChartValues = (value:IStatSpec) => Object.entries(value)
                         .filter(entry=>!ignored.includes(entry[0]))
                         .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{});
@@ -41,16 +45,16 @@ export function AreaStat({ name, rawvalue, ignored, statsAnimateChange, maxSampl
 
     const getStatTooltip = (data) => {
         return (
-        <div>
-            <div>{data.labelFormatter(data.label)}</div>
-            <ul>
+        <div className={classes.tooltipContent}>
+            <div className={classes.tooltipHeader}>{data.labelFormatter(data.label)}</div>
+            <ul className={classes.threads}>
                 {data.payload
-                    .sort((a,b) => sortStats(a,b))
+                    .sort((a,b) => sortStats(b,a))
                     .map(stat => 
-                    <div key={stat.name}>
-                        <div style={{color:stat.color}}>{stat.name}</div>
-                        <div>{getValue(stat.value)}
-                            <div>
+                    <div key={stat.name} className={classes.thread}>
+                        <div className={classes.threadName} style={{color:stat.color}}>{stat.name}</div>
+                        <div className={classes.threadValue}>{getValue(stat.value)}
+                            <div className={classes.threadSummary}>
                                 ({(stat.value/data.payload.reduce((ret,stat) => ret + stat.value,0)*100).toFixed(2)}%)
                             </div>
                         </div>
@@ -117,5 +121,4 @@ export function AreaStat({ name, rawvalue, ignored, statsAnimateChange, maxSampl
                                 stackId="1"/>)}
         </AreaChart>
     </Box>
-};
-    
+},areaChartStyle);

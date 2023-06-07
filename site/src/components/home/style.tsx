@@ -20,19 +20,19 @@ export const mainAppStyle = (theme,{openDrawerWidth,closeDrawerWidth,toolbarHeig
       }),
     },
     categoryStats: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "center",
-        "align-items": "center"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignContent: "flexStart",
+        justifyContent: "center",
+        alignItems: "center"
     },
     toolbarTitle: {
-      "flex-grow": "1"
+      flexGrow: "1"
     },
     drawer: {
       whiteSpace: 'nowrap',
-      "z-index": 0,
+      zIndex: 0,
       width: openDrawerWidth,
       transition: theme.transitions.create('width', {
         easing: theme.transitions.easing.sharp,
@@ -52,17 +52,17 @@ export const mainAppStyle = (theme,{openDrawerWidth,closeDrawerWidth,toolbarHeig
     },
     drawerHeader: {
       display: "flex",
-      "flex-wrap": "nowrap",
-      "min-height": toolbarHeight,
-      "flex-direction": "row",
-      "justify-content": "space-between"
+      flexWrap: "nowrap",
+      minHeight: toolbarHeight,
+      flexDirection: "row",
+      justifyContent: "space-between"
     },
     displayMode: {
       display: "flex",
-      "flex-wrap": "nowrap",
-      "flex-direction": "row",
-      "justify-content": "flex-start",
-      "align-items": "center"
+      flexWrap: "nowrap",
+      flexDirection: "row",
+      justifyContent: "flexStart",
+      alignItems: "center"
     },
     content: {
       padding: `64px 0 0 ${openDrawerWidth}px`,
@@ -78,7 +78,7 @@ export const mainAppStyle = (theme,{openDrawerWidth,closeDrawerWidth,toolbarHeig
       width: "100%",
     },
     contentShrinked: {
-      "padding-left": closeDrawerWidth + 10,
+      paddingLeft: closeDrawerWidth + 10,
       rowGap: "10px",
       transition: theme.transitions.create('padding-left', {
         easing: theme.transitions.easing.sharp,
@@ -97,7 +97,7 @@ export const mainAppStyle = (theme,{openDrawerWidth,closeDrawerWidth,toolbarHeig
       flexWrap: "wrap",
     },
     settingItem: {
-      width: "fit-content"
+      width: "fitContent"
     }
   });
   

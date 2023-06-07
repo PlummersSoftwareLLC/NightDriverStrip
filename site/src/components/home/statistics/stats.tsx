@@ -6,13 +6,16 @@ import { ISiteConfig } from "../../../models/config/site/siteconfig";
 import { StaticStatsPanel } from "./static/static";
 import { AreaStat } from "./areachart/areachart";
 import { BarStat } from "./barchart/barchart";
+import { withStyles } from 'tss-react/mui';
+import { statsStyle } from "./style";
 
 interface IStatsPanelProps { 
     open: boolean;
-    smallScreen:boolean 
+    smallScreen:boolean;
+    classes?: any;
 }
 
-export function StatsPanel({ open, smallScreen }:IStatsPanelProps) {
+export const StatsPanel = withStyles(({ open, smallScreen, classes }:IStatsPanelProps) => {
     const [siteConfig, setSiteConfig] = useState({} as ISiteConfig);
     const [service] = useState(eventManager());
 
@@ -133,19 +136,19 @@ export function StatsPanel({ open, smallScreen }:IStatsPanelProps) {
     }
 
     return statistics && siteConfig && 
-    <Card variant="outlined">
-        <CardContent>
+    <Card variant="outlined" className={`${!open && classes.hidden}`}>
+        <CardContent className={Object.values(openedCategories).some(category => category)?classes.contentDetails:(smallScreen?classes.contentSummarySmall:classes.contentSummaryBig)}>
             {Object.entries(statistics).map(category =>
                 <Accordion key={category[0]}
                            expanded={openedCategories[category[0]]} 
                            onChange={()=>setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}>
                     <AccordionSummary
                         expandIcon={<Icon>expand_more</Icon>}>
-                        <Box>
+                        <Box className={classes.headerStats}>
                             <Typography sx={{ width: '50%', flexShrink: 0 }}>
                                 {category[0]}
                             </Typography>
-                            {!openedCategories[category[0]] && <Box>
+                            {!openedCategories[category[0]] && <Box className={classes.smallgraphs}>
                                 {Object.entries(category[1]).filter(entry=>entry && (entry[1] as IStatSpec).idleField).map(entry => <BarStat
                                             key={`Bar-${entry[0]}`}
                                             name={entry[0]}
@@ -159,18 +162,20 @@ export function StatsPanel({ open, smallScreen }:IStatsPanelProps) {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Box>
+                    <Box className={classes.detailStats}>
                             {Object.entries(category[1]).map((entry)=> (entry[1] as ICHIP|ICODE).static ?
-                                <Box key={`entry-${entry[0]}`}>
-                                    <StaticStatsPanel
+                                <Box key={`entry-${entry[0]}`}
+                                     className={!openedCategories[category[0]] && classes.summaryStats }>
+                                <StaticStatsPanel
                                         key={`static-${entry[0]}`}
                                         detail={openedCategories[category[0]]}
                                         name={entry[0]}
                                         stat={entry[1] as IStatSpec}/>
                             </Box>:
                             <Box key={`chart-${entry[0]}`}
-                                sx={{cursor:"pointer"}}>
-                                    {category[1][entry[0]].idleField && 
+                                 sx={{cursor:"pointer"}}
+                                 className={`${classes.chartArea} ${!openedCategories[category[0]] && classes.summaryStats}`}>
+                                {category[1][entry[0]].idleField && 
                                     <BarStat
                                         key={`Bar-${entry[0]}`}
                                         name={entry[0]}
@@ -197,5 +202,5 @@ export function StatsPanel({ open, smallScreen }:IStatsPanelProps) {
                 </Accordion>)}
         </CardContent>
     </Card>
-}
+},statsStyle);
 

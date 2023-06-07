@@ -5,15 +5,19 @@ import { eventManager } from "../../../services/eventManager/eventmanager";
 import { Effect } from "./effect/effect";
 import { IEffect, IEffects } from '../../../models/config/nightdriver/effects';
 import { INightDriverConfiguration } from "../../../models/config/nightdriver/nightdriver";
+import { withStyles } from 'tss-react/mui';
+import { designerStyle } from "./style";
 
 interface IDesignerPanelProps {
     open: boolean;
     displayMode: string;
+    classes?: any;
 }
 
-export function DesignerPanel(props:IDesignerPanelProps) {
+export const DesignerPanel = withStyles((props:IDesignerPanelProps) => {
     const [chipConfig, setChipConfig] = useState(undefined as unknown as INightDriverConfiguration);
     const [service] = useState(eventManager());
+    const { classes } = props;
 
     const [ effects, setEffects ] = useState(undefined as unknown as IEffects);
     const [ nextRefreshDate, setNextRefreshDate] = useState(0);
@@ -67,7 +71,7 @@ export function DesignerPanel(props:IDesignerPanelProps) {
     },[props.open,nextRefreshDate]);
 
     const displayHeader = ()=>{
-        return <Box>
+        return <Box className={classes.effectsHeaderValue}>
             <Typography variant="caption" color="textPrimary">Interval</Typography>:
             <Button color="primary" onClick={() => setEditing(true)}>{effects.effectInterval}</Button>
         </Box>;
@@ -80,7 +84,7 @@ export function DesignerPanel(props:IDesignerPanelProps) {
                     setEffects((prev=>{return {...prev,effectInterval}}));
                     setNextRefreshDate(Date.now());
                     }}>
-                    <Box>
+                    <Box className={classes.effectsHeaderValue}>
                         <TextField label="Interval ms"
                             variant="outlined"
                             type="number"
@@ -95,7 +99,7 @@ export function DesignerPanel(props:IDesignerPanelProps) {
     }
 
     return effects?.Effects ? 
-    <Card variant="outlined">
+    <Card variant="outlined" className={`${!open ? classes.hidden : displayMode === "detailed" ? classes.shownAll : classes.shownSome}`}>
         <CardHeader 
                 action={<IconButton aria-label="Next" onClick={()=>setDisplayMode(displayMode === "detailed" ? "summary":"detailed")}>
                         <Icon>{displayMode === "detailed" ? "expand_less":"expand_more"}</Icon></IconButton>}
@@ -106,11 +110,11 @@ export function DesignerPanel(props:IDesignerPanelProps) {
                             {displayMode==="detailed"?<IconButton aria-label="Refresh Effects" onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>:null}
                        </Box>} 
                 subheader={editing?editingHeader():displayHeader()} />
-        <CardContent>
+        <CardContent sx={{padding:0}}>
             {effectSection()}
             {footer()}
         </CardContent>
-        <LinearProgress variant="determinate" aria-label={`${Math.floor(progress)}%`} value={progress} />
+        <LinearProgress className={classes.progress} variant="determinate" aria-label={`${Math.floor(progress)}%`} value={progress} />
         <CardActions disableSpacing>
             <IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>
             <IconButton aria-label="Next" onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>
@@ -137,7 +141,7 @@ export function DesignerPanel(props:IDesignerPanelProps) {
     }
 
     function list() {
-        return <List>
+        return <List className={displayMode === "summary" ? classes.summaryEffects : classes.effects}>
                 {effects.Effects.map((effect, idx) => <Box key={`effect-${idx}`} onMouseEnter={() => { setHoverEffect(effect); } }
                 onMouseLeave={() => { setHoverEffect(undefined as unknown as IEffect); } }>
                 <Effect
@@ -166,4 +170,4 @@ export function DesignerPanel(props:IDesignerPanelProps) {
                 effects={effects} />
         </Box>);
     }
-}
+}, designerStyle);

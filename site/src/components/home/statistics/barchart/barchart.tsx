@@ -1,5 +1,7 @@
 import { useTheme, Box, Typography } from "@mui/material";
 import { BarChart, XAxis, YAxis, Bar } from "recharts";
+import { withStyles } from 'tss-react/mui';
+import { barChartStyle } from './style';
 
 interface IBarStatProp { 
     name: string;
@@ -9,9 +11,10 @@ interface IBarStatProp {
     idleField:string;
     category: string;
     detail: boolean; 
+    classes?: any;
 }
 
-export function BarStat({ name, rawvalue, ignored, statsAnimateChange , idleField, category, detail }:IBarStatProp) {
+export const BarStat = withStyles(({ name, rawvalue, ignored, statsAnimateChange , idleField, category, detail, classes }:IBarStatProp) => {
     const theme = useTheme();
 
     const getFillColor = ({step, isIdle}) => {
@@ -27,7 +30,7 @@ export function BarStat({ name, rawvalue, ignored, statsAnimateChange , idleFiel
                 1 : a !== idleField && b === idleField ? -1 : a.localeCompare(b);
 
     return (
-    <Box>
+    <Box className={classes.summary}>
         <BarChart
             height={detail ? 300 : 70}
             width={detail ? 150 : 75}
@@ -55,5 +58,5 @@ export function BarStat({ name, rawvalue, ignored, statsAnimateChange , idleFiel
                                              .filter(entry => !ignored.includes(entry[0]))
                                              .reduce((ret,stat)=>ret+(stat[1] as number),0.0)*100).toFixed(0)}%</Typography>:null}
     </Box>)
-};
+}, barChartStyle);
     

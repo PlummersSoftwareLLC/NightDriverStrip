@@ -102,7 +102,7 @@ export const Effect = withStyles(({ effectInterval, millisecondsRemaining, selec
     function detailedList() {
         return <ListItem className={`${classes.effectline} ${effect.enabled ? null : classes.disabled}`}>
             <Paper className={classes.effectline}>
-                <Box className={selected ? classes.activelightbar : classes.lightbar}></Box>
+                <Box className={`${selected ? classes.activelightbar : classes.lightbar}`}></Box>
                 {getEffectOptionDialog()}
                 {selected?<Box className={classes.line}>
                     <Box className={classes.effectName}>

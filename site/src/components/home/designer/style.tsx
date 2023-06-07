@@ -1,7 +1,7 @@
-const designStyle = theme => ({
+export const designerStyle = theme => ({
     root: {
-        "display": "flex",
-        "flex-direction": "column",
+        display: "flex",
+        flexDirection: "column",
     },
     summaryRoot: {
         display: "flex",

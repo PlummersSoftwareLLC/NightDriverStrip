@@ -60,7 +60,7 @@ export const AppPannel = withStyles(({classes}) => {
                 <Toolbar>
                     <IconButton 
                         aria-label="Open drawer" 
-                        className={drawerOpened && classes.drawerClosed}
+                        className={drawerOpened ? classes.drawerClosed : null}
                         onClick={()=>setDrawerOpened(!drawerOpened)} 
                         sx={{
                             ...(drawerOpened && {
@@ -110,7 +110,7 @@ export const AppPannel = withStyles(({classes}) => {
                      {caption: "Configuration", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item =>
                     <ListItem key={item.icon}>
                         <ListItemIcon><IconButton aria-label={item.caption} onClick={() => item.setter(prevValue => !prevValue)}>
-                            <Icon color="action">{item.icon}</Icon>
+                            <Icon color="action" className={item.flag ? classes.optionSelected : classes.optionUnselected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                     </ListItem>),
                     drawerOpened && <ListItem key="setting">
@@ -131,7 +131,7 @@ export const AppPannel = withStyles(({classes}) => {
                 display: "flex",
                 flexDirection: "column",
                 flexWrap: "wrap",
-                rowGap: "10px",
+                rowGap: "0px",
                 ...(drawerOpened && {
                     paddingLeft: drawerWidth + 10,
                     transition: theme.transitions.create('padding-left', {

@@ -1,14 +1,16 @@
+import { keyframes } from "tss-react";
+
 export const effectStyle = theme => ({
     root: {
-        "display": "flex",
-        "flex-direction": "column",
+        display: "flex",
+        flexDirection: "column",
         padding: "10px",
     },
     hidden: {
         display: "none"
     },
     effect: {
-        height: "fit-content",
+        height: "fitContent",
         display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
@@ -19,7 +21,7 @@ export const effectStyle = theme => ({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-around",
+        justifyContent: "spaceAround",
     },
     effectName: {
         marginLeft: "10px",
@@ -38,7 +40,7 @@ export const effectStyle = theme => ({
     circularProgressText: {
         position: "relative",
         left: "-29px",
-        top:"-15px"    
+        top: "-15px"
     },
     disabled: {
         opacity: "50%"
@@ -59,7 +61,7 @@ export const effectStyle = theme => ({
         height: "10px",
         width: "10px",
         borderRadius: "50%",
-        display: "inline-block",
+        display: "inlineBlock",
         borderStyle: "groove",
         cursor: "pointer",
     },
@@ -75,11 +77,30 @@ export const effectStyle = theme => ({
         opacity: 0.1,
     },
     activelightbar: {
-        "-webkit-box-reflect": "below 0px linear-gradient(transparent, white)",
+        WebkitBoxReflect: "below 0px linear-gradient(transparent, white)",
         background: "linear-gradient(9deg, green, blue, red, violet, aquamarine)",
-        width: "100%",
+        width: "200%",
         height: "5px",
-        borderRadius: "5px"
+        borderRadius: "5px",
+        position: "absolute",
+        left: "-50%",
+        animation: `${keyframes`
+        0% {
+            margin-left: -50%;
+        }
+        25% {
+            margin-left: 0;
+        }
+        50% {
+            margin-left: 50%;
+        }
+        75% {
+            margin-left: 0%;
+        }
+        100% {
+            margin-left: -50%;
+        }
+        `} 1.5s infinite ease-in-out`,
     },
     effectline: {
         display: "flex",
@@ -92,7 +113,6 @@ export const effectStyle = theme => ({
         flexDirection: "row",
         margin: "10px",
         justifyContent: "space-between",
-        padding: "5px",
         alignItems: "center"
     },
     effectDetail: {

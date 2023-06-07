@@ -1,17 +1,17 @@
 export const configStyle = theme => ({
     configBar: {
-        "padding-top": "65px"
+        paddingTop: "65px"
     },
     configDisplay: {
-        "display": "flex",
-        "column-gap": "10px",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "justify-content": "flex-start",
-        "align-items": "flex-start",
+        display: "flex",
+        columnGap: "10px",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        justifyContent: "flexStart",
+        alignItems: "flexStart",
     },
     cblabel: {
-        "margin-left": "initial"
+        marginLeft: "initial"
     },
     hidden: {
         display: "none"
@@ -27,8 +27,8 @@ export const configStyle = theme => ({
         display: "flex",
         flexWrap: "nowrap",
         flexDirection: "column",
-        justifyContent: "flex-start",
-        alignItems: "flex-start",
+        justifyContent: "flexStart",
+        alignItems: "flexStart",
         padding: "5px;",
     }
 });

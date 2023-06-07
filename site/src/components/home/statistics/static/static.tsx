@@ -1,15 +1,17 @@
 import { Box, Typography, List, ListItem } from "@mui/material";
 import { IStatSpec } from "../../../../models/stats/espstate";
+import { withStyles } from "tss-react/mui";
+import { staticStatStyle } from "./style"
 
 interface IStatsPanelProps {
     stat: IStatSpec;
     name: string;
     detail: boolean;
+    classes?: any;
 }
 
-export function StaticStatsPanel({stat, name, detail }:IStatsPanelProps) {
-
-    return <Box>
+export const StaticStatsPanel = withStyles( ({stat, name, detail, classes }:IStatsPanelProps) => 
+    <Box className={classes.root}>
         <Typography >{name}</Typography>
         {detail ? <List>
             {Object.entries(stat.stat)
@@ -24,5 +26,4 @@ export function StaticStatsPanel({stat, name, detail }:IStatsPanelProps) {
                .filter(entry => stat.headerFields.includes(entry[0]))
                .map(entry=><ListItem key={entry[0]}><Typography variant="caption" color="textSecondary" >{entry[1]}</Typography></ListItem>)}
         </List>}
-    </Box>
-};
+    </Box>,staticStatStyle);
