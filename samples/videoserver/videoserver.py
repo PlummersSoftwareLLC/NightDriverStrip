@@ -28,8 +28,8 @@ future_delay  = 5
 
 # YouTube video URL
 # url = "https://youtu.be/7eMpKGIQ6RM"
-# url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-url = "https://www.youtube.com/watch?v=iF7lo0vU_WI"
+url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+# url = "https://www.youtube.com/watch?v=iF7lo0vU_WI"
 # url = "https://www.youtube.com/watch?v=_gzWsIJQTKY"
 
 print("Downloading Video Data...")
@@ -46,7 +46,7 @@ if not cap.isOpened():
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.250'      
+client = '192.168.8.227'      
 sock = None
 
 # Get a timestamp slightly into the future for buffering

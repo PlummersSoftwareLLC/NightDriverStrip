@@ -88,7 +88,7 @@ class Screen
     // 
     // Display a single string of text on the TFT screen, useful during boot for status, etc.
 
-    static void IRAM_ATTR ScreenStatus(const String & strStatus)
+    static inline void ScreenStatus(const String & strStatus)
     {
     #if USE_OLED 
         g_pDisplay->clear();
@@ -99,7 +99,7 @@ class Screen
         g_pDisplay->sendBuffer();
     #elif USE_TFTSPI || USE_M5DISPLAY
         g_pDisplay->fillScreen(TFT_BLACK);
-        g_pDisplay->setFreeFont(FF15);
+        g_pDisplay->setFreeFont(FF1);
         g_pDisplay->setTextColor(0xFBE0);
         auto xh = 10;
         auto yh = 0; 

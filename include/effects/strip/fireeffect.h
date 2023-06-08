@@ -568,7 +568,7 @@ public:
         //    return;
         //lastDraw = g_AppTime.FrameStartTime();
 
-        float deltaTime = (float)g_AppTime.DeltaTime();
+        float deltaTime = (float)g_AppTime.LastFrameTime();
         setAllOnAllChannels(0, 0, 0);
 
         float cooldown = randomfloat(0, _Cooling) * deltaTime;

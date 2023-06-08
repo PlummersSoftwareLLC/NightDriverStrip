@@ -92,7 +92,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         ProcessAudio();
         ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
 
-        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.DeltaTime()));
+        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.LastFrameTime()));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)
@@ -282,33 +282,34 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             for (int x = xOffset; x < xOffset + barWidth; x++)
                 g()->setPixel(x, y, baseColor);
 
-        const int PeakFadeTime_ms = 1000;
-
-        CRGB colorHighlight = CRGB(CRGB::White);
-        unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
-        if (msPeakAge > PeakFadeTime_ms)
-            msPeakAge = PeakFadeTime_ms;
-
-        float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
-        uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
-
         // We draw the highlight in white, but if its falling at a different rate than the bar itself,
         // it indicates a free-floating highlight, and those get faded out based on age
-
-        colorHighlight = CRGB(CRGB::White);
-        if (g_Analyzer.g_peak1Decay != g_Analyzer.g_peak2Decay)
-            colorHighlight = colorHighlight.fadeToBlackBy(fadeAmount);
-
         // We draw the bottom row in bar color even when only 1 pixel high so as not to have a white
         // strip as the bottom row (all made up of highlights)
 
-        if (value == 0)
-            colorHighlight = baseColor;
+        CRGB colorHighlight = value > 1 ? CRGB::White : baseColor;
 
-        // if decay rate is less than zero we interpret that here to mean "don't draw it at all".
-
+        // If a decay rate has been defined and it's different than the rate at which the bar falls
         if (_peak1DecayRate >= 0.0f)
-            pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
+        {
+            if (_peak1DecayRate != _peak2DecayRate)
+            {
+                const int PeakFadeTime_ms = 1000;
+
+                unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
+                if (msPeakAge > PeakFadeTime_ms)
+                    msPeakAge = PeakFadeTime_ms;
+
+                float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
+                uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
+                colorHighlight.fadeToBlackBy(fadeAmount);
+                pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
+            }
+            else
+            {
+                pGFXChannel->drawLine(xOffset, max(0, yOffset2-1), xOffset + barWidth - 1, max(0, yOffset2-1), colorHighlight);
+            }
+        }
     }
 
   public:
@@ -404,15 +405,20 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         for (int i = 0; i < _numBars; i++)
         {
             // We don't use the auto-cycling palette, but we'll use the paused palette if the user has asked for one
+            // BUGBUG (davepl) - why is one 240 and one 255?  Perhaps for palette wraparound but shouldnt both be the same?
+            //
+            // If the palette is scrolling, we do a smooth blend.  Otherwise we do a straight color lookup, which makes the stripes
+            // on the USA flag solid red rather than pinkish...
+            
             if (pGFXChannel->IsPalettePaused())
             {
                 int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
-                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 240, 255, LINEARBLEND));
+                DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 240, 255, _scrollSpeed > 0 ? LINEARBLEND : NOBLEND));
             }
             else
             {
                 int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, LINEARBLEND));
+                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, _scrollSpeed > 0 ? LINEARBLEND : NOBLEND));
             }
         }
     }

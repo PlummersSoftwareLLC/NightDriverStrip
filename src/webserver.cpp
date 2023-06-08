@@ -31,6 +31,9 @@
 #include "globals.h"
 #include "webserver.h"
 
+// Static member initializers
+
+
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {

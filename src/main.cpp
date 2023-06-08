@@ -429,7 +429,14 @@ void setup()
     // Re-route debug output to the serial port
     Debug.setSerialEnabled(true);
 
-    heap_caps_malloc_extmem_enable(128);
+    // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
+    // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default 
+    // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
+
+    #if MESMERIZER
+        heap_caps_malloc_extmem_enable(1024);
+    #endif
+
     uzlib_init();
 
     if (!SPIFFS.begin(true))
@@ -601,21 +608,30 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #ifdef USESTRIP
+    Screen::ScreenStatus("Initializing GFXBASE devices");
+
+    #if USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
-            g_aptrDevices[i] = std::make_unique<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        {
+            debugW("Allocating LEDStripGFX for channel %d", i);
+            g_aptrDevices[i] = std::make_shared<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        }
     #endif
 
     #if USE_MATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_aptrDevices[i] = std::make_unique<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i] = std::make_shared<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             g_aptrDevices[i]->loadPalette(0);
         }
     #endif
 
+    Screen::ScreenStatus("Setting JPG callback");
+
     TJpgDec.setJpgScale(1);
     TJpgDec.setCallback(bitmap_output);
+
+    Screen::ScreenStatus("Allocating LED Buffers");
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -659,8 +675,9 @@ void setup()
         ledcSetup(3, 12000, 8);
     #endif
 
-    #if USESTRIP
+    Screen::ScreenStatus("Initializing LED strips");
 
+    #if USESTRIP
 
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
@@ -713,7 +730,7 @@ void setup()
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
         #endif
 
-            g_Brightness = 255;
+        g_Brightness = 255;
 
         #if ATOMLIGHT
             pinMode(4, INPUT);
@@ -724,6 +741,8 @@ void setup()
         #endif
     #endif
 
+    Screen::ScreenStatus("Initializing Effects Manager");
+
     // Show splash effect on matrix
     #if USE_MATRIX
         debugI("Initializing splash effect manager...");
@@ -733,6 +752,8 @@ void setup()
         InitEffectsManager();
     #endif
 
+    Screen::ScreenStatus("Initializing Audio");
+
     // Microphone stuff
     #if ENABLE_AUDIO
         pinMode(INPUT_PIN, INPUT);
@@ -740,6 +761,8 @@ void setup()
         g_TaskManager.StartAudioThread();
         CheckHeap();
     #endif
+
+    Screen::ScreenStatus("Initializing Screen Thread");
 
     #if USE_SCREEN
         g_TaskManager.StartScreenThread();
@@ -750,7 +773,7 @@ void setup()
     debugV("Initializing compression...");
     CheckHeap();
 
-    #if ENABLE_WIFI
+    #if ENABLE_WIFI 
         g_TaskManager.StartNetworkThread();
         CheckHeap();
     #endif
@@ -762,6 +785,8 @@ void setup()
     #endif
 
     #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+        // Start the color data server and other network services
+        g_TaskManager.StartColorDataThread();
         g_TaskManager.StartSocketThread();
     #endif
 
@@ -809,7 +834,10 @@ void loop()
     while(true)
     {
         #if ENABLE_WIFI
-            g_ImprovSerial.loop();
+            EVERY_N_MILLIS(10)
+            {
+                g_ImprovSerial.loop();
+            }
         #endif
 
         #if ENABLE_OTA
@@ -863,6 +891,6 @@ void loop()
             Serial.println(strOutput);
         }
 
-        delay(1);
+        delay(10);
     }
 }

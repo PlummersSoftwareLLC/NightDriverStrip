@@ -337,21 +337,4 @@ class Boid
 
       return bounced;
     }
-
-    void render() {
-      //// Draw a triangle rotated in the direction of velocity
-      //float theta = velocity.heading2D() + radians(90);
-      //fill(175);
-      //stroke(0);
-      //pushMatrix();
-      //translate(location.x,location.y);
-      //rotate(theta);
-      //beginShape(TRIANGLES);
-      //vertex(0, -r*2);
-      //vertex(-r, r*2);
-      //vertex(r, r*2);
-      //endShape();
-      //popMatrix();
-      //matrix.drawBackgroundPixelRGB888(location.x, location.y, CRGB::Blue);
-    }
 };
