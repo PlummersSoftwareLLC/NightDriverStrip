@@ -139,7 +139,7 @@ class PatternPongClock : public LEDStripEffect
         g->Clear();
 
         // draw pitch centre line
-        for (uint8_t i = 0; i < MATRIX_WIDTH / 2; i += 2)
+        for (uint16_t i = 0; i < MATRIX_WIDTH / 2; i += 2)
             g->setPixel(MATRIX_WIDTH / 2, i, 0x6666);
 
         // draw hh:mm seperator colon that blinks once per second

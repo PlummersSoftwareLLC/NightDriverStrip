@@ -89,7 +89,7 @@ class PatternSpark : public LEDStripEffect
       random16_add_entropy( random16());
 
       g()->DimAll(235);
-      for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
+      for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
       {
         // Step 1.  Cool down every cell a little
         for (int y = 0; y < MATRIX_HEIGHT; y++) {

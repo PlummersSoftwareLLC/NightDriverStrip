@@ -212,21 +212,27 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             return false;
         }
 
+        debugV("Wifi.disconnect");
+        WiFi.disconnect();
+        debugV("Wifi.mode");
+        WiFi.mode(WIFI_STA);
+        debugV("Wifi.begin");
+
         for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            Serial.printf("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+            debugW("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                    iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
-            WiFi.disconnect();
-            WiFi.mode(WIFI_STA);
             WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
+
+            debugV("Done Wifi.begin, waiting for connection...");
 
             // Give the module a few seconds to connect
             delay(4000 + iPass * 1000);
 
             if (WiFi.isConnected())
             {
-                Serial.printf("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
+                debugW("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
                 break;
             }
         }
@@ -536,15 +542,18 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
                 pPacket->header = COLOR_DATA_PACKET_HEADER;
                 pPacket->width  = g_ptrEffectManager->g()->width();
                 pPacket->height = g_ptrEffectManager->g()->height();
-                memcpy(pPacket->colors, (*g_ptrEffectManager)[0]->leds, sizeof(CRGB) * NUM_LEDS);
-
-                if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
+                if ((*g_ptrEffectManager)[0]->leds != nullptr)
                 {
-                    // If anything goes wrong, we close the socket so it can accept new incoming attempts
-                    debugW("Error on color data socket, so closing");
-                    close(socket);
-                    socket = -1;
-                    break;
+                    memcpy(pPacket->colors, (*g_ptrEffectManager)[0]->leds, sizeof(CRGB) * NUM_LEDS);
+
+                    if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
+                    {
+                        // If anything goes wrong, we close the socket so it can accept new incoming attempts
+                        debugW("Error on color data socket, so closing");
+                        close(socket);
+                        socket = -1;
+                        break;
+                    }
                 }
             }
             delay(10);
