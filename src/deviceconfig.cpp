@@ -101,7 +101,7 @@ DeviceConfig::DeviceConfig()
         "Remember current effect",
         "A boolean that indicates if the current effect index should be saved after an effect transition, so the device resumes "
         "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
-        SettingSpec::SettingType::String
+        SettingSpec::SettingType::Boolean
     );
 
     writerIndex = g_ptrJSONWriter->RegisterWriter(

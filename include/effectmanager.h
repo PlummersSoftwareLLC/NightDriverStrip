@@ -81,6 +81,7 @@ class EffectManager : public IJSONSerializable
     bool _bShowVU = true;
     CRGB lastManualColor = CRGB::Red;
     bool _clearTempEffectWhenExpired = false;
+    bool _newFrameAvailable = false;
 
     std::shared_ptr<GFXTYPE> * _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
@@ -201,6 +202,16 @@ public:
         ClearEffects();
     }
 
+    bool IsNewFrameAvailable() const
+    {
+        return _newFrameAvailable;
+    }
+
+    void SetNewFrameAvailable(bool available)
+    {
+        _newFrameAvailable = available;
+    }
+    
     void LoadDefaultEffects()
     {
         for (auto &numberedFactory : g_EffectFactories.GetDefaultFactories())
