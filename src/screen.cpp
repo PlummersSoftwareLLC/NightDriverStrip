@@ -44,15 +44,13 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C *g_pDisplay = new U8G2_SSD1306_128X64_NONAME
 Adafruit_ILI9341 *g_pDisplay;
 #endif
 
-#if USE_M5DISPLAY
-M5Display *g_pDisplay;
-#endif
 
 #if USE_TFTSPI
 #include <TFT_eSPI.h>
 #include <SPI.h>
-std::unique_ptr<Screen> g_pDisplay;
 #endif
+
+std::unique_ptr<Screen> g_pDisplay;
 
 //
 // Externals - Mostly things that the screen will report or display for us
@@ -303,11 +301,15 @@ void CurrentEffectSummary(bool bRedraw)
             lastFPS = g_FPS;
             lastSerial = g_Analyzer._serialFPS;
             lastAudio = g_Analyzer._AudioFPS;
-            Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), 1, BLUE16);
-            yh = Screen::screenHeight() - Screen::fontHeight() - 3;
-            Screen::setTextColor(YELLOW16, backColor);
-            Screen::drawString(str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS), yh);
-            yh += Screen::fontHeight();
+            g_pDisplay->fillRect(0, g_pDisplay->height() - g_pDisplay->BottomMargin, g_pDisplay->width(), 1, BLUE16);
+            yh = g_pDisplay->height() - g_pDisplay->fontHeight() + 6;
+            g_pDisplay->setTextColor(YELLOW16, backColor);
+            g_pDisplay->setTextSize(1);
+            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
+            auto w = g_pDisplay->textWidth(strOut);
+            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
+            g_pDisplay->print(strOut);
+            yh += g_pDisplay->fontHeight();
         }
 #endif
     }
@@ -319,41 +321,41 @@ void CurrentEffectSummary(bool bRedraw)
 
     static unsigned long lastDraw = millis();
 
-    int xHalf = Screen::screenWidth() / 2 - 1;   // xHalf is half the screen width
-    float ySizeVU = Screen::screenHeight() / 16; // vu is 1/20th the screen height, height of each block
+    int xHalf = g_pDisplay->width() / 2 - 1;   // xHalf is half the screen width
+    float ySizeVU = g_pDisplay->height() / 16; // vu is 1/20th the screen height, height of each block
     int cPixels = 16;
     float xSize = xHalf / cPixels + 1;                          // xSize is count of pixels in each block
     int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
 
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
     {
-        uint16_t color16 = iPixel > litBlocks ? BLACK16 : Screen::to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
-        Screen::fillRect(xHalf - iPixel * xSize, Screen::TopMargin, xSize - 1, ySizeVU, color16);
-        Screen::fillRect(xHalf + iPixel * xSize, Screen::TopMargin, xSize - 1, ySizeVU, color16);
+        uint16_t color16 = iPixel > litBlocks ? BLACK16 : g_pDisplay->to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
+        g_pDisplay->fillRect(xHalf - iPixel * xSize, g_pDisplay->TopMargin, xSize - 1, ySizeVU, color16);
+        g_pDisplay->fillRect(xHalf + iPixel * xSize, g_pDisplay->TopMargin, xSize - 1, ySizeVU, color16);
     }
 
     // Draw the spectrum analyzer bars
 
-    int spectrumTop = Screen::TopMargin + ySizeVU + 1; // Start at the bottom of the VU meter
-    int bandHeight = Screen::screenHeight() - spectrumTop - Screen::BottomMargin;
+    int spectrumTop = g_pDisplay->TopMargin + ySizeVU + 1; // Start at the bottom of the VU meter
+    int bandHeight = g_pDisplay->height() - spectrumTop - g_pDisplay->BottomMargin;
 
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
     {
         CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
-        int bandWidth = Screen::screenWidth() / NUM_BANDS;
-        auto color16 = Screen::to16bit(bandColor);
+        int bandWidth = g_pDisplay->width() / NUM_BANDS;
+        auto color16 = g_pDisplay->to16bit(bandColor);
         auto topSection = bandHeight - bandHeight * g_Analyzer.g_peak2Decay[iBand];
         if (topSection > 0)
-            Screen::fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
+            g_pDisplay->fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
         auto val = min(1.0f, g_Analyzer.g_peak2Decay[iBand]);
         assert(bandHeight * val <= bandHeight);
-        Screen::fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
+        g_pDisplay->fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }
 
     // Draw horizontal lines so the bars look like they are made of segments
 
-    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += Screen::screenHeight() / 25)
-        Screen::drawLine(0, iLine, Screen::screenWidth(), iLine, BLACK16);
+//    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += g_pDisplay->height() / 25)
+//        g_pDisplay->drawLine(0, iLine, g_pDisplay->width()-1, iLine, BLACK16);
 #endif
 }
 
@@ -371,7 +373,7 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
     // We don't want to be in the middle of drawing and have someone one another thread set the dirty
     // flag on us, so access to the flag is guarded by a mutex
 
-    std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+    std::lock_guard<std::mutex> guard(g_pDisplay->_screenMutex);
 
 #if USE_OLED
     g_pDisplay->clearBuffer();
@@ -433,7 +435,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         Button1.update();
         if (Button1.pressed())
         {
-            std::lock_guard<std::mutex> guard(Screen::_screenMutex);
+            std::lock_guard<std::mutex> guard(g_pDisplay->_screenMutex);
 
             // When the button is pressed advance to the next information page on the little display
 

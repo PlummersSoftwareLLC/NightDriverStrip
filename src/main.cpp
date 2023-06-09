@@ -429,6 +429,9 @@ void setup()
     // Re-route debug output to the serial port
     Debug.setSerialEnabled(true);
 
+    if (!SPIFFS.begin(true))
+        Serial.println("WARNING: SPIFFs could not be intialized!");
+
     // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
     // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default 
     // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
@@ -437,16 +440,8 @@ void setup()
         heap_caps_malloc_extmem_enable(1024);
     #endif
 
-    #if USE_TFTSPI
-        // Height and width get reversed here because the display is actually portrait, not landscape.  Once
-        // we set the rotation, it works as expected in landscape.
-        g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);      
-    #endif
-
     uzlib_init();
 
-    if (!SPIFFS.begin(true))
-        Serial.println("WARNING: SPIFFs could not be intialized!");
 
     // Star the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
@@ -545,22 +540,6 @@ void setup()
 #endif
 
 
-#if M5STICKC || M5STICKCPLUS || M5STACKCORE2
-    #if USE_M5DISPLAY
-        debugI("Intializizing TFT display\n");
-        extern M5Display * g_pDisplay;
-        M5.begin();
-        M5.Lcd.fillScreen(BLUE16);
-        g_pDisplay = &M5.Lcd;
-        g_pDisplay->setRotation(1);
-        g_pDisplay->setTextDatum(C_BASELINE);
-        g_pDisplay->printf("NightDriver: " FLASH_VERSION_NAME);
-    #else
-        debugI("Initializing M5 withOUT display");
-        M5.begin(false);
-    #endif
-#endif
-
 #if USE_LCD
     extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
@@ -596,6 +575,22 @@ void setup()
     debugI("Self Diagnostic: %x", x);
 
 #endif
+
+    #if USE_TFTSPI
+        // Height and width get reversed here because the display is actually portrait, not landscape.  Once
+        // we set the rotation, it works as expected in landscape.
+        g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);      
+
+    #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
+        
+        #if USE_M5DISPLAY
+            M5.begin();
+            g_pDisplay = std::make_unique<M5Screen>(TFT_HEIGHT, TFT_WIDTH);      
+        #else
+            M5.begin(false);
+        #endif
+    
+    #endif
 
     #if USE_MATRIX
         LEDMatrixGFX::StartMatrix();

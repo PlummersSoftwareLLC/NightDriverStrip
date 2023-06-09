@@ -48,15 +48,25 @@ extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C *g_pDisplay;
 extern Adafruit_ILI9341 *g_pDisplay;
 #endif
 
-#if USE_M5DISPLAY
-extern M5Display *g_pDisplay;
+/*
+#if USE_OLED
+        g_pDisplay->clear();
+        g_pDisplay->clearBuffer();                   // clear the internal memory
+        g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable font
+        g_pDisplay->setCursor(0, 10);
+        g_pDisplay->println(strStatus);
+        g_pDisplay->sendBuffer();
+#elif USE_TFTSPI || USE_M5DISPLAY
+#elif USE_LCD
+        g_pDisplay->fillScreen(BLUE16);
+        g_pDisplay->setFont(FM9);
+        g_pDisplay->setTextColor(WHITE16);
+        auto xh = 10;
+        auto yh = 0;
+        g_pDisplay->setCursor(xh, yh);
+        g_pDisplay->print(strStatus);
 #endif
-
-#include <fonts/FreeMono18pt7b.h>
-#include <fonts/FreeMono12pt7b.h>
-#include <fonts/FreeMono9pt7b.h>
-#include <fonts/FreeSans9pt7b.h>
-
+*/
 class Screen : public GFXBase
 {
 public:
@@ -71,6 +81,18 @@ public:
     const int TopMargin = 52;
     const int BottomMargin = 12;
 
+    virtual void ScreenStatus(const String &strStatus) 
+    {
+        fillScreen(BLACK16);
+        setFont();
+        setTextSize(1);
+        setTextColor(0xFBE0, BLACK16);
+        auto xh = 10;
+        auto yh = 0;
+        setCursor(xh, yh);
+        print(strStatus);
+    }
+
     // fontHeight
     //
     // Returns the height of the current font
@@ -80,7 +102,7 @@ public:
         int16_t x1, y1;
         uint16_t w, h;
         getTextBounds(String("W"), 0, 0, &x1, &y1, &w, &h);
-        return w;
+        return h;
     }
 
     // textHeight
@@ -106,87 +128,91 @@ public:
         getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
         return w;
     }
-
-    // ScreenStatus
-    //
-    // Display a single string of text on the TFT screen, useful during boot for status, etc.
-
-    virtual void ScreenStatus(const String &strStatus)
-    {
-#if USE_OLED
-        g_pDisplay->clear();
-        g_pDisplay->clearBuffer();                   // clear the internal memory
-        g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable font
-        g_pDisplay->setCursor(0, 10);
-        g_pDisplay->println(strStatus);
-        g_pDisplay->sendBuffer();
-#elif USE_TFTSPI || USE_M5DISPLAY
-#elif USE_LCD
-        g_pDisplay->fillScreen(BLUE16);
-        g_pDisplay->setFont(FM9);
-        g_pDisplay->setTextColor(WHITE16);
-        auto xh = 10;
-        auto yh = 0;
-        g_pDisplay->setCursor(xh, yh);
-        g_pDisplay->print(strStatus);
-#endif
-    }
 };
+
+// Class specializations of the Screen class for various display types can implement hardware-specific versions of functions
+// like fillRect.  They also do any required initial setup of the display.
+
+#if USE_M5DISPLAY
+    #include <M5Display.h>
+
+    // M5Screen
+    //
+    // Screen class that supports the M5 devices
+
+    class M5Screen : public Screen
+    {
+      private:
+
+        M5Display m5display;
+
+      public:
+
+        M5Screen(int w, int h) : Screen(w, h)
+        {
+            M5.Lcd.fillScreen(BLUE16);
+            M5.Lcd.setRotation(1);
+            M5.Lcd.setTextDatum(L_BASELINE);
+        }
+
+        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            M5.Lcd.drawPixel(x, y, color);
+        }
+
+        virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
+        {
+            M5.Lcd.fillRect(x, y, w, h, color);
+        }
+
+        virtual void fillScreen(uint16_t color) override
+        {
+            M5.Lcd.fillScreen(color);
+        }
+    };
+#endif
 
 #if USE_TFTSPI
-#include <TFT_eSPI.h>
-#include <SPI.h>
+    #include <TFT_eSPI.h>
+    #include <SPI.h>
+
+    // TFTScreen
+    //
+    // Screen class that works with the TFT_eSPI library for devices such as the S3-TFT-Feather
+    class TFTScreen : public Screen
+    {
+        TFT_eSPI tft;
+
+    public:
+
+        TFTScreen(int w, int h) : Screen(w, h)
+        {
+            tft.begin();
+            
+            pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
+            digitalWrite(TFT_BL, 128);
+
+            tft.setRotation(3);
+            tft.fillScreen(TFT_GREEN);    
+            tft.setTextDatum(L_BASELINE);   
+        }   
+
+        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            tft.drawPixel(x, y, color);
+        }
+
+        virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
+        {
+            tft.fillRect(x, y, w, h, color);
+        }
+
+        virtual void fillScreen(uint16_t color) override
+        {
+            tft.fillScreen(color);
+        }
+    };
 #endif
-
-class TFTScreen : public Screen
-{
-    TFT_eSPI tft;
-
-public:
-
-    TFTScreen(int w, int h) : Screen(w, h)
-    {
-        tft.begin();
-        
-        pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
-        digitalWrite(TFT_BL, 128);
-
-        tft.setRotation(3);
-        tft.fillScreen(TFT_GREEN);    
-        tft.setTextDatum(L_BASELINE);   
-    }   
-
-    virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
-    {
-        tft.drawPixel(x, y, color);
-    }
-
-    virtual void ScreenStatus(const String &strStatus) override
-    {
-        fillScreen(TFT_BLACK);
-        setFont(FM9);
-        setTextColor(0xFBE0, TFT_BLACK);
-        auto xh = 10;
-        auto yh = 0;
-        setCursor(xh, yh);
-        print(strStatus);
-    }
-
-    virtual inline int fontHeight() override
-    {
-        return tft.fontHeight() * 2;                        // REVIEW No idea why I have to double it, but it seems to work.  Need to find out.  Maybe text baseline?
-    }
-
-    virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
-    {
-        tft.fillRect(x, y, w, h, color);
-    }
-
-    virtual void fillScreen(uint16_t color) override
-    {
-        tft.fillScreen(color);
-    }
-};
 
 extern std::unique_ptr<Screen> g_pDisplay;
 
