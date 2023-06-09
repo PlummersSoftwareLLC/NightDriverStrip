@@ -124,7 +124,7 @@ class PatternRose : public LEDStripEffect
       g()->DimAll(dim);
 
 
-      for (uint8_t i = 0; i < 32; i++)
+      for (uint16_t i = 0; i < MATRIX_HEIGHT; i++)
       {
         CRGB color;
 
@@ -281,8 +281,8 @@ public:
     virtual void Draw() override
     {
 
-        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
-            for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint16_t x = 0; x < MATRIX_WIDTH; x++) {
+            for (uint16_t y = 0; y < MATRIX_HEIGHT; y++) {
                 g()->leds[g()->xy(x, y)] =
                   (x ^ y ^ flip) < count ?
                       g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)

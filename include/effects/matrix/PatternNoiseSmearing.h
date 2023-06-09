@@ -79,7 +79,7 @@ public:
     for (int x = 0; x < MATRIX_WIDTH; x++)
       g()->setPixel(x, 0, g()->getPixel(x, 1));
 
-    for (uint8_t i = 3; i < MATRIX_WIDTH - 3; i = i + 3)
+    for (uint16_t i = 3; i < MATRIX_WIDTH - 3; i = i + 3)
     {
       uint16_t color = g()->to16bit(g()->ColorFromCurrentPalette(i * 4));
       g()->drawCircle(i, 2, 1, color);
@@ -119,9 +119,9 @@ public:
       g()->setPixel(x, 0, g()->getPixel(x, 1));
 
     // draw grid of rainbow dots on top of the dimmed image
-    for (uint8_t y = 1; y < MATRIX_HEIGHT - 6; y = y + 6)
+    for (uint16_t y = 1; y < MATRIX_HEIGHT - 6; y = y + 6)
     {
-      for (uint8_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6)
+      for (uint16_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6)
       {
         g()->leds[g()->xy(x, y)] += g()->ColorFromCurrentPalette((x * y) / 2);
       }
@@ -155,13 +155,13 @@ public:
     g()->DimAll(10);
 
     // draw a rainbow color palette
-    for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
+    for (uint16_t y = 0; y < MATRIX_HEIGHT; y++)
     {
-      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++)
+      for (uint16_t x = 0; x < MATRIX_CENTER_X; x++)
       {
         g()->leds[g()->xy(x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
-      for (uint8_t x = 0; x < MATRIX_CENTER_X; x++)
+      for (uint16_t x = 0; x < MATRIX_CENTER_X; x++)
       {
         g()->leds[g()->xy(MATRIX_WIDTH - 1 - x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
@@ -215,7 +215,7 @@ public:
 
     for (uint8_t c = 0; c < 6; c++) {
       for (uint8_t j = 0; j < 5; j++) {
-        for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
+        for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
         {
           g()->leds[g()->xy(x, y)] += rainbow[c];
         }

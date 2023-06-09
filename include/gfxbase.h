@@ -71,21 +71,20 @@
 #include "effects/matrix/Vector.h"
 #include <memory>
 
-typedef struct 
+typedef struct
 {
     uint32_t noise_x;
     uint32_t noise_y;
     uint32_t noise_z;
     uint32_t noise_scale_x;
     uint32_t noise_scale_y;
-    uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT]; 
+    uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
     uint8_t  noisesmoothing;
 } Noise;
 
 class GFXBase : public Adafruit_GFX
 {
 protected:
-    
     size_t _width;
     size_t _height;
 
@@ -93,55 +92,64 @@ protected:
     static const uint8_t gamma6[];
 
     static const int _paletteCount = 10;
-    int              _paletteIndex = -1;
-    uint             _lastSecond = 99;
-    bool             _palettePaused = false;
+    int _paletteIndex = -1;
+    uint _lastSecond = 99;
+    bool _palettePaused = false;
 
-    TBlendType       _currentBlendType = LINEARBLEND;
-    CRGBPalette16    _currentPalette;
-    CRGBPalette16    _targetPalette;
-    String           _currentPaletteName;
-    
+    TBlendType _currentBlendType = LINEARBLEND;
+    CRGBPalette16 _currentPalette;
+    CRGBPalette16 _targetPalette;
+    String _currentPaletteName;
+
     std::unique_ptr<Noise> _ptrNoise;
 
     static const int _heatColorsPaletteIndex = 6;
     static const int _randomPaletteIndex = 9;
 
 public:
-
     // Many of the Aurora effects need direct access to these from external classes
 
-    CRGB * leds;
-    std::unique_ptr<Boid []> _boids;
+    CRGB *leds = nullptr;
+    std::unique_ptr<Boid[]> _boids;
 
     GFXBase(int w, int h) : Adafruit_GFX(w, h),
                             _width(w),
                             _height(h)
     {
-        _boids.reset( psram_allocator<Boid>().allocate(_width) );
-        _ptrNoise.reset( psram_allocator<Noise>().allocate(1) );
-        assert(_ptrNoise);
+        debugV("Allocating boids and noise");
+        _boids.reset(psram_allocator<Boid>().allocate(_width));
+        _ptrNoise.reset(psram_allocator<Noise>().allocate(1));
+        assert(_ptrNoise && _boids);
+
+        debugV("Setting up palette");
+        loadPalette(0);
+        debugV("Setting up noise");
+        NoiseVariablesSetup();
+        debugV("Filling noise");
+        FillGetNoise();
+        debugV("Done with GFXBase ctor");
+        ResetOscillators();
     }
 
     virtual ~GFXBase()
     {
     }
 
-    Noise & GetNoise()
+    Noise &GetNoise()
     {
         return *_ptrNoise;
     }
 
-    CRGBPalette16 & GetCurrentPalette()
+    CRGBPalette16 &GetCurrentPalette()
     {
         return _currentPalette;
     }
 
     virtual size_t GetLEDCount() const
     {
-        return NUM_LEDS;
+        return _width * _height;
     }
-    
+
     virtual CRGB getPixel(int16_t x, int16_t y) const
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
@@ -150,9 +158,9 @@ public:
             throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 
-    virtual CRGB getPixel(int16_t i) const 
+    virtual CRGB getPixel(int16_t i) const
     {
-        if (i >= 0 && i < _width * _height)
+        if (i >= 0 && i < GetLEDCount())
             return leds[i];
         else
             throw std::runtime_error("Pixel out of range in getPixel(x)");
@@ -168,7 +176,7 @@ public:
         return result;
     }
 
-    static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
+    static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
     {
         uint8_t beatsin = sin8(theta);
         uint8_t rangewidth = highest - lowest;
@@ -177,7 +185,7 @@ public:
         return result;
     }
 
-    static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) 
+    static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
     {
         uint8_t beatcos = cos8(theta);
         uint8_t rangewidth = highest - lowest;
@@ -217,24 +225,20 @@ public:
 
     // Matrices that are built from individually addressable strips like WS2812b generally
     // follow a boustrophodon layout as follows:
-    // 
+    //
     //     0 >  1 >  2 >  3 >  4
     //                         |
-    //     .----<----<----<----'
-    //     |
-    //     5 >  6 >  7 >  8 >  9
-    //                         |
-    //     .----<----<----<----'
+    //     9 <  8 <  7 <  6 <  5
     //     |
     //    10 > 11 > 12 > 13 > 14
     //                         |
-    //     .----<----<----<----'
+    //    19 < 18 < 17 < 16 < 15
     //     |
-    //    15 > 16 > 17 > 18 > 19
+    //    (etc)
     //
-    // If your matrix uses a different approach, you can override this function and implement it 
+    // If your matrix uses a different approach, you can override this function and implement it
     // in the xy() function of your class
-    
+
     virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         if (x & 0x01)
@@ -266,12 +270,12 @@ public:
         addColor(xy(x, y), from16Bit(color));
     }
 
-    virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs)
+    virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
     {
         // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
         // so we do it the "slow" way for other matrices
 
-        for (int x=0; x < _width; x++)
+        for (int x = 0; x < _width; x++)
             for (int y = 0; y < _height; y++)
                 setPixel(x, y, pLEDs[y * _width + x]);
     }
@@ -369,7 +373,7 @@ public:
         if (p >= 0 && p < GetLEDCount())
             for (int i = 0; i < NUM_CHANNELS; i++)
                 leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
-                
+
         p = fPos + (1.0 - frac1);
         count -= (1.0 - frac1);
 
@@ -391,16 +395,15 @@ public:
                     leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
-
-    void blurRows(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
+    void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
     {
         // blur rows same as columns, for irregular matrix
         uint8_t keep = 255 - blur_amount;
         uint8_t seep = blur_amount >> 1;
-        for (uint8_t row = 0; row < height; row++)
+        for (uint16_t row = 0; row < height; row++)
         {
             CRGB carryover = CRGB::Black;
-            for (uint8_t i = first; i < width; i++)
+            for (uint16_t i = first; i < width; i++)
             {
                 CRGB cur = leds[xy(i, row)];
                 CRGB part = cur;
@@ -416,15 +419,15 @@ public:
     }
 
     // blurColumns: perform a blur1d on each column of a rectangular matrix
-    void blurColumns(CRGB *leds, uint8_t width, uint8_t height, uint8_t first, fract8 blur_amount)
+    void blurColumns(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
     {
         // blur columns
         uint8_t keep = 255 - blur_amount;
         uint8_t seep = blur_amount >> 1;
-        for (uint8_t col = 0; col < width; ++col)
+        for (uint16_t col = 0; col < width; ++col)
         {
             CRGB carryover = CRGB::Black;
-            for (uint8_t i = first; i < height; ++i)
+            for (uint16_t i = first; i < height; ++i)
             {
                 CRGB cur = leds[xy(col, i)];
                 CRGB part = cur;
@@ -439,7 +442,7 @@ public:
         }
     }
 
-    void blur2d(CRGB *leds, uint8_t width, uint8_t firstColumn, uint8_t height, uint8_t firstRow, fract8 blur_amount)
+    void blur2d(CRGB *leds, uint16_t width, uint16_t firstColumn, uint16_t height, uint16_t firstRow, fract8 blur_amount)
     {
         blurRows(leds, width, height, firstColumn, blur_amount);
         blurColumns(leds, width, height, firstRow, blur_amount);
@@ -449,15 +452,6 @@ public:
     {
         // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
         blur2d(leds, _width, 0, _height, 1, amount);
-    }
-
-    virtual void Setup()
-    {
-        debugW(">> GFXBase::Setup\n");
-        loadPalette(0);
-        NoiseVariablesSetup();
-        FillGetNoise();
-        ResetOscillators();
     }
 
     void CyclePalette(int offset = 1)
@@ -472,22 +466,34 @@ public:
 
         const int minutesPerPaletteCycle = 2;
         uint8_t secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
-        
-        if( _lastSecond != secondHand) 
+
+        if (_lastSecond != secondHand)
         {
             _lastSecond = secondHand;
-            if( secondHand ==  0)  
-                { _targetPalette = RainbowColors_p; }
-            if( secondHand == 10)  
-                { _targetPalette = HeatColors_p; } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
-            if( secondHand == 20)  
-                { _targetPalette = ForestColors_p; } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
-            if( secondHand == 30)  
-                { _targetPalette = LavaColors_p; }       // Black gaps
-            if( secondHand == 40)  
-                { _targetPalette = CloudColors_p; }
-            if( secondHand == 50)  
-                { _targetPalette = PartyColors_p; }
+            if (secondHand == 0)
+            {
+                _targetPalette = RainbowColors_p;
+            }
+            if (secondHand == 10)
+            {
+                _targetPalette = HeatColors_p;
+            } // CRGBPalette16( g,g,b,b, p,p,b,b, g,g,b,b, p,p,b,b); }
+            if (secondHand == 20)
+            {
+                _targetPalette = ForestColors_p;
+            } // CRGBPalette16( b,b,b,w, b,b,b,w, b,b,b,w, b,b,b,w); }
+            if (secondHand == 30)
+            {
+                _targetPalette = LavaColors_p;
+            } // Black gaps
+            if (secondHand == 40)
+            {
+                _targetPalette = CloudColors_p;
+            }
+            if (secondHand == 50)
+            {
+                _targetPalette = PartyColors_p;
+            }
         }
     }
 
@@ -499,7 +505,7 @@ public:
     //   - the default of 24 is a good balance
     //   - meaningful values are 1-48.  1=veeeeeeeery slow, 48=quickest
     //   - "0" means do not change the currentPalette at all; freeze
-    
+
     void PausePalette(bool bPaused)
     {
         _palettePaused = bPaused;
@@ -508,14 +514,14 @@ public:
     bool IsPalettePaused()
     {
         return _palettePaused;
-    }    
+    }
 
     void UpdatePaletteCycle()
     {
 
         ChangePalettePeriodically();
-        uint8_t maxChanges = 24; 
-        nblendPaletteTowardPalette( _currentPalette, _targetPalette, maxChanges);
+        uint8_t maxChanges = 24;
+        nblendPaletteTowardPalette(_currentPalette, _targetPalette, maxChanges);
     }
 
     void RandomPalette()
@@ -669,8 +675,8 @@ public:
     }
 
     // write one pixel with the specified color from the current palette to coordinates
-    
-    void Pixel(int x, int y, uint8_t colorIndex) 
+
+    void Pixel(int x, int y, uint8_t colorIndex)
     {
         leds[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
     }
@@ -684,7 +690,7 @@ public:
     uint8_t p[6];
 
     // set the speeds (and by that ratios) of the oscillators here
-    
+
     void MoveOscillators()
     {
         osci[0] = osci[0] + 5;
@@ -704,7 +710,7 @@ public:
     {
         memset(osci, 0, sizeof(osci));
         memset(p, 0, sizeof(p));
-    }    
+    }
 
     // All the caleidoscope functions work directly within the screenbuffer (leds array).
     // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it arround.
@@ -818,7 +824,7 @@ public:
     //
     // create a square twister to the left or counter-clockwise
     // x and y for center, r for radius
-    
+
     void SpiralStream(int x, int y, int r, uint8_t dimm)
     {
         for (int d = r; d >= 0; d--)
@@ -986,7 +992,7 @@ public:
     }
 
     // give it a linear tail up and to the right
-    
+
     void StreamUpAndRight(uint8_t scale)
     {
         for (int x = 0; x < _width - 1; x++)
@@ -1007,7 +1013,7 @@ public:
     }
 
     // just move everything one line down - BUGBUG (DAVEPL) Redundant with MoveX?
-    
+
     void MoveDown()
     {
         for (int y = _height - 1; y > 0; y--)
@@ -1020,8 +1026,8 @@ public:
     }
 
     // just move everything one line down - BUGBUG (davepl) Redundant with MoveY?
-    
-    void VerticalMoveFrom(int start, int end)  
+
+    void VerticalMoveFrom(int start, int end)
     {
         for (int y = end; y > start; y--)
         {
@@ -1034,7 +1040,7 @@ public:
 
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
-    
+
     void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
     {
         for (int y = y0; y < y1 + 1; y++)
@@ -1113,7 +1119,6 @@ public:
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
 
-
     void drawLine(int x0, int y0, int x1, int y1, CRGB color)
     {
         BresenhamLine(x0, y0, x1, y1, color);
@@ -1126,7 +1131,7 @@ public:
             // if ((leds[i].r != 255) || (leds[i].g != 255) || (leds[i].b != 255))           // Don't dim pure white
             leds[i].nscale8(value);
         }
-    } 
+    }
     // write one pixel with the specified color from the current palette to coordinates
     /*
     void Pixel(int x, int y, uint8_t colorIndex) {
@@ -1170,15 +1175,15 @@ public:
 
     void FillGetNoise()
     {
-        for (uint8_t i = 0; i < _width; i++)
+        for (uint16_t i = 0; i < _width; i++)
         {
             uint32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_height + 1) / 2));
 
-            for (uint8_t j = 0; j < _height; j++)
+            for (uint16_t j = 0; j < _height; j++)
             {
                 uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
 
-                uint8_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+                uint16_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
 
                 uint8_t olddata = _ptrNoise->noise[i][j];
                 uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
@@ -1208,19 +1213,19 @@ public:
             for (int x = 0; x < _width / 2 - 1; x++)
             {
                 leds[xy(x, y)] = leds[xy(x + 1, y)];
-                leds[xy(_width-x-1, y)] = leds[xy(_width-x-2, y)];
+                leds[xy(_width - x - 1, y)] = leds[xy(_width - x - 2, y)];
             }
-        }    
+        }
     }
 
     // MoveX - Shift the content on the matrix left or right
-    
+
     void MoveX(uint8_t delta)
     {
         for (int y = 0; y < _height; y++)
         {
             // First part
-            for (int x = 0; x < _width - delta; x++)  
+            for (int x = 0; x < _width - delta; x++)
                 leds[xy(x, y)] = leds[xy(x + delta, y)];
             // Wrap around to second part
             for (int x = _width - delta; x < _width; x++)
@@ -1229,7 +1234,7 @@ public:
     }
 
     // MoveY - Shifts the content on the matix up or down
-    
+
     void MoveY(uint8_t delta)
     {
         CRGB tmp = 0;
@@ -1249,7 +1254,7 @@ public:
 
     void MoveFractionalNoiseX(uint8_t amt = 16)
     {
-        std::unique_ptr<CRGB []> ledsTemp = std::make_unique<CRGB []>(NUM_LEDS);
+        std::unique_ptr<CRGB[]> ledsTemp = std::make_unique<CRGB[]>(NUM_LEDS);
 
         // move delta pixelwise
         for (int y = 0; y < _height; y++)
@@ -1270,13 +1275,13 @@ public:
         CRGB PixelA;
         CRGB PixelB;
 
-        for (uint8_t y = 0; y < _height; y++)
+        for (uint16_t y = 0; y < _height; y++)
         {
-            uint16_t amount   = _ptrNoise->noise[0][y] * amt;
-            uint8_t delta     = _height - 1 - (amount / 256);
+            uint16_t amount = _ptrNoise->noise[0][y] * amt;
+            uint8_t delta = _height - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
-            for (uint8_t x = 1; x < _width; x++)
+            for (uint16_t x = 1; x < _width; x++)
             {
                 PixelA = ledsTemp[xy(x, y)];
                 PixelB = ledsTemp[xy(x - 1, y)];
@@ -1299,7 +1304,7 @@ public:
 
     void MoveFractionalNoiseY(uint8_t amt = 16)
     {
-        std::unique_ptr<CRGB []> ledsTemp = std::make_unique<CRGB []>(NUM_LEDS);
+        std::unique_ptr<CRGB[]> ledsTemp = std::make_unique<CRGB[]>(NUM_LEDS);
 
         // move delta pixelwise
         for (int x = 0; x < _width; x++)
@@ -1321,13 +1326,13 @@ public:
         CRGB PixelA;
         CRGB PixelB;
 
-        for (uint8_t x = 0; x < _width; x++)
+        for (uint16_t x = 0; x < _width; x++)
         {
             uint16_t amount = _ptrNoise->noise[x][0] * amt;
             uint8_t delta = _height - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
-            for (uint8_t y = 1; y < _height; y++)
+            for (uint16_t y = 1; y < _height; y++)
             {
                 PixelA = ledsTemp[xy(x, y)];
                 PixelB = ledsTemp[xy(x, y - 1)];

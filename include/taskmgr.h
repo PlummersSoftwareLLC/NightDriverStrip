@@ -192,6 +192,7 @@ void IRAM_ATTR DebugLoopTaskEntry(void *);
 void IRAM_ATTR SocketServerTaskEntry(void *);
 void IRAM_ATTR RemoteLoopEntry(void *);
 void IRAM_ATTR JSONWriterTaskEntry(void *);
+void IRAM_ATTR ColorDataTaskEntry(void *);
 
 #define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
 
@@ -223,6 +224,7 @@ private:
     TaskHandle_t _taskRemote     = nullptr;
     TaskHandle_t _taskSocket     = nullptr;
     TaskHandle_t _taskSerial     = nullptr;
+    TaskHandle_t _taskColorData  = nullptr;
     TaskHandle_t _taskJSONWriter = nullptr;
 
     std::vector<TaskHandle_t> _vEffectTasks;
@@ -251,6 +253,7 @@ public:
         DELETE_TASK(_taskScreen);
         DELETE_TASK(_taskRemote);
         DELETE_TASK(_taskSerial);
+        DELETE_TASK(_taskColorData);        
         DELETE_TASK(_taskAudio);
         DELETE_TASK(_taskSocket);
         DELETE_TASK(_taskSync);
@@ -269,7 +272,15 @@ public:
     {
         #if ENABLE_SERIAL
             debugW(">> Launching Serial Thread");
-            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskAudio, AUDIOSERIAL_CORE);
+            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskSerial, AUDIOSERIAL_CORE);
+        #endif
+    }
+
+    void StartColorDataThread()
+    {
+        #if ENABLE_WIFI
+            debugW(">> Launching ColorData Server Thread");
+            xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
         #endif
     }
 

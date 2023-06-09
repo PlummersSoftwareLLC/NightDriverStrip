@@ -129,10 +129,10 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
     {
         ProcessAudio();
 
-        CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_AppTime.DeltaTime() * 0.75;
+        CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_AppTime.LastFrameTime() * 0.75;
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
-        fadeAllChannelsToBlackBy(min(255.0,1000.0 * g_AppTime.DeltaTime()));
+        fadeAllChannelsToBlackBy(min(255.0,1000.0 * g_AppTime.LastFrameTime()));
         delay(1);
     }
 
