@@ -212,14 +212,12 @@ class PatternSubscribers : public LEDStripEffect
         LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
     }
 
-    virtual bool HasSettings() const override
-    {
-        return true;
-    }
-
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<256> jsonDoc;
+        StaticJsonDocument<384> jsonDoc;
+        auto rootObject = jsonDoc.to<JsonObject>();
+
+        LEDStripEffect::SerializeSettingsToJSON(jsonObject);
 
         jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
         jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;
@@ -230,7 +228,9 @@ class PatternSubscribers : public LEDStripEffect
     virtual bool SetSetting(const String& name, const String& value) override
     {
         RETURN_IF_SET(name, NAME_OF(youtubeChannelGuid), youtubeChannelGuid, value);
-        return SetIfSelected(name, NAME_OF(youtubeChannelName), youtubeChannelName, value);
+        RETURN_IF_SET(name, NAME_OF(youtubeChannelName), youtubeChannelName, value);
+
+        return LEDStripEffect::SetSetting(name, value);
     }
 };
 

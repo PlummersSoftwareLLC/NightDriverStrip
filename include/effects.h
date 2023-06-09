@@ -124,6 +124,7 @@
 
 // Some common JSON properties to prevent typos
 #define PTY_EFFECTNR        "en"
+#define PTY_COREEFFECT      "ce"
 #define PTY_REVERSED        "rvr"
 #define PTY_MIRORRED        "mir"
 #define PTY_ERASE           "ers"

@@ -46,7 +46,8 @@
 #include "effects/strip/misceffects.h"
 #include "effects/strip/fireeffect.h"
 
-#define JSON_FORMAT_VERSION 1
+#define JSON_FORMAT_VERSION         1
+#define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
 extern uint8_t g_Brightness;
 extern uint8_t g_Fader;
@@ -57,6 +58,9 @@ void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
+void SaveCurrentEffectIndex();
+bool ReadCurrentEffectIndex(size_t& index);
+
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
@@ -69,7 +73,6 @@ template <typename GFXTYPE>
 class EffectManager : public IJSONSerializable
 {
     std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
-    size_t _cEnabled = 0;
 
     size_t _iCurrentEffect = 0;
     uint _effectStartTime;
@@ -112,9 +115,11 @@ class EffectManager : public IJSONSerializable
                 continue;
 
             auto pEffect = factoryEntry->second(effectObject);
-
-            if (pEffect != nullptr)
+            if (pEffect)
             {
+                if (effectObject[PTY_COREEFFECT].as<int>())
+                    pEffect->MarkAsCoreEffect();
+
                 _vEffects.push_back(pEffect);
                 loadedEffectNumbers.insert(effectNumber);
             }
@@ -141,8 +146,12 @@ class EffectManager : public IJSONSerializable
                         return;
 
                     auto pEffect = numberedFactory.Factory();
-                    if (pEffect != nullptr)
+                    if (pEffect)
+                    {
+                        // Effects in the default list are core effects. These can be disabled but not deleted.
+                        pEffect->MarkAsCoreEffect();
                         _vEffects.push_back(pEffect);
+                    }
                 }
             );
 
@@ -154,7 +163,6 @@ class EffectManager : public IJSONSerializable
     void ClearEffects()
     {
         _vEffects.clear();
-        _cEnabled = 0;
     }
 
 public:
@@ -209,8 +217,12 @@ public:
         for (auto &numberedFactory : g_EffectFactories.GetDefaultFactories())
         {
             auto pEffect = numberedFactory.Factory();
-            if (pEffect != nullptr)
+            if (pEffect)
+            {
+                // Effects in the default list are core effects. These can be disabled but not deleted.
+                pEffect->MarkAsCoreEffect();
                 _vEffects.push_back(pEffect);
+            }
         }
 
         for (int i = 0; i < _vEffects.size(); i++)
@@ -279,13 +291,13 @@ public:
         // "ivl" contains the effect interval in ms
         SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
-        // "cei" contains the current effect index
-        if (jsonObject.containsKey("cei"))
-        {
+        // Try to read the effectindex from its own file. If that fails, "cei" may contain the current effect index instead
+        if (!ReadCurrentEffectIndex(_iCurrentEffect) && jsonObject.containsKey("cei"))
             _iCurrentEffect = jsonObject["cei"];
-            if (_iCurrentEffect >= EffectCount())
-                _iCurrentEffect = EffectCount() - 1;
-        }
+
+        // Make sure that if we read an index, it's sane
+        if (_iCurrentEffect >= EffectCount())
+            _iCurrentEffect = EffectCount() - 1;
 
         construct(true);
 
@@ -318,7 +330,6 @@ public:
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
 
         jsonObject["ivl"] = _effectInterval;
-        jsonObject["cei"] = _iCurrentEffect;
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 
@@ -445,13 +456,10 @@ public:
 
         if (!effect->IsEnabled())
         {
-            effect->SetEnabled(true);
-
-            if (_cEnabled < 1)
-            {
+            if (!AreEffectsEnabled())
                 ClearRemoteColor(true);
-            }
-            _cEnabled++;
+
+            effect->SetEnabled(true);
 
             if (!skipSave)
                 SaveEffectManagerConfig();
@@ -472,11 +480,8 @@ public:
         {
             effect->SetEnabled(false);
 
-            _cEnabled--;
-            if (_cEnabled < 1)
-            {
+            if (!AreEffectsEnabled())
                 SetGlobalColor(CRGB::Black);
-            }
 
             if (!skipSave)
                 SaveEffectManagerConfig();
@@ -491,6 +496,120 @@ public:
             return false;
         }
         return _vEffects[i]->IsEnabled();
+    }
+
+    void MoveEffect(size_t from, size_t to)
+    {
+        if (from >= _vEffects.size() || to >= _vEffects.size())
+        {
+            debugW("Invalid index for MoveEffect");
+            return;
+        }
+
+        if (from == to)
+            return;
+        else if (from < to)
+            std::rotate(_vEffects.begin() + from, _vEffects.begin() + from + 1, _vEffects.begin() + to + 1);
+        else // from > to
+            std::rotate(_vEffects.rend() - from - 1, _vEffects.rend() - from, _vEffects.rend() - to);
+
+        if (from == _iCurrentEffect)
+        {
+            _iCurrentEffect = to;
+            SaveCurrentEffectIndex();
+        }
+        else if (from < _iCurrentEffect && to >= _iCurrentEffect)
+        {
+            _iCurrentEffect--;
+            SaveCurrentEffectIndex();
+        }
+        else if (from > _iCurrentEffect && to <= _iCurrentEffect)
+        {
+            _iCurrentEffect++;
+            SaveCurrentEffectIndex();
+        }
+
+        SaveEffectManagerConfig();
+    }
+
+    // Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
+    //   use the AppendEffect() function for that.
+    std::shared_ptr<LEDStripEffect> CopyEffect(size_t index)
+    {
+        if (index >= _vEffects.size())
+        {
+            debugW("Invalid index for CopyEffect");
+            return nullptr;
+        }
+
+        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+
+        auto& sourceEffect = _vEffects[index];
+
+        std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
+
+        SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
+            [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
+
+        auto jsonEffectFactories = g_EffectFactories.GetJSONFactories();
+        auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
+
+        if (factoryEntry == jsonEffectFactories.end())
+            return nullptr;
+
+        auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
+
+        if (!copiedEffect)
+            return nullptr;
+
+        copiedEffect->SetEnabled(false);
+
+        return copiedEffect;
+    }
+
+    // Adds an effect to the effect list and enables it. If an effect is added that is already in the effect list then the result
+    //   is undefined but potentially messy.
+    bool AppendEffect(std::shared_ptr<LEDStripEffect>& effect)
+    {
+        if (!effect->Init(_gfx))
+            return false;
+
+        _vEffects.push_back(effect);
+        EnableEffect(_vEffects.size() - 1, true);
+
+        SaveEffectManagerConfig();
+
+        return true;
+    }
+
+    bool DeleteEffect(size_t index)
+    {
+        if (index >= _vEffects.size())
+        {
+            debugW("Invalid index for DeleteEffect");
+            return false;
+        }
+
+        // We don't allow core effects to be deleted
+        if (_vEffects[index]->IsCoreEffect())
+            return false;
+
+        DisableEffect(index, true);
+
+        if (index == _iCurrentEffect)
+            NextEffect();
+
+        _vEffects.erase(_vEffects.begin() + index);
+
+        if (index <= _iCurrentEffect)
+        {
+            _iCurrentEffect--;
+            SaveCurrentEffectIndex();
+        }
+
+        SaveEffectManagerConfig();
+
+        return true;
     }
 
     void PlayAll(bool bPlayAll)
@@ -516,9 +635,13 @@ public:
         return _vEffects.size();
     }
 
-    const size_t EnabledCount() const
+    const bool AreEffectsEnabled() const
     {
-        return _cEnabled;
+        for (auto& pEffect : _vEffects)
+            if (pEffect->IsEnabled())
+                return true;
+
+        return false;
     }
 
     const size_t GetCurrentEffectIndex() const
@@ -541,7 +664,7 @@ public:
 
     // Change the current effect; marks the state as needing attention so this get noticed next frame
 
-    void SetCurrentEffectIndex(size_t i, bool skipSave = false)
+    void SetCurrentEffectIndex(size_t i)
     {
         if (i >= _vEffects.size())
         {
@@ -553,8 +676,7 @@ public:
 
         StartEffect();
 
-        if (!skipSave)
-            SaveEffectManagerConfig();
+        SaveCurrentEffectIndex();
     }
 
     uint GetTimeUsedByCurrentEffect() const
@@ -611,23 +733,27 @@ public:
     }
     // Update to the next effect and abort the current effect.
 
-    void NextEffect()
+    void NextEffect(bool skipSave = false)
     {
+        auto enabled = AreEffectsEnabled();
+
         do
         {
             _iCurrentEffect++; //   ... if so advance to next effect
             _iCurrentEffect %= EffectCount();
             _effectStartTime = millis();
-        } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        } while (enabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
-        SaveEffectManagerConfig();
+        SaveCurrentEffectIndex();
     }
 
     // Go back to the previous effect and abort the current one.
 
     void PreviousEffect()
     {
+        auto enabled = AreEffectsEnabled();
+
         do
         {
             if (_iCurrentEffect == 0)
@@ -635,10 +761,10 @@ public:
 
             _iCurrentEffect--;
             _effectStartTime = millis();
-        } while (0 < _cEnabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
+        } while (enabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
         StartEffect();
-        SaveEffectManagerConfig();
+        SaveCurrentEffectIndex();
     }
 
     bool Init()
@@ -653,10 +779,6 @@ public:
                 return false;
             }
             debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName());
-
-            // First time only, we ensure the data is cleared
-
-            //_vEffects[i]->setAll(0,0,0);
         }
         debugV("First Effect: %s", GetCurrentEffectName());
         return true;

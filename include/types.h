@@ -57,13 +57,15 @@ struct SettingSpec
         Float,
         Boolean,
         String,
-        Palette
+        Palette,
+        Color
     };
 
     String Name;
     String FriendlyName;
     String Description;
     SettingType Type;
+    bool HasValidation = false;
 
     SettingSpec(const String& name, const String& friendlyName, const String& description, SettingType type)
       : Name(name),
@@ -80,7 +82,7 @@ struct SettingSpec
 
     String static ToName(SettingType type)
     {
-        String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette" };
+        String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color" };
         return names[(int)type];
     }
 };
