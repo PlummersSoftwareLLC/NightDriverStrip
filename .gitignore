@@ -8,9 +8,6 @@ lib/*
 .DS_Store
 site/node_modules
 site/local/**
-site/index.html
-site/main.jsx
-site/favicon.ico
 WebInstaller/assets/**
 WebInstaller/firmware/**
 WebInstaller/manifests/**
@@ -18,3 +15,4 @@ WebInstaller/web_projects.json
 .idea/**
 site/package-lock.json
 site/yarn.lock
+site/dist

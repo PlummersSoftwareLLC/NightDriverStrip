@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { viteExternalsPlugin } from 'vite-plugin-externals';
+import viteCompression from 'vite-plugin-compression';
 
 const viteExternals = viteExternalsPlugin({
     react: 'React',
@@ -15,11 +16,13 @@ const viteExternals = viteExternalsPlugin({
 })
 
 export default defineConfig({
-    plugins: [react(), viteExternals],
+    plugins: [react(), viteExternals, viteCompression({
+        deleteOriginFile: true
+    })],
     server: {
-        port: 3000,
+        port: 4000,
     },
-    publicDir: './local',
+    publicDir: './assets',
     build: {
         outDir: './dist',
         sourcemap: true,
@@ -27,8 +30,8 @@ export default defineConfig({
             output: {
                 entryFileNames: 'assets/[name].js',
                 chunkFileNames: 'assets/[name].js',
-                assetFileNames: 'assets/[name].[ext]'
-            }
+                assetFileNames: 'assets/[name].[ext]',
+            },
         },
     },
 });

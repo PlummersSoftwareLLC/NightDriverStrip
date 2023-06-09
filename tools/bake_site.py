@@ -5,66 +5,30 @@ import sys
 import glob
 import shutil
 
-localBuild=False
-for i, arg in enumerate(sys.argv):
-    if arg == 'local':
-        localBuild = True
-
-def minimize(content):
-    if localBuild:
-        return content
-    else:
-        return '\n'.join(map(lambda line: line.strip(), content.splitlines()))
-
-def getJsx(folder, mask, exclude=''):
-    files = glob.glob(os.path.join(folder, '**', mask), recursive=True)
-    ret = ''
-    for i, file in enumerate(files):
-        with open(file, encoding='utf-8') as reader:
-            if exclude == '' or not file.endswith(exclude):
-                ret += reader.read()
-    return ret
-
-destFolder='site'
-buildType='chip'
-
-if localBuild:
-    destFolder = os.path.join(destFolder, 'local')
-    buildType = 'local'
-
-if not os.path.exists(destFolder):
-    print('Creating ' + buildType + ' build folder')
-    os.makedirs(destFolder)
-
+destFolder=os.path.join('site', 'dist')
+backupAddr="espaddr.tsx.orig"
 srcFolder = os.path.join('site', 'src')
-htmlFile = 'index.html'
+htmlFile = 'index.html.gz'
 icoFile = 'favicon.ico'
+espAddr= 'espaddr.tsx'
 
-shutil.copy(os.path.join(srcFolder, htmlFile), destFolder)
-shutil.copy(os.path.join('assets', icoFile), destFolder)
+shutil.copy(os.path.join(srcFolder, espAddr), os.path.join(srcFolder, backupAddr))
 
-jsxPath = os.path.join(destFolder, 'main.jsx')
-jsx = open(jsxPath, 'w', encoding='utf-8')
+jsPath = os.path.join(srcFolder, espAddr)
+js = open(jsPath, 'w', encoding='utf-8')
+js.write("export const httpPrefix='';")
+js.close()
 
-if (localBuild):
-    print('Building site in local development code')
-    jsx.write(open(os.path.join(srcFolder, 'espaddr.jsx'), encoding='utf-8').read())
-else:
-    print('Building site in Chip model')
-    jsx.write("const httpPrefix='';")
+os.chdir('site')
+os.system('yarn')
+os.system('yarn build')
+os.chdir('..')
 
-jsx.write(minimize(open(os.path.join(srcFolder, 'modules', 'modules.jsx'), encoding='utf-8').read()))
-jsx.write(minimize(getJsx(os.path.join(srcFolder, 'theme'), '*.jsx')))
-jsx.write(minimize(getJsx(os.path.join(srcFolder, 'services'), '*.jsx')))
-jsx.write(minimize(getJsx(os.path.join(srcFolder, 'config'), '*.jsx')))
-compFolder = os.path.join(srcFolder, 'components')
-jsx.write(minimize(getJsx(compFolder, 'style.jsx')))
-jsx.write(minimize(getJsx(compFolder, '*.jsx', 'style.jsx')))
-jsx.write(minimize(open(os.path.join(srcFolder, 'main.jsx'), encoding='utf-8').read()))
-jsx.close()
+shutil.copy(os.path.join(srcFolder, backupAddr), os.path.join(srcFolder, espAddr))
+os.remove(os.path.join(srcFolder, backupAddr))
 
 htmlBytes = os.stat(os.path.join(destFolder, htmlFile)).st_size
-jsxBytes = os.stat(jsxPath).st_size
+jsBytes = os.stat(jsPath).st_size
 icoBytes = os.stat(os.path.join(destFolder, icoFile)).st_size
-totalBytes = htmlBytes + jsxBytes + icoBytes
-print('Build completed, html: %d B, jsx: %d B, ico: %d B, total: %d KB' % (htmlBytes, jsxBytes, icoBytes, totalBytes / 1024))
+totalBytes = htmlBytes + jsBytes + icoBytes
+print('Build completed, html: %d B, js: %d B, ico: %d B, total: %d KB' % (htmlBytes, jsBytes, icoBytes, totalBytes / 1024))
