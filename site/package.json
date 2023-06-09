@@ -19,11 +19,9 @@
         "tss-react": "^4.8.6"
     },
     "scripts": {
-        "build:new": "vite build --watch",
         "preview": "vite preview --host 0.0.0.0",
-        "build": "cd .. && python tools/bake_site.py local",
-        "rebuild": "node ./node_modules/fs-watch-exec/index.js run -d ./src npm run build",
-        "start": "(npm run rebuild& node ./nodeq_modules/serve/build/main.js ./local)",
+        "build": "vite build",
+        "rebuild": "vite build --watch",
         "dev": "vite --port 4000 --host 0.0.0.0"
     },
     "devDependencies": {
