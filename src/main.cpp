@@ -437,6 +437,12 @@ void setup()
         heap_caps_malloc_extmem_enable(1024);
     #endif
 
+    #if USE_TFTSPI
+        // Height and width get reversed here because the display is actually portrait, not landscape.  Once
+        // we set the rotation, it works as expected in landscape.
+        g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);      
+    #endif
+
     uzlib_init();
 
     if (!SPIFFS.begin(true))
@@ -538,17 +544,6 @@ void setup()
     debugI("Initializing OLED display");
 #endif
 
-#if USE_TFTSPI
-    debugI("Initializing TFTSPI");
-    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
-
-    pinMode(TFT_BL, OUTPUT);
-    digitalWrite(TFT_BL, 128);
-
-    g_pDisplay->init();
-    g_pDisplay->setRotation(3);
-    g_pDisplay->fillScreen(TFT_GREEN);
-#endif
 
 #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
     #if USE_M5DISPLAY
@@ -608,7 +603,7 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    Screen::ScreenStatus("Initializing GFXBASE devices");
+    g_pDisplay->ScreenStatus("Initializing GFXBASE devices");
 
     #if USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
@@ -626,12 +621,12 @@ void setup()
         }
     #endif
 
-    Screen::ScreenStatus("Setting JPG callback");
+    g_pDisplay->ScreenStatus("Setting JPG callback");
 
     TJpgDec.setJpgScale(1);
     TJpgDec.setCallback(bitmap_output);
 
-    Screen::ScreenStatus("Allocating LED Buffers");
+    g_pDisplay->ScreenStatus("Allocating LED Buffers");
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -675,7 +670,7 @@ void setup()
         ledcSetup(3, 12000, 8);
     #endif
 
-    Screen::ScreenStatus("Initializing LED strips");
+    g_pDisplay->ScreenStatus("Initializing LED strips");
 
     #if USESTRIP
 
@@ -741,7 +736,7 @@ void setup()
         #endif
     #endif
 
-    Screen::ScreenStatus("Initializing Effects Manager");
+    g_pDisplay->ScreenStatus("Initializing Effects Manager");
 
     // Show splash effect on matrix
     #if USE_MATRIX
@@ -752,7 +747,7 @@ void setup()
         InitEffectsManager();
     #endif
 
-    Screen::ScreenStatus("Initializing Audio");
+    g_pDisplay->ScreenStatus("Initializing Audio");
 
     // Microphone stuff
     #if ENABLE_AUDIO
@@ -762,7 +757,7 @@ void setup()
         CheckHeap();
     #endif
 
-    Screen::ScreenStatus("Initializing Screen Thread");
+    g_pDisplay->ScreenStatus("Initializing Screen Thread");
 
     #if USE_SCREEN
         g_TaskManager.StartScreenThread();
@@ -834,14 +829,14 @@ void loop()
     while(true)
     {
         #if ENABLE_WIFI
-            EVERY_N_MILLIS(10)
+            EVERY_N_MILLIS(20)
             {
                 g_ImprovSerial.loop();
             }
         #endif
 
         #if ENABLE_OTA
-            EVERY_N_MILLIS(10)
+            EVERY_N_MILLIS(20)
             {
                 try
                 {

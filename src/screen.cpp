@@ -51,7 +51,7 @@ M5Display *g_pDisplay;
 #if USE_TFTSPI
 #include <TFT_eSPI.h>
 #include <SPI.h>
-std::unique_ptr<TFT_eSPI> g_pDisplay = std::make_unique<TFT_eSPI>();
+std::unique_ptr<Screen> g_pDisplay;
 #endif
 
 //
@@ -83,8 +83,8 @@ void BasicInfoSummary(bool bRedraw)
     const int xMargin = 0;
     const int yMargin = 0;
 #else
-    const int xMargin = 10;
-    const int yMargin = 6;
+    const int xMargin = 8;
+    const int yMargin = 5;
 #endif
 
     // Blue Theme
@@ -106,7 +106,7 @@ void BasicInfoSummary(bool bRedraw)
         Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
 #else
     if (bRedraw)
-        Screen::fillRect(1, 1, Screen::screenWidth() - 2, Screen::screenHeight() - 2, bkgndColor);
+        g_pDisplay->fillRect(1, 1, g_pDisplay->width() - 2, g_pDisplay->height() - 2, bkgndColor);
 #endif
 
     // Status line 1
@@ -117,41 +117,41 @@ void BasicInfoSummary(bool bRedraw)
     char chStatus = szStatus[c2];
     cStatus++;
 
-    Screen::setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
-    Screen::setTextSize(Screen::screenWidth() < 240 ? Screen::SMALL : Screen::MEDIUM);
-
-    Screen::setCursor(xMargin, yMargin);
-    Screen::println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
+    g_pDisplay->setFont();
+    g_pDisplay->setTextSize(2);
+    g_pDisplay->setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
+    g_pDisplay->setCursor(xMargin, yMargin);
+    g_pDisplay->println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
 
     // WiFi info line 2
 
-    auto lineHeight = Screen::fontHeight();
-    Screen::setCursor(xMargin + 0, yMargin + lineHeight);
+    auto lineHeight = g_pDisplay->fontHeight();
+    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight);
 
     if (WiFi.isConnected() == false)
     {
-        Screen::println("No Wifi");
+        g_pDisplay->println("No Wifi");
     }
     else
     {
         const IPAddress address = WiFi.localIP();
-        Screen::println(str_sprintf("%ddB:%d.%d.%d.%d",
+        g_pDisplay->println(str_sprintf("%ddB:%d.%d.%d.%d",
                                     (int)labs(WiFi.RSSI()), // skip sign in first character
                                     address[0], address[1], address[2], address[3]));
     }
 
     // Buffer Status Line 3
 
-    Screen::setCursor(xMargin + 0, yMargin + lineHeight * 4);
-    Screen::println(str_sprintf("BUFR:%02d/%02d %dfps ",
+    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 4);
+    g_pDisplay->println(str_sprintf("BUFR:%02d/%02d %dfps ",
                                 g_aptrBufferManager[0]->Depth(),
                                 g_aptrBufferManager[0]->BufferCount(),
                                 g_FPS));
 
     // Data Status Line 4
 
-    Screen::setCursor(xMargin + 0, yMargin + lineHeight * 2);
-    Screen::println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
+    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 2);
+    g_pDisplay->println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
                                 min(99.99f, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
                                 min(99.99f, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
 
@@ -165,27 +165,27 @@ void BasicInfoSummary(bool bRedraw)
     char szTime[16];
     strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
 
-    Screen::setCursor(xMargin + 0, yMargin + lineHeight * 3);
-    Screen::println(str_sprintf("CLCK:%s %04.3lf",
+    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 3);
+    g_pDisplay->println(str_sprintf("CLCK:%s %04.3lf",
                                 g_AppTime.CurrentTime() > 100000 ? szTime : "Unset",
                                 g_FreeDrawTime));
 
     // LED Power Info Line 6 - only if display tall enough
 
-    if (Screen::screenHeight() >= lineHeight * 5 + Screen::fontHeight())
+    if (g_pDisplay->height() >= lineHeight * 5 + lineHeight)
     {
-        Screen::setCursor(xMargin + 0, yMargin + lineHeight * 5);
-        Screen::println(str_sprintf("POWR:%3.0lf%% %4uW\n",
+        g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 5);
+        g_pDisplay->println(str_sprintf("POWR:%3.0lf%% %4uW\n",
                                     g_Brite,
                                     g_Watts));
     }
 
     // PSRAM Info Line 7 - only if display tall enough
 
-    if (Screen::screenHeight() >= lineHeight * 6 + Screen::fontHeight())
+    if (g_pDisplay->height() >= lineHeight * 7)
     {
-        Screen::setCursor(xMargin + 0, yMargin + lineHeight * 6);
-        Screen::println(str_sprintf("PRAM:%dK/%dK\n",
+        g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 6);
+        g_pDisplay->println(str_sprintf("PRAM:%dK/%dK\n",
                                     ESP.getFreePsram() / 1024,
                                     ESP.getPsramSize() / 1024));
     }
@@ -193,11 +193,11 @@ void BasicInfoSummary(bool bRedraw)
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
     //             that conveys the overall status
 
-    if (Screen::screenHeight() >= lineHeight * 7 + Screen::fontHeight())
+    if (g_pDisplay->height() >= lineHeight * 8)
     {
-        int top = yMargin + lineHeight * 7 + 1;
+        int top = lineHeight * 7 + lineHeight / 2;
         int height = lineHeight - 5;
-        int width = Screen::screenWidth() - xMargin * 2;
+        int width = g_pDisplay->width() - xMargin * 2;
         float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
         ratio = std::min(1.0f, ratio);
         int filled = (width - 2) * ratio;
@@ -207,26 +207,26 @@ void BasicInfoSummary(bool bRedraw)
         uint16_t color = RED16;
         if (ratio > 0.25)
         {
-            color = Screen::to16bit(CRGB::Orange);
+            color = g_pDisplay->to16bit(CRGB::Orange);
             if (ratio > 0.5)
             {
-                color = Screen::to16bit(CRGB::Green);
+                color = g_pDisplay->to16bit(CRGB::Green);
                 if (ratio > 0.92)
                 {
-                    color = Screen::to16bit(CRGB::Orange);
+                    color = g_pDisplay->to16bit(CRGB::Orange);
                     if (ratio > 0.96)
-                        color = Screen::to16bit(CRGB::Red);
+                        color = g_pDisplay->to16bit(CRGB::Red);
                 }
             }
         }
 
-        Screen::fillRect(xMargin + 1, top + 1, filled, height - 2, color);
-        Screen::fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
-        Screen::drawRect(xMargin, top, width, height, WHITE16);
+        g_pDisplay->fillRect(xMargin + 1, top + 1, filled, height - 2, color);
+        g_pDisplay->fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
+        g_pDisplay->drawRect(xMargin, top, width, height, WHITE16);
     }
 
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32
-    Screen::drawRect(0, 0, Screen::screenWidth(), Screen::screenHeight(), borderColor);
+    g_pDisplay->drawRect(0, 0, g_pDisplay->width(), g_pDisplay->height(), borderColor);
 #endif
 }
 
@@ -237,7 +237,7 @@ void BasicInfoSummary(bool bRedraw)
 void CurrentEffectSummary(bool bRedraw)
 {
     if (bRedraw)
-        Screen::fillScreen(BLACK16);
+        g_pDisplay->fillScreen(BLACK16);
 
     uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
 
@@ -251,7 +251,7 @@ void CurrentEffectSummary(bool bRedraw)
     static auto lastFullDraw = 0;
     static auto lastAudio = 0;
     static auto lastSerial = 0;
-    auto yh = 1; // Start at top of screen
+    auto yh = 2; // Start at top of screen
 
     if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
     {
@@ -260,44 +260,41 @@ void CurrentEffectSummary(bool bRedraw)
             lasteffect != g_ptrEffectManager->GetCurrentEffectIndex() ||
             sip != WiFi.localIP().toString())
         {
-            Screen::fillRect(0, 0, Screen::screenWidth(), Screen::TopMargin, backColor);
-            Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin, Screen::screenWidth(), Screen::BottomMargin, backColor);
-            Screen::fillRect(0, Screen::TopMargin - 1, Screen::screenWidth(), 1, BLUE16);
-            Screen::fillRect(0, Screen::screenHeight() - Screen::BottomMargin + 1, Screen::screenWidth(), 1, BLUE16);
+            g_pDisplay->fillRect(0, 0, g_pDisplay->width(), g_pDisplay->TopMargin, backColor);
+            g_pDisplay->fillRect(0, g_pDisplay->height() - g_pDisplay->BottomMargin, g_pDisplay->width(), g_pDisplay->BottomMargin, backColor);
+            g_pDisplay->fillRect(0, g_pDisplay->TopMargin - 1, g_pDisplay->width(), 1, BLUE16);
+            g_pDisplay->fillRect(0, g_pDisplay->height() - g_pDisplay->BottomMargin + 1, g_pDisplay->width(), 1, BLUE16);
 
             lasteffect = g_ptrEffectManager->GetCurrentEffectIndex();
             sip = WiFi.localIP().toString();
             lastFPS = g_FPS;
 
-            Screen::setTextSize(Screen::SMALL);
-
-            Screen::setTextColor(YELLOW16, backColor);
+            g_pDisplay->setFont();
+            g_pDisplay->setTextSize(2);
+            g_pDisplay->setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
                              String(g_ptrEffectManager->GetCurrentEffectIndex() + 1) +
                              String("/") +
                              String(g_ptrEffectManager->EffectCount());
-            Screen::drawString(sEffect.c_str(), yh);
-            yh += Screen::fontHeight();
+            auto w = g_pDisplay->textWidth(sEffect);
+            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
+            g_pDisplay->print(sEffect.c_str());
+            yh += g_pDisplay->fontHeight();
             // get effect name length and switch text size accordingly
             int effectnamelen = g_ptrEffectManager->GetCurrentEffectName().length();
 
-#if M5STICKCPLUS || M5STACKCORE2
-            Screen::setTextSize(Screen::MEDIUM);
-#else
-            Screen::setTextSize(Screen::SMALL);
-#endif
-            Screen::setTextColor(WHITE16, backColor);
-            Screen::drawString(g_ptrEffectManager->GetCurrentEffectName(), yh);
-            yh += Screen::fontHeight();
-            Screen::setTextSize(Screen::SMALL);
-
+            g_pDisplay->setTextColor(WHITE16, backColor);
+            w = g_pDisplay->textWidth(g_ptrEffectManager->GetCurrentEffectName());
+            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
+            g_pDisplay->print(g_ptrEffectManager->GetCurrentEffectName());
+            yh += g_pDisplay->fontHeight();
+            
             String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
-#if M5STICKCPLUS || M5STACKCORE2
-            sIP += " - NightDriverLED.com";
-#endif
-            Screen::setTextColor(YELLOW16, backColor);
-            Screen::drawString(sIP.c_str(), yh);
-            yh += Screen::fontHeight();
+            g_pDisplay->setTextColor(YELLOW16, backColor);
+            w = g_pDisplay->textWidth(sIP);
+            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
+            yh += g_pDisplay->fontHeight();
+            g_pDisplay->print(sIP);
         }
 
 #if ENABLE_AUDIO

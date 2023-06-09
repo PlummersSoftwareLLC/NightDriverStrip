@@ -1370,12 +1370,7 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
 #endif
 
-#if USE_TFTSPI
-    #define DISABLE_ALL_LIBRARY_WARNINGS 1
-    #include <TFT_eSPI.h>
-    #include <SPI.h>
-    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
-#endif
+
 
 // FPS
 //
@@ -1710,6 +1705,14 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #include "colordata.h"                          // color palettes
 #include "drawing.h"                            // drawing code
 #include "taskmgr.h"                            // for cpu usage, etc
+
+#if USE_TFTSPI
+    #define DISABLE_ALL_LIBRARY_WARNINGS 1
+    #include <TFT_eSPI.h>
+    #include <SPI.h>
+
+    extern std::unique_ptr<Screen> g_pDisplay;
+#endif
 
 // Conditional includes depending on which project is being build
 
