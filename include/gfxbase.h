@@ -292,26 +292,6 @@ public:
             leds[xy(x, y)] = color;
     }
 
-    // Adafruit_GFX overrride
-    void writePixel(int16_t x, int16_t y, uint16_t color)
-    {
-        setPixel(x, y, color);
-    }
-
-    // Adafruit_GFX overrride
-    void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
-    {
-        for (int p = y; p < y + h; p++)
-            setPixel(x, p, color);
-    }
-
-    // Adafruit_GFX overrride
-    void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
-    {
-        for (int p = x; p < x + w; p++)
-            setPixel(p, y, color);
-    }
-
     virtual void setPixel(int16_t x, int r, int g, int b)
     {
         setPixel(x, CRGB(r, g, b));
