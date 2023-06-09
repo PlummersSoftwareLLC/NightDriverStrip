@@ -1,9 +1,10 @@
 export const esp32Style = theme => ({
     esp32: {
-        display: "flex"
+        display: "flex",
+        columnGap: "5px"
     },
     neticon: {
         fontSize: "small",
-        color: "green"
+        color: "lightgreen"
     }
 });

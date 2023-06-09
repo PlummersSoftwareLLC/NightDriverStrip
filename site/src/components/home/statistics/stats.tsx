@@ -20,7 +20,7 @@ export const StatsPanel = withStyles(({ open, smallScreen, classes }:IStatsPanel
     const [service] = useState(eventManager());
 
     const [ statistics, setStatistics] = useState(undefined as unknown as IConvertedStat);
-    const [ timer, setTimer ] = useState(undefined as unknown as number);
+    const [ timer, setTimer ] = useState(undefined as unknown as any);
     const [ lastRefreshDate, setLastRefreshDate] = useState(undefined as unknown as number);
     const [ openedCategories, setOpenedCategories ] = useState({
         Package:false,
@@ -123,7 +123,7 @@ export const StatsPanel = withStyles(({ open, smallScreen, classes }:IStatsPanel
         if (open) {
             service.emit("refreshStatistics");
 
-            if (siteConfig && (siteConfig.statsRefreshRate.value >= 0) && open) {
+            if (siteConfig && (siteConfig.statsRefreshRate.value >= 0)) {
                 setTimer(setTimeout(() => {setLastRefreshDate(Date.now())},siteConfig.statsRefreshRate.value*1000));
             }
 
@@ -165,7 +165,7 @@ export const StatsPanel = withStyles(({ open, smallScreen, classes }:IStatsPanel
                     <Box className={classes.detailStats}>
                             {Object.entries(category[1]).map((entry)=> (entry[1] as ICHIP|ICODE).static ?
                                 <Box key={`entry-${entry[0]}`}
-                                     className={!openedCategories[category[0]] && classes.summaryStats }>
+                                     className={openedCategories[category[0]] ? classes.detailedStats : classes.summaryStats }>
                                 <StaticStatsPanel
                                         key={`static-${entry[0]}`}
                                         detail={openedCategories[category[0]]}

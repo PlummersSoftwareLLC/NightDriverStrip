@@ -68,18 +68,18 @@ export const AreaStat = withStyles(({ name, rawvalue, ignored, statsAnimateChang
         return a.name === idleField && b.name !== idleField ? 1 : (a.name !== idleField && b.name === idleField ? -1 : a.value-b.value);
     };
 
-    return <Box>
-        {detail && <Box>
-            <Typography color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
-                <Typography key={headerField} color="textPrimary" variant="subtitle1">{headerField}: 
+    return <Box className={classes.root}>
+        {detail && <Box className={classes.header}>
+            <Typography className={classes.headerLine} color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
+                <Typography key={headerField} className={classes.headerField} color="textPrimary" variant="subtitle1">{headerField}: 
                     <Typography color="textSecondary" variant="subtitle2">{Math.floor(rawvalue[headerField])}</Typography>
                 </Typography>)}
             </Typography>
-            <List>
+            <List className={classes.stats}>
                 {Object.entries(rawvalue)
                         .filter(entry=>!ignored.includes(entry[0]))
                         .map(entry=>
-                    <ListItem  key={entry[0]}>
+                    <ListItem className={classes.stats} key={entry[0]}>
                         <Typography color="textPrimary" variant="subtitle1">{entry[0]}</Typography>:
                         <Typography color="textSecondary" variant="subtitle2" >{getValue(entry[1])}</Typography>
                     </ListItem>)}

@@ -1,4 +1,6 @@
-const ScreenService = (() => {
+import { eventManager } from "../eventManager/eventmanager";
+
+export const ScreenService = () => {
     const mediaQueries = {
         isDesktopOrLaptop : window.matchMedia('(min-width: 1224px)'),
         isBigScreen : window.matchMedia('(min-width: 1824px)' ),
@@ -13,10 +15,8 @@ const ScreenService = (() => {
     };
     const service = eventManager();
 
-    const isLive = Object.values(mediaQueries)
-        .every(mediaQuery=> mediaQuery.addEventListener("change",()=>service.emit("isSmallScreen",isSmallScreen()) || true));
+    Object.values(mediaQueries)
+        .every(mediaQuery=> mediaQuery.addEventListener("change",()=>service.emit("isSmallScreen",isSmallScreen())));
 
-    const isInitialized = service.subscribe("subscription",sub=>service.emit("isSmallScreen",isSmallScreen(),sub)) || true; 
-
-    return isLive && isInitialized;
-})();
+    return service.subscribe("subscription",sub=>service.emit("isSmallScreen",isSmallScreen(),sub));
+};

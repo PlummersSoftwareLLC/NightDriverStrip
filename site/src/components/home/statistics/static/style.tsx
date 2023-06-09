@@ -4,7 +4,7 @@ export const staticStatStyle = theme => ({
         flexDirection: "column",
         flexWrap: "wrap",
         alignContent: "flexStart",
-        justifyContent: "space-between",
+        justifyContent: "space-around",
         alignItems: "flexStart",
         marginLeft: "5px",
         marginRight: "5px"

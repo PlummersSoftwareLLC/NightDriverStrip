@@ -12,8 +12,7 @@ export const statsStyle = theme => ({
     summaryStats: {
         cursor: "pointer"
     },
-    detiailedStats: {
-        border: "solid 1px"
+    detailedStats: {
     },
     headerStats: {
         display: "flex",
@@ -75,11 +74,4 @@ export const statsStyle = theme => ({
     },
     contentDetails: {
     },
-});
-
-const statStyle = theme => ({
-    root: {
-      display: 'flex',
-      flexDirection: "column"
-    }
 });

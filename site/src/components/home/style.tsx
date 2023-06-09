@@ -1,3 +1,5 @@
+import {DrawerWidth} from "./AppPannel"
+
 export const mainAppStyle = (theme,{openDrawerWidth,closeDrawerWidth,toolbarHeight}) => ({
     root: {
       display: 'flex'
@@ -11,7 +13,7 @@ export const mainAppStyle = (theme,{openDrawerWidth,closeDrawerWidth,toolbarHeig
       }),
     },
     appbarOpened: {
-      marginLeft: openDrawerWidth,
+      marginLeft: `${openDrawerWidth}px`,
       width: `calc(100% - ${openDrawerWidth}px)`,
       minHeight: toolbarHeight,
       transition: theme.transitions.create(['width', 'margin'], {
@@ -65,24 +67,22 @@ export const mainAppStyle = (theme,{openDrawerWidth,closeDrawerWidth,toolbarHeig
       alignItems: "center"
     },
     content: {
-      padding: `64px 0 0 ${openDrawerWidth}px`,
+      paddingLeft: `${DrawerWidth.close + 10}px`,
+      paddingTop: `${toolbarHeight}px`,
       transition: theme.transitions.create('padding-left', {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen,
       }),
       display: "flex",
       flexDirection: "column",
       flexWrap: "wrap",
       rowGap: "0px",
-      alignItems: "stretch",
-      width: "100%",
     },
     contentShrinked: {
-      paddingLeft: closeDrawerWidth + 10,
-      rowGap: "10px",
+      paddingLeft:  `${DrawerWidth.open + 25}px`,
       transition: theme.transitions.create('padding-left', {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen,
       })
     },
     optionSelected: {

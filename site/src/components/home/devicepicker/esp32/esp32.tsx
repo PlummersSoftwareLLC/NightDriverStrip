@@ -22,37 +22,35 @@ export const Esp32 = withStyles(({activeHttpPrefix, selected, classes}:IEsp32Pro
 
     const chipRequest = (url:string,options:RequestInit,operation:string):Promise<Response> =>
         new Promise<Response>((resolve,_reject) => {
-        const aborter = new AbortController();
-        const timer = setTimeout(() => aborter.abort(), 3000);
+            const aborter = new AbortController();
+            const timer = setTimeout(() => aborter.abort(), 3000);
 
-        return fetch(`${activeHttpPrefix !== "Current Device" ? activeHttpPrefix : ""}${url}`,{...options, signal: aborter.signal })
-            .then(resolve)
-            .catch((err)=>service.emit("Error",{level:"error",type:options.method ?? "GET",target:operation,notification:err}))
-            .finally(()=>clearTimeout(timer));
-    });
+            fetch(`${activeHttpPrefix !== "Current Device" ? activeHttpPrefix : ""}${url}`,{...options, signal: aborter.signal })
+                .then(resolve)
+                .catch((err)=>service.emit("Error",{level:"error",type:options.method ?? "GET",target:operation,notification:err}))
+                .finally(()=>clearTimeout(timer));
+        });
 
     useEffect(() => {
-        console.log("Getting settings");
-        chipRequest(`/settings`,{method: "GET"},"Get Chip Setting")
-            .then(resp => resp.text())
-            .then(safeJsonParse<INightDriverConfiguration>())
-            .then(cfg=>!cfg.hasError && setConfig({...cfg.parsed }))
-            .then(()=>chipRequest(`/settings/specs`,{method:"GET"},"Get Chip Option Specs")
-                .then(resp => resp.text())
-                .then(safeJsonParse<INightDriverConfigurationSpecs[]>())
-                .then(cs=>!cs.hasError&&setConfigSpec([...cs.parsed])))
-            .catch(console.error);
-
         if (selected) {
+            chipRequest(`/settings`,{method: "GET"},"Get Chip Setting")
+                .then(resp => resp.text())
+                .then(safeJsonParse<INightDriverConfiguration>())
+                .then(cfg=>!cfg.hasError && setConfig({...cfg.parsed }))
+                .then(()=>chipRequest(`/settings/specs`,{method:"GET"},"Get Chip Option Specs")
+                    .then(resp => resp.text())
+                    .then(safeJsonParse<INightDriverConfigurationSpecs[]>())
+                    .then(cs=>!cs.hasError&&setConfigSpec([...cs.parsed])))
+                .catch(console.error);
             let subs = {
                 changeConfigSub : service.subscribe("SetChipConfig", (newConfig:INightDriverConfiguration) => {
                     const formData = new FormData();
                     Object.entries(newConfig).forEach(entry=>formData.append(entry[0],entry[1]));
-                    console.log("Getting settings.");
                     chipRequest(`/settings`,{method: "POST", body:formData},"Set Chip Config")
                         .then(resp => resp.text())
                         .then(safeJsonParse<INightDriverConfiguration>())
                         .then(cfg=>!cfg.hasError&&setConfig({...cfg.parsed}))
+                        .then(()=>service.emit("refreshEffectList"))
                         .catch(console.error)}),
                 effectList: service.subscribe("refreshEffectList",()=> 
                     chipRequest(`/effects`,{method:"GET"},"Get Effects")
@@ -122,6 +120,6 @@ export const Esp32 = withStyles(({activeHttpPrefix, selected, classes}:IEsp32Pro
 
     return <div className={classes.esp32}>
         {config ? <Icon className={classes.neticon}>settings_input_antenna</Icon> : <span/>}
-        <Typography>{getDeviceShortName()}</Typography>
+        <Typography className={classes.name}>{getDeviceShortName()}</Typography>
     </div>;
 },esp32Style); 

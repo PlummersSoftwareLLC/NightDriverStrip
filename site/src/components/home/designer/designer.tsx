@@ -23,6 +23,7 @@ export const DesignerPanel = withStyles((props:IDesignerPanelProps) => {
     const [ nextRefreshDate, setNextRefreshDate] = useState(0);
     const [ editing, setEditing ] = useState(false);
     const [ effectInterval, setEffectInterval ] = useState(0);
+    const [ effectTimeRemaining, setEffectTimeRemaining ] = useState(0);
     const [ hoverEffect, setHoverEffect ] = useState(undefined as unknown as IEffect);
     const [ displayMode, setDisplayMode ] = useState( props.displayMode );
     
@@ -31,21 +32,21 @@ export const DesignerPanel = withStyles((props:IDesignerPanelProps) => {
     
 
     useEffect(() => {
-        if (effects?.millisecondsRemaining) {
-            const timeReference = Date.now()+effects.millisecondsRemaining;
+        if (effectTimeRemaining) {
+            const timeReference = Date.now()+effectTimeRemaining;
             let timeRemaining = timeReference-Date.now();
-            const interval = setInterval(()=>{
-                const remaining = timeReference-Date.now();
-                if (remaining >= 0) {
-                    timeRemaining = remaining;
-                    setProgress((1-timeRemaining/effects.effectInterval)*100.0);
-                } else {
-                    service.emit("refreshEffectList")
-                }
-            },300);
-            return ()=>clearInterval(interval);
+            const timers = {
+                    effectList: setInterval(()=>{
+                    const remaining = timeReference-Date.now();
+                    if (remaining >= 0) {
+                        timeRemaining = remaining;
+                        setProgress((1-timeRemaining/effects.effectInterval)*100.0);
+                    }
+                },300),
+            };
+            return ()=>Object.values(timers).forEach(clearInterval);
         }
-    },[effects ? effects.millisecondsRemaining:0]);
+    },[effectTimeRemaining]);
 
     useEffect(() => {
         const subs={
@@ -53,6 +54,7 @@ export const DesignerPanel = withStyles((props:IDesignerPanelProps) => {
             effectsSub:service.subscribe("effectList",(effectList:IEffects)=>{
                 setEffects(effectList);
                 setEffectInterval(effectList.effectInterval);
+                setEffectTimeRemaining(effectList.millisecondsRemaining);
             }),
         };
         
@@ -61,19 +63,19 @@ export const DesignerPanel = withStyles((props:IDesignerPanelProps) => {
 
     useEffect(() => {
         if (props.open) {
-            service.emit("refreshEffectList");
             const timer = setTimeout(()=>{
+                service.emit("refreshEffectList");
                 setNextRefreshDate(Date.now());
-            },3000);
+            },effectTimeRemaining < 100 ? 300 : (effectTimeRemaining+500) * 0.75);
 
             return () => clearTimeout(timer);
         }
-    },[props.open,nextRefreshDate]);
+    },[props.open,nextRefreshDate,effectTimeRemaining]);
 
     const displayHeader = ()=>{
         return <Box className={classes.effectsHeaderValue}>
             <Typography variant="caption" color="textPrimary">Interval</Typography>:
-            <Button color="primary" onClick={() => setEditing(true)}>{effects.effectInterval}</Button>
+            <Button color="secondary" onClick={() => setEditing(true)}>{effects.effectInterval}</Button>
         </Box>;
     };
 
@@ -99,15 +101,15 @@ export const DesignerPanel = withStyles((props:IDesignerPanelProps) => {
     }
 
     return effects?.Effects ? 
-    <Card variant="outlined" className={`${!open ? classes.hidden : displayMode === "detailed" ? classes.shownAll : classes.shownSome}`}>
+    <Card variant="outlined" className={`${!props.open ? classes.hidden : (displayMode === "detailed" ? classes.shownAll : classes.shownSome)}`}>
         <CardHeader 
                 action={<IconButton aria-label="Next" onClick={()=>setDisplayMode(displayMode === "detailed" ? "summary":"detailed")}>
                         <Icon>{displayMode === "detailed" ? "expand_less":"expand_more"}</Icon></IconButton>}
                 title={<Box>
                             {effects.Effects.length} effects
-                            {displayMode==="detailed"?<IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>:null}
-                            {displayMode==="detailed"?<IconButton aria-label="Next" onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>:null}
-                            {displayMode==="detailed"?<IconButton aria-label="Refresh Effects" onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>:null}
+                            {displayMode==="detailed"?<IconButton aria-label="Previous" onClick={()=>service.emit("navigate",false)}><Icon>skip_previous</Icon></IconButton>:<></>}
+                            {displayMode==="detailed"?<IconButton aria-label="Next" onClick={()=>service.emit("navigate",true)}><Icon>skip_next</Icon></IconButton>:<></>}
+                            {displayMode==="detailed"?<IconButton aria-label="Refresh Effects" onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>:<></>}
                        </Box>} 
                 subheader={editing?editingHeader():displayHeader()} />
         <CardContent sx={{padding:0}}>
@@ -142,8 +144,10 @@ export const DesignerPanel = withStyles((props:IDesignerPanelProps) => {
 
     function list() {
         return <List className={displayMode === "summary" ? classes.summaryEffects : classes.effects}>
-                {effects.Effects.map((effect, idx) => <Box key={`effect-${idx}`} onMouseEnter={() => { setHoverEffect(effect); } }
-                onMouseLeave={() => { setHoverEffect(undefined as unknown as IEffect); } }>
+                {effects.Effects.map((effect, idx) => <Box 
+                    key={`effect-${idx}`} 
+                    onMouseEnter={() => { setHoverEffect(effect); } }
+                    onMouseLeave={() => { setHoverEffect(undefined as unknown as IEffect); } }>
                 <Effect
                     displayMode={displayMode}
                     index={idx}

@@ -27,7 +27,7 @@ export const Effect = withStyles(({ effectInterval, millisecondsRemaining, selec
     
     useEffect(() => {
         const subs={
-            chipConfig:service.subscribe("EffectSettings",cfg=>{setEffectSettings({...cfg})}),
+            effectSettings:service.subscribe("EffectSettings",cfg=>{setEffectSettings({...cfg})}),
         };
         
         return ()=>Object.values(subs).forEach(service.unsubscribe);
@@ -52,9 +52,11 @@ export const Effect = withStyles(({ effectInterval, millisecondsRemaining, selec
         };
     
         const effectName = getEffectName(index);
-        return effectSettings && (effectSettings[effectName]) ? {...effect,options:effectSettings[effectName]} : 
+        return (effectSettings && effectSettings[effectName]) ? {...effect,options:effectSettings[effectName]} : 
                                                                 {...effect,options:{...defaultConfig}};
-    },[index,...effects.Effects]);
+    },[index,...effects.Effects,effectSettings]);
+
+    const [options, setOptions] = useState(fullEffect.options);
 
     useEffect(() => {
         if (millisecondsRemaining && selected) {
@@ -100,7 +102,7 @@ export const Effect = withStyles(({ effectInterval, millisecondsRemaining, selec
     }
 
     function detailedList() {
-        return <ListItem className={`${classes.effectline} ${effect.enabled ? null : classes.disabled}`}>
+        return <ListItem className={`${classes.effectline} ${effect.enabled ? "" : classes.disabled}`}>
             <Paper className={classes.effectline}>
                 <Box className={`${selected ? classes.activelightbar : classes.lightbar}`}></Box>
                 {getEffectOptionDialog()}
@@ -132,13 +134,12 @@ export const Effect = withStyles(({ effectInterval, millisecondsRemaining, selec
     }
 
     function getEffectOptionDialog() {
-        const [options, setOptions] = useState(fullEffect.options);
         const save = () => {
             service.emit("setEffectSettings",{index,options});
             setDOpen(false);
         };
         return (
-              <Dialog open={dopen} onClose={()=>setDOpen(false)}>
+              <Dialog open={dopen} onClose={()=>setDOpen(false)} fullWidth>
                 <DialogTitle>{fullEffect.name} Options</DialogTitle>
                 <DialogContent>
                   <DialogContentText>

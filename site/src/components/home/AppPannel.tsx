@@ -12,7 +12,7 @@ import { SiteConfig } from "../../config/siteconfig";
 import { DevicePicker } from "./devicepicker/devicepicker";
 import { mainAppStyle } from "./style"
 
-enum DrawerWidth {
+export enum DrawerWidth {
     close=80,
     open=300
 }
@@ -105,14 +105,20 @@ export const AppPannel = withStyles(({classes}) => {
                 </Box>:<Box sx={{height:toolbarHeight}}></Box>}
                 <Divider/>
                 <List>{[
-                    [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
-                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                     {caption: "Configuration", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item =>
-                    <ListItem key={item.icon}>
-                        <ListItemIcon><IconButton aria-label={item.caption} onClick={() => item.setter(prevValue => !prevValue)}>
-                            <Icon color="action" className={item.flag ? classes.optionSelected : classes.optionUnselected}>{item.icon}</Icon>
-                        </IconButton></ListItemIcon>
-                    </ListItem>),
+                    <Box 
+                        key="control-panel-buttons"
+                        sx={{
+                            display:"flex", 
+                            flexDirection:drawerOpened?"row":"column",
+                    }}>{[{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
+                         {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
+                         {caption: "Configuration", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item =>
+                        <ListItem key={item.icon}>
+                            <ListItemIcon><IconButton aria-label={item.caption} onClick={() => item.setter(prevValue => !prevValue)}>
+                                <Icon color="action" className={item.flag ? classes.optionSelected : classes.optionUnselected}>{item.icon}</Icon>
+                            </IconButton></ListItemIcon>
+                        </ListItem>)}
+                    </Box>,
                     drawerOpened && <ListItem key="setting">
                         {!drawerOpened && <ListItemIcon><IconButton aria-label="Configuration" onClick={() => setDrawerOpened(prevValue => !prevValue)}>
                             <Icon color="action">config</Icon>
@@ -121,25 +127,7 @@ export const AppPannel = withStyles(({classes}) => {
                     </ListItem>]}
                 </List>
             </Drawer>
-            <Box sx={{
-                paddingLeft: `${DrawerWidth.close}px`,
-                paddingTop: `${toolbarHeight}px`,
-                transition: theme.transitions.create('padding-left', {
-                    easing: theme.transitions.easing.sharp,
-                    duration: theme.transitions.duration.leavingScreen,
-                }),
-                display: "flex",
-                flexDirection: "column",
-                flexWrap: "wrap",
-                rowGap: "0px",
-                ...(drawerOpened && {
-                    paddingLeft: drawerWidth + 10,
-                    transition: theme.transitions.create('padding-left', {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.leavingScreen,
-                    })
-                })
-            }}>
+            <Box className={[classes.content, drawerOpened ? classes.contentShrinked:"",smallScreen?classes.smallScreen:""].join(" ")}>
                 <StatsPanel open={stats} smallScreen={smallScreen} /> 
                 <DesignerPanel open={designer} displayMode="detailed"/>
             </Box>
