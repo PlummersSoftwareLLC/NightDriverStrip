@@ -94,6 +94,7 @@
 #include <math.h>
 #include <deque>
 #include <algorithm>
+#include <numeric>
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>                         // For updating the flash over WiFi
@@ -190,6 +191,7 @@
 #define REMOTE_PRIORITY         tskIDLE_PRIORITY+3
 #define DEBUG_PRIORITY          tskIDLE_PRIORITY+2
 #define JSONWRITER_PRIORITY     tskIDLE_PRIORITY+2
+#define COLORDATA_PRIORITY      tskIDLE_PRIORITY+2
 
 // If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1.
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
@@ -214,6 +216,7 @@
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
 #define JSONWRITER_CORE         0
+#define COLORDATA_CORE          1
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
@@ -328,9 +331,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
     #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -368,9 +368,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN     25
     #define LED_FAN_OFFSET_BU 12
     #define POWER_LIMIT_MW    20000
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 2
@@ -443,9 +440,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define NOISE_CUTOFF   20
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -476,6 +470,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     #define SUBCHECK_INTERVAL  600000   // Update subscriber count every N seconds
+    #define SCALE_AUDIO_EXPONENTIAL 0   
+    #define ENABLE_AUDIO_SMOOTHING  1
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
     #define MILLIS_PER_FRAME        0
@@ -535,10 +531,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   22
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (1 * 5 * 1000)         // Expects at least a 5V, 1A supply
-
-    #define NOISE_CUTOFF   10                     // Using a MAX4466
-    #define NOISE_FLOOR    100.0f
-
+    
     #define TOGGLE_BUTTON_1         35
     #define NUM_INFO_PAGES          4
     #define ONSCREEN_SPECTRUM_PAGE  2   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -580,9 +573,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   25
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (5 * 5 * 1000)         // Expects at least a 5V, 5A supply
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON_1         37
     #define TOGGLE_BUTTON_2         39
@@ -719,7 +709,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
 
     #define NUM_CHANNELS    1
-    #define MATRIX_WIDTH    (8*144)       // My naximum run, and about all you can do at 30fps
+    #define MATRIX_WIDTH    (8*144)     // My maximum run, and about all you can do at 30fps
     #define MATRIX_HEIGHT   1
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   0                     // IR Remote Control
@@ -836,9 +826,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
-
-    #define NOISE_CUTOFF   20
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
@@ -970,9 +957,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW    50000
 
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
-
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
@@ -1013,9 +997,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW    5000
     #define ENABLE_OTA        0
-
-    #define NOISE_CUTOFF   75
-    #define NOISE_FLOOR    200.0f
 
     #define TOGGLE_BUTTON  37
     #define NUM_INFO_PAGES 1
@@ -1075,9 +1056,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
 #define TIME_CHECK_INTERVAL_MS (1000 * 60 * 5)   // How often in ms we resync the clock from NTP
-#define MIN_BRIGHTNESS  4
+#define MIN_BRIGHTNESS  10
 #define MAX_BRIGHTNESS  255
-#define BRIGHTNESS_STEP 10          // Amount to step brightness on each remote control repeat
+#define BRIGHTNESS_STEP 20          // Amount to step brightness on each remote control repeat
 #define MAX_RINGS       5
 
 
@@ -1119,7 +1100,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 6000.0
+        #define NOISE_FLOOR 10000.0
     #endif
     #ifndef NOISE_CUTOFF
         #define NOISE_CUTOFF   2000
@@ -1213,6 +1194,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #ifndef ENABLE_REMOTE
 #define ENABLE_REMOTE 0
 #endif
+
+#ifndef MATRIX_REFRESH_RATE
+#define MATRIX_REFRESH_RATE 120
+#endif
+
+#ifndef MATRIX_CALC_DIVIDER 
+#define MATRIX_CALC_DIVIDER 2
+#endif
+
 
 // Power Limit
 //
@@ -1604,6 +1594,11 @@ class AppTime
         return (double)tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
     }
 
+    double FrameElapsedTime() const
+    {
+        return FrameStartTime() - CurrentTime();
+    }
+
     static double TimeFromTimeval(const timeval & tv)
     {
         return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
@@ -1617,7 +1612,7 @@ class AppTime
         return tv;
     }
 
-    double DeltaTime() const
+    double LastFrameTime() const
     {
         return _deltaTime;
     }
@@ -1670,6 +1665,24 @@ inline uint16_t WORDFromMemory(uint8_t * payloadData)
             (uint16_t)payloadData[0];
 }
 
+// SetSocketBlockingEnabled
+//
+// In blocking mode, socket API calls wait until the operation is complete before returning control to the application. 
+// For example, a call to the send() function won't return until all data has been sent. This can lead to the application 
+// hanging if the operation takes a long time.
+
+// In contrast, in non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function returns an error (usually EWOULDBLOCK or EAGAIN). The application can then decide how to handle the situation, such as by retrying the operation later. This provides more control and can make the application more responsive. However, it also requires more sophisticated programming, as the application must be prepared to handle these error conditions.
+
+inline bool SetSocketBlockingEnabled(int fd, bool blocking)
+{
+   if (fd < 0) return false;
+
+   int flags = fcntl(fd, F_GETFL, 0);
+   if (flags == -1) return false;
+   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+}
+
 // 16-bit (5:6:5) color definitions for common colors
 
 #define BLACK16     0x0000
@@ -1693,7 +1706,8 @@ inline uint16_t WORDFromMemory(uint8_t * payloadData)
 #include "ledmatrixgfx.h"                       // For drawing to HUB75 matrices
 #include "ledstripeffect.h"                     // Defines base led effect classes
 #include "ntptimeclient.h"                      // setting the system clock from ntp
-#include "effectmanager.h"                      // For g_EffectManagerf
+#include "effectmanager.h"                      // For g_EffectManager
+#include "ledviewer.h"                          // For the LEDViewer task and object
 #include "network.h"                            // Networking
 #include "ledbuffer.h"                          // Buffer manager for strip
 #include "Bounce2.h"                            // For Bounce button class

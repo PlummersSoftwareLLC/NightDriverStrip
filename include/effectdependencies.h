@@ -64,6 +64,7 @@
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
     #include "effects/matrix/PatternWave.h"
+    #include "effects/matrix/PatternMaze.h"
     #include "effects/matrix/PatternLife.h"
     #include "effects/matrix/PatternSpiro.h"
     #include "effects/matrix/PatternCube.h"

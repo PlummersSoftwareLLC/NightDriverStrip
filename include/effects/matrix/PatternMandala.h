@@ -145,9 +145,9 @@ public:
     // show just one layer
     void ShowNoiseLayer(uint8_t layer, uint8_t colorrepeat, uint8_t colorshift)
     {
-        for (uint8_t i = 0; i < MATRIX_WIDTH; i++)
+        for (uint16_t i = 0; i < MATRIX_WIDTH; i++)
         {
-            for (uint8_t j = 0; j < MATRIX_HEIGHT; j++)
+            for (uint16_t j = 0; j < MATRIX_HEIGHT; j++)
             {
 
                 uint8_t color = g()->GetNoise().noise[i][j];

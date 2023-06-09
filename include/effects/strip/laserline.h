@@ -124,7 +124,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         while(it != _shots.end())
         {
             it->Draw(_gfx);
-            if (!it->Update(g_AppTime.DeltaTime()))
+            if (!it->Update(g_AppTime.LastFrameTime()))
                 _shots.erase(it);
             else
                 it++;

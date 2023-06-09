@@ -62,7 +62,7 @@ public:
     static const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;                // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
     static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING   /* | SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1 */); // see http://docs.pixelmatix.com/SmartMatrix for options
     static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
-    static const uint8_t kDefaultBrightness = (100 * 255) / 100; // full (100%) brightness
+    static const uint8_t kDefaultBrightness = 255; // full (100%) brightness
     static const rgb24 defaultBackgroundColor;
 
     #if USE_MATRIX
@@ -80,9 +80,9 @@ public:
     {
     }
 
-    void SetBrightness(byte percent)
+    void SetBrightness(byte amount)
     {
-        matrix.setBrightness(percent);
+        matrix.setBrightness(amount);
     }
     
     virtual uint16_t xy(uint16_t x, uint16_t y) const override
@@ -176,10 +176,5 @@ public:
     static void StartMatrix();
     static CRGB *GetMatrixBackBuffer();
     static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
-
-    SMLayerBackground<SM_RGB, kBackgroundLayerOptions> GetBackgroundLayer()
-    {
-        return backgroundLayer;
-    }
 };
 #endif

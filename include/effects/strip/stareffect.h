@@ -511,7 +511,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                 }
             #endif
 
-            if (randomdouble(0, 2.0) < g_AppTime.DeltaTime() * prob)
+            if (randomdouble(0, 2.0) < g_AppTime.LastFrameTime() * prob)
             {
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                 // This always starts stars on even pixel boundaries so they look like the desired width if not moving
@@ -543,7 +543,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         }
         else
         {
-            blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, _blurFactor * 255);
+            g()->blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blurFactor * 255);
             fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer._VURatioFade));
         }
 

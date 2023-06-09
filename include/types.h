@@ -65,6 +65,7 @@ struct SettingSpec
     String FriendlyName;
     String Description;
     SettingType Type;
+    bool HasValidation = false;
 
     SettingSpec(const String& name, const String& friendlyName, const String& description, SettingType type)
       : Name(name),

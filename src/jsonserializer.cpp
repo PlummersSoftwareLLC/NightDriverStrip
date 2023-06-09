@@ -39,7 +39,7 @@ bool BoolFromText(const String& text)
     return text == "true" || strtol(text.c_str(), NULL, 10);
 }
 
-bool LoadJSONFile(const char *fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;
 
@@ -106,7 +106,7 @@ void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, s
     }
 }
 
-bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable& object)
+bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializable& object)
 {
     if (bufferSize == 0)
         bufferSize = JSON_BUFFER_BASE_SIZE;
@@ -152,7 +152,7 @@ bool SaveToJSONFile(const char *fileName, size_t& bufferSize, IJSONSerializable&
     return true;
 }
 
-bool RemoveJSONFile(const char *fileName)
+bool RemoveJSONFile(const String & fileName)
 {
     return SPIFFS.remove(fileName);
 }
@@ -176,6 +176,14 @@ void JSONWriter::FlagWriter(size_t index)
     g_TaskManager.NotifyJSONWriterThread();
 }
 
+void JSONWriter::FlushWrites(bool halt)
+{
+    flushRequested = true;
+    haltWrites = halt;
+
+    g_TaskManager.NotifyJSONWriterThread();
+}
+
 // JSONWriterTaskEntry
 //
 // Invoke functions that write serialized JSON objects to SPIFFS at request, with some delay
@@ -191,6 +199,17 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
             if (!g_ptrJSONWriter)
+                continue;
+
+            // If a flush was requested then we execute pending writes now
+            if (g_ptrJSONWriter->flushRequested)
+            {
+                g_ptrJSONWriter->flushRequested = false;
+                break;
+            }
+
+            // If writes are halted, we don't do anything
+            if (g_ptrJSONWriter->haltWrites)
                 continue;
 
             unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs + JSON_WRITER_DELAY;
