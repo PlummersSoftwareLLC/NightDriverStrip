@@ -48,6 +48,7 @@ class LEDStripEffect : public IJSONSerializable
   private:
 
     bool   _coreEffect = false;
+    static std::vector<SettingSpec> _baseSettingSpecs;
 
   protected:
 
@@ -56,7 +57,6 @@ class LEDStripEffect : public IJSONSerializable
     int    _effectNumber;
     bool   _enabled = true;
     size_t _maximumEffectTime = SIZE_MAX;
-    static std::vector<SettingSpec> _baseSettingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
@@ -119,8 +119,11 @@ class LEDStripEffect : public IJSONSerializable
         SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
     }
 
-    virtual void FillSettingSpecs()
+    virtual bool FillSettingSpecs()
     {
+        if (_settingSpecs.size() > 0)
+            return false;
+
         if (_baseSettingSpecs.size() == 0)
         {
             _baseSettingSpecs.emplace_back(
@@ -151,6 +154,8 @@ class LEDStripEffect : public IJSONSerializable
         }
 
         _settingSpecs.insert(_settingSpecs.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
+
+        return true;
     }
 
   public:
@@ -469,8 +474,7 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
-        if (_settingSpecs.size() == 0)
-            FillSettingSpecs();
+        FillSettingSpecs();
 
         return _settingSpecs;
     }

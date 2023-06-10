@@ -52,7 +52,7 @@ class PatternSubscribers : public LEDStripEffect
     String youtubeChannelGuid               = DEFAULT_CHANNEL_GUID;
     String youtubeChannelName               = DEFAULT_CHANNEL_NAME;
     bool guidUpdated                        = true;
-    static std::vector<SettingSpec> mySettingSpecs;
+    std::vector<SettingSpec> mySettingSpecs;
 
     unsigned long millisLastCheck;
     bool succeededBefore                    = false;
@@ -117,29 +117,28 @@ class PatternSubscribers : public LEDStripEffect
 
   protected:
 
-    virtual void FillSettingSpecs() override
+    virtual bool FillSettingSpecs() override
     {
-        if (mySettingSpecs.size() == 0)
-        {
-            mySettingSpecs.emplace_back(
-                NAME_OF(youtubeChannelGuid),
-                "YouTube channel GUID",
-                "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
-                "the effect should show subscriber information.",
-                SettingSpec::SettingType::String
-            );
-            mySettingSpecs.emplace_back(
-                NAME_OF(youtubeChannelName),
-                "YouTube channel name",
-                "The name of the channel for which the effect should show subscriber information.",
-                SettingSpec::SettingType::String
-            );
-        }
+        if (!LEDStripEffect::FillSettingSpecs())
+            return false;
 
-        LEDStripEffect::FillSettingSpecs();
+        mySettingSpecs.emplace_back(
+            NAME_OF(youtubeChannelGuid),
+            "YouTube channel GUID",
+            "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
+            "the effect should show subscriber information.",
+            SettingSpec::SettingType::String
+        );
+        mySettingSpecs.emplace_back(
+            NAME_OF(youtubeChannelName),
+            "YouTube channel name",
+            "The name of the channel for which the effect should show subscriber information.",
+            SettingSpec::SettingType::String
+        );
 
         _settingSpecs.insert(_settingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
 
+        return true;
     }
 
   public:
