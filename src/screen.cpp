@@ -104,7 +104,8 @@ void BasicInfoSummary(bool bRedraw)
     // bRedraw is set for full redraw, in which case we fill the screen
 
     if (bRedraw)
-        g_pDisplay->fillRect(1, 1, g_pDisplay->height() - 2, g_pDisplay->width() - 2, bkgndColor);
+        g_pDisplay->fillScreen(bkgndColor);
+        //g_pDisplay->fillRect(1, 1, g_pDisplay->height() - 2, g_pDisplay->width() - 2, bkgndColor);
 
     // Status line 1
 
@@ -197,8 +198,8 @@ void BasicInfoSummary(bool bRedraw)
 
     if (g_pDisplay->height() >= lineHeight * 8)
     {
-        int top = lineHeight * 7 + 2;
-        int height = lineHeight - 2;
+        int top = g_pDisplay->height() - lineHeight;
+        int height = lineHeight - 3;
         int width = g_pDisplay->width() - xMargin * 2;
         float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
         ratio = std::min(1.0f, ratio);
@@ -223,8 +224,8 @@ void BasicInfoSummary(bool bRedraw)
         }
 
         #if USE_OLED
-            g_pDisplay->fillRect(xMargin + 1, top + 1, filled, height - 2, WHITE16);
-            g_pDisplay->fillRect(xMargin + filled, top + 1, width - filled, height - 2, BLACK16);
+            g_pDisplay->fillRect(xMargin + 1, top, filled, height, WHITE16);
+            g_pDisplay->fillRect(xMargin + filled, top, width - filled, height, BLACK16);
             g_pDisplay->drawRect(xMargin, top, width, height, WHITE16);
         #else
             g_pDisplay->fillRect(xMargin + 1, top + 1, filled, height - 2, color);

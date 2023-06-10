@@ -146,9 +146,8 @@ public:
 
         M5Screen(int w, int h) : Screen(w, h)
         {
-            M5.Lcd.fillScreen(BLUE16);
+            M5.Lcd.fillScreen(GREEN16);
             M5.Lcd.setRotation(1);
-            M5.Lcd.setTextDatum(L_BASELINE);
         }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
