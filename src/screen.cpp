@@ -86,7 +86,12 @@ void BasicInfoSummary(bool bRedraw)
 
     // Blue Theme
 
-    const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);
+    #if USE_OLED
+        const uint16_t bkgndColor = BLACK16;
+    #else
+        const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);
+    #endif
+
     const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
     const uint16_t textColor = Screen::to16bit(CRGB::White);
 
@@ -192,8 +197,8 @@ void BasicInfoSummary(bool bRedraw)
 
     if (g_pDisplay->height() >= lineHeight * 8)
     {
-        int top = lineHeight * 7 + lineHeight / 2;
-        int height = lineHeight - 5;
+        int top = lineHeight * 7 + 2;
+        int height = lineHeight - 2;
         int width = g_pDisplay->width() - xMargin * 2;
         float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
         ratio = std::min(1.0f, ratio);
@@ -217,9 +222,15 @@ void BasicInfoSummary(bool bRedraw)
             }
         }
 
-        g_pDisplay->fillRect(xMargin + 1, top + 1, filled, height - 2, color);
-        g_pDisplay->fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
-        g_pDisplay->drawRect(xMargin, top, width, height, WHITE16);
+        #if USE_OLED
+            g_pDisplay->fillRect(xMargin + 1, top + 1, filled, height - 2, WHITE16);
+            g_pDisplay->fillRect(xMargin + filled, top + 1, width - filled, height - 2, BLACK16);
+            g_pDisplay->drawRect(xMargin, top, width, height, WHITE16);
+        #else
+            g_pDisplay->fillRect(xMargin + 1, top + 1, filled, height - 2, color);
+            g_pDisplay->fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
+            g_pDisplay->drawRect(xMargin, top, width, height, WHITE16);
+        #endif
     }
 
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32

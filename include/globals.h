@@ -76,6 +76,7 @@
 //              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
+//              Jun-10-2023  v037       Davepl      New Screen classes 
 //
 //---------------------------------------------------------------------------
 
@@ -119,7 +120,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         36    // Update ONLY this to increment the version number
+#define FLASH_VERSION         7    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
     #ifndef USESTRIP
@@ -1221,7 +1222,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #if USE_SCREEN
 
-    #ifdef ARDUINO_HELTEC_WIFI_KIT_32                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
+    #if ARDUINO_HELTEC_WIFI_KIT_32_V3
+
+        #define USE_OLED 1
+        #define USE_SSD1306 1
+
+    #elif ARDUINO_HELTEC_WIFI_KIT_32      
+                        // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 

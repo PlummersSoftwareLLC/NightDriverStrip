@@ -210,14 +210,14 @@ public:
     };
 #endif
 
-#if USE_OLED
+#if USE_OLED && !USE_SSD1306
     #include <U8g2lib.h>                // Library for monochrome displays
     #include <gfxfont.h>                // Adafruit GFX font structs
     #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
 
     // OLEDScreen
     //
-    // Screen class that works with the TFT_eSPI library for devices such as the S3-TFT-Feather
+    // Screen class that works with the devices like the original Heltec Wifi Kit 32
 
     class OLEDScreen : public Screen
     {
@@ -249,6 +249,51 @@ public:
         virtual void fillScreen(uint16_t color) override
         {
             oled.clearDisplay();
+        }
+    };
+#endif
+
+#if USE_SSD1306
+
+    #include <U8g2lib.h>                // Library for monochrome displays
+    #include <gfxfont.h>                // Adafruit GFX font structs
+    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
+    #include <heltec.h>                // Display 
+
+    // SSD1306Screen
+    //
+    // Screen class that works with the newer V3 Heltec Wifi Kit 32
+
+    class SSD1306Screen : public Screen
+    {
+    public:
+
+        SSD1306Screen(int w, int h) : Screen(w, h)
+        {
+            Heltec.begin(true /*DisplayEnable Enable*/, true /*LoRa Disable*/, false /*Serial Enable*/);
+            Heltec.display->screenRotate(ANGLE_180_DEGREE);
+        }   
+
+        virtual void StartFrame() override
+        {
+        }
+
+        virtual void EndFrame() override
+        {
+            Heltec.display->display();
+        }
+
+        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            if (color == BLACK16)
+                Heltec.display->clearPixel(x,y);
+            else
+                Heltec.display->setPixel(x,y);
+        }
+
+        virtual void fillScreen(uint16_t color) override
+        {
+            Heltec.display->clear();
         }
     };
 #endif
