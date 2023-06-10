@@ -33,14 +33,14 @@
 
 // Static member initializers
 
-
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
     { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrDeviceConfig->ValidateOpenWeatherAPIKey(value); } }
 };
 
-std::vector<SettingSpec> CWebServer::deviceSettingSpecs{};
+std::vector<SettingSpec> CWebServer::mySettingSpecs = {};
+std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
 
 // Member function template specialzations
 
@@ -269,7 +269,7 @@ void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<SettingSpec> & settingSpecs)
+void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs)
 {
     static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
     bool bufferOverflow;
@@ -280,15 +280,16 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
         auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
         auto jsonArray = response->getRoot().to<JsonArray>();
 
-        for (auto& spec : settingSpecs)
+        for (auto& specWrapper : settingSpecs)
         {
+            auto& spec = specWrapper.get();
             auto specObject = jsonArray.createNestedObject();
 
             StaticJsonDocument<384> jsonDoc;
 
             jsonDoc["name"] = spec.Name;
             jsonDoc["friendlyName"] = spec.FriendlyName;
-            if (!spec.Description.isEmpty())
+            if (spec.Description)
                 jsonDoc["description"] = spec.Description;
             jsonDoc["type"] = to_value(spec.Type);
             jsonDoc["typeName"] = spec.ToName(spec.Type);
@@ -310,18 +311,21 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
     } while (bufferOverflow);
 }
 
-const std::vector<SettingSpec> & CWebServer::LoadDeviceSettingSpecs()
+const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
 {
     if (deviceSettingSpecs.size() == 0)
     {
-        auto deviceConfigSpecs = g_ptrDeviceConfig->GetSettingSpecs();
-        deviceSettingSpecs.emplace_back(
+        mySettingSpecs.emplace_back(
             "effectInterval",
             "Effect interval",
             "The duration in milliseconds that an individual effect runs, before the next effect is activated.",
             SettingSpec::SettingType::PositiveBigInteger
         );
+        deviceSettingSpecs.insert(deviceSettingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
+
+        auto deviceConfigSpecs = g_ptrDeviceConfig->GetSettingSpecs();
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
+
     }
 
     return deviceSettingSpecs;
@@ -441,9 +445,9 @@ bool CWebServer::ApplyEffectSettings(AsyncWebServerRequest * pRequest, std::shar
 {
     bool settingChanged = false;
 
-    for (auto& settingSpec : effect->GetSettingSpecs())
+    for (auto& settingSpecWrapper : effect->GetSettingSpecs())
     {
-        const String& settingName = settingSpec.Name;
+        const String& settingName = settingSpecWrapper.get().Name;
         settingChanged = PushPostParamIfPresent<String>(pRequest, settingName, [&](auto value) { return effect->SetSetting(settingName, value); })
             || settingChanged;
     }
@@ -472,8 +476,10 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
 {
     String paramName;
 
-    for (auto settingSpec : LoadDeviceSettingSpecs())
+    for (auto& settingSpecWrapper : LoadDeviceSettingSpecs())
     {
+        auto& settingSpec = settingSpecWrapper.get();
+
         if (pRequest->hasParam(settingSpec.Name, true))
         {
             if (paramName.isEmpty())
