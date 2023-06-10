@@ -75,8 +75,6 @@ class PatternSubscribers : public LEDStripEffect
 
     void UpdateSubscribers()
     {
-        debugI("Updating subscriber data");
-
         if (!WiFi.isConnected())
         {
             debugW("Skipping Subscriber update, waiting for WiFi...");
