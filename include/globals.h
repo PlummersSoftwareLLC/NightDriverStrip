@@ -1367,14 +1367,6 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 //
 // Headers that are only included when certain features are enabled
 
-#if USE_OLED
-#include <U8g2lib.h>                // Library for monochrome displays
-#include <gfxfont.h>                // Adafruit GFX font structs
-#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
-extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
-#endif
-
-
 
 // FPS
 //

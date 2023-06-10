@@ -35,10 +35,7 @@ extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 float g_Brite;
 uint32_t g_Watts;
 
-#if USE_OLED
-#define SCREEN_ROTATION U8G2_R2
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C *g_pDisplay = new U8G2_SSD1306_128X64_NONAME_F_HW_I2C(SCREEN_ROTATION, /*reset*/ 16, /*clk*/ 15, /*data*/ 4);
-#endif
+#if USE_SCREEN
 
 #if USE_LCD
 Adafruit_ILI9341 *g_pDisplay;
@@ -50,7 +47,9 @@ Adafruit_ILI9341 *g_pDisplay;
 #include <SPI.h>
 #endif
 
+#if USE_SCREEN
 std::unique_ptr<Screen> g_pDisplay;
+#endif
 
 //
 // Externals - Mostly things that the screen will report or display for us
@@ -99,13 +98,8 @@ void BasicInfoSummary(bool bRedraw)
 
     // bRedraw is set for full redraw, in which case we fill the screen
 
-#if USE_OLED
     if (bRedraw)
-        Screen::fillRect(1, 1, Screen::screenHeight() - 2, Screen::screenWidth() - 2, bkgndColor);
-#else
-    if (bRedraw)
-        g_pDisplay->fillRect(1, 1, g_pDisplay->width() - 2, g_pDisplay->height() - 2, bkgndColor);
-#endif
+        g_pDisplay->fillRect(1, 1, g_pDisplay->height() - 2, g_pDisplay->width() - 2, bkgndColor);
 
     // Status line 1
 
@@ -116,8 +110,13 @@ void BasicInfoSummary(bool bRedraw)
     cStatus++;
 
     g_pDisplay->setFont();
-    g_pDisplay->setTextSize(2);
-    g_pDisplay->setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
+    g_pDisplay->setTextSize(g_pDisplay->width() >= 240 ? 2 : 1);
+    #if USE_OLED
+        g_pDisplay->setTextColor(WHITE16, BLACK16);
+    #else
+        g_pDisplay->setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
+    #endif
+
     g_pDisplay->setCursor(xMargin, yMargin);
     g_pDisplay->println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
 
@@ -375,9 +374,7 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
 
     std::lock_guard<std::mutex> guard(g_pDisplay->_screenMutex);
 
-#if USE_OLED
-    g_pDisplay->clearBuffer();
-#endif
+    g_pDisplay->StartFrame();
 
     switch (giInfoPage)
     {
@@ -394,9 +391,7 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
         break;
     }
 
-#if USE_OLED
-    g_pDisplay->sendBuffer();
-#endif
+    g_pDisplay->EndFrame();
 
 #endif
 }
@@ -418,12 +413,6 @@ extern Bounce2::Button Button2;
 void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 {
     //debugI(">> ScreenUpdateLoopEntry\n");
-
-#if USE_OLED
-    g_pDisplay->setDisplayRotation(SCREEN_ROTATION);
-    g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable default font
-    g_pDisplay->clear();
-#endif
 
     bool bRedraw = true;
     for (;;)
@@ -462,3 +451,5 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         bRedraw = false;
     }
 }
+
+#endif

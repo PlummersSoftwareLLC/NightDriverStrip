@@ -37,26 +37,12 @@
 #include <freefonts.h>
 #include "gfxbase.h"
 
-// A project with a screen will define one of these screen types (TFT, OLED, LCD, etc) and one object of the
-// correct type will be created and assigned to g_pDisplay, which will have the appropriate type.
-
-#if USE_OLED
-extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C *g_pDisplay;
-#endif
 
 #if USE_LCD
 extern Adafruit_ILI9341 *g_pDisplay;
 #endif
 
 /*
-#if USE_OLED
-        g_pDisplay->clear();
-        g_pDisplay->clearBuffer();                   // clear the internal memory
-        g_pDisplay->setFont(u8g2_font_profont15_tf); // choose a suitable font
-        g_pDisplay->setCursor(0, 10);
-        g_pDisplay->println(strStatus);
-        g_pDisplay->sendBuffer();
-#elif USE_TFTSPI || USE_M5DISPLAY
 #elif USE_LCD
         g_pDisplay->fillScreen(BLUE16);
         g_pDisplay->setFont(FM9);
@@ -73,6 +59,16 @@ public:
     static DRAM_ATTR std::mutex _screenMutex;
 
     Screen(int w, int h) : GFXBase(w, h)
+    {
+    }
+
+    // Some devices, like the OLE, require that you send the whole buffer at once, but others do not.  The default implenetation is to do nothing.
+
+    virtual void StartFrame()
+    {
+    }
+
+    virtual void EndFrame()
     {
     }
 
@@ -214,5 +210,50 @@ public:
     };
 #endif
 
+#if USE_OLED
+    #include <U8g2lib.h>                // Library for monochrome displays
+    #include <gfxfont.h>                // Adafruit GFX font structs
+    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
+
+    // OLEDScreen
+    //
+    // Screen class that works with the TFT_eSPI library for devices such as the S3-TFT-Feather
+
+    class OLEDScreen : public Screen
+    {
+        U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled;
+
+    public:
+
+        OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
+        {
+            oled.begin();
+            oled.clear();
+        }   
+
+        virtual void StartFrame() override
+        {
+            oled.clearBuffer();
+        }
+
+        virtual void EndFrame() override
+        {
+            oled.sendBuffer();
+        }
+        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            oled.setDrawColor(color == BLACK16 ? 0  : 1);
+            oled.drawPixel(x, y);
+        }
+
+        virtual void fillScreen(uint16_t color) override
+        {
+            oled.clearDisplay();
+        }
+    };
+#endif
+
+#if USE_SCREEN
 extern std::unique_ptr<Screen> g_pDisplay;
+#endif
 

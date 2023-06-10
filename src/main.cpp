@@ -531,15 +531,6 @@ void setup()
         Button2.setPressedState(LOW);
     #endif
 
-    // Init the U8G2 compatible SSD1306, 128X64 OLED display on the Heltec board
-
-#if USE_OLED
-    debugI("Intializizing OLED display");
-    g_pDisplay->begin();
-    debugI("Initializing OLED display");
-#endif
-
-
 #if USE_LCD
     extern Adafruit_ILI9341 * g_pDisplay;
     debugI("Initializing LCD display\n");
@@ -589,7 +580,11 @@ void setup()
         #else
             M5.begin(false);
         #endif
-    
+
+    #elif USE_OLED
+
+        g_pDisplay = std::make_unique<OLEDScreen>(128, 64);                    
+
     #endif
 
     #if USE_MATRIX
@@ -598,7 +593,7 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    g_pDisplay->ScreenStatus("Initializing GFXBASE devices");
+    //g_pDisplay->ScreenStatus("Initializing GFXBASE devices");
 
     #if USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
@@ -616,12 +611,12 @@ void setup()
         }
     #endif
 
-    g_pDisplay->ScreenStatus("Setting JPG callback");
+    //g_pDisplay->ScreenStatus("Setting JPG callback");
 
     TJpgDec.setJpgScale(1);
     TJpgDec.setCallback(bitmap_output);
 
-    g_pDisplay->ScreenStatus("Allocating LED Buffers");
+    //g_pDisplay->ScreenStatus("Allocating LED Buffers");
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -665,7 +660,7 @@ void setup()
         ledcSetup(3, 12000, 8);
     #endif
 
-    g_pDisplay->ScreenStatus("Initializing LED strips");
+    //g_pDisplay->ScreenStatus("Initializing LED strips");
 
     #if USESTRIP
 
@@ -731,7 +726,7 @@ void setup()
         #endif
     #endif
 
-    g_pDisplay->ScreenStatus("Initializing Effects Manager");
+    //g_pDisplay->ScreenStatus("Initializing Effects Manager");
 
     // Show splash effect on matrix
     #if USE_MATRIX
@@ -742,7 +737,7 @@ void setup()
         InitEffectsManager();
     #endif
 
-    g_pDisplay->ScreenStatus("Initializing Audio");
+    //g_pDisplay->ScreenStatus("Initializing Audio");
 
     // Microphone stuff
     #if ENABLE_AUDIO
@@ -752,7 +747,7 @@ void setup()
         CheckHeap();
     #endif
 
-    g_pDisplay->ScreenStatus("Initializing Screen Thread");
+    //g_pDisplay->ScreenStatus("Initializing Screen Thread");
 
     #if USE_SCREEN
         g_TaskManager.StartScreenThread();
