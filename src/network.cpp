@@ -38,6 +38,10 @@
     extern DRAM_ATTR CWebServer g_WebServer;
 #endif
 
+#if ENABLE_WIFI
+    DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader = nullptr;
+#endif
+
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
 DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
@@ -504,7 +508,7 @@ bool WriteWiFiConfig()
 
 void IRAM_ATTR ColorDataTaskEntry(void *)
 {
-    LEDViewer _viewer(12000);    
+    LEDViewer _viewer(12000);
     int socket = -1;
 
     for(;;)
@@ -512,7 +516,7 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
         while (!WiFi.isConnected())
             delay(250);
 
-        if (!_viewer.begin()) 
+        if (!_viewer.begin())
         {
             debugE("Unable to start color data server!");
             delay(1000);
@@ -561,3 +565,102 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
         delay(1000);
     }
 }
+
+#if ENABLE_WIFI
+
+    size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval)
+    {
+        // Add the reader with its flag unset
+        auto& readerEntry = readers.emplace_back(reader, interval);
+
+        // If an interval is specified, start the interval timer now.
+        if (interval)
+            readerEntry.lastReadMs.store(millis());
+
+        return readers.size() - 1;
+    }
+
+    void NetworkReader::FlagReader(size_t index)
+    {
+        // Check if we received a valid reader index
+        if (index >= readers.size())
+            return;
+
+        readers[index].flag.store(true);
+
+        g_TaskManager.NotifyNetworkReaderThread();
+    }
+
+    void IRAM_ATTR NetworkReaderTaskEntry(void *)
+    {
+        TickType_t notifyWait = 0;
+
+        for(;;)
+        {
+            if (notifyWait)
+                // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
+                ulTaskNotifyTake(pdTRUE, notifyWait);
+
+            // If the reader container isn't available yet, we sleep 5 seconds and check again
+            if (!g_ptrNetworkReader)
+            {
+                notifyWait = pdMS_TO_TICKS(5000);
+                continue;
+            }
+
+            unsigned long now = millis();
+
+            // Flag entries of which the read interval has passed
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
+                auto interval = entry.readInterval.load();
+                unsigned long targetMs = entry.lastReadMs.load() + interval;
+
+                // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
+                //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
+                if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
+                    entry.flag.store(true);
+            }
+
+            // Execute flagged readers
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
+                // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
+                if (entry.flag.exchange(false))
+                {
+                    entry.reader();
+                    entry.lastReadMs.store(millis());
+                }
+            }
+
+            unsigned long holdMs = std::numeric_limits<unsigned long>::max();
+            now = millis();
+
+            // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
+                auto interval = entry.readInterval.load();
+                auto lastReadMs = entry.lastReadMs.load();
+
+                if (!interval)
+                    continue;
+
+                // If one of the reader intervals passed then we're up for another read cycle right away, so we can stop looking further
+                if (lastReadMs + interval <= now)
+                {
+                    holdMs = 0;
+                    break;
+                }
+                else
+                {
+                    unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
+                    if (entryHoldMs < holdMs)
+                        holdMs = entryHoldMs;
+                }
+            }
+
+            notifyWait = holdMs < std::numeric_limits<unsigned long>::max() ? pdMS_TO_TICKS(holdMs) : portMAX_DELAY;
+        }
+    }
+
+#endif

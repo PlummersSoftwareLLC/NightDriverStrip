@@ -36,10 +36,9 @@
 #include "deviceconfig.h"
 #include "YouTubeSight.h"
 
-#define SUB_CHECK_WIFI_WAIT 5000
-#define SUB_CHECK_INTERVAL 60000
-#define SUB_CHECK_GUID_INTERVAL 5000
-#define SUB_CHECK_ERROR_INTERVAL 20000
+#define SUB_CHECK_INTERVAL          60000
+#define SUB_CHECK_ERROR_INTERVAL    20000
+#define SIGHT_READER_INTERVAL       5000
 
 #define DEFAULT_CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
 #define DEFAULT_CHANNEL_NAME "Daves Garage"
@@ -54,45 +53,37 @@ class PatternSubscribers : public LEDStripEffect
     bool guidUpdated                        = true;
     std::vector<SettingSpec> mySettingSpecs;
 
-    unsigned long millisLastCheck;
+    unsigned long msLastCheck;
     bool succeededBefore                    = false;
 
-    TaskHandle_t sightTask                  = nullptr;
     time_t latestUpdate                     = 0;
 
     WiFiClient http;
     std::unique_ptr<YouTubeSight> sight = nullptr;
 
-    // Thread entry point so we can update the subscriber data asynchronously
-    static void SightTaskEntryPoint(LEDStripEffect& effect)
+    void SightReader()
     {
-        PatternSubscribers& subsEffect = static_cast<PatternSubscribers&>(effect);
+        unsigned long msSinceLastCheck = millis() - msLastCheck;
 
-        for(;;)
+        if (guidUpdated || !msLastCheck
+            || (!succeededBefore && msSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
+            || msSinceLastCheck > SUBCHECK_INTERVAL)
         {
-            unsigned long millisSinceLastCheck = millis() - subsEffect.millisLastCheck;
-
-            if (subsEffect.guidUpdated || !subsEffect.millisLastCheck
-                || (!subsEffect.succeededBefore && millisSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
-                || millisSinceLastCheck > SUBCHECK_INTERVAL)
-            {
-                subsEffect.UpdateSubscribers();
-            }
-
-            // Sleep for a few seconds before we recheck if the GUID has changed
-            vTaskDelay(SUB_CHECK_GUID_INTERVAL / portTICK_PERIOD_MS);
+            UpdateSubscribers();
         }
     }
 
     void UpdateSubscribers()
     {
-        while(!WiFi.isConnected())
+        debugI("Updating subscriber data");
+
+        if (!WiFi.isConnected())
         {
-            debugI("Delaying Subscriber update, waiting for WiFi...");
-            vTaskDelay(pdMS_TO_TICKS(SUB_CHECK_WIFI_WAIT));
+            debugW("Skipping Subscriber update, waiting for WiFi...");
+            return;
         }
 
-        millisLastCheck = millis();
+        msLastCheck = millis();
 
         if (!sight || guidUpdated)
         {
@@ -105,6 +96,7 @@ class PatternSubscribers : public LEDStripEffect
         // Use the YouTubeSight API call to get the current channel stats
         if (sight->getData())
         {
+            debugI("Got YouTube subscriber data");
             subscribers = atol(sight->channelStats.subscribers_count.c_str());
             views       = atol(sight->channelStats.views.c_str());
             succeededBefore = true;
@@ -179,7 +171,9 @@ class PatternSubscribers : public LEDStripEffect
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        sightTask = g_TaskManager.StartEffectThread(SightTaskEntryPoint, this, "Subs");
+        auto readerIndex = g_ptrNetworkReader->RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL);
+        // Trigger our reader straight away
+        g_ptrNetworkReader->FlagReader(readerIndex);
 
         return true;
     }

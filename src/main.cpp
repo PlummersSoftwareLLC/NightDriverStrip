@@ -498,6 +498,11 @@ void setup()
         WiFi_ssid     = cszSSID;
     }
 
+    // We create the network reader here, so classes can register their readers from this point onwards.
+    //   Note that the thread that executes the readers is started further down, along with other networking
+    //   threads.
+    g_ptrNetworkReader = std::make_unique<NetworkReader>();
+
 #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
@@ -682,7 +687,6 @@ void setup()
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
 
-
             FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[0]->leds, g_aptrDevices[0]->GetLEDCount());
             //FastLED.setMaxRefreshRate(100, false);
             pinMode(LED_PIN0, OUTPUT);
@@ -775,6 +779,7 @@ void setup()
 
     #if ENABLE_WIFI
         g_TaskManager.StartNetworkThread();
+        g_TaskManager.StartNetworkReaderThread();
         CheckHeap();
     #endif
 
