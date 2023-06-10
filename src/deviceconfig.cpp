@@ -45,65 +45,6 @@ void DeviceConfig::SaveToJSON()
 
 DeviceConfig::DeviceConfig()
 {
-    // Add SettingSpec for additional settings to this list
-    settingSpecs.emplace_back(
-        NAME_OF(location),
-        "Location",
-        "The location (city or postal code) where the device is located.",
-        SettingSpec::SettingType::String
-    );
-    settingSpecs.emplace_back(
-        NAME_OF(locationIsZip),
-        "Location is postal code",
-        "A boolean indicating if the value in the 'location' setting is a postal code ('true'/1) or not ('false'/0).",
-        SettingSpec::SettingType::Boolean
-    );
-    settingSpecs.emplace_back(
-        NAME_OF(countryCode),
-        "Country code",
-        "The <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">ISO 3166-1 alpha-2</a> country "
-        "code for the country that the device is located in.",
-        SettingSpec::SettingType::String
-    );
-    settingSpecs.emplace_back(
-        NAME_OF(openWeatherApiKey),
-        "Open Weather API key",
-        "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a> (write only).",
-        SettingSpec::SettingType::String
-    ).HasValidation = true;
-    settingSpecs.emplace_back(
-        NAME_OF(timeZone),
-        "Time zone",
-        "The timezone the device resides in, in <a href=\"https://en.wikipedia.org/wiki/Tz_database\">tz database</a> format. "
-        "The list of available timezone identifiers can be found in the <a href=\"/timezones.json\">timezones.json</a> file.",
-        SettingSpec::SettingType::String
-    );
-    settingSpecs.emplace_back(
-        NAME_OF(use24HourClock),
-        "Use 24 hour clock",
-        "A boolean that indicates if time should be shown in 24-hour format ('true'/1) or 12-hour AM/PM format ('false'/0).",
-        SettingSpec::SettingType::Boolean
-    );
-    settingSpecs.emplace_back(
-        NAME_OF(useCelsius),
-        "Use degrees Celsius",
-        "A boolean that indicates if temperatures should be shown in degrees Celsius ('true'/1) or degrees Fahrenheit ('false'/0).",
-        SettingSpec::SettingType::Boolean
-    );
-    settingSpecs.emplace_back(
-        NAME_OF(ntpServer),
-        "NTP server address",
-        "The hostname or IP address of the NTP server to be used for time synchronization.",
-        SettingSpec::SettingType::String
-    );
-    settingSpecs.emplace_back(
-        NAME_OF(rememberCurrentEffect),
-        "Remember current effect",
-        "A boolean that indicates if the current effect index should be saved after an effect transition, so the device resumes "
-        "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
-        SettingSpec::SettingType::Boolean
-    );
-
     writerIndex = g_ptrJSONWriter->RegisterWriter(
         [this]() { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
     );

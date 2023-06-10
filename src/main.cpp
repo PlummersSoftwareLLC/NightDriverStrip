@@ -430,11 +430,11 @@ void setup()
     Debug.setSerialEnabled(true);
 
     // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
-    // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default 
+    // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default
     // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
 
     #if MESMERIZER
-        heap_caps_malloc_extmem_enable(1024);
+        heap_caps_malloc_extmem_enable(128);
     #endif
 
     uzlib_init();
@@ -442,7 +442,7 @@ void setup()
     if (!SPIFFS.begin(true))
         Serial.println("WARNING: SPIFFs could not be intialized!");
 
-    // Star the Task Manager which takes over the watchdog role and measures CPU usage
+    // Start the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
@@ -773,7 +773,7 @@ void setup()
     debugV("Initializing compression...");
     CheckHeap();
 
-    #if ENABLE_WIFI 
+    #if ENABLE_WIFI
         g_TaskManager.StartNetworkThread();
         CheckHeap();
     #endif

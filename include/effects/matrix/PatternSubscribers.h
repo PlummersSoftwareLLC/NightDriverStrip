@@ -47,17 +47,18 @@
 class PatternSubscribers : public LEDStripEffect
 {
   private:
-    long subscribers          = 0;
-    long views                = 0;
-    String youtubeChannelGuid = DEFAULT_CHANNEL_GUID;
-    String youtubeChannelName = DEFAULT_CHANNEL_NAME;
-    bool guidUpdated          = true;
+    long subscribers                        = 0;
+    long views                              = 0;
+    String youtubeChannelGuid               = DEFAULT_CHANNEL_GUID;
+    String youtubeChannelName               = DEFAULT_CHANNEL_NAME;
+    bool guidUpdated                        = true;
+    static std::vector<SettingSpec> mySettingSpecs;
 
     unsigned long millisLastCheck;
-    bool succeededBefore    = false;
+    bool succeededBefore                    = false;
 
-    TaskHandle_t sightTask   = nullptr;
-    time_t latestUpdate      = 0;
+    TaskHandle_t sightTask                  = nullptr;
+    time_t latestUpdate                     = 0;
 
     WiFiClient http;
     std::unique_ptr<YouTubeSight> sight = nullptr;
@@ -114,28 +115,37 @@ class PatternSubscribers : public LEDStripEffect
         }
     }
 
-    void construct()
+  protected:
+
+    virtual void FillSettingSpecs() override
     {
-        _settingSpecs.emplace_back(
-            NAME_OF(youtubeChannelGuid),
-            "YouTube channel GUID",
-            "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
-            "the effect should show subscriber information.",
-            SettingSpec::SettingType::String
-        );
-        _settingSpecs.emplace_back(
-            NAME_OF(youtubeChannelName),
-            "YouTube channel name",
-            "The name of the channel for which the effect should show subscriber information.",
-            SettingSpec::SettingType::String
-        );
+        if (mySettingSpecs.size() == 0)
+        {
+            mySettingSpecs.emplace_back(
+                NAME_OF(youtubeChannelGuid),
+                "YouTube channel GUID",
+                "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
+                "the effect should show subscriber information.",
+                SettingSpec::SettingType::String
+            );
+            mySettingSpecs.emplace_back(
+                NAME_OF(youtubeChannelName),
+                "YouTube channel name",
+                "The name of the channel for which the effect should show subscriber information.",
+                SettingSpec::SettingType::String
+            );
+        }
+
+        LEDStripEffect::FillSettingSpecs();
+
+        _settingSpecs.insert(_settingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
+
     }
 
   public:
 
     PatternSubscribers() : LEDStripEffect(EFFECT_MATRIX_SUBSCRIBERS, "Subs")
     {
-        construct();
     }
 
     PatternSubscribers(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
@@ -145,8 +155,6 @@ class PatternSubscribers : public LEDStripEffect
 
         if (jsonObject.containsKey("ycn"))
             youtubeChannelName = jsonObject["ycn"].as<String>();
-
-        construct();
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
