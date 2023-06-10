@@ -289,7 +289,7 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
 
             jsonDoc["name"] = spec.Name;
             jsonDoc["friendlyName"] = spec.FriendlyName;
-            if (!spec.Description.isEmpty())
+            if (spec.Description)
                 jsonDoc["description"] = spec.Description;
             jsonDoc["type"] = to_value(spec.Type);
             jsonDoc["typeName"] = spec.ToName(spec.Type);

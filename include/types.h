@@ -61,20 +61,20 @@ struct SettingSpec
         Color
     };
 
-    String Name;
-    String FriendlyName;
-    String Description;
+    const char* Name;
+    const char* FriendlyName;
+    const char* Description;
     SettingType Type;
     bool HasValidation = false;
 
-    SettingSpec(const String& name, const String& friendlyName, const String& description, SettingType type)
+    SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type)
       : Name(name),
         FriendlyName(friendlyName),
         Description(description),
         Type(type)
     {}
 
-    SettingSpec(const String& name, const String& friendlyName, SettingType type) : SettingSpec(name, friendlyName, "", type)
+    SettingSpec(const char* name, const char* friendlyName, SettingType type) : SettingSpec(name, friendlyName, nullptr, type)
     {}
 
     SettingSpec()
