@@ -1725,7 +1725,7 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #endif
 
 #if USE_SCREEN
-    #include "freefonts.h"
+    // #include "freefonts.h"
 #endif
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER

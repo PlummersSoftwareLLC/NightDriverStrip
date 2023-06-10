@@ -34,7 +34,7 @@
 #pragma once
 
 #include <mutex>
-#include <freefonts.h>
+//#include <freefonts.h>
 #include "gfxbase.h"
 
 
@@ -80,7 +80,7 @@ public:
     virtual void ScreenStatus(const String &strStatus) 
     {
         fillScreen(BLACK16);
-        setFont();
+        //setFont();
         setTextSize(1);
         setTextColor(0xFBE0, BLACK16);
         auto xh = 10;

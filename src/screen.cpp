@@ -115,7 +115,7 @@ void BasicInfoSummary(bool bRedraw)
     char chStatus = szStatus[c2];
     cStatus++;
 
-    g_pDisplay->setFont();
+    //g_pDisplay->setFont();
     g_pDisplay->setTextSize(g_pDisplay->width() >= 240 ? 2 : 1);
     #if USE_OLED
         g_pDisplay->setTextColor(WHITE16, BLACK16);
@@ -278,7 +278,7 @@ void CurrentEffectSummary(bool bRedraw)
             sip = WiFi.localIP().toString();
             lastFPS = g_FPS;
 
-            g_pDisplay->setFont();
+            //g_pDisplay->setFont();
             g_pDisplay->setTextSize(2);
             g_pDisplay->setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
