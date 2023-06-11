@@ -36,8 +36,9 @@
 #include "deviceconfig.h"
 #include "YouTubeSight.h"
 
-#define SUB_CHECK_INTERVAL          60000
-#define SUB_CHECK_ERROR_INTERVAL    20000
+// Update subscribers every 30 minutes, retry after 30 seconds on error, and check other things every 5 seconds
+#define SUB_CHECK_INTERVAL          (30 * 60000)
+#define SUB_CHECK_ERROR_INTERVAL    30000
 #define SIGHT_READER_INTERVAL       5000
 
 #define DEFAULT_CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
@@ -68,7 +69,7 @@ class PatternSubscribers : public LEDStripEffect
 
         if (guidUpdated || !msLastCheck
             || (!succeededBefore && msSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
-            || msSinceLastCheck > SUBCHECK_INTERVAL)
+            || msSinceLastCheck > SUB_CHECK_INTERVAL)
         {
             UpdateSubscribers();
         }
