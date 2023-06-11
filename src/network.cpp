@@ -290,7 +290,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 #endif
 
-
 // ProcessIncomingData
 //
 // Code that actually handles whatever comes in on the socket.  Must be known good data
@@ -594,54 +593,52 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
 
         readers[index].flag.store(true);
 
-        g_TaskManager.NotifyNetworkThread();
+        g_TaskManager.NotifyNetworkReaderThread();
     }
 
-    void IRAM_ATTR NetworkTaskEntry(void *)
+    void IRAM_ATTR NetworkReaderTaskEntry(void *)
     {
         TickType_t notifyWait = 0;
 
         for(;;)
         {
-            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
-            ulTaskNotifyTake(pdTRUE, notifyWait);
+            if (notifyWait)
+                // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
+                ulTaskNotifyTake(pdTRUE, notifyWait);
 
-            // If the reader container isn't available yet, we sleep a second and check again
+            // If the reader container isn't available yet, we sleep 5 seconds and check again
             if (!g_ptrNetworkReader)
             {
-                notifyWait = pdMS_TO_TICKS(1000);
+                notifyWait = pdMS_TO_TICKS(5000);
                 continue;
             }
 
-            auto now = millis();
+            unsigned long now = millis();
 
-            int i = 0;
-            // Execute readers that are flagged or of which the read interval has passed
+            // Flag entries of which the read interval has passed
             for (auto& entry : g_ptrNetworkReader->readers)
             {
                 auto interval = entry.readInterval.load();
-                auto lastReadMs = entry.lastReadMs.load();
+                unsigned long targetMs = entry.lastReadMs.load() + interval;
 
-                // The last check captures cases where millis() returns bogus data; if lastReadMs is greater than now
-                //   then something's up with our timekeeping, so we trigger the reader just to be sure
-                if (interval && (lastReadMs + interval <= now || lastReadMs > now))
+                // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
+                //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
+                if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
                     entry.flag.store(true);
+            }
 
-                debugW("Checking network function %d", i);
-
+            // Execute flagged readers
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
                 // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
                 if (entry.flag.exchange(false))
                 {
-                    debugW("Starting network function %d", i);
-                    delay(500);
                     entry.reader();
                     entry.lastReadMs.store(millis());
                 }
-
-                i++;
             }
 
-            auto holdMs = std::numeric_limits<unsigned long>::max();
+            unsigned long holdMs = std::numeric_limits<unsigned long>::max();
             now = millis();
 
             // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
@@ -660,11 +657,15 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
                     break;
                 }
                 else
-                    holdMs = std::min({holdMs, interval, interval - (now - lastReadMs)});
+                {
+                    unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
+                    if (entryHoldMs < holdMs)
+                        holdMs = entryHoldMs;
+                }
             }
 
             notifyWait = holdMs < std::numeric_limits<unsigned long>::max() ? pdMS_TO_TICKS(holdMs) : portMAX_DELAY;
         }
     }
 
-#endif // ENABLE_WIFI
+#endif

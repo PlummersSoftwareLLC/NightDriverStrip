@@ -241,62 +241,87 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
 // Entry point for the Debug task, pumps the Debug handler
 
 #if ENABLE_WIFI
-    void IRAM_ATTR DebugLoopTaskEntry(void *)
+void IRAM_ATTR DebugLoopTaskEntry(void *)
+{
+    //debugI(">> DebugLoopTaskEntry\n");
+
+   // Initialize RemoteDebug
+
+    debugV("Starting RemoteDebug server...\n");
+
+    Debug.setResetCmdEnabled(true);                         // Enable the reset command
+    Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
+    Debug.showColors(false);                                // Colors
+    Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug externsions we add
+
+    while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
+        delay(100);
+
+    Debug.begin(cszHostname, RemoteDebug::INFO);            // Initialize the WiFi debug server
+
+    for (;;)                                                // Call Debug.handle() 20 times a second
     {
-        //debugI(">> DebugLoopTaskEntry\n");
-
-    // Initialize RemoteDebug
-
-        debugV("Starting RemoteDebug server...\n");
-
-        Debug.setResetCmdEnabled(true);                         // Enable the reset command
-        Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
-        Debug.showColors(false);                                // Colors
-        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug externsions we add
-
-        while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
-            delay(100);
-
-        Debug.begin(cszHostname, RemoteDebug::INFO);            // Initialize the WiFi debug server
-
-        for (;;)                                                // Call Debug.handle() 20 times a second
+        EVERY_N_MILLIS(50)
         {
-            EVERY_N_MILLIS(50)
+            Debug.handle();
+        }
+
+        delay(10);
+    }
+}
+#endif
+
+// NetworkHandlingLoopEntry
+//
+// Thead entry point for the Networking task
+// Pumps the various network loops and sets the time periodically, as well as reconnecting
+// to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
+
+void IRAM_ATTR NetworkHandlingLoopEntry(void *)
+{
+    //debugI(">> NetworkHandlingLoopEntry\n");
+
+#if ENABLE_WIFI
+    if(!MDNS.begin("esp32")) {
+        Serial.println("Error starting mDNS");
+    }
+#endif
+
+    for (;;)
+    {
+        /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
+           it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
+
+        #if ENABLE_WIFI
+            EVERY_N_SECONDS(1)
             {
-                Debug.handle();
+                if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
+                {
+                    debugE("Cannot Connect to Wifi!");
+                    #if WAIT_FOR_WIFI
+                        debugE("Rebooting in 5 seconds due to no Wifi available.");
+                        delay(5000);
+                        throw new std::runtime_error("Rebooting due to no Wifi available.");
+                    #endif
+                }
             }
+        #endif
 
-            delay(10);
-        }
+        #if ENABLE_WIFI && ENABLE_NTP
+            EVERY_N_MILLIS(TIME_CHECK_INTERVAL_MS)
+            {
+                if (WiFi.isConnected())
+                {
+                    debugV("Refreshing Time from Server...");
+                    NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+
+                }
+            }
+        #endif
+
+        delay(50);
     }
-
-    void CheckOrReconnectWiFi()
-    {
-        if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
-        {
-            debugE("Cannot Connect to Wifi!");
-            #if WAIT_FOR_WIFI
-                debugE("Rebooting in 5 seconds due to no Wifi available.");
-                delay(5000);
-                throw new std::runtime_error("Rebooting due to no Wifi available.");
-            #endif
-        }
-    }
-
-#endif
-
-#if ENABLE_WIFI && ENABLE_NTP
-    void UpdateNTPTime()
-    {
-        debugW("Entering UpdateNTPTime...");
-        delay(500);
-        if (WiFi.isConnected())
-        {
-            debugW("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-        }
-    }
-#endif
+}
 
 // SocketServerTaskEntry
 //
@@ -477,9 +502,6 @@ void setup()
     //   Note that the thread that executes the readers is started further down, along with other networking
     //   threads.
     g_ptrNetworkReader = std::make_unique<NetworkReader>();
-
-    // We register the WiFi check/connect function first so that it is started first
-    g_ptrNetworkReader->RegisterReader(CheckOrReconnectWiFi, 1000, true);
 #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
@@ -755,15 +777,9 @@ void setup()
     CheckHeap();
 
     #if ENABLE_WIFI
-        if(!MDNS.begin("esp32")) {
-            Serial.println("Error starting mDNS");
-        }
-
         g_TaskManager.StartNetworkThread();
+        g_TaskManager.StartNetworkReaderThread();
         CheckHeap();
-        #if ENABLE_NTP
-            g_ptrNetworkReader->RegisterReader(UpdateNTPTime, TIME_CHECK_INTERVAL_MS);
-        #endif
 
     #endif
 
