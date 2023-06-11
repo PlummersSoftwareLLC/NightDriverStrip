@@ -288,31 +288,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return true;
     }
 
-    void CheckOrReconnectWiFi()
-    {
-        if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
-        {
-            debugE("Cannot Connect to Wifi!");
-            #if WAIT_FOR_WIFI
-                debugE("Rebooting in 5 seconds due to no Wifi available.");
-                delay(5000);
-                throw new std::runtime_error("Rebooting due to no Wifi available.");
-            #endif
-        }
-    }
 #endif
 
-#if ENABLE_WIFI && ENABLE_NTP
-    void UpdateNTPTime()
-    {
-        if (WiFi.isConnected())
-        {
-            debugV("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-
-        }
-    }
-#endif
 
 // ProcessIncomingData
 //
@@ -638,6 +615,7 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
 
             auto now = millis();
 
+            int i = 0;
             // Execute readers that are flagged or of which the read interval has passed
             for (auto& entry : g_ptrNetworkReader->readers)
             {
@@ -649,12 +627,18 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
                 if (interval && (lastReadMs + interval <= now || lastReadMs > now))
                     entry.flag.store(true);
 
+                debugW("Checking network function %d", i);
+
                 // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
                 if (entry.flag.exchange(false))
                 {
+                    debugW("Starting network function %d", i);
+                    delay(500);
                     entry.reader();
                     entry.lastReadMs.store(millis());
                 }
+
+                i++;
             }
 
             auto holdMs = std::numeric_limits<unsigned long>::max();

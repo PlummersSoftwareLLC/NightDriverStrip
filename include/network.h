@@ -144,7 +144,7 @@
 
       // Add a reader to the collection. Returns the index of the added reader, for use with FlagReader().
       //   Note that if an interval (in ms) is specified, the reader will run for the first time after
-      //   the interval has passed. If an immediate run is required, use FlagReader() to trigger it.
+      //   the interval has passed, unless "true" is passed to the last parameter.
       size_t RegisterReader(std::function<void()> reader, unsigned long interval = 0, bool flag = false);
 
       // Flag a reader for invocation and wake up the task that calls them

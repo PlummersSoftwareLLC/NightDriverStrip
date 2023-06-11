@@ -270,11 +270,32 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
         }
     }
 
-    void CheckOrReconnectWiFi();
-#endif // ENABLE_WIFI
+    void CheckOrReconnectWiFi()
+    {
+        if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
+        {
+            debugE("Cannot Connect to Wifi!");
+            #if WAIT_FOR_WIFI
+                debugE("Rebooting in 5 seconds due to no Wifi available.");
+                delay(5000);
+                throw new std::runtime_error("Rebooting due to no Wifi available.");
+            #endif
+        }
+    }
+
+#endif
 
 #if ENABLE_WIFI && ENABLE_NTP
-    void UpdateNTPTime();
+    void UpdateNTPTime()
+    {
+        debugW("Entering UpdateNTPTime...");
+        delay(500);
+        if (WiFi.isConnected())
+        {
+            debugW("Refreshing Time from Server...");
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+        }
+    }
 #endif
 
 // SocketServerTaskEntry
@@ -459,11 +480,6 @@ void setup()
 
     // We register the WiFi check/connect function first so that it is started first
     g_ptrNetworkReader->RegisterReader(CheckOrReconnectWiFi, 1000, true);
-
-    #if ENABLE_NTP
-        // Next is update of NTP time; other stuff depends on that as well
-        g_ptrNetworkReader->RegisterReader(UpdateNTPTime, TIME_CHECK_INTERVAL_MS, true);
-    #endif
 #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
@@ -745,6 +761,10 @@ void setup()
 
         g_TaskManager.StartNetworkThread();
         CheckHeap();
+        #if ENABLE_NTP
+            g_ptrNetworkReader->RegisterReader(UpdateNTPTime, TIME_CHECK_INTERVAL_MS);
+        #endif
+
     #endif
 
     #if ENABLE_REMOTE

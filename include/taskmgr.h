@@ -300,7 +300,7 @@ public:
     {
         #if ENABLE_WIFI
             debugW(">> Launching Network Thread");
-            xTaskCreatePinnedToCore(NetworkTaskEntry, "NetworkTaskEntry", STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
+            xTaskCreatePinnedToCore(NetworkTaskEntry, "Network Loop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
         #endif
     }
 

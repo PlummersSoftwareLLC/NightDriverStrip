@@ -212,7 +212,7 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             if (g_ptrJSONWriter->haltWrites.load())
                 continue;
 
-            unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs + JSON_WRITER_DELAY;
+            unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs.load() + JSON_WRITER_DELAY;
             unsigned long now = millis();
             if (now >= holdUntil)
                 break;
