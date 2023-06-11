@@ -37,22 +37,6 @@
 //#include <freefonts.h>
 #include "gfxbase.h"
 
-
-#if USE_LCD
-extern Adafruit_ILI9341 *g_pDisplay;
-#endif
-
-/*
-#elif USE_LCD
-        g_pDisplay->fillScreen(BLUE16);
-        g_pDisplay->setFont(FM9);
-        g_pDisplay->setTextColor(WHITE16);
-        auto xh = 10;
-        auto yh = 0;
-        g_pDisplay->setCursor(xh, yh);
-        g_pDisplay->print(strStatus);
-#endif
-*/
 class Screen : public GFXBase
 {
 public:
@@ -294,6 +278,49 @@ public:
         {
             Heltec.display->clear();
         }
+    };
+#endif
+
+#if USE_LCD
+
+    #include <Adafruit_ILI9341.h>
+
+    // LCDScreen
+    //
+    // Screen class that works with the newer V3 Heltec Wifi Kit 32
+
+    class LCDScreen : public Screen
+    {
+        SPIClass hspi;
+        std::unique_ptr<Adafruit_ILI9341> pLCD;
+
+    public:
+
+        LCDScreen(int w, int h) : Screen(w, h), hspi(HSPI)
+        {
+            hspi.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
+
+            #ifndef TFT_BL
+            #define TFT_BL 5 // LED back-light
+            #endif
+            pinMode(TFT_BL, OUTPUT); //initialize BL
+
+            pLCD = std::make_unique<Adafruit_ILI9341>(&hspi, TFT_DC, TFT_CS, TFT_RST);
+            pLCD->begin();
+            pLCD->setRotation(1);
+            pLCD->fillScreen(GREEN16);
+        }   
+
+        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            pLCD->writePixel(x, y, color);
+        }
+
+        virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
+        {
+            pLCD->fillRect(x, y, w, h, color);
+        }
+
     };
 #endif
 

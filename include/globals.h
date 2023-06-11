@@ -1248,7 +1248,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif WROVERKIT
+    #elif WROVERKIT || SPECTRUM_WROVER_KIT
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard
 
@@ -1265,12 +1265,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #if USE_LCD
     // These pins are based on the Espressif WROVER-KIT, which uses an ILI9314 chipset for its display
     // connected as follows:
-    #define TFT_CS   22
-    #define TFT_DC   21
-    #define TFT_MOSI 23
-    #define TFT_SCK  19
-    #define TFT_RST  18
-    #define TFT_MISO 25
+    #define TFT_CS      22
+    #define TFT_DC      21
+    #define TFT_MOSI    23
+    #define TFT_SCK     19
+    #define TFT_RST     18
+    #define TFT_MISO    25
+    #define TFT_WIDTH   240
+    #define TFT_HEIGHT  320
 #endif
 
 #ifdef ESP32FEATHERTFT

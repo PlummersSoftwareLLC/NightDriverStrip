@@ -37,11 +37,6 @@ uint32_t g_Watts;
 
 #if USE_SCREEN
 
-#if USE_LCD
-Adafruit_ILI9341 *g_pDisplay;
-#endif
-
-
 #if USE_TFTSPI
 #include <TFT_eSPI.h>
 #include <SPI.h>

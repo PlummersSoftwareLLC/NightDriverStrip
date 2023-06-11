@@ -531,47 +531,16 @@ void setup()
         Button2.setPressedState(LOW);
     #endif
 
-#if USE_LCD
-    extern Adafruit_ILI9341 * g_pDisplay;
-    debugI("Initializing LCD display\n");
-
-    // Set up bitmap drawing for those that need it
-
-    // Without these two magic lines, you get no picture, which is pretty annoying...
-
-    #ifndef TFT_BL
-      #define TFT_BL 5 // LED back-light
-    #endif
-    pinMode(TFT_BL, OUTPUT); //initialize BL
-
-    // We need-want hardware SPI, but the default constructor that lets us specify the pins we need
-    // forces software SPI, so we need to use the constructor that explicitly lets us use hardware SPI.
-
-    SPIClass * hspi = new SPIClass(HSPI);               // BUGBUG (Davepl) who frees this?
-    hspi->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
-    g_pDisplay = std::make_unique<Adafruit_ILI9341>(hspi, TFT_DC, TFT_CS, TFT_RST);
-    g_pDisplay->begin();
-    g_pDisplay->fillScreen(BLUE16);
-    g_pDisplay->setRotation(1);
-
-    uint8_t x = g_pDisplay->readcommand8(ILI9341_RDMODE);
-    debugI("Display Power Mode: %x", x);
-    x = g_pDisplay->readcommand8(ILI9341_RDMADCTL);
-    debugI("MADCTL Mode: %x", x);
-    x = g_pDisplay->readcommand8(ILI9341_RDPIXFMT);
-    debugI("Pixel Format: %x", x);
-    x = g_pDisplay->readcommand8(ILI9341_RDIMGFMT);
-    debugI("Image Format: %x", x);
-    x = g_pDisplay->readcommand8(ILI9341_RDSELFDIAG);
-    debugI("Self Diagnostic: %x", x);
-
-#endif
-
     #if USE_TFTSPI
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
         Serial.println("Creating TFT Screen");
         g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);      
+
+    #elif USE_LCD
+
+        Serial.println("Creating LCD Screen");
+        g_pDisplay = std::make_unique<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);      
 
     #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
         
