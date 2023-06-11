@@ -335,6 +335,11 @@ public:
     {
     }
 
+    ~PatternWeather()
+    {
+        g_ptrNetworkReader->CancelReader(readerIndex);
+    }
+
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         if (!LEDStripEffect::Init(gfx))

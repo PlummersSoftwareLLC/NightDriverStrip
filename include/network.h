@@ -118,6 +118,7 @@
       struct ReaderEntry
       {
           std::atomic_bool flag = false;
+          std::atomic_bool canceled = false;
           std::atomic_ulong readInterval;
           std::atomic_ulong lastReadMs;
           std::function<void()> reader;
@@ -127,14 +128,15 @@
               readInterval(interval)
           {}
 
-          ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag) :
+          ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag, bool canceled) :
               reader(reader),
               readInterval(interval),
               lastReadMs(lastReadMs),
-              flag(flag)
+              flag(flag),
+              canceled(canceled)
           {}
 
-          ReaderEntry(ReaderEntry&& entry) : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag)
+          ReaderEntry(ReaderEntry&& entry) : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag, entry.canceled)
           {}
       };
 
@@ -149,6 +151,9 @@
 
       // Flag a reader for invocation and wake up the task that calls them
       void FlagReader(size_t index);
+
+      // Cancel a reader. After this, it will no longer be invoked.
+      void CancelReader(size_t index);
   };
 
   extern DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader;

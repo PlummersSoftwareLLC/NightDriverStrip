@@ -52,6 +52,7 @@ class PatternSubscribers : public LEDStripEffect
     String youtubeChannelName               = DEFAULT_CHANNEL_NAME;
     bool guidUpdated                        = true;
     std::vector<SettingSpec> mySettingSpecs;
+    size_t readerIndex                      = std::numeric_limits<size_t>::max();
 
     unsigned long msLastCheck;
     bool succeededBefore                    = false;
@@ -146,6 +147,11 @@ class PatternSubscribers : public LEDStripEffect
             youtubeChannelName = jsonObject["ycn"].as<String>();
     }
 
+    ~PatternSubscribers()
+    {
+        g_ptrNetworkReader->CancelReader(readerIndex);
+    }
+
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
@@ -169,7 +175,7 @@ class PatternSubscribers : public LEDStripEffect
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        auto readerIndex = g_ptrNetworkReader->RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL, true);
+        readerIndex = g_ptrNetworkReader->RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL, true);
 
         return true;
     }

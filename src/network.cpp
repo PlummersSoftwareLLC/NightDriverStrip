@@ -596,6 +596,18 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
         g_TaskManager.NotifyNetworkReaderThread();
     }
 
+    void NetworkReader::CancelReader(size_t index)
+    {
+        // Check if we received a valid reader index
+        if (index >= readers.size())
+            return;
+
+        auto& entry = readers[index];
+        entry.canceled.store(true);
+        entry.readInterval.store(0);
+        entry.reader = nullptr;
+    }
+
     void IRAM_ATTR NetworkReaderTaskEntry(void *)
     {
         TickType_t notifyWait = 0;
@@ -618,6 +630,9 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
             // Flag entries of which the read interval has passed
             for (auto& entry : g_ptrNetworkReader->readers)
             {
+                if (entry.canceled.load())
+                    continue;
+
                 auto interval = entry.readInterval.load();
                 unsigned long targetMs = entry.lastReadMs.load() + interval;
 
@@ -625,11 +640,7 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
                 //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
                 if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
                     entry.flag.store(true);
-            }
 
-            // Execute flagged readers
-            for (auto& entry : g_ptrNetworkReader->readers)
-            {
                 // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
                 if (entry.flag.exchange(false))
                 {
@@ -644,6 +655,9 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
             // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
             for (auto& entry : g_ptrNetworkReader->readers)
             {
+                if (entry.canceled.load())
+                    continue;
+
                 auto interval = entry.readInterval.load();
                 auto lastReadMs = entry.lastReadMs.load();
 
