@@ -127,7 +127,14 @@
               readInterval(interval)
           {}
 
-          ReaderEntry(ReaderEntry&& entry) : ReaderEntry(entry.reader, entry.readInterval)
+          ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag) :
+              reader(reader),
+              readInterval(interval),
+              lastReadMs(lastReadMs),
+              flag(flag)
+          {}
+
+          ReaderEntry(ReaderEntry&& entry) : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag)
           {}
       };
 
@@ -138,7 +145,7 @@
       // Add a reader to the collection. Returns the index of the added reader, for use with FlagReader().
       //   Note that if an interval (in ms) is specified, the reader will run for the first time after
       //   the interval has passed. If an immediate run is required, use FlagReader() to trigger it.
-      size_t RegisterReader(std::function<void()> reader, unsigned long interval = 0);
+      size_t RegisterReader(std::function<void()> reader, unsigned long interval = 0, bool flag = false);
 
       // Flag a reader for invocation and wake up the task that calls them
       void FlagReader(size_t index);

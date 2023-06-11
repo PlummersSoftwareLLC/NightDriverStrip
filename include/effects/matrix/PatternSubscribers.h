@@ -169,9 +169,7 @@ class PatternSubscribers : public LEDStripEffect
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        auto readerIndex = g_ptrNetworkReader->RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL);
-        // Trigger our reader straight away
-        g_ptrNetworkReader->FlagReader(readerIndex);
+        auto readerIndex = g_ptrNetworkReader->RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL, true);
 
         return true;
     }

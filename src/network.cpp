@@ -592,7 +592,7 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
 
 #if ENABLE_WIFI
 
-    size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval)
+    size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset
         auto& readerEntry = readers.emplace_back(reader, interval);
@@ -601,7 +601,12 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
         if (interval)
             readerEntry.lastReadMs.store(millis());
 
-        return readers.size() - 1;
+        size_t index = readers.size() - 1;
+
+        if (flag)
+            FlagReader(index);
+
+        return index;
     }
 
     void NetworkReader::FlagReader(size_t index)

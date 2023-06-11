@@ -456,10 +456,13 @@ void setup()
     //   Note that the thread that executes the readers is started further down, along with other networking
     //   threads.
     g_ptrNetworkReader = std::make_unique<NetworkReader>();
-    g_ptrNetworkReader->RegisterReader(CheckOrReconnectWiFi, 1000);
+
+    // We register the WiFi check/connect function first so that it is started first
+    g_ptrNetworkReader->RegisterReader(CheckOrReconnectWiFi, 1000, true);
 
     #if ENABLE_NTP
-        g_ptrNetworkReader->RegisterReader(UpdateNTPTime, TIME_CHECK_INTERVAL_MS);
+        // Next is update of NTP time; other stuff depends on that as well
+        g_ptrNetworkReader->RegisterReader(UpdateNTPTime, TIME_CHECK_INTERVAL_MS, true);
     #endif
 #endif
 
