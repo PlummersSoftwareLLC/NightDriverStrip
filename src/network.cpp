@@ -288,7 +288,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return true;
     }
 
-#endif
+#endif // ENABLE_WIFI
 
 // ProcessIncomingData
 //
@@ -623,120 +623,121 @@ bool WriteWiFiConfig()
     }
 #endif // ENABLE_WIFI && INCOMING_WIFI_ENABLED
 
-// NetworkHandlingLoopEntry
-//
-// Thead entry point for the Networking task
-// Pumps the various network loops and sets the time periodically, as well as reconnecting
-// to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
-
 #if ENABLE_WIFI
-void IRAM_ATTR NetworkHandlingLoopEntry(void *)
-{
-    //debugI(">> NetworkHandlingLoopEntry\n");
-    if(!MDNS.begin("esp32")) {
-        Serial.println("Error starting mDNS");
-    }
 
-    TickType_t notifyWait = 0;
+    // NetworkHandlingLoopEntry
+    //
+    // Thead entry point for the Networking task
+    // Pumps the various network loops and sets the time periodically, as well as reconnecting
+    // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
 
-    for (;;)
+    void IRAM_ATTR NetworkHandlingLoopEntry(void *)
     {
-        /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
-            it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
+        //debugI(">> NetworkHandlingLoopEntry\n");
+        if(!MDNS.begin("esp32")) {
+            Serial.println("Error starting mDNS");
+        }
 
-        EVERY_N_SECONDS(1)
+        TickType_t notifyWait = 0;
+
+        for (;;)
         {
-            if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
+            /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
+                it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
+
+            EVERY_N_SECONDS(1)
             {
-                debugE("Cannot Connect to Wifi!");
-                #if WAIT_FOR_WIFI
-                    debugE("Rebooting in 5 seconds due to no Wifi available.");
-                    delay(5000);
-                    throw new std::runtime_error("Rebooting due to no Wifi available.");
-                #endif
+                if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
+                {
+                    debugE("Cannot Connect to Wifi!");
+                    #if WAIT_FOR_WIFI
+                        debugE("Rebooting in 5 seconds due to no Wifi available.");
+                        delay(5000);
+                        throw new std::runtime_error("Rebooting due to no Wifi available.");
+                    #endif
+                }
             }
-        }
 
-        if (notifyWait)
-            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
-            ulTaskNotifyTake(pdTRUE, notifyWait);
+            if (notifyWait)
+                // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
+                ulTaskNotifyTake(pdTRUE, notifyWait);
 
-        // If the reader container isn't available yet, we sleep 5 seconds and check again
-        if (!g_ptrNetworkReader)
-        {
-            notifyWait = pdMS_TO_TICKS(5000);
-            continue;
-        }
-
-        unsigned long now = millis();
-
-        // Flag entries of which the read interval has passed
-        for (auto& entry : g_ptrNetworkReader->readers)
-        {
-            if (entry.canceled.load())
+            // If the reader container isn't available yet, we sleep 5 seconds and check again
+            if (!g_ptrNetworkReader)
+            {
+                notifyWait = pdMS_TO_TICKS(5000);
                 continue;
-
-            auto interval = entry.readInterval.load();
-            unsigned long targetMs = entry.lastReadMs.load() + interval;
-
-            // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
-            //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
-            if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
-                entry.flag.store(true);
-
-            // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
-            if (entry.flag.exchange(false))
-            {
-                entry.reader();
-                entry.lastReadMs.store(millis());
             }
+
+            unsigned long now = millis();
+
+            // Flag entries of which the read interval has passed
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
+                if (entry.canceled.load())
+                    continue;
+
+                auto interval = entry.readInterval.load();
+                unsigned long targetMs = entry.lastReadMs.load() + interval;
+
+                // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
+                //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
+                if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
+                    entry.flag.store(true);
+
+                // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
+                if (entry.flag.exchange(false))
+                {
+                    entry.reader();
+                    entry.lastReadMs.store(millis());
+                }
+            }
+
+            // We wake up at least once every second
+            unsigned long holdMs = 1000;
+            now = millis();
+
+            // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
+                if (entry.canceled.load())
+                    continue;
+
+                auto interval = entry.readInterval.load();
+                auto lastReadMs = entry.lastReadMs.load();
+
+                if (!interval)
+                    continue;
+
+                // If one of the reader intervals passed then we're up for another read cycle right away, so we can stop looking further
+                if (lastReadMs + interval <= now)
+                {
+                    holdMs = 0;
+                    break;
+                }
+                else
+                {
+                    unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
+                    if (entryHoldMs < holdMs)
+                        holdMs = entryHoldMs;
+                }
+            }
+
+            notifyWait = pdMS_TO_TICKS(holdMs);
         }
-
-        // We wake up at least once every second
-        unsigned long holdMs = 1000;
-        now = millis();
-
-        // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
-        for (auto& entry : g_ptrNetworkReader->readers)
-        {
-            if (entry.canceled.load())
-                continue;
-
-            auto interval = entry.readInterval.load();
-            auto lastReadMs = entry.lastReadMs.load();
-
-            if (!interval)
-                continue;
-
-            // If one of the reader intervals passed then we're up for another read cycle right away, so we can stop looking further
-            if (lastReadMs + interval <= now)
-            {
-                holdMs = 0;
-                break;
-            }
-            else
-            {
-                unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
-                if (entryHoldMs < holdMs)
-                    holdMs = entryHoldMs;
-            }
-        }
-
-        notifyWait = pdMS_TO_TICKS(holdMs);
     }
-}
-#endif
+#endif // ENABLE_WIFI
 
 #if ENABLE_WIFI && ENABLE_NTP
-void UpdateNTPTime()
-{
-    if (WiFi.isConnected())
+    void UpdateNTPTime()
     {
-        debugV("Refreshing Time from Server...");
-        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+        if (WiFi.isConnected())
+        {
+            debugV("Refreshing Time from Server...");
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
 
+        }
     }
-}
 #endif
 
 #if ENABLE_WIFI
@@ -780,4 +781,4 @@ void UpdateNTPTime()
         entry.reader = nullptr;
     }
 
-#endif
+#endif // ENABLE_WIFI
