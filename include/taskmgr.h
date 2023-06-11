@@ -192,7 +192,6 @@ void IRAM_ATTR DebugLoopTaskEntry(void *);
 void IRAM_ATTR SocketServerTaskEntry(void *);
 void IRAM_ATTR RemoteLoopEntry(void *);
 void IRAM_ATTR JSONWriterTaskEntry(void *);
-void IRAM_ATTR NetworkReaderTaskEntry(void *);
 void IRAM_ATTR ColorDataTaskEntry(void *);
 
 #define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
@@ -217,17 +216,15 @@ private:
     };
 
     TaskHandle_t _taskScreen        = nullptr;
-    TaskHandle_t _taskSync          = nullptr;
+    TaskHandle_t _taskNetwork       = nullptr;
     TaskHandle_t _taskDraw          = nullptr;
     TaskHandle_t _taskDebug         = nullptr;
     TaskHandle_t _taskAudio         = nullptr;
-    TaskHandle_t _taskNet           = nullptr;
     TaskHandle_t _taskRemote        = nullptr;
     TaskHandle_t _taskSocket        = nullptr;
     TaskHandle_t _taskSerial        = nullptr;
     TaskHandle_t _taskColorData     = nullptr;
     TaskHandle_t _taskJSONWriter    = nullptr;
-    TaskHandle_t _taskNetworkReader = nullptr;
 
     std::vector<TaskHandle_t> _vEffectTasks;
 
@@ -258,10 +255,8 @@ public:
         DELETE_TASK(_taskColorData);
         DELETE_TASK(_taskAudio);
         DELETE_TASK(_taskSocket);
-        DELETE_TASK(_taskSync);
-        DELETE_TASK(_taskNet);
+        DELETE_TASK(_taskNetwork);
         DELETE_TASK(_taskJSONWriter);
-        DELETE_TASK(_taskNetworkReader);
         DELETE_TASK(_taskDebug);
     }
 
@@ -305,7 +300,7 @@ public:
     {
         #if ENABLE_WIFI
             debugW(">> Launching Network Thread");
-            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);
+            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "Network Loop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
         #endif
     }
 
@@ -339,14 +334,6 @@ public:
         xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
     }
 
-    void StartNetworkReaderThread()
-    {
-        #if ENABLE_WIFI
-            debugW(">> Launching Network Reader Thread");
-            xTaskCreatePinnedToCore(NetworkReaderTaskEntry, "Network Reader Loop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetworkReader, NET_CORE);
-        #endif
-    }
-
     void NotifyJSONWriterThread()
     {
         if (_taskJSONWriter == nullptr)
@@ -357,14 +344,14 @@ public:
         xTaskNotifyGive(_taskJSONWriter);
     }
 
-    void NotifyNetworkReaderThread()
+    void NotifyNetworkThread()
     {
-        if (_taskNetworkReader == nullptr)
+        if (_taskNetwork == nullptr)
             return;
 
-        debugW(">> Notifying Network Reader Thread");
-        // Wake up the reader invoker task if it's sleeping, or request another read cycle if it isn't
-        xTaskNotifyGive(_taskNetworkReader);
+        debugW(">> Notifying Network Thread");
+        // Wake up the network task if it's sleeping, or request another read cycle if it isn't
+        xTaskNotifyGive(_taskNetwork);
     }
 
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
