@@ -288,6 +288,30 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return true;
     }
 
+    void CheckOrReconnectWiFi()
+    {
+        if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
+        {
+            debugE("Cannot Connect to Wifi!");
+            #if WAIT_FOR_WIFI
+                debugE("Rebooting in 5 seconds due to no Wifi available.");
+                delay(5000);
+                throw new std::runtime_error("Rebooting due to no Wifi available.");
+            #endif
+        }
+    }
+#endif
+
+#if ENABLE_WIFI && ENABLE_NTP
+    void UpdateNTPTime()
+    {
+        if (WiFi.isConnected())
+        {
+            debugV("Refreshing Time from Server...");
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+
+        }
+    }
 #endif
 
 // ProcessIncomingData
@@ -588,43 +612,38 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
 
         readers[index].flag.store(true);
 
-        g_TaskManager.NotifyNetworkReaderThread();
+        g_TaskManager.NotifyNetworkThread();
     }
 
-    void IRAM_ATTR NetworkReaderTaskEntry(void *)
+    void IRAM_ATTR NetworkTaskEntry(void *)
     {
         TickType_t notifyWait = 0;
 
         for(;;)
         {
-            if (notifyWait)
-                // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
-                ulTaskNotifyTake(pdTRUE, notifyWait);
+            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
+            ulTaskNotifyTake(pdTRUE, notifyWait);
 
-            // If the reader container isn't available yet, we sleep 5 seconds and check again
+            // If the reader container isn't available yet, we sleep a second and check again
             if (!g_ptrNetworkReader)
             {
-                notifyWait = pdMS_TO_TICKS(5000);
+                notifyWait = pdMS_TO_TICKS(1000);
                 continue;
             }
 
-            unsigned long now = millis();
+            auto now = millis();
 
-            // Flag entries of which the read interval has passed
+            // Execute readers that are flagged or of which the read interval has passed
             for (auto& entry : g_ptrNetworkReader->readers)
             {
                 auto interval = entry.readInterval.load();
-                unsigned long targetMs = entry.lastReadMs.load() + interval;
+                auto lastReadMs = entry.lastReadMs.load();
 
-                // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
-                //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
-                if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
+                // The last check captures cases where millis() returns bogus data; if lastReadMs is greater than now
+                //   then something's up with our timekeeping, so we trigger the reader just to be sure
+                if (interval && (lastReadMs + interval <= now || lastReadMs > now))
                     entry.flag.store(true);
-            }
 
-            // Execute flagged readers
-            for (auto& entry : g_ptrNetworkReader->readers)
-            {
                 // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
                 if (entry.flag.exchange(false))
                 {
@@ -633,7 +652,7 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
                 }
             }
 
-            unsigned long holdMs = std::numeric_limits<unsigned long>::max();
+            auto holdMs = std::numeric_limits<unsigned long>::max();
             now = millis();
 
             // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
@@ -652,15 +671,11 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
                     break;
                 }
                 else
-                {
-                    unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
-                    if (entryHoldMs < holdMs)
-                        holdMs = entryHoldMs;
-                }
+                    holdMs = std::min({holdMs, interval, interval - (now - lastReadMs)});
             }
 
             notifyWait = holdMs < std::numeric_limits<unsigned long>::max() ? pdMS_TO_TICKS(holdMs) : portMAX_DELAY;
         }
     }
 
-#endif
+#endif // ENABLE_WIFI
