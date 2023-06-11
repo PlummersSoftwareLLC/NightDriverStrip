@@ -229,7 +229,7 @@ example in globals.h:
 
 ## Fetching things from the Internet
 
-If you develop an effect that requires data that needs to be pulled in from the Internet then you can register a network reader functon with the `NetworkReader` class, which is available via the `g_ptrNetworkReader` global variable. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
+If you develop an effect that requires data that needs to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrNetworkReader` global variable. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
 
 ## Time It Takes To Build This Project
 
