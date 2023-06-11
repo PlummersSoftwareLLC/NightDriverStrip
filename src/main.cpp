@@ -457,8 +457,10 @@ void setup()
     //   threads.
     g_ptrNetworkReader = std::make_unique<NetworkReader>();
     g_ptrNetworkReader->RegisterReader(CheckOrReconnectWiFi, 1000);
-    g_ptrNetworkReader->RegisterReader(UpdateNTPTime, TIME_CHECK_INTERVAL_MS);
 
+    #if ENABLE_NTP
+        g_ptrNetworkReader->RegisterReader(UpdateNTPTime, TIME_CHECK_INTERVAL_MS);
+    #endif
 #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
