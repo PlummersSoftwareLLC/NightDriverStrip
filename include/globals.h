@@ -470,8 +470,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
-    #define SUBCHECK_INTERVAL  600000   // Update subscriber count every N seconds
-    #define SCALE_AUDIO_EXPONENTIAL 0   
+    #define SCALE_AUDIO_EXPONENTIAL 0
     #define ENABLE_AUDIO_SMOOTHING  1
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
@@ -532,7 +531,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   22
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (1 * 5 * 1000)         // Expects at least a 5V, 1A supply
-    
+
     #define TOGGLE_BUTTON_1         35
     #define NUM_INFO_PAGES          4
     #define ONSCREEN_SPECTRUM_PAGE  2   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -1172,10 +1171,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define DEFAULT_EFFECT_INTERVAL 1000*30
 #endif
 
-#ifndef SUBCHECK_INTERVAL
-#define SUBCHECK_INTERVAL 0                             // How often to poll for youtube sub count, 0 means never
-#endif
-
 #ifndef MILLIS_PER_FRAME
 #define MILLIS_PER_FRAME 0
 #endif
@@ -1204,7 +1199,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define MATRIX_REFRESH_RATE 120
 #endif
 
-#ifndef MATRIX_CALC_DIVIDER 
+#ifndef MATRIX_CALC_DIVIDER
 #define MATRIX_CALC_DIVIDER 2
 #endif
 
@@ -1667,8 +1662,8 @@ inline uint16_t WORDFromMemory(uint8_t * payloadData)
 
 // SetSocketBlockingEnabled
 //
-// In blocking mode, socket API calls wait until the operation is complete before returning control to the application. 
-// For example, a call to the send() function won't return until all data has been sent. This can lead to the application 
+// In blocking mode, socket API calls wait until the operation is complete before returning control to the application.
+// For example, a call to the send() function won't return until all data has been sent. This can lead to the application
 // hanging if the operation takes a long time.
 
 // In contrast, in non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function returns an error (usually EWOULDBLOCK or EAGAIN). The application can then decide how to handle the situation, such as by retrying the operation later. This provides more control and can make the application more responsive. However, it also requires more sophisticated programming, as the application must be prepared to handle these error conditions.

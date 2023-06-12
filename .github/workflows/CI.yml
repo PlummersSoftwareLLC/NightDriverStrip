@@ -4,7 +4,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    env: 
+    env:
       ENABLE_PAGES_PUSH: ${{ ( github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' ) || ( github.repository_owner == 'rbergen' && github.ref == 'refs/heads/staging' ) }}
 
     runs-on: ubuntu-latest
@@ -12,32 +12,21 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Cache pip
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Cache PlatformIO
-      uses: actions/cache@v3
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-
     - name: Set up Python
       uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
 
-    - name: Install PlatformIO and dependencies
+    - name: Install PlatformIO
       run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-        pio pkg install --no-save
-        pio pkg update --no-save
+        python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+        echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
+
+    - name: Install packages
+      run: pio pkg install --no-save
 
     - name: Copy secrets and clear SSID
-      run: | 
+      run: |
         grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
         echo '#define cszSSID ""' >> include/secrets.h
 
@@ -49,7 +38,7 @@ jobs:
 
     - name: Build WebInstaller and dependencies
       if: ${{ env.ENABLE_PAGES_PUSH == 'true' }}
-      run: | 
+      run: |
         pio run -t buildfs
         python tools/bake_installer.py
         touch WebInstaller/.nojekyll

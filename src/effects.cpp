@@ -624,6 +624,9 @@ void InitEffectsManager()
     if (false == g_ptrEffectManager->Init())
         throw std::runtime_error("Could not initialize effect manager");
 
+
+    // We won't need the default factories any more, so swipe them from memory
+    g_EffectFactories.ClearDefaultFactories();
 }
 
 void SaveEffectManagerConfig()

@@ -41,8 +41,8 @@
 #include <esp_attr.h>
 #include "ledstripeffect.h"
 
-using DefaultEffectFactory = std::function<std::shared_ptr<LEDStripEffect>()>;
-using JSONEffectFactory = std::function<std::shared_ptr<LEDStripEffect>(const JsonObjectConst&)>;
+using DefaultEffectFactory = std::shared_ptr<LEDStripEffect>(*)();
+using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectConst&);
 
 class EffectFactories
 {
@@ -90,6 +90,11 @@ class EffectFactories
     bool IsEmpty()
     {
         return defaultFactories.size() == 0 && jsonFactories.size() == 0;
+    }
+
+    void ClearDefaultFactories()
+    {
+      defaultFactories.clear();
     }
 };
 
