@@ -71,25 +71,37 @@ extern uint32_t g_FPS;
         String str = Debug.getLastCommand();
         if (str.equalsIgnoreCase("clock"))
         {
-            debugI("Refreshing Time from Server...");
+            debugA("Refreshing Time from Server...");
             NTPTimeClient::UpdateClockFromWeb(&g_Udp);
         }
         else if (str.equalsIgnoreCase("stats"))
         {
-            debugI("Displaying statistics....");
-
-            debugI("%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
-            debugI("%sdB:%s\n",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            debugI("BUFR:%02d/%02d [%dfps]\n", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
-            debugI("DATA:%+04.2lf-%+04.2lf\n", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
+            debugA("Displaying statistics....");
+            debugA("%s:%dx%d %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugA("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            debugA("BUFR:%02d/%02d [%dfps]", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
+            debugA("DATA:%+04.2lf-%+04.2lf", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
 
             #if ENABLE_AUDIO
-                debugI("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
+                debugA("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                debugI("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
+                debugA("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             #endif
+        }
+        else if (str.equalsIgnoreCase("clearsettings"))
+        {
+            debugA("Removing persisted settings....");
+            g_ptrDeviceConfig->RemovePersisted();
+            RemoveEffectManagerConfig();
+        }
+        else 
+        {
+            debugA("Unknown Command.  Extended Commands:");
+            debugA("clock               Refresh time from server");
+            debugA("stats               Display buffers, memory, etc");
+            debugA("clearsettings       Reset persisted user settings");
         }
     }
 #endif

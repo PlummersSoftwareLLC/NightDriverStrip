@@ -76,6 +76,7 @@
 //              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
+//              Jun-10-2023  v037       Davepl      New Screen classes 
 //
 //---------------------------------------------------------------------------
 
@@ -119,7 +120,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         36    // Update ONLY this to increment the version number
+#define FLASH_VERSION          37    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
     #ifndef USESTRIP
@@ -464,7 +465,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_WEBSERVER        1  // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
@@ -1179,7 +1180,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef RESERVE_MEMORY
-#define RESERVE_MEMORY 180000
+  #ifdef USE_PSRAM
+    #define RESERVE_MEMORY 1000000
+  #else
+    #define RESERVE_MEMORY 180000
+  #endif
 #endif
 
 #ifndef TIME_BEFORE_LOCAL
@@ -1216,7 +1221,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #if USE_SCREEN
 
-    #ifdef ARDUINO_HELTEC_WIFI_KIT_32                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
+    #if ARDUINO_HELTEC_WIFI_KIT_32_V3
+
+        #define USE_OLED 1
+        #define USE_SSD1306 1
+
+    #elif ARDUINO_HELTEC_WIFI_KIT_32      
+                        // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 
@@ -1236,7 +1247,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif WROVERKIT
+    #elif WROVERKIT || SPECTRUM_WROVER_KIT
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard
 
@@ -1253,12 +1264,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #if USE_LCD
     // These pins are based on the Espressif WROVER-KIT, which uses an ILI9314 chipset for its display
     // connected as follows:
-    #define TFT_CS   22
-    #define TFT_DC   21
-    #define TFT_MOSI 23
-    #define TFT_SCK  19
-    #define TFT_RST  18
-    #define TFT_MISO 25
+    #define TFT_CS      22
+    #define TFT_DC      21
+    #define TFT_MOSI    23
+    #define TFT_SCK     19
+    #define TFT_RST     18
+    #define TFT_MISO    25
+    #define TFT_WIDTH   240
+    #define TFT_HEIGHT  320
 #endif
 
 #ifdef ESP32FEATHERTFT
@@ -1362,19 +1375,6 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 //
 // Headers that are only included when certain features are enabled
 
-#if USE_OLED
-#include <U8g2lib.h>                // Library for monochrome displays
-#include <gfxfont.h>                // Adafruit GFX font structs
-#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
-extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
-#endif
-
-#if USE_TFTSPI
-    #define DISABLE_ALL_LIBRARY_WARNINGS 1
-    #include <TFT_eSPI.h>
-    #include <SPI.h>
-    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
-#endif
 
 // FPS
 //
@@ -1710,6 +1710,14 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #include "drawing.h"                            // drawing code
 #include "taskmgr.h"                            // for cpu usage, etc
 
+#if USE_TFTSPI
+    #define DISABLE_ALL_LIBRARY_WARNINGS 1
+    #include <TFT_eSPI.h>
+    #include <SPI.h>
+
+    extern std::unique_ptr<Screen> g_pDisplay;
+#endif
+
 // Conditional includes depending on which project is being build
 
 #if USE_MATRIX
@@ -1718,7 +1726,7 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #endif
 
 #if USE_SCREEN
-    #include "freefonts.h"
+    // #include "freefonts.h"
 #endif
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER
