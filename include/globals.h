@@ -1336,7 +1336,7 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #endif
 
 #ifndef COLORDATA_SERVER_ENABLED
-  #ifdef ENABLE_WIFI
+  #if ENABLE_WIFI
     #define COLORDATA_SERVER_ENABLED 1
   #else
     #define COLORDATA_SERVER_ENABLED 0
