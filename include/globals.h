@@ -120,7 +120,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         7    // Update ONLY this to increment the version number
+#define FLASH_VERSION          37    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
     #ifndef USESTRIP
@@ -465,7 +465,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_WEBSERVER        1  // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
@@ -1185,7 +1185,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef RESERVE_MEMORY
-#define RESERVE_MEMORY 180000
+  #ifdef USE_PSRAM
+    #define RESERVE_MEMORY 1000000
+  #else
+    #define RESERVE_MEMORY 180000
+  #endif
 #endif
 
 #ifndef TIME_BEFORE_LOCAL

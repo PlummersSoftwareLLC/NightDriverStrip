@@ -273,12 +273,12 @@ public:
 
     virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
-        addColor(xy(x, y), color);
+        leds[xy(x, y)] = color;
     }
 
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        addColor(xy(x, y), from16Bit(color));
+        leds[xy(x, y)] = from16Bit(color);
     }
 
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)

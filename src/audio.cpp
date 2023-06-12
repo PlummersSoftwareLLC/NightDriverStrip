@@ -51,8 +51,10 @@ extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *)
 {
+    debugI(">>> Sampler Task Started");
 
-    // debugI(">>> Sampler Task Started");
+    // Enable microphone input 
+    pinMode(INPUT_PIN, INPUT);
 
     g_Analyzer.SampleBufferInitI2S();
 
@@ -80,7 +82,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ?
                                 0.0 :
-                                (g_Analyzer._VU-g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
+                                (g_Analyzer._VU - g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
+
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
         // Delay enough time to yield 60fps max

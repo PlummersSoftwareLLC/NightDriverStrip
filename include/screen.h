@@ -114,6 +114,11 @@ public:
 // like fillRect.  They also do any required initial setup of the display.
 
 #if USE_M5DISPLAY
+
+    // M5Screen
+    //
+    // Display code for the M5 based TFT displays on the M5 Stick, Stick C Plus, and Stack
+
     #include <M5Display.h>
 
     // M5Screen
@@ -194,13 +199,14 @@ public:
 #endif
 
 #if USE_OLED && !USE_SSD1306
-    #include <U8g2lib.h>                // Library for monochrome displays
-    #include <gfxfont.h>                // Adafruit GFX font structs
-    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
 
     // OLEDScreen
     //
-    // Screen class that works with the devices like the original Heltec Wifi Kit 32
+    // Display code for the blue OLED display on the Heltect Wifi Kit 32 Original
+
+    #include <U8g2lib.h>                // Library for monochrome displays
+    #include <gfxfont.h>                // Adafruit GFX font structs
+    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
 
     class OLEDScreen : public Screen
     {
@@ -238,14 +244,14 @@ public:
 
 #if USE_SSD1306
 
+    // SSD1306Screen
+    //
+    // Display code for the SSD1306 display on the Heltect Wifi Kit 32 V3
+
     #include <U8g2lib.h>                // Library for monochrome displays
     #include <gfxfont.h>                // Adafruit GFX font structs
     #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
     #include <heltec.h>                // Display 
-
-    // SSD1306Screen
-    //
-    // Screen class that works with the newer V3 Heltec Wifi Kit 32
 
     class SSD1306Screen : public Screen
     {
@@ -287,8 +293,8 @@ public:
 
     // LCDScreen
     //
-    // Screen class that works with the newer V3 Heltec Wifi Kit 32
-
+    // Screen class that works with the WROVER devkit board
+    
     class LCDScreen : public Screen
     {
         SPIClass hspi;

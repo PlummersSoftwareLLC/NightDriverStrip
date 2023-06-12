@@ -442,7 +442,6 @@ void setup()
 
     uzlib_init();
 
-
     // Start the Task Manager which takes over the watchdog role and measures CPU usage
     g_TaskManager.begin();
 
@@ -570,8 +569,6 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    //g_pDisplay->ScreenStatus("Initializing GFXBASE devices");
-
     #if USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
@@ -588,12 +585,8 @@ void setup()
         }
     #endif
 
-    //g_pDisplay->ScreenStatus("Setting JPG callback");
-
     TJpgDec.setJpgScale(1);
     TJpgDec.setCallback(bitmap_output);
-
-    //g_pDisplay->ScreenStatus("Allocating LED Buffers");
 
     #if USE_PSRAM
         uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
@@ -709,72 +702,10 @@ void setup()
     #if USE_MATRIX
         debugI("Initializing splash effect manager...");
         InitSplashEffectManager();
-    #else
-        debugI("Initializing effects manager...");
-        InitEffectsManager();
     #endif
 
-    //g_pDisplay->ScreenStatus("Initializing Audio");
-
-    // Microphone stuff
-    #if ENABLE_AUDIO
-        pinMode(INPUT_PIN, INPUT);
-        // The audio sampler task might as well be on a different core from the LED stuff
-        g_TaskManager.StartAudioThread();
-        CheckHeap();
-    #endif
-
-    //g_pDisplay->ScreenStatus("Initializing Screen Thread");
-
-    #if USE_SCREEN
-        g_TaskManager.StartScreenThread();
-    #endif
-
-    // Init the zlib compression
-
-    debugV("Initializing compression...");
-    CheckHeap();
-
-    #if ENABLE_WIFI
-        g_TaskManager.StartNetworkThread();
-        CheckHeap();
-    #endif
-
-    #if ENABLE_REMOTE
-        // Start Remote Control
-        g_TaskManager.StartRemoteThread();
-        CheckHeap();
-    #endif
-
-    #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
-        // Start the color data server and other network services
-        g_TaskManager.StartColorDataThread();
-        g_TaskManager.StartSocketThread();
-    #endif
-
-    #if ENABLE_AUDIOSERIAL
-        // The audio sampler task might as well be on a different core from the LED stuff
-        g_TaskManager.StartSerialThread();
-        CheckHeap();
-    #endif
-
-    debugI("Setup complete - ESP32 Free Memory: %d\n", ESP.getFreeHeap());
-    CheckHeap();
-
-    debugI("Launching Drawing:");
-    debugE("Heap before launch: %s", heap_caps_check_integrity_all(true) ? "PASS" : "FAIL");
-    g_TaskManager.StartDrawThread();
-    CheckHeap();
-
-    // Do proper effects manager initialization now that splash effect is running
-    #if USE_MATRIX
-        debugI("Initializing regular effects manager...");
-        InitEffectsManager();
-    #endif
-
-    debugV("Saving effect manager config...");
-    SaveEffectManagerConfig();
-
+    // Connect to Wifi and wait for it if so requested
+    
     #if ENABLE_WIFI && WAIT_FOR_WIFI
         debugI("Calling ConnectToWifi()\n");
         if (false == ConnectToWiFi(99))
@@ -784,12 +715,26 @@ void setup()
         }
         Debug.setSerialEnabled(true);
     #endif
+
+    // Start the services
+
+    g_TaskManager.StartNetworkThread();
+    g_TaskManager.StartColorDataThread();
+    g_TaskManager.StartSocketThread();
+    g_TaskManager.StartSerialThread();
+    g_TaskManager.StartAudioThread();
+    g_TaskManager.StartDrawThread();
+    g_TaskManager.StartScreenThread();
+    g_TaskManager.StartRemoteThread();
+
+    InitEffectsManager();
+    SaveEffectManagerConfig();
 }
 
 // loop - main execution loop
 //
 // This is where an Arduino app spends most of its life but since we spin off tasks for much of our work, all that remains here is
-// to maintain the WiFi connection and process any data that comes in over the WiFi
+// to maintain the WiFi connection, watch for OTA updates, and output logging
 
 void loop()
 {
