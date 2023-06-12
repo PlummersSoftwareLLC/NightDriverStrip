@@ -658,14 +658,13 @@ bool WriteWiFiConfig()
                 }
             }
 
-            if (notifyWait)
-                // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
-                ulTaskNotifyTake(pdTRUE, notifyWait);
+            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
+            ulTaskNotifyTake(pdTRUE, notifyWait);
 
-            // If the reader container isn't available yet, we sleep 5 seconds and check again
+            // If the reader container isn't available yet, we'll sleep for a second before we check again
             if (!g_ptrNetworkReader)
             {
-                notifyWait = pdMS_TO_TICKS(5000);
+                notifyWait = pdMS_TO_TICKS(1000);
                 continue;
             }
 
