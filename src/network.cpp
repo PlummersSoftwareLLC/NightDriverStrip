@@ -220,8 +220,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            debugW("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                    iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+            debugW("Pass %u of %u: Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                    iPass + 1, cRetries, WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
             WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
@@ -490,7 +490,7 @@ bool WriteWiFiConfig()
 
     if (success)
         // Do not check in code that displays the password in logs, etc.
-        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid);
+        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid.c_str());
 
     nvs_commit(nvsRWHandle);
     nvs_close(nvsRWHandle);
@@ -504,7 +504,7 @@ bool WriteWiFiConfig()
 
 void IRAM_ATTR ColorDataTaskEntry(void *)
 {
-    LEDViewer _viewer(12000);    
+    LEDViewer _viewer(12000);
     int socket = -1;
 
     for(;;)
@@ -512,7 +512,7 @@ void IRAM_ATTR ColorDataTaskEntry(void *)
         while (!WiFi.isConnected())
             delay(250);
 
-        if (!_viewer.begin()) 
+        if (!_viewer.begin())
         {
             debugE("Unable to start color data server!");
             delay(1000);
