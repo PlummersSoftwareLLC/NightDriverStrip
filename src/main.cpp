@@ -228,7 +228,7 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
     DRAM_ATTR CWebServer g_WebServer;
 #endif
 
-#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+#if INCOMING_WIFI_ENABLED
     DRAM_ATTR SocketServer g_SocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
 #endif
 
@@ -285,14 +285,20 @@ void TerminateHandler()
 
     PrintOutputHeader();
 
+/*
     try {
         std::rethrow_exception(std::current_exception());
     }
     catch (std::exception &ex) {
         debugE("Terminated due to exception: %s", ex.what());
     }
+*/
+    Serial.flush();
 
-    abort();
+    while(true)
+    {
+        sleep(1);
+    }
 }
 
 #ifdef TOGGLE_BUTTON_1
@@ -320,6 +326,9 @@ Bounce2::Button Button2;
 
 void setup()
 {
+    // Set the unhandled exception handler to be our own special exit function
+    std::set_terminate(TerminateHandler);
+
     // Initialize Serial output
     Serial.begin(115200);
     // Re-route debug output to the serial port
@@ -342,9 +351,6 @@ void setup()
     g_TaskManager.begin();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
-
-    // Set the unhandled exception handler to be our own special exit function
-    std::set_terminate(TerminateHandler);
 
     // Display a simple statup header on the serial port
     PrintOutputHeader();
@@ -513,10 +519,13 @@ void setup()
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
 
+    InitEffectsManager();
+
+    g_TaskManager.StartScreenThread();
+
     // Initialize all of the built in effects
 
     debugI("Adding LEDs to FastLED...");
-    CheckHeap();
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
     // Onboard PWM LED
@@ -586,7 +595,7 @@ void setup()
 
         g_Brightness = 255;
 
-        #if ATOMLIGHT
+        #if ATOMLIGHT                                                   // BUGBUG Why input?  Shouldn't they be output?
             pinMode(4, INPUT);
             pinMode(12, INPUT);
             pinMode(13, INPUT);
@@ -617,16 +626,14 @@ void setup()
 
     // Start the services
 
+    g_TaskManager.StartDrawThread();
+    g_TaskManager.StartSerialThread();
+    g_TaskManager.StartAudioThread();
+    g_TaskManager.StartRemoteThread();
     g_TaskManager.StartNetworkThread();
     g_TaskManager.StartColorDataThread();
     g_TaskManager.StartSocketThread();
-    g_TaskManager.StartSerialThread();
-    g_TaskManager.StartAudioThread();
-    g_TaskManager.StartDrawThread();
-    g_TaskManager.StartScreenThread();
-    g_TaskManager.StartRemoteThread();
 
-    InitEffectsManager();
     SaveEffectManagerConfig();
 }
 
