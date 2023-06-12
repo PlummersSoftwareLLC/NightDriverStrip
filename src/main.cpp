@@ -430,7 +430,7 @@ void setup()
     Debug.setSerialEnabled(true);
 
     // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
-    // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default 
+    // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default
     // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
 
     #if MESMERIZER
@@ -773,7 +773,7 @@ void setup()
     debugV("Initializing compression...");
     CheckHeap();
 
-    #if ENABLE_WIFI 
+    #if ENABLE_WIFI
         g_TaskManager.StartNetworkThread();
         CheckHeap();
     #endif
