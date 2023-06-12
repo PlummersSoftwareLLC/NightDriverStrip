@@ -282,7 +282,7 @@ public:
 
     void StartColorDataThread()
     {
-        #if ENABLE_WIFI
+        #if COLORDATA_SERVER_ENABLED
             Serial.print( str_sprintf(">> Launching ColorData Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", DEFAULT_STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
         #endif
@@ -320,7 +320,7 @@ public:
 
     void StartSocketThread()
     {
-        #if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+        #if INCOMING_WIFI_ENABLED
             Serial.print( str_sprintf(">> Launching Socket Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", DEFAULT_STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
         #endif

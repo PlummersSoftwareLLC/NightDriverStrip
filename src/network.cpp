@@ -550,7 +550,7 @@ bool WriteWiFiConfig()
     }
 #endif
 
-#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+#if INCOMING_WIFI_ENABLED 
 
     // SocketServerTaskEntry
     //
@@ -570,7 +570,9 @@ bool WriteWiFiConfig()
             delay(500);
         }
     }
+#endif
 
+#if COLORDATA_SERVER_ENABLED
     // ColorDataTaskEntry
     //
     // The thread which serves requests for color data on port 49153
@@ -633,7 +635,7 @@ bool WriteWiFiConfig()
             delay(1000);
         }
     }
-#endif // ENABLE_WIFI && INCOMING_WIFI_ENABLED
+#endif // COLORDATA_SERVER_ENABLED
 
 #if ENABLE_WIFI
 

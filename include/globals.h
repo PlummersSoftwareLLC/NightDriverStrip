@@ -1335,6 +1335,14 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #define M5STACKCORE2 0
 #endif
 
+#ifndef COLORDATA_SERVER_ENABLED
+  #ifdef ENABLE_WIFI
+    #define COLORDATA_SERVER_ENABLED 1
+  #else
+    #define COLORDATA_SERVER_ENABLED 0
+  #endif
+#endif
+
 // Microphone
 //
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
