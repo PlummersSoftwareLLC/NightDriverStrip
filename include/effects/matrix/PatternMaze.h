@@ -294,8 +294,12 @@ public:
 
         cellCount = 0;
         hue = 0;
-        g()->Clear();
         return true;
+    }
+
+    virtual void Start() override
+    {
+        g()->Clear();
     }
 };
 

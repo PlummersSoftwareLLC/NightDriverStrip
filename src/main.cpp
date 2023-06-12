@@ -519,10 +519,6 @@ void setup()
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
 
-    InitEffectsManager();
-
-    g_TaskManager.StartScreenThread();
-
     // Initialize all of the built in effects
 
     debugI("Adding LEDs to FastLED...");
@@ -613,7 +609,15 @@ void setup()
     #endif
 
     // Connect to Wifi and wait for it if so requested
-    
+
+
+    InitEffectsManager();
+
+    g_TaskManager.StartDrawThread();
+    g_TaskManager.StartScreenThread();
+    g_TaskManager.StartAudioThread();
+    g_TaskManager.StartRemoteThread();
+
     #if ENABLE_WIFI && WAIT_FOR_WIFI
         debugI("Calling ConnectToWifi()\n");
         if (false == ConnectToWiFi(99))
@@ -626,10 +630,7 @@ void setup()
 
     // Start the services
 
-    g_TaskManager.StartDrawThread();
     g_TaskManager.StartSerialThread();
-    g_TaskManager.StartAudioThread();
-    g_TaskManager.StartRemoteThread();
     g_TaskManager.StartNetworkThread();
     g_TaskManager.StartColorDataThread();
     g_TaskManager.StartSocketThread();
