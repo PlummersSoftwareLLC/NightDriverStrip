@@ -642,6 +642,9 @@ bool WriteWiFiConfig()
 
         for (;;)
         {
+            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
+            ulTaskNotifyTake(pdTRUE, notifyWait);
+
             /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
                 it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
 
@@ -657,9 +660,6 @@ bool WriteWiFiConfig()
                     #endif
                 }
             }
-
-            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
-            ulTaskNotifyTake(pdTRUE, notifyWait);
 
             // If the reader container isn't available yet, we'll sleep for a second before we check again
             if (!g_ptrNetworkReader)
