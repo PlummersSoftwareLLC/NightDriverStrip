@@ -107,6 +107,9 @@
 #define EFFECT_MATRIX_GHOST_WAVE                       134
 #define EFFECT_MATRIX_MAZE                             135
 
+// Hexagon Effects
+#define EFFECT_HEXAGON_OUTER_RING                      201
+
 // Starry Night star variations
 #define EFFECT_STAR                                      1
 #define EFFECT_STAR_RANDOM_PALETTE_COLOR                 2

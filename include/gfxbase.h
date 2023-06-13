@@ -276,7 +276,7 @@ public:
         leds[xy(x, y)] = color;
     }
 
-    virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
+    virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
         leds[xy(x, y)] = from16Bit(color);
     }

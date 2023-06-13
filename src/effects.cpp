@@ -549,6 +549,11 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_STRIP_FIRE_FAN, FireFanEffect, HeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true);
         ADD_EFFECT(EFFECT_STRIP_FIRE_FAN, FireFanEffect, HeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true);
 
+    #elif HEXAGON
+
+        ADD_EFFECT(EFFECT_HEXAGON_OUTER_RING, OuterHexRingEffect);
+        //ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 24, 4);
+
     #elif LEDSTRIP
 
         ADD_EFFECT(EFFECT_STRIP_STATUS, StatusEffect, CRGB::White);

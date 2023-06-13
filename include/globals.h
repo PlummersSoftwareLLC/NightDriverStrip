@@ -694,6 +694,32 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define POWER_LIMIT_MW 10000
 
+#elif HEXAGON
+
+    // The LED strips I use for Christmas lights under my eaves
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Hexagon"
+    #endif
+
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
+
+    #define NUM_CHANNELS    1
+    #define MATRIX_WIDTH    (271)     // My maximum run, and about all you can do at 30fps
+    #define MATRIX_HEIGHT   1
+    #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
+    #define ENABLE_REMOTE   0                     // IR Remote Control
+    #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
+    #define LED_PIN0        5
+
+    #define POWER_LIMIT_MW (INT_MAX)              // Unlimited power for long strips, up to you to limit here or supply enough!
+
+    #define DEFAULT_EFFECT_INTERVAL     (1000*20)
+
 #elif LEDSTRIP
 
     // The LED strips I use for Christmas lights under my eaves

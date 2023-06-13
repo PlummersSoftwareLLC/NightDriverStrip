@@ -473,3 +473,60 @@ class TwinkleEffect : public LEDStripEffect
         }
     }
 };
+
+#if HEXAGON
+////////////////////////////////////////////////
+// Hexagon Effects
+////////////////////////////////////////////////
+
+class OuterHexRingEffect : public LEDStripEffect
+{
+  public:
+    
+    OuterHexRingEffect() : LEDStripEffect(EFFECT_HEXAGON_OUTER_RING, "OuterRingHexEffect")
+    {
+    }
+
+    OuterHexRingEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual void Draw() override
+    {
+        //g()->fillScreen(CRGB::Blue);
+        //return;
+
+        const CRGB color = CRGB::Blue;
+
+        // Iterate over all rows
+        for (int row = 0; row < 19; ++row) 
+        {
+            // Get the width of the current row
+            int width = hg()->getRowWidth(row);
+
+            // Get the start index of the current row
+            int startIndex = hg()->getStartIndexOfRow(row);
+
+            // Serial.printf("Row: %d, startIndex: %d, width: %d\n", row, startIndex, width);
+
+            if (row == 0 || row == 18) 
+            {
+                // If it's the first or last row, light all pixels
+                for (int i = 0; i < width; ++i) 
+                {
+                    // Assuming setPixel() lights a pixel at a specified index
+                    hg()->setPixel(startIndex + i, color);
+                }
+            } 
+            else 
+            {
+                // For other rows, only light the first and last pixel
+                hg()->setPixel(startIndex, color);              // first pixel
+                hg()->setPixel(startIndex + width - 1, color);  // last pixel
+            }
+        }
+    }
+};
+#endif // HEXAGON
+
