@@ -1,6 +1,6 @@
 {
   "name": "Demo for Heltec Wifi Kit 32 (V2)",
-  "version": "v036",
+  "version": "v037",
   "builds": [
     {
       "chipFamily": "ESP32",

@@ -1,6 +1,6 @@
 {
   "name": "Panlee for ESP32ESP32-S3-DevKitC-1",
-  "version": "v036",
+  "version": "v037",
   "builds": [
     {
       "chipFamily": "ESP32-S3",

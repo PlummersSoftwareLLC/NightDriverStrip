@@ -1,6 +1,6 @@
 {
   "name": "Ledstrip for Adafruit Feather S3 TFT",
-  "version": "v036",
+  "version": "v037",
   "builds": [
     {
       "chipFamily": "ESP32-S3",

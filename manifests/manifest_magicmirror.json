@@ -1,6 +1,6 @@
 {
   "name": "Magic Mirror for M5StickC",
-  "version": "v036",
+  "version": "v037",
   "builds": [
     {
       "chipFamily": "ESP32",

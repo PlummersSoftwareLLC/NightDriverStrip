@@ -1,6 +1,6 @@
 {
   "name": "Demo for ESP32",
-  "version": "v036",
+  "version": "v037",
   "builds": [
     {
       "chipFamily": "ESP32",

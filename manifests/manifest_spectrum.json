@@ -1,6 +1,6 @@
 {
   "name": "Spectrum for M5StickC Plus",
-  "version": "v036",
+  "version": "v037",
   "builds": [
     {
       "chipFamily": "ESP32",

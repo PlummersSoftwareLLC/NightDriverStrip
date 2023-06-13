@@ -1,6 +1,6 @@
 {
   "name": "Spectrum for ESP-WROVER-KIT",
-  "version": "v036",
+  "version": "v037",
   "builds": [
     {
       "chipFamily": "ESP32",
