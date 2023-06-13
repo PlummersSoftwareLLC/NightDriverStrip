@@ -49,6 +49,10 @@
 
 // Stack size for the taskmgr's idle threads
 #define IDLE_STACK_SIZE 2048
+#define DEFAULT_STACK_SIZE 2048+512
+#define DRAWING_STACK_SIZE 4096
+#define AUDIO_STACK_SIZE 4096
+
 
 class IdleTask
 {
@@ -215,17 +219,16 @@ private:
         {}
     };
 
-    TaskHandle_t _taskScreen     = nullptr;
-    TaskHandle_t _taskSync       = nullptr;
-    TaskHandle_t _taskDraw       = nullptr;
-    TaskHandle_t _taskDebug      = nullptr;
-    TaskHandle_t _taskAudio      = nullptr;
-    TaskHandle_t _taskNet        = nullptr;
-    TaskHandle_t _taskRemote     = nullptr;
-    TaskHandle_t _taskSocket     = nullptr;
-    TaskHandle_t _taskSerial     = nullptr;
-    TaskHandle_t _taskColorData  = nullptr;
-    TaskHandle_t _taskJSONWriter = nullptr;
+    TaskHandle_t _taskScreen        = nullptr;
+    TaskHandle_t _taskNetwork       = nullptr;
+    TaskHandle_t _taskDraw          = nullptr;
+    TaskHandle_t _taskDebug         = nullptr;
+    TaskHandle_t _taskAudio         = nullptr;
+    TaskHandle_t _taskRemote        = nullptr;
+    TaskHandle_t _taskSocket        = nullptr;
+    TaskHandle_t _taskSerial        = nullptr;
+    TaskHandle_t _taskColorData     = nullptr;
+    TaskHandle_t _taskJSONWriter    = nullptr;
 
     std::vector<TaskHandle_t> _vEffectTasks;
 
@@ -253,87 +256,88 @@ public:
         DELETE_TASK(_taskScreen);
         DELETE_TASK(_taskRemote);
         DELETE_TASK(_taskSerial);
-        DELETE_TASK(_taskColorData);        
+        DELETE_TASK(_taskColorData);
         DELETE_TASK(_taskAudio);
         DELETE_TASK(_taskSocket);
-        DELETE_TASK(_taskSync);
-        DELETE_TASK(_taskNet);
+        DELETE_TASK(_taskNetwork);
         DELETE_TASK(_taskJSONWriter);
         DELETE_TASK(_taskDebug);
     }
 
     void StartScreenThread()
     {
-        debugW(">> Launching Screen Thread");
-        xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
+        #if USE_SCREEN
+            Serial.print( str_sprintf(">> Launching Screen Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", DEFAULT_STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
+        #endif
     }
 
     void StartSerialThread()
     {
         #if ENABLE_SERIAL
-            debugW(">> Launching Serial Thread");
-            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskSerial, AUDIOSERIAL_CORE);
+            Serial.print( str_sprintf(">> Launching Serial Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", DEFAULT_STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskSerial, AUDIOSERIAL_CORE);
         #endif
     }
 
     void StartColorDataThread()
     {
-        #if ENABLE_WIFI
-            debugW(">> Launching ColorData Server Thread");
-            xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
+        #if COLORDATA_SERVER_ENABLED
+            Serial.print( str_sprintf(">> Launching ColorData Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", DEFAULT_STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
         #endif
     }
 
     void StartDrawThread()
     {
-        debugW(">> Launching Draw Thread");
-        xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);
+        Serial.print( str_sprintf(">> Launching Drawing Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+        xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", DRAWING_STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);
     }
 
     void StartAudioThread()
     {
         #if ENABLE_AUDIO
-            debugW(">> Launching Audio Thread");
-            xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
+            Serial.print( str_sprintf(">> Launching Audio Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", AUDIO_STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
         #endif
     }
 
     void StartNetworkThread()
     {
         #if ENABLE_WIFI
-            debugW(">> Launching Network Thread");
-            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", STACK_SIZE, nullptr, NET_PRIORITY, &_taskSync, NET_CORE);
+            Serial.print( str_sprintf(">> Launching Network Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", DEFAULT_STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
         #endif
     }
 
     void StartDebugThread()
     {
         #if ENABLE_WIFI
-            debugW(">> Launching Debug Thread");
-            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
+            Serial.print( str_sprintf(">> Launching Debug Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", DEFAULT_STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
         #endif
     }
 
     void StartSocketThread()
     {
-        #if ENABLE_WIFI
-            debugW(">> Launching Socket Thread");
-            xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
+        #if INCOMING_WIFI_ENABLED
+            Serial.print( str_sprintf(">> Launching Socket Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", DEFAULT_STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
         #endif
     }
 
     void StartRemoteThread()
     {
-        #if ENABLE_WIFI
-            debugW(">> Launching Remote Thread");
-            xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
+        #if ENABLE_REMOTE
+            Serial.print( str_sprintf(">> Launching Remote Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", DEFAULT_STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
         #endif
     }
 
     void StartJSONWriterThread()
     {
-        debugW(">> Launching JSON Writer Thread");
-        xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
+        Serial.print( str_sprintf(">> Launching JSON Writer Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+        xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", DEFAULT_STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
     }
 
     void NotifyJSONWriterThread()
@@ -346,6 +350,16 @@ public:
         xTaskNotifyGive(_taskJSONWriter);
     }
 
+    void NotifyNetworkThread()
+    {
+        if (_taskNetwork == nullptr)
+            return;
+
+        debugW(">> Notifying Network Thread");
+        // Wake up the network task if it's sleeping, or request another read cycle if it isn't
+        xTaskNotifyGive(_taskNetwork);
+    }
+
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show
     TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
@@ -355,9 +369,9 @@ public:
         EffectTaskParams* pTaskParams = new EffectTaskParams(function, pEffect);
         TaskHandle_t effectTask = nullptr;
 
-        debugW(">> Launching %s Effect Thread", name);
+        Serial.print( str_sprintf(">> Launching %s Effect Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", name, ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
 
-        if (xTaskCreatePinnedToCore(EffectTaskEntry, name, STACK_SIZE, pTaskParams, priority, &effectTask, core) == pdPASS)
+        if (xTaskCreatePinnedToCore(EffectTaskEntry, name, DEFAULT_STACK_SIZE, pTaskParams, priority, &effectTask, core) == pdPASS)
             _vEffectTasks.push_back(effectTask);
         else
             // Clean up the task params object if the thread was not actually created

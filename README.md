@@ -95,7 +95,7 @@ I recommend you do the following:
 Ensure your WiFi SSID and password are set in include/secrets.h.<br/>
 Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
 
-- enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
+Enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
 
 ```C++
 #define ENABLE_WIFI 1
@@ -105,8 +105,7 @@ This can also be configured in the platformio.ini file, as described in the [Fea
 
 ## File system
 
-To build and upload the file system that is used by some effects (currently the [Weather effect](include/effects/matrix/PatternWeather.h) to be specific), you will need to build and upload the SPIFFS image to your board's flash using platformio.
-You can do this using the platformio user interface, or using the pio command line tool:
+To build and upload the file system that can be used by effects (although currently none do), you will need to build and upload the SPIFFS image to your board's flash using platformio. You can do this using the platformio user interface, or using the pio command line tool:
 
 ```ShellConsole
 pio run --target buildfs --environment <project name>
@@ -227,6 +226,10 @@ example in globals.h:
 ```C++
 #define ENABLE_WIFI 1
 ```
+
+## Fetching things from the Internet
+
+If you develop an effect that requires data that needs to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrNetworkReader` global variable. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
 
 ## Time It Takes To Build This Project
 

@@ -324,7 +324,7 @@ void LoadEffectFactories()
 
     #elif MESMERIZER
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.0, 1.0);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.75, 1.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 32,            spectrumBasicColors, 100, 0, 0.25, 1.25);
 
@@ -337,7 +337,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS, PatternSubscribers);
         ADD_EFFECT(EFFECT_MATRIX_WEATHER, PatternWeather);
 
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave", 0, 24, false);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave", 0, 30, false, 2);
         ADD_EFFECT(EFFECT_MATRIX_WAVEFORM, WaveformEffect, "WaveIn", 8);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "WaveOut", 0, 0, true, 0);
 
@@ -369,6 +369,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_CURTAIN, PatternCurtain);
         ADD_EFFECT(EFFECT_MATRIX_GRID_LIGHTS, PatternGridLights);
         ADD_EFFECT(EFFECT_MATRIX_MUNCH, PatternMunch);
+        ADD_EFFECT(EFFECT_MATRIX_MAZE, PatternMaze);
 
         // std::make_shared<PatternInfinity>(),
         // std::make_shared<PatternQR>(),
@@ -622,10 +623,15 @@ void InitEffectsManager()
 
     if (false == g_ptrEffectManager->Init())
         throw std::runtime_error("Could not initialize effect manager");
+
+
+    // We won't need the default factories any more, so swipe them from memory
+    g_EffectFactories.ClearDefaultFactories();
 }
 
 void SaveEffectManagerConfig()
 {
+    debugV("Saving effect manager config...");
     // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
     g_ptrJSONWriter->FlagWriter(g_EffectsManagerJSONWriterIndex);
 }

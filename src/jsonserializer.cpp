@@ -170,16 +170,16 @@ void JSONWriter::FlagWriter(size_t index)
     if (index >= writers.size())
         return;
 
-    writers[index].flag = true;
-    latestFlagMs = millis();
+    writers[index].flag.store(true);
+    latestFlagMs.store(millis());
 
     g_TaskManager.NotifyJSONWriterThread();
 }
 
 void JSONWriter::FlushWrites(bool halt)
 {
-    flushRequested = true;
-    haltWrites = halt;
+    flushRequested.store(true);
+    haltWrites.store(halt);
 
     g_TaskManager.NotifyJSONWriterThread();
 }
@@ -202,17 +202,17 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
                 continue;
 
             // If a flush was requested then we execute pending writes now
-            if (g_ptrJSONWriter->flushRequested)
+            if (g_ptrJSONWriter->flushRequested.load())
             {
-                g_ptrJSONWriter->flushRequested = false;
+                g_ptrJSONWriter->flushRequested.store(false);
                 break;
             }
 
             // If writes are halted, we don't do anything
-            if (g_ptrJSONWriter->haltWrites)
+            if (g_ptrJSONWriter->haltWrites.load())
                 continue;
 
-            unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs + JSON_WRITER_DELAY;
+            unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs.load() + JSON_WRITER_DELAY;
             unsigned long now = millis();
             if (now >= holdUntil)
                 break;

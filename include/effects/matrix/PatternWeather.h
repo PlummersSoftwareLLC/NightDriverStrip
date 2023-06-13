@@ -92,23 +92,23 @@ class PatternWeather : public LEDStripEffect
 
 private:
 
-    String strLocationName   = "";
-    String strLocation       = "";
-    String strCountryCode    = "";
-    String strLatitude       = "0.0";
-    String strLongitude      = "0.0";
-    int    dayOfWeek         = 0;
-    int    iconToday         = -1;
-    int    iconTomorrow      = -1;
-    float  temperature       = 0.0f;
-    float  highToday         = 0.0f;
-    float  loToday           = 0.0f;
-    float  highTomorrow      = 0.0f;
-    float  loTomorrow        = 0.0f;
+    String strLocationName    = "";
+    String strLocation        = "";
+    String strCountryCode     = "";
+    String strLatitude        = "0.0";
+    String strLongitude       = "0.0";
+    int    dayOfWeek          = 0;
+    int    iconToday          = -1;
+    int    iconTomorrow       = -1;
+    float  temperature        = 0.0f;
+    float  highToday          = 0.0f;
+    float  loToday            = 0.0f;
+    float  highTomorrow       = 0.0f;
+    float  loTomorrow         = 0.0f;
 
-    bool   dataReady         = false;
-    TaskHandle_t weatherTask = nullptr;
-    time_t latestUpdate      = 0;
+    bool   dataReady          = false;
+    size_t readerIndex = std::numeric_limits<size_t>::max();
+    time_t latestUpdate       = 0;
 
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
@@ -293,20 +293,6 @@ private:
         }
     }
 
-    // Thread entry point so we can update the weather data asynchronously
-    static void WeatherTaskEntryPoint(LEDStripEffect &effect)
-    {
-        PatternWeather& weatherEffect = static_cast<PatternWeather&>(effect);
-
-        for(;;)
-        {
-            // Suspend ourself until Draw() wakes us up
-            vTaskSuspend(NULL);
-
-            weatherEffect.UpdateWeather();
-        }
-    }
-
     void UpdateWeather()
     {
         while(!WiFi.isConnected())
@@ -349,12 +335,17 @@ public:
     {
     }
 
+    ~PatternWeather()
+    {
+        g_ptrNetworkReader->CancelReader(readerIndex);
+    }
+
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        weatherTask = g_TaskManager.StartEffectThread(WeatherTaskEntryPoint, this, "Weather");
+        readerIndex = g_ptrNetworkReader->RegisterReader([this]() { UpdateWeather(); });
 
         return true;
     }
@@ -382,9 +373,8 @@ public:
             latestUpdate = now;
 
             debugW("Triggering thread to check weather now...");
-            // Resume the weather task. If it's not suspended then there's an update running and this will do nothing,
-            //   so we'll silently skip the update this would otherwise trigger.
-            vTaskResume(weatherTask);
+            // Trigger the weather reader.
+            g_ptrNetworkReader->FlagReader(readerIndex);
         }
 
         // Draw the graphics

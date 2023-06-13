@@ -76,6 +76,7 @@
 //              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
+//              Jun-10-2023  v037       Davepl      New Screen classes 
 //
 //---------------------------------------------------------------------------
 
@@ -119,7 +120,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION         36    // Update ONLY this to increment the version number
+#define FLASH_VERSION          37    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
     #ifndef USESTRIP
@@ -464,13 +465,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_WEBSERVER        1  // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
-    #define SUBCHECK_INTERVAL  600000   // Update subscriber count every N seconds
-    #define SCALE_AUDIO_EXPONENTIAL 0   
+    #define SCALE_AUDIO_EXPONENTIAL 0
     #define ENABLE_AUDIO_SMOOTHING  1
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
@@ -531,7 +531,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define IR_REMOTE_PIN   22
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (1 * 5 * 1000)         // Expects at least a 5V, 1A supply
-    
+
     #define TOGGLE_BUTTON_1         35
     #define NUM_INFO_PAGES          4
     #define ONSCREEN_SPECTRUM_PAGE  2   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -1171,10 +1171,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define DEFAULT_EFFECT_INTERVAL 1000*30
 #endif
 
-#ifndef SUBCHECK_INTERVAL
-#define SUBCHECK_INTERVAL 0                             // How often to poll for youtube sub count, 0 means never
-#endif
-
 #ifndef MILLIS_PER_FRAME
 #define MILLIS_PER_FRAME 0
 #endif
@@ -1184,7 +1180,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef RESERVE_MEMORY
-#define RESERVE_MEMORY 180000
+  #ifdef USE_PSRAM
+    #define RESERVE_MEMORY 1000000
+  #else
+    #define RESERVE_MEMORY 180000
+  #endif
 #endif
 
 #ifndef TIME_BEFORE_LOCAL
@@ -1199,7 +1199,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define MATRIX_REFRESH_RATE 120
 #endif
 
-#ifndef MATRIX_CALC_DIVIDER 
+#ifndef MATRIX_CALC_DIVIDER
 #define MATRIX_CALC_DIVIDER 2
 #endif
 
@@ -1221,7 +1221,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #if USE_SCREEN
 
-    #ifdef ARDUINO_HELTEC_WIFI_KIT_32                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
+    #if ARDUINO_HELTEC_WIFI_KIT_32_V3
+
+        #define USE_OLED 1
+        #define USE_SSD1306 1
+
+    #elif ARDUINO_HELTEC_WIFI_KIT_32      
+                        // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 
@@ -1241,7 +1247,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif WROVERKIT
+    #elif WROVERKIT || SPECTRUM_WROVER_KIT
 
         #define USE_LCD 1                                      // Use the ILI9341 onboard
 
@@ -1258,12 +1264,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #if USE_LCD
     // These pins are based on the Espressif WROVER-KIT, which uses an ILI9314 chipset for its display
     // connected as follows:
-    #define TFT_CS   22
-    #define TFT_DC   21
-    #define TFT_MOSI 23
-    #define TFT_SCK  19
-    #define TFT_RST  18
-    #define TFT_MISO 25
+    #define TFT_CS      22
+    #define TFT_DC      21
+    #define TFT_MOSI    23
+    #define TFT_SCK     19
+    #define TFT_RST     18
+    #define TFT_MISO    25
+    #define TFT_WIDTH   240
+    #define TFT_HEIGHT  320
 #endif
 
 #ifdef ESP32FEATHERTFT
@@ -1327,6 +1335,14 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #define M5STACKCORE2 0
 #endif
 
+#ifndef COLORDATA_SERVER_ENABLED
+  #if ENABLE_WIFI
+    #define COLORDATA_SERVER_ENABLED 1
+  #else
+    #define COLORDATA_SERVER_ENABLED 0
+  #endif
+#endif
+
 // Microphone
 //
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
@@ -1367,19 +1383,6 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 //
 // Headers that are only included when certain features are enabled
 
-#if USE_OLED
-#include <U8g2lib.h>                // Library for monochrome displays
-#include <gfxfont.h>                // Adafruit GFX font structs
-#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
-extern U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2;
-#endif
-
-#if USE_TFTSPI
-    #define DISABLE_ALL_LIBRARY_WARNINGS 1
-    #include <TFT_eSPI.h>
-    #include <SPI.h>
-    extern std::unique_ptr<TFT_eSPI> g_pDisplay;
-#endif
 
 // FPS
 //
@@ -1667,8 +1670,8 @@ inline uint16_t WORDFromMemory(uint8_t * payloadData)
 
 // SetSocketBlockingEnabled
 //
-// In blocking mode, socket API calls wait until the operation is complete before returning control to the application. 
-// For example, a call to the send() function won't return until all data has been sent. This can lead to the application 
+// In blocking mode, socket API calls wait until the operation is complete before returning control to the application.
+// For example, a call to the send() function won't return until all data has been sent. This can lead to the application
 // hanging if the operation takes a long time.
 
 // In contrast, in non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function returns an error (usually EWOULDBLOCK or EAGAIN). The application can then decide how to handle the situation, such as by retrying the operation later. This provides more control and can make the application more responsive. However, it also requires more sophisticated programming, as the application must be prepared to handle these error conditions.
@@ -1715,6 +1718,14 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #include "drawing.h"                            // drawing code
 #include "taskmgr.h"                            // for cpu usage, etc
 
+#if USE_TFTSPI
+    #define DISABLE_ALL_LIBRARY_WARNINGS 1
+    #include <TFT_eSPI.h>
+    #include <SPI.h>
+
+    extern std::unique_ptr<Screen> g_pDisplay;
+#endif
+
 // Conditional includes depending on which project is being build
 
 #if USE_MATRIX
@@ -1723,7 +1734,7 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #endif
 
 #if USE_SCREEN
-    #include "freefonts.h"
+    // #include "freefonts.h"
 #endif
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER

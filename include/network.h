@@ -61,7 +61,7 @@
     #define WL_DISCONNECTED     "WL_DISCONNECTED"
     #define WL_UNKNOWN_STATUS   "WL_UNKNOWN_STATUS"
 
-    inline static const char* WLtoString(wl_status_t status) 
+    inline static const char* WLtoString(wl_status_t status)
     {
       switch (status) {
         case 255: return WL_NO_SHIELD;
@@ -107,6 +107,54 @@
       return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
 
+    class NetworkReader
+    {
+      // We allow the main network task entry point function to access private members
+      friend void IRAM_ATTR NetworkHandlingLoopEntry(void *);
 
+    private:
 
+      // Writer function and flag combo
+      struct ReaderEntry
+      {
+          std::atomic_bool flag = false;
+          std::atomic_bool canceled = false;
+          std::atomic_ulong readInterval;
+          std::atomic_ulong lastReadMs;
+          std::function<void()> reader;
+
+          ReaderEntry(std::function<void()> reader, unsigned long interval) :
+              reader(reader),
+              readInterval(interval)
+          {}
+
+          ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag, bool canceled) :
+              reader(reader),
+              readInterval(interval),
+              lastReadMs(lastReadMs),
+              flag(flag),
+              canceled(canceled)
+          {}
+
+          ReaderEntry(ReaderEntry&& entry) : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag, entry.canceled)
+          {}
+      };
+
+      std::vector<ReaderEntry> readers;
+
+    public:
+
+      // Add a reader to the collection. Returns the index of the added reader, for use with FlagReader().
+      //   Note that if an interval (in ms) is specified, the reader will run for the first time after
+      //   the interval has passed, unless "true" is passed to the last parameter.
+      size_t RegisterReader(std::function<void()> reader, unsigned long interval = 0, bool flag = false);
+
+      // Flag a reader for invocation and wake up the task that calls them
+      void FlagReader(size_t index);
+
+      // Cancel a reader. After this, it will no longer be invoked.
+      void CancelReader(size_t index);
+  };
+
+  extern DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader;
 #endif

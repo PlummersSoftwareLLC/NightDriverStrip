@@ -38,6 +38,10 @@
     extern DRAM_ATTR CWebServer g_WebServer;
 #endif
 
+#if ENABLE_WIFI
+    DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader = nullptr;
+#endif
+
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
 DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
@@ -67,25 +71,37 @@ extern uint32_t g_FPS;
         String str = Debug.getLastCommand();
         if (str.equalsIgnoreCase("clock"))
         {
-            debugI("Refreshing Time from Server...");
+            debugA("Refreshing Time from Server...");
             NTPTimeClient::UpdateClockFromWeb(&g_Udp);
         }
         else if (str.equalsIgnoreCase("stats"))
         {
-            debugI("Displaying statistics....");
-
-            debugI("%s:%dx%d %dK\n", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
-            debugI("%sdB:%s\n",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            debugI("BUFR:%02d/%02d [%dfps]\n", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
-            debugI("DATA:%+04.2lf-%+04.2lf\n", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
+            debugA("Displaying statistics....");
+            debugA("%s:%dx%d %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugA("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            debugA("BUFR:%02d/%02d [%dfps]", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount(), g_FPS);
+            debugA("DATA:%+04.2lf-%+04.2lf", g_aptrBufferManager[0]->AgeOfOldestBuffer(), g_aptrBufferManager[0]->AgeOfNewestBuffer());
 
             #if ENABLE_AUDIO
-                debugI("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
+                debugA("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                debugI("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
+                debugA("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
             #endif
+        }
+        else if (str.equalsIgnoreCase("clearsettings"))
+        {
+            debugA("Removing persisted settings....");
+            g_ptrDeviceConfig->RemovePersisted();
+            RemoveEffectManagerConfig();
+        }
+        else 
+        {
+            debugA("Unknown Command.  Extended Commands:");
+            debugA("clock               Refresh time from server");
+            debugA("stats               Display buffers, memory, etc");
+            debugA("clearsettings       Reset persisted user settings");
         }
     }
 #endif
@@ -220,8 +236,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            debugW("Pass %u of %u: Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                    iPass + 1, cRetries, WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+            debugW("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                    iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
             WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
@@ -284,7 +300,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return true;
     }
 
-#endif
+#endif // ENABLE_WIFI
 
 // ProcessIncomingData
 //
@@ -490,7 +506,7 @@ bool WriteWiFiConfig()
 
     if (success)
         // Do not check in code that displays the password in logs, etc.
-        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid.c_str());
+        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid);
 
     nvs_commit(nvsRWHandle);
     nvs_close(nvsRWHandle);
@@ -498,66 +514,284 @@ bool WriteWiFiConfig()
     return true;
 }
 
-// ColorDataTaskEntry
-//
-// The thread which serves requests for color data on port 49153
+#if ENABLE_WIFI
 
-void IRAM_ATTR ColorDataTaskEntry(void *)
-{
-    LEDViewer _viewer(12000);
-    int socket = -1;
+    // DebugLoopTaskEntry
+    //
+    // Entry point for the Debug task, pumps the Debug handler
 
-    for(;;)
+    void IRAM_ATTR DebugLoopTaskEntry(void *)
     {
-        while (!WiFi.isConnected())
-            delay(250);
+        //debugI(">> DebugLoopTaskEntry\n");
 
-        if (!_viewer.begin())
-        {
-            debugE("Unable to start color data server!");
-            delay(1000);
-            continue;
-        }
-        else
-        {
-            debugW("Started color data server!");
-            break;
-        }
-    }
+    // Initialize RemoteDebug
 
-    for (;;)
-    {
-        if (socket < 0)
-            socket = _viewer.CheckForConnection();
+        debugV("Starting RemoteDebug server...\n");
 
-        while (socket >= 0)
+        Debug.setResetCmdEnabled(true);                         // Enable the reset command
+        Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
+        Debug.showColors(false);                                // Colors
+        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug externsions we add
+
+        while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
+            delay(100);
+
+        Debug.begin(cszHostname, RemoteDebug::INFO);            // Initialize the WiFi debug server
+
+        for (;;)                                                // Call Debug.handle() 20 times a second
         {
-            if (g_ptrEffectManager->IsNewFrameAvailable())
+            EVERY_N_MILLIS(50)
             {
-                g_ptrEffectManager->SetNewFrameAvailable(false);
-
-                debugV("Sending color data packet");
-                // Potentially too large for the stack, so we allocate it on the heap instead
-                std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
-                pPacket->header = COLOR_DATA_PACKET_HEADER;
-                pPacket->width  = g_ptrEffectManager->g()->width();
-                pPacket->height = g_ptrEffectManager->g()->height();
-                if ((*g_ptrEffectManager)[0]->leds != nullptr)
-                {
-                    memcpy(pPacket->colors, (*g_ptrEffectManager)[0]->leds, sizeof(CRGB) * NUM_LEDS);
-
-                    if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
-                    {
-                        // If anything goes wrong, we close the socket so it can accept new incoming attempts
-                        debugW("Error on color data socket, so closing");
-                        close(socket);
-                        socket = -1;
-                        break;
-                    }
-                }
+                Debug.handle();
             }
+
             delay(10);
         }
-        delay(1000);
     }
-}
+#endif
+
+#if INCOMING_WIFI_ENABLED 
+
+    // SocketServerTaskEntry
+    //
+    // Repeatedly calls the code to open up a socket and receive new connections
+
+    void IRAM_ATTR SocketServerTaskEntry(void *)
+    {
+        for (;;)
+        {
+            if (WiFi.isConnected())
+            {
+                g_SocketServer.release();
+                g_SocketServer.begin();
+                g_SocketServer.ProcessIncomingConnectionsLoop();
+                debugW("Socket connection closed.  Retrying...\n");
+            }
+            delay(500);
+        }
+    }
+#endif
+
+#if COLORDATA_SERVER_ENABLED
+    // ColorDataTaskEntry
+    //
+    // The thread which serves requests for color data on port 49153
+    void IRAM_ATTR ColorDataTaskEntry(void *)
+    {
+        LEDViewer _viewer(12000);
+        int socket = -1;
+
+        for(;;)
+        {
+            while (!WiFi.isConnected())
+                delay(250);
+
+            if (!_viewer.begin())
+            {
+                debugE("Unable to start color data server!");
+                delay(1000);
+                continue;
+            }
+            else
+            {
+                debugW("Started color data server!");
+                break;
+            }
+        }
+
+        for (;;)
+        {
+            if (socket < 0)
+                socket = _viewer.CheckForConnection();
+
+            while (socket >= 0)
+            {
+                if (g_ptrEffectManager->IsNewFrameAvailable())
+                {
+                    g_ptrEffectManager->SetNewFrameAvailable(false);
+
+                    debugV("Sending color data packet");
+                    // Potentially too large for the stack, so we allocate it on the heap instead
+                    std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
+                    pPacket->header = COLOR_DATA_PACKET_HEADER;
+                    pPacket->width  = g_ptrEffectManager->g()->width();
+                    pPacket->height = g_ptrEffectManager->g()->height();
+                    if ((*g_ptrEffectManager)[0]->leds != nullptr)
+                    {
+                        memcpy(pPacket->colors, (*g_ptrEffectManager)[0]->leds, sizeof(CRGB) * NUM_LEDS);
+
+                        if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
+                        {
+                            // If anything goes wrong, we close the socket so it can accept new incoming attempts
+                            debugW("Error on color data socket, so closing");
+                            close(socket);
+                            socket = -1;
+                            break;
+                        }
+                    }
+                }
+                delay(10);
+            }
+            delay(1000);
+        }
+    }
+#endif // COLORDATA_SERVER_ENABLED
+
+#if ENABLE_WIFI
+
+    // NetworkHandlingLoopEntry
+    //
+    // Thead entry point for the Networking task
+    // Pumps the various network loops and sets the time periodically, as well as reconnecting
+    // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
+
+    void IRAM_ATTR NetworkHandlingLoopEntry(void *)
+    {
+        //debugI(">> NetworkHandlingLoopEntry\n");
+        if(!MDNS.begin("esp32")) {
+            Serial.println("Error starting mDNS");
+        }
+
+        TickType_t notifyWait = 0;
+
+        for (;;)
+        {
+            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
+            ulTaskNotifyTake(pdTRUE, notifyWait);
+
+            /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
+                it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
+
+            EVERY_N_SECONDS(1)
+            {
+                if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
+                {
+                    debugE("Cannot Connect to Wifi!");
+                    #if WAIT_FOR_WIFI
+                        debugE("Rebooting in 5 seconds due to no Wifi available.");
+                        delay(5000);
+                        throw new std::runtime_error("Rebooting due to no Wifi available.");
+                    #endif
+                }
+            }
+
+            // If the reader container isn't available yet, we'll sleep for a second before we check again
+            if (!g_ptrNetworkReader)
+            {
+                notifyWait = pdMS_TO_TICKS(1000);
+                continue;
+            }
+
+            unsigned long now = millis();
+
+            // Flag entries of which the read interval has passed
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
+                if (entry.canceled.load())
+                    continue;
+
+                auto interval = entry.readInterval.load();
+                unsigned long targetMs = entry.lastReadMs.load() + interval;
+
+                // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
+                //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
+                if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
+                    entry.flag.store(true);
+
+                // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
+                if (entry.flag.exchange(false))
+                {
+                    entry.reader();
+                    entry.lastReadMs.store(millis());
+                }
+            }
+
+            // We wake up at least once every second
+            unsigned long holdMs = 1000;
+            now = millis();
+
+            // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
+            for (auto& entry : g_ptrNetworkReader->readers)
+            {
+                if (entry.canceled.load())
+                    continue;
+
+                auto interval = entry.readInterval.load();
+                auto lastReadMs = entry.lastReadMs.load();
+
+                if (!interval)
+                    continue;
+
+                // If one of the reader intervals passed then we're up for another read cycle right away, so we can stop looking further
+                if (lastReadMs + interval <= now)
+                {
+                    holdMs = 0;
+                    break;
+                }
+                else
+                {
+                    unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
+                    if (entryHoldMs < holdMs)
+                        holdMs = entryHoldMs;
+                }
+            }
+
+            notifyWait = pdMS_TO_TICKS(holdMs);
+        }
+    }
+#endif // ENABLE_WIFI
+
+#if ENABLE_WIFI && ENABLE_NTP
+    void UpdateNTPTime()
+    {
+        if (WiFi.isConnected())
+        {
+            debugV("Refreshing Time from Server...");
+            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+
+        }
+    }
+#endif
+
+#if ENABLE_WIFI
+    size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval, bool flag)
+    {
+        // Add the reader with its flag unset
+        auto& readerEntry = readers.emplace_back(reader, interval);
+
+        // If an interval is specified, start the interval timer now.
+        if (interval)
+            readerEntry.lastReadMs.store(millis());
+
+        size_t index = readers.size() - 1;
+
+        if (flag)
+            FlagReader(index);
+
+        return index;
+    }
+
+    void NetworkReader::FlagReader(size_t index)
+    {
+        // Check if we received a valid reader index
+        if (index >= readers.size())
+            return;
+
+        readers[index].flag.store(true);
+
+        g_TaskManager.NotifyNetworkThread();
+    }
+
+    void NetworkReader::CancelReader(size_t index)
+    {
+        // Check if we received a valid reader index
+        if (index >= readers.size())
+            return;
+
+        auto& entry = readers[index];
+        entry.canceled.store(true);
+        entry.readInterval.store(0);
+        entry.reader = nullptr;
+    }
+
+#endif // ENABLE_WIFI
