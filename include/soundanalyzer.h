@@ -87,13 +87,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
 // results are simplified down to this small class of band peaks.
 
-// The MAX9814 mic has different sensitivity than the M5's mic, so each needs its own value here
-
-#if (M5STICKC || M5STICKCPLUS || M5STACKCORE2)
-    #define MIN_VU 128
-#else
-    #define MIN_VU 512
-#endif
+#define MIN_VU 512
 
 #ifndef GAINDAMPEN
     #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands

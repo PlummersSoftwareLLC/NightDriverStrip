@@ -172,7 +172,7 @@ uint16_t WiFiDraw()
             }
             else
             {
-                // Using a 'while' rather than an 'if' would cause it to pulls frames until it's caught up
+                // Using a 'while' rather than an 'if' causes it to pull frames until it's caught up
                 // written as 'while' it will pull frames until it gets one that is current.
                 // Chew through ALL frames older than now, ignoring all but the last of them
 

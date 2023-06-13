@@ -71,16 +71,22 @@
 #include "effects/matrix/Vector.h"
 #include <memory>
 
-typedef struct
-{
-    uint32_t noise_x;
-    uint32_t noise_y;
-    uint32_t noise_z;
-    uint32_t noise_scale_x;
-    uint32_t noise_scale_y;
-    uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
-    uint8_t  noisesmoothing;
-} Noise;
+#if USE_MATRIX
+#define USE_NOISE 1
+#endif
+
+#if USE_NOISE
+    typedef struct
+    {
+        uint32_t noise_x;
+        uint32_t noise_y;
+        uint32_t noise_z;
+        uint32_t noise_scale_x;
+        uint32_t noise_scale_y;
+        uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
+        uint8_t  noisesmoothing;
+    } Noise;
+#endif
 
 class GFXBase : public Adafruit_GFX
 {
@@ -101,7 +107,9 @@ protected:
     CRGBPalette16 _targetPalette;
     String _currentPaletteName;
 
-    std::unique_ptr<Noise> _ptrNoise;
+    #if USE_NOISE
+        std::unique_ptr<Noise> _ptrNoise;
+    #endif
 
     static const int _heatColorsPaletteIndex = 6;
     static const int _randomPaletteIndex = 9;
@@ -116,18 +124,19 @@ public:
                             _width(w),
                             _height(h)
     {
-        debugV("Allocating boids and noise");
-        _boids.reset(psram_allocator<Boid>().allocate(_width));
-        _ptrNoise.reset(psram_allocator<Noise>().allocate(1));
-        assert(_ptrNoise && _boids);
+        #if USE_NOISE
+            debugV("Allocating boids and noise");
+            _boids.reset(psram_allocator<Boid>().allocate(_width));
+            _ptrNoise.reset(psram_allocator<Noise>().allocate(1));
+            assert(_ptrNoise && _boids);
+            debugV("Setting up noise");
+            NoiseVariablesSetup();
+            debugV("Filling noise");
+            FillGetNoise();
+        #endif
 
         debugV("Setting up palette");
         loadPalette(0);
-        debugV("Setting up noise");
-        NoiseVariablesSetup();
-        debugV("Filling noise");
-        FillGetNoise();
-        debugV("Done with GFXBase ctor");
         ResetOscillators();
     }
 
@@ -135,10 +144,12 @@ public:
     {
     }
 
+    #if USE_NOISE
     Noise &GetNoise()
     {
         return *_ptrNoise;
     }
+    #endif
 
     CRGBPalette16 &GetCurrentPalette()
     {
@@ -262,12 +273,12 @@ public:
 
     virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
-        addColor(xy(x, y), color);
+        leds[xy(x, y)] = color;
     }
 
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        addColor(xy(x, y), from16Bit(color));
+        leds[xy(x, y)] = from16Bit(color);
     }
 
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
@@ -290,26 +301,6 @@ public:
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
             leds[xy(x, y)] = color;
-    }
-
-    // Adafruit_GFX overrride
-    void writePixel(int16_t x, int16_t y, uint16_t color)
-    {
-        setPixel(x, y, color);
-    }
-
-    // Adafruit_GFX overrride
-    void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
-    {
-        for (int p = y; p < y + h; p++)
-            setPixel(x, p, color);
-    }
-
-    // Adafruit_GFX overrride
-    void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
-    {
-        for (int p = x; p < x + w; p++)
-            setPixel(p, y, color);
     }
 
     virtual void setPixel(int16_t x, int r, int g, int b)
@@ -1153,46 +1144,48 @@ public:
         return rgb;
     }
 
-    void NoiseVariablesSetup()
-    {
-        _ptrNoise->noisesmoothing = 200;
-
-        _ptrNoise->noise_x = random16();
-        _ptrNoise->noise_y = random16();
-        _ptrNoise->noise_z = random16();
-        _ptrNoise->noise_scale_x = 6000;
-        _ptrNoise->noise_scale_y = 6000;
-    }
-
-    void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
-    {
-        _ptrNoise->noise_x += nx;
-        _ptrNoise->noise_y += ny;
-        _ptrNoise->noise_z += nx;
-        _ptrNoise->noise_scale_x = sx;
-        _ptrNoise->noise_scale_y = sy;
-    }
-
-    void FillGetNoise()
-    {
-        for (uint16_t i = 0; i < _width; i++)
+    #if USE_NOISE
+        void NoiseVariablesSetup()
         {
-            uint32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_height + 1) / 2));
+            _ptrNoise->noisesmoothing = 200;
 
-            for (uint16_t j = 0; j < _height; j++)
+            _ptrNoise->noise_x = random16();
+            _ptrNoise->noise_y = random16();
+            _ptrNoise->noise_z = random16();
+            _ptrNoise->noise_scale_x = 6000;
+            _ptrNoise->noise_scale_y = 6000;
+        }
+
+        void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
+        {
+            _ptrNoise->noise_x += nx;
+            _ptrNoise->noise_y += ny;
+            _ptrNoise->noise_z += nx;
+            _ptrNoise->noise_scale_x = sx;
+            _ptrNoise->noise_scale_y = sy;
+        }
+
+        void FillGetNoise()
+        {
+            for (uint16_t i = 0; i < _width; i++)
             {
-                uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
+                uint32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_height + 1) / 2));
 
-                uint16_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+                for (uint16_t j = 0; j < _height; j++)
+                {
+                    uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
 
-                uint8_t olddata = _ptrNoise->noise[i][j];
-                uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
-                data = newdata;
+                    uint16_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
 
-                _ptrNoise->noise[i][j] = data;
+                    uint8_t olddata = _ptrNoise->noise[i][j];
+                    uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
+                    data = newdata;
+
+                    _ptrNoise->noise[i][j] = data;
+                }
             }
         }
-    }
+    #endif
 
     virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
@@ -1252,104 +1245,106 @@ public:
         } // end column loop
     }     /// MoveY
 
-    void MoveFractionalNoiseX(uint8_t amt = 16)
-    {
-        std::unique_ptr<CRGB[]> ledsTemp = std::make_unique<CRGB[]>(NUM_LEDS);
-
-        // move delta pixelwise
-        for (int y = 0; y < _height; y++)
+    #if USE_NOISE
+        void MoveFractionalNoiseX(uint8_t amt = 16)
         {
-            uint16_t amount = _ptrNoise->noise[0][y] * amt;
-            uint8_t delta = _width - 1 - (amount / 256);
+            std::unique_ptr<CRGB[]> ledsTemp = std::make_unique<CRGB[]>(NUM_LEDS);
 
-            // Process up to the end less the dekta
-            for (int x = 0; x < _width - delta; x++)
-                ledsTemp[xy(x, y)] = leds[xy(x + delta, y)];
-
-            // Do the tail portion while wrapping around
-            for (int x = _width - delta; x < _width; x++)
-                ledsTemp[xy(x, y)] = leds[xy(x + delta - _width, y)];
-        }
-
-        // move fractions
-        CRGB PixelA;
-        CRGB PixelB;
-
-        for (uint16_t y = 0; y < _height; y++)
-        {
-            uint16_t amount = _ptrNoise->noise[0][y] * amt;
-            uint8_t delta = _height - 1 - (amount / 256);
-            uint8_t fractions = amount - (delta * 256);
-
-            for (uint16_t x = 1; x < _width; x++)
+            // move delta pixelwise
+            for (int y = 0; y < _height; y++)
             {
-                PixelA = ledsTemp[xy(x, y)];
-                PixelB = ledsTemp[xy(x - 1, y)];
+                uint16_t amount = _ptrNoise->noise[0][y] * amt;
+                uint8_t delta = _width - 1 - (amount / 256);
+
+                // Process up to the end less the dekta
+                for (int x = 0; x < _width - delta; x++)
+                    ledsTemp[xy(x, y)] = leds[xy(x + delta, y)];
+
+                // Do the tail portion while wrapping around
+                for (int x = _width - delta; x < _width; x++)
+                    ledsTemp[xy(x, y)] = leds[xy(x + delta - _width, y)];
+            }
+
+            // move fractions
+            CRGB PixelA;
+            CRGB PixelB;
+
+            for (uint16_t y = 0; y < _height; y++)
+            {
+                uint16_t amount = _ptrNoise->noise[0][y] * amt;
+                uint8_t delta = _height - 1 - (amount / 256);
+                uint8_t fractions = amount - (delta * 256);
+
+                for (uint16_t x = 1; x < _width; x++)
+                {
+                    PixelA = ledsTemp[xy(x, y)];
+                    PixelB = ledsTemp[xy(x - 1, y)];
+
+                    PixelA %= 255 - fractions;
+                    PixelB %= fractions;
+
+                    leds[xy(x, y)] = PixelA + PixelB;
+                }
+
+                PixelA = ledsTemp[xy(0, y)];
+                PixelB = ledsTemp[xy(_width - 1, y)];
 
                 PixelA %= 255 - fractions;
                 PixelB %= fractions;
 
-                leds[xy(x, y)] = PixelA + PixelB;
-            }
-
-            PixelA = ledsTemp[xy(0, y)];
-            PixelB = ledsTemp[xy(_width - 1, y)];
-
-            PixelA %= 255 - fractions;
-            PixelB %= fractions;
-
-            leds[xy(0, y)] = PixelA + PixelB;
-        }
-    }
-
-    void MoveFractionalNoiseY(uint8_t amt = 16)
-    {
-        std::unique_ptr<CRGB[]> ledsTemp = std::make_unique<CRGB[]>(NUM_LEDS);
-
-        // move delta pixelwise
-        for (int x = 0; x < _width; x++)
-        {
-            uint16_t amount = _ptrNoise->noise[x][0] * amt;
-            uint8_t delta = _height - 1 - (amount / 256);
-
-            for (int y = 0; y < _height - delta; y++)
-            {
-                ledsTemp[xy(x, y)] = leds[xy(x, y + delta)];
-            }
-            for (int y = _height - delta; y < _height; y++)
-            {
-                ledsTemp[xy(x, y)] = leds[xy(x, y + delta - _height)];
+                leds[xy(0, y)] = PixelA + PixelB;
             }
         }
 
-        // move fractions
-        CRGB PixelA;
-        CRGB PixelB;
-
-        for (uint16_t x = 0; x < _width; x++)
+        void MoveFractionalNoiseY(uint8_t amt = 16)
         {
-            uint16_t amount = _ptrNoise->noise[x][0] * amt;
-            uint8_t delta = _height - 1 - (amount / 256);
-            uint8_t fractions = amount - (delta * 256);
+            std::unique_ptr<CRGB[]> ledsTemp = std::make_unique<CRGB[]>(NUM_LEDS);
 
-            for (uint16_t y = 1; y < _height; y++)
+            // move delta pixelwise
+            for (int x = 0; x < _width; x++)
             {
-                PixelA = ledsTemp[xy(x, y)];
-                PixelB = ledsTemp[xy(x, y - 1)];
+                uint16_t amount = _ptrNoise->noise[x][0] * amt;
+                uint8_t delta = _height - 1 - (amount / 256);
+
+                for (int y = 0; y < _height - delta; y++)
+                {
+                    ledsTemp[xy(x, y)] = leds[xy(x, y + delta)];
+                }
+                for (int y = _height - delta; y < _height; y++)
+                {
+                    ledsTemp[xy(x, y)] = leds[xy(x, y + delta - _height)];
+                }
+            }
+
+            // move fractions
+            CRGB PixelA;
+            CRGB PixelB;
+
+            for (uint16_t x = 0; x < _width; x++)
+            {
+                uint16_t amount = _ptrNoise->noise[x][0] * amt;
+                uint8_t delta = _height - 1 - (amount / 256);
+                uint8_t fractions = amount - (delta * 256);
+
+                for (uint16_t y = 1; y < _height; y++)
+                {
+                    PixelA = ledsTemp[xy(x, y)];
+                    PixelB = ledsTemp[xy(x, y - 1)];
+
+                    PixelA %= 255 - fractions;
+                    PixelB %= fractions;
+
+                    leds[xy(x, y)] = PixelA + PixelB;
+                }
+
+                PixelA = ledsTemp[xy(x, 0)];
+                PixelB = ledsTemp[xy(x, _height - 1)];
 
                 PixelA %= 255 - fractions;
                 PixelB %= fractions;
 
-                leds[xy(x, y)] = PixelA + PixelB;
+                leds[xy(x, 0)] = PixelA + PixelB;
             }
-
-            PixelA = ledsTemp[xy(x, 0)];
-            PixelB = ledsTemp[xy(x, _height - 1)];
-
-            PixelA %= 255 - fractions;
-            PixelB %= fractions;
-
-            leds[xy(x, 0)] = PixelA + PixelB;
         }
-    }
+    #endif
 };

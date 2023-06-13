@@ -530,7 +530,7 @@ class GhostWave : public WaveformEffect
     }
   public:
 
-    GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 20)
+    GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 0)
         : WaveformEffect(pszFriendlyName, increment),
           _blur(blur),
           _erase(erase),
@@ -579,19 +579,21 @@ class GhostWave : public WaveformEffect
 
         int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
 
-        g->DimAll(250 - _fade * g_Analyzer._VURatio);
         g->MoveOutwardsX(top);
+
+        if (_fade)
+            g->DimAll(255-_fade);
 
         if (_blur)
             g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
-
-        // VURatio is too fast, VURatioFade looks too slow, but averaged is just right
+        
+        // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 
         float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
-
-        // Offsetting by 0.5, which is a very low ratio, helps keep the line thin when sound is low
-        DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.5) / 1.5, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.5) / 1.5, _erase);
+        
+        // Offsetting by 0.25, which is a very low ratio, helps keep the line thin when sound is low
+        DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.25) / 1.75, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.25) / 1.75, _erase);
     }
 };
 

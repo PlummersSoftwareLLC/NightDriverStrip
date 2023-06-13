@@ -56,7 +56,7 @@ extern "C"
 
 bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
 
-#if ENABLE_WIFI && INCOMING_WIFI_ENABLED
+#if COLORDATA_SERVER_ENABLED
 
 // SocketResponse
 //
