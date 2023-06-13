@@ -76,17 +76,18 @@ class HexagonGFX : public LEDStripGFX
             // Invalid row
             return -1;
         }
-        else if (row < 10)
+        else if (row < HEX_HALF_DIMENSION)
         {
-            // For the top half, we use the formula for the sum of an arithmetic series
-            return (row * (row + 19)) / 2;
+            // For the top half, we use the formula for the sum of an arithmetic series.  It's ok to stare.
+            return (row * (row + HEX_MAX_DIMENSION)) / 2;
         } 
-        else if (row < 19)
+        else if (row < HEX_MAX_DIMENSION)
         {
             // For the bottom half, we adjust our row number to start from 1 again (d = row - 9)
-            // Then work our way back up from the end
-            int d = 19 - row;
-            return 271 - (d * (d + 19)) / 2;
+            // Then work our way back up from the end.  ChatGPT couldn't solve the series so I decided to
+            // just work backwards from the end using the same formula as the top half, and it works.
+            int d = HEX_MAX_DIMENSION - row;
+            return NUM_LEDS - (d * (d + HEX_MAX_DIMENSION)) / 2;
         }
         else 
         {
@@ -99,15 +100,15 @@ class HexagonGFX : public LEDStripGFX
     // Function to calculate the width of a specified row on an LED display.
     virtual int getRowWidth(int row) const
     {
-        if (row < 10) 
+        if (row < HEX_HALF_DIMENSION) 
         {
             // For the top half, the width simply increases from 10 to 19.
-            return 10 + row;
+            return HEX_HALF_DIMENSION + row;
         } 
         else 
         {
             // For the bottom half, the width decreases from 19 back to 10.
-            return 28 - row;
+            return HEX_MAX_DIMENSION + HEX_HALF_DIMENSION - 1 - row;
         }
     }
     
@@ -130,6 +131,30 @@ class HexagonGFX : public LEDStripGFX
         {
             return start + x;
         }
+    }
+
+    // fillRing
+    //
+    // Fills a ring around the hexagon, inset by the indent specified and in the color provided
+
+    virtual void fillRing(uint16_t indent, CRGB color)
+    {
+        for (int i = indent; i < getRowWidth(indent)-indent; ++i) 
+            setPixel(getStartIndexOfRow(indent) + i, color);
+
+        // Iterate over all rows
+        for (int row = indent; row < HEX_MAX_DIMENSION - indent; ++row) 
+        {
+            // Get the start index of the current row
+            int startIndex = getStartIndexOfRow(row);
+
+            setPixel(startIndex + indent, color);                           // first pixel
+            setPixel(startIndex + getRowWidth(row) - 1 - indent, color);    // last pixel
+        }
+
+        for (int i = indent; i < getRowWidth(HEX_MAX_DIMENSION-indent-1)-indent; ++i) 
+            setPixel(getStartIndexOfRow(HEX_MAX_DIMENSION-indent-1) + i, color);
+
     }
 };
 

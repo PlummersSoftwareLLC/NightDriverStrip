@@ -720,6 +720,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)
 
+    #define HEX_MAX_DIMENSION 19                 // How big the hex is - it's biggest row and the number of rows
+    #define HEX_HALF_DIMENSION 10                // How many rows from top to middle inclusive
+    
 #elif LEDSTRIP
 
     // The LED strips I use for Christmas lights under my eaves
