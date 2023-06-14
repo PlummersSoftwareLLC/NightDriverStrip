@@ -220,14 +220,6 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
 // Optional Components
 //
 
-#if ENABLE_WIFI && ENABLE_WEBSERVER
-    DRAM_ATTR CWebServer g_WebServer;
-#endif
-
-#if INCOMING_WIFI_ENABLED
-    DRAM_ATTR SocketServer g_SocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
-#endif
-
 #if ENABLE_REMOTE
     DRAM_ATTR RemoteControl g_RemoteControl;
 #endif
@@ -399,6 +391,14 @@ void setup()
     //   Note that the thread that executes the readers is started further down, along with other networking
     //   threads.
     g_ptrSystem->SetupNetworkReader();
+#endif
+
+#if INCOMING_WIFI_ENABLED
+    g_ptrSystem->SetupSocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
+#endif
+
+#if ENABLE_WIFI && ENABLE_WEBSERVER
+    g_ptrSystem->SetupWebServer();
 #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly

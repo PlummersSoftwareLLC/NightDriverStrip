@@ -35,10 +35,6 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
-#if ENABLE_WEBSERVER
-    extern DRAM_ATTR CWebServer g_WebServer;
-#endif
-
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
 DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
@@ -84,7 +80,7 @@ extern uint32_t g_FPS;
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                debugA("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
+                debugA("Socket Buffer _cbReceived: %d", g_ptrSystem->SocketServer()._cbReceived);
             #endif
         }
         else if (str.equalsIgnoreCase("clearsettings"))
@@ -264,10 +260,12 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             return true;
 
         #if INCOMING_WIFI_ENABLED
+            auto& socketServer = g_ptrSystem->SocketServer();
+
             // Start listening for incoming data
             debugI("Starting/restarting Socket Server...");
-            g_SocketServer.release();
-            if (false == g_SocketServer.begin())
+            socketServer.release();
+            if (false == socketServer.begin())
                 throw std::runtime_error("Could not start socket server!");
 
             debugI("Socket server started.");
@@ -285,7 +283,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_WEBSERVER
             debugI("Starting Web Server...");
-            g_WebServer.begin();
+            g_ptrSystem->WebServer().begin();
             debugI("Web Server begin called!");
         #endif
 
@@ -559,9 +557,11 @@ bool WriteWiFiConfig()
         {
             if (WiFi.isConnected())
             {
-                g_SocketServer.release();
-                g_SocketServer.begin();
-                g_SocketServer.ProcessIncomingConnectionsLoop();
+                auto& socketServer = g_ptrSystem->SocketServer();
+
+                socketServer.release();
+                socketServer.begin();
+                socketServer.ProcessIncomingConnectionsLoop();
                 debugW("Socket connection closed.  Retrying...\n");
             }
             delay(500);

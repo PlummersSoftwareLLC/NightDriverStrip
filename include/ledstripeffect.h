@@ -30,6 +30,7 @@
 
 #pragma once
 
+
 #include "effects.h"
 #include "jsonserializer.h"
 #include "types.h"

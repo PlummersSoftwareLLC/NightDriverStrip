@@ -33,7 +33,6 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 #include <limits>
-#include "systemcontainer.h"
 
 extern DRAM_ATTR uint8_t g_Brightness;
 extern DRAM_ATTR uint8_t g_Fader;
@@ -175,83 +174,7 @@ class RemoteControl
         _IR_Receive.disableIRIn();
     }
 
-    void handle()
-    {
-        decode_results results;
-        static uint lastResult = 0;
-
-        if (!_IR_Receive.decode(&results))
-            return;
-
-        uint result = results.value;
-        _IR_Receive.resume();
-
-        debugW("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
-
-        if (0xFFFFFFFF == result)
-        {
-            debugV("Remote Repeat; lastResult == %08x\n", lastResult);
-            result = lastResult;
-        }
-
-        auto &effectManager = g_ptrSystem->EffectManager();
-
-        if (IR_ON == result)
-        {
-            debugV("Turning ON via remote");
-            effectManager.ClearRemoteColor();
-            effectManager.SetInterval(0);
-            effectManager.StartEffect();
-            g_Brightness = 255;
-            return;
-        }
-        else if (IR_OFF == result)
-        {
-            g_Brightness = std::max(MIN_BRIGHTNESS, (int) g_Brightness - BRIGHTNESS_STEP);
-            return;
-        }
-        else if (IR_BPLUS == result)
-        {
-            effectManager.ClearRemoteColor();
-            effectManager.NextEffect();
-            return;
-        }
-        else if (IR_BMINUS == result)
-        {
-            effectManager.ClearRemoteColor();
-            effectManager.PreviousEffect();
-            return;
-        }
-        else if (IR_SMOOTH == result)
-        {
-            effectManager.ClearRemoteColor();
-            effectManager.SetInterval(EffectManager<GFXBase>::csSmoothButtonSpeed);
-        }
-        else if (IR_STROBE == result)
-        {
-            effectManager.NextPalette();
-        }
-        else if (IR_FLASH == result)
-        {
-            effectManager.PreviousPalette();
-        }
-        else if (IR_FADE == result)
-        {
-            effectManager.ShowVU( !effectManager.IsVUVisible() );
-        }
-
-        for (int i = 0; i < ARRAYSIZE(RemoteColorCodes); i++)
-        {
-            if (RemoteColorCodes[i].code == result)
-            {
-                debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
-                effectManager.SetGlobalColor(RemoteColorCodes[i].color);
-                return;
-            }
-        }
-    }
+    void handle();
 };
-
-extern RemoteControl g_RemoteControl;
 
 #endif

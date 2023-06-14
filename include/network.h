@@ -31,7 +31,6 @@
 
 #if INCOMING_WIFI_ENABLED
     #include "socketserver.h"
-    extern SocketServer g_SocketServer;
 #endif
 
 #if ENABLE_WIFI

@@ -31,10 +31,12 @@
 
 #pragma once
 
+#include "esp_attr.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
+#include "types.h"
+#include "systemcontainer.h"
 
-extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
 
 #if ENABLE_AUDIO
