@@ -220,10 +220,6 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
 // Optional Components
 //
 
-#if ENABLE_REMOTE
-    DRAM_ATTR RemoteControl g_RemoteControl;
-#endif
-
 #if ENABLE_WIFI && ENABLE_NTP
 void UpdateNTPTime();
 #endif

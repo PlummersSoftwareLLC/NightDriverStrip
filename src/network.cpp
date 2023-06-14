@@ -125,7 +125,7 @@ void SetupOTA(const String & strHostname)
 
             debugI("Stopping IR remote");
             #if ENABLE_REMOTE
-            g_RemoteControl.end();
+            g_ptrSystem->RemoteControl().end();
             #endif
 
             debugI("Start updating from OTA ");
@@ -184,16 +184,17 @@ void SetupOTA(const String & strHostname)
 // remote is being used, this code and thread doesn't exist in the build.
 
 #if ENABLE_REMOTE
-extern RemoteControl g_RemoteControl;
 
 void IRAM_ATTR RemoteLoopEntry(void *)
 {
     //debugW(">> RemoteLoopEntry\n");
 
-    g_RemoteControl.begin();
+    auto& remoteControl = g_ptrSystem->RemoteControl();
+
+    remoteControl.begin();
     while (true)
     {
-        g_RemoteControl.handle();
+        remoteControl.handle();
         delay(20);
     }
 }
