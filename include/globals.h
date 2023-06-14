@@ -76,7 +76,7 @@
 //              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
-//              Jun-10-2023  v037       Davepl      New Screen classes 
+//              Jun-10-2023  v037       Davepl      New Screen classes
 //
 //---------------------------------------------------------------------------
 
@@ -140,7 +140,6 @@
 #define FASTLED_INTERNAL        1   // Silence FastLED build banners
 #define NTP_DELAY_COUNT         20  // delay count for ntp update
 #define NTP_PACKET_LENGTH       48  // ntp packet length
-#define TIME_ZONE             (-8)  // My offset from London (UTC-8)
 
 // C Helpers and Macros
 
@@ -1226,7 +1225,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define USE_OLED 1
         #define USE_SSD1306 1
 
-    #elif ARDUINO_HELTEC_WIFI_KIT_32      
+    #elif ARDUINO_HELTEC_WIFI_KIT_32
                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
@@ -1722,17 +1721,15 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
     #include <TFT_eSPI.h>
     #include <SPI.h>
-
-    extern std::unique_ptr<Screen> g_pDisplay;
 #endif
 
 // Conditional includes depending on which project is being build
-
+/*
 #if USE_MATRIX
     #include <YouTubeSight.h>                       // For fetching YouTube sub count
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
-
+*/
 #if USE_SCREEN
     // #include "freefonts.h"
 #endif

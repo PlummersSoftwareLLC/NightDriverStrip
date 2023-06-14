@@ -188,7 +188,7 @@ public:
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
+        auto g = g_ptrSystem->EffectManager().g();
 
         // Reset after 20 seconds
         if (millis() - msStart > 20000)

@@ -33,11 +33,9 @@
 
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
-#include "effectmanager.h"
 
 extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
 #if ENABLE_AUDIO
 
@@ -409,7 +407,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             //
             // If the palette is scrolling, we do a smooth blend.  Otherwise we do a straight color lookup, which makes the stripes
             // on the USA flag solid red rather than pinkish...
-            
+
             if (pGFXChannel->IsPalettePaused())
             {
                 int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
@@ -468,7 +466,7 @@ class WaveformEffect : public LEDStripEffect
         v = std::min(v, 1.0f);
         v = std::max(v, 0.0f);
 
-        auto g = g_ptrEffectManager->g();
+        auto g = g_ptrSystem->EffectManager().g();
 
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
@@ -509,9 +507,9 @@ class WaveformEffect : public LEDStripEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
+        auto g = g_ptrSystem->EffectManager().g();
 
-        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
+        int top = g_ptrSystem->EffectManager().IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         DrawSpike(63, g_Analyzer._VURatio/2.0);
         DrawSpike(0, g_Analyzer._VURatio/2.0);
@@ -575,9 +573,9 @@ class GhostWave : public WaveformEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
-
-        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
+        auto& effectManager = g_ptrSystem->EffectManager();
+        auto g = effectManager.g();
+        int top = effectManager.IsVUVisible() ? 1 : 0;
 
         g->MoveOutwardsX(top);
 
@@ -586,11 +584,11 @@ class GhostWave : public WaveformEffect
 
         if (_blur)
             g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
-        
+
         // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 
         float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
-        
+
         // Offsetting by 0.25, which is a very low ratio, helps keep the line thin when sound is low
         DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.25) / 1.75, _erase);
         DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.25) / 1.75, _erase);

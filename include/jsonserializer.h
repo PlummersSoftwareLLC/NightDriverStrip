@@ -32,6 +32,7 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <ArduinoJson.h>
 #include "jsonbase.h"
 #include "FastLED.h"
@@ -171,4 +172,3 @@ class JSONWriter
     void FlushWrites(bool halt = false);
 };
 
-extern DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter;

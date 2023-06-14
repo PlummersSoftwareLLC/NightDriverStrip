@@ -30,13 +30,14 @@
 
 #include "globals.h"
 #include "webserver.h"
+#include "systemcontainer.h"
 
 // Static member initializers
 
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
-    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrDeviceConfig->ValidateOpenWeatherAPIKey(value); } }
+    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } }
 };
 
 std::vector<SettingSpec> CWebServer::mySettingSpecs = {};
@@ -103,13 +104,13 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
         auto j = response->getRoot();
 
-        j["currentEffect"]         = g_ptrEffectManager->GetCurrentEffectIndex();
-        j["millisecondsRemaining"] = g_ptrEffectManager->GetTimeRemainingForCurrentEffect();
-        j["effectInterval"]        = g_ptrEffectManager->GetInterval();
+        j["currentEffect"]         = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+        j["millisecondsRemaining"] = g_ptrSystem->EffectManager().GetTimeRemainingForCurrentEffect();
+        j["effectInterval"]        = g_ptrSystem->EffectManager().GetInterval();
 
-        auto effectsList = g_ptrEffectManager->EffectsList();
+        auto effectsList = g_ptrSystem->EffectManager().EffectsList();
 
-        for (int i = 0; i < g_ptrEffectManager->EffectCount(); i++)
+        for (int i = 0; i < g_ptrSystem->EffectManager().EffectCount(); i++)
         {
             StaticJsonDocument<256> effectDoc;
 
@@ -165,9 +166,11 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     j["CODE_FREE"]             = _staticStats.FreeSketchSpace;
     j["FLASH_SIZE"]            = _staticStats.FlashChipSize;
 
-    j["CPU_USED"]              = g_TaskManager.GetCPUUsagePercent();
-    j["CPU_USED_CORE0"]        = g_TaskManager.GetCPUUsagePercent(0);
-    j["CPU_USED_CORE1"]        = g_TaskManager.GetCPUUsagePercent(1);
+    auto taskManager = g_ptrSystem->TaskManager();
+
+    j["CPU_USED"]              = taskManager.GetCPUUsagePercent();
+    j["CPU_USED_CORE0"]        = taskManager.GetCPUUsagePercent(0);
+    j["CPU_USED_CORE1"]        = taskManager.GetCPUUsagePercent(1);
 
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
@@ -175,21 +178,21 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
 void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
 {
     debugV("SetCurrentEffectIndex");
-    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_ptrEffectManager->SetCurrentEffectIndex(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_ptrSystem->EffectManager().SetCurrentEffectIndex(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("EnableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrEffectManager->EnableEffect(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->EffectManager().EnableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("DisableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrEffectManager->DisableEffect(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->EffectManager().DisableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -204,7 +207,7 @@ void CWebServer::MoveEffect(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    PushPostParamIfPresent<size_t>(pRequest, "newIndex", SET_VALUE(g_ptrEffectManager->MoveEffect(fromIndex, value)));
+    PushPostParamIfPresent<size_t>(pRequest, "newIndex", SET_VALUE(g_ptrSystem->EffectManager().MoveEffect(fromIndex, value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -219,7 +222,7 @@ void CWebServer::CopyEffect(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    auto effect = g_ptrEffectManager->CopyEffect(index);
+    auto effect = g_ptrSystem->EffectManager().CopyEffect(index);
     if (!effect)
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
@@ -228,7 +231,7 @@ void CWebServer::CopyEffect(AsyncWebServerRequest * pRequest)
 
     ApplyEffectSettings(pRequest, effect);
 
-    if (g_ptrEffectManager->AppendEffect(effect))
+    if (g_ptrSystem->EffectManager().AppendEffect(effect))
         SendEffectSettingsResponse(pRequest, effect);
     else
         AddCORSHeaderAndSendOKResponse(pRequest);
@@ -245,27 +248,27 @@ void CWebServer::DeleteEffect(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    if (index < g_ptrEffectManager->EffectCount() && g_ptrEffectManager->EffectsList()[index]->IsCoreEffect())
+    if (index < g_ptrSystem->EffectManager().EffectCount() && g_ptrSystem->EffectManager().EffectsList()[index]->IsCoreEffect())
     {
         AddCORSHeaderAndSendBadRequest(pRequest, "Can't delete core effect");
         return;
     }
 
-    g_ptrEffectManager->DeleteEffect(index);
+    g_ptrSystem->EffectManager().DeleteEffect(index);
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::NextEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("NextEffect");
-    g_ptrEffectManager->NextEffect();
+    g_ptrSystem->EffectManager().NextEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("PreviousEffect");
-    g_ptrEffectManager->PreviousEffect();
+    g_ptrSystem->EffectManager().PreviousEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -323,7 +326,7 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
         );
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
 
-        auto deviceConfigSpecs = g_ptrDeviceConfig->GetSettingSpecs();
+        auto deviceConfigSpecs = g_ptrSystem->DeviceConfig().GetSettingSpecs();
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
 
     }
@@ -347,8 +350,8 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     JsonObject jsonObject = root.to<JsonObject>();
 
     // We get the serialized JSON for the device config, without any sensitive values
-    g_ptrDeviceConfig->SerializeToJSON(jsonObject, false);
-    jsonObject["effectInterval"] = g_ptrEffectManager->GetInterval();
+    g_ptrSystem->DeviceConfig().SerializeToJSON(jsonObject, false);
+    jsonObject["effectInterval"] = g_ptrSystem->EffectManager().GetInterval();
 
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
@@ -357,16 +360,18 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 //   Composing a response is left to the invoker!
 void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
 {
-    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrEffectManager->SetInterval(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(g_ptrDeviceConfig->SetLocation(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(g_ptrDeviceConfig->SetLocationIsZip(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(g_ptrDeviceConfig->SetCountryCode(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::OpenWeatherApiKeyTag, SET_VALUE(g_ptrDeviceConfig->SetOpenWeatherAPIKey(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(g_ptrDeviceConfig->SetTimeZone(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(g_ptrDeviceConfig->Set24HourClock(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(g_ptrDeviceConfig->SetUseCelsius(value)));
-    PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(g_ptrDeviceConfig->SetNTPServer(value)));
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(g_ptrDeviceConfig->SetRememberCurrentEffect(value)));
+    auto deviceConfig = g_ptrSystem->DeviceConfig();
+
+    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrSystem->EffectManager().SetInterval(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(deviceConfig.SetLocation(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(deviceConfig.SetLocationIsZip(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(deviceConfig.SetCountryCode(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::OpenWeatherApiKeyTag, SET_VALUE(deviceConfig.SetOpenWeatherAPIKey(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::TimeZoneTag, SET_VALUE(deviceConfig.SetTimeZone(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::Use24HourClockTag, SET_VALUE(deviceConfig.Set24HourClock(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(deviceConfig.SetUseCelsius(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(deviceConfig.SetNTPServer(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(deviceConfig.SetRememberCurrentEffect(value)));
 }
 
 // Set settings and return resulting config
@@ -382,7 +387,7 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 
 bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post)
 {
-    auto effectsList = g_ptrEffectManager->EffectsList();
+    auto effectsList = g_ptrSystem->EffectManager().EffectsList();
     auto effectIndex = GetEffectIndexFromParam(pRequest, post);
 
     if (effectIndex < 0 || effectIndex >= effectsList.size())
@@ -539,7 +544,7 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
         // Flush any pending writes and make sure nothing is written after. We do this to make sure
         //   that what needs saving is written, but no further writes take place after any requested
         //   config resets have happened.
-        g_ptrJSONWriter->FlushWrites(true);
+        g_ptrSystem->JSONWriter().FlushWrites(true);
 
         // Give the device a few seconds to finish the requested writes - this also gives AsyncWebServer
         //   time to push out the response to the request before the device resets
@@ -549,7 +554,7 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
     if (deviceConfigResetRequested)
     {
         debugI("Removing DeviceConfig");
-        g_ptrDeviceConfig->RemovePersisted();
+        g_ptrSystem->DeviceConfig().RemovePersisted();
     }
 
     if (effectsConfigResetRequested)

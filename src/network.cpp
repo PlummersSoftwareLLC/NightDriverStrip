@@ -33,13 +33,10 @@
 #include <HTTPClient.h>
 
 #include "globals.h"
+#include "systemcontainer.h"
 
 #if ENABLE_WEBSERVER
     extern DRAM_ATTR CWebServer g_WebServer;
-#endif
-
-#if ENABLE_WIFI
-    DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader = nullptr;
 #endif
 
 #if USE_WIFI_MANAGER
@@ -93,10 +90,10 @@ extern uint32_t g_FPS;
         else if (str.equalsIgnoreCase("clearsettings"))
         {
             debugA("Removing persisted settings....");
-            g_ptrDeviceConfig->RemovePersisted();
+            g_ptrSystem->DeviceConfig().RemovePersisted();
             RemoveEffectManagerConfig();
         }
-        else 
+        else
         {
             debugA("Unknown Command.  Extended Commands:");
             debugA("clock               Refresh time from server");
@@ -550,7 +547,7 @@ bool WriteWiFiConfig()
     }
 #endif
 
-#if INCOMING_WIFI_ENABLED 
+#if INCOMING_WIFI_ENABLED
 
     // SocketServerTaskEntry
     //
@@ -606,19 +603,21 @@ bool WriteWiFiConfig()
 
             while (socket >= 0)
             {
-                if (g_ptrEffectManager->IsNewFrameAvailable())
+                auto& effectManager = g_ptrSystem->EffectManager();
+
+                if (effectManager.IsNewFrameAvailable())
                 {
-                    g_ptrEffectManager->SetNewFrameAvailable(false);
+                    effectManager.SetNewFrameAvailable(false);
 
                     debugV("Sending color data packet");
                     // Potentially too large for the stack, so we allocate it on the heap instead
                     std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
                     pPacket->header = COLOR_DATA_PACKET_HEADER;
-                    pPacket->width  = g_ptrEffectManager->g()->width();
-                    pPacket->height = g_ptrEffectManager->g()->height();
-                    if ((*g_ptrEffectManager)[0]->leds != nullptr)
+                    pPacket->width  = effectManager.g()->width();
+                    pPacket->height = effectManager.g()->height();
+                    if (effectManager[0]->leds != nullptr)
                     {
-                        memcpy(pPacket->colors, (*g_ptrEffectManager)[0]->leds, sizeof(CRGB) * NUM_LEDS);
+                        memcpy(pPacket->colors, effectManager[0]->leds, sizeof(CRGB) * NUM_LEDS);
 
                         if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
                         {
@@ -676,16 +675,17 @@ bool WriteWiFiConfig()
             }
 
             // If the reader container isn't available yet, we'll sleep for a second before we check again
-            if (!g_ptrNetworkReader)
+            if (!g_ptrSystem->HasNetworkReader())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
                 continue;
             }
 
+            auto& networkReader = g_ptrSystem->NetworkReader();
             unsigned long now = millis();
 
             // Flag entries of which the read interval has passed
-            for (auto& entry : g_ptrNetworkReader->readers)
+            for (auto& entry : networkReader.readers)
             {
                 if (entry.canceled.load())
                     continue;
@@ -711,7 +711,7 @@ bool WriteWiFiConfig()
             now = millis();
 
             // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
-            for (auto& entry : g_ptrNetworkReader->readers)
+            for (auto& entry : networkReader.readers)
             {
                 if (entry.canceled.load())
                     continue;
@@ -779,7 +779,7 @@ bool WriteWiFiConfig()
 
         readers[index].flag.store(true);
 
-        g_TaskManager.NotifyNetworkThread();
+        g_ptrSystem->TaskManager().NotifyNetworkThread();
     }
 
     void NetworkReader::CancelReader(size_t index)

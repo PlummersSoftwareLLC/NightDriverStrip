@@ -327,5 +327,3 @@ class DeviceConfig : public IJSONSerializable
         SetAndSave(rememberCurrentEffect, newRememberCurrentEffect);
     }
 };
-
-extern DRAM_ATTR std::unique_ptr<DeviceConfig> g_ptrDeviceConfig;

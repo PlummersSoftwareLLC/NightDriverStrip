@@ -30,6 +30,7 @@
 #include "globals.h"
 #include "SPIFFS.h"
 #include "effectdependencies.h"
+#include "systemcontainer.h"
 
 extern std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
@@ -259,7 +260,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-DRAM_ATTR EffectFactories g_EffectFactories;
+DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
@@ -289,19 +290,21 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
         : nullptr;
 }
 
-#define ADD_EFFECT(effectNumber, effectType, ...)   g_EffectFactories.AddEffect(effectNumber, \
+#define ADD_EFFECT(effectNumber, effectType, ...)   g_ptrEffectFactories->AddEffect(effectNumber, \
     []()                                 ->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(jsonObject); })
 
-#define ADD_STARRY_NIGHT_EFFECT(starType, ...)      g_EffectFactories.AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
+#define ADD_STARRY_NIGHT_EFFECT(starType, ...)      g_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
     []()                                 ->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<starType>>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); })
 
 void LoadEffectFactories()
 {
     // Check if the factories have already been loaded
-    if (!g_EffectFactories.IsEmpty())
+    if (g_ptrEffectFactories)
         return;
+
+    g_ptrEffectFactories = std::make_unique<EffectFactories>();
 
     // Fill effect factories
     #if DEMO
@@ -562,10 +565,9 @@ void LoadEffectFactories()
     // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
     // add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
-    assert(!g_EffectFactories.IsEmpty());
+    assert(!g_ptrEffectFactories->IsEmpty());
 }
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 DRAM_ATTR size_t g_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
 DRAM_ATTR size_t g_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
@@ -576,7 +578,7 @@ DRAM_ATTR size_t g_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max()
     {
         debugW("InitSplashEffectManager");
 
-        g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(std::make_shared<SplashLogoEffect>(), g_aptrDevices);
+        g_ptrSystem->SetupEffectManager(std::make_shared<SplashLogoEffect>(), g_aptrDevices);
     }
 
 #endif
@@ -595,10 +597,10 @@ void InitEffectsManager()
 
     LoadEffectFactories();
 
-    g_EffectsManagerJSONWriterIndex = g_ptrJSONWriter->RegisterWriter(
-        []() { SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, *g_ptrEffectManager); }
+    g_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(
+        []() { SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()); }
     );
-    g_CurrentEffectWriterIndex = g_ptrJSONWriter->RegisterWriter(WriteCurrentEffectIndexFile);
+    g_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
 
@@ -606,34 +608,34 @@ void InitEffectsManager()
     {
         debugI("Creating EffectManager from JSON config");
 
-        if (!g_ptrEffectManager)
-            g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+        if (g_ptrSystem->HasEffectManager())
+            g_ptrSystem->EffectManager().DeserializeFromJSON((pJsonDoc->as<JsonObjectConst>()));
         else
-            g_ptrEffectManager->DeserializeFromJSON(pJsonDoc->as<JsonObjectConst>());
+            g_ptrSystem->SetupEffectManager(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
     }
     else
     {
         debugI("Creating EffectManager using default effects");
 
-        if (!g_ptrEffectManager)
-            g_ptrEffectManager = std::make_unique<EffectManager<GFXBase>>(g_aptrDevices);
+        if (g_ptrSystem->HasEffectManager())
+            g_ptrSystem->EffectManager().LoadDefaultEffects();
         else
-            g_ptrEffectManager->LoadDefaultEffects();
+            g_ptrSystem->SetupEffectManager(g_aptrDevices);
     }
 
-    if (false == g_ptrEffectManager->Init())
+    if (false == g_ptrSystem->EffectManager().Init())
         throw std::runtime_error("Could not initialize effect manager");
 
 
     // We won't need the default factories any more, so swipe them from memory
-    g_EffectFactories.ClearDefaultFactories();
+    g_ptrEffectFactories->ClearDefaultFactories();
 }
 
 void SaveEffectManagerConfig()
 {
     debugV("Saving effect manager config...");
     // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-    g_ptrJSONWriter->FlagWriter(g_EffectsManagerJSONWriterIndex);
+    g_ptrSystem->JSONWriter().FlagWriter(g_EffectsManagerJSONWriterIndex);
 }
 
 void RemoveEffectManagerConfig()
@@ -645,9 +647,9 @@ void RemoveEffectManagerConfig()
 
 void SaveCurrentEffectIndex()
 {
-    if (g_ptrDeviceConfig->RememberCurrentEffect())
+    if (g_ptrSystem->DeviceConfig().RememberCurrentEffect())
         // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-        g_ptrJSONWriter->FlagWriter(g_CurrentEffectWriterIndex);
+        g_ptrSystem->JSONWriter().FlagWriter(g_CurrentEffectWriterIndex);
 }
 
 void WriteCurrentEffectIndexFile()
@@ -662,7 +664,7 @@ void WriteCurrentEffectIndexFile()
         return;
     }
 
-    auto bytesWritten = file.print(g_ptrEffectManager->GetCurrentEffectIndex());
+    auto bytesWritten = file.print(g_ptrSystem->EffectManager().GetCurrentEffectIndex());
     debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, bytesWritten);
 
     file.flush();
@@ -708,7 +710,7 @@ bool ReadCurrentEffectIndex(size_t& index)
 uint16_t XY(uint8_t x, uint8_t y)
 {
     // Have a drink on me!
-    return (*g_ptrEffectManager)[0]->xy(x, y);
+    return g_ptrSystem->EffectManager()[0]->xy(x, y);
 }
 
 // btimap_output
@@ -718,8 +720,7 @@ uint16_t XY(uint8_t x, uint8_t y)
 
 bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 {
-    auto pgfx = g_ptrEffectManager->g();
+    auto pgfx = g_ptrSystem->EffectManager().g();
     pgfx->drawRGBBitmap(x, y, bitmap, w, h);
     return true;
 }
-

@@ -61,7 +61,7 @@ public:
     const int TopMargin = 52;
     const int BottomMargin = 12;
 
-    virtual void ScreenStatus(const String &strStatus) 
+    virtual void ScreenStatus(const String &strStatus)
     {
         fillScreen(BLACK16);
         //setFont();
@@ -77,7 +77,7 @@ public:
     //
     // Returns the height of the current font
 
-    virtual int fontHeight() 
+    virtual int fontHeight()
     {
         int16_t x1, y1;
         uint16_t w, h;
@@ -86,7 +86,7 @@ public:
     }
 
     // textHeight
-    // 
+    //
     // Returns the height of a string in screen pixels
 
     virtual int textHeight(const String & str)
@@ -172,14 +172,14 @@ public:
         TFTScreen(int w, int h) : Screen(w, h)
         {
             tft.begin();
-            
+
             pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
             digitalWrite(TFT_BL, 128);
 
             tft.setRotation(3);
-            tft.fillScreen(TFT_GREEN);    
-            tft.setTextDatum(L_BASELINE);   
-        }   
+            tft.fillScreen(TFT_GREEN);
+            tft.setTextDatum(L_BASELINE);
+        }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
         {
@@ -218,7 +218,7 @@ public:
         {
             oled.begin();
             oled.clear();
-        }   
+        }
 
         virtual void StartFrame() override
         {
@@ -251,7 +251,7 @@ public:
     #include <U8g2lib.h>                // Library for monochrome displays
     #include <gfxfont.h>                // Adafruit GFX font structs
     #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
-    #include <heltec.h>                // Display 
+    #include <heltec.h>                // Display
 
     class SSD1306Screen : public Screen
     {
@@ -261,7 +261,7 @@ public:
         {
             Heltec.begin(true /*DisplayEnable Enable*/, true /*LoRa Disable*/, false /*Serial Enable*/);
             Heltec.display->screenRotate(ANGLE_180_DEGREE);
-        }   
+        }
 
         virtual void StartFrame() override
         {
@@ -294,7 +294,7 @@ public:
     // LCDScreen
     //
     // Screen class that works with the WROVER devkit board
-    
+
     class LCDScreen : public Screen
     {
         SPIClass hspi;
@@ -315,7 +315,7 @@ public:
             pLCD->begin();
             pLCD->setRotation(1);
             pLCD->fillScreen(GREEN16);
-        }   
+        }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
         {
@@ -329,8 +329,3 @@ public:
 
     };
 #endif
-
-#if USE_SCREEN
-extern std::unique_ptr<Screen> g_pDisplay;
-#endif
-

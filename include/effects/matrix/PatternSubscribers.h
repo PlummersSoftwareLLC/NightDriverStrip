@@ -33,8 +33,8 @@
 #define PatternSub_H
 
 #include <UrlEncode.h>
-#include "deviceconfig.h"
 #include "YouTubeSight.h"
+#include "systemcontainer.h"
 
 // Update subscribers every 30 minutes, retry after 30 seconds on error, and check other things every 5 seconds
 #define SUB_CHECK_INTERVAL          (30 * 60000)
@@ -150,7 +150,7 @@ class PatternSubscribers : public LEDStripEffect
 
     ~PatternSubscribers()
     {
-        g_ptrNetworkReader->CancelReader(readerIndex);
+        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
@@ -176,7 +176,7 @@ class PatternSubscribers : public LEDStripEffect
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        readerIndex = g_ptrNetworkReader->RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL, true);
+        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL, true);
 
         return true;
     }

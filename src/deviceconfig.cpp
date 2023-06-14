@@ -31,21 +31,20 @@
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 #include "globals.h"
-#include "deviceconfig.h"
+#include "systemcontainer.h"
 
-DRAM_ATTR std::unique_ptr<DeviceConfig> g_ptrDeviceConfig;
 extern const char timezones_start[] asm("_binary_config_timezones_json_start");
 
 DRAM_ATTR size_t g_DeviceConfigJSONBufferSize = 0;
 
 void DeviceConfig::SaveToJSON()
 {
-    g_ptrJSONWriter->FlagWriter(writerIndex);
+    g_ptrSystem->JSONWriter().FlagWriter(writerIndex);
 }
 
 DeviceConfig::DeviceConfig()
 {
-    writerIndex = g_ptrJSONWriter->RegisterWriter(
+    writerIndex = g_ptrSystem->JSONWriter().RegisterWriter(
         [this]() { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
     );
 
