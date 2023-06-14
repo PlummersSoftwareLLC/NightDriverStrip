@@ -133,11 +133,11 @@ class HexagonGFX : public LEDStripGFX
         }
     }
 
-    // fillRing
+    // filHexRing
     //
     // Fills a ring around the hexagon, inset by the indent specified and in the color provided
 
-    virtual void fillRing(uint16_t indent, CRGB color)
+    virtual void fillHexRing(uint16_t indent, CRGB color)
     {
         for (int i = indent; i < getRowWidth(indent)-indent; ++i) 
             setPixel(getStartIndexOfRow(indent) + i, color);
