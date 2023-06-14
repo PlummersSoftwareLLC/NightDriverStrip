@@ -494,23 +494,19 @@ class OuterHexRingEffect : public LEDStripEffect
 
     virtual void Draw() override
     {
-        static int colorOffset = 0;
+        static int colorOffset = HUE_BLUE;
         static int indent = 0;
 
         EVERY_N_MILLIS(20)
-        {
-          colorOffset+=4;;
-        }
+          colorOffset += 4;
 
-        EVERY_N_MILLIS(50)
-        {
+        EVERY_N_MILLIS(100)
           indent = (indent + 1) % 9;
-        }
 
         fadeAllChannelsToBlackBy(75);
 
-        const CRGB color = ColorFromPalette(RainbowColors_p, indent*32 + colorOffset);
-        hg()->fillRing(indent, color);
+        CRGB color = ColorFromPalette(RainbowColors_p, indent*32 + colorOffset);
+        hg()->fillHexRing(indent, color);
     }
 };
 #endif // HEXAGON
