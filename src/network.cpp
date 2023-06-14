@@ -308,7 +308,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 // as this code does not validate!  This is where the commands and pixel data are received
 // from the server.
 
-bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
+bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
 {
     #if !INCOMING_WIFI_ENABLED
         return false;
