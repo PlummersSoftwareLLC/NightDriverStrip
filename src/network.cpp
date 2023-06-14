@@ -96,7 +96,7 @@ extern uint32_t g_FPS;
             g_ptrDeviceConfig->RemovePersisted();
             RemoveEffectManagerConfig();
         }
-        else 
+        else
         {
             debugA("Unknown Command.  Extended Commands:");
             debugA("clock               Refresh time from server");
@@ -236,8 +236,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            debugW("Pass %u of %u: Connecting to Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                    iPass + 1, cRetries, WiFi_ssid, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+            debugW("Pass %u of %u: Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                    iPass + 1, cRetries, WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
             WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
@@ -506,7 +506,7 @@ bool WriteWiFiConfig()
 
     if (success)
         // Do not check in code that displays the password in logs, etc.
-        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid);
+        debugW("Stored SSID and Password to NVS: %s, *******", WiFi_ssid.c_str());
 
     nvs_commit(nvsRWHandle);
     nvs_close(nvsRWHandle);
@@ -550,7 +550,7 @@ bool WriteWiFiConfig()
     }
 #endif
 
-#if INCOMING_WIFI_ENABLED 
+#if INCOMING_WIFI_ENABLED
 
     // SocketServerTaskEntry
     //
