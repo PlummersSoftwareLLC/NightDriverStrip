@@ -273,7 +273,7 @@ void ShowStrip(uint16_t numToShow)
 
 // CalcDelayUntilNextFrame
 //
-// Returns the amount of time to wait patiently until it is time to draw the next frame, up to one second max
+// Returns the amount of time to wait patiently until it's time to draw the next frame, up to one second max
 
 int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
