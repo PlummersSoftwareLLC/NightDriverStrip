@@ -290,7 +290,7 @@ class PatternPongClock : public LEDStripEffect
         }
 
         // move bat 1 towards target
-        // if bat y greater than target y move down until hit 0 (don't go any further or bat will move off-screen)
+        // if bat y greater than target y move down until hit 0 (don't go any further or bat will move off screen)
         if (bat1_y > bat1_target_y && bat1_y > 0)
         {
             bat1_y--;
