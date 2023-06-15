@@ -238,7 +238,7 @@ uint16_t LocalDraw()
 
 // ShowStrip
 //
-// ShowStrip sends the data to the LED strip.  If it is fewer than the size of the strip, we only send that many.
+// ShowStrip sends the data to the LED strip.  If it's fewer than the size of the strip, we only send that many.
 
 void ShowStrip(uint16_t numToShow)
 {
