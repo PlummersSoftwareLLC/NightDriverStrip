@@ -56,6 +56,8 @@ public:
     }
 };
 
+#if HEXAGON
+
 // HexagonGFX
 // 
 // A version of the LEDStripGFX class that accounts for the layout of the hexagon LEDs
@@ -158,3 +160,4 @@ class HexagonGFX : public LEDStripGFX
     }
 };
 
+#endif
