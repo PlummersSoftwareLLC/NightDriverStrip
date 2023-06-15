@@ -148,7 +148,7 @@ void MatrixPreDraw()
 
 // WiFiDraw
 //
-// Draws from WiFi color data if available, returns pixels drawn from this frame
+// Draws from WiFi color data if available, returns pixels drawn this frame
 
 uint16_t WiFiDraw()
 {
