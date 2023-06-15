@@ -309,7 +309,7 @@ class PatternPongClock : public LEDStripEffect
         LEDMatrixGFX::backgroundLayer.fillRectangle(BAT1_X - 1, bat1_y, BAT1_X, bat1_y + BAT_HEIGHT, rgb24(255,255,255));
         //      }
 
-        // move bat 2 towards target (dont go any further or bat will move off-screen)
+        // move bat 2 towards target (don't go any further or bat will move off screen)
         // if bat y greater than target y move down until hit 0
         if (bat2_y > bat2_target_y && bat2_y > 0)
         {
