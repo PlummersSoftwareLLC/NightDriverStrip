@@ -560,7 +560,7 @@ void LoadEffectFactories()
     #endif
 
     // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
-    // add the list of effects in this table as shown for the vaious other existing configs.  You MUST have at least
+    // add the list of effects in this table as shown for the various other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
     assert(!g_EffectFactories.IsEmpty());
 }
@@ -625,7 +625,7 @@ void InitEffectsManager()
         throw std::runtime_error("Could not initialize effect manager");
 
 
-    // We won't need the default factories any more, so swipe them from memory
+    // We won't need the default factories anymore, so swipe them from memory
     g_EffectFactories.ClearDefaultFactories();
 }
 
