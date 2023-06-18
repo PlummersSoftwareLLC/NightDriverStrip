@@ -401,6 +401,7 @@ void setup()
 
     #if ENABLE_REMOTE
         pinMode(IR_REMOTE_PIN, INPUT);
+        g_ptrSystem->SetupRemoteControl();
     #endif
 
     #if ENABLE_AUDIO

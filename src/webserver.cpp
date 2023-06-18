@@ -102,7 +102,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
     {
         bufferOverflow = false;
         auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
-        auto j = response->getRoot();
+        auto& j = response->getRoot();
 
         j["currentEffect"]         = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
         j["millisecondsRemaining"] = g_ptrSystem->EffectManager().GetTimeRemainingForCurrentEffect();
@@ -139,7 +139,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     debugV("GetStatistics");
 
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
-    auto j = response->getRoot();
+    auto& j = response->getRoot();
 
     j["LED_FPS"]               = g_FPS;
     j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
@@ -360,7 +360,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 //   Composing a response is left to the invoker!
 void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
 {
-    auto deviceConfig = g_ptrSystem->DeviceConfig();
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
 
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrSystem->EffectManager().SetInterval(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(deviceConfig.SetLocation(value)));
