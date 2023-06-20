@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "esp_attr.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
 #include "effectmanager.h"
@@ -226,41 +227,22 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         int iBand = ::map(iBar, 0, _numBars, 0, NUM_BANDS);
         int iNextBand = (iBand + 1) % NUM_BANDS;
+        int barsPerBand = _numBars / NUM_BANDS;
 
-        if (_numBars >= NUM_BANDS * 4)
+        if (barsPerBand >= 2)
         {
-            // Interpolate across four bars
+            // Interpolate the value for the Nth bar by taking a proportional average of this band and the next band, depending on how
+            // far we are in between bars.  ib is the substep, so if you have 64 bars and 16 bands, ib will range from 0 to 3, and for
+            // bar 16, for example, it will take all of bar 4 and none of bar 5.  For bar 16, it will take 3/4 of bar 4 and 1/4 of bar 5.
 
-            if (iBar % 4 == 0)
-            {
-                value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-                value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
-            }
-            else if (iBar % 4 == 1)
-            {
-                value  = (g_Analyzer.g_peak1Decay[iBand] * 3 + g_Analyzer.g_peak1Decay[iNextBand] * 1 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 3 + g_Analyzer.g_peak2Decay[iNextBand] * 1 ) / 4 *  pGFXChannel->height();
-            }
-            else if (iBar % 4 == 2)
-            {
-                value  = (g_Analyzer.g_peak1Decay[iBand] * 2 + g_Analyzer.g_peak1Decay[iNextBand] * 2 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 2 + g_Analyzer.g_peak2Decay[iNextBand] * 2 ) / 4 *  pGFXChannel->height();
-            }
-            else if (iBar % 4 == 3)
-            {
-                value  = (g_Analyzer.g_peak1Decay[iBand] * 1 + g_Analyzer.g_peak1Decay[iNextBand] * 3) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 1 + g_Analyzer.g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();
-            }
-        }
-        else if ((_numBars > NUM_BANDS) && (iBar % 2 == 1))
-        {
-            // For odd bars, average the bars to the left and right of this one
-            value  = ((g_Analyzer.g_peak1Decay[iBand] + g_Analyzer.g_peak1Decay[iNextBand]) / 2) * (pGFXChannel->height() - 1);
-            value2 = ((g_Analyzer.g_peak2Decay[iBand] + g_Analyzer.g_peak2Decay[iNextBand]) / 2) *  pGFXChannel->height();
+            int ib = iBar % barsPerBand;
+            value  = (g_Analyzer.g_peak1Decay[iBand] * (barsPerBand - ib) + g_Analyzer.g_peak1Decay[iNextBand] * (ib) ) / barsPerBand * (pGFXChannel->height() - 1);
+            value2 = (g_Analyzer.g_peak2Decay[iBand] * (barsPerBand - ib) + g_Analyzer.g_peak2Decay[iNextBand] * (ib) ) / barsPerBand *  pGFXChannel->height();
         }
         else
         {
-            // One to one case
+            // One to one case, just use the actual band value we mapped to
+            
             value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
             value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
         }
@@ -409,7 +391,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             //
             // If the palette is scrolling, we do a smooth blend.  Otherwise we do a straight color lookup, which makes the stripes
             // on the USA flag solid red rather than pinkish...
-            
+
             if (pGFXChannel->IsPalettePaused())
             {
                 int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
@@ -586,11 +568,11 @@ class GhostWave : public WaveformEffect
 
         if (_blur)
             g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
-        
+
         // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 
         float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
-        
+
         // Offsetting by 0.25, which is a very low ratio, helps keep the line thin when sound is low
         DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.25) / 1.75, _erase);
         DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.25) / 1.75, _erase);

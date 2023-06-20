@@ -669,7 +669,7 @@ void loop()
         #endif
 
         #if ENABLE_OTA
-            EVERY_N_MILLIS(20)
+            EVERY_N_MILLIS(10)
             {
                 try
                 {
@@ -719,6 +719,6 @@ void loop()
             Serial.println(strOutput);
         }
 
-        delay(10);
+        delay(5);
     }
 }
