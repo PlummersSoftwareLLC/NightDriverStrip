@@ -582,7 +582,7 @@ void setup()
 
         #if NUM_CHANNELS >= 8
             pinMode(LED_PIN7, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[7]->leds,g_aptrDevices[7]->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN7, COLOR_ORDER>(g_aptrDevices[7]->leds,g_aptrDevices[7]->GetLEDCount());
         #endif
 
         #ifdef POWER_LIMIT_MW
