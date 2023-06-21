@@ -548,36 +548,36 @@ void setup()
         #endif
 
         #if NUM_CHANNELS >= 2
-            pinMode(LED_PIN0, OUTPUT);
             FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[0]->GetLEDCount());
-
+            pinMode(LED_PIN0, OUTPUT);
+            
+            FastLED.addLeds<WS2812B, LED_PIN1, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[1]->GetLEDCount());
             pinMode(LED_PIN1, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[1]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 3
             pinMode(LED_PIN2, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[2]->leds,g_aptrDevices[2]->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN2, COLOR_ORDER>(g_aptrDevices[2]->leds,g_aptrDevices[2]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 4
             pinMode(LED_PIN3, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[3]->leds,g_aptrDevices[3]->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN3, COLOR_ORDER>(g_aptrDevices[3]->leds,g_aptrDevices[3]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 5
             pinMode(LED_PIN4, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[4]->leds,g_aptrDevices[4]->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN4, COLOR_ORDER>(g_aptrDevices[4]->leds,g_aptrDevices[4]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 6
             pinMode(LED_PIN5, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[5]->leds,g_aptrDevices[5]->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN5, COLOR_ORDER>(g_aptrDevices[5]->leds,g_aptrDevices[5]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 7
             pinMode(LED_PIN6, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[6]->leds,g_aptrDevices[6]->GetLEDCount());
+            FastLED.addLeds<WS2812B, LED_PIN6, COLOR_ORDER>(g_aptrDevices[6]->leds,g_aptrDevices[6]->GetLEDCount());
         #endif
 
         #if NUM_CHANNELS >= 8
