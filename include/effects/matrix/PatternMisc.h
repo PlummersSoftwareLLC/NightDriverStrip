@@ -209,7 +209,7 @@ public:
     }
 
     int _lastX = -1;
-    int _lastY = -1;;
+    int _lastY = -1;
 
     virtual void Draw() override
     {
@@ -227,7 +227,7 @@ public:
 
         // the vertical position of the head oscillates up and down
 
-        const int ymargin = 6 ;
+        const int ymargin = 6;
         int y = map8(sin8(g()->osci[3]), ymargin, MATRIX_HEIGHT - ymargin);
 
         // the hue oscillates from 0 to 255, overflowing back to 0

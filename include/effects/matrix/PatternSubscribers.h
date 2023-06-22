@@ -194,7 +194,7 @@ class PatternSubscribers : public LEDStripEffect
 
         // Start in the middle of the panel and then back up a half a row to center vertically,
         // then back up left one half a char for every 10s digit in the subscriber count.  This
-        // shoud center the number on the screen
+        // should center the number on the screen
 
         const int CHAR_WIDTH = 6;
         const int CHAR_HEIGHT = 7;
