@@ -1651,12 +1651,7 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #endif
 
 // Conditional includes depending on which project is being build
-/*
-#if USE_MATRIX
-    #include <YouTubeSight.h>                       // For fetching YouTube sub count
-    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-#endif
-*/
+
 #if USE_SCREEN
     // #include "freefonts.h"
 #endif

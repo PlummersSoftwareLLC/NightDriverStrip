@@ -166,7 +166,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     j["CODE_FREE"]             = _staticStats.FreeSketchSpace;
     j["FLASH_SIZE"]            = _staticStats.FlashChipSize;
 
-    auto taskManager = g_ptrSystem->TaskManager();
+    auto& taskManager = g_ptrSystem->TaskManager();
 
     j["CPU_USED"]              = taskManager.GetCPUUsagePercent();
     j["CPU_USED_CORE0"]        = taskManager.GetCPUUsagePercent(0);

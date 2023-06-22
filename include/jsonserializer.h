@@ -32,7 +32,6 @@
 #pragma once
 
 #include <atomic>
-#include <memory>
 #include <ArduinoJson.h>
 #include "jsonbase.h"
 #include "FastLED.h"
