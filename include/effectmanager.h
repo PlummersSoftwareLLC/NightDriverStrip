@@ -211,7 +211,7 @@ public:
     {
         _newFrameAvailable = available;
     }
-    
+
     void LoadDefaultEffects()
     {
         for (auto &numberedFactory : g_EffectFactories.GetDefaultFactories())
@@ -647,6 +647,15 @@ public:
     const size_t GetCurrentEffectIndex() const
     {
         return _iCurrentEffect;
+    }
+
+    size_t GetEffectIndexForID(const esp_uuid::UUID& id) const
+    {
+        for (size_t i = 0; i++; i < _vEffects.size())
+            if (_vEffects[i]->ID() == id)
+                return i;
+
+        return -1;
     }
 
     const std::shared_ptr<LEDStripEffect> GetCurrentEffect() const

@@ -85,10 +85,12 @@ bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String 
 
 long CWebServer::GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post)
 {
-    if (!pRequest->hasParam("effectIndex", post, false))
-        return -1;
+    if (pRequest->hasParam("effectIndex", post, false))
+        return strtol(pRequest->getParam("effectIndex", post, false)->value().c_str(), NULL, 10);
+    else if (pRequest->hasParam("effectID", post, false))
+        return g_ptrEffectManager->GetEffectIndexForID(esp_uuid::UUID(pRequest->getParam("effectID", post, false)->value()));
 
-    return strtol(pRequest->getParam("effectIndex", post, false)->value().c_str(), NULL, 10);
+    return -1;
 }
 
 void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
@@ -115,6 +117,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
             auto effect = effectsList[i];
             effectDoc["name"]    = effect->FriendlyName();
+            effectDoc["id"]      = effect->ID().toString();
             effectDoc["enabled"] = effect->IsEnabled();
             effectDoc["core"]    = effect->IsCoreEffect();
 
@@ -182,14 +185,18 @@ void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
 void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("EnableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrEffectManager->EnableEffect(value)));
+    auto effectIndex = GetEffectIndexFromParam(pRequest, true);
+    if (effectIndex != -1)
+        g_ptrEffectManager->EnableEffect(effectIndex);
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("DisableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrEffectManager->DisableEffect(value)));
+    auto effectIndex = GetEffectIndexFromParam(pRequest, true);
+    if (effectIndex != -1)
+        g_ptrEffectManager->DisableEffect(effectIndex);
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 

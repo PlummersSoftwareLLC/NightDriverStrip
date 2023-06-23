@@ -36,6 +36,7 @@
 #include <memory>
 #include <list>
 #include <stdlib.h>
+#include <esp_uuid.h>
 
 #define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return true
 
@@ -52,11 +53,12 @@ class LEDStripEffect : public IJSONSerializable
 
   protected:
 
-    size_t _cLEDs;
-    String _friendlyName;
-    int    _effectNumber;
-    bool   _enabled = true;
-    size_t _maximumEffectTime = SIZE_MAX;
+    size_t         _cLEDs;
+    String         _friendlyName;
+    esp_uuid::UUID _id;
+    int            _effectNumber;
+    bool           _enabled = true;
+    size_t         _maximumEffectTime = SIZE_MAX;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
@@ -171,6 +173,8 @@ class LEDStripEffect : public IJSONSerializable
         : _effectNumber(jsonObject[PTY_EFFECTNR]),
           _friendlyName(jsonObject["fn"].as<String>())
     {
+        if (jsonObject.containsKey("id"))
+            _id = esp_uuid::UUID(jsonObject["id"].as<String>());
         if (jsonObject.containsKey("es"))
             _enabled = jsonObject["es"].as<int>() == 1;
         if (jsonObject.containsKey("mt"))
@@ -224,6 +228,11 @@ class LEDStripEffect : public IJSONSerializable
     int EffectNumber() const
     {
         return _effectNumber;
+    }
+
+    const esp_uuid::UUID & ID() const
+    {
+        return _id;
     }
 
     virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
@@ -441,6 +450,7 @@ class LEDStripEffect : public IJSONSerializable
         StaticJsonDocument<128> jsonDoc;
 
         jsonDoc[PTY_EFFECTNR]       = _effectNumber;
+        jsonDoc["id"]               = _id.toString();
         jsonDoc["fn"]               = _friendlyName;
         jsonDoc["es"]               = _enabled ? 1 : 0;
         // Only add the max effect time and core effect flag if they're not the default, to save space
