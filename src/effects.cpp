@@ -324,50 +324,50 @@ void LoadEffectFactories()
 
     #elif MESMERIZER
 
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave", 0, 30, false, 10);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "PlasmaWave", 0, 255,  false);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25);
+
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.75, 1.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,         0);
+
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 64,            spectrumBasicColors, 100, 0, 0.25, 1.25);
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,         0);
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25);
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0);
 
-        ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK, PatternPongClock);
-        ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS, PatternSubscribers);
-        ADD_EFFECT(EFFECT_MATRIX_WEATHER, PatternWeather);
-
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave", 0, 30, false, 15);
         ADD_EFFECT(EFFECT_MATRIX_WAVEFORM, WaveformEffect, "WaveIn", 8);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "WaveOut", 0, 0, true, 0);
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave 2", 0, 0,  false);
-
-        ADD_EFFECT(EFFECT_MATRIX_LIFE, PatternLife);
-        ADD_EFFECT(EFFECT_MATRIX_ROSE, PatternRose);
-        ADD_EFFECT(EFFECT_MATRIX_PINWHEEL, PatternPinwheel);
-        ADD_EFFECT(EFFECT_MATRIX_SUNBURST, PatternSunburst);
-
-        ADD_EFFECT(EFFECT_MATRIX_FLOW_FIELD, PatternFlowField);
-        ADD_EFFECT(EFFECT_MATRIX_CLOCK, PatternClock);
-        ADD_EFFECT(EFFECT_MATRIX_ALIEN_TEXT, PatternAlienText);
-        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT, PatternCircuit);
 
         ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
 
-        ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
+        ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,    PatternPongClock);
+        ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,   PatternSubscribers);
+        ADD_EFFECT(EFFECT_MATRIX_WEATHER,       PatternWeather);
 
-        ADD_EFFECT(EFFECT_MATRIX_BOUNCE, PatternBounce);
-        ADD_EFFECT(EFFECT_MATRIX_CUBE, PatternCube);
-        ADD_EFFECT(EFFECT_MATRIX_SPIRO, PatternSpiro);
-        ADD_EFFECT(EFFECT_MATRIX_WAVE, PatternWave);
-        ADD_EFFECT(EFFECT_MATRIX_SWIRL, PatternSwirl);
-        ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY, PatternSerendipity);
-        ADD_EFFECT(EFFECT_MATRIX_MANDALA, PatternMandala);
+        ADD_EFFECT(EFFECT_MATRIX_CUBE,          PatternCube);
+        ADD_EFFECT(EFFECT_MATRIX_LIFE,          PatternLife);
+        ADD_EFFECT(EFFECT_MATRIX_ROSE,          PatternRose);
+        ADD_EFFECT(EFFECT_MATRIX_PINWHEEL,      PatternPinwheel);
+        ADD_EFFECT(EFFECT_MATRIX_SUNBURST,      PatternSunburst);
+        ADD_EFFECT(EFFECT_MATRIX_FLOW_FIELD,    PatternFlowField);
+        ADD_EFFECT(EFFECT_MATRIX_CLOCK,         PatternClock);
+        ADD_EFFECT(EFFECT_MATRIX_ALIEN_TEXT,    PatternAlienText);
+        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,       PatternCircuit);
+        ADD_EFFECT(EFFECT_MATRIX_PULSAR,        PatternPulsar);
+        ADD_EFFECT(EFFECT_MATRIX_BOUNCE,        PatternBounce);
+        ADD_EFFECT(EFFECT_MATRIX_SPIRO,         PatternSpiro);
+        ADD_EFFECT(EFFECT_MATRIX_WAVE,          PatternWave);
+        ADD_EFFECT(EFFECT_MATRIX_SWIRL,         PatternSwirl);
+        ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,   PatternSerendipity);
+        ADD_EFFECT(EFFECT_MATRIX_MANDALA,       PatternMandala);
         ADD_EFFECT(EFFECT_MATRIX_PALETTE_SMEAR, PatternPaletteSmear);
-        ADD_EFFECT(EFFECT_MATRIX_CURTAIN, PatternCurtain);
-        ADD_EFFECT(EFFECT_MATRIX_GRID_LIGHTS, PatternGridLights);
-        ADD_EFFECT(EFFECT_MATRIX_MUNCH, PatternMunch);
-        ADD_EFFECT(EFFECT_MATRIX_MAZE, PatternMaze);
+        ADD_EFFECT(EFFECT_MATRIX_CURTAIN,       PatternCurtain);
+        ADD_EFFECT(EFFECT_MATRIX_GRID_LIGHTS,   PatternGridLights);
+        ADD_EFFECT(EFFECT_MATRIX_MUNCH,         PatternMunch);
+        ADD_EFFECT(EFFECT_MATRIX_MAZE,          PatternMaze);
 
         // std::make_shared<PatternInfinity>(),
         // std::make_shared<PatternQR>(),

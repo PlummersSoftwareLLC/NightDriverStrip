@@ -183,7 +183,6 @@ class VUMeterEffect
     }
 };
 
-
 // SpectrumAnalyzerEffect
 //
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
@@ -233,7 +232,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         {
             // Interpolate the value for the Nth bar by taking a proportional average of this band and the next band, depending on how
             // far we are in between bars.  ib is the substep, so if you have 64 bars and 16 bands, ib will range from 0 to 3, and for
-            // bar 16, for example, it will take all of bar 4 and none of bar 5.  For bar 16, it will take 3/4 of bar 4 and 1/4 of bar 5.
+            // bar 16, for example, it will take all of bar 4 and none of bar 5.  For bar 17, it will take 3/4 of bar 4 and 1/4 of bar 5.
 
             int ib = iBar % barsPerBand;
             value  = (g_Analyzer.g_peak1Decay[iBand] * (barsPerBand - ib) + g_Analyzer.g_peak1Decay[iNextBand] * (ib) ) / barsPerBand * (pGFXChannel->height() - 1);
@@ -257,8 +256,18 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         int barWidth  = pGFXChannel->width() / _numBars;
         int xOffset   = iBar * barWidth;
-        int yOffset   = pGFXChannel->height() - value;
-        int yOffset2  = pGFXChannel->height() - value2;
+        
+        // The top of the bar is normally just matrix height less the value.  Here, however, we "enhance" the bar by pulsing it a bit with
+        // the beat of the music.  We do this by taking the value and subtracting a fraction of itself, which makes the bar taller when the
+        // beat is higher.  We also subtract a fraction of the VU fade, which makes the bar taller when the VU is higher.  The net effect is
+        // that the bar is taller when the beat is higher, and the beat is higher when the VU is higher, so the bar is taller when the VU is
+        // higher.
+
+        value *= g_Analyzer.BeatEnhance(BARBEAT_ENHANCE);
+        value2 *= g_Analyzer.BeatEnhance(BARBEAT_ENHANCE);
+
+        int yOffset   = pGFXChannel->height() - value ; 
+        int yOffset2  = pGFXChannel->height() - value2 ;
 
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
@@ -353,11 +362,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _palette;
-        jsonDoc["nmb"] = _numBars;
-        jsonDoc[PTY_SPEED] = _scrollSpeed;
-        jsonDoc["frt"] = _fadeRate;
-        jsonDoc["pd1"] = _peak1DecayRate;
-        jsonDoc["pd2"] = _peak2DecayRate;
+        jsonDoc["nmb"]       = _numBars;
+        jsonDoc[PTY_SPEED]   = _scrollSpeed;
+        jsonDoc["frt"]       = _fadeRate;
+        jsonDoc["pd1"]       = _peak1DecayRate;
+        jsonDoc["pd2"]       = _peak2DecayRate;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -567,15 +576,89 @@ class GhostWave : public WaveformEffect
             g->DimAll(255-_fade);
 
         if (_blur)
-            g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
+            g->blur2d(g->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, _blur);
 
         // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 
         float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
-
+        
         // Offsetting by 0.25, which is a very low ratio, helps keep the line thin when sound is low
-        DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.25) / 1.75, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.25) / 1.75, _erase);
+        //audioLevel = (audioLevel - 0.25) / 1.75;
+
+        // Now pulse it by some amount based on the beat
+        audioLevel = audioLevel * g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE);
+
+        DrawSpike(MATRIX_WIDTH/2, audioLevel, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, audioLevel, _erase);
+    }
+};
+
+// SpectrumBarEffect
+//
+// Draws an approximation of the waveform by mirroring the spectrum analyzer bars in four quadrants
+
+class SpectrumBarEffect : public LEDStripEffect 
+{
+    void construct()
+    {
+        _effectNumber = EFFECT_MATRIX_SPECTRUMBAR;
+    }
+
+    public:
+
+    SpectrumBarEffect(const char   * pszFriendlyName)
+        :LEDStripEffect(EFFECT_MATRIX_SPECTRUMBAR, pszFriendlyName)
+    {
+    }
+
+    SpectrumBarEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject)
+    {
+    }    
+
+    virtual size_t DesiredFramesPerSecond() const override
+    {
+        return 60;
+    }
+
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
+
+    void DrawGraph()
+    {
+        constexpr size_t halfHeight = MATRIX_HEIGHT / 2;
+        constexpr size_t halfWidth  = MATRIX_WIDTH  / 2;
+
+        static byte hue = 0;
+        EVERY_N_MILLISECONDS(30)
+            hue-=6;
+
+        for (int iBand = 0; iBand < NUM_BANDS; iBand++)
+        {
+            auto value =  g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE) * g_Analyzer.g_peak1Decay[iBand];
+            auto top    = std::max(0.0f, halfHeight - value * halfHeight);
+            auto bottom = std::min(MATRIX_HEIGHT-1.0f, halfHeight + value * halfHeight + 1);
+            auto x1     = halfWidth - iBand * 2;
+            auto x2     = halfWidth + iBand * 2;
+            
+            if (x1 < 0 || x2 >= MATRIX_WIDTH)
+                break;
+
+            CRGB  color = g()->IsPalettePaused() ? g()->ColorFromCurrentPalette() : CHSV(hue + iBand * 16, 255, 255);
+            g()->drawLine(x1, top, x1, bottom, color);
+            g()->drawLine(x2, top, x2, bottom, color);
+
+            g()->drawLine(0, halfHeight, MATRIX_WIDTH - 1, halfHeight, CRGB::Grey);
+
+        }
+    }
+
+    virtual void Draw() override
+    {
+        g()->Clear();
+        DrawGraph();
     }
 };
 
