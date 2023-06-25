@@ -1138,7 +1138,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
     #endif
     #ifndef SPECTRUMBARBEAT_ENHANCE
-        #define SPECTRUMBARBEAT_ENHANCE 0.85            // How much the SpectrumBar effect "pulses" with the music 
+        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music 
     #endif
 #endif
 

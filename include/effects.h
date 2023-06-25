@@ -153,5 +153,6 @@
 #define PTY_BLUR            "blr"
 #define PTY_FADE            "fde"
 #define PTY_VERSION         "ver"
+#define PTY_HUESTEP         "hst"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

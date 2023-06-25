@@ -599,6 +599,10 @@ class GhostWave : public WaveformEffect
 
 class SpectrumBarEffect : public LEDStripEffect 
 {
+    byte _hueIncrement = 0;
+    byte _scrollIncrement = 0;
+    byte _hueStep = 0;
+
     void construct()
     {
         _effectNumber = EFFECT_MATRIX_SPECTRUMBAR;
@@ -606,19 +610,39 @@ class SpectrumBarEffect : public LEDStripEffect
 
     public:
 
-    SpectrumBarEffect(const char   * pszFriendlyName)
-        :LEDStripEffect(EFFECT_MATRIX_SPECTRUMBAR, pszFriendlyName)
+    SpectrumBarEffect(const char   * pszFriendlyName, byte hueStep = 16, byte hueIncrement = 4, byte scrollIncrement = 0)
+        :LEDStripEffect(EFFECT_MATRIX_SPECTRUMBAR, pszFriendlyName),
+        _hueIncrement(hueIncrement),
+        _scrollIncrement(scrollIncrement),
+        _hueStep(hueStep)
     {
     }
 
     SpectrumBarEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject)
+        : LEDStripEffect(jsonObject),
+          _hueIncrement(jsonObject[PTY_DELTAHUE]),
+          _scrollIncrement(jsonObject[PTY_SPEED]),
+          _hueStep(jsonObject[PTY_HUESTEP])
     {
     }    
 
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_SPEED]    = _scrollIncrement;
+        jsonDoc[PTY_DELTAHUE] = _hueIncrement;
+        jsonDoc[PTY_HUESTEP]  = _hueStep;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
     virtual size_t DesiredFramesPerSecond() const override
     {
-        return 60;
+        return 90;
     }
 
     virtual bool RequiresDoubleBuffering() const override
@@ -631,33 +655,51 @@ class SpectrumBarEffect : public LEDStripEffect
         constexpr size_t halfHeight = MATRIX_HEIGHT / 2;
         constexpr size_t halfWidth  = MATRIX_WIDTH  / 2;
 
+        // We step the hue ever 30ms
         static byte hue = 0;
         EVERY_N_MILLISECONDS(30)
-            hue-=6;
+            hue -= _hueIncrement;
+
+        // We scroll the bars ever 50ms
+        static byte offset = 0;
+        EVERY_N_MILLISECONDS(50)
+            offset += _scrollIncrement;
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
         {
+            // Draw the spike
+
             auto value =  g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE) * g_Analyzer.g_peak1Decay[iBand];
             auto top    = std::max(0.0f, halfHeight - value * halfHeight);
             auto bottom = std::min(MATRIX_HEIGHT-1.0f, halfHeight + value * halfHeight + 1);
-            auto x1     = halfWidth - iBand * 2;
-            auto x2     = halfWidth + iBand * 2;
-            
+            auto x1     = halfWidth - ((iBand * 2 + offset) % halfWidth);
+            auto x2     = halfWidth + ((iBand * 2 + offset) % halfWidth);
+
+            if (value == 0.0f)
+                bottom = top;
+                
             if (x1 < 0 || x2 >= MATRIX_WIDTH)
                 break;
 
-            CRGB  color = g()->IsPalettePaused() ? g()->ColorFromCurrentPalette() : CHSV(hue + iBand * 16, 255, 255);
+            CRGB  color = g()->IsPalettePaused() ? g()->ColorFromCurrentPalette() : CHSV(hue + iBand * _hueStep, 255, 255);
             g()->drawLine(x1, top, x1, bottom, color);
             g()->drawLine(x2, top, x2, bottom, color);
-
-            g()->drawLine(0, halfHeight, MATRIX_WIDTH - 1, halfHeight, CRGB::Grey);
-
         }
+        g()->drawLine(0, halfHeight, MATRIX_WIDTH - 1, halfHeight, CRGB::Grey);
+     }
+
+    virtual void Start() override
+    {
+        // Doesn't clear during drawing, so we need to clear to start the frame
+        g()->Clear();
     }
 
     virtual void Draw() override
     {
-        g()->Clear();
+        // Rather than clearing the screen, we fade it out quickly, which gives a nice persistence of vision effect
+        // as the bars fade back to black once the line has receeded
+
+        g()->DimAll(200);
         DrawGraph();
     }
 };
