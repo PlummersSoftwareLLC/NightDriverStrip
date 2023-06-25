@@ -54,7 +54,7 @@ struct SettingSpec
         None    = 0,
         Minimum = 1,
         Maximum = 2,
-        Both    = Minimum + Maximum
+        Range    = Minimum + Maximum
     };
 
     // Note that if this enum is expanded, ToName() must be also!
@@ -95,7 +95,7 @@ struct SettingSpec
     {
         MinimumValue = min;
         MaximumValue = max;
-        LimitsProvided = LimitType::Both;
+        LimitsProvided = LimitType::Range;
     }
 
     // Constructor that sets both mininum and maximum values
@@ -103,7 +103,7 @@ struct SettingSpec
       : SettingSpec(name, friendlyName, nullptr, type, min, max)
     {}
 
-    // Constructor that sets either Min or Max. Note that if LimitType::Both is passed for limitType, it will be interpreted as LimitType::Maximum.
+    // Constructor that sets either Min or Max. Note that if LimitType::Range is passed for limitType, it will be interpreted as LimitType::Maximum.
     SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, LimitType limitType, double limit)
       : SettingSpec(name, friendlyName, description, type)
     {
@@ -121,15 +121,13 @@ struct SettingSpec
         }
     }
 
-    // Constructor that sets either Min or Max. Note that if LimitType::Both is passed for limitType, it will be interpreted as LimitType::Maximum.
+    // Constructor that sets either Min or Max. Note that if LimitType::Range is passed for limitType, it will be interpreted as LimitType::Maximum.
     SettingSpec(const char* name, const char* friendlyName, SettingType type, LimitType limitType, double limit)
       : SettingSpec(name, friendlyName, nullptr, type, limitType, limit)
     {}
 
     SettingSpec()
     {}
-
-    // This is virtual so we can dynamic_cast SettingSpec to its subclasses
 
     virtual String TypeName() const
     {
