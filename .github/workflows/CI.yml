@@ -22,8 +22,8 @@ jobs:
         python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
         echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
 
-#    - name: Install packages
-#      run: pio pkg install --no-save
+    - name: Install packages
+      run: pio pkg install --no-save
 
     - name: Copy secrets and clear SSID
       run: |
