@@ -21,10 +21,10 @@ config.read('platformio.ini')
 
 envs = ''
 
-for env in config.sections():
-    if env.startswith('env:'):
+for section in config.sections():
+    if section.startswith('env:') and len(section) > 4:
         if envs != '':
             envs += ','
-        envs += '"' + env[4::] + '"'
+        envs += '"' + section[4::] + '"'
 
 print('[' + envs + ']')
