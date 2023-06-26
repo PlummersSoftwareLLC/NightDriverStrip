@@ -475,6 +475,8 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
+    // LEDStripGFX is used for simple strips or for matrices woven from strips
+
     #if USESTRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
@@ -483,6 +485,18 @@ void setup()
         }
     #endif
 
+    // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
+
+    #if HEXAGON
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            debugW("Allocating HexagonGFX for channel %d", i);
+            g_aptrDevices[i] = std::make_shared<HexagonGFX>(NUM_LEDS);
+        }
+    #endif
+
+    // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
+    
     #if USE_MATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
@@ -655,7 +669,7 @@ void loop()
         #endif
 
         #if ENABLE_OTA
-            EVERY_N_MILLIS(20)
+            EVERY_N_MILLIS(10)
             {
                 try
                 {
@@ -705,6 +719,6 @@ void loop()
             Serial.println(strOutput);
         }
 
-        delay(10);
+        delay(5);
     }
 }

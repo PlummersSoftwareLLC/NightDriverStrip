@@ -362,7 +362,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT     RING_SIZE_0
     #define NUM_FANS          MATRIX_WIDTH
     #define FAN_SIZE          MATRIX_HEIGHT
-    #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define ENABLE_REMOTE     1                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
@@ -436,7 +435,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   1
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
@@ -526,7 +524,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   16
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define IR_REMOTE_PIN   22
     #define LED_FAN_OFFSET_BU 6
@@ -568,7 +565,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   5
     #define FAN_SIZE        MATRIX_WIDTH
     #define NUM_FANS        MATRIX_HEIGHT
-    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define IR_REMOTE_PIN   25
     #define LED_FAN_OFFSET_BU 6
@@ -694,6 +690,35 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define POWER_LIMIT_MW 10000
 
+#elif HEXAGON
+
+    // The LED strips I use for Christmas lights under my eaves
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Hexagon"
+    #endif
+
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
+
+    #define NUM_CHANNELS    1
+    #define MATRIX_WIDTH    (271)     // My maximum run, and about all you can do at 30fps
+    #define MATRIX_HEIGHT   1
+    #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
+    #define ENABLE_REMOTE   0                     // IR Remote Control
+    #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
+    #define LED_PIN0        5
+
+    #define POWER_LIMIT_MW (INT_MAX)              // Unlimited power for long strips, up to you to limit here or supply enough!
+
+    #define DEFAULT_EFFECT_INTERVAL     (1000*20)
+
+    #define HEX_MAX_DIMENSION 19                 // How big the hex is - it's biggest row and the number of rows
+    #define HEX_HALF_DIMENSION 10                // How many rows from top to middle inclusive
+    
 #elif LEDSTRIP
 
     // The LED strips I use for Christmas lights under my eaves
@@ -949,7 +974,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT     RING_SIZE_0
     #define NUM_FANS          MATRIX_WIDTH
     #define FAN_SIZE          MATRIX_HEIGHT
-    #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define ENABLE_REMOTE     0                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
@@ -989,7 +1013,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT     RING_SIZE_0
     #define NUM_FANS          MATRIX_WIDTH
     #define FAN_SIZE          MATRIX_HEIGHT
-    #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define ENABLE_REMOTE     0                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
@@ -1100,10 +1123,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 10000.0
+        #define NOISE_FLOOR (MAX_VU / 2)
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF   2000
+        #define NOISE_CUTOFF 2000
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
@@ -1111,7 +1134,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef ENABLE_AUDIO_SMOOTHING
         #define ENABLE_AUDIO_SMOOTHING 1
     #endif
+    #ifndef BARBEAT_ENHANCE       
+        #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
+    #endif
+    #ifndef SPECTRUMBARBEAT_ENHANCE
+        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music 
+    #endif
 #endif
+
 
 #ifndef LED_PIN0                // Which pin the LEDs are connected to
 #define LED_PIN0 5
@@ -1196,11 +1226,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 120
+#define MATRIX_REFRESH_RATE 90
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 2
+#define MATRIX_CALC_DIVIDER 1
 #endif
 
 

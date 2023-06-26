@@ -211,6 +211,13 @@ class LEDStripEffect : public IJSONSerializable
       }
     #endif
 
+    #if HEXAGON
+      std::shared_ptr<HexagonGFX> hg(size_t channel = 0)
+      {
+        return std::static_pointer_cast<HexagonGFX>(_GFX[channel]);
+      }
+    #endif
+
     virtual bool CanDisplayVUMeter() const
     {
         return true;
