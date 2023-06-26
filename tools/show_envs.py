@@ -15,16 +15,15 @@
 #
 
 import configparser
+import json
 
 config = configparser.ConfigParser()
 config.read('platformio.ini')
 
-envs = ''
+envs = []
 
 for section in config.sections():
     if section.startswith('env:') and len(section) > 4:
-        if envs != '':
-            envs += ','
-        envs += '"' + section[4::] + '"'
+        envs.append(section[4::])
 
-print('[' + envs + ']')
+print(json.dumps(envs))
