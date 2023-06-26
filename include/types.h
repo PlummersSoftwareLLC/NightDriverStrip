@@ -32,6 +32,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <WString.h>
 
 struct EmbeddedFile
@@ -49,14 +50,6 @@ struct EmbeddedFile
 
 struct SettingSpec
 {
-    enum class LimitType : char
-    {
-        None    = 0,
-        Minimum = 1,
-        Maximum = 2,
-        Range    = Minimum + Maximum
-    };
-
     // Note that if this enum is expanded, ToName() must be also!
     enum class SettingType : int
     {
@@ -74,9 +67,8 @@ struct SettingSpec
     const char* Description;
     SettingType Type;
     bool HasValidation = false;
-    LimitType LimitsProvided = LimitType::None;
-    double MinimumValue;
-    double MaximumValue;
+    std::optional<double> MinimumValue = {};
+    std::optional<double> MaximumValue = {};
 
 
     SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type)
@@ -95,35 +87,11 @@ struct SettingSpec
     {
         MinimumValue = min;
         MaximumValue = max;
-        LimitsProvided = LimitType::Range;
     }
 
     // Constructor that sets both mininum and maximum values
     SettingSpec(const char* name, const char* friendlyName, SettingType type, double min, double max)
       : SettingSpec(name, friendlyName, nullptr, type, min, max)
-    {}
-
-    // Constructor that sets either Min or Max. Note that if LimitType::Range is passed for limitType, it will be interpreted as LimitType::Maximum.
-    SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, LimitType limitType, double limit)
-      : SettingSpec(name, friendlyName, description, type)
-    {
-        if (limitType == LimitType::None)
-            return;
-        else if (static_cast<char>(limitType) & static_cast<char>(LimitType::Maximum))
-        {
-            LimitsProvided = LimitType::Maximum;
-            MaximumValue = limit;
-        }
-        else
-        {
-            LimitsProvided = LimitType::Minimum;
-            MinimumValue = limit;
-        }
-    }
-
-    // Constructor that sets either Min or Max. Note that if LimitType::Range is passed for limitType, it will be interpreted as LimitType::Maximum.
-    SettingSpec(const char* name, const char* friendlyName, SettingType type, LimitType limitType, double limit)
-      : SettingSpec(name, friendlyName, nullptr, type, limitType, limit)
     {}
 
     SettingSpec()
@@ -133,12 +101,5 @@ struct SettingSpec
     {
         String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color" };
         return names[static_cast<int>(Type)];
-    }
-
-    virtual bool HasLimit(LimitType type) const
-    {
-        auto charType = static_cast<char>(type);
-
-        return static_cast<char>(LimitsProvided) & charType == charType;
     }
 };
