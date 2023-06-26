@@ -80,7 +80,7 @@ jobs:
         grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
         echo '#define cszSSID ""' >> include/secrets.h
 
-    - name: Build environment
+    - name: Build all environments
       run: |
         cp platformio.ini platformio.ini.orig
         grep -v ^default_envs platformio.ini.orig > platformio.ini
