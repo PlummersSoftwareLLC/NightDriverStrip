@@ -3,9 +3,62 @@ name: PlatformIO CI
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  build:
-    env:
-      ENABLE_PAGES_PUSH: ${{ ( github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' ) || ( github.repository_owner == 'rbergen' && github.ref == 'refs/heads/staging' ) }}
+
+  collect-envs:
+    if: ( github.repository_owner != 'PlummersSoftwareLLC' || github.ref != 'refs/heads/main' ) && ( github.repository_owner != 'rbergen' || github.ref != 'refs/heads/staging' )
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: "Find environments"
+      id: "envs"
+      run: echo "envs=$(tools/show_envs.py)" >> $GITHUB_OUTPUT
+
+    outputs:
+      envs: ${{ steps.envs.outputs.envs }}
+
+  build-parallel:
+    if: ( github.repository_owner != 'PlummersSoftwareLLC' || github.ref != 'refs/heads/main' ) && ( github.repository_owner != 'rbergen' || github.ref != 'refs/heads/staging' )
+
+    runs-on: ubuntu-latest
+
+    needs: [collect-envs]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        envname: ${{ fromJson(needs.collect-envs.outputs.envs) }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install PlatformIO
+      run: |
+        python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+        echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
+
+    - name: Copy secrets and clear SSID
+      run: |
+        grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
+        echo '#define cszSSID ""' >> include/secrets.h
+
+    - name: Build environment ${{ matrix.envname }}
+      run: pio run -e ${{ matrix.envname }}
+
+  build-and-publish:
+    if: ( github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' ) || ( github.repository_owner == 'rbergen' && github.ref == 'refs/heads/staging' )
 
     runs-on: ubuntu-latest
 
@@ -22,9 +75,6 @@ jobs:
         python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
         echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
 
-    - name: Install packages
-      run: pio pkg install --no-save
-
     - name: Copy secrets and clear SSID
       run: |
         grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
@@ -37,14 +87,12 @@ jobs:
         pio run
 
     - name: Build WebInstaller and dependencies
-      if: ${{ env.ENABLE_PAGES_PUSH == 'true' }}
       run: |
         pio run -t buildfs
         python tools/bake_installer.py
         touch WebInstaller/.nojekyll
 
     - name: Push to GitHub Pages
-      if: ${{ env.ENABLE_PAGES_PUSH == 'true' }}
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
