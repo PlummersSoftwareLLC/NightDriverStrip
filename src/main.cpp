@@ -268,7 +268,7 @@ void PrintOutputHeader()
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
     #endif
 
-    debugI("Version %u: Wifi SSID: %s - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u",
+    debugI("Version %u: Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u",
             FLASH_VERSION, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
     debugI("ESP32 Clock Freq : %d MHz", ESP.getCpuFreqMHz());
 }
@@ -440,19 +440,19 @@ void setup()
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
         Serial.println("Creating TFT Screen");
-        g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);      
+        g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif USE_LCD
 
         Serial.println("Creating LCD Screen");
-        g_pDisplay = std::make_unique<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);      
+        g_pDisplay = std::make_unique<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
-        
+
         #if USE_M5DISPLAY
             M5.begin();
             Serial.println("Creating M5 Screen");
-            g_pDisplay = std::make_unique<M5Screen>(TFT_HEIGHT, TFT_WIDTH);      
+            g_pDisplay = std::make_unique<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
         #else
             M5.begin(false);
         #endif
@@ -461,10 +461,10 @@ void setup()
 
         #if USE_SSD1306
             Serial.println("Creating SSD1306 Screen");
-            g_pDisplay = std::make_unique<SSD1306Screen>(128, 64);                    
+            g_pDisplay = std::make_unique<SSD1306Screen>(128, 64);
         #else
         Serial.println("Creating OLED Screen");
-            g_pDisplay = std::make_unique<OLEDScreen>(128, 64);                        
+            g_pDisplay = std::make_unique<OLEDScreen>(128, 64);
         #endif
 
     #endif

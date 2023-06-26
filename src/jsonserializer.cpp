@@ -54,7 +54,7 @@ bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<A
             if (bufferSize == 0)
                 bufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
 
-            // Loop is here to deal with out of memory conditions
+            // Loop is here to deal with out-of-memory conditions
             while(true)
             {
                 pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
@@ -90,7 +90,7 @@ bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<A
 
 void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction)
 {
-    // Loop is here to deal with out of memory conditions
+    // Loop is here to deal with out-of-memory conditions
     while(true)
     {
         pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
