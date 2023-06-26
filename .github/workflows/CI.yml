@@ -57,7 +57,7 @@ jobs:
     - name: Build environment ${{ matrix.envname }}
       run: pio run -e ${{ matrix.envname }}
 
-  build-sequential:
+  build-and-publish:
     if: ( github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' ) || ( github.repository_owner == 'rbergen' && github.ref == 'refs/heads/staging' )
 
     runs-on: ubuntu-latest
