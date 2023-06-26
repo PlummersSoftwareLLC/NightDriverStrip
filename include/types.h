@@ -50,7 +50,7 @@ struct EmbeddedFile
 
 struct SettingSpec
 {
-    // Note that if this enum is expanded, ToName() must be also!
+    // Note that if this enum is expanded, TypeName() must be also!
     enum class SettingType : int
     {
         Integer,
