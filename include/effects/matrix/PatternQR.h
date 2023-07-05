@@ -32,7 +32,6 @@
 #ifndef PatternQR_H
 #define PatternQR_H
 
-#include "Geometry.h"
 #include "qrcode.h"
 
 class PatternQR : public LEDStripEffect

@@ -148,7 +148,7 @@ void MatrixPreDraw()
 
 // WiFiDraw
 //
-// Draws forom WiFi color data if available, returns pixels drawn this frame
+// Draws from WiFi color data if available, returns pixels drawn this frame
 
 uint16_t WiFiDraw()
 {
@@ -197,7 +197,7 @@ uint16_t WiFiDraw()
 
 // LocalDraw
 //
-// Draws from effets table rather than from WiFi data.  Returns the number of LEDs rendered.
+// Draws from effects table rather than from WiFi data.  Returns the number of LEDs rendered.
 
 uint16_t LocalDraw()
 {
@@ -227,7 +227,7 @@ uint16_t LocalDraw()
         {
             debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - g_usLastWifiDraw) / (float)MICROS_PER_SECOND);
             // It's important to return 0 when you do not draw so that the caller knows we did not
-            // render any pixels, and we can/should wait until the next frame.  Otherwise the caller might
+            // render any pixels, and we can/should wait until the next frame.  Otherwise, the caller might
             // draw the strip needlessly, which can take significant time.
             return 0;
         }
@@ -238,7 +238,7 @@ uint16_t LocalDraw()
 
 // ShowStrip
 //
-// ShowStrip sends the data to the LED strip.  If its fewer than the size of the strip, we only send that many.
+// ShowStrip sends the data to the LED strip.  If it's fewer than the size of the strip, we only send that many.
 
 void ShowStrip(uint16_t numToShow)
 {
@@ -273,7 +273,7 @@ void ShowStrip(uint16_t numToShow)
 
 // CalcDelayUntilNextFrame
 //
-// Returns the amount of time to wait patiently until its time to draw the next frame, up to one second max
+// Returns the amount of time to wait patiently until it's time to draw the next frame, up to one second max
 
 int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {

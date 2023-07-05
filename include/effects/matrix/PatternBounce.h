@@ -96,7 +96,7 @@ public:
     {
         // dim all pixels on the display
 
-        // Blue columns only, and skip the first row of each column if the VU meter is being shown so we don't blend it onto ourselves
+        // Blue columns only. Skip the first row of each column if the VU meter is being shown, so we don't blend it onto ourselves
         g()->blurColumns(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_ptrEffectManager->IsVUVisible() ? 1 : 0, 200);
         g()->DimAll(250);
 
