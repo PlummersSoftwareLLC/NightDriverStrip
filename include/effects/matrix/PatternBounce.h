@@ -106,7 +106,8 @@ public:
             boid.applyForce(gravity);
             boid.update();
 
-            g()->setPixel(boid.location.x, boid.location.y, g()->ColorFromCurrentPalette(boid.colorIndex));
+            if (g()->isValidPixel(boid.location.x, boid.location.y))
+                g()->setPixel(boid.location.x, boid.location.y, g()->ColorFromCurrentPalette(boid.colorIndex));
 
             if (boid.location.y >= MATRIX_HEIGHT - 1)
             {
