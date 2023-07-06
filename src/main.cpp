@@ -663,17 +663,14 @@ void loop()
         #endif
 
         #if ENABLE_OTA
-            EVERY_N_MILLIS(10)
+            try
             {
-                try
-                {
-                    if (WiFi.isConnected())
-                        ArduinoOTA.handle();
-                }
-                catch(const std::exception& e)
-                {
-                    debugW("Exception in OTA code caught");
-                }
+                if (WiFi.isConnected())
+                    ArduinoOTA.handle();
+            }
+            catch(const std::exception& e)
+            {
+                debugW("Exception in OTA code caught");
             }
         #endif
 
@@ -713,6 +710,9 @@ void loop()
             Serial.println(strOutput);
         }
 
-        delay(5);
+        // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherweise we delay a bit to share the CPU.
+        
+        if (!g_bUpdateStarted)
+            delay(10);
     }
 }
