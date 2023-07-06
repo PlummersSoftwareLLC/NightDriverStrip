@@ -106,36 +106,48 @@ public:
             case 0:
                 for (int x = 0; x < MATRIX_WIDTH; x++) {
                     n = quadwave8(x * 2 + theta) / scale;
-                    graphics->setPixel(x, n, graphics->ColorFromCurrentPalette(x + hue));
-                    if (waveCount == 2)
-                        graphics->setPixel(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
+                    if (n < MATRIX_HEIGHT)
+                    {
+                        graphics->setPixel(x, n, graphics->ColorFromCurrentPalette(x + hue));
+                        if (waveCount == 2)
+                            graphics->setPixel(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
+                    }
                 }
                 break;
 
             case 1:
                 for (int y = 0; y < MATRIX_HEIGHT; y++) {
                     n = quadwave8(y * 2 + theta) / scale;
-                    graphics->setPixel(n, y, graphics->ColorFromCurrentPalette(y + hue));
-                    if (waveCount == 2)
-                        graphics->setPixel(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
+                    if (n < MATRIX_WIDTH)
+                    {                    
+                        graphics->setPixel(n, y, graphics->ColorFromCurrentPalette(y + hue));
+                        if (waveCount == 2)
+                            graphics->setPixel(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
+                    }
                 }
                 break;
 
             case 2:
                 for (int x = 0; x < MATRIX_WIDTH; x++) {
                     n = quadwave8(x * 2 - theta) / scale;
-                    graphics->setPixel(x, n, graphics->ColorFromCurrentPalette(x + hue));
-                    if (waveCount == 2)
-                        graphics->setPixel(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
+                    if (n < MATRIX_HEIGHT)
+                    {
+                        graphics->setPixel(x, n, graphics->ColorFromCurrentPalette(x + hue));
+                        if (waveCount == 2)
+                            graphics->setPixel(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
+                    }
                 }
                 break;
 
             case 3:
                 for (int y = 0; y < MATRIX_HEIGHT; y++) {
                     n = quadwave8(y * 2 - theta) / scale;
-                    graphics->setPixel(n, y, graphics->ColorFromCurrentPalette(y + hue));
-                    if (waveCount == 2)
-                        graphics->setPixel(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
+                    if (n < MATRIX_WIDTH)
+                    {
+                        graphics->setPixel(n, y, graphics->ColorFromCurrentPalette(y + hue));
+                        if (waveCount == 2)
+                            graphics->setPixel(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
+                    }
                 }
                 break;
         }

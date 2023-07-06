@@ -458,7 +458,8 @@ class PatternPongClock : public LEDStripEffect
         uint8_t plot_x = (int)(ballpos_x + 0.5f);
         uint8_t plot_y = (int)(ballpos_y + 0.5f);
 
-        g()->setPixel(plot_x, plot_y, WHITE16);
+        if (g()->isValidPixel(plot_x, plot_y))
+            g()->setPixel(plot_x, plot_y, WHITE16);
 
         // check if a bat missed the ball. if it did, reset the game.
         if (ballpos_x < 0 || ballpos_x > MATRIX_WIDTH)

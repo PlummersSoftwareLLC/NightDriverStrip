@@ -40,10 +40,10 @@
 
 extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
 
-#define SUPERSAMPLES 2                                    // How many supersamples to take
+#define SUPERSAMPLES 1                                    // How many supersamples to take
 #define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
-#define MAX_VU 32767
+#define MAX_VU (MAX_ANALOG_IN / 2)
 #define MS_PER_SECOND 1000
 
 // These are the audio variables that are referenced by many audio effects.  In order to allow non-audio code to reference them too without
@@ -87,7 +87,9 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
 // results are simplified down to this small class of band peaks.
 
-#define MIN_VU 512
+#define MIN_VU 256              // Minimum VU value to use for the span when computing VURatio.  Contributes to
+                                // how dynamic the music is (smaller values == more dynamic)
+                                
 
 #ifndef GAINDAMPEN
     #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
@@ -148,7 +150,7 @@ public:
       {
         case MESMERIZERMIC:
         {
-            static const float Scalars16[16] = {0.4, .35, 0.4, 0.7, 0.8, 0.8, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static const float Scalars16[16] = {0.4, .5, 0.75, 1.0, 0.6, 0.6, 0.8, 0.8, 1.2, 1.5, 3.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
             float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -191,9 +193,9 @@ class SoundAnalyzer : public AudioVariables
     const size_t MAX_SAMPLES = 256;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
-    // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
+    // school that you need to sample at double the frequency you want to process, so 24000 is 12K
 
-    const size_t SAMPLING_FREQUENCY = 24000;
+    const size_t SAMPLING_FREQUENCY = 20000;
     const size_t LOWEST_FREQ = 40;
     const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
@@ -266,7 +268,7 @@ class SoundAnalyzer : public AudioVariables
     {
         arduinoFFT _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
         _FFT.DCRemoval();
-        _FFT.Windowing(FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
+        _FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
         _FFT.Compute(FFT_FORWARD);
         _FFT.ComplexToMagnitude();
         _FFT.MajorPeak();
@@ -347,7 +349,7 @@ class SoundAnalyzer : public AudioVariables
     {
         // Find the peak and the average
 
-        float averageSum = 0.0f;
+        double averageSum = 0.0f;
 
         int hitCount[NUM_BANDS] = {0};
         for (int i = 0; i < NUM_BANDS; i++)
@@ -415,7 +417,8 @@ class SoundAnalyzer : public AudioVariables
         // We'll use the average as the gVU.  I assume the average of the samples tracks sound pressure level, but don't really know...
 
         float newval = averageSum / (MAX_SAMPLES / 2 - 2);
-        debugV("AverageSumL: %f", averageSum);
+        debugV("AverageSum : %f", averageSum);
+        debugV("Newval     : %f", newval);
 
         UpdateVU(newval);
 
@@ -489,6 +492,18 @@ public:
         free(_vReal);
         free(_vImaginary);
         free(_vPeaks);
+    }
+
+    // BeatEnhance
+    //
+    // Looks like pure voodoo, but it returns the multiplier by which to scale a vale to enhance it
+    // by the current VURatioFade amount.  The amt amount is the amount of your factor that should be
+    // made up of the VURatioFade multiplier.  So passing a 0.75 is a lot of beat enhancement, whereas
+    // 0.25 is a little bit.  
+
+    float BeatEnhance(float amt)
+    {
+        return ((1.0 - amt) + (_VURatioFade / 2.0) * amt);        
     }
 
     // flash record size, for recording 5 second
@@ -624,8 +639,8 @@ public:
         #if ENABLE_AUDIO_SMOOTHING
             for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
             {
-                g_peak1Decay[iBand] = (g_peak1Decay[iBand] + g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 3;
-                g_peak2Decay[iBand] = (g_peak2Decay[iBand] + g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 3;
+                g_peak1Decay[iBand] = (g_peak1Decay[iBand] * 2 + g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 4;
+                g_peak2Decay[iBand] = (g_peak2Decay[iBand] * 2 + g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 4;
             }
         #endif
     }
@@ -690,7 +705,7 @@ public:
 
             // Scale it so that its not always in the top red
             _MicMode = PeakData::PCREMOTE;
-            UpdateVU(sum);
+            UpdateVU(sum / NUM_BANDS);
         }
     }
 };

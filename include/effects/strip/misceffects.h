@@ -473,3 +473,41 @@ class TwinkleEffect : public LEDStripEffect
         }
     }
 };
+
+#if HEXAGON
+////////////////////////////////////////////////
+// Hexagon Effects
+////////////////////////////////////////////////
+
+class OuterHexRingEffect : public LEDStripEffect
+{
+  public:
+    
+    OuterHexRingEffect() : LEDStripEffect(EFFECT_HEXAGON_OUTER_RING, "OuterRingHexEffect")
+    {
+    }
+
+    OuterHexRingEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual void Draw() override
+    {
+        static int colorOffset = HUE_BLUE;
+        static int indent = 0;
+
+        EVERY_N_MILLIS(20)
+          colorOffset += 4;
+
+        EVERY_N_MILLIS(100)
+          indent = (indent + 1) % 9;
+
+        fadeAllChannelsToBlackBy(75);
+
+        CRGB color = ColorFromPalette(RainbowColors_p, indent*32 + colorOffset);
+        hg()->fillHexRing(indent, color);
+    }
+};
+#endif // HEXAGON
+

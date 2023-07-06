@@ -166,7 +166,8 @@ public:
         if (x >= 0 && x < _width && y >= 0 && y < _height)
             return leds[xy(x, y)];
         else
-            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
+            debugE("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
+        return CRGB::Black;
     }
 
     virtual CRGB getPixel(int16_t i) const
@@ -174,7 +175,8 @@ public:
         if (i >= 0 && i < GetLEDCount())
             return leds[i];
         else
-            throw std::runtime_error("Pixel out of range in getPixel(x)");
+            debugE("Pixel out of range in getPixel(x)");
+        return CRGB::Black;
     }
 
     static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
@@ -234,6 +236,18 @@ public:
         memset(leds, 0, sizeof(CRGB) * _width * _height);
     }
 
+    virtual bool isValidPixel(int x, int y)
+    {
+        // Check that the pixel location is within the matrix's bounds
+        return x >= 0 && x < _width && y >= 0 && y < _height;
+    }
+
+    virtual bool isValidPixel(int n)
+    {
+        // Check that the pixel location is within the matrix's bounds
+        return n >= 0 && n < _width * _height;
+    }
+
     // Matrices that are built from individually addressable strips like WS2812b generally
     // follow a boustrophodon layout as follows:
     //
@@ -273,12 +287,18 @@ public:
 
     virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
-        leds[xy(x, y)] = color;
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
+            leds[xy(x, y)] = color;
+        else
+            debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    virtual void drawPixel(int16_t x, int16_t y, uint16_t color)
+    virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
-        leds[xy(x, y)] = from16Bit(color);
+        if (x >= 0 && x < _width && y >= 0 && y < _height)
+            leds[xy(x, y)] = from16Bit(color);
+        else
+            debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
@@ -295,23 +315,72 @@ public:
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
             leds[xy(x, y)] = from16Bit(color);
+        else
+            debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
+
     }
 
     void setPixel(int16_t x, int16_t y, CRGB color)
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
             leds[xy(x, y)] = color;
+        else
+            debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
     virtual void setPixel(int16_t x, int r, int g, int b)
     {
-        setPixel(x, CRGB(r, g, b));
+        if (x < NUM_LEDS)
+            setPixel(x, CRGB(r, g, b));
+        else
+            debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
+        
     }
 
     virtual void setPixel(int x, CRGB color)
     {
         if (x >= 0 && x < _width * _height)
             leds[x] = color;
+        else
+            debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
+    }
+
+    // DrawSafeCircle
+    // 
+    // Draws a circle, but does not draw pixels that are out of bounds.  This is useful
+    // for drawing circles that are larger than the matrix, or for drawing circles that
+    // are partially off the matrix.  This is important for the pulsar effect.   Note that
+    // the Adafruit versions do no bounds checking
+
+    virtual void DrawSafeCircle(int centerX, int centerY, int radius, CRGB color)
+    {
+        int x = radius;
+        int y = 0;
+        int err = 0;
+
+        while (x >= y)
+        {
+            // Only set the points on the circle's circumference
+            if (isValidPixel(centerX+x, centerY+y)) setPixel(centerX+x, centerY+y, color);
+            if (isValidPixel(centerX+y, centerY+x)) setPixel(centerX+y, centerY+x, color);
+            if (isValidPixel(centerX-y, centerY+x)) setPixel(centerX-y, centerY+x, color);
+            if (isValidPixel(centerX-x, centerY+y)) setPixel(centerX-x, centerY+y, color);
+            if (isValidPixel(centerX-x, centerY-y)) setPixel(centerX-x, centerY-y, color);
+            if (isValidPixel(centerX-y, centerY-x)) setPixel(centerX-y, centerY-x, color);
+            if (isValidPixel(centerX+y, centerY-x)) setPixel(centerX+y, centerY-x, color);
+            if (isValidPixel(centerX+x, centerY-y)) setPixel(centerX+x, centerY-y, color);
+
+            if (err <= 0)
+            {
+                y += 1;
+                err += 2*y + 1;
+            }
+            if (err > 0)
+            {
+                x -= 1;
+                err -= 2*x + 1;
+            }
+        }
     }
 
     // setPixelsF - Floating point variant
@@ -738,7 +807,7 @@ public:
     // copy one diagonal triangle into the other one within a 16x16
     void Caleidoscope3()
     {
-        for (int x = 0; x <= ((_width + 1) / 2); x++)
+        for (int x = 0; x < ((_width + 1) / 2); x++)
         {
             for (int y = 0; y <= x; y++)
             {
@@ -750,7 +819,7 @@ public:
     // copy one diagonal triangle into the other one within a 16x16 (90 degrees rotated compared to Caleidoscope3)
     void Caleidoscope4()
     {
-        for (int x = 0; x <= ((_width + 1) / 2); x++)
+        for (int x = 0; x < ((_width + 1) / 2); x++)
         {
             for (int y = 0; y <= ((_height + 1) / 2) - x; y++)
             {
@@ -1088,9 +1157,12 @@ public:
         int err = dx + dy, e2;
         for (;;)
         {
-            leds[xy(x0, y0)] = bMerge ? leds[xy(x0, y0)] + color : color;
+            if (isValidPixel(x0, y0))
+                leds[xy(x0, y0)] = bMerge ? leds[xy(x0, y0)] + color : color;
+
             if (x0 == x1 && y0 == y1)
                 break;
+
             e2 = 2 * err;
             if (e2 > dy)
             {

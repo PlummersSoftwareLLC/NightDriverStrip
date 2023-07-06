@@ -295,9 +295,13 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
             if (spec.Description)
                 jsonDoc["description"] = spec.Description;
             jsonDoc["type"] = to_value(spec.Type);
-            jsonDoc["typeName"] = spec.ToName(spec.Type);
+            jsonDoc["typeName"] = spec.TypeName();
             if (spec.HasValidation)
                 jsonDoc["hasValidation"] = true;
+            if (spec.MinimumValue.has_value())
+                jsonDoc["minimumValue"] = spec.MinimumValue.value();
+            if (spec.MaximumValue.has_value())
+                jsonDoc["maximumValue"] = spec.MaximumValue.value();
 
             if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
             {

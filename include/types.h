@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <sys/time.h>
+#include <optional>
 #include <WString.h>
 
 #ifndef MICROS_PER_SECOND
@@ -128,7 +129,7 @@ struct EmbeddedFile
 
 struct SettingSpec
 {
-    // Note that if this enum is expanded, ToName() must be also!
+    // Note that if this enum is expanded, TypeName() must be also!
     enum class SettingType : int
     {
         Integer,
@@ -145,6 +146,9 @@ struct SettingSpec
     const char* Description;
     SettingType Type;
     bool HasValidation = false;
+    std::optional<double> MinimumValue = {};
+    std::optional<double> MaximumValue = {};
+
 
     SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type)
       : Name(name),
@@ -156,12 +160,25 @@ struct SettingSpec
     SettingSpec(const char* name, const char* friendlyName, SettingType type) : SettingSpec(name, friendlyName, nullptr, type)
     {}
 
+    // Constructor that sets both mininum and maximum values
+    SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, double min, double max)
+      : SettingSpec(name, friendlyName, description, type)
+    {
+        MinimumValue = min;
+        MaximumValue = max;
+    }
+
+    // Constructor that sets both mininum and maximum values
+    SettingSpec(const char* name, const char* friendlyName, SettingType type, double min, double max)
+      : SettingSpec(name, friendlyName, nullptr, type, min, max)
+    {}
+
     SettingSpec()
     {}
 
-    String static ToName(SettingType type)
+    virtual String TypeName() const
     {
         String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color" };
-        return names[(int)type];
+        return names[static_cast<int>(Type)];
     }
 };

@@ -48,10 +48,11 @@
 #include "ledstripeffect.h"
 
 // Stack size for the taskmgr's idle threads
-#define IDLE_STACK_SIZE 2048
-#define DEFAULT_STACK_SIZE 2048+512
+#define IDLE_STACK_SIZE 4096
+#define DEFAULT_STACK_SIZE 4096+512
 #define DRAWING_STACK_SIZE 4096
 #define AUDIO_STACK_SIZE 4096
+#define JSON_STACK_SIZE 4096
 
 
 class IdleTask
@@ -337,7 +338,7 @@ public:
     void StartJSONWriterThread()
     {
         Serial.print( str_sprintf(">> Launching JSON Writer Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", DEFAULT_STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
+        xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", JSON_STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
     }
 
     void NotifyJSONWriterThread()

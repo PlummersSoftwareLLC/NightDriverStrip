@@ -96,8 +96,8 @@ public:
         graphics->BlurFrame(blurAmount);
 
         // Use two out-of-sync sine waves
-        uint8_t i = beatsin8(27, borderWidth, MATRIX_WIDTH - borderWidth);
-        uint8_t j = beatsin8(41, borderWidth, MATRIX_HEIGHT - borderWidth);
+        uint8_t i = beatsin8(27, borderWidth, MATRIX_WIDTH - 1 - borderWidth);
+        uint8_t j = beatsin8(41, borderWidth, MATRIX_HEIGHT - 1 - borderWidth);
         // Also calculate some reflections
         uint8_t ni = (MATRIX_WIDTH - 1) - i;
         uint8_t nj = (MATRIX_HEIGHT - 1) - j;
