@@ -91,7 +91,8 @@ class PatternSunburst : public LEDStripEffect
         uint8_t y = beatsin8((17 - i) * 2, MATRIX_CENTER_Y - i, MATRIX_CENTER_Y + i);
 
         if (color.r != 0 || color.g != 0 || color.b !=0 )
-          g()->setPixel(x, y, color);
+          if (g()->isValidPixel(x,y))
+            g()->setPixel(x, y, color);
       }
     }
 };
@@ -143,7 +144,8 @@ class PatternRose : public LEDStripEffect
           color = g()->ColorFromCurrentPalette((31 - i) * 14);
         }
 
-        g()->setPixel(x, y, color);
+        if (g()->isValidPixel(x, y))
+          g()->setPixel(x, y, color);
       }
     }
 };
@@ -186,7 +188,8 @@ class PatternPinwheel : public LEDStripEffect
         y = g()->beatcos8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1);
         color = g()->ColorFromCurrentPalette((64 - i) * 14);
 
-        g()->setPixel(x, y, color);
+        if (g()->isValidPixel(x, y))
+          g()->setPixel(x, y, color);
       }
     }
 };
