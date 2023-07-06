@@ -48,11 +48,13 @@
 #include "ledstripeffect.h"
 
 // Stack size for the taskmgr's idle threads
-#define IDLE_STACK_SIZE 4096
-#define DEFAULT_STACK_SIZE 4096+512
+#define DEFAULT_STACK_SIZE 2048+512
+
+#define IDLE_STACK_SIZE    2048
 #define DRAWING_STACK_SIZE 4096
-#define AUDIO_STACK_SIZE 4096
-#define JSON_STACK_SIZE 4096
+#define AUDIO_STACK_SIZE   4096
+#define JSON_STACK_SIZE    4096
+#define SOCKET_STACK_SIZE  4096
 
 
 class IdleTask
@@ -323,7 +325,7 @@ public:
     {
         #if INCOMING_WIFI_ENABLED
             Serial.print( str_sprintf(">> Launching Socket Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
-            xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", DEFAULT_STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
+            xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", SOCKET_STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
         #endif
     }
 

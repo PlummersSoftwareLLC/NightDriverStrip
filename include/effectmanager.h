@@ -202,6 +202,11 @@ public:
         ClearEffects();
     }
 
+    std::shared_ptr<GFXBase> GetBaseGraphics()
+    {
+        return _gfx[0];
+    }
+
     bool IsNewFrameAvailable() const
     {
         return _newFrameAvailable;

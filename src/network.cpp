@@ -140,6 +140,7 @@ void SetupOTA(const String & strHostname)
         })
         .onEnd([]() {
             debugI("\nEnd OTA");
+            g_bUpdateStarted = false;
         })
         .onProgress([](unsigned int progress, unsigned int total)
         {
@@ -147,15 +148,24 @@ void SetupOTA(const String & strHostname)
             if (millis() - last_time > 1000)
             {
                 last_time = millis();
-                debugI("Progress: %u%%\r", (progress / (total / 100)));
+                auto p = (progress / (total / 100));
+                debugI("OTA Progress: %u%%\r", p);
+
+                #if USE_MATRIX
+                    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->GetBaseGraphics());
+                    pMatrix->SetCaption(str_sprintf("Update:%d%%", p), 3000);
+                    pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+                #endif
             }
             else
             {
-                debugV("Progress: %u%%\r", (progress / (total / 100)));
+                debugV("OTA Progress: %u%%\r", (progress / (total / 100)));
             }
 
         })
-        .onError([](ota_error_t error) {
+        .onError([](ota_error_t error) 
+        {
+            g_bUpdateStarted = false;
             debugW("Error[%u]: ", error);
             if (error == OTA_AUTH_ERROR)
             {
