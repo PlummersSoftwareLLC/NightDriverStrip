@@ -48,12 +48,12 @@
 #include "ledstripeffect.h"
 
 // Stack size for the taskmgr's idle threads
-#define IDLE_STACK_SIZE 4096
-#define DEFAULT_STACK_SIZE 4096+512
-#define DRAWING_STACK_SIZE 4096
-#define AUDIO_STACK_SIZE 4096
-#define JSON_STACK_SIZE 4096
+#define DEFAULT_STACK_SIZE 2048+512
 
+#define IDLE_STACK_SIZE    2048
+#define DRAWING_STACK_SIZE 4096
+#define AUDIO_STACK_SIZE   4096
+#define JSON_STACK_SIZE    4096
 
 class IdleTask
 {

@@ -450,6 +450,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // so we'll slow down to share the CPU a bit once the update has begun
 
         if (g_bUpdateStarted)
-            delay(100);
+            delay(500);
     }
 }
