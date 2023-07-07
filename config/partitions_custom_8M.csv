@@ -1,0 +1,11 @@
+# ESP-IDF Partition Table
+# Adjusted to accommodate 8M flash size and includes a second 'app1' partition for OTA updates
+# Name,   Type, SubType,     Offset,      Size, Flags
+
+# Note that our NVS code assumes name 'storage' for the NVS partition
+
+nvs,         data,   nvs,       0x009000,  0x002000,
+otadata,     data,   ota,       0x00b000,  0x002000,
+app0,        app,    ota_0,     0x010000,  0x320000,
+app1,        app,    ota_1,     0x330000,  0x320000,
+storage,     data,   spiffs,    0x650000,  0x1B0000 

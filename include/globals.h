@@ -464,7 +464,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1  // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0   // Accept over the air flash updates
+    #define ENABLE_OTA              1   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     #define SCALE_AUDIO_EXPONENTIAL 0
@@ -1225,11 +1225,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 90
+#define MATRIX_REFRESH_RATE 120
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 1
+#define MATRIX_CALC_DIVIDER 2
 #endif
 
 
