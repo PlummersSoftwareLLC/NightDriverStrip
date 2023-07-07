@@ -131,7 +131,7 @@ With this endpoint an effect in the effect list can be copied. The created copy 
 | URL | `/copyEffect` |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect of which a copy should be made. |
-| | | Zero, one or more settings that have been returned by the [Effect setting specifications endpoint](#effect-setting-specifications); also refer to the [Change effect settings endpoint](#change-effect-settings) for more information. |
+| | | Zero, one or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications); also refer to the [Change effect settings endpoint](#change-effect-settings) for more information. |
 | Response | 200 (OK) | A JSON blob with the values for the copied effect's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Delete effect
@@ -195,7 +195,7 @@ When changing settings:
 |-|-|-|
 | URL | `/settings` |
 | Method | POST | |
-| Parameters | | One or more settings that have been returned by the [Device setting specifications endpoint](#device-setting-specifications). |
+| Parameters | | One or more settings that have been returned by the [Get device setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Set setting with validation
@@ -208,7 +208,7 @@ Note that validation is not implemented for all settings; the validation step is
 |-|-|-|
 | URL | `/settings/validated` |
 | Method | POST | |
-| Parameters | | Exactly one setting that has been returned by the [Device setting specifications endpoint](#device-setting-specifications). |
+| Parameters | | Exactly one setting that has been returned by the [Get dvice setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | Validation succeeded and the provided value has been set. |
 | | 400 (Bad Request) | More than one known setting was provided, or validation failed. The applicable message is returned in a JSON blob. |
 
@@ -251,7 +251,7 @@ When changing settings:
 | URL | `/settings` |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to change settings for. |
-| | | One or more settings that have been returned by the [Effect setting specifications endpoint](#effect-setting-specifications). |
+| | | One or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications). |
 | Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Reset configuration and/or device
