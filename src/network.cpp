@@ -145,7 +145,7 @@ void SetupOTA(const String & strHostname)
                 debugI("OTA Progress: %u%%\r", p);
 
                 #if USE_MATRIX
-                    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->GetBaseGraphics());
+                    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), 3000);
                     pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
                 #endif
@@ -156,7 +156,7 @@ void SetupOTA(const String & strHostname)
             }
 
         })
-        .onError([](ota_error_t error) 
+        .onError([](ota_error_t error)
         {
             g_bUpdateStarted = false;
             debugW("Error[%u]: ", error);
