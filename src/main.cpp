@@ -710,7 +710,8 @@ void loop()
             Serial.println(strOutput);
         }
 
-        // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherweise we delay a bit to share the CPU.
+        // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise we delay a bit to share the CPU.
+
         
         if (!g_bUpdateStarted)
             delay(10);
