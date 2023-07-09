@@ -103,14 +103,15 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         bufferOverflow = false;
         auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
         auto& j = response->getRoot();
+        auto& effectManager = g_ptrSystem->EffectManager();
 
-        j["currentEffect"]         = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
-        j["millisecondsRemaining"] = g_ptrSystem->EffectManager().GetTimeRemainingForCurrentEffect();
-        j["effectInterval"]        = g_ptrSystem->EffectManager().GetInterval();
+        j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
+        j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
+        j["effectInterval"]        = effectManager.GetInterval();
 
-        auto effectsList = g_ptrSystem->EffectManager().EffectsList();
+        auto effectsList = effectManager.EffectsList();
 
-        for (int i = 0; i < g_ptrSystem->EffectManager().EffectCount(); i++)
+        for (int i = 0; i < effectManager.EffectCount(); i++)
         {
             StaticJsonDocument<256> effectDoc;
 
