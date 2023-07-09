@@ -34,7 +34,6 @@
 #pragma once
 
 #include <mutex>
-//#include <freefonts.h>
 #include "gfxbase.h"
 
 class Screen : public GFXBase

@@ -179,9 +179,9 @@ private:
             }
 
             float position = Height[i] * (_cLength - 1) / StartHeight;
-            setPixelsOnAllChannels(position, _cBallSize, Colors[i]);
+            setPixelsOnAllChannels(position, _cBallSize, Colors[i % ARRAYSIZE(ballColors)]);
             if (_bMirrored)
-                setPixelsOnAllChannels(_cLength-1-position, _cBallSize, Colors[i], true);
+                setPixelsOnAllChannels(_cLength-1-position, _cBallSize, Colors[i % ARRAYSIZE(ballColors)], true);
         }
     }
 };

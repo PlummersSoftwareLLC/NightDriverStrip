@@ -504,7 +504,7 @@ class WaveformEffect : public LEDStripEffect
 
         int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
         g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
-        DrawSpike(63, g_Analyzer._VURatio/2.0);
+        DrawSpike(MATRIX_WIDTH-1, g_Analyzer._VURatio/2.0);
         DrawSpike(0, g_Analyzer._VURatio/2.0);
     }
 };
