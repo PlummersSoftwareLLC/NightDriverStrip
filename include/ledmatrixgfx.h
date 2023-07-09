@@ -61,7 +61,7 @@ public:
     static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING   /* | SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1 */); // see http://docs.pixelmatix.com/SmartMatrix for options
     static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
     static const uint8_t kDefaultBrightness = 255; // full (100%) brightness
-    static const rgb24 defaultBackgroundColor;
+    static const rgb24   defaultBackgroundColor;
 
     #if USE_MATRIX
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
@@ -102,8 +102,7 @@ public:
 
     virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
     {
-        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
-        // so we do it the "slow" way for other matrices
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  
 
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }

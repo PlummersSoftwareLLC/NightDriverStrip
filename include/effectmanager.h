@@ -441,7 +441,7 @@ public:
 
         #if USE_MATRIX
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
-            pMatrix->SetCaption(effect->FriendlyName(), 3000);
+            pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
             pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 

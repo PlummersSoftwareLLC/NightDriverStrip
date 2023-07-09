@@ -1682,8 +1682,8 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 
 // Conditional includes depending on which project is being build
 
-#if USE_SCREEN
-    // #include "freefonts.h"
+#if USE_MATRIX
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER

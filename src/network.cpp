@@ -146,7 +146,7 @@ void SetupOTA(const String & strHostname)
 
                 #if USE_MATRIX
                     auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
-                    pMatrix->SetCaption(str_sprintf("Update:%d%%", p), 3000);
+                    pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
                     pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
                 #endif
             }
@@ -270,6 +270,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         if (bPreviousConnection)
             return true;
 
+        bPreviousConnection = true;
+
         #if INCOMING_WIFI_ENABLED
             auto& socketServer = g_ptrSystem->SocketServer();
 
@@ -299,10 +301,10 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         #endif
 
         #if USE_MATRIX
-            //LEDStripEffect::mgraphics()->SetCaption(WiFi.localIP().toString().c_str(), 3000);
+//            auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->GetBaseGraphics());
+//             pMatrix->SetCaption(WiFi.localIP().toString().c_str(), CAPTION_TIME);
         #endif
 
-        bPreviousConnection = true;
         return true;
     }
 

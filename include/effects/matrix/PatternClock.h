@@ -73,12 +73,9 @@ class PatternClock : public LEDStripEffect
         radius = std::min(MATRIX_WIDTH, MATRIX_HEIGHT) / 2 - 1;
 
         g()->Clear();
-        g()->DrawSafeCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius+1, GREEN16);
         g()->DrawSafeCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, GREEN16);
 
         // Draw the hour ticks around the outside of the clock every 30 degrees
-
-        radius = radius - 1;
 
         for (int z = 0; z < 360; z = z + 30)
         {
@@ -115,6 +112,9 @@ class PatternClock : public LEDStripEffect
         x3 = (MATRIX_CENTER_X + (sin(angle) * (radius / 2 )));
         y3 = (MATRIX_CENTER_Y - (cos(angle) * (radius / 2 )));
         g()->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::Yellow);
+
+        g()->DrawSafeCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius+1, GREEN16);
+
     }
 };
 

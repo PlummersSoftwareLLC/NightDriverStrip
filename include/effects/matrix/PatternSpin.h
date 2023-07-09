@@ -61,6 +61,10 @@ public:
     {
     }
 
+    PatternSpin(const char   * pszFriendlyName) : LEDStripEffect(EFFECT_MATRIX_SPIN, pszFriendlyName)
+    {
+    }
+
     PatternSpin(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
     }

@@ -124,9 +124,7 @@ public:
 
     void release()
     {
-        _pBuffer.release();
-        _pBuffer = nullptr;
-
+        _pBuffer.reset();
         if (_server_fd >= 0)
         {
             close(_server_fd);
@@ -256,7 +254,13 @@ public:
 
         struct sockaddr_in addr;
         socklen_t addr_size = sizeof(struct sockaddr_in);
-        getpeername(new_socket, (struct sockaddr *)&addr, &addr_size);
+        if (0 != getpeername(new_socket, (struct sockaddr *)&addr, &addr_size))
+        {
+            close(new_socket);
+            ResetReadBuffer();
+            return false;
+        }
+        
         debugV("Incoming connection from: %s", inet_ntoa(addr.sin_addr));
 
         // Set a timeout of 3 seconds on the socket so we don't permanently hang on a corrupt or partial packet
@@ -281,9 +285,7 @@ public:
             if (false == ReadUntilNBytesReceived(new_socket, STANDARD_DATA_HEADER_SIZE))
             {
                 debugW("Read error in getting header.\n");
-                close(new_socket);
-                ResetReadBuffer();
-                return false;
+                break;
             }
 
             // Now that we have the header we can see how much more data is expected to follow
@@ -476,6 +478,7 @@ public:
 
         // There's an "off by one" bug/feature in uzlib that reaches one byte past the end.  Took forever
         // to find it...
+
         d.dest_limit     = pOutput + expectedOutputSize + 1;
 
         int res = uzlib_zlib_parse_header(&d);
@@ -494,7 +497,7 @@ public:
 
         if (d.dest - pOutput != expectedOutputSize)
         {
-            debugE("Exepcted it to to decompress to %d but got %d instead\n", expectedOutputSize, d.dest - pOutput);
+            debugE("Expected it to to decompress to %d but got %d instead\n", expectedOutputSize, d.dest - pOutput);
             return false;
         }
 

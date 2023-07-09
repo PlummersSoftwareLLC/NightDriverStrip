@@ -44,6 +44,39 @@
 using DefaultEffectFactory = std::shared_ptr<LEDStripEffect>(*)();
 using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectConst&);
 
+// -----------------------------------------------------------------------------
+// Class: EffectFactories
+// 
+// This class manages a collection of default and JSON effect factories. Each 
+// factory is associated with a unique effect number. Factories are categorized 
+// into two types: default and JSON, managed separately using respective containers.
+//
+// Sub-Structure:
+//
+// NumberedFactory: This struct represents a default factory coupled with its unique effect number.
+//
+// Member Variables:
+//
+// defaultFactories: A vector of NumberedFactory instances. Each NumberedFactory holds an 
+//                   effect number and a DefaultEffectFactory instance.
+// jsonFactories: A map linking each effect number to its corresponding JSONEffectFactory.
+//
+// Member Functions:
+//
+// GetDefaultFactories: Returns a const reference to the vector of default factories.
+// GetJSONFactories: Returns a const reference to the map of JSON factories.
+// AddEffect: Adds a new effect into the collection. It takes three parameters:
+//            - An effect number which is an integer.
+//            - A DefaultEffectFactory reference.
+//            - A JSONEffectFactory reference.
+// IsEmpty: Returns a boolean indicating whether both defaultFactories and jsonFactories are empty.
+// ClearDefaultFactories: Clears the vector of default factories.
+//
+// Note: The 'extern DRAM_ATTR EffectFactories g_EffectFactories;' line at the bottom of this code 
+//       indicates that an EffectFactories object named 'g_EffectFactories' is declared elsewhere, 
+//       and it is available for use throughout the program.
+// -----------------------------------------------------------------------------
+
 class EffectFactories
 {
   public:
