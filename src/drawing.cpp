@@ -286,10 +286,7 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         const double minimumFrameTime = 1.0 / g_ptrEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
         double elapsed = g_AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
-        {
             g_FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
-            return (g_FreeDrawTime * MILLIS_PER_SECOND);
-        }
     }
     else if (wifiPixelsDrawn > 0)
     {
@@ -303,11 +300,7 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
                 t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
         }
 
-        g_FreeDrawTime = t;
-        if (g_FreeDrawTime > 0.0)
-            return (g_FreeDrawTime * MILLIS_PER_SECOND);
-        else
-            g_FreeDrawTime = 0.0;
+        g_FreeDrawTime = std::clamp(t, 0.0, 1.0);
     }
     else
     {
@@ -316,7 +309,7 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         g_FreeDrawTime = .001;
     }
 
-    return 1;
+    return g_FreeDrawTime * MILLIS_PER_SECOND;
 #endif
 }
 
@@ -350,11 +343,11 @@ void ShowOnboardRGBLED()
 
 void PrepareOnboardPixel()
 {
-#ifdef ONBOARD_PIXEL_POWER
-    g_ledSinglePixel = &FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(&g_SinglePixel, 1);
-    pinMode(ONBOARD_PIXEL_POWER, OUTPUT);
-    digitalWrite(ONBOARD_PIXEL_POWER, HIGH);
-#endif
+    #ifdef ONBOARD_PIXEL_POWER
+        g_ledSinglePixel = &FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(&g_SinglePixel, 1);
+        pinMode(ONBOARD_PIXEL_POWER, OUTPUT);
+        digitalWrite(ONBOARD_PIXEL_POWER, HIGH);
+    #endif
 }
 
 void ShowOnboardPixel()
@@ -362,9 +355,9 @@ void ShowOnboardPixel()
     // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
-#ifdef ONBOARD_PIXEL_POWER
-    g_SinglePixel = FastLED[0].leds()[0];
-#endif
+    #ifdef ONBOARD_PIXEL_POWER
+        g_SinglePixel = FastLED[0].leds()[0];
+    #endif
 }
 
 // DrawLoopTaskEntry
@@ -380,17 +373,17 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     PrepareOnboardPixel();
 
-#if USE_MATRIX
-    // We don't need color correction on the title layer, but we want it on the main background
+    #if USE_MATRIX
+        // We don't need color correction on the title layer, but we want it on the main background
 
-    LEDMatrixGFX::titleLayer.enableColorCorrection(false);
-    LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
+        LEDMatrixGFX::titleLayer.enableColorCorrection(false);
+        LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
 
-    // Starting the effect might need to draw, so we need to set the leds up before doing so
-    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->g());
-    pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-    auto spectrum = GetSpectrumAnalyzer(0);
-#endif
+        // Starting the effect might need to draw, so we need to set the leds up before doing so
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->g());
+        pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+        auto spectrum = GetSpectrumAnalyzer(0);
+    #endif
     g_ptrEffectManager->StartEffect();
 
     // Run the draw loop

@@ -1763,10 +1763,6 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
 
-#if USE_SCREEN
-    // #include "freefonts.h"
-#endif
-
 #if ENABLE_WIFI && ENABLE_WEBSERVER
     #include "webserver.h"
 #endif

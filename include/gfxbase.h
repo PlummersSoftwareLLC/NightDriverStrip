@@ -163,20 +163,18 @@ public:
 
     virtual CRGB getPixel(int16_t x, int16_t y) const
     {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
+        if (isValidPixel(x, y))
             return leds[xy(x, y)];
         else
-            debugE("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
-        return CRGB::Black;
+            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 
     virtual CRGB getPixel(int16_t i) const
     {
-        if (i >= 0 && i < GetLEDCount())
+        if (isValidPixel(i))
             return leds[i];
         else
-            debugE("Pixel out of range in getPixel(x)");
-        return CRGB::Black;
+            throw std::runtime_error(str_sprintf("Invalid index in getPixel: i=%d, NUM_LEDS=%d", i, NUM_LEDS).c_str());
     }
 
     static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
@@ -236,13 +234,13 @@ public:
         memset(leds, 0, sizeof(CRGB) * _width * _height);
     }
 
-    virtual bool isValidPixel(int x, int y)
+    virtual bool isValidPixel(int x, int y) const
     {
         // Check that the pixel location is within the matrix's bounds
         return x >= 0 && x < _width && y >= 0 && y < _height;
     }
 
-    virtual bool isValidPixel(int n)
+    virtual bool isValidPixel(int n) const
     {
         // Check that the pixel location is within the matrix's bounds
         return n >= 0 && n < _width * _height;
@@ -287,7 +285,7 @@ public:
 
     virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
+        if (isValidPixel(x, y))
             leds[xy(x, y)] = color;
         else
             debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
@@ -295,7 +293,7 @@ public:
 
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
+        if (isValidPixel(x, y))
             leds[xy(x, y)] = from16Bit(color);
         else
             debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
@@ -313,7 +311,7 @@ public:
 
     virtual void setPixel(int16_t x, int16_t y, uint16_t color)
     {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
+        if (isValidPixel(x, y))
             leds[xy(x, y)] = from16Bit(color);
         else
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
@@ -322,7 +320,7 @@ public:
 
     void setPixel(int16_t x, int16_t y, CRGB color)
     {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
+        if (isValidPixel(x, y))
             leds[xy(x, y)] = color;
         else
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
@@ -330,7 +328,7 @@ public:
 
     virtual void setPixel(int16_t x, int r, int g, int b)
     {
-        if (x < NUM_LEDS)
+        if (isValidPixel(x))
             setPixel(x, CRGB(r, g, b));
         else
             debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
@@ -339,7 +337,7 @@ public:
 
     virtual void setPixel(int x, CRGB color)
     {
-        if (x >= 0 && x < _width * _height)
+        if (isValidPixel(x))
             leds[x] = color;
         else
             debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
@@ -1195,13 +1193,6 @@ public:
             leds[i].nscale8(value);
         }
     }
-    // write one pixel with the specified color from the current palette to coordinates
-    /*
-    void Pixel(int x, int y, uint8_t colorIndex) {
-      leds[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
-      matrix.drawBackgroundPixelRGB888(x,y, leds[xy(x, y)]); // now draw it?
-    }
-    */
 
     CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
     {

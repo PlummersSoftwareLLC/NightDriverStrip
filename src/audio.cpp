@@ -90,7 +90,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         // We wait a minimum of 5ms even if busy so we don't Bogart the CPU
 
         unsigned long elapsed = millis() - lastFrame;
-        const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
+        constexpr auto kMaxFPS = 60;
+        const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
         delay(max(1.0, targetDelay - elapsed));
 
         g_Analyzer._AudioFPS = FPS(lastFrame, millis());

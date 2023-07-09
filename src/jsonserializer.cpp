@@ -39,7 +39,7 @@ bool BoolFromText(const String& text)
     return text == "true" || strtol(text.c_str(), NULL, 10);
 }
 
-bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;
 
