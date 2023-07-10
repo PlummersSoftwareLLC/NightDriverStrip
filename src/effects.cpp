@@ -358,7 +358,8 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION, PatternSMStrobeDiffusion);
+        ADD_EFFECT(EFFECT_MATRIX_SMONE_RING, PatternSMOneRing);
+        //ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION, PatternSMStrobeDiffusion);
         // ADD_EFFECT(EFFECT_MATRIX_BALLS, PatternBalls);
 #if 0
         ADD_EFFECT(EFFECT_MATRIX_BOUNCE, PatternBounce);

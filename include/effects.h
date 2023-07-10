@@ -108,6 +108,7 @@
 #define EFFECT_MATRIX_MAZE                             135
 #define EFFECT_MATRIX_BALLS                            136
 #define EFFECT_MATRIX_SMSTROBE_DIFFUSION               137
+#define EFFECT_MATRIX_SMONE_RING                       138
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
