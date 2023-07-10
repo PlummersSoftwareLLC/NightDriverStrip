@@ -5,6 +5,7 @@
 #include <algorithm>
 
 // Inspired from https://editor.soulmatelights.com/gallery/843-squares-and-dots
+// This looks better on 2812's than on HUB75.
 
 #if USE_AUDIO
 class PatternSMSquaresAndDots : public BeatEffectBase, public LEDStripEffect
