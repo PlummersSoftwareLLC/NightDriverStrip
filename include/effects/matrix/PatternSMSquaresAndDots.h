@@ -2,6 +2,9 @@
 
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
+#include <algorithm>
+
+// Inspired from https://editor.soulmatelights.com/gallery/843-squares-and-dots
 
 #if USE_AUDIO
 class PatternSMSquaresAndDots : public BeatEffectBase, public LEDStripEffect
@@ -17,7 +20,7 @@ public:
 #if USE_AUDIO
     BeatEffectBase(1.50, 0.05),
 #endif
-    LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Strobe Diffusion")
+    LEDStripEffect(EFFECT_MATRIX_SMSQUARES_AND_DOTS, "Squares and Dots")
     {
     }
 
@@ -30,14 +33,22 @@ public:
   }
 
   void printSpr(byte x, byte y, byte numSpr) {
-    byte hue = random8();
-      byte y1 = y;
+    int hue = random8();
+    int y1 = y;
     for (int j = 0; j < 3; j++) {
-      byte x1 = x;
+      int x1 = x;
       for (int i = 0; i < 3; i++) {
+        x1 = std::clamp(x1, 3, MATRIX_WIDTH-3);
+        y1 = std::clamp(y1, 3, MATRIX_HEIGHT-3);
         uint16_t index = g()->xy(x1, y1);
-        if (sprites[numSpr][i][j]) g()->leds[index].setHue(hue);
-        else g()->leds[index] = 0;
+        if (sprites[numSpr][i][j])
+        {
+          g()->leds[index].setHue(hue);
+        }
+        else
+        {
+            g()->leds[index] = 0;
+        }
         x1++;
       }
       y1++;
@@ -46,6 +57,7 @@ public:
 
   virtual void Start() override
   {
+    g()->Clear();
     for (byte x = 0; x < MATRIX_WIDTH / 3 + 1; x++) {
       for (byte y = 0; y < MATRIX_HEIGHT / 3 + 1; y++) {
         printSpr(x * 3, y * 3, random8(2));
