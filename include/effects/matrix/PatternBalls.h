@@ -120,31 +120,31 @@ debugI("Beat: %p %p %u %u", &balls, b.get(),  (uint16_t)b->x_, (uint16_t)b->y_);
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
 	// debugI("Beat: %u %f %f\n", bMajor, elapsed, span);
-	if (elapsed < .2f) return; // short beat? We may already be in a draw.
+		if (elapsed < .2f) return; // short beat? We may already be in a draw.
 
-	for (auto&& b : balls) {
-	    b->SetColor(RandomRainbowColor());
-	    // Serious impedance mismatch between the FastLED layer that
-	    // takes floating point coords and 24-bit colors and the
-	    // Arduino drawing layer which wants ints and 16-bit RGB565.
-	    // Because this is "under" FastLED, I wonder if it knows about
-	    // wrapping NeoPixel style matrices. This def works on HUB75.
-	    //
-	    // Worse still, because it's lower than FastLED, it doesn't
-	    // know the sizeof the added LED array, so if you attempt 
-	    // to draw a circle that's nearthe beginning or end, it will
-	    // dutifully draw that circle ... outside of the LED array.
-	    // This eventually causes heap corruption and a crash. Thus,
-	    // we manually clamp the clipping region of the circle so we
-	    // draw only inside the leds[] boundaries.
-	    int16_t r = kChangeBurstRadius;
-	    int x = b->x_;
-	    int y = b->y_;
-	    x = std::clamp(x,
-		    kChangeBurstRadius + r + 0, MATRIX_WIDTH - r - 1);
-	    y = std::clamp(y,
-		    kChangeBurstRadius + r + 0, MATRIX_HEIGHT - r - 1);
-	    g()->fillCircle(x, y, r, random16());
-	}
+		for (auto&& b : balls) {
+		    b->SetColor(RandomRainbowColor());
+		    // Serious impedance mismatch between the FastLED layer that
+		    // takes floating point coords and 24-bit colors and the
+		    // Arduino drawing layer which wants ints and 16-bit RGB565.
+		    // Because this is "under" FastLED, I wonder if it knows about
+		    // wrapping NeoPixel style matrices. This def works on HUB75.
+		    //
+		    // Worse still, because it's lower than FastLED, it doesn't
+		    // know the sizeof the added LED array, so if you attempt
+		    // to draw a circle that's nearthe beginning or end, it will
+		    // dutifully draw that circle ... outside of the LED array.
+		    // This eventually causes heap corruption and a crash. Thus,
+		    // we manually clamp the clipping region of the circle so we
+		    // draw only inside the leds[] boundaries.
+		    int16_t r = kChangeBurstRadius;
+		    int x = b->x_;
+		    int y = b->y_;
+		    x = std::clamp(x,
+			    kChangeBurstRadius + r + 0, MATRIX_WIDTH - r - 1);
+		    y = std::clamp(y,
+			    kChangeBurstRadius + r + 0, MATRIX_HEIGHT - r - 1);
+		    g()->fillCircle(x, y, r, random16());
+		}
     }
 };

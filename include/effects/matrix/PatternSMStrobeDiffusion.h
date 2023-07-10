@@ -20,18 +20,16 @@ private:
 	uint8_t deltaHue;
 	uint8_t step;                // some counter of frames or sequences of operations
   uint8_t noise3d[MATRIX_WIDTH][MATRIX_HEIGHT]{0};     // Locations of snowflakes.
-  uint8_t Speed = 250;         // 1-255 is speed
-  uint8_t Scale = 100;          // 1-100 is something parameter
+  uint8_t Speed = 150;         // 1-255 is speed
+  uint8_t Scale = 90;          // 1-100 is something parameter
   uint8_t FPSdelay; // BUGBUG: This is set but never used. :-(
   const int LOW_DELAY = 0; // This is used to set FPSdelay ... which is never used.
 
 #if ENABLE_AUDIO
-			const int top_line_offset = 1;
+	const int top_line_offset = 1;
 #else
-			const int top_line_offset = 0;
+	const int top_line_offset = 0;
 #endif
-
-
 
 public:
   PatternSMStrobeDiffusion() :
@@ -81,7 +79,7 @@ public:
 		  }
 
 		  // Scroll the flakes above more often than we add new flakes below.
-		  if (ct&3 !=0) return;
+//		  if ((ct & 0x07) != 0) return;
 
 		  // This is a fragile way to to it, but we fill the top line of
 		  // the display with fresh snowflakes to be scrolled down later.
@@ -113,7 +111,6 @@ public:
   // Most of the things being tested in this mess are constants and
   // many of the things being set are not used. Messy!
   STEP = floor((255 - Speed) / 64) + 1U; // for strob
-  debugW("step %d STEP %d Scale %d", step, STEP, Scale);
   if (Scale > 50)
   {
     // diffusion ---

@@ -323,7 +323,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_STRIP_LANTERN, LanternEffect);
 
     #elif MESMERIZER
-
+#if 0
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.75, 1.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 32,            spectrumBasicColors, 100, 0, 0.25, 1.25);
@@ -357,7 +357,10 @@ void LoadEffectFactories()
         ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
-
+#endif
+        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION, PatternSMStrobeDiffusion);
+        // ADD_EFFECT(EFFECT_MATRIX_BALLS, PatternBalls);
+#if 0
         ADD_EFFECT(EFFECT_MATRIX_BOUNCE, PatternBounce);
         ADD_EFFECT(EFFECT_MATRIX_CUBE, PatternCube);
         ADD_EFFECT(EFFECT_MATRIX_SPIRO, PatternSpiro);
@@ -370,6 +373,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_GRID_LIGHTS, PatternGridLights);
         ADD_EFFECT(EFFECT_MATRIX_MUNCH, PatternMunch);
         ADD_EFFECT(EFFECT_MATRIX_MAZE, PatternMaze);
+#endif
 
         // std::make_shared<PatternInfinity>(),
         // std::make_shared<PatternQR>(),
@@ -722,4 +726,3 @@ bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitma
     pgfx->drawRGBBitmap(x, y, bitmap, w, h);
     return true;
 }
-
