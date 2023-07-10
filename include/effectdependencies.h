@@ -65,6 +65,7 @@
     #include "effects/matrix/PatternSMOneRing.h"
     #include "effects/matrix/PatternSMLumenjerPalette.h"
     #include "effects/matrix/PatternSMSquaresAndDots.h"
+    #include "effects/matrix/PatternSMTraffic.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
