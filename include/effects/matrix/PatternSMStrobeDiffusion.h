@@ -2,6 +2,7 @@
 
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
+#include <bitset>
 
 // Inspired by https://editor.soulmatelights.com/gallery/1685-strobe-and-diffusion
 // Was originally drawn for a lamp, but I like it on a panel.
@@ -19,7 +20,7 @@ private:
 	uint8_t hue, hue2;           // gradual hue shift or some other cyclic counter
 	uint8_t deltaHue;
 	uint8_t step;                // some counter of frames or sequences of operations
-  uint8_t noise3d[MATRIX_WIDTH][MATRIX_HEIGHT]{0};     // Locations of snowflakes.
+  std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT> noise3d[MATRIX_WIDTH * MATRIX_HEIGHT];  // Locations of snowflakes.
   uint8_t Speed = 150;         // 1-255 is speed
   uint8_t Scale = 90;          // 1-100 is something parameter
   uint8_t FPSdelay; // BUGBUG: This is set but never used. :-(
