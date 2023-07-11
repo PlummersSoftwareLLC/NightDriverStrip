@@ -6,8 +6,6 @@
 // Taken from https://editor.soulmatelights.com/gallery/1192-sinusoid-sin16
 
 #define SQRT_VARIANT sqrtf   // sqrtf or sqrt or sqrt3 (quick variant)
-#define WIDTH (MATRIX_WIDTH)
-#define HEIGHT (MATRIX_HEIGHT)
 
 #if ENABLE_AUDIO
 class PatternSMSinusoidSin16 : public BeatEffectBase, public LEDStripEffect
@@ -39,7 +37,7 @@ private:
   // функция отрисовки точки по координатам X Y
   void drawPixelXY(int8_t x, int8_t y, CRGB color)
   {
-    if (x < 0 || x > (WIDTH - 1) || y < 0 || y > (HEIGHT - 1)) return;
+    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1)) return;
     uint32_t thisPixel = g()->xy((uint8_t)x, (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
@@ -67,8 +65,8 @@ public:
       //deltaHue = (Scale - 1U) % ... + 1U;
       deltaValue = (Speed - 1U) % 9U; // количество режимов
 
-      emitterX = WIDTH * 0.5;
-      emitterY = HEIGHT * 0.5;
+      emitterX = MATRIX_WIDTH * 0.5;
+      emitterY = MATRIX_HEIGHT * 0.5;
       //speedfactor = 0.004 * Speed + 0.015; // speed of the movement along the Lissajous curves //const float speedfactor =
       speedfactor = 0.00145 * Speed + 0.015;
   }
@@ -110,8 +108,8 @@ public:
 
       switch (deltaValue) {
       case 0: //Sinusoid I
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           int8_t v = 127 * (1 + float(sin16(_scale * SQRT_VARIANT(cx * cx + cy * cy))) / 0x7FFF);
@@ -124,8 +122,8 @@ public:
         }
       }
           case 1: //Sinusoid II ???
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           //int8_t v = 127 * (0.001 * time_shift * speedfactor + float(sin16(_scale * SQRT_VARIANT(cx * cx + cy * cy))) / 32767.0);
@@ -144,8 +142,8 @@ public:
       }
       break;
     case 2://Sinusoid III
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           int8_t v = 127 * (1 + float(sin16(_scale * SQRT_VARIANT(cx * cx + cy * cy))) / 0x7FFF);
@@ -165,8 +163,8 @@ public:
       }
       break;
     case 3: //Sinusoid IV
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           int8_t v = 127 * (1 + float(sin16(_scale * SQRT_VARIANT(cx * cx + cy * cy) + time_shift * speedfactor * 100)) / 0x7FFF);
@@ -187,8 +185,8 @@ public:
 
       break;
 /*    case 4: //changed by stepko //anaglyph sinusoid
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           int8_t v = 127 * (1 + float(sin16(_scale * SQRT_VARIANT(cx * cx + cy * cy))) / 0x7FFF);// + time_shift * speedfactor)) / 0x7FFF);
@@ -205,8 +203,8 @@ public:
       break;
 */
     case 4: //changed by stepko //colored sinusoid
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           int8_t v = 127 * (1 + float(sin16(_scale * (beatsin16(2,1000,1750)/2550.) * SQRT_VARIANT(cx * cx + cy * cy))) / 0x7FFF);// + time_shift * speedfactor * 5 // mass colors plus by SottNick
@@ -226,8 +224,8 @@ public:
       }
       break;
     case 5: //changed by stepko //sinusoid in net
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           int8_t v = 127 * (1 + float(sin16(_scale * SQRT_VARIANT(cx * cx + cy * cy) + time_shift * speedfactor * 5)) / 0x7FFF);
@@ -246,8 +244,8 @@ public:
       }
       break;
     case 6: //changed by stepko //spiral
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           //uint8_t v = 127 * (1 + float(sin16(_scale * (2 * atan2(cy, cx) + hypot(cy, cx)) + time_shift * speedfactor * 5)) / 0x7FFF);
@@ -273,8 +271,8 @@ public:
       }
       break;
     case 7: //variant by SottNick
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           //uint8_t v = 127 * (1 + float(sin16(_scale * (2 * atan2(cy, cx) + hypot(cy, cx)) + time_shift * speedfactor * 5)) / 0x7FFF);
@@ -308,8 +306,8 @@ public:
       }
       break;
     case 8: //variant by SottNick
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           //uint8_t v = 127 * (1 + float(sin16(_scale * (2 * atan2(cy, cx) + hypot(cy, cx)) + time_shift * speedfactor * 5)) / 0x7FFF);
@@ -342,8 +340,8 @@ public:
 
 
 /*    case 8: //changed by stepko //blobs
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
           float cx = x + center1x;
           float cy = y + center1y;
           uint8_t v = 30 * (max(

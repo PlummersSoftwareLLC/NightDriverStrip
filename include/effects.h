@@ -114,6 +114,8 @@
 #define EFFECT_MATRIX_SMTRAFFIC                        141
 #define EFFECT_MATRIX_SM2DDPR                          142
 #define EFFECT_MATRIX_SMSINUSOIDSIN16                  143
+#define EFFECT_MATRIX_SMFIREWORKS                      144
+#define EFFECT_MATRIX_SMSTARDEEP                       145
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
