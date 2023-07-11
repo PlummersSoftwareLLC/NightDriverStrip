@@ -358,7 +358,8 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMMAGMA, PatternSMMagma);
+        ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN, PatternSMAmberRain);
+        // ADD_EFFECT(EFFECT_MATRIX_SMMAGMA, PatternSMMagma);
         // ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP, PatternSMStarDeep);
         // ADD_EFFECT(EFFECT_MATRIX_SMFIREWORKS, PatternSMFireworks);
         // ADD_EFFECT(EFFECT_MATRIX_SMSINUSOIDSIN16, PatternSMSinusoidSin16);
@@ -367,7 +368,7 @@ void LoadEffectFactories()
         // ADD_EFFECT(EFFECT_MATRIX_SQUARES_AND_DOTS, PatternSMSquaresAndDots);
         // ADD_EFFECT(EFFECT_MATRIX_SMLUMENJER_PALETTE, PatternSMLumenjerPalette);
         // ADD_EFFECT(EFFECT_MATRIX_SMONE_RING, PatternSMOneRing);
-        //ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION, PatternSMStrobeDiffusion);
+        // ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION, PatternSMStrobeDiffusion);
         // ADD_EFFECT(EFFECT_MATRIX_BALLS, PatternBalls);
 #if 0
         ADD_EFFECT(EFFECT_MATRIX_BOUNCE, PatternBounce);

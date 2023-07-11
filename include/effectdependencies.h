@@ -71,6 +71,7 @@
     #include "effects/matrix/PatternSMFireworks.h"
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMMagma.h"
+    #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"

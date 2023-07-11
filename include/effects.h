@@ -117,6 +117,7 @@
 #define EFFECT_MATRIX_SMFIREWORKS                      144
 #define EFFECT_MATRIX_SMSTARDEEP                       145
 #define EFFECT_MATRIX_SMMAGMA                          146
+#define EFFECT_MATRIX_SMAMBERRAIN                      147
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
