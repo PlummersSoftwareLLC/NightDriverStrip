@@ -1123,30 +1123,34 @@ public:
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif
-      EVERY_N_SECONDS(5)  {
-    if (mode++ > 17)
-      mode = 0;
-  }
-  switch (mode){
-    case 0: LavaLampRainbow();    break;
-    case 1: LavaLampRainbowStripe();    break;
-    case 2: Party();    break;
-    case 3: Forest();    break;
-    case 4: Cloud();    break;
-    case 5: Fire();    break;
-    case 6: FireNoise();    break;
-    case 7: Lava();    break;
-    case 8: Ocean();    break;
-    case 9: BlackAndWhite();    break;
-    case 10: BlackAndBlue();    break;
-    case 11: Temperature();    break;
-    case 12: Spectrum();    break;
-    case 13: OceanBreeze();    break;
-    case 14: DeepSea();    break;
-    case 15: Aurora();    break;
-    case 16: Shikon();    break;
-    case 17: ColorCube();    break;
-  }
+    // For Mesmerizer/Nightdriver, I'm not sure this is the best
+    // final presentation. It just zips through 17 effects without
+    // announcing them in any way. Should it interact with audio or
+    // the remote or splash labels on the display or ... ?
+    EVERY_N_SECONDS(5)  {
+      if (mode++ > 17)
+        mode = 0;
+     }
+    switch (mode){
+      case 0: LavaLampRainbow();    break;
+      case 1: LavaLampRainbowStripe();    break;
+      case 2: Party();    break;
+      case 3: Forest();    break;
+      case 4: Cloud();    break;
+      case 5: Fire();    break;
+      case 6: FireNoise();    break;
+      case 7: Lava();    break;
+      case 8: Ocean();    break;
+      case 9: BlackAndWhite();    break;
+      case 10: BlackAndBlue();    break;
+      case 11: Temperature();    break;
+      case 12: Spectrum();    break;
+      case 13: OceanBreeze();    break;
+      case 14: DeepSea();    break;
+      case 15: Aurora();    break;
+      case 16: Shikon();    break;
+      case 17: ColorCube();    break;
+    }
   }
 
 #if ENABLE_AUDIO
