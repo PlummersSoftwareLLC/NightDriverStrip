@@ -112,6 +112,7 @@
 #define EFFECT_MATRIX_SMLUMENJER_PALETTE               139
 #define EFFECT_MATRIX_SMSQUARES_AND_DOTS               140
 #define EFFECT_MATRIX_SMTRAFFIC                        141
+#define EFFECT_MATRIX_SM2DDPR                          142
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
