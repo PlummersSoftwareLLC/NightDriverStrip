@@ -73,6 +73,7 @@
     #include "effects/matrix/PatternSMMagma.h"
     #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSMFire2021.h"
+    #include "effects/matrix/PatternSMWisp.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
