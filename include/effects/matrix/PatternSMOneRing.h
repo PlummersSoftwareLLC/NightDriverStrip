@@ -3,6 +3,8 @@
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
 
+// Inspired by https://editor.soulmatelights.com/gallery/1455-one-ring
+
 #if USE_AUDIO
 // class PatternSMOneRing : public BeatEffectBase, public LEDStripEffect
 #else

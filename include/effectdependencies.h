@@ -67,6 +67,7 @@
     #include "effects/matrix/PatternSMSquaresAndDots.h"
     #include "effects/matrix/PatternSMTraffic.h"
     #include "effects/matrix/PatternSM2DDPR.h"
+    #include "effects/matrix/PatternSMSinusoidSin16.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
