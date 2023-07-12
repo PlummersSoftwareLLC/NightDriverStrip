@@ -188,15 +188,13 @@ public:
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
-
         // Reset after 20 seconds
         if (millis() - msStart > 20000)
             start();
 
         for (int i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT / 10; i++)
         {
-            g->leds[g->xy(random(0, MATRIX_WIDTH), random(0, MATRIX_HEIGHT))].fadeToBlackBy(32);
+            g()->leds[g()->xy(random(0, MATRIX_WIDTH), random(0, MATRIX_HEIGHT))].fadeToBlackBy(32);
         }
 
         // fill_palette(colors, SNAKE_LENGTH, initialHue++, 5, graphics->currentPalette, 255, LINEARBLEND);
@@ -213,7 +211,7 @@ public:
             }
 
             path->move();
-            path->draw(g, colors);
+            path->draw(g(), colors);
         }
     }
 };

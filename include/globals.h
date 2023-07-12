@@ -76,7 +76,7 @@
 //              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
-//              Jun-10-2023  v037       Davepl      New Screen classes 
+//              Jun-10-2023  v037       Davepl      New Screen classes
 //
 //---------------------------------------------------------------------------
 
@@ -140,7 +140,6 @@
 #define FASTLED_INTERNAL        1   // Silence FastLED build banners
 #define NTP_DELAY_COUNT         20  // delay count for ntp update
 #define NTP_PACKET_LENGTH       48  // ntp packet length
-#define TIME_ZONE             (-8)  // My offset from London (UTC-8)
 
 // C Helpers and Macros
 
@@ -1256,7 +1255,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define USE_OLED 1
         #define USE_SSD1306 1
 
-    #elif ARDUINO_HELTEC_WIFI_KIT_32      
+    #elif ARDUINO_HELTEC_WIFI_KIT_32
                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
@@ -1576,80 +1575,7 @@ inline String str_sprintf(const char *fmt, ...)
     return String(str.get());
 }
 
-
-// AppTime
-//
-// A class that keeps track of the clock, how long the last frame took, calculating FPS, etc.
-
-class AppTime
-{
-  protected:
-
-    double _lastFrame;
-    double _deltaTime;
-
-  public:
-
-    // NewFrame
-    //
-    // Call this at the start of every frame or udpate, and it'll figure out and keep track of how
-    // long between frames
-
-    void NewFrame()
-    {
-        timeval tv;
-        gettimeofday(&tv, nullptr);
-        double current = CurrentTime();
-        _deltaTime = current - _lastFrame;
-
-        // Cap the delta time at one full second
-
-        if (_deltaTime > 1.0)
-            _deltaTime = 1.0;
-
-        _lastFrame = current;
-    }
-
-    AppTime() : _lastFrame(CurrentTime())
-    {
-        NewFrame();
-    }
-
-    double FrameStartTime() const
-    {
-        return _lastFrame;
-    }
-
-    static double CurrentTime()
-    {
-        timeval tv;
-        gettimeofday(&tv, nullptr);
-        return (double)tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
-    }
-
-    double FrameElapsedTime() const
-    {
-        return FrameStartTime() - CurrentTime();
-    }
-
-    static double TimeFromTimeval(const timeval & tv)
-    {
-        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
-    }
-
-    static timeval TimevalFromTime(double t)
-    {
-        timeval tv;
-        tv.tv_sec = (long)t;
-        tv.tv_usec = t - tv.tv_sec;
-        return tv;
-    }
-
-    double LastFrameTime() const
-    {
-        return _deltaTime;
-    }
-};
+#include "types.h"
 
 // C Helpers
 //
@@ -1752,14 +1678,11 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
     #include <TFT_eSPI.h>
     #include <SPI.h>
-
-    extern std::unique_ptr<Screen> g_pDisplay;
 #endif
 
 // Conditional includes depending on which project is being build
 
 #if USE_MATRIX
-    #include <YouTubeSight.h>                       // For fetching YouTube sub count
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
 

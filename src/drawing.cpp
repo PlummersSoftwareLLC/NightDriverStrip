@@ -33,6 +33,7 @@
 #include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
 #include "globals.h"
 #include "effects/matrix/spectrumeffects.h"
+#include "systemcontainer.h"
 
 CRGB g_SinglePixel = CRGB::Blue;
 CLEDController *g_ledSinglePixel;
@@ -47,7 +48,6 @@ extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGF
 #endif
 
 DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager = nullptr;
 
 double volatile g_FreeDrawTime = 0.0;
 
@@ -91,7 +91,7 @@ void MatrixPreDraw()
             LEDMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
         #endif
 
-        auto graphics = (*g_ptrEffectManager)[0];
+        auto graphics = g_ptrSystem->EffectManager()[0];
 
         LEDMatrixGFX::matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         LEDMatrixGFX::matrix.setRefreshRate(MATRIX_REFRESH_RATE);
@@ -99,13 +99,13 @@ void MatrixPreDraw()
         auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
 
-        // We set ouutselves to the lower of the fader value or the brightness value, 
+        // We set ouutselves to the lower of the fader value or the brightness value,
         // so that we can fade between effects without having to change the brightness
-        // setting. 
+        // setting.
 
         pMatrix->SetBrightness(min(g_Brightness, g_Fader));
 
-        if (g_ptrEffectManager->GetCurrentEffect()->ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
+        if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
             LEDMatrixGFX::titleLayer.setFont(font3x5);
             uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
@@ -201,37 +201,43 @@ uint16_t WiFiDraw()
 
 uint16_t LocalDraw()
 {
-    if (nullptr == g_ptrEffectManager)
+    if (!g_ptrSystem->HasEffectManager())
     {
-        debugW("Drawing before g_pEffectManager is ready, so delaying...");
+        debugW("Drawing before EffectManager is ready, so delaying...");
         delay(100);
         return 0;
     }
-    else if (g_ptrEffectManager->EffectCount() > 0)
+    else
     {
-        // If we've never drawn from wifi before, now would also be a good time to local draw
-        if (g_usLastWifiDraw == 0 || (micros() - g_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
-        {
-            g_ptrEffectManager->Update(); // Draw the current built in effect
+        auto& effectManager = g_ptrSystem->EffectManager();
 
-            #if SHOW_VU_METER
-                static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
-                if (g_ptrEffectManager->IsVUVisible())
-                    spectrum->DrawVUMeter(g_ptrEffectManager->g(), 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
-            #endif
-
-            debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
-            return NUM_LEDS;
-        }
-        else
+        if (effectManager.EffectCount() > 0)
         {
-            debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - g_usLastWifiDraw) / (float)MICROS_PER_SECOND);
-            // It's important to return 0 when you do not draw so that the caller knows we did not
-            // render any pixels, and we can/should wait until the next frame.  Otherwise, the caller might
-            // draw the strip needlessly, which can take significant time.
-            return 0;
+            // If we've never drawn from wifi before, now would also be a good time to local draw
+            if (g_usLastWifiDraw == 0 || (micros() - g_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
+            {
+                effectManager.Update(); // Draw the current built in effect
+
+                #if SHOW_VU_METER
+                    static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
+                    if (effectManager.IsVUVisible())
+                        spectrum->DrawVUMeter(effectManager.g(), 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
+                #endif
+
+                debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
+                return NUM_LEDS;
+            }
+            else
+            {
+                debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - g_usLastWifiDraw) / (float)MICROS_PER_SECOND);
+                // It's important to return 0 when you do not draw so that the caller knows we did not
+                // render any pixels, and we can/should wait until the next frame.  Otherwise the caller might
+                // draw the strip needlessly, which can take significant time.
+                return 0;
+            }
         }
     }
+
     debugV("Local draw not drawing");
     return 0;
 }
@@ -255,14 +261,16 @@ void ShowStrip(uint16_t numToShow)
         {
             debugV("Telling FastLED that we'll be drawing %d pixels\n", numToShow);
 
+            auto& effectManager = g_ptrSystem->EffectManager();
+
             for (int i = 0; i < NUM_CHANNELS; i++)
-                FastLED[i].setLeds((*g_ptrEffectManager)[i]->leds, numToShow);
+                FastLED[i].setLeds(effectManager[i]->leds, numToShow);
 
             FastLED.show(g_Fader);
 
             g_FPS = FastLED.getFPS();
             g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
-            g_Watts = calculate_unscaled_power_mW((*g_ptrEffectManager)[0]->leds, numToShow) / 1000; // 1000 for mw->W
+            g_Watts = calculate_unscaled_power_mW(effectManager[0]->leds, numToShow) / 1000; // 1000 for mw->W
         }
         else
         {
@@ -283,7 +291,7 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
 
     if (localPixelsDrawn > 0)
     {
-        const double minimumFrameTime = 1.0 / g_ptrEffectManager->GetCurrentEffect()->DesiredFramesPerSecond();
+        const double minimumFrameTime = 1.0 / g_ptrSystem->EffectManager().GetCurrentEffect().DesiredFramesPerSecond();
         double elapsed = g_AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
             g_FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
@@ -380,11 +388,11 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
 
         // Starting the effect might need to draw, so we need to set the leds up before doing so
-        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->g());
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().g());
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         auto spectrum = GetSpectrumAnalyzer(0);
     #endif
-    g_ptrEffectManager->StartEffect();
+    g_ptrSystem->EffectManager().StartEffect();
 
     // Run the draw loop
 
@@ -414,7 +422,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #if USE_MATRIX
             if (wifiPixelsDrawn + localPixelsDrawn > 0)
             {
-                LEDMatrixGFX::MatrixSwapBuffers(g_ptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+                LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
                 FastLED.countFPS();
                 g_FPS = FastLED.getFPS();
             }
@@ -427,7 +435,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #endif
 
         if (wifiPixelsDrawn + localPixelsDrawn > 0)
-            g_ptrEffectManager->SetNewFrameAvailable(true);
+            g_ptrSystem->EffectManager().SetNewFrameAvailable(true);
 
         // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
         // is on LED #0 of Channel #0.
@@ -436,7 +444,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         ShowOnboardRGBLED();
 
         // Delay at least 1ms and not more than 1s until next frame is due
-        
+
         delay( CalcDelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn) );
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,

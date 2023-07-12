@@ -31,7 +31,6 @@
 
 #if INCOMING_WIFI_ENABLED
     #include "socketserver.h"
-    extern SocketServer g_SocketServer;
 #endif
 
 #if ENABLE_WIFI
@@ -107,6 +106,12 @@
       return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
 
+    // NetworkReader
+    //
+    // Allows functions to be registered that are called at regular intervals and/or on request, in the
+    // background. As the name of the class implies, this is intended to be used to execute network
+    // requests, like for effects that require data from RESTful APIs.
+
     class NetworkReader
     {
       // We allow the main network task entry point function to access private members
@@ -156,5 +161,4 @@
       void CancelReader(size_t index);
   };
 
-  extern DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader;
 #endif

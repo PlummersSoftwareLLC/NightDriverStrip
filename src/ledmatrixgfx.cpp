@@ -34,7 +34,6 @@
 
 extern DRAM_ATTR AppTime g_AppTime; // Keeps track of frame times
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
 #if USE_MATRIX
 
@@ -54,10 +53,10 @@ void LEDMatrixGFX::StartMatrix()
   matrix.addLayer(&backgroundLayer);
   matrix.addLayer(&titleLayer);
 
-  // When the matrix starts, you can ask it to leave N bytes of memory free, and this amount must be tuned.  Too much free 
+  // When the matrix starts, you can ask it to leave N bytes of memory free, and this amount must be tuned.  Too much free
   // will cause a dim panel with a low refresh, too little will starve other things.  We currently have enough RAM for
   // use so begin() is not being called with a reserve paramter, but it can be if memory becomes scarce.
-  
+
   matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
   matrix.setRefreshRate(MATRIX_REFRESH_RATE);
   matrix.begin();

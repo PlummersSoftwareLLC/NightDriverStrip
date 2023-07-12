@@ -33,14 +33,7 @@
 #include <HTTPClient.h>
 
 #include "globals.h"
-
-#if ENABLE_WEBSERVER
-    extern DRAM_ATTR CWebServer g_WebServer;
-#endif
-
-#if ENABLE_WIFI
-    DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader = nullptr;
-#endif
+#include "systemcontainer.h"
 
 #if USE_WIFI_MANAGER
 #include <ESP_WiFiManager.h>
@@ -87,13 +80,13 @@ extern uint32_t g_FPS;
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                debugA("Socket Buffer _cbReceived: %d", g_SocketServer._cbReceived);
+                debugA("Socket Buffer _cbReceived: %d", g_ptrSystem->SocketServer()._cbReceived);
             #endif
         }
         else if (str.equalsIgnoreCase("clearsettings"))
         {
             debugA("Removing persisted settings....");
-            g_ptrDeviceConfig->RemovePersisted();
+            g_ptrSystem->DeviceConfig().RemovePersisted();
             RemoveEffectManagerConfig();
         }
         else
@@ -132,7 +125,7 @@ void SetupOTA(const String & strHostname)
 
             debugI("Stopping IR remote");
             #if ENABLE_REMOTE
-            g_RemoteControl.end();
+            g_ptrSystem->RemoteControl().end();
             #endif
 
             debugI("Start updating from OTA ");
@@ -152,7 +145,7 @@ void SetupOTA(const String & strHostname)
                 debugI("OTA Progress: %u%%\r", p);
 
                 #if USE_MATRIX
-                    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->GetBaseGraphics());
+                    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
                     pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
                 #endif
@@ -163,7 +156,7 @@ void SetupOTA(const String & strHostname)
             }
 
         })
-        .onError([](ota_error_t error) 
+        .onError([](ota_error_t error)
         {
             g_bUpdateStarted = false;
             debugW("Error[%u]: ", error);
@@ -201,16 +194,17 @@ void SetupOTA(const String & strHostname)
 // remote is being used, this code and thread doesn't exist in the build.
 
 #if ENABLE_REMOTE
-extern RemoteControl g_RemoteControl;
 
 void IRAM_ATTR RemoteLoopEntry(void *)
 {
     //debugW(">> RemoteLoopEntry\n");
 
-    g_RemoteControl.begin();
+    auto& remoteControl = g_ptrSystem->RemoteControl();
+
+    remoteControl.begin();
     while (true)
     {
-        g_RemoteControl.handle();
+        remoteControl.handle();
         delay(20);
     }
 }
@@ -279,10 +273,12 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         bPreviousConnection = true;
 
         #if INCOMING_WIFI_ENABLED
+            auto& socketServer = g_ptrSystem->SocketServer();
+
             // Start listening for incoming data
             debugI("Starting/restarting Socket Server...");
-            g_SocketServer.release();
-            if (false == g_SocketServer.begin())
+            socketServer.release();
+            if (false == socketServer.begin())
                 throw std::runtime_error("Could not start socket server!");
 
             debugI("Socket server started.");
@@ -300,7 +296,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_WEBSERVER
             debugI("Starting Web Server...");
-            g_WebServer.begin();
+            g_ptrSystem->WebServer().begin();
             debugI("Web Server begin called!");
         #endif
 
@@ -574,9 +570,11 @@ bool WriteWiFiConfig()
         {
             if (WiFi.isConnected())
             {
-                g_SocketServer.release();
-                g_SocketServer.begin();
-                g_SocketServer.ProcessIncomingConnectionsLoop();
+                auto& socketServer = g_ptrSystem->SocketServer();
+
+                socketServer.release();
+                socketServer.begin();
+                socketServer.ProcessIncomingConnectionsLoop();
                 debugW("Socket connection closed.  Retrying...\n");
             }
             delay(500);
@@ -618,19 +616,21 @@ bool WriteWiFiConfig()
 
             while (socket >= 0)
             {
-                if (g_ptrEffectManager->IsNewFrameAvailable())
+                auto& effectManager = g_ptrSystem->EffectManager();
+
+                if (effectManager.IsNewFrameAvailable())
                 {
-                    g_ptrEffectManager->SetNewFrameAvailable(false);
+                    effectManager.SetNewFrameAvailable(false);
 
                     debugV("Sending color data packet");
                     // Potentially too large for the stack, so we allocate it on the heap instead
                     std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
                     pPacket->header = COLOR_DATA_PACKET_HEADER;
-                    pPacket->width  = g_ptrEffectManager->g()->width();
-                    pPacket->height = g_ptrEffectManager->g()->height();
-                    if ((*g_ptrEffectManager)[0]->leds != nullptr)
+                    pPacket->width  = effectManager.g()->width();
+                    pPacket->height = effectManager.g()->height();
+                    if (effectManager[0]->leds != nullptr)
                     {
-                        memcpy(pPacket->colors, (*g_ptrEffectManager)[0]->leds, sizeof(CRGB) * NUM_LEDS);
+                        memcpy(pPacket->colors, effectManager[0]->leds, sizeof(CRGB) * NUM_LEDS);
 
                         if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
                         {
@@ -688,16 +688,17 @@ bool WriteWiFiConfig()
             }
 
             // If the reader container isn't available yet, we'll sleep for a second before we check again
-            if (!g_ptrNetworkReader)
+            if (!g_ptrSystem->HasNetworkReader())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
                 continue;
             }
 
+            auto& networkReader = g_ptrSystem->NetworkReader();
             unsigned long now = millis();
 
             // Flag entries of which the read interval has passed
-            for (auto& entry : g_ptrNetworkReader->readers)
+            for (auto& entry : networkReader.readers)
             {
                 if (entry.canceled.load())
                     continue;
@@ -723,7 +724,7 @@ bool WriteWiFiConfig()
             now = millis();
 
             // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
-            for (auto& entry : g_ptrNetworkReader->readers)
+            for (auto& entry : networkReader.readers)
             {
                 if (entry.canceled.load())
                     continue;
@@ -791,7 +792,7 @@ bool WriteWiFiConfig()
 
         readers[index].flag.store(true);
 
-        g_TaskManager.NotifyNetworkThread();
+        g_ptrSystem->TaskManager().NotifyNetworkThread();
     }
 
     void NetworkReader::CancelReader(size_t index)

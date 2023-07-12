@@ -39,8 +39,6 @@ SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio ca
 
 #include <esp_task_wdt.h>
 
-
-extern NightDriverTaskManager g_TaskManager;
 extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
 extern uint32_t g_Watts;
 extern float g_Brite;

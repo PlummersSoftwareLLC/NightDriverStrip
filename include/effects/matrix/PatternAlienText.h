@@ -79,10 +79,9 @@ public:
 
   virtual void Start() override
   {
-      auto g = g_ptrEffectManager->g();
       x = leftMargin;
       y = topMargin;
-      g->Clear();
+      g()->Clear();
       debugW("Starting AlienText...");
   }
 

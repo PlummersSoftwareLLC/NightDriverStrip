@@ -2,8 +2,6 @@
 //
 // File:        ledmatrixgfx.h
 //
-// File:        NTPTimeClient.h
-//
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
@@ -84,18 +82,18 @@ public:
     {
         matrix.setBrightness(amount);
     }
-    
+
     virtual uint16_t xy(uint16_t x, uint16_t y) const override
     {
         if (x >= 0 && x < _width && y >= 0 && y < _height)
-            return y * MATRIX_WIDTH + x;    
+            return y * MATRIX_WIDTH + x;
         else
             throw std::runtime_error(str_sprintf("Invalid index in xy: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 
     // Whereas an LEDStripGFX would track it's own memory for the CRGB array, we simply point to the buffer already used for
     // the matrix display memory.  That also eliminated having a local draw buffer that is then copied, because the effects
-    // can render directly to the right back buffer automatically.  
+    // can render directly to the right back buffer automatically.
 
     void setLeds(CRGB *pLeds)
     {
@@ -153,7 +151,7 @@ public:
             auto pLinemem = leds + y * MATRIX_WIDTH;
             auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
             memcpy(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-            memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));                
+            memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
         }
     }
 

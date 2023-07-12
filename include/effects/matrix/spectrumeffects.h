@@ -34,11 +34,10 @@
 #include "esp_attr.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
-#include "effectmanager.h"
+#include "types.h"
+#include "systemcontainer.h"
 
-extern AppTime  g_AppTime;
 extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
 
 #if ENABLE_AUDIO
 
@@ -241,7 +240,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         else
         {
             // One to one case, just use the actual band value we mapped to
-            
+
             value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
             value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
         }
@@ -256,7 +255,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         int barWidth  = pGFXChannel->width() / _numBars;
         int xOffset   = iBar * barWidth;
-        
+
         // The top of the bar is normally just matrix height less the value.  Here, however, we "enhance" the bar by pulsing it a bit with
         // the beat of the music.  We do this by taking the value and subtracting a fraction of itself, which makes the bar taller when the
         // beat is higher.  We also subtract a fraction of the VU fade, which makes the bar taller when the VU is higher.  The net effect is
@@ -266,7 +265,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         value *= g_Analyzer.BeatEnhance(BARBEAT_ENHANCE);
         value2 *= g_Analyzer.BeatEnhance(BARBEAT_ENHANCE);
 
-        int yOffset   = pGFXChannel->height() - value ; 
+        int yOffset   = pGFXChannel->height() - value ;
         int yOffset2  = pGFXChannel->height() - value2 ;
 
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
@@ -459,8 +458,6 @@ class WaveformEffect : public LEDStripEffect
         v = std::min(v, 1.0f);
         v = std::max(v, 0.0f);
 
-        auto g = g_ptrEffectManager->g();
-
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
         if (yTop < 0)
@@ -482,10 +479,10 @@ class WaveformEffect : public LEDStripEffect
                 if (y < 2 || y > (MATRIX_HEIGHT - 2))
                     color  = CRGB::Red;
                 else
-                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
+                    color = g()->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
             }
 
-            bErase ? g->setPixel(x, y, color) : g->drawPixel(x, y, color);
+            bErase ? g()->setPixel(x, y, color) : g()->drawPixel(x, y, color);
 
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
@@ -500,10 +497,8 @@ class WaveformEffect : public LEDStripEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
-
-        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
-        g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
+        int top = g_ptrSystem->EffectManager().IsVUVisible() ? 1 : 0;
+        g()->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         DrawSpike(MATRIX_WIDTH-1, g_Analyzer._VURatio/2.0);
         DrawSpike(0, g_Analyzer._VURatio/2.0);
     }
@@ -566,22 +561,21 @@ class GhostWave : public WaveformEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
+        auto& effectManager = g_ptrSystem->EffectManager();
+        int top = effectManager.IsVUVisible() ? 1 : 0;
 
-        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
-
-        g->MoveOutwardsX(top);
+        g()->MoveOutwardsX(top);
 
         if (_fade)
-            g->DimAll(255-_fade);
+            g()->DimAll(255-_fade);
 
         if (_blur)
-            g->blur2d(g->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, _blur);
+            g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, _blur);
 
         // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 
         float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
-        
+
         // Offsetting by 0.25, which is a very low ratio, helps keep the line thin when sound is low
         //audioLevel = (audioLevel - 0.25) / 1.75;
 
@@ -597,7 +591,7 @@ class GhostWave : public WaveformEffect
 //
 // Draws an approximation of the waveform by mirroring the spectrum analyzer bars in four quadrants
 
-class SpectrumBarEffect : public LEDStripEffect 
+class SpectrumBarEffect : public LEDStripEffect
 {
     byte _hueIncrement = 0;
     byte _scrollIncrement = 0;
@@ -624,7 +618,7 @@ class SpectrumBarEffect : public LEDStripEffect
           _scrollIncrement(jsonObject[PTY_SPEED]),
           _hueStep(jsonObject[PTY_HUESTEP])
     {
-    }    
+    }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
@@ -677,7 +671,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
             if (value == 0.0f)
                 bottom = top;
-                
+
             if (x1 < 0 || x2 >= MATRIX_WIDTH)
                 break;
 

@@ -64,6 +64,7 @@ bool ReadCurrentEffectIndex(size_t& index);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
+extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
 // EffectManager
 //
@@ -104,7 +105,7 @@ class EffectManager : public IJSONSerializable
         std::set<int> loadedEffectNumbers;
 
         // Create effects from JSON objects, using the respective factories in g_EffectFactories
-        auto& jsonFactories = g_EffectFactories.GetJSONFactories();
+        auto& jsonFactories = g_ptrEffectFactories->GetJSONFactories();
 
         for (auto effectObject : effectsArray)
         {
@@ -126,7 +127,7 @@ class EffectManager : public IJSONSerializable
         }
 
         // Now add missing effects from the default factory list
-        auto &defaultFactories = g_EffectFactories.GetDefaultFactories();
+        auto &defaultFactories = g_ptrEffectFactories->GetDefaultFactories();
 
         // We iterate manually, so we can use where we are as the starting point for a later inner loop
         for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
@@ -216,10 +217,10 @@ public:
     {
         _newFrameAvailable = available;
     }
-    
+
     void LoadDefaultEffects()
     {
-        for (auto &numberedFactory : g_EffectFactories.GetDefaultFactories())
+        for (auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
         {
             auto pEffect = numberedFactory.Factory();
             if (pEffect)
@@ -376,7 +377,7 @@ public:
 
     virtual bool IsVUVisible() const
     {
-        return _bShowVU && GetCurrentEffect()->CanDisplayVUMeter();
+        return _bShowVU && GetCurrentEffect().CanDisplayVUMeter();
     }
 
     // SetGlobalColor
@@ -556,7 +557,7 @@ public:
         SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
             [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
 
-        auto jsonEffectFactories = g_EffectFactories.GetJSONFactories();
+        auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
         auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
 
         if (factoryEntry == jsonEffectFactories.end())
@@ -654,9 +655,9 @@ public:
         return _iCurrentEffect;
     }
 
-    const std::shared_ptr<LEDStripEffect> GetCurrentEffect() const
+    LEDStripEffect& GetCurrentEffect() const
     {
-        return _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
+        return *(_tempEffect ? _tempEffect : _vEffects[_iCurrentEffect]);
     }
 
     const String & GetCurrentEffectName() const
@@ -701,14 +702,14 @@ public:
     uint GetInterval() const
     {
         // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
-        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect()->MaximumEffectTime());
+        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect().MaximumEffectTime());
     }
 
     void CheckEffectTimerExpired()
     {
         // If interval is zero, the current effect never expires unless it thas a max effect time set
 
-        if (_effectInterval == 0 && !GetCurrentEffect()->HasMaximumEffectTime())
+        if (_effectInterval == 0 && !GetCurrentEffect().HasMaximumEffectTime())
             return;
 
         if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
@@ -841,5 +842,3 @@ public:
         }
     }
 };
-
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;

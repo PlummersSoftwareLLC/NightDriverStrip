@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <cmath>
 #include "effects.h"
 #include "paletteeffect.h"
 

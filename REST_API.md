@@ -14,10 +14,10 @@
   - [Copy effect](#copy-effect)
   - [Delete effect](#delete-effect)
   - [Get effect configuration information](#get-effect-configuration-information)
-  - [Device setting specifications](#device-setting-specifications)
+  - [Get device setting specifications](#get-device-setting-specifications)
   - [Device settings](#device-settings)
   - [Set setting with validation](#set-setting-with-validation)
-  - [Effect setting specifications](#effect-setting-specifications)
+  - [Get effect setting specifications](#get-effect-setting-specifications)
   - [Effect settings](#effect-settings)
   - [Reset configuration and/or device](#reset-configuration-andor-device)
 - [Postman collection](#postman-collection)
@@ -27,9 +27,12 @@
 On devices with WiFi and the webserver enabled, NightDriverStrip publishes a REST-like API. The API includes a number of endpoints to:
 
 - Retrieve information about the device and the effects it runs
-- Changing the effect that's running
+- Change the effect that's running
 - Disable and enable effects
+- Move, copy and delete effects
+- Retrieve setting specifications
 - Retrieve and change settings
+- Reset configuration and/or the device itself
 
 A subset of the endpoints is used by the NightDriverStrip [web UI](site/README.md).
 
@@ -128,7 +131,7 @@ With this endpoint an effect in the effect list can be copied. The created copy 
 | URL | `/copyEffect` |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect of which a copy should be made. |
-| | | Zero, one or more settings that have been returned by the [Effect setting specifications endpoint](#effect-setting-specifications); also refer to the [Change effect settings endpoint](#change-effect-settings) for more information. |
+| | | Zero, one or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications); also refer to the [Change effect settings endpoint](#change-effect-settings) for more information. |
 | Response | 200 (OK) | A JSON blob with the values for the copied effect's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Delete effect
@@ -154,7 +157,7 @@ This endpoint returns a JSON document with information about the detailed config
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with detailed configuration information about the device's effects. |
 
-### Device setting specifications
+### Get device setting specifications
 
 This endpoint can be used to retrieve the list of known device configuration settings.
 
@@ -163,7 +166,7 @@ This endpoint can be used to retrieve the list of known device configuration set
 | URL | `/settings/specs` |
 | Method | GET | |
 | Parameters | | |
-| Response | 200 (OK) | A JSON array with the known device configuration settings. The specifications include the name, description, type identifier and type name for each setting. |
+| Response | 200 (OK) | A JSON array with the known device configuration settings. The specifications include for each setting the name, description, type identifier, type name, if validation is available, and lower and upper value boundaries if applicable. |
 
 ### Device settings
 
@@ -192,7 +195,7 @@ When changing settings:
 |-|-|-|
 | URL | `/settings` |
 | Method | POST | |
-| Parameters | | One or more settings that have been returned by the [Device setting specifications endpoint](#device-setting-specifications). |
+| Parameters | | One or more settings that have been returned by the [Get device setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Set setting with validation
@@ -205,11 +208,11 @@ Note that validation is not implemented for all settings; the validation step is
 |-|-|-|
 | URL | `/settings/validated` |
 | Method | POST | |
-| Parameters | | Exactly one setting that has been returned by the [Device setting specifications endpoint](#device-setting-specifications). |
+| Parameters | | Exactly one setting that has been returned by the [Get dvice setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | Validation succeeded and the provided value has been set. |
 | | 400 (Bad Request) | More than one known setting was provided, or validation failed. The applicable message is returned in a JSON blob. |
 
-### Effect setting specifications
+### Get effect setting specifications
 
 This endpoint can be used to retrieve the list of known effect-specific configuration settings for an individual effect.
 
@@ -218,7 +221,7 @@ This endpoint can be used to retrieve the list of known effect-specific configur
 | URL | `/settings/effect/specs` |
 | Method | GET | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the setting specifications for. |
-| Response | 200 (OK) | A JSON array with the known effect-specific configuration settings for the effect with index `effectIndex`. The specifications include the name, description, type identifier and type name for each setting. |
+| Response | 200 (OK) | A JSON array with the known effect-specific configuration settings for the effect with index `effectIndex`. The specifications include for each setting the name, description, type identifier, type name, if validation is available, and lower and upper value boundaries if applicable. |
 
 ### Effect settings
 
@@ -248,7 +251,7 @@ When changing settings:
 | URL | `/settings` |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to change settings for. |
-| | | One or more settings that have been returned by the [Effect setting specifications endpoint](#effect-setting-specifications). |
+| | | One or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications). |
 | Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Reset configuration and/or device
