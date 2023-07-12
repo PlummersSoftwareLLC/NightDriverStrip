@@ -3,6 +3,7 @@
 
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
+// Inspired by https://editor.soulmatelights.com/gallery/1177-picasso-3in1
 
 #if ENABLE_AUDIO
 class PatternSMPicasso3in1 : public BeatEffectBase,
