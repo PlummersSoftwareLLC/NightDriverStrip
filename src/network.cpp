@@ -459,7 +459,7 @@ bool ReadWiFiConfig()
         WiFi_password = szBuffer;
 
         // Don't check in changes that would display the password in logs, etc.
-        debugW("Retrieved SSID and Password from NVS: %s, %s", WiFi_ssid, "********");
+        debugW("Retrieved SSID and Password from NVS: %s, %s", WiFi_ssid.c_str(), "********");
 
         nvs_close(nvsROHandle);
         return true;
