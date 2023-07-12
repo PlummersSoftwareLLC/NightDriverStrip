@@ -1,4 +1,5 @@
 #pragma once
+#undef trackingOBJECT_MAX_COUNT
 
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
@@ -11,8 +12,8 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 {
 private:
     // Suggested values for Mesmerizer w/ 1/2 HUB75 panel: 10, 36, 70
-    uint8_t Scale = 36;        // 1-100 is image type and count. THis should be a Setting 0-33 = P1, 34-68 = P2, 68-99 = Picasso3
-      // P1 - Scale is number of independent lines drawn w/ trailers. 20 or so = Pink Floyd 'Pulse' laser show.
+    uint8_t Scale = 2;        // 1-100 is image type and count. THis should be a Setting 0-33 = P1, 34-68 = P2, 68-99 = Picasso3
+      // P1 - Scale is number of independent lines drawn w/ trailers. Safe=1-8 20 or so = Pink Floyd 'Pulse' laser show.
       // P2 - 34 & up. Scale -33 == number of vertices on a connected polyline "wire" rotating in 3d. 38 up? SLOW!
       // P3 - 68 & up. Scale -68 -2 == number of circles  *68=2, 69=3, 70=4, etc. 80 up? SLOW
 #define trackingOBJECT_MAX_COUNT                         (100U)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -129,11 +130,6 @@ void PicassoGenerate(bool reset){
   if (loadingFlag)
   {
     loadingFlag = false;
-    //setCurrentPalette();
-    //FastLED.clear();
-// not for 3in1
-//    enlargedObjectNUM = (modes[currentMode].Scale - 1U) / 99.0 * (enlargedOBJECT_MAX_COUNT - 1U) + 1U;
-    //enlargedObjectNUM = (modes[currentMode].Scale - 1U) % 11U / 10.0 * (enlargedOBJECT_MAX_COUNT - 1U) + 1U;
     if (enlargedObjectNUM > enlargedOBJECT_MAX_COUNT) enlargedObjectNUM = enlargedOBJECT_MAX_COUNT;
     if (enlargedObjectNUM < 2U) enlargedObjectNUM = 2U;
 
@@ -187,65 +183,44 @@ void PicassoPosition(){
   PicassoGenerate(false);
   PicassoPosition();
 
-//  for (unsigned i = 0; i < numParticles - 2; i+=2) {
-//    Particle *p1 = (Particle *)&particles[i];
-//    Particle *p2 = (Particle *)&particles[i + 1];
-//    DrawLine(p1->position_x, p1->position_y, p2->position_x, p2->position_y, p1->color);
-//  }
-  for (uint8_t i = 0 ; i < enlargedObjectNUM - 2U ; i+=2)
+  for (uint8_t i = 0 ; i < enlargedObjectNUM - 2U ; i+=2) {
     DrawLine(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i+1U], trackingObjectPosY[i+1U], CHSV(trackingObjectHue[i], 255U, 255U));
     //DrawLine(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i+1U], trackingObjectPosY[i+1U], ColorFromPalette(*curPalette, trackingObjectHue[i]));
-
-
-  EVERY_N_MILLIS(20000){
-    PicassoGenerate(true);
   }
-          g()->BlurFrame(80);
 
-//  g()->blurScreen(80);
+   g()->BlurFrame(80);
   }
+
   void PicassoRoutine2(){
-      PicassoGenerate(false);
+  PicassoGenerate(false);
   PicassoPosition();
+
   g()->DimAll(180);
 
-//  for (unsigned i = 0; i < numParticles - 1; i++) {
-//    Particle *p1 = (Particle *)&particles[i];
-//    Particle *p2 = (Particle *)&particles[i + 1];
-//    DrawLineF(p1->position_x, p1->position_y, p2->position_x, p2->position_y, p1->color);
-//  }
   for (uint8_t i = 0 ; i < enlargedObjectNUM - 1U ; i++)
     DrawLineF(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i+1U], trackingObjectPosY[i+1U], CHSV(trackingObjectHue[i], 255U, 255U));
-    //DrawLineF(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i+1U], trackingObjectPosY[i+1U], ColorFromPalette(*curPalette, trackingObjectHue[i]));
 
   EVERY_N_MILLIS(20000){
     PicassoGenerate(true);
   }
-          g()->BlurFrame(80);
-
-  // blurScreen(80);
+  g()->BlurFrame(80);
   }
+
+
   void PicassoRoutine3(){
 
   PicassoGenerate(false);
   PicassoPosition();
   g()->DimAll(180);
 
-//  for (unsigned i = 0; i < numParticles - 2; i+=2) {
-//    Particle *p1 = (Particle *)&particles[i];
-//    Particle *p2 = (Particle *)&particles[i + 1];
-//    drawCircleF(std::fabs(p1->position_x - p2->position_x), std::fabs(p1->position_y - p2->position_y), std::fabs(p1->position_x - p1->position_y), p1->color);
-//  }
   for (uint8_t i = 0 ; i < enlargedObjectNUM - 2U ; i+=2)
     drawCircle(fabs(trackingObjectPosX[i] - trackingObjectPosX[i+1U]), fabs(trackingObjectPosY[i] - trackingObjectPosX[i+1U]), fabs(trackingObjectPosX[i] - trackingObjectPosY[i]), CHSV(trackingObjectHue[i], 255U, 255U));
-    //drawCircleF(fabs(trackingObjectPosX[i] - trackingObjectPosX[i+1U]), fabs(trackingObjectPosY[i] - trackingObjectPosX[i+1U]), fabs(trackingObjectPosX[i] - trackingObjectPosY[i]), ColorFromPalette(*curPalette, trackingObjectHue[i]));
 
   EVERY_N_MILLIS(20000){
     PicassoGenerate(true);
   }
-          g()->BlurFrame(80);
+  g()->BlurFrame(80);
 
-  // g()->blurScreen(80);
   }
 
 public:
@@ -264,6 +239,11 @@ public:
     LEDStripEffect(jsonObject)
   {
   }
+
+  // This has atomicity issues. It looks at a global (boooo) that may change the contents
+  // of the underlying enlarge/trackingFOO arrays while they're being traversed. It's just
+  // a bad diea to modify Scale while these are running, but there's too much cool code
+  // in this effect to just let it go to waste.
 
   void RecalibrateDrawnObjects() {
    if (Scale < 34U)           // если масштаб до 34
@@ -285,29 +265,28 @@ public:
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif
-//Scale = 20; // PR1
-Scale = 45; // PR2
-// Scale = 85; // PR3
 
    // Mesmerizer/NightDriver demo: just pick some preset and skip through them.
    // Good way to demo off this module, but it's a bit much visually!
    // robert
    // An entry of 6 does so much work it trips the watchdog!
    // An entry of 45 does so much work it trips the watchdog!
-   static int demo_values[] = {/* 1, 2, 3, 4, 5, 35, 36, 37, */ 68, 70, 71, 72};
+   static int demo_values[] = { 3, 35, 68 } ;
    static int demo_idx = 0;
+
    // BUGBUG(robertl): Just eyeballing this, I think the clock is running about double time...
    EVERY_N_MILLIS(2000) {
-//    if (demo_idx++ == sizeof(demo_values) / sizeof(demo_values[0])) demo_idx = 0;
-//    Scale = demo_values[demo_idx];
-    RecalibrateDrawnObjects();
+    if (demo_idx++ == sizeof(demo_values) / sizeof(demo_values[0])) demo_idx = 0;
+    Scale = demo_values[demo_idx];
+    // RecalibrateDrawnObjects();
     debugI("Index %d Scale %d", demo_idx, Scale);
     // delay(10);
    }
    // end robert
 
   // Don't just let the renderer freewheel.
-  EVERY_N_MILLIS(10) {
+  // Unfortunately, this is a terrible way to implement usage governors.
+  EVERY_N_MILLIS(16) {
     if (Scale < 34U)           // если масштаб до 34
       PicassoRoutine1();
     else if (Scale > 67U)      // если масштаб больше 67
