@@ -189,12 +189,13 @@ public:
     virtual void Draw() override
     {
         // Reset after 20 seconds
-        if (millis() - msStart > 20000)
+        const auto kResetEveryNSeconds = 20;
+        if (millis() - msStart > kResetEveryNSeconds * MILLIS_PER_SECOND)
             start();
 
         for (int i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT / 10; i++)
         {
-            g()->leds[g()->xy(random(0, MATRIX_WIDTH), random(0, MATRIX_HEIGHT))].fadeToBlackBy(32);
+            g()->leds[g()->xy(random(0, MATRIX_WIDTH-1), random(0, MATRIX_HEIGHT-1))].fadeToBlackBy(32);
         }
 
         // fill_palette(colors, SNAKE_LENGTH, initialHue++, 5, graphics->currentPalette, 255, LINEARBLEND);

@@ -516,6 +516,7 @@ void setup()
 
     debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
+
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
 
