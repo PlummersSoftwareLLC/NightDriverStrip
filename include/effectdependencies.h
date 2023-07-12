@@ -72,6 +72,7 @@
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMMagma.h"
     #include "effects/matrix/PatternSMAmberRain.h"
+    #include "effects/matrix/PatternSMFire2012.h"
     #include "effects/matrix/PatternSMFire2021.h"
     #include "effects/matrix/PatternSMWisp.h"
     #include "effects/matrix/PatternSMNoise.h"

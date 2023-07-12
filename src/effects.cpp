@@ -358,8 +358,9 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE, PatternSMNoise);
+        // ADD_EFFECT(EFFECT_MATRIX_SMNOISE, PatternSMNoise);
         // ADD_EFFECT(EFFECT_MATRIX_SMWISP, PatternSMWisp);
+        ADD_EFFECT(EFFECT_MATRIX_SMFIRE2012, PatternSMFire2012);
         // ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021, PatternSMFire2021);
         // ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN, PatternSMAmberRain);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAGMA, PatternSMMagma);
