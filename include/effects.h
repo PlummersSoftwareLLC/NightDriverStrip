@@ -122,6 +122,7 @@
 #define EFFECT_MATRIX_SMFIRE2021                       149
 #define EFFECT_MATRIX_SMWISP                           150
 #define EFFECT_MATRIX_SMNOISE                          151
+#define EFFECT_MATRIX_SMPICASSO3IN1                    152
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1

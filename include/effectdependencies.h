@@ -76,6 +76,7 @@
     #include "effects/matrix/PatternSMFire2021.h"
     #include "effects/matrix/PatternSMWisp.h"
     #include "effects/matrix/PatternSMNoise.h"
+    #include "effects/matrix/PatternSMFPicasso3in1.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
