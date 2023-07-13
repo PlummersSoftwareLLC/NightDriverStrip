@@ -316,7 +316,7 @@ public:
                 // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
 
                 #if USE_PSRAM
-                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIMUM_PACKET_SIZE);
+                    std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIMUM_PACKET_SIZE+1);    // Plus one for uzlib buffer overreach bug
                     memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIMUM_PACKET_SIZE);
                     auto pSourceBuffer = &_abTempBuffer[COMPRESSED_HEADER_SIZE];
                 #else

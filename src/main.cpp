@@ -326,7 +326,7 @@ void setup()
     uzlib_init();
 
     // Create the SystemContainer that holds primary device management objects.
-    g_ptrSystem = std::make_unique<SystemContainer>();
+    g_ptrSystem = make_unique_psram<SystemContainer>();
 
     // Start the Task Manager which takes over the watchdog role and measures CPU usage
     auto& taskManager = g_ptrSystem->SetupTaskManager();
@@ -467,7 +467,7 @@ void setup()
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating LEDStripGFX for channel %d", i);
-            g_aptrDevices[i] = std::make_shared<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i] = make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
         }
     #endif
 
@@ -477,7 +477,7 @@ void setup()
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating HexagonGFX for channel %d", i);
-            g_aptrDevices[i] = std::make_shared<HexagonGFX>(NUM_LEDS);
+            g_aptrDevices[i] = make_shared_psram<HexagonGFX>(NUM_LEDS);
         }
     #endif
 
@@ -486,7 +486,7 @@ void setup()
     #if USE_MATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_aptrDevices[i] = std::make_shared<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i] = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             g_aptrDevices[i]->loadPalette(0);
         }
     #endif

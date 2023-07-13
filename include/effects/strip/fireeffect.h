@@ -378,7 +378,7 @@ public:
 
     void Fire(int Cooling, int Sparking, int Sparks)
     {
-        static std::unique_ptr<uint8_t []> heat = std::make_unique<uint8_t []>(NUM_LEDS);
+        static std::unique_ptr<uint8_t []> heat = make_unique_psram_array<uint8_t>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
 
         int cooldown;
