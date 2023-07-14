@@ -83,6 +83,7 @@
     #include "effects/matrix/PatternSMParticles.h"
 #endif
     #include "effects/matrix/PatternSMRainbowFlow.h"
+    #include "effects/matrix/PatternSMPastelFlutter.h"
 #if BOOGER
     #include "effects/matrix/PatternSMRainbowSwirl.h"
     #include "effects/matrix/PatternSerendipity.h"

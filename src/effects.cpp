@@ -358,6 +358,7 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
+        ADD_EFFECT(EFFECT_MATRIX_SMPASTEL_FLUTTER, PatternSMPastelFlutter);
         ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_FLOW, PatternSMRainbowFlow);
         // ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_SWIRL, PatternSMRainbowSwirl);
         // ADD_EFFECT(EFFECT_MATRIX_SMPARTICLES, PatternSMParticles);
