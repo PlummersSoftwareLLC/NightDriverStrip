@@ -82,8 +82,9 @@
     #include "effects/matrix/PatternSMSnakes.h"
     #include "effects/matrix/PatternSMParticles.h"
 #endif
-    #include "effects/matrix/PatternSMRainbowSwirl.h"
+    #include "effects/matrix/PatternSMRainbowFlow.h"
 #if BOOGER
+    #include "effects/matrix/PatternSMRainbowSwirl.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
