@@ -1,6 +1,8 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
+#if COLORDATA_SERVER_ENABLED
+
 extern float g_Brite;
 
 int SocketServer::ProcessIncomingConnectionsLoop()
@@ -231,3 +233,5 @@ int SocketServer::ProcessIncomingConnectionsLoop()
     ResetReadBuffer();
     return false;
 }
+
+#endif
