@@ -57,8 +57,10 @@
 // Externals
 //
 
+#define BOOGER 0
 #if USE_MATRIX
     #include "ledmatrixgfx.h"
+#if BOOGER
     #include "effects/strip/misceffects.h"
     #include "effects/matrix/PatternBalls.h"
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
@@ -78,6 +80,9 @@
     #include "effects/matrix/PatternSMNoise.h"
     #include "effects/matrix/PatternSMFPicasso3in1.h"
     #include "effects/matrix/PatternSMSnakes.h"
+#endif
+    #include "effects/matrix/PatternSMParticles.h"
+#if BOOGER
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -87,7 +92,9 @@
     #include "effects/matrix/PatternSpiro.h"
     #include "effects/matrix/PatternCube.h"
     #include "effects/matrix/PatternCircuit.h"
+#if ENABLE_WIFI
     #include "effects/matrix/PatternSubscribers.h"
+#endif
     #include "effects/matrix/PatternAlienText.h"
     #include "effects/matrix/PatternRadar.h"
     #include "effects/matrix/PatternPongClock.h"
@@ -98,7 +105,10 @@
     #include "effects/matrix/PatternMisc.h"
     #include "effects/matrix/PatternNoiseSmearing.h"
     #include "effects/matrix/PatternQR.h"
+#if ENABLE_WIFI
     #include "effects/matrix/PatternWeather.h"
+#endif
+#endif // BOOGER
 #endif
 
 #ifdef USESTRIP

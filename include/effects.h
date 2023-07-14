@@ -124,6 +124,7 @@
 #define EFFECT_MATRIX_SMNOISE                          151
 #define EFFECT_MATRIX_SMPICASSO3IN1                    152
 #define EFFECT_MATRIX_SMSNAKES                         153
+#define EFFECT_MATRIX_SMPARTICLES                      154
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
