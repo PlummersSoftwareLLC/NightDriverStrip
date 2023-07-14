@@ -163,6 +163,7 @@
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;
+extern float g_Brite;
 extern uint32_t g_Watts;
 
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
