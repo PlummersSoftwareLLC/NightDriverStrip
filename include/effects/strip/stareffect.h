@@ -33,8 +33,6 @@
 
 #include "particles.h"
 
-extern AppTime g_AppTime;
-
 const int cMaxNewStarsPerFrame = 144;
 const int cMaxStars = 500;
 const int starWidth = 1;
@@ -601,7 +599,7 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         for (int i = 0; i < NUM_TWINKLES; i++)

@@ -105,6 +105,58 @@ class SystemContainer
     }
 
     // -------------------------------------------------------------
+    // Devices
+
+    SC_SIMPLE_PROPERTY(std::vector<std::shared_ptr<GFXBase>>, Devices)
+
+    // -------------------------------------------------------------
+    // BufferManagers
+
+    SC_DECLARE(std::vector<std::unique_ptr<LEDBufferManager>>, BufferManagers)
+
+    public: std::vector<std::unique_ptr<LEDBufferManager>>& SetupBufferManagers()
+    {
+        if (!!SC_MEMBER(BufferManagers))
+            return *SC_MEMBER(BufferManagers);
+
+        if (!SC_MEMBER(Devices) || SC_MEMBER(Devices)->size() == 0)
+        {
+            debugE("Can't setup BufferManagers without Devices!");
+            delay(1000);
+            throw std::runtime_error("Attempt to setup BufferManagers without Devices");
+        }
+
+        #if USE_PSRAM
+            uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
+        #else
+            uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
+        #endif
+
+        uint32_t memtoalloc = (NUM_CHANNELS * ((sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB))));
+        uint32_t cBuffers = memtouse / memtoalloc;
+
+        if (cBuffers < MIN_BUFFERS)
+        {
+            debugI("Not enough memory, could only allocate %d buffers and need %d\n", cBuffers, MIN_BUFFERS);
+            throw std::runtime_error("Could not allocate all buffers");
+        }
+        if (cBuffers > MAX_BUFFERS)
+        {
+            debugI("Could allocate %d buffers but limiting it to %d\n", cBuffers, MAX_BUFFERS);
+            cBuffers = MAX_BUFFERS;
+        }
+
+        debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
+
+        for (auto& device : *SC_MEMBER(Devices))
+            SC_MEMBER(BufferManagers)->push_back(std::make_unique<LEDBufferManager>(cBuffers, device));
+
+        return *SC_MEMBER(BufferManagers);
+    }
+
+    SC_GETTERS_FOR(std::vector<std::unique_ptr<LEDBufferManager>>, BufferManagers)
+
+    // -------------------------------------------------------------
     // EffectManager
 
     SC_FORWARDING_PROPERTY(EffectManager<GFXBase>, EffectManager)

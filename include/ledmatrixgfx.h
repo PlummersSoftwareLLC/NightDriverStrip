@@ -78,6 +78,18 @@ public:
     {
     }
 
+    static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
+    {
+        StartMatrix();
+
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            auto matrix = std::make_shared<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            devices.push_back(matrix);
+            matrix->loadPalette(0);
+        }
+    }
+
     void SetBrightness(byte amount)
     {
         matrix.setBrightness(amount);
@@ -102,7 +114,7 @@ public:
 
     virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
     {
-        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.
 
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }

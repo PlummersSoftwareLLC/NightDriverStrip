@@ -110,7 +110,7 @@
 
 #include <WiFi.h>
 
-#include "RemoteDebug.h"
+#include <RemoteDebug.h>
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
 // value.  So if version = 020,
@@ -717,7 +717,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define HEX_MAX_DIMENSION 19                 // How big the hex is - it's biggest row and the number of rows
     #define HEX_HALF_DIMENSION 10                // How many rows from top to middle inclusive
-    
+
 #elif LEDSTRIP
 
     // The LED strips I use for Christmas lights under my eaves
@@ -1133,11 +1133,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef ENABLE_AUDIO_SMOOTHING
         #define ENABLE_AUDIO_SMOOTHING 1
     #endif
-    #ifndef BARBEAT_ENHANCE       
+    #ifndef BARBEAT_ENHANCE
         #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
     #endif
     #ifndef SPECTRUMBARBEAT_ENHANCE
-        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music 
+        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
     #endif
 #endif
 

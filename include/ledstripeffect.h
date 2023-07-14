@@ -33,11 +33,15 @@
 #include "effects.h"
 #include "jsonserializer.h"
 #include "types.h"
+#include "gfxbase.h"
+#include "ledmatrixgfx.h"
 #include <memory>
 #include <list>
 #include <stdlib.h>
 
-#define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return true
+#define RETURN_IF_SET(settingName, propertyName, property, value) \
+    if (SetIfSelected(settingName, propertyName, property, value)) \
+        return true
 
 // LEDStripEffect
 //
@@ -59,7 +63,7 @@ class LEDStripEffect : public IJSONSerializable
     size_t _maximumEffectTime = SIZE_MAX;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
-    std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
+    std::vector<std::shared_ptr<GFXBase>> _GFX;
 
     #define SET_IF_NAMES_MATCH(firstName, secondName, property, value)  if (firstName == secondName) \
     { \
@@ -181,12 +185,12 @@ class LEDStripEffect : public IJSONSerializable
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
         debugV("Init %s", _friendlyName.c_str());
 
-        for (int i = 0; i < NUM_CHANNELS; i++)                      // There are up to 8 channel in play per effect and when we
-            _GFX[i] = gfx[i];                                       //   start up, we are given copies to their graphics interfaces
+        _GFX = gfx;                                                 // There are up to 8 channel in play per effect and when we
+                                                                    //   start up, we are given copies to their graphics interfaces
                                                                     //   so that we can call them directly later from other calls
         _cLEDs = _GFX[0]->GetLEDCount();
 

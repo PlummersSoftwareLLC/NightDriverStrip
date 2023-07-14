@@ -47,12 +47,9 @@ extern std::mutex g_buffer_mutex;
 extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
 #endif
 
-DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-
 double volatile g_FreeDrawTime = 0.0;
 
 extern uint32_t g_FPS;
-extern AppTime g_AppTime;
 extern bool g_bUpdateStarted;
 extern float g_Brite;
 extern uint32_t g_Watts;
@@ -155,20 +152,22 @@ uint16_t WiFiDraw()
     std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
     uint16_t pixelsDrawn = 0;
-    for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
+    for (int iChannel = 0; iChannel < g_ptrSystem->BufferManagers().size(); iChannel++)
     {
 
         timeval tv;
         gettimeofday(&tv, nullptr);
 
+        auto& bufferManager = *g_ptrSystem->BufferManagers()[iChannel];
+
         // Pull buffers out of the queue.
 
-        if (false == g_aptrBufferManager[iChannel]->IsEmpty())
+        if (false == bufferManager.IsEmpty())
         {
             std::shared_ptr<LEDBuffer> pBuffer;
             if (NTPTimeClient::HasClockBeenSet() == false)
             {
-                pBuffer = g_aptrBufferManager[iChannel]->GetOldestBuffer();
+                pBuffer = bufferManager.GetOldestBuffer();
             }
             else
             {
@@ -176,8 +175,8 @@ uint16_t WiFiDraw()
                 // written as 'while' it will pull frames until it gets one that is current.
                 // Chew through ALL frames older than now, ignoring all but the last of them
 
-                while (!g_aptrBufferManager[iChannel]->IsEmpty() && g_aptrBufferManager[iChannel]->PeekOldestBuffer()->IsBufferOlderThan(tv))
-                    pBuffer = g_aptrBufferManager[iChannel]->GetOldestBuffer();
+                while (!bufferManager.IsEmpty() && bufferManager.PeekOldestBuffer()->IsBufferOlderThan(tv))
+                    pBuffer = bufferManager.GetOldestBuffer();
             }
 
             if (pBuffer)
@@ -303,7 +302,7 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         double t = 0.04;
         for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         {
-            auto pOldest = g_aptrBufferManager[iChannel]->PeekOldestBuffer();
+            auto pOldest = g_ptrSystem->BufferManagers()[iChannel]->PeekOldestBuffer();
             if (pOldest)
                 t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
         }

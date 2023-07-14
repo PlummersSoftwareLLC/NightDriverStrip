@@ -32,8 +32,6 @@
 #include "effectdependencies.h"
 #include "systemcontainer.h"
 
-extern std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
 // Palettes
 //
 // Palettes that are referenced by effects need to be instantiated first
@@ -240,7 +238,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
     CHSV hueColor = rgb2hsv_approximate(color1);
     auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
-    if (object->Init(g_aptrDevices))
+    if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
 }
@@ -250,7 +248,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
     CHSV hueColor = rgb2hsv_approximate(color);
     CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
     auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
-    if (object->Init(g_aptrDevices))
+    if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
 }
@@ -581,7 +579,7 @@ DRAM_ATTR size_t g_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max()
     {
         debugW("InitSplashEffectManager");
 
-        g_ptrSystem->SetupEffectManager(std::make_shared<SplashLogoEffect>(), g_aptrDevices);
+        g_ptrSystem->SetupEffectManager(std::make_shared<SplashLogoEffect>(), g_ptrSystem->Devices());
     }
 
 #endif
@@ -614,7 +612,7 @@ void InitEffectsManager()
         if (g_ptrSystem->HasEffectManager())
             g_ptrSystem->EffectManager().DeserializeFromJSON((pJsonDoc->as<JsonObjectConst>()));
         else
-            g_ptrSystem->SetupEffectManager(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+            g_ptrSystem->SetupEffectManager(pJsonDoc->as<JsonObjectConst>(), g_ptrSystem->Devices());
     }
     else
     {
@@ -623,7 +621,7 @@ void InitEffectsManager()
         if (g_ptrSystem->HasEffectManager())
             g_ptrSystem->EffectManager().LoadDefaultEffects();
         else
-            g_ptrSystem->SetupEffectManager(g_aptrDevices);
+            g_ptrSystem->SetupEffectManager(g_ptrSystem->Devices());
     }
 
     if (false == g_ptrSystem->EffectManager().Init())

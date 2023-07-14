@@ -31,7 +31,7 @@
 
 #pragma once
 
-extern AppTime g_AppTime;
+extern DRAM_ATTR AppTime g_AppTime;
 
 class MeteorChannel
 {
@@ -105,15 +105,6 @@ public:
             }
         }
 
-            // If there's a beat to the music in a band, reverse the direction of the meteor indexed by the same number
-        /*
-        if (g_Beats.IsBeat[0] && (g_AppTime.FrameStartTime() - lastBeat[0] > minTimeBetweenBeats))
-        {
-            lastBeat[0] = g_AppTime.FrameStartTime();
-            for (int j = 0; j < meteorCount; j++)
-                Reverse(j);
-        }
-        */
         for (int i = 0; i < meteorCount; i++)
         {
             float spd = speed[i];
@@ -159,7 +150,6 @@ class MeteorEffect : public LEDStripEffect
 {
   private:
     MeteorChannel   _Meteors[NUM_CHANNELS];
-    std::shared_ptr<GFXBase> * _gfx;
 
     int             _cMeteors;
     uint8_t         _meteorSize;
@@ -207,9 +197,8 @@ class MeteorEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
-        _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))
             return false;
         for (int i = 0; i < ARRAYSIZE(_Meteors); i++)
@@ -220,6 +209,6 @@ class MeteorEffect : public LEDStripEffect
     virtual void Draw() override
     {
         for (int i = 0; i < ARRAYSIZE(_Meteors); i++)
-            _Meteors[i].Draw(_gfx[i]);
+            _Meteors[i].Draw(_GFX[i]);
     }
 };

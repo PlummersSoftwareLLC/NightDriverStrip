@@ -32,8 +32,6 @@
 
 #include "effects.h"
 
-extern AppTime g_AppTime;
-
 class PaletteEffect : public LEDStripEffect
 {
   private:

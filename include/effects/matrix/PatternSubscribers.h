@@ -182,7 +182,7 @@ class PatternSubscribers : public LEDStripEffect
         return false;
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

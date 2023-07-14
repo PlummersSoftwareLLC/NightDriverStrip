@@ -35,6 +35,7 @@
 #include <cmath>
 #include "effects.h"
 #include "paletteeffect.h"
+#include "soundanalyzer.h"
 
 // Simple definitions of what direction we're talking about
 

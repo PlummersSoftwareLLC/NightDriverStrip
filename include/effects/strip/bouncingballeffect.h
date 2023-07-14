@@ -32,7 +32,7 @@
 
 #include "effects.h"
 
-extern AppTime g_AppTime;
+extern DRAM_ATTR AppTime g_AppTime;
 
 // BouncingBallEffect
 //
@@ -112,7 +112,7 @@ private:
         return 61;
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

@@ -287,7 +287,7 @@ public:
         }
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

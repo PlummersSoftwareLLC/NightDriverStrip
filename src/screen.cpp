@@ -45,11 +45,8 @@ uint32_t g_Watts;
 // Externals - Mostly things that the screen will report or display for us
 //
 
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-
 extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
-extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
 extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
 extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
 extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
@@ -137,18 +134,20 @@ void BasicInfoSummary(bool bRedraw)
 
     // Buffer Status Line 3
 
+    auto& bufferManager = *g_ptrSystem->BufferManagers()[0];
+
     display.setCursor(xMargin + 0, yMargin + lineHeight * 4);
     display.println(str_sprintf("BUFR:%02d/%02d %dfps ",
-                                g_aptrBufferManager[0]->Depth(),
-                                g_aptrBufferManager[0]->BufferCount(),
+                                bufferManager.Depth(),
+                                bufferManager.BufferCount(),
                                 g_FPS));
 
     // Data Status Line 4
 
     display.setCursor(xMargin + 0, yMargin + lineHeight * 2);
     display.println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
-                                min(99.99f, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
-                                min(99.99f, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
+                                min(99.99f, bufferManager.AgeOfOldestBuffer()),
+                                min(99.99f, bufferManager.AgeOfNewestBuffer())));
 
     // Clock info Line 5
     //
@@ -193,7 +192,7 @@ void BasicInfoSummary(bool bRedraw)
         int top = display.height() - lineHeight;
         int height = lineHeight - 3;
         int width = display.width() - xMargin * 2;
-        float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
+        float ratio = (float)bufferManager.Depth() / (float)bufferManager.BufferCount();
         ratio = std::min(1.0f, ratio);
         int filled = (width - 2) * ratio;
 

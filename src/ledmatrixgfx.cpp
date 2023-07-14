@@ -32,9 +32,6 @@
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
 
-extern DRAM_ATTR AppTime g_AppTime; // Keeps track of frame times
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
 #if USE_MATRIX
 
 #include <SmartMatrix.h>
@@ -75,7 +72,7 @@ void LEDMatrixGFX::StartMatrix()
 CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
 {
   for (int i = 0; i < NUM_CHANNELS; i++)
-    g_aptrDevices[i]->UpdatePaletteCycle();
+    g_ptrSystem->Devices()[i]->UpdatePaletteCycle();
 
   return (CRGB *)backgroundLayer.getRealBackBuffer();
 }

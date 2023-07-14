@@ -63,7 +63,6 @@ bool ReadCurrentEffectIndex(size_t& index);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
 // EffectManager
@@ -84,7 +83,7 @@ class EffectManager : public IJSONSerializable
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
 
-    std::shared_ptr<GFXTYPE> * _gfx;
+    std::vector<std::shared_ptr<GFXTYPE>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
 
     void construct(bool clearTempEffect)
@@ -170,7 +169,7 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::vector<std::shared_ptr<GFXTYPE>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
@@ -181,7 +180,7 @@ public:
         construct(false);
     }
 
-    EffectManager(std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(std::vector<std::shared_ptr<GFXTYPE>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
@@ -189,7 +188,7 @@ public:
         LoadDefaultEffects();
     }
 
-    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXTYPE>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
@@ -413,7 +412,7 @@ public:
                     effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
 
-            if (effect->Init(g_aptrDevices))
+            if (effect->Init(_gfx))
             {
                 _tempEffect = effect;
                 StartEffect();

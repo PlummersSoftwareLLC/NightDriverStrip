@@ -39,7 +39,6 @@
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
 #include <secrets.h>
-#include <RemoteDebug.h>
 #include <FastLED.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
@@ -338,7 +337,7 @@ public:
         g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
