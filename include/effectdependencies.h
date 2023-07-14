@@ -80,8 +80,9 @@
     #include "effects/matrix/PatternSMNoise.h"
     #include "effects/matrix/PatternSMFPicasso3in1.h"
     #include "effects/matrix/PatternSMSnakes.h"
-#endif
     #include "effects/matrix/PatternSMParticles.h"
+#endif
+    #include "effects/matrix/PatternSMRainbowSwirl.h"
 #if BOOGER
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
