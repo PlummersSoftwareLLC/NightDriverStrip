@@ -375,22 +375,18 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
             std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
-            //if (!heap_caps_check_integrity_all(true))
-            //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
-
-            for (auto& bufferManager : g_ptrSystem->BufferManagers())
+            for (int iChannel = 0, channelMask = 1; iChannel < g_ptrSystem->BufferManagers().size(); iChannel++, channelMask <<= 1)
             {
-                channelMask <<= 1;
-
                 if ((channelMask & channel16) != 0)
                 {
                     debugV("Processing for Channel %d", iChannel);
 
                     bool bDone = false;
+                    auto& bufferManager = *g_ptrSystem->BufferManagers()[iChannel];
 
-                    if (!bufferManager->IsEmpty())
+                    if (!bufferManager.IsEmpty())
                     {
-                        auto pNewestBuffer = bufferManager->PeekNewestBuffer();
+                        auto pNewestBuffer = bufferManager.PeekNewestBuffer();
                         if (micros != 0 && pNewestBuffer->MicroSeconds() == micros && pNewestBuffer->Seconds() == seconds)
                         {
                             debugV("Updating existing buffer");
@@ -402,7 +398,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                     if (!bDone)
                     {
                         debugV("No match so adding new buffer");
-                        auto pNewBuffer = bufferManager->GetNewBuffer();
+                        auto pNewBuffer = bufferManager.GetNewBuffer();
                         if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                             return false;
                     }
