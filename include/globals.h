@@ -123,8 +123,8 @@
 #define FLASH_VERSION          37    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
-    #ifndef USESTRIP
-        #define USESTRIP 1
+    #ifndef USE_STRIP
+        #define USE_STRIP 1
     #endif
 #endif
 

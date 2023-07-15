@@ -70,7 +70,7 @@ extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
 template <typename GFXTYPE>
-class EffectManager : public IJSONSerializable
+class  EffectManager : public IJSONSerializable
 {
     std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
 
@@ -95,6 +95,7 @@ class EffectManager : public IJSONSerializable
             _clearTempEffectWhenExpired = true;
 
             // This is a hacky way to ensure that we start the correct effect after the temporary one
+            // REVIEW: Explain, I don't get it!
             _iCurrentEffect--;
         }
     }
@@ -441,7 +442,7 @@ public:
         #if USE_MATRIX
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
-            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+//            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
         effect->Start();

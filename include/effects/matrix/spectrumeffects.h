@@ -459,8 +459,6 @@ class WaveformEffect : public LEDStripEffect
         v = std::min(v, 1.0f);
         v = std::max(v, 0.0f);
 
-        auto g = g_ptrEffectManager->g();
-
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
         if (yTop < 0)
@@ -482,10 +480,10 @@ class WaveformEffect : public LEDStripEffect
                 if (y < 2 || y > (MATRIX_HEIGHT - 2))
                     color  = CRGB::Red;
                 else
-                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
+                    color = g()->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
             }
 
-            bErase ? g->setPixel(x, y, color) : g->drawPixel(x, y, color);
+            bErase ? g()->setPixel(x, y, color) : g()->drawPixel(x, y, color);
 
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
@@ -500,10 +498,8 @@ class WaveformEffect : public LEDStripEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
-
         int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
-        g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
+        g()->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         DrawSpike(MATRIX_WIDTH-1, g_Analyzer._VURatio/2.0);
         DrawSpike(0, g_Analyzer._VURatio/2.0);
     }
@@ -566,17 +562,15 @@ class GhostWave : public WaveformEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
-
         int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
 
-        g->MoveOutwardsX(top);
+        g()->MoveOutwardsX(top);
 
         if (_fade)
-            g->DimAll(255-_fade);
+            g()->DimAll(255-_fade);
 
         if (_blur)
-            g->blur2d(g->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, _blur);
+            g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, _blur);
 
         // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 

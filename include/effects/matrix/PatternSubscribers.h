@@ -83,6 +83,12 @@ class PatternSubscribers : public LEDStripEffect
             return;
         }
 
+        if (youtubeChannelGuid.isEmpty())
+        {
+            debugW("No YouTube subscriber guid, so skipping check...");
+            return;
+        }
+
         msLastCheck = millis();
 
         if (!sight || guidUpdated)

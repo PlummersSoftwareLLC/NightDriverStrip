@@ -34,7 +34,6 @@
 #include <atomic>
 #include <ArduinoJson.h>
 #include "jsonbase.h"
-#include "FastLED.h"
 
 struct IJSONSerializable
 {

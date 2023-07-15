@@ -191,6 +191,11 @@ DRAM_ATTR bool g_bUpdateStarted = false;                                        
 DRAM_ATTR AppTime g_AppTime;                                                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 
+#if USE_MATRIX
+    extern int g_MatrixPowerMilliwatts;                                             // Matrix power draw in mw
+    extern uint8_t g_MatrixScaledBrightness;                                        // 0-255 scaled brightness to stay in limit
+#endif
+
 extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;       // The one and only global effect manager
 
 DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                     // The array of GFXBase devices (each strip channel, for example)
@@ -471,7 +476,7 @@ void setup()
 
     // LEDStripGFX is used for simple strips or for matrices woven from strips
 
-    #if USESTRIP
+    #if USE_STRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating LEDStripGFX for channel %d", i);
@@ -545,7 +550,7 @@ void setup()
 
     //g_pDisplay->ScreenStatus("Initializing LED strips");
 
-    #if USESTRIP
+    #if USE_STRIP
 
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
@@ -685,12 +690,12 @@ void loop()
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_FPS);
 
-            #if USESTRIP
+            #if USE_STRIP
                 strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Watts, g_Brite);
             #endif
 
             #if USE_MATRIX
-                strOutput += str_sprintf("Refresh: %d Hz, ", LEDMatrixGFX::matrix.getRefreshRate());
+                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_MatrixPowerMilliwatts, g_MatrixScaledBrightness / 2.55);
             #endif
 
             #if ENABLE_AUDIO

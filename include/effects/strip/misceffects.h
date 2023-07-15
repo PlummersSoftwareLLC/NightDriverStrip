@@ -249,7 +249,7 @@ protected:
     {
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
-        fillSolidOnAllChannels(_color);
+        fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
     }
 };
 
@@ -260,7 +260,7 @@ protected:
 // Displays the NightDriver logo on the screen
 
 extern const uint8_t logo_start[] asm("_binary_assets_bmp_lowreslogo_jpg_start");
-extern const uint8_t logo_end[] asm("_binary_assets_bmp_lowreslogo_jpg_end");
+extern const uint8_t logo_end[]   asm("_binary_assets_bmp_lowreslogo_jpg_end");
 
 class SplashLogoEffect : public LEDStripEffect
 {

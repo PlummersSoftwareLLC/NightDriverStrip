@@ -40,7 +40,6 @@
 #include <ledmatrixgfx.h>
 #include <secrets.h>
 #include <RemoteDebug.h>
-#include <FastLED.h>
 #include <ArduinoJson.h>
 #include "globals.h"
 #include "deviceconfig.h"
@@ -53,24 +52,24 @@
 #define WEATHER_INTERVAL_SECONDS (10*60)
 #define WEATHER_CHECK_WIFI_WAIT 5000
 
-extern const uint8_t brokenclouds_start[] asm("_binary_assets_bmp_brokenclouds_jpg_start");
-extern const uint8_t brokenclouds_end[] asm("_binary_assets_bmp_brokenclouds_jpg_end");
-extern const uint8_t clearsky_start[] asm("_binary_assets_bmp_clearsky_jpg_start");
-extern const uint8_t clearsky_end[] asm("_binary_assets_bmp_clearsky_jpg_end");
-extern const uint8_t fewclouds_start[] asm("_binary_assets_bmp_fewclouds_jpg_start");
-extern const uint8_t fewclouds_end[] asm("_binary_assets_bmp_fewclouds_jpg_end");
-extern const uint8_t mist_start[] asm("_binary_assets_bmp_mist_jpg_start");
-extern const uint8_t mist_end[] asm("_binary_assets_bmp_mist_jpg_end");
-extern const uint8_t rain_start[] asm("_binary_assets_bmp_rain_jpg_start");
-extern const uint8_t rain_end[] asm("_binary_assets_bmp_rain_jpg_end");
+extern const uint8_t brokenclouds_start[]    asm("_binary_assets_bmp_brokenclouds_jpg_start");
+extern const uint8_t brokenclouds_end[]      asm("_binary_assets_bmp_brokenclouds_jpg_end");
+extern const uint8_t clearsky_start[]        asm("_binary_assets_bmp_clearsky_jpg_start");
+extern const uint8_t clearsky_end[]          asm("_binary_assets_bmp_clearsky_jpg_end");
+extern const uint8_t fewclouds_start[]       asm("_binary_assets_bmp_fewclouds_jpg_start");
+extern const uint8_t fewclouds_end[]         asm("_binary_assets_bmp_fewclouds_jpg_end");
+extern const uint8_t mist_start[]            asm("_binary_assets_bmp_mist_jpg_start");
+extern const uint8_t mist_end[]              asm("_binary_assets_bmp_mist_jpg_end");
+extern const uint8_t rain_start[]            asm("_binary_assets_bmp_rain_jpg_start");
+extern const uint8_t rain_end[]              asm("_binary_assets_bmp_rain_jpg_end");
 extern const uint8_t scatteredclouds_start[] asm("_binary_assets_bmp_scatteredclouds_jpg_start");
-extern const uint8_t scatteredclouds_end[] asm("_binary_assets_bmp_scatteredclouds_jpg_end");
-extern const uint8_t showerrain_start[] asm("_binary_assets_bmp_showerrain_jpg_start");
-extern const uint8_t showerrain_end[] asm("_binary_assets_bmp_showerrain_jpg_end");
-extern const uint8_t snow_start[] asm("_binary_assets_bmp_snow_jpg_start");
-extern const uint8_t snow_end[] asm("_binary_assets_bmp_snow_jpg_end");
-extern const uint8_t thunderstorm_start[] asm("_binary_assets_bmp_thunderstorm_jpg_start");
-extern const uint8_t thunderstorm_end[] asm("_binary_assets_bmp_thunderstorm_jpg_end");
+extern const uint8_t scatteredclouds_end[]   asm("_binary_assets_bmp_scatteredclouds_jpg_end");
+extern const uint8_t showerrain_start[]      asm("_binary_assets_bmp_showerrain_jpg_start");
+extern const uint8_t showerrain_end[]        asm("_binary_assets_bmp_showerrain_jpg_end");
+extern const uint8_t snow_start[]            asm("_binary_assets_bmp_snow_jpg_start");
+extern const uint8_t snow_end[]              asm("_binary_assets_bmp_snow_jpg_end");
+extern const uint8_t thunderstorm_start[]    asm("_binary_assets_bmp_thunderstorm_jpg_start");
+extern const uint8_t thunderstorm_end[]      asm("_binary_assets_bmp_thunderstorm_jpg_end");
 
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
