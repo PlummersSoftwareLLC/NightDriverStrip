@@ -149,7 +149,7 @@ public:
 class MeteorEffect : public LEDStripEffect
 {
   private:
-    std::vector<std::reference_wrapper<MeteorChannel>> _Meteors;
+    std::vector<MeteorChannel> _Meteors;
 
     int                        _cMeteors;
     uint8_t                    _meteorSize;
@@ -206,7 +206,7 @@ class MeteorEffect : public LEDStripEffect
         {
             MeteorChannel channel;
             channel.Init(device, _cMeteors, _meteorSize, _meteorTrailDecay, _meteorSpeedMin, _meteorSpeedMax);
-            _Meteors.emplace_back(channel);
+            _Meteors.push_back(channel);
         }
 
         return true;
@@ -215,6 +215,6 @@ class MeteorEffect : public LEDStripEffect
     virtual void Draw() override
     {
         for (int i = 0; i < _Meteors.size(); i++)
-            _Meteors[i].get().Draw(_GFX[i]);
+            _Meteors[i].Draw(_GFX[i]);
     }
 };
