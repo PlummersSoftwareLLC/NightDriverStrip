@@ -130,5 +130,3 @@ class EffectFactories
       defaultFactories.clear();
     }
 };
-
-extern DRAM_ATTR EffectFactories g_EffectFactories;

@@ -66,7 +66,7 @@
 #ifndef PatternPongClock_H
 #define PatternPongClock_H
 
-#include "deviceconfig.h"
+#include "systemcontainer.h"
 
 #define BAT1_X 2 // Pong left bat x pos (this is where the ball collision occurs, the bat is drawn 1 behind these coords)
 #define BAT2_X (MATRIX_WIDTH - 4)
@@ -118,7 +118,7 @@ class PatternPongClock : public LEDStripEffect
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
 
-        bool ampm = !g_ptrDeviceConfig->Use24HourClock();
+        bool ampm = !g_ptrSystem->DeviceConfig().Use24HourClock();
 
         // update score / time
         mins = local_time->tm_min;
@@ -131,23 +131,21 @@ class PatternPongClock : public LEDStripEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
-
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
 
-        g->Clear();
+        g()->Clear();
 
         // draw pitch centre line
         for (uint16_t i = 0; i < MATRIX_WIDTH / 2; i += 2)
-            g->setPixel(MATRIX_WIDTH / 2, i, 0x6666);
+            g()->setPixel(MATRIX_WIDTH / 2, i, 0x6666);
 
         // draw hh:mm separator colon that blinks once per second
 
         if (local_time->tm_sec % 2 == 0)
         {
-            g->setPixel(MATRIX_WIDTH / 2, 4, RED16);
-            g->setPixel(MATRIX_WIDTH / 2, 6, RED16);
+            g()->setPixel(MATRIX_WIDTH / 2, 4, RED16);
+            g()->setPixel(MATRIX_WIDTH / 2, 6, RED16);
         }
 
         LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
@@ -460,8 +458,8 @@ class PatternPongClock : public LEDStripEffect
         uint8_t plot_x = (int)(ballpos_x + 0.5f);
         uint8_t plot_y = (int)(ballpos_y + 0.5f);
 
-        if (g->isValidPixel(plot_x, plot_y))
-            g->setPixel(plot_x, plot_y, WHITE16);
+        if (g()->isValidPixel(plot_x, plot_y))
+            g()->setPixel(plot_x, plot_y, WHITE16);
 
         // check if a bat missed the ball. if it did, reset the game.
         if (ballpos_x < 0 || ballpos_x > MATRIX_WIDTH)
@@ -469,7 +467,7 @@ class PatternPongClock : public LEDStripEffect
             restart = 1;
 
             // update score / time
-            bool ampm = !g_ptrDeviceConfig->Use24HourClock();
+            bool ampm = !g_ptrSystem->DeviceConfig().Use24HourClock();
 
             mins = local_time->tm_min;
             hours = local_time->tm_hour;

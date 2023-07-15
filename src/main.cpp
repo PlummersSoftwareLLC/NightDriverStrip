@@ -159,16 +159,14 @@
 
 #include "globals.h"
 #include "deviceconfig.h"
+#include "systemcontainer.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 extern volatile double g_FreeDrawTime;
 extern uint32_t g_Watts;
 extern float g_Brite;
 
-//
-// Task Handles to our running threads
-//
-NightDriverTaskManager g_TaskManager;
+DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
@@ -228,18 +226,6 @@ extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANN
 //
 // Optional Components
 //
-
-#if ENABLE_WIFI && ENABLE_WEBSERVER
-    DRAM_ATTR CWebServer g_WebServer;
-#endif
-
-#if INCOMING_WIFI_ENABLED
-    DRAM_ATTR SocketServer g_SocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
-#endif
-
-#if ENABLE_REMOTE
-    DRAM_ATTR RemoteControl g_RemoteControl;
-#endif
 
 #if ENABLE_WIFI && ENABLE_NTP
 void UpdateNTPTime();
@@ -346,8 +332,11 @@ void setup()
 
     uzlib_init();
 
+    // Create the SystemContainer that holds primary device management objects.
+    g_ptrSystem = std::make_unique<SystemContainer>();
+
     // Start the Task Manager which takes over the watchdog role and measures CPU usage
-    g_TaskManager.begin();
+    auto& taskManager = g_ptrSystem->SetupTaskManager();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
@@ -357,7 +346,7 @@ void setup()
 
     // Start Debug
     debugI("Starting DebugLoopTaskEntry");
-    g_TaskManager.StartDebugThread();
+    taskManager.StartDebugThread();
     CheckHeap();
 
     // Initialize Non-Volatile Storage
@@ -370,12 +359,8 @@ void setup()
     }
     ESP_ERROR_CHECK(err);
 
-    // Create the JSON writer and start its background thread
-    g_ptrJSONWriter = std::make_unique<JSONWriter>();
-    g_TaskManager.StartJSONWriterThread();
-
-    // Create and load device config from SPIFFS if possible
-    g_ptrDeviceConfig = std::make_unique<DeviceConfig>();
+    // Setup config objects
+    g_ptrSystem->SetupConfig();
 
 #if ENABLE_WIFI
 
@@ -402,13 +387,22 @@ void setup()
     // We create the network reader here, so classes can register their readers from this point onwards.
     //   Note that the thread that executes the readers is started further down, along with other networking
     //   threads.
-    g_ptrNetworkReader = std::make_unique<NetworkReader>();
+    g_ptrSystem->SetupNetworkReader();
+#endif
+
+#if INCOMING_WIFI_ENABLED
+    g_ptrSystem->SetupSocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
+#endif
+
+#if ENABLE_WIFI && ENABLE_WEBSERVER
+    g_ptrSystem->SetupWebServer();
 #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 
     #if ENABLE_REMOTE
         pinMode(IR_REMOTE_PIN, INPUT);
+        g_ptrSystem->SetupRemoteControl();
     #endif
 
     #if ENABLE_AUDIO
@@ -439,19 +433,19 @@ void setup()
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
         Serial.println("Creating TFT Screen");
-        g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
+        g_ptrSystem->SetupDisplay<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif USE_LCD
 
         Serial.println("Creating LCD Screen");
-        g_pDisplay = std::make_unique<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
+        g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
 
         #if USE_M5DISPLAY
             M5.begin();
             Serial.println("Creating M5 Screen");
-            g_pDisplay = std::make_unique<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
+            g_ptrSystem->SetupDisplay<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
         #else
             M5.begin(false);
         #endif
@@ -460,10 +454,10 @@ void setup()
 
         #if USE_SSD1306
             Serial.println("Creating SSD1306 Screen");
-            g_pDisplay = std::make_unique<SSD1306Screen>(128, 64);
+            g_ptrSystem->SetupDisplay<SSD1306Screen>(128, 64);
         #else
         Serial.println("Creating OLED Screen");
-            g_pDisplay = std::make_unique<OLEDScreen>(128, 64);
+            g_ptrSystem->SetupDisplay<OLEDScreen>(128, 64);
         #endif
 
     #endif
@@ -528,6 +522,7 @@ void setup()
     }
 
     debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
+
 
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
@@ -621,15 +616,12 @@ void setup()
         InitSplashEffectManager();
     #endif
 
-    // Connect to Wifi and wait for it if so requested
-
-
     InitEffectsManager();
 
-    g_TaskManager.StartDrawThread();
-    g_TaskManager.StartScreenThread();
-    g_TaskManager.StartAudioThread();
-    g_TaskManager.StartRemoteThread();
+    taskManager.StartDrawThread();
+    taskManager.StartScreenThread();
+    taskManager.StartAudioThread();
+    taskManager.StartRemoteThread();
 
     #if ENABLE_WIFI && WAIT_FOR_WIFI
         debugI("Calling ConnectToWifi()\n");
@@ -643,10 +635,10 @@ void setup()
 
     // Start the services
 
-    g_TaskManager.StartSerialThread();
-    g_TaskManager.StartNetworkThread();
-    g_TaskManager.StartColorDataThread();
-    g_TaskManager.StartSocketThread();
+    taskManager.StartSerialThread();
+    taskManager.StartNetworkThread();
+    taskManager.StartColorDataThread();
+    taskManager.StartSocketThread();
 
     SaveEffectManagerConfig();
 }
@@ -687,7 +679,7 @@ void loop()
                 strOutput += str_sprintf("WiFi: %s, IP: %s, ", WLtoString(WiFi.status()), WiFi.localIP().toString().c_str());
             #endif
 
-            strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
+            strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_FPS);
 
             #if USE_STRIP
@@ -710,7 +702,8 @@ void loop()
                 strOutput += str_sprintf("Buffer: %d/%d, ", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount());
             #endif
 
-            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            auto& taskManager = g_ptrSystem->TaskManager();
+            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
 
             Serial.println(strOutput);
         }

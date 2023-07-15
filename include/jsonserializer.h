@@ -170,4 +170,3 @@ class JSONWriter
     void FlushWrites(bool halt = false);
 };
 
-extern DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter;

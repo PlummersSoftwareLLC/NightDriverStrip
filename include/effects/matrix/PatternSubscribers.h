@@ -33,13 +33,12 @@
 #define PatternSub_H
 
 #include <UrlEncode.h>
-#include "deviceconfig.h"
-#include "YouTubeSight.h"
+#include "systemcontainer.h"
 
 // Update subscribers every 30 minutes, retry after 30 seconds on error, and check other things every 5 seconds
 #define SUB_CHECK_INTERVAL          (30 * 60000)
 #define SUB_CHECK_ERROR_INTERVAL    30000
-#define SIGHT_READER_INTERVAL       5000
+#define SUB_READER_INTERVAL         5000
 
 #define DEFAULT_CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
 #define DEFAULT_CHANNEL_NAME "Daves Garage"
@@ -48,7 +47,6 @@ class PatternSubscribers : public LEDStripEffect
 {
   private:
     long subscribers                        = 0;
-    long views                              = 0;
     String youtubeChannelGuid               = DEFAULT_CHANNEL_GUID;
     String youtubeChannelName               = DEFAULT_CHANNEL_NAME;
     bool guidUpdated                        = true;
@@ -60,10 +58,7 @@ class PatternSubscribers : public LEDStripEffect
 
     time_t latestUpdate                     = 0;
 
-    WiFiClient http;
-    std::unique_ptr<YouTubeSight> sight = nullptr;
-
-    void SightReader()
+    void SubscriberReader()
     {
         unsigned long msSinceLastCheck = millis() - msLastCheck;
 
@@ -91,26 +86,42 @@ class PatternSubscribers : public LEDStripEffect
 
         msLastCheck = millis();
 
-        if (!sight || guidUpdated)
-        {
-            sight = std::make_unique<YouTubeSight>(urlEncode(youtubeChannelGuid), http);
+        if (guidUpdated)
             succeededBefore = false;
-        }
 
         guidUpdated = false;
 
-        // Use the YouTubeSight API call to get the current channel stats
-        if (sight->getData())
+        HTTPClient http;
+
+        http.begin("http://tools.tastethecode.com/api/youtube-sight/" + youtubeChannelGuid);
+        int httpResponseCode = http.GET();
+
+        if (httpResponseCode <= 0)
         {
-            debugI("Got YouTube subscriber data");
-            subscribers = atol(sight->channelStats.subscribers_count.c_str());
-            views       = atol(sight->channelStats.views.c_str());
-            succeededBefore = true;
+            debugW("Error fetching subscribers for channel %s (GUID %s)", youtubeChannelName.c_str(), youtubeChannelGuid.c_str());
+            http.end();
         }
-        else
+
+        String response = http.getString();
+        int commaIndex = -1;
+        int startIndex;
+
+        for (int i = 0; i < 4; i++)
         {
-            debugW("YouTubeSight Subscriber API failed\n");
+            startIndex = commaIndex + 1;
+            commaIndex = response.indexOf(',', startIndex);
+            if (commaIndex < 0)
+            {
+                debugW("Malformed response while fetching subscribers for channel %s (GUID %s)", youtubeChannelName.c_str(), youtubeChannelGuid.c_str());
+                return;
+            }
         }
+
+        subscribers = response.substring(startIndex, commaIndex).toInt();
+
+        debugI("Got YouTube subscriber count for channel %s (GUID %s)", youtubeChannelName.c_str(), youtubeChannelGuid.c_str());
+
+        succeededBefore = true;
     }
 
   protected:
@@ -156,7 +167,7 @@ class PatternSubscribers : public LEDStripEffect
 
     ~PatternSubscribers()
     {
-        g_ptrNetworkReader->CancelReader(readerIndex);
+        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
@@ -182,7 +193,7 @@ class PatternSubscribers : public LEDStripEffect
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        readerIndex = g_ptrNetworkReader->RegisterReader([this]() { SightReader(); }, SIGHT_READER_INTERVAL, true);
+        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this]() { SubscriberReader(); }, SUB_READER_INTERVAL, true);
 
         return true;
     }

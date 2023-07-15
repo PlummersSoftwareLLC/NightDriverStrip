@@ -41,9 +41,7 @@
 #include <secrets.h>
 #include <RemoteDebug.h>
 #include <ArduinoJson.h>
-#include "globals.h"
-#include "deviceconfig.h"
-#include "jsonserializer.h"
+#include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
 #include <thread>
 #include <map>
@@ -139,7 +137,7 @@ private:
 
     inline float KelvinToLocal(float K)
     {
-        if (g_ptrDeviceConfig->UseCelsius())
+        if (g_ptrSystem->DeviceConfig().UseCelsius())
             return KelvinToCelsius(K);
         else
             return KelvinToFarenheit(K);
@@ -153,16 +151,16 @@ private:
         if (!HasLocationChanged())
             return false;
 
-        const String& configLocation = g_ptrDeviceConfig->GetLocation();
-        const String& configCountryCode = g_ptrDeviceConfig->GetCountryCode();
-        const bool configLocationIsZip = g_ptrDeviceConfig->IsLocationZip();
+        const String& configLocation = g_ptrSystem->DeviceConfig().GetLocation();
+        const String& configCountryCode = g_ptrSystem->DeviceConfig().GetCountryCode();
+        const bool configLocationIsZip = g_ptrSystem->DeviceConfig().IsLocationZip();
 
         if (configLocationIsZip)
             url = "http://api.openweathermap.org/geo/1.0/zip"
-                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         else
             url = "http://api.openweathermap.org/geo/1.0/direct"
-                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
 
         http.begin(url);
         int httpResponseCode = http.GET();
@@ -197,7 +195,7 @@ private:
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -256,7 +254,7 @@ private:
         HTTPClient http;
 
         String url = "http://api.openweathermap.org/data/2.5/weather"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -318,8 +316,8 @@ private:
 
     bool HasLocationChanged()
     {
-        String configLocation = g_ptrDeviceConfig->GetLocation();
-        String configCountryCode = g_ptrDeviceConfig->GetCountryCode();
+        String configLocation = g_ptrSystem->DeviceConfig().GetLocation();
+        String configCountryCode =g_ptrSystem->DeviceConfig().GetCountryCode();
 
         return strLocation != configLocation || strCountryCode != configCountryCode;
     }
@@ -336,7 +334,7 @@ public:
 
     ~PatternWeather()
     {
-        g_ptrNetworkReader->CancelReader(readerIndex);
+        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
     virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
@@ -344,7 +342,7 @@ public:
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        readerIndex = g_ptrNetworkReader->RegisterReader([this]() { UpdateWeather(); });
+        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this]() { UpdateWeather(); });
 
         return true;
     }
@@ -373,7 +371,7 @@ public:
 
             debugW("Triggering thread to check weather now...");
             // Trigger the weather reader.
-            g_ptrNetworkReader->FlagReader(readerIndex);
+            g_ptrSystem->NetworkReader().FlagReader(readerIndex);
         }
 
         // Draw the graphics
@@ -401,7 +399,7 @@ public:
         g()->setTextColor(WHITE16);
         String showLocation = strLocation;
         showLocation.toUpperCase();
-        if (g_ptrDeviceConfig->GetOpenWeatherAPIKey().isEmpty())
+        if (g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
             g()->print("No API Key");
         else
             g()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));

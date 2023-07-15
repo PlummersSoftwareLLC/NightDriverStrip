@@ -2,7 +2,7 @@
 //
 // File:        RemoteControl.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -45,85 +45,85 @@ extern DRAM_ATTR uint8_t g_Fader;
 void IRAM_ATTR RemoteLoopEntry(void *);
 
 #if key24
-#define IR_BPLUS  0xF700FF  // 
-#define IR_BMINUS 0xF7807F  // 
-#define IR_OFF    0xF740BF  // 
-#define IR_ON     0xF7C03F  // 
-#define IR_R      0xF720DF  // 
-#define IR_G      0xF7A05F  // 
-#define IR_B      0xF7609F  // 
-#define IR_W      0xF7E01F  // 
-#define IR_B1     0xF710EF  // 
-#define IR_B2     0xF7906F  // 
-#define IR_B3     0xF750AF  // 
-#define IR_FLASH  0xF7D02F  // 
-#define IR_B4     0xF730CF  // 
-#define IR_B5     0xF7B04F  // 
-#define IR_B6     0xF7708F  // 
-#define IR_STROBE 0xF7F00F  // 
-#define IR_B7     0xF708F7  // 
-#define IR_B8     0xF78877  // 
-#define IR_B9     0xF748B7  // 
-#define IR_FADE   0xF7C837  // 
-#define IR_B10    0xF728D7  // 
-#define IR_B11    0xF7A857  // 
-#define IR_B12    0xF76897  // 
-#define IR_SMOOTH 0xF7E817  // 
+#define IR_BPLUS  0xF700FF  //
+#define IR_BMINUS 0xF7807F  //
+#define IR_OFF    0xF740BF  //
+#define IR_ON     0xF7C03F  //
+#define IR_R      0xF720DF  //
+#define IR_G      0xF7A05F  //
+#define IR_B      0xF7609F  //
+#define IR_W      0xF7E01F  //
+#define IR_B1     0xF710EF  //
+#define IR_B2     0xF7906F  //
+#define IR_B3     0xF750AF  //
+#define IR_FLASH  0xF7D02F  //
+#define IR_B4     0xF730CF  //
+#define IR_B5     0xF7B04F  //
+#define IR_B6     0xF7708F  //
+#define IR_STROBE 0xF7F00F  //
+#define IR_B7     0xF708F7  //
+#define IR_B8     0xF78877  //
+#define IR_B9     0xF748B7  //
+#define IR_FADE   0xF7C837  //
+#define IR_B10    0xF728D7  //
+#define IR_B11    0xF7A857  //
+#define IR_B12    0xF76897  //
+#define IR_SMOOTH 0xF7E817  //
 #endif
 
 #if key44
-#define IR_BPlus  0xFF3AC5  // 
-#define IR_BMinus 0xFFBA45  // 
-#define IR_ON     0xFF827D  // 
-#define IR_OFF    0xFF02FD  // 
-#define IR_R      0xFF1AE5  // 
-#define IR_G      0xFF9A65  // 
-#define IR_B      0xFFA25D  // 
-#define IR_W      0xFF22DD  // 
-#define IR_B1     0xFF2AD5  // 
-#define IR_B2     0xFFAA55  // 
-#define IR_B3     0xFF926D  // 
-#define IR_B4     0xFF12ED  // 
-#define IR_B5     0xFF0AF5  // 
-#define IR_B6     0xFF8A75  // 
-#define IR_B7     0xFFB24D  // 
-#define IR_B8     0xFF32CD  // 
-#define IR_B9     0xFF38C7  // 
-#define IR_B10    0xFFB847  // 
-#define IR_B11    0xFF7887  // 
-#define IR_B12    0xFFF807  // 
-#define IR_B13    0xFF18E7  // 
-#define IR_B14    0xFF9867  // 
-#define IR_B15    0xFF58A7  // 
-#define IR_B16    0xFFD827  // 
-#define IR_UPR    0xFF28D7  // 
-#define IR_UPG    0xFFA857  // 
-#define IR_UPB    0xFF6897  // 
-#define IR_QUICK  0xFFE817  // 
-#define IR_DOWNR  0xFF08F7  // 
-#define IR_DOWNG  0xFF8877  // 
-#define IR_DOWNB  0xFF48B7  // 
-#define IR_SLOW   0xFFC837  // 
-#define IR_DIY1   0xFF30CF  // 
-#define IR_DIY2   0xFFB04F  // 
-#define IR_DIY3   0xFF708F  // 
-#define IR_AUTO   0xFFF00F  // 
-#define IR_DIY4   0xFF10EF  // 
-#define IR_DIY5   0xFF906F  // 
-#define IR_DIY6   0xFF50AF  // 
-#define IR_FLASH  0xFFD02F  // 
-#define IR_JUMP3  0xFF20DF  // 
-#define IR_JUMP7  0xFFA05F  // 
-#define IR_FADE3  0xFF609F  // 
-#define IR_FADE7  0xFFE01F  // 
+#define IR_BPlus  0xFF3AC5  //
+#define IR_BMinus 0xFFBA45  //
+#define IR_ON     0xFF827D  //
+#define IR_OFF    0xFF02FD  //
+#define IR_R      0xFF1AE5  //
+#define IR_G      0xFF9A65  //
+#define IR_B      0xFFA25D  //
+#define IR_W      0xFF22DD  //
+#define IR_B1     0xFF2AD5  //
+#define IR_B2     0xFFAA55  //
+#define IR_B3     0xFF926D  //
+#define IR_B4     0xFF12ED  //
+#define IR_B5     0xFF0AF5  //
+#define IR_B6     0xFF8A75  //
+#define IR_B7     0xFFB24D  //
+#define IR_B8     0xFF32CD  //
+#define IR_B9     0xFF38C7  //
+#define IR_B10    0xFFB847  //
+#define IR_B11    0xFF7887  //
+#define IR_B12    0xFFF807  //
+#define IR_B13    0xFF18E7  //
+#define IR_B14    0xFF9867  //
+#define IR_B15    0xFF58A7  //
+#define IR_B16    0xFFD827  //
+#define IR_UPR    0xFF28D7  //
+#define IR_UPG    0xFFA857  //
+#define IR_UPB    0xFF6897  //
+#define IR_QUICK  0xFFE817  //
+#define IR_DOWNR  0xFF08F7  //
+#define IR_DOWNG  0xFF8877  //
+#define IR_DOWNB  0xFF48B7  //
+#define IR_SLOW   0xFFC837  //
+#define IR_DIY1   0xFF30CF  //
+#define IR_DIY2   0xFFB04F  //
+#define IR_DIY3   0xFF708F  //
+#define IR_AUTO   0xFFF00F  //
+#define IR_DIY4   0xFF10EF  //
+#define IR_DIY5   0xFF906F  //
+#define IR_DIY6   0xFF50AF  //
+#define IR_FLASH  0xFFD02F  //
+#define IR_JUMP3  0xFF20DF  //
+#define IR_JUMP7  0xFFA05F  //
+#define IR_FADE3  0xFF609F  //
+#define IR_FADE7  0xFFE01F  //
 #endif
 
-const static struct 
+const static struct
 {
     uint    code;
     CRGB    color;
     uint8_t hue;
-} 
+}
 RemoteColorCodes[] =
 {
     { IR_OFF, CRGB(000, 000, 000), 0    },
@@ -136,11 +136,11 @@ RemoteColorCodes[] =
     { IR_B1,  CRGB(255,  64, 000), 16   },
     { IR_B2,  CRGB(000, 255,  64), 112  },
     { IR_B3,  CRGB( 64, 000, 255), 176  },
-    
+
     { IR_B4,  CRGB(255, 128, 000), 32   },
     { IR_B5,  CRGB(000, 255, 128), 128  },
     { IR_B6,  CRGB(128, 000, 255), 192  },
-    
+
     { IR_B7,  CRGB(255, 192, 000), 48   },
     { IR_B8,  CRGB(000, 255, 192), 112  },
     { IR_B9,  CRGB(192, 000, 255), 208  },
@@ -171,84 +171,10 @@ class RemoteControl
     void end()
     {
         debugW("Remote Control Decoding Stopped");
-        _IR_Receive.disableIRIn(); 
+        _IR_Receive.disableIRIn();
     }
 
-    void handle()
-    {
-        decode_results results;
-        static uint lastResult = 0;
-
-        if (!_IR_Receive.decode(&results))
-            return;
-
-        uint result = results.value;
-        _IR_Receive.resume();
-
-        debugW("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
-
-        if (0xFFFFFFFF == result)
-        {
-            debugV("Remote Repeat; lastResult == %08x\n", lastResult);
-            result = lastResult;
-        }
-
-        if (IR_ON == result)
-        {
-            debugV("Turning ON via remote");
-            g_ptrEffectManager->ClearRemoteColor();
-            g_ptrEffectManager->SetInterval(0);
-            g_ptrEffectManager->StartEffect();
-            g_Brightness = 255;
-            return;
-        }
-        else if (IR_OFF == result)
-        {
-            g_Brightness = std::max(MIN_BRIGHTNESS, (int) g_Brightness - BRIGHTNESS_STEP);
-            return;
-        }
-        else if (IR_BPLUS == result)
-        {
-            g_ptrEffectManager->ClearRemoteColor();
-            g_ptrEffectManager->NextEffect();
-            return;
-        }
-        else if (IR_BMINUS == result)
-        {
-            g_ptrEffectManager->ClearRemoteColor();
-            g_ptrEffectManager->PreviousEffect();
-            return;
-        }
-        else if (IR_SMOOTH == result)
-        {
-            g_ptrEffectManager->ClearRemoteColor();
-            g_ptrEffectManager->SetInterval(EffectManager<GFXBase>::csSmoothButtonSpeed);
-        }
-        else if (IR_STROBE == result)
-        {
-            g_ptrEffectManager->NextPalette();
-        }
-        else if (IR_FLASH == result)
-        {
-            g_ptrEffectManager->PreviousPalette();
-        }
-        else if (IR_FADE == result)
-        {
-            g_ptrEffectManager->ShowVU( !g_ptrEffectManager->IsVUVisible() );
-        }
-
-        for (int i = 0; i < ARRAYSIZE(RemoteColorCodes); i++)
-        {
-            if (RemoteColorCodes[i].code == result)
-            {
-                debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
-                g_ptrEffectManager->SetGlobalColor(RemoteColorCodes[i].color);
-                return;
-            }
-        }
-    }
+    void handle();
 };
-
-extern RemoteControl g_RemoteControl;
 
 #endif
