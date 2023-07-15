@@ -208,7 +208,7 @@
 // Drawing must be on Core 1 if using SmartMatrix unless you specify SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1
 
 #define DRAWING_CORE            1
-#define NET_CORE                0
+#define NET_CORE                1
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        1
 #define SCREEN_CORE             0
