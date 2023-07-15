@@ -132,7 +132,7 @@ class SystemContainer
             uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
         #endif
 
-        uint32_t memtoalloc = (NUM_CHANNELS * ((sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB))));
+        uint32_t memtoalloc = (SC_MEMBER(Devices)->size() * ((sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB))));
         uint32_t cBuffers = memtouse / memtoalloc;
 
         if (cBuffers < MIN_BUFFERS)

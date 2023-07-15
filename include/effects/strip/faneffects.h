@@ -158,7 +158,7 @@ inline void ClearFanPixels(float fPos, float count, PixelOrder order = Sequentia
   fPos += iFan * FAN_SIZE;
   while (count > 0)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
       FastLED[i][GetFanPixelOrder(fPos + (int)count, order)] = CRGB::Black;
     count--;
   }
@@ -251,7 +251,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
 
   if (remaining > 0.0f && amtFirstPixel > 0.0f && iPos < NUM_LEDS)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       auto index = GetFanPixelOrder(iPos, order);
       CRGB newColor = LEDStripEffect::ColorFraction(color, amtFirstPixel);
@@ -267,7 +267,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
 
   while (remaining > 1.0f && iPos < NUM_LEDS)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
       FastLED[i][GetFanPixelOrder(iPos, order)] += color;
     iPos++;
     remaining--;
@@ -277,7 +277,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
 
   if (remaining > 0.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
       FastLED[i][GetFanPixelOrder(iPos, order)] += LEDStripEffect::ColorFraction(color, remaining);
     iPos++;
   }
@@ -319,7 +319,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
   iPos %= GetRingSize(iRing);
   if (remaining > 0.0f && amtFirstPixel > 0.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
@@ -332,7 +332,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
 
   while (remaining > 1.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       iPos %= GetRingSize(iRing);
       if (!bMerge)
@@ -347,7 +347,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
   iPos %= GetRingSize(iRing);
   if (remaining > 0.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
@@ -1110,7 +1110,7 @@ public:
       // for (int iCell = 0; iCell < CellsPerLED; iCell++)
       //   maxv = max(maxv, heat[i * CellsPerLED + iCell]);
 
-      for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
+      for (int iChannel = 0; iChannel < FastLED.count(); iChannel++)
       {
         CRGB color = GetBlackBodyHeatColor(abHeat[i * CellsPerLED]);
 

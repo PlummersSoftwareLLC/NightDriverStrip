@@ -113,7 +113,7 @@ void BasicInfoSummary(bool bRedraw)
     #endif
 
     display.setCursor(xMargin, yMargin);
-    display.println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
+    display.println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
 
     // WiFi info line 2
 

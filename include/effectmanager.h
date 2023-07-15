@@ -353,6 +353,11 @@ public:
         return _gfx[index];
     }
 
+    size_t gCount()
+    {
+        return _gfx.size();
+    }
+
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
     inline std::shared_ptr<GFXTYPE> g() const
     {

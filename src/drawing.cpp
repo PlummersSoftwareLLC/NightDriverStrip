@@ -152,22 +152,20 @@ uint16_t WiFiDraw()
     std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
     uint16_t pixelsDrawn = 0;
-    for (int iChannel = 0; iChannel < g_ptrSystem->BufferManagers().size(); iChannel++)
+    for (auto& bufferManager : g_ptrSystem->BufferManagers())
     {
 
         timeval tv;
         gettimeofday(&tv, nullptr);
 
-        auto& bufferManager = *g_ptrSystem->BufferManagers()[iChannel];
-
         // Pull buffers out of the queue.
 
-        if (false == bufferManager.IsEmpty())
+        if (false == bufferManager->IsEmpty())
         {
             std::shared_ptr<LEDBuffer> pBuffer;
             if (NTPTimeClient::HasClockBeenSet() == false)
             {
-                pBuffer = bufferManager.GetOldestBuffer();
+                pBuffer = bufferManager->GetOldestBuffer();
             }
             else
             {
@@ -175,8 +173,8 @@ uint16_t WiFiDraw()
                 // written as 'while' it will pull frames until it gets one that is current.
                 // Chew through ALL frames older than now, ignoring all but the last of them
 
-                while (!bufferManager.IsEmpty() && bufferManager.PeekOldestBuffer()->IsBufferOlderThan(tv))
-                    pBuffer = bufferManager.GetOldestBuffer();
+                while (!bufferManager->IsEmpty() && bufferManager->PeekOldestBuffer()->IsBufferOlderThan(tv))
+                    pBuffer = bufferManager->GetOldestBuffer();
             }
 
             if (pBuffer)
@@ -262,14 +260,14 @@ void ShowStrip(uint16_t numToShow)
 
             auto& effectManager = g_ptrSystem->EffectManager();
 
-            for (int i = 0; i < NUM_CHANNELS; i++)
+            for (int i = 0; i < effectManager.gCount(); i++)
                 FastLED[i].setLeds(effectManager[i]->leds, numToShow);
 
             FastLED.show(g_Fader);
 
             g_FPS = FastLED.getFPS();
             g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
-            g_Watts = calculate_unscaled_power_mW(effectManager[0]->leds, numToShow) / 1000; // 1000 for mw->W
+            g_Watts = calculate_unscaled_power_mW(effectManager.g()->leds, numToShow) / 1000; // 1000 for mw->W
         }
         else
         {
@@ -300,9 +298,9 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         // Sleep up to 1/25th second, depending on how far away the next frame we need to service is
 
         double t = 0.04;
-        for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
+        for (auto& bufferManager : g_ptrSystem->BufferManagers())
         {
-            auto pOldest = g_ptrSystem->BufferManagers()[iChannel]->PeekOldestBuffer();
+            auto pOldest = bufferManager->PeekOldestBuffer();
             if (pOldest)
                 t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
         }

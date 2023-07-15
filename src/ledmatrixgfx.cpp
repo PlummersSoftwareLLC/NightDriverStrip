@@ -71,8 +71,8 @@ void LEDMatrixGFX::StartMatrix()
 
 CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
 {
-  for (int i = 0; i < NUM_CHANNELS; i++)
-    g_ptrSystem->Devices()[i]->UpdatePaletteCycle();
+  for (auto& device : g_ptrSystem->Devices())
+    device->UpdatePaletteCycle();
 
   return (CRGB *)backgroundLayer.getRealBackBuffer();
 }

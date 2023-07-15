@@ -65,7 +65,7 @@ extern uint32_t g_FPS;
             auto& bufferManager = *g_ptrSystem->BufferManagers()[0];
 
             debugA("Displaying statistics....");
-            debugA("%s:%dx%d %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugA("%s:%dx%d %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
             debugA("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
             debugA("BUFR:%02d/%02d [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_FPS);
             debugA("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
@@ -378,18 +378,19 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
             //if (!heap_caps_check_integrity_all(true))
             //    debugW("### Corrupt heap detected in WIFI_COMMAND_PIXELDATA64");
 
-            for (int iChannel = 0, channelMask = 1; iChannel < NUM_CHANNELS; iChannel++, channelMask <<= 1)
+            for (auto& bufferManager : g_ptrSystem->BufferManagers())
             {
+                channelMask <<= 1;
+
                 if ((channelMask & channel16) != 0)
                 {
                     debugV("Processing for Channel %d", iChannel);
 
                     bool bDone = false;
-                    auto& bufferManager = *g_ptrSystem->BufferManagers()[iChannel];
 
-                    if (!bufferManager.IsEmpty())
+                    if (!bufferManager->IsEmpty())
                     {
-                        auto pNewestBuffer = bufferManager.PeekNewestBuffer();
+                        auto pNewestBuffer = bufferManager->PeekNewestBuffer();
                         if (micros != 0 && pNewestBuffer->MicroSeconds() == micros && pNewestBuffer->Seconds() == seconds)
                         {
                             debugV("Updating existing buffer");
@@ -401,7 +402,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                     if (!bDone)
                     {
                         debugV("No match so adding new buffer");
-                        auto pNewBuffer = bufferManager.GetNewBuffer();
+                        auto pNewBuffer = bufferManager->GetNewBuffer();
                         if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                             return false;
                     }

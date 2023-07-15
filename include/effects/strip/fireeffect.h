@@ -414,9 +414,6 @@ public:
         {
             setPixelHeatColor(j, heat[j]);
         }
-
-        //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-        //    blur1d(_GFX[channel]->leds(), _cLEDs, 255);
     }
 
     void setPixelWithMirror(int Pixel, CRGB temperature)

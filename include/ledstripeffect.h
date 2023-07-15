@@ -338,11 +338,10 @@ class LEDStripEffect : public IJSONSerializable
             return;
         }
 
-        for (int n = 0; n < NUM_CHANNELS; n++)
+        for (auto& device : _GFX)
         {
             for (int i = iStart; i < iStart + numToFill; i+= everyN)
-                _GFX[n]->setPixel(i, color);
-
+                device->setPixel(i, color);
         }
     }
 
@@ -352,8 +351,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void ClearFrameOnAllChannels()
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->Clear();
+        for (auto& device : _GFX)
+            device->Clear();
     }
 
     // ColorFraction
@@ -401,11 +400,11 @@ class LEDStripEffect : public IJSONSerializable
 
     void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
+        for (auto& device : _GFX)
         {
-            CRGB crgb = _GFX[i]->getPixel(pixel);
+            CRGB crgb = device->getPixel(pixel);
             crgb.fadeToBlackBy(fadeValue);
-            _GFX[i]->setPixel(pixel, crgb);
+            device->setPixel(pixel, crgb);
         }
     }
 
@@ -417,9 +416,9 @@ class LEDStripEffect : public IJSONSerializable
 
     void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const
     {
-        for (int n = 0; n < NUM_CHANNELS; n++)
+        for (auto& device : _GFX)
             for (int i = 0; i < _cLEDs; i++)
-                _GFX[n]->setPixel(i, r, g, b);
+                device->setPixel(i, r, g, b);
     }
 
     // setPixelOnAllChannels
@@ -428,8 +427,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void setPixelOnAllChannels(int i, CRGB c)
     {
-        for (int j = 0; j < NUM_CHANNELS; j++)
-            _GFX[j]->setPixel(i, c);
+        for (auto& device : _GFX)
+            device->setPixel(i, c);
     }
 
     // setPixelsOnAllChannels
@@ -439,8 +438,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->setPixelsF(fPos, count, c, bMerge);
+        for (auto& device : _GFX)
+            device->setPixelsF(fPos, count, c, bMerge);
     }
 
     // SerializeToJSON
