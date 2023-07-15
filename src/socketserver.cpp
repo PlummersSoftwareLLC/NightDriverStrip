@@ -207,7 +207,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
         if (bSendResponsePacket)
         {
-            auto& bufferManager = *g_ptrSystem->BufferManagers()[0];
+            auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
             SocketResponse response = {
                                         .size = sizeof(SocketResponse),

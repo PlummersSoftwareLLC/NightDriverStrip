@@ -160,12 +160,12 @@ uint16_t WiFiDraw()
 
         // Pull buffers out of the queue.
 
-        if (false == bufferManager->IsEmpty())
+        if (false == bufferManager.IsEmpty())
         {
             std::shared_ptr<LEDBuffer> pBuffer;
             if (NTPTimeClient::HasClockBeenSet() == false)
             {
-                pBuffer = bufferManager->GetOldestBuffer();
+                pBuffer = bufferManager.GetOldestBuffer();
             }
             else
             {
@@ -173,8 +173,8 @@ uint16_t WiFiDraw()
                 // written as 'while' it will pull frames until it gets one that is current.
                 // Chew through ALL frames older than now, ignoring all but the last of them
 
-                while (!bufferManager->IsEmpty() && bufferManager->PeekOldestBuffer()->IsBufferOlderThan(tv))
-                    pBuffer = bufferManager->GetOldestBuffer();
+                while (!bufferManager.IsEmpty() && bufferManager.PeekOldestBuffer()->IsBufferOlderThan(tv))
+                    pBuffer = bufferManager.GetOldestBuffer();
             }
 
             if (pBuffer)
@@ -300,7 +300,7 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         double t = 0.04;
         for (auto& bufferManager : g_ptrSystem->BufferManagers())
         {
-            auto pOldest = bufferManager->PeekOldestBuffer();
+            auto pOldest = bufferManager.PeekOldestBuffer();
             if (pOldest)
                 t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
         }

@@ -134,7 +134,7 @@ void BasicInfoSummary(bool bRedraw)
 
     // Buffer Status Line 3
 
-    auto& bufferManager = *g_ptrSystem->BufferManagers()[0];
+    auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
     display.setCursor(xMargin + 0, yMargin + lineHeight * 4);
     display.println(str_sprintf("BUFR:%02d/%02d %dfps ",

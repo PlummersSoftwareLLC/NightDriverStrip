@@ -62,7 +62,7 @@ extern uint32_t g_FPS;
         }
         else if (str.equalsIgnoreCase("stats"))
         {
-            auto& bufferManager = *g_ptrSystem->BufferManagers()[0];
+            auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
             debugA("Displaying statistics....");
             debugA("%s:%dx%d %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
@@ -382,7 +382,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                     debugV("Processing for Channel %d", iChannel);
 
                     bool bDone = false;
-                    auto& bufferManager = *g_ptrSystem->BufferManagers()[iChannel];
+                    auto& bufferManager = g_ptrSystem->BufferManagers()[iChannel];
 
                     if (!bufferManager.IsEmpty())
                     {

@@ -153,7 +153,7 @@ class LEDBuffer
 
 class LEDBufferManager
 {
-    const std::unique_ptr<std::shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
+    std::unique_ptr<std::vector<std::shared_ptr<LEDBuffer>>> _ppBuffers;          // The circular array of buffer ptrs
     std::shared_ptr<LEDBuffer>                           _pLastBufferAdded;   // Keeps track of the MRU buffer
     size_t                                               _iNextBuffer;        // Head pointer index
     size_t                                               _iLastBuffer;        // Tail pointer index
@@ -164,7 +164,7 @@ class LEDBufferManager
   public:
 
     LEDBufferManager(uint32_t cBuffers, std::shared_ptr<GFXBase> pGFX)
-     : _ppBuffers(std::make_unique<std::shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
+     : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer>>>()), // Create the circular array of ptrs
        _iNextBuffer(0),
        _iLastBuffer(0),
        _cBuffers(cBuffers)
@@ -174,7 +174,7 @@ class LEDBufferManager
         // are returned back out to callers so they must be shared pointers.
 
         for (int i = 0; i < _cBuffers; i++)
-            _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
+            _ppBuffers->push_back(std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX));
     }
 
     float AgeOfOldestBuffer()
@@ -247,7 +247,7 @@ class LEDBufferManager
 
     std::shared_ptr<LEDBuffer> GetNewBuffer()
     {
-        auto pResult = _ppBuffers[_iNextBuffer++];
+        auto pResult = (*_ppBuffers)[_iNextBuffer++];
 
         if (IsEmpty())
             _iLastBuffer++;
@@ -269,7 +269,7 @@ class LEDBufferManager
         if (IsEmpty())
             return nullptr;
 
-        auto pResult = _ppBuffers[_iLastBuffer];
+        auto pResult = (*_ppBuffers)[_iLastBuffer];
         _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
 
@@ -285,7 +285,7 @@ class LEDBufferManager
         if (IsEmpty())
             return nullptr;
 
-        return _ppBuffers[_iLastBuffer];
+        return (*_ppBuffers)[_iLastBuffer];
     }
 
     const std::shared_ptr<LEDBuffer> operator[](size_t index) const
@@ -293,7 +293,7 @@ class LEDBufferManager
         if (IsEmpty())
             return nullptr;
         size_t i = (_iLastBuffer + index) % _cBuffers;
-        return _ppBuffers[i];
+        return (*_ppBuffers)[i];
     }
 };
 

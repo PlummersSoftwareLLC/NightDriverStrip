@@ -581,7 +581,7 @@ void loop()
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                auto& bufferManager = *g_ptrSystem->BufferManagers()[0];
+                auto& bufferManager = g_ptrSystem->BufferManagers()[0];
                 strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
             #endif
 

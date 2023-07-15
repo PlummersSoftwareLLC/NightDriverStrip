@@ -112,9 +112,9 @@ class SystemContainer
     // -------------------------------------------------------------
     // BufferManagers
 
-    SC_DECLARE(std::vector<std::unique_ptr<LEDBufferManager>>, BufferManagers)
+    SC_DECLARE(std::vector<LEDBufferManager>, BufferManagers)
 
-    public: std::vector<std::unique_ptr<LEDBufferManager>>& SetupBufferManagers()
+    public: std::vector<LEDBufferManager>& SetupBufferManagers()
     {
         if (!!SC_MEMBER(BufferManagers))
             return *SC_MEMBER(BufferManagers);
@@ -148,13 +148,15 @@ class SystemContainer
 
         debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
+        SC_MEMBER(BufferManagers) = std::make_unique<std::vector<LEDBufferManager>>();
+
         for (auto& device : *SC_MEMBER(Devices))
-            SC_MEMBER(BufferManagers)->push_back(std::make_unique<LEDBufferManager>(cBuffers, device));
+            SC_MEMBER(BufferManagers)->emplace_back(cBuffers, device);
 
         return *SC_MEMBER(BufferManagers);
     }
 
-    SC_GETTERS_FOR(std::vector<std::unique_ptr<LEDBufferManager>>, BufferManagers)
+    SC_GETTERS_FOR(std::vector<LEDBufferManager>, BufferManagers)
 
     // -------------------------------------------------------------
     // EffectManager
