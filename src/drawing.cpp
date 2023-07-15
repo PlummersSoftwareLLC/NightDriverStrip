@@ -88,7 +88,7 @@ void MatrixInit()
     LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
 
     // Starting the effect might need to draw, so we need to set the leds up before doing so
-    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->g());
+    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().g());
     pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
 }
 
@@ -118,7 +118,7 @@ void MatrixPreDraw()
         LEDMatrixGFX::matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         LEDMatrixGFX::matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
-        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
 
         // We set ourselves to the lower of the fader value or the brightness value, 
@@ -171,7 +171,7 @@ void MatrixPreDraw()
 
 void MatrixPostDraw()
 {
-    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->g());
+    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>( g_ptrSystem->EffectManager().g() );
 
     constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
     g_MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                             // What our drawn pixels will consume
@@ -201,7 +201,7 @@ void MatrixPostDraw()
     debugV("MW: %d, Setting Scaled Brightness to: %d", g_MatrixPowerMilliwatts, targetBrightness);
     pMatrix->SetBrightness(targetBrightness );
 
-    LEDMatrixGFX::MatrixSwapBuffers(g_ptrEffectManager->GetCurrentEffect()->RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+    LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
 }
 #endif
 
@@ -486,7 +486,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #if USE_MATRIX
             if (wifiPixelsDrawn + localPixelsDrawn > 0)
             {
-                LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
                 FastLED.countFPS();
                 g_FPS = FastLED.getFPS();
             }
