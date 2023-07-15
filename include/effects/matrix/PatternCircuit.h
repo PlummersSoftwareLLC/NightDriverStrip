@@ -195,7 +195,7 @@ public:
 
         for (int i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT / 10; i++)
         {
-            g()->leds[g()->xy(random(0, MATRIX_WIDTH-1), random(0, MATRIX_HEIGHT-1))].fadeToBlackBy(32);
+            g()->leds[g()->xy(random(0, MATRIX_WIDTH), random(0, MATRIX_HEIGHT))].fadeToBlackBy(32);
         }
 
         // fill_palette(colors, SNAKE_LENGTH, initialHue++, 5, graphics->currentPalette, 255, LINEARBLEND);

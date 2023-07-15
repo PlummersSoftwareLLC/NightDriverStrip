@@ -211,7 +211,6 @@ class PatternCube : public LEDStripEffect
 
     virtual void Draw() override
     {
-      //uint8_t blurAmount = beatsin8(2, 250, 255);
       g()->Clear();
       zCamera = beatsin8(2, 100, 140);
       AngxSpeed = beatsin8(3, 3, 10) / 100.0f;
