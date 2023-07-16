@@ -484,11 +484,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             localPixelsDrawn = LocalDraw();
 
         #if USE_MATRIX
-            if (wifiPixelsDrawn + localPixelsDrawn > 0)
-            {
-                FastLED.countFPS();
-                g_FPS = FastLED.getFPS();
-            }
             // Swap the back buffer forward, set the auto-brightness
             MatrixPostDraw();
         #endif
