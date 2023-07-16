@@ -189,6 +189,11 @@ DRAM_ATTR bool g_bUpdateStarted = false;                                        
 DRAM_ATTR AppTime g_AppTime;                                                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 
+#if USE_MATRIX
+    extern int g_MatrixPowerMilliwatts;                                             // Matrix power draw in mw
+    extern uint8_t g_MatrixScaledBrightness;                                        // 0-255 scaled brightness to stay in limit
+#endif
+
 DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                     // The array of GFXBase devices (each strip channel, for example)
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
@@ -326,7 +331,7 @@ void setup()
     uzlib_init();
 
     // Create the SystemContainer that holds primary device management objects.
-    g_ptrSystem = std::make_unique<SystemContainer>();
+    g_ptrSystem = make_unique_psram<SystemContainer>();
 
     // Start the Task Manager which takes over the watchdog role and measures CPU usage
     auto& taskManager = g_ptrSystem->SetupTaskManager();
@@ -463,11 +468,11 @@ void setup()
 
     // LEDStripGFX is used for simple strips or for matrices woven from strips
 
-    #if USESTRIP
+    #if USE_STRIP
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating LEDStripGFX for channel %d", i);
-            g_aptrDevices[i] = std::make_shared<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i] = make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
         }
     #endif
 
@@ -477,7 +482,7 @@ void setup()
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating HexagonGFX for channel %d", i);
-            g_aptrDevices[i] = std::make_shared<HexagonGFX>(NUM_LEDS);
+            g_aptrDevices[i] = make_shared_psram<HexagonGFX>(NUM_LEDS);
         }
     #endif
 
@@ -486,7 +491,7 @@ void setup()
     #if USE_MATRIX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            g_aptrDevices[i] = std::make_shared<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            g_aptrDevices[i] = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             g_aptrDevices[i]->loadPalette(0);
         }
     #endif
@@ -516,6 +521,7 @@ void setup()
 
     debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
+
     for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
         g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
 
@@ -537,7 +543,7 @@ void setup()
 
     //g_pDisplay->ScreenStatus("Initializing LED strips");
 
-    #if USESTRIP
+    #if USE_STRIP
 
         #if NUM_CHANNELS == 1
             debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
@@ -674,12 +680,12 @@ void loop()
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_FPS);
 
-            #if USESTRIP
+            #if USE_STRIP
                 strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Watts, g_Brite);
             #endif
 
             #if USE_MATRIX
-                strOutput += str_sprintf("Refresh: %d Hz, ", LEDMatrixGFX::matrix.getRefreshRate());
+                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_MatrixPowerMilliwatts, g_MatrixScaledBrightness / 2.55);
             #endif
 
             #if ENABLE_AUDIO

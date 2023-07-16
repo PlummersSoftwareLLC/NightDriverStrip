@@ -279,7 +279,7 @@ public:
 
     virtual void addColor(int16_t i, CRGB c)
     {
-        if (i >= 0 && i < _width * _height)
+        if (isValidPixel(i))
             leds[i] += c;
     }
 
@@ -302,7 +302,7 @@ public:
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
     {
         // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
-        // so we do it the "slow" way for other matrices
+        // so we do it the "slow" way for other matrices in the default implementation
 
         for (int x = 0; x < _width; x++)
             for (int y = 0; y < _height; y++)
@@ -315,7 +315,6 @@ public:
             leds[xy(x, y)] = from16Bit(color);
         else
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
-
     }
 
     void setPixel(int16_t x, int16_t y, CRGB color)
@@ -569,7 +568,7 @@ public:
         _palettePaused = bPaused;
     }
 
-    bool IsPalettePaused()
+    bool IsPalettePaused() const
     {
         return _palettePaused;
     }
@@ -730,13 +729,6 @@ public:
     void setupIcePalette()
     {
         _targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White);
-    }
-
-    // write one pixel with the specified color from the current palette to coordinates
-
-    void Pixel(int x, int y, uint8_t colorIndex)
-    {
-        leds[xy(x, y)] = ColorFromCurrentPalette(colorIndex);
     }
 
     // Oscillators and Emitters
@@ -1106,44 +1098,6 @@ public:
             for (int x = x0; x < x1 + 1; x++)
             {
                 leds[xy(x + x2 - x0, y + y2 - y0)] = leds[xy(x, y)];
-            }
-        }
-    }
-
-    // rotate + copy triangle (((_width + 1) / 2)*((_width + 1) / 2))
-    void RotateTriangle()
-    {
-        for (int x = 1; x < ((_width + 1) / 2); x++)
-        {
-            for (int y = 0; y < x; y++)
-            {
-                leds[xy(x, 7 - y)] = leds[xy(7 - x, y)];
-            }
-        }
-    }
-
-    // mirror + copy triangle (((_width + 1) / 2)*((_width + 1) / 2))
-    void MirrorTriangle()
-    {
-        for (int x = 1; x < ((_width + 1) / 2); x++)
-        {
-            for (int y = 0; y < x; y++)
-            {
-                leds[xy(7 - y, x)] = leds[xy(7 - x, y)];
-            }
-        }
-    }
-
-    // draw static rainbow triangle pattern (((_width + 1) / 2)xWIDTH / 2)
-    // (just for debugging)
-
-    void RainbowTriangle()
-    {
-        for (int i = 0; i < ((_width + 1) / 2); i++)
-        {
-            for (int j = 0; j <= i; j++)
-            {
-                Pixel(7 - i, j, i * j * 4);
             }
         }
     }

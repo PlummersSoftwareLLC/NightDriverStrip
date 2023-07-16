@@ -123,8 +123,8 @@
 #define FLASH_VERSION          37    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
-    #ifndef USESTRIP
-        #define USESTRIP 1
+    #ifndef USE_STRIP
+        #define USE_STRIP 1
     #endif
 #endif
 
@@ -208,7 +208,7 @@
 // Drawing must be on Core 1 if using SmartMatrix unless you specify SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1
 
 #define DRAWING_CORE            1
-#define NET_CORE                0
+#define NET_CORE                1
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        1
 #define SCREEN_CORE             0
@@ -1431,48 +1431,6 @@ inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SEC
     return FPS;
 }
 
-// Custom Allocator for allocate_unique, which is like make_unique but can use PSRAM
-
-template<typename Alloc>
-struct alloc_deleter
-{
-  alloc_deleter(const Alloc& a) : a(a) { }
-
-  typedef typename std::allocator_traits<Alloc>::pointer pointer;
-
-  void operator()(pointer p) const
-  {
-    Alloc aa(a);
-    std::allocator_traits<Alloc>::destroy(aa, std::addressof(*p));
-    std::allocator_traits<Alloc>::deallocate(aa, p, 1);
-  }
-
-private:
-  Alloc a;
-};
-
-template<typename T, typename Alloc, typename... Args>
-auto
-allocate_unique(const Alloc& alloc, Args&&... args)
-{
-  using AT = std::allocator_traits<Alloc>;
-  static_assert(std::is_same<typename AT::value_type, std::remove_cv_t<T>>{}(),
-                "Allocator has the wrong value_type");
-
-  Alloc a(alloc);
-  auto p = AT::allocate(a, 1);
-  try {
-    AT::construct(a, std::addressof(*p), std::forward<Args>(args)...);
-    using D = alloc_deleter<Alloc>;
-    return std::unique_ptr<T, D>(p, D(a));
-  }
-  catch (...)
-  {
-    AT::deallocate(a, p, 1);
-    throw;
-  }
-}
-
 // PreferPSRAMAlloc
 //
 // Will return PSRAM if it's available, regular ram otherwise
@@ -1547,6 +1505,63 @@ public:
         p->~T();
     }
 };
+
+// Typically we do not need a deleter because the regular one can handle PSRAM deallocations just fine,
+// but for completeness, here it is.
+
+template<typename T>
+struct psram_deleter
+{
+    void operator()(T* ptr)
+    {
+        psram_allocator<T> allocator;
+        allocator.destroy(ptr);
+        allocator.deallocate(ptr, 1);
+    }
+};
+
+// make_unique_psram
+//
+// Like std::make_unique, but returns PSRAM instead of base RAM.  We cheat a little here by not providing
+// a deleter, because we know that PSRAM can be freed with the regular free() call and does not require
+// special handling. 
+
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique_psram(Args&&... args)
+{
+    psram_allocator<T> allocator;
+    T* ptr = allocator.allocate(1);
+    allocator.construct(ptr, std::forward<Args>(args)...);
+    return std::unique_ptr<T>(ptr);
+}
+
+template<typename T>
+std::unique_ptr<T[]> make_unique_psram_array(size_t size)
+{
+    psram_allocator<T> allocator;
+    T* ptr = allocator.allocate(size);
+    // No need to call construct since arrays don't have constructors
+    return std::unique_ptr<T[]>(ptr);
+}
+
+// make_shared_psram
+//
+// Same as std::make_shared except allocates preferentially from the PSRAM pool
+
+template<typename T, typename... Args>
+std::shared_ptr<T> make_shared_psram(Args&&... args)
+{
+    psram_allocator<T> allocator;
+    return std::allocate_shared<T>(allocator, std::forward<Args>(args)...);
+}
+
+template<typename T>
+std::shared_ptr<T> make_shared_psram_array(size_t size)
+{
+    psram_allocator<T> allocator;
+    return std::allocate_shared<T>(allocator, size);
+}
+
 
 // str_snprintf
 //

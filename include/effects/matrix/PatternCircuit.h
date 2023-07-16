@@ -189,7 +189,8 @@ public:
     virtual void Draw() override
     {
         // Reset after 20 seconds
-        if (millis() - msStart > 20000)
+        const auto kResetEveryNSeconds = 20;
+        if (millis() - msStart > kResetEveryNSeconds * MILLIS_PER_SECOND)
             start();
 
         for (int i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT / 10; i++)

@@ -71,7 +71,7 @@ extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
 template <typename GFXTYPE>
-class EffectManager : public IJSONSerializable
+class  EffectManager : public IJSONSerializable
 {
     std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
 
@@ -96,6 +96,7 @@ class EffectManager : public IJSONSerializable
             _clearTempEffectWhenExpired = true;
 
             // This is a hacky way to ensure that we start the correct effect after the temporary one
+            // REVIEW: Explain, I don't get it!
             _iCurrentEffect--;
         }
     }
@@ -400,17 +401,17 @@ public:
             std::shared_ptr<LEDStripEffect> effect;
 
             if (color == CRGB(CRGB::White))
-                effect = std::make_shared<ColorFillEffect>(CRGB::White, 1);
+                effect = make_shared_psram<ColorFillEffect>(CRGB::White, 1);
             else
 
                 #if ENABLE_AUDIO
                     #if SPECTRUM
                         effect = GetSpectrumAnalyzer(color, oldColor);
                     #else
-                        effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                        effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                     #endif
                 #else
-                    effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
 
             if (effect->Init(g_aptrDevices))
@@ -442,7 +443,7 @@ public:
         #if USE_MATRIX
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
-            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+//            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
         effect->Start();
