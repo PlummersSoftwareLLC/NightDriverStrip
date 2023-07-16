@@ -44,7 +44,7 @@
 //
 // A class that keeps track of the clock, how long the last frame took, calculating FPS, etc.
 
-class AppTime
+class CAppTime
 {
   protected:
 
@@ -73,7 +73,7 @@ class AppTime
         _lastFrame = current;
     }
 
-    AppTime() : _lastFrame(CurrentTime())
+    CAppTime() : _lastFrame(CurrentTime())
     {
         NewFrame();
     }

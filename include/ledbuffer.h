@@ -194,7 +194,7 @@ class LEDBufferManager
         if (false == IsEmpty())
         {
             auto pNewest = PeekNewestBuffer();
-            return (pNewest->Seconds() + pNewest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pNewest->Seconds() + pNewest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
         }
         else
         {

@@ -49,9 +49,6 @@
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
-extern uint8_t g_Brightness;
-extern uint8_t g_Fader;
-
 // References to functions in other C files
 
 void InitSplashEffectManager();
@@ -819,13 +816,13 @@ public:
 
         if (EffectCount() < 2)
         {
-            g_Fader = 255;
+            g_Values.Fader = 255;
             return;
         }
 
         if (_effectInterval == 0)
         {
-            g_Fader = 255;
+            g_Values.Fader = 255;
             return;
         }
 
@@ -834,15 +831,15 @@ public:
 
         if (e < msFadeTime)
         {
-            g_Fader = 255 * (e / msFadeTime); // Fade in
+            g_Values.Fader = 255 * (e / msFadeTime); // Fade in
         }
         else if (r < msFadeTime)
         {
-            g_Fader = 255 * (r / msFadeTime); // Fade out
+            g_Values.Fader = 255 * (r / msFadeTime); // Fade out
         }
         else
         {
-            g_Fader = 255; // No fade, not at start or end
+            g_Values.Fader = 255; // No fade, not at start or end
         }
     }
 };

@@ -1339,8 +1339,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 // Common globals
 
-extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: davepl - why are some DRAM?)
-
 // g_aRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped

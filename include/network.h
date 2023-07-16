@@ -34,9 +34,6 @@
 #endif
 
 #if ENABLE_WIFI
-    extern uint8_t g_Brightness;
-    extern bool    g_bUpdateStarted;
-    extern WiFiUDP g_Udp;
     void processRemoteDebugCmd();
 
     bool ConnectToWiFi(uint cRetries);

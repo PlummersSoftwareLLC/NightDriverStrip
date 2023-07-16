@@ -31,9 +31,6 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
-float g_Brite;
-uint32_t g_Watts;
-
 #if USE_SCREEN
 
 #if USE_TFTSPI
@@ -41,20 +38,16 @@ uint32_t g_Watts;
 #include <SPI.h>
 #endif
 
-//
-// Externals - Mostly things that the screen will report or display for us
-//
+#define SHOW_FPS    true                                // Indicates whether little lcd should show FPS
 
-extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
-extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
-extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
-extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
-extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern volatile double g_FreeDrawTime;  // Idle drawing time
+DRAM_ATTR std::mutex Screen::_screenMutex;              // The storage for the mutex of the screen class
 
-DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
-
-bool g_ShowFPS = true; // Indicates whether little lcd should show FPS
+// What page of screen we are showing
+#if NUM_INFO_PAGES > 0
+DRAM_ATTR uint8_t g_InfoPage = NUM_INFO_PAGES - 1;      // Default to last page
+#else
+DRAM_ATTR uint8_t g_InfoPage = 0;                       // Default to first page
+#endif
 
 // BasicInfoSummary
 //
@@ -140,7 +133,7 @@ void BasicInfoSummary(bool bRedraw)
     display.println(str_sprintf("BUFR:%02d/%02d %dfps ",
                                 bufferManager.Depth(),
                                 bufferManager.BufferCount(),
-                                g_FPS));
+                                g_Values.FPS));
 
     // Data Status Line 4
 
@@ -161,8 +154,8 @@ void BasicInfoSummary(bool bRedraw)
 
     display.setCursor(xMargin + 0, yMargin + lineHeight * 3);
     display.println(str_sprintf("CLCK:%s %04.3lf",
-                                g_AppTime.CurrentTime() > 100000 ? szTime : "Unset",
-                                g_FreeDrawTime));
+                                g_Values.AppTime.CurrentTime() > 100000 ? szTime : "Unset",
+                                g_Values.FreeDrawTime));
 
     // LED Power Info Line 6 - only if display tall enough
 
@@ -170,8 +163,8 @@ void BasicInfoSummary(bool bRedraw)
     {
         display.setCursor(xMargin + 0, yMargin + lineHeight * 5);
         display.println(str_sprintf("POWR:%3.0lf%% %4uW\n",
-                                    g_Brite,
-                                    g_Watts));
+                                    g_Values.Brite,
+                                    g_Values.Watts));
     }
 
     // PSRAM Info Line 7 - only if display tall enough
@@ -249,7 +242,7 @@ void CurrentEffectSummary(bool bRedraw)
 
     static auto lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
     static auto sip = WiFi.localIP().toString();
-    static auto lastFPS = g_FPS;
+    static auto lastFPS = g_Values.FPS;
     static auto lastFullDraw = 0;
     static auto lastAudio = 0;
     static auto lastSerial = 0;
@@ -269,7 +262,7 @@ void CurrentEffectSummary(bool bRedraw)
 
             lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
             sip = WiFi.localIP().toString();
-            lastFPS = g_FPS;
+            lastFPS = g_Values.FPS;
 
             //display.setFont();
             display.setTextSize(2);
@@ -300,16 +293,16 @@ void CurrentEffectSummary(bool bRedraw)
         }
 
 #if ENABLE_AUDIO
-        if ((g_ShowFPS && ((lastFPS != g_FPS) || (lastAudio != g_Analyzer._AudioFPS) || (lastSerial != g_Analyzer._serialFPS))))
+        if (SHOW_FPS && ((lastFPS != g_Values.FPS) || (lastAudio != g_Analyzer._AudioFPS) || (lastSerial != g_Analyzer._serialFPS)))
         {
-            lastFPS = g_FPS;
+            lastFPS = g_Values.FPS;
             lastSerial = g_Analyzer._serialFPS;
             lastAudio = g_Analyzer._AudioFPS;
             display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
             yh = display.height() - display.fontHeight() + 6;
             display.setTextColor(YELLOW16, backColor);
             display.setTextSize(1);
-            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
+            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
             auto w = display.textWidth(strOut);
             display.setCursor(display.width() / 2 - w / 2, yh);
             display.print(strOut);
@@ -383,7 +376,7 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
 
     display.StartFrame();
 
-    switch (giInfoPage)
+    switch (g_InfoPage)
     {
     case 0:
         BasicInfoSummary(bRedraw);
@@ -435,7 +428,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 
             // When the button is pressed advance to the next information page on the little display
 
-            giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
+            g_InfoPage = (g_InfoPage + 1) % NUM_INFO_PAGES;
             bRedraw = true;
         }
 #endif
@@ -450,7 +443,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 #endif
 
         UpdateScreen(bRedraw);
-        if (g_bUpdateStarted)
+        if (g_Values.UpdateStarted)
             delay(200);
         else
             delay(50);

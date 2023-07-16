@@ -31,8 +31,6 @@
 
 #pragma once
 
-extern DRAM_ATTR AppTime g_AppTime;
-
 class MeteorChannel
 {
     std::vector<float> hue;
@@ -79,7 +77,7 @@ public:
             iPos[i] = (pGFX->GetLEDCount() / meteorCount) * i;
             //bLeft[i] = (bool) randomfloat(0, 1);
             speed[i] = randomfloat(meteorSpeedMin, meteorSpeedMax);
-            lastBeat[i] = g_AppTime.FrameStartTime();
+            lastBeat[i] = g_Values.AppTime.FrameStartTime();
             bLeft[i] = i & 2;
         }
     }

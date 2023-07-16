@@ -43,8 +43,8 @@ DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
 std::mutex g_buffer_mutex;
 String WiFi_ssid;
 String WiFi_password;
+DRAM_ATTR WiFiUDP g_Udp;              // UDP object used for NNTP, etc
 
-extern uint32_t g_FPS;
 
 // processRemoteDebugCmd
 //
@@ -67,7 +67,7 @@ extern uint32_t g_FPS;
             debugA("Displaying statistics....");
             debugA("%s:%dx%d %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
             debugA("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            debugA("BUFR:%02d/%02d [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_FPS);
+            debugA("BUFR:%02d/%02d [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
             debugA("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
             #if ENABLE_AUDIO
@@ -110,7 +110,7 @@ void SetupOTA(const String & strHostname)
 
     ArduinoOTA
         .onStart([]() {
-            g_bUpdateStarted = true;
+            g_Values.UpdateStarted = true;
 
             String type;
             if (ArduinoOTA.getCommand() == U_FLASH)
@@ -128,7 +128,7 @@ void SetupOTA(const String & strHostname)
         })
         .onEnd([]() {
             debugI("\nEnd OTA");
-            g_bUpdateStarted = false;
+            g_Values.UpdateStarted = false;
         })
         .onProgress([](unsigned int progress, unsigned int total)
         {
@@ -153,7 +153,7 @@ void SetupOTA(const String & strHostname)
         })
         .onError([](ota_error_t error)
         {
-            g_bUpdateStarted = false;
+            g_Values.UpdateStarted = false;
             debugW("Error[%u]: ", error);
             if (error == OTA_AUTH_ERROR)
             {

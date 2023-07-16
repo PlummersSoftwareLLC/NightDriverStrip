@@ -33,8 +33,6 @@
 #include "effects.h"
 #include "faneffects.h"
 
-extern DRAM_ATTR AppTime g_AppTime;
-
 // BeatEffectBase
 //
 // A specialization of LEDStripEffect, adds a HandleBeat function that allows apps to
@@ -71,7 +69,7 @@ class BeatEffectBase
 
     double SecondsSinceLastBeat()
     {
-      return g_AppTime.CurrentTime() - _lastBeat;
+      return g_Values.AppTime.CurrentTime() - _lastBeat;
     }
 
 
@@ -107,7 +105,7 @@ class BeatEffectBase
               debugV("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
 
               HandleBeat(false, elapsed, maximum - minimum);
-              _lastBeat = g_AppTime.CurrentTime();
+              _lastBeat = g_Values.AppTime.CurrentTime();
               _samples.clear();
             }
         }
@@ -129,10 +127,10 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
     {
         ProcessAudio();
 
-        CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_AppTime.LastFrameTime() * 0.75;
+        CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_Values.AppTime.LastFrameTime() * 0.75;
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
-        fadeAllChannelsToBlackBy(min(255.0,1000.0 * g_AppTime.LastFrameTime()));
+        fadeAllChannelsToBlackBy(min(255.0,1000.0 * g_Values.AppTime.LastFrameTime()));
         delay(1);
     }
 

@@ -35,8 +35,6 @@
 #include "musiceffect.h"
 #include "soundanalyzer.h"
 
-extern DRAM_ATTR AppTime g_AppTime;
-
 class FireEffect : public LEDStripEffect
 {
     void construct()
@@ -554,7 +552,7 @@ public:
 
     virtual void Draw() override
     {
-        float deltaTime = (float)g_AppTime.LastFrameTime();
+        float deltaTime = (float)g_Values.AppTime.LastFrameTime();
         setAllOnAllChannels(0, 0, 0);
 
         float cooldown = randomfloat(0, _Cooling) * deltaTime;

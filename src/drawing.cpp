@@ -47,12 +47,6 @@ extern std::mutex g_buffer_mutex;
 extern SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
 #endif
 
-double volatile g_FreeDrawTime = 0.0;
-
-extern uint32_t g_FPS;
-extern bool g_bUpdateStarted;
-extern float g_Brite;
-extern uint32_t g_Watts;
 extern const CRGBPalette16 vuPaletteGreen;
 
 void ShowTM1814();
@@ -63,8 +57,6 @@ void ShowTM1814();
 // we will draw the local effect instead
 
 DRAM_ATTR uint64_t g_usLastWifiDraw = 0;
-DRAM_ATTR uint8_t g_Brightness = 255;
-DRAM_ATTR uint8_t g_Fader = 255;
 
 // MatrixPreDraw
 //
@@ -84,7 +76,7 @@ void MatrixPreDraw()
         #if SHOW_FPS_ON_MATRIX
             LEDMatrixGFX::backgroundLayer.setFont(gohufont11);
             // 3 is half char width at curret font size, 5 is half the height.
-            string output = "FPS: " + std::to_string(g_FPS);
+            string output = "FPS: " + std::to_string(g_Values.FPS);
             LEDMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
         #endif
 
@@ -100,7 +92,7 @@ void MatrixPreDraw()
         // so that we can fade between effects without having to change the brightness
         // setting.
 
-        pMatrix->SetBrightness(min(g_Brightness, g_Fader));
+        pMatrix->SetBrightness(min(g_Values.Brightness, g_Values.Fader));
 
         if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
@@ -263,11 +255,11 @@ void ShowStrip(uint16_t numToShow)
             for (int i = 0; i < effectManager.gCount(); i++)
                 FastLED[i].setLeds(effectManager[i]->leds, numToShow);
 
-            FastLED.show(g_Fader);
+            FastLED.show(g_Values.Fader);
 
-            g_FPS = FastLED.getFPS();
-            g_Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Brightness, POWER_LIMIT_MW) / 255;
-            g_Watts = calculate_unscaled_power_mW(effectManager.g()->leds, numToShow) / 1000; // 1000 for mw->W
+            g_Values.FPS = FastLED.getFPS();
+            g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Values.Brightness, POWER_LIMIT_MW) / 255;
+            g_Values.Watts = calculate_unscaled_power_mW(effectManager.g()->leds, numToShow) / 1000; // 1000 for mw->W
         }
         else
         {
@@ -289,9 +281,9 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
     if (localPixelsDrawn > 0)
     {
         const double minimumFrameTime = 1.0 / g_ptrSystem->EffectManager().GetCurrentEffect().DesiredFramesPerSecond();
-        double elapsed = g_AppTime.CurrentTime() - frameStartTime;
+        double elapsed = g_Values.AppTime.CurrentTime() - frameStartTime;
         if (elapsed < minimumFrameTime)
-            g_FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
+            g_Values.FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
     }
     else if (wifiPixelsDrawn > 0)
     {
@@ -302,19 +294,19 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         {
             auto pOldest = bufferManager.PeekOldestBuffer();
             if (pOldest)
-                t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_AppTime.CurrentTime());
+                t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime());
         }
 
-        g_FreeDrawTime = std::clamp(t, 0.0, 1.0);
+        g_Values.FreeDrawTime = std::clamp(t, 0.0, 1.0);
     }
     else
     {
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
-        g_FreeDrawTime = .001;
+        g_Values.FreeDrawTime = .001;
     }
 
-    return g_FreeDrawTime * MILLIS_PER_SECOND;
+    return g_Values.FreeDrawTime * MILLIS_PER_SECOND;
 #endif
 }
 
@@ -397,12 +389,12 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     for (;;)
     {
-        g_AppTime.NewFrame();
+        g_Values.AppTime.NewFrame();
         // Loop through each of the channels and see if they have a current frame that needs to be drawn
 
         uint16_t localPixelsDrawn   = 0;
         uint16_t wifiPixelsDrawn    = 0;
-        double frameStartTime       = g_AppTime.FrameStartTime();
+        double frameStartTime       = g_Values.AppTime.FrameStartTime();
 
         #if USE_MATRIX
             MatrixPreDraw();
@@ -421,7 +413,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             {
                 LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
                 FastLED.countFPS();
-                g_FPS = FastLED.getFPS();
+                g_Values.FPS = FastLED.getFPS();
             }
         #endif
         #if USESTRIP
@@ -447,7 +439,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
         // so we'll slow down to share the CPU a bit once the update has begun
 
-        if (g_bUpdateStarted)
+        if (g_Values.UpdateStarted)
             delay(500);
     }
 }

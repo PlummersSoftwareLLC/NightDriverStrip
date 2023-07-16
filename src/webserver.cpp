@@ -142,7 +142,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
     auto& j = response->getRoot();
 
-    j["LED_FPS"]               = g_FPS;
+    j["LED_FPS"]               = g_Values.FPS;
     j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
     j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
 

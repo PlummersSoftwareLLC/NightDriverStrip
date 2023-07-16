@@ -38,8 +38,6 @@
 #include <driver/adc.h>
 // #include <driver/adc_deprecated.h>
 
-extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
-
 #define SUPERSAMPLES 1                                    // How many supersamples to take
 #define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
@@ -625,8 +623,8 @@ public:
 
     inline void DecayPeaks()
     {
-        float decayAmount1 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak1DecayRate);
-        float decayAmount2 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak2DecayRate);
+        float decayAmount1 = std::max(0.0, g_Values.AppTime.LastFrameTime() * g_peak1DecayRate);
+        float decayAmount2 = std::max(0.0, g_Values.AppTime.LastFrameTime() * g_peak2DecayRate);
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
         {

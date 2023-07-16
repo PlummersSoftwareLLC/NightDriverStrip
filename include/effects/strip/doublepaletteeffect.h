@@ -32,8 +32,6 @@
 
 #include "effects.h"
 
-extern DRAM_ATTR AppTime g_AppTime;
-
 class DoublePaletteEffect : public LEDStripEffect
 {
   private:

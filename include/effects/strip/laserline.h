@@ -31,8 +31,6 @@
 
 #pragma once
 
-extern DRAM_ATTR AppTime g_AppTime;
-
 class LaserShot
 {
     float         _position = 0.0;
@@ -124,7 +122,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         while(it != _shots.end())
         {
             it->Draw(_gfx);
-            if (!it->Update(g_AppTime.LastFrameTime()))
+            if (!it->Update(g_Values.AppTime.LastFrameTime()))
                 _shots.erase(it);
             else
                 it++;

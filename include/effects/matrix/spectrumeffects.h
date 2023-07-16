@@ -34,10 +34,8 @@
 #include "esp_attr.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
-#include "types.h"
+#include "values.h"
 #include "systemcontainer.h"
-
-extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
 
 #if ENABLE_AUDIO
 
@@ -92,7 +90,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         ProcessAudio();
         ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
 
-        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.LastFrameTime()));
+        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_Values.AppTime.LastFrameTime()));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)

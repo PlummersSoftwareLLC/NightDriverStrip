@@ -164,6 +164,7 @@
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 
+// Global support objects and global values
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
 DRAM_ATTR Values g_Values;
 
@@ -176,15 +177,7 @@ ImprovSerial<typeof(Serial)> g_ImprovSerial;
 // Global Variables
 //
 
-#if NUM_INFO_PAGES > 0
-DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;                                  // Default to last page
-#else
-DRAM_ATTR uint8_t giInfoPage = 0;                                                   // Default to first page
-#endif
-
-DRAM_ATTR WiFiUDP g_Udp;                                                            // UDP object used for NNTP, etc
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
-
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
 
@@ -558,10 +551,10 @@ void loop()
             #endif
 
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
-            strOutput += str_sprintf("LED FPS: %d ", g_FPS);
+            strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
             #if USESTRIP
-                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Watts, g_Brite);
+                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Values.Watts, g_Values.Brite);
             #endif
 
             #if USE_MATRIX
@@ -589,8 +582,7 @@ void loop()
 
         // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise we delay a bit to share the CPU.
 
-
-        if (!g_bUpdateStarted)
+        if (!g_Values.UpdateStarted)
             delay(10);
     }
 }

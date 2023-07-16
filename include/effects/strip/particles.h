@@ -34,8 +34,6 @@
 
 #include "effects.h"
 
-extern DRAM_ATTR AppTime g_AppTime;
-
 // Lifespan
 //
 // Base class that knows only when it was created, so it can later tell you old it is, which is
@@ -49,7 +47,7 @@ class Lifespan
 
   public:
 
-    Lifespan() :_birthTime(g_AppTime.FrameStartTime())
+    Lifespan() :_birthTime(g_Values.AppTime.FrameStartTime())
     {
     }
 
@@ -58,7 +56,7 @@ class Lifespan
 
     double Age() const
     {
-        return g_AppTime.FrameStartTime() - _birthTime;
+        return g_Values.AppTime.FrameStartTime() - _birthTime;
     }
 
     virtual double TotalLifetime() const = 0;
@@ -91,7 +89,7 @@ public:
 
     virtual void UpdatePosition()
     {
-        _iPos += _velocity * g_AppTime.LastFrameTime();
+        _iPos += _velocity * g_Values.AppTime.LastFrameTime();
     }
 };
 
@@ -563,7 +561,7 @@ class SpinningPaletteRingParticle : public FadingObject
         if (_bErase)
           _GFX[0]->setPixelsF(_start, _length, CRGB::Black, false);
 
-        float deltaTime = g_AppTime.LastFrameTime();
+        float deltaTime = g_Values.AppTime.LastFrameTime();
         float increment = (deltaTime * _LEDSPerSecond);
         const int totalSize = _gapSize + _lightSize + 1;
         _startIndex   = totalSize > 1 ? fmodf(_startIndex + increment, totalSize) : 0;
@@ -772,7 +770,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffec
 
       uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_AppTime.LastFrameTime())));
+      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_Values.AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       BeatEffectBase::ProcessAudio();
@@ -862,7 +860,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
        uint8_t v = 16  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(200, 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_AppTime.LastFrameTime())));
+      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_Values.AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
@@ -923,7 +921,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
       uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 2500.0 * g_AppTime.LastFrameTime())));
+      _baseColor.fadeToBlackBy((min(255.0, 2500.0 * g_Values.AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
 
       BeatEffectBase::ProcessAudio();
@@ -968,7 +966,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
 
       uint8_t v = 32  * g_Analyzer._VURatio;
       _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0,1000.0 * g_AppTime.LastFrameTime())));
+      _baseColor.fadeToBlackBy((min(255.0,1000.0 * g_Values.AppTime.LastFrameTime())));
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
       setAllOnAllChannels(0,0,0);
 

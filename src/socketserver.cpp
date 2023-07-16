@@ -3,8 +3,6 @@
 
 #if COLORDATA_SERVER_ENABLED
 
-extern float g_Brite;
-
 int SocketServer::ProcessIncomingConnectionsLoop()
 {
     if (0 == _server_fd)
@@ -212,15 +210,15 @@ int SocketServer::ProcessIncomingConnectionsLoop()
             SocketResponse response = {
                                         .size = sizeof(SocketResponse),
                                         .flashVersion = FLASH_VERSION,
-                                        .currentClock = g_AppTime.CurrentTime(),
+                                        .currentClock = g_Values.AppTime.CurrentTime(),
                                         .oldestPacket = bufferManager.AgeOfOldestBuffer(),
                                         .newestPacket = bufferManager.AgeOfNewestBuffer(),
-                                        .brightness   = g_Brite,
+                                        .brightness   = g_Values.Brite,
                                         .wifiSignal   = (float) WiFi.RSSI(),
                                         .bufferSize   = bufferManager.BufferCount(),
                                         .bufferPos    = bufferManager.Depth(),
-                                        .fpsDrawing   = g_FPS,
-                                        .watts        = g_Watts
+                                        .fpsDrawing   = g_Values.FPS,
+                                        .watts        = g_Values.Watts
                                     };
 
             // I dont think this is fatal, and doesn't affect the read buffer, so content to ignore for now if it happens

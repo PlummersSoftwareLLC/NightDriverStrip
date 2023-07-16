@@ -33,8 +33,6 @@
 #pragma once
 #include "gfxbase.h"
 
-extern DRAM_ATTR uint8_t g_Brightness;
-
 // LEDStripGFX
 //
 // A derivation of GFXBase that adds LED-strip-specific functionality
@@ -116,7 +114,7 @@ public:
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
         #endif
 
-        g_Brightness = 255;
+        g_Values.Brightness = 255;
 
         #if ATOMLIGHT                                                   // BUGBUG Why input?  Shouldn't they be output?
             pinMode(4, INPUT);

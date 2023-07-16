@@ -87,9 +87,6 @@ static_assert(sizeof(float)  == 4);             // PeakData on wire uses 4 byte 
 
 static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and float size" );
 
-extern uint32_t g_FPS;
-extern uint32_t g_Watts;
-
 // SocketServer
 //
 // Handles incoming connections from the server and pass the data that comes in
