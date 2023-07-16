@@ -68,7 +68,7 @@ DeviceConfig::DeviceConfig()
         use24HourClock = false;
         useCelsius = false;
         ntpServer = DEFAULT_NTP_SERVER;
-        rememberCurrentEffect = false;
+        rememberCurrentEffect = true;
 
         SetTimeZone(cszTimeZone, true);
 

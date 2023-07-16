@@ -91,7 +91,11 @@ class EffectManager : public IJSONSerializable
         {
             _clearTempEffectWhenExpired = true;
 
-            // This is a hacky way to ensure that we start the correct effect after the temporary one
+            // This is a hacky way to ensure that we start the correct effect after the temporary one.
+            //   The switching to the next effect is taken care of by NextEffect(), which starts with
+            //   increasing _iCurrentEffect. We therefore need to decrease it here, to make sure that
+            //   the first effect after the temporary one is the one we want (either the then current
+            //   one when the chip was powered off, or the one at index 0).
             _iCurrentEffect--;
         }
     }
