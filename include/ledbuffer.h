@@ -36,8 +36,7 @@
 #include <pixeltypes.h>
 #include <memory>
 #include <iostream>
-
-extern DRAM_ATTR AppTime g_AppTime;
+#include "values.h"
 
 class LEDBuffer
 {
@@ -182,7 +181,7 @@ class LEDBufferManager
         if (false == IsEmpty())
         {
             auto pOldest = PeekOldestBuffer();
-            return (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
         }
         else
         {

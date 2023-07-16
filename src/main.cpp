@@ -160,13 +160,12 @@
 #include "globals.h"
 #include "deviceconfig.h"
 #include "systemcontainer.h"
+#include "values.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern volatile double g_FreeDrawTime;
-extern float g_Brite;
-extern uint32_t g_Watts;
 
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
+DRAM_ATTR Values g_Values;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
@@ -184,9 +183,6 @@ DRAM_ATTR uint8_t giInfoPage = 0;                                               
 #endif
 
 DRAM_ATTR WiFiUDP g_Udp;                                                            // UDP object used for NNTP, etc
-DRAM_ATTR uint32_t g_FPS = 0;                                                       // Our global framerate
-DRAM_ATTR bool g_bUpdateStarted = false;                                            // Has an OTA update started?
-DRAM_ATTR AppTime g_AppTime;                                                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
@@ -586,7 +582,7 @@ void loop()
             #endif
 
             auto& taskManager = g_ptrSystem->TaskManager();
-            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
             Serial.println(strOutput);
         }
