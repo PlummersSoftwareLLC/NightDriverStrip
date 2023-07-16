@@ -300,11 +300,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugI("Web Server begin called!");
         #endif
 
-        #if USE_MATRIX
-//            auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrEffectManager->GetBaseGraphics());
-//             pMatrix->SetCaption(WiFi.localIP().toString().c_str(), CAPTION_TIME);
-        #endif
-
         return true;
     }
 

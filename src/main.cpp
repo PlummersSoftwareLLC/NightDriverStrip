@@ -194,8 +194,6 @@ DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                               
     extern uint8_t g_MatrixScaledBrightness;                                        // 0-255 scaled brightness to stay in limit
 #endif
 
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;       // The one and only global effect manager
-
 DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                     // The array of GFXBase devices (each strip channel, for example)
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
