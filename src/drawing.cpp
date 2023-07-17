@@ -423,21 +423,6 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     PrepareOnboardPixel();
 
-    // Prep the matrix and its layers
-
-    #if USE_MATRIX
-        MatrixInit();
-        // We don't need color correction on the title layer, but we want it on the main background
-
-        LEDMatrixGFX::titleLayer.enableColorCorrection(false);
-        LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
-
-        // Starting the effect might need to draw, so we need to set the leds up before doing so
-        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().g());
-        pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-        auto spectrum = GetSpectrumAnalyzer(0);
-    #endif
-
     // Start the effect
 
     g_ptrSystem->EffectManager().StartEffect();

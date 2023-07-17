@@ -88,6 +88,14 @@ public:
             devices.push_back(matrix);
             matrix->loadPalette(0);
         }
+
+        // We don't need color correction on the title layer, but we want it on the main background
+
+        titleLayer.enableColorCorrection(false);
+        backgroundLayer.enableColorCorrection(true);
+
+        // Starting an effect might need to draw, so we need to set the leds up before doing so
+        std::static_pointer_cast<LEDMatrixGFX>(devices[0])->setLeds(GetMatrixBackBuffer());
     }
 
     void SetBrightness(byte amount)
