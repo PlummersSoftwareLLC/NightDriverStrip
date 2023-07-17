@@ -131,6 +131,7 @@
 #define EFFECT_MATRIX_SMSAND                           158
 #define EFFECT_MATRIX_SMSMOKE                          159
 #define EFFECT_MATRIX_SMSPIRO                          160
+#define EFFECT_MATRIX_SMAURORA                         161
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1

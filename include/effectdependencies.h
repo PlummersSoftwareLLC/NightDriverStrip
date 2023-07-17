@@ -84,8 +84,9 @@
     #include "effects/matrix/PatternSMRainbowFlow.h"
     #include "effects/matrix/PatternSMPastelFlutter.h"
     #include "effects/matrix/PatternSMSand.h"
-#endif
     #include "effects/matrix/PatternSMSpiro.h"
+#endif
+    #include "effects/matrix/PatternSMAurora.h"
 #if BOOGER
     #include "effects/matrix/PatternSMSmoke.h"
     #include "effects/matrix/PatternSMRainbowSwirl.h"
