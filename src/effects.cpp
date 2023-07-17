@@ -237,7 +237,7 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
     CHSV hueColor = rgb2hsv_approximate(color1);
-    auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
     if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
@@ -247,7 +247,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
     CHSV hueColor = rgb2hsv_approximate(color);
     CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
     if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -262,21 +262,21 @@ DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<Star>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<Star>>(jsonObject); } },
     { EFFECT_STAR_BUBBLY,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<BubblyStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<BubblyStar>>(jsonObject); } },
     { EFFECT_STAR_HOT_WHITE,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<HotWhiteStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<HotWhiteStar>>(jsonObject); } },
     { EFFECT_STAR_LONG_LIFE_SPARKLE,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<LongLifeSparkleStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<LongLifeSparkleStar>>(jsonObject); } },
 
 #if ENABLE_AUDIO
     { EFFECT_STAR_MUSIC,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<MusicStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<MusicStar>>(jsonObject); } },
 #endif
 
     { EFFECT_STAR_QUIET,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<QuietStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<QuietStar>>(jsonObject); } },
 };
 
 std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
@@ -289,11 +289,11 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 }
 
 #define ADD_EFFECT(effectNumber, effectType, ...)   g_ptrEffectFactories->AddEffect(effectNumber, \
-    []()                                 ->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(__VA_ARGS__); }, \
-    [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(jsonObject); })
+    []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(__VA_ARGS__); }, \
+    [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(jsonObject); })
 
 #define ADD_STARRY_NIGHT_EFFECT(starType, ...)      g_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
-    []()                                 ->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<starType>>(__VA_ARGS__); }, \
+    []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<starType>>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); })
 
 void LoadEffectFactories()
@@ -302,7 +302,7 @@ void LoadEffectFactories()
     if (g_ptrEffectFactories)
         return;
 
-    g_ptrEffectFactories = std::make_unique<EffectFactories>();
+    g_ptrEffectFactories = make_unique_psram<EffectFactories>();
 
     // Fill effect factories
     #if DEMO
@@ -370,8 +370,8 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_MUNCH,         PatternMunch);
         ADD_EFFECT(EFFECT_MATRIX_MAZE,          PatternMaze);
 
-        // std::make_shared<PatternInfinity>(),
-        // std::make_shared<PatternQR>(),
+        // make_shared_psram<PatternInfinity>(),
+        // make_shared_psram<PatternQR>(),
 
     #elif UMBRELLA
 
@@ -487,15 +487,15 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24, RainbowColors_p);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave One", 4);
 
-        //std::make_shared<GhostWave>("GhostWave Rainbow", &rainbowPalette),
+        //make_shared_psram<GhostWave>("GhostWave Rainbow", &rainbowPalette),
 
     #elif ATOMLIGHT
 
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, CRGB::White, 1);
-        // std::make_shared<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
-        // std::make_shared<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
-        // std::make_shared<HueFireFanEffect>(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
-        //  std::make_shared<HueFireFanEffect>(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
+        // make_shared_psram<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
+        // make_shared_psram<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
+        // make_shared_psram<HueFireFanEffect>(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
+        //  make_shared_psram<HueFireFanEffect>(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 60, 0);
         ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, Sequential);
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0);
@@ -503,7 +503,7 @@ void LoadEffectFactories()
 
         ADD_STARRY_NIGHT_EFFECT(BubblyStar, "Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 4); // Blooming Little Rainbow Stars
         ADD_STARRY_NIGHT_EFFECT(BubblyStar, "Big Blooming Rainbow Stars", RainbowColors_p, 20, 12, LINEARBLEND, 1.0, 0.0, 2); // Blooming Rainbow Stars
-        //        std::make_shared<StarryNightEffect<FanStar>>("FanStars", RainbowColors_p, 8.0, 1.0, LINEARBLEND, 80.0, 0, 2.0),
+        //        make_shared_psram<StarryNightEffect<FanStar>>("FanStars", RainbowColors_p, 8.0, 1.0, LINEARBLEND, 80.0, 0, 2.0),
 
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 20, 1, 25, .15, .05);
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 12, 1, 25, .15, .08);
@@ -579,7 +579,7 @@ DRAM_ATTR size_t g_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max()
     {
         debugW("InitSplashEffectManager");
 
-        g_ptrSystem->SetupEffectManager(std::make_shared<SplashLogoEffect>(), g_ptrSystem->Devices());
+        g_ptrSystem->SetupEffectManager(make_shared_psram<SplashLogoEffect>(), g_ptrSystem->Devices());
     }
 
 #endif

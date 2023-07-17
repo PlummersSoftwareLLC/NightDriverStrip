@@ -58,13 +58,30 @@ void ShowTM1814();
 
 DRAM_ATTR uint64_t g_usLastWifiDraw = 0;
 
+#if USE_MATRIX
+
+// MatrixInit
+//
+// One time setup we need to do with the matrix before drawing to it
+
+void MatrixInit()
+{
+    // We don't need color correction on the title layer, but we want it on the main background
+
+    LEDMatrixGFX::titleLayer.enableColorCorrection(false);
+    LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
+
+    // Starting the effect might need to draw, so we need to set the leds up before doing so
+    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().g());
+    pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+}
+
 // MatrixPreDraw
 //
 // Gets the matrix ready for the effect or wifi to render into
 
 void MatrixPreDraw()
 {
-#if USE_MATRIX
     // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
     // both 24-bits RGB triplets.  Or at least the same size!
 
@@ -85,14 +102,12 @@ void MatrixPreDraw()
         LEDMatrixGFX::matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         LEDMatrixGFX::matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
-        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(graphics);
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
 
-        // We set ouutselves to the lower of the fader value or the brightness value,
+        // We set ourselves to the lower of the fader value or the brightness value,
         // so that we can fade between effects without having to change the brightness
         // setting.
-
-        pMatrix->SetBrightness(min(g_Values.Brightness, g_Values.Fader));
 
         if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
@@ -132,8 +147,47 @@ void MatrixPreDraw()
             LEDMatrixGFX::titleLayer.setBrightness(0);
         }
     }
-#endif
 }
+
+// MatrixPostDraw
+//
+// Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
+
+void MatrixPostDraw()
+{
+    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>( g_ptrSystem->EffectManager().g() );
+
+    constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
+    g_Values.MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                      // What our drawn pixels will consume
+
+    if (pMatrix->GetCaptionTransparency() > 0)
+        g_Values.MatrixPowerMilliwatts += kCaptionPower;
+
+    const auto kMaxPower = 5000.0;
+    uint8_t scaledBrightness = std::clamp(kMaxPower / g_Values.MatrixPowerMilliwatts, 0.0, 1.0) * 255;
+
+    // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
+    // somewhat slowly to avoid flicker.  We do this by using a weighted average of the current and former brightness.  To avoid
+    // an ansymptote near the max, we always increase by at least one step if we're lower than the target.
+
+    constexpr auto kWeightedAverageAmount = 10;
+    if (scaledBrightness <= g_Values.MatrixScaledBrightness)
+        g_Values.MatrixScaledBrightness = scaledBrightness;
+    else
+        g_Values.MatrixScaledBrightness = std::max(g_Values.MatrixScaledBrightness + 1,
+                                                   (( (g_Values.MatrixScaledBrightness * (kWeightedAverageAmount-1)) ) + scaledBrightness) / kWeightedAverageAmount);
+
+    // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
+    // whichever is lowest, so that we can fade between effects without having to change the brightness setting.
+
+    auto targetBrightness = std::min({ g_Values.Brightness, g_Values.Fader, g_Values.MatrixScaledBrightness });
+
+    debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
+    pMatrix->SetBrightness(targetBrightness );
+
+    LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+}
+#endif
 
 // WiFiDraw
 //
@@ -287,8 +341,8 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
     }
     else if (wifiPixelsDrawn > 0)
     {
-        // Sleep up to 1/25th second, depending on how far away the next frame we need to service is
-
+        // Look through all the channels to see how far away the next wifi frame is times for.  We can then delay
+        // up to the minimum value found
         double t = 0.04;
         for (auto& bufferManager : g_ptrSystem->BufferManagers())
         {
@@ -363,14 +417,16 @@ void ShowOnboardPixel()
 
 void IRAM_ATTR DrawLoopTaskEntry(void *)
 {
+    debugW(">> DrawLoopTaskEntry\n");
 
-    //debugW(">> DrawLoopTaskEntry\n");
-
-    // Initialize our graphics and the first effect
+    // If this board has an onboard RGB pixel, set it up now
 
     PrepareOnboardPixel();
 
+    // Prep the matrix and its layers
+
     #if USE_MATRIX
+        MatrixInit();
         // We don't need color correction on the title layer, but we want it on the main background
 
         LEDMatrixGFX::titleLayer.enableColorCorrection(false);
@@ -381,6 +437,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         auto spectrum = GetSpectrumAnalyzer(0);
     #endif
+
+    // Start the effect
+
     g_ptrSystem->EffectManager().StartEffect();
 
     // Run the draw loop
@@ -390,13 +449,13 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     for (;;)
     {
         g_Values.AppTime.NewFrame();
-        // Loop through each of the channels and see if they have a current frame that needs to be drawn
 
         uint16_t localPixelsDrawn   = 0;
         uint16_t wifiPixelsDrawn    = 0;
         double frameStartTime       = g_Values.AppTime.FrameStartTime();
 
         #if USE_MATRIX
+            // Get the matrix ready for drawing, set the LED array to point to the back buffer
             MatrixPreDraw();
         #endif
 
@@ -411,20 +470,29 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         #if USE_MATRIX
             if (wifiPixelsDrawn + localPixelsDrawn > 0)
             {
-                LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
                 FastLED.countFPS();
                 g_Values.FPS = FastLED.getFPS();
             }
+            // Swap the back buffer forward, set the auto-brightness
+            MatrixPostDraw();
         #endif
-        #if USESTRIP
+
+        #if USE_STRIP
             if (wifiPixelsDrawn)
                 ShowStrip(wifiPixelsDrawn);
             else if (localPixelsDrawn)
                 ShowStrip(localPixelsDrawn);
         #endif
 
+        // If we drew any pixels by any method, we'll call that a frame and track it for FPS purposes.  We also notify the
+        // color data thread that a new frame is available and can be transmitted to clients
+
         if (wifiPixelsDrawn + localPixelsDrawn > 0)
+        {
+            FastLED.countFPS();
+            g_Values.FPS = FastLED.getFPS();
             g_ptrSystem->EffectManager().SetNewFrameAvailable(true);
+        }
 
         // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
         // is on LED #0 of Channel #0.

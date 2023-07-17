@@ -84,7 +84,7 @@ public:
 
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            auto matrix = std::make_shared<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            auto matrix = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             devices.push_back(matrix);
             matrix->loadPalette(0);
         }
@@ -93,6 +93,29 @@ public:
     void SetBrightness(byte amount)
     {
         matrix.setBrightness(amount);
+    }
+
+    // EstimatePowerDraw
+    //
+    // Estimate the total power load for the board and matrix by walking the pixels and adding our previously measured
+    // power draw per pixel based on what color and brightness each pixel is/
+
+    int EstimatePowerDraw()
+    {
+        const auto kBaseLoad       = 1500;          // Experimentally derived values
+        const auto mwPerPixelRed   = 4.10f;
+        const auto mwPerPixelGreen = 0.82f;
+        const auto mwPerPixelBlue  = 1.75f;
+
+        float totalPower = kBaseLoad;
+        for (int i = 0; i < NUM_LEDS; i++)
+        {
+            const auto pixel = leds[i];
+            totalPower += pixel.r * mwPerPixelRed   / 255.0f;
+            totalPower += pixel.g * mwPerPixelGreen / 255.0f;
+            totalPower += pixel.b * mwPerPixelBlue  / 255.0f;
+        }
+        return (int) totalPower;
     }
 
     virtual uint16_t xy(uint16_t x, uint16_t y) const override
@@ -119,6 +142,16 @@ public:
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }
 
+    virtual void Clear() override
+    {
+        // NB: We directly clear the backbuffer because otherwise effects would start with a snapshot of the effect
+        //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
+        //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
+
+        memset(backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
+        memset(leds, 0, sizeof(CRGB) * _width * _height);
+    }
+
     const String & GetCaption()
     {
         return strCaption;
@@ -128,10 +161,10 @@ public:
     {
         unsigned long now = millis();
         if (strCaption == nullptr)
-            return 0;
+            return 0.0f;
 
         if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
-            return 0;
+            return 0.0f;
 
         float elapsed = now - captionStartTime;
 
@@ -139,9 +172,9 @@ public:
             return elapsed / captionFadeInTime;
 
         if (elapsed > captionFadeInTime + captionDuration)
-            return 1.0 - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
+            return 1.0f - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
 
-        return 1.0;
+        return 1.0f;
     }
 
     void SetCaption(const String & str, uint32_t duration)

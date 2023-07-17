@@ -308,7 +308,7 @@ void setup()
     uzlib_init();
 
     // Create the SystemContainer that holds primary device management objects.
-    g_ptrSystem = std::make_unique<SystemContainer>();
+    g_ptrSystem = make_unique_psram<SystemContainer>();
 
     // Start the Task Manager which takes over the watchdog role and measures CPU usage
     auto& taskManager = g_ptrSystem->SetupTaskManager();
@@ -446,7 +446,7 @@ void setup()
 
     // LEDStripGFX is used for simple strips or for matrices woven from strips
 
-    #if USESTRIP
+    #if USE_STRIP
         LEDStripGFX::InitializeHardware(devices);
     #endif
 
@@ -553,12 +553,12 @@ void loop()
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
-            #if USESTRIP
+            #if USE_STRIP
                 strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Values.Watts, g_Values.Brite);
             #endif
 
             #if USE_MATRIX
-                strOutput += str_sprintf("Refresh: %d Hz, ", LEDMatrixGFX::matrix.getRefreshRate());
+                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
             #endif
 
             #if ENABLE_AUDIO

@@ -63,7 +63,7 @@ public:
         for (int i = 0; i < channelCount; i++)
         {
             debugW("Allocating LEDStripGFX for channel %d", i);
-            devices.push_back(std::make_shared<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
+            devices.push_back(make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
         }
 
         // Macro to add LEDs to a channel
@@ -146,7 +146,7 @@ class HexagonGFX : public LEDStripGFX
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating HexagonGFX for channel %d", i);
-            devices.push_back(std::make_shared<HexagonGFX>(NUM_LEDS));
+            devices.push_back(make_shared_psram<HexagonGFX>(NUM_LEDS));
         }
     }
 

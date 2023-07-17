@@ -132,7 +132,7 @@ class SystemContainer
             uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
         #endif
 
-        uint32_t memtoalloc = (SC_MEMBER(Devices)->size() * ((sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB))));
+        uint32_t memtoalloc = (SC_MEMBER(Devices)->size() * (sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB)));
         uint32_t cBuffers = memtouse / memtoalloc;
 
         if (cBuffers < MIN_BUFFERS)
@@ -173,7 +173,7 @@ class SystemContainer
     {
         if (!SC_MEMBER(TaskManager))
         {
-            SC_MEMBER(TaskManager) = std::make_unique<::NightDriverTaskManager>();
+            SC_MEMBER(TaskManager) = make_unique_psram<::NightDriverTaskManager>();
             SC_MEMBER(TaskManager)->begin();
         }
 
@@ -201,13 +201,13 @@ class SystemContainer
         // Create the JSON writer and start its background thread
         if (!SC_MEMBER(JSONWriter))
         {
-            SC_MEMBER(JSONWriter) = std::make_unique<::JSONWriter>();
+            SC_MEMBER(JSONWriter) = make_unique_psram<::JSONWriter>();
             SC_MEMBER(TaskManager)->StartJSONWriterThread();
         }
 
         // Create and load device config from SPIFFS if possible
         if (!SC_MEMBER(DeviceConfig))
-            SC_MEMBER(DeviceConfig) = std::make_unique<::DeviceConfig>();
+            SC_MEMBER(DeviceConfig) = make_unique_psram<::DeviceConfig>();
     }
 
     SC_GETTERS_FOR(JSONWriter, JSONWriter)
@@ -251,7 +251,7 @@ class SystemContainer
         public: template<typename Ts, typename... Args>
         ::Screen& SetupDisplay(Args&&... args)
         {
-            SC_MEMBER(Display) = std::make_unique<Ts>(std::forward<Args>(args)...);
+            SC_MEMBER(Display) = make_unique_psram<Ts>(std::forward<Args>(args)...);
 
             return *SC_MEMBER(Display);
         }
