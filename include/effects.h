@@ -133,6 +133,7 @@
 #define EFFECT_MATRIX_SMSPIRO                          160
 #define EFFECT_MATRIX_SMAURORA                         161
 #define EFFECT_MATRIX_SMPRISMATA                       162
+#define EFFECT_MATRIX_SMRADIALFIRE                     163
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
