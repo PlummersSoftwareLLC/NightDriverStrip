@@ -135,6 +135,7 @@
 #define EFFECT_MATRIX_SMPRISMATA                       162
 #define EFFECT_MATRIX_SMRADIALFIRE                     163
 #define EFFECT_MATRIX_SMMAZE2                          164
+#define EFFECT_MATRIX_SMMIRAGE                         165
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
