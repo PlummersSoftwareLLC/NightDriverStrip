@@ -86,6 +86,7 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
+    #include "effects/matrix/PatternSMBoidExplosion.h"
     #include "effects/matrix/PatternSMTixyLand.h"
 #if BOOGER
     #include "effects/matrix/PatternSMXorCircles.h"

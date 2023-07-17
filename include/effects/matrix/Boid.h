@@ -77,6 +77,7 @@ class Boid
     PVector acceleration;
     float maxforce;    // Maximum steering force
     float maxspeed;    // Maximum speed
+    int hue;
 
     float desiredseparation = 4;
     float neighbordist = 8;
@@ -93,6 +94,8 @@ class Boid
       location = PVector(x, y);
       maxspeed = 1.5;
       maxforce = 0.05;
+      mass = random(1.0,1.4);
+      hue = random(40,255);
     }
 
     static float randomf() {

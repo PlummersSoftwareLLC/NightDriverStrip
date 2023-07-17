@@ -142,6 +142,7 @@
 #define EFFECT_MATRIX_SMWALKING_MACHINE                169
 #define EFFECT_MATRIX_SMXOR_CIRCLES                    170
 #define EFFECT_MATRIX_SMTIXY_LAND                      171
+#define EFFECT_MATRIX_SMBOID_EXPLOSION                 172
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1
