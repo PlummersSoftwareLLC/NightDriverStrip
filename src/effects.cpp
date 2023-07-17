@@ -358,7 +358,8 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRainbowTunnel);
+        ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMHypnosis);
+        //ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRainbowTunnel);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRadialWave);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMirage);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);

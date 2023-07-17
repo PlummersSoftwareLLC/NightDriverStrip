@@ -138,6 +138,7 @@
 #define EFFECT_MATRIX_SMMIRAGE                         165
 #define EFFECT_MATRIX_SMRADIALWAVE                     166
 #define EFFECT_MATRIX_SMRAINBOW_TUNNEL                 167
+#define EFFECT_MATRIX_SMHYPNOSIS                       168
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1

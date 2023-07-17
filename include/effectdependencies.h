@@ -86,8 +86,9 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
-    #include "effects/matrix/PatternSMRainbowTunnel.h"
+    #include "effects/matrix/PatternSMHypnosis.h"
 #if BOOGER
+    #include "effects/matrix/PatternSMRainbowTunnel.h"
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMMirage.h"
     #include "effects/matrix/PatternSMMaze2.h"
