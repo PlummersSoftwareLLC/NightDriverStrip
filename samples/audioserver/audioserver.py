@@ -23,7 +23,7 @@ import sys
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.250'        
+client = '192.168.8.47'        
 
 # Set up audio input stream. 512@24000 gives a nice framerate.  And 512
 # is what I run on the ESP32 if connected via hardware mic, so at least it matches
@@ -34,8 +34,6 @@ max_freq     = 20000
 num_bands    = 16
 
 # Correction I apply to get a mostly linear response across the bands.  
-
-# band_scalars = [ 0.25, 0.25, 0.125, 0.1, 0.3, 0.3, 1.5, 1.5, 1.75, 2.0, 3.0, 8.0 ]
 
 if num_bands == 16:
     band_scalars = [ 0.35, 0.20, 0.125, 0.1, 0.5, 1.2, 1.7, 2.0, 2.1, 2.75, 2.0, 8.0, 8.0, 8.0, 8.0, 8.0 ]
