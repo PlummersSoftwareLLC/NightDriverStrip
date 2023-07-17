@@ -3,6 +3,8 @@
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
 
+// Derived from https://editor.soulmatelights.com/gallery/1990-walking-machine
+
 #if ENABLE_AUDIO
 class PatternSMWalkingMachine : public BeatEffectBase, public LEDStripEffect
 #else
