@@ -316,6 +316,8 @@ public:
 
         ElecrowScreen(int w, int h) : Screen(w, h)
         {
+             // I'm not a fan of these local clauses but it keeps it the same as the original sample code
+            
              {
                 auto cfg = _bus_instance.config();
                 cfg.spi_host = SPI3_HOST;
