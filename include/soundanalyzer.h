@@ -279,8 +279,8 @@ class SoundAnalyzer : public AudioVariables
         int16_t sampleBuffer[MAX_SAMPLES];
         size_t bytesRead = 0;
 
-        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
-            i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS));
+        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
         #else
             ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
             ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
@@ -567,7 +567,33 @@ public:
         i2s_set_pin(I2S_NUM_0, &pin_config);
         i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
-#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
+#elif ELECROW
+
+        const i2s_config_t i2s_config = {
+                .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
+                .sample_rate = SAMPLING_FREQUENCY,
+                .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+                .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+                .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+                .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+                .dma_buf_count = 2,
+                .dma_buf_len = (int) MAX_SAMPLES,
+                .use_apll = false
+            };
+
+            // i2s pin configuration
+            const i2s_pin_config_t pin_config = {
+                .bck_io_num = 39,
+                .ws_io_num = 38,
+                .data_out_num = -1,  // not used
+                .data_in_num = INPUT_PIN
+            };
+
+            ESP_ERROR_CHECK( i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL) );
+            ESP_ERROR_CHECK( i2s_set_pin(I2S_NUM_0, &pin_config) );
+            ESP_ERROR_CHECK( i2s_start(I2S_NUM_0) );
+
+#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT 
 
         i2s_config_t i2s_config;
         i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
