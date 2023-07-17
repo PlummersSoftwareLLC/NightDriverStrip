@@ -139,8 +139,9 @@
 #define EFFECT_MATRIX_SMRADIALWAVE                     166
 #define EFFECT_MATRIX_SMRAINBOW_TUNNEL                 167
 #define EFFECT_MATRIX_SMHYPNOSIS                       168
+#define EFFECT_MATRIX_SMHWALKING_MACHINE               169
 
-// Starry Night star variations
+999999rry Night star variations
 #define EFFECT_STAR                                      1
 #define EFFECT_STAR_RANDOM_PALETTE_COLOR                 2
 #define EFFECT_STAR_LONG_LIFE_SPARKLE                    3
