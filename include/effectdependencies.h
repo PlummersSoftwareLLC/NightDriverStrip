@@ -86,9 +86,12 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
-    #include "effects/matrix/PatternSMBoidExplosion.h"
-    #include "effects/matrix/PatternSMTixyLand.h"
+
+    // A block of 3D-ish effects using Particle systems or Boids.
+    #include "effects/matrix/PatternSMSupernova.h"
 #if BOOGER
+    #include "effects/matrix/PatternSMBoidExplosion.h"
+    #include "effects/matrix/PatternSMTixyLand.h" // Dozens of simple effects
     #include "effects/matrix/PatternSMXorCircles.h"
     #include "effects/matrix/PatternSMWalkingMachine.h"
     #include "effects/matrix/PatternSMHypnosis.h"
