@@ -86,9 +86,10 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
+    #include "effects/matrix/PatternSMMaze2.h"
+#if BOOGER
     #include "effects/matrix/PatternSMRadialFire.h"
     #include "effects/matrix/PatternSMPrismata.h"
-#if BOOGER
     #include "effects/matrix/PatternSMAurora.h"
     #include "effects/matrix/PatternSMSmoke.h"
     #include "effects/matrix/PatternSMRainbowSwirl.h"
