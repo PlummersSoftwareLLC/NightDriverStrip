@@ -148,6 +148,12 @@
 							"value": "true",
 							"type": "text",
 							"disabled": true
+						},
+						{
+							"key": "powerLimit",
+							"value": "5000",
+							"type": "text",
+							"disabled": true
 						}
 					]
 				},
