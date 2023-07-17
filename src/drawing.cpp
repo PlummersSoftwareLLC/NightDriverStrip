@@ -163,7 +163,7 @@ void MatrixPostDraw()
     if (pMatrix->GetCaptionTransparency() > 0)
         g_Values.MatrixPowerMilliwatts += kCaptionPower;
 
-    const auto kMaxPower = 5000.0;
+    const auto kMaxPower = double(g_ptrSystem->DeviceConfig().GetPowerLimit());
     uint8_t scaledBrightness = std::clamp(kMaxPower / g_Values.MatrixPowerMilliwatts, 0.0, 1.0) * 255;
 
     // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
