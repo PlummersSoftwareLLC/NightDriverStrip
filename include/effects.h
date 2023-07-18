@@ -146,6 +146,7 @@
 #define EFFECT_MATRIX_SMSUPERNOVA                      173
 #define EFFECT_MATRIX_SMBLURRING_COLORS                174
 #define EFFECT_MATRIX_SMFLOW_FIELDS                    175
+#define EFFECT_MATRIX_SMFLOCKING                       176
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1
