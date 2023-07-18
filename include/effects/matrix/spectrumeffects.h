@@ -556,7 +556,7 @@ class GhostWave : public WaveformEffect
     virtual size_t DesiredFramesPerSecond() const override
     {
         // Looks cool at the low-50s it can actually achieve
-        return _blur > 0 ? 60 : 30;
+        return _blur > 0 ? 45 : 30;
     }
 
     virtual void Draw() override
@@ -636,7 +636,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const override
     {
-        return 90;
+        return 45;
     }
 
     virtual bool RequiresDoubleBuffering() const override
