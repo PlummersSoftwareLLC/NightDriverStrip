@@ -86,9 +86,10 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
-    #include "effects/matrix/PatternSMStarshipTroopers.h"
+    #include "effects/matrix/PatternSMHolidayLights.h"
 
 #if BOOGER
+    #include "effects/matrix/PatternSMStarshipTroopers.h"
     #include "effects/matrix/PatternSMGamma.h"
     // A Small block of 3D-ish effects using Particle systems or Boids.
     #include "effects/matrix/PatternSMFlocking.h"
