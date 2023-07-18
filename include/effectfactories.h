@@ -97,12 +97,12 @@ class EffectFactories
 
   private:
 
-    std::vector<NumberedFactory> defaultFactories;
+    std::vector<NumberedFactory, psram_allocator<NumberedFactory>> defaultFactories;
     std::map<int, JSONEffectFactory> jsonFactories;
 
   public:
 
-    const std::vector<NumberedFactory>& GetDefaultFactories()
+    const std::vector<NumberedFactory, psram_allocator<NumberedFactory>>& GetDefaultFactories()
     {
         return defaultFactories;
     }

@@ -86,7 +86,7 @@ void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
   // can swap without waiting for a copy.
   matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
   matrix.setRefreshRate(MATRIX_REFRESH_RATE);
-  matrix.setMaxCalculationCpuPercentage(100);
+  matrix.setMaxCalculationCpuPercentage(95);
 
   backgroundLayer.swapBuffers(bSwapBackground);
   titleLayer.swapBuffers(bSwapTitle);

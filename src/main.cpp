@@ -430,31 +430,36 @@ void setup()
     #if USE_TFTSPI
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
-        Serial.println("Creating TFT Screen");
+        debugW("Creating TFT Screen");
         g_ptrSystem->SetupDisplay<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif USE_LCD
 
-        Serial.println("Creating LCD Screen");
+        debugW("Creating LCD Screen");
         g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
 
         #if USE_M5DISPLAY
             M5.begin();
-            Serial.println("Creating M5 Screen");
+            debugW("Creating M5 Screen");
             g_ptrSystem->SetupDisplay<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
         #else
             M5.begin(false);
         #endif
 
+    #elif ELECROW
+    
+            debugW("Creating Elecrow Screen");
+            g_ptrSystem->SetupDisplay<ElecrowScreen>(TFT_HEIGHT, TFT_WIDTH);
+
     #elif USE_OLED
 
         #if USE_SSD1306
-            Serial.println("Creating SSD1306 Screen");
+            debugW("Creating SSD1306 Screen");
             g_ptrSystem->SetupDisplay<SSD1306Screen>(128, 64);
         #else
-        Serial.println("Creating OLED Screen");
+        debugW("Creating OLED Screen");
             g_ptrSystem->SetupDisplay<OLEDScreen>(128, 64);
         #endif
 

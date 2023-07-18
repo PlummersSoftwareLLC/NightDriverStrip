@@ -40,8 +40,8 @@ const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
     { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } }
 };
 
-std::vector<SettingSpec> CWebServer::mySettingSpecs = {};
-std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
+std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
+std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>> CWebServer::deviceSettingSpecs{};
 
 // Member function template specialzations
 
@@ -273,7 +273,7 @@ void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs)
+void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>> & settingSpecs)
 {
     static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
     bool bufferOverflow;
@@ -319,7 +319,7 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
     } while (bufferOverflow);
 }
 
-const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
+const std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
 {
     if (deviceSettingSpecs.size() == 0)
     {

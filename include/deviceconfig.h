@@ -66,8 +66,8 @@ class DeviceConfig : public IJSONSerializable
     String ntpServer;
     bool rememberCurrentEffect = false;
 
-    std::vector<SettingSpec> settingSpecs;
-    std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
+    std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
+    std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>> settingSpecReferences;
     size_t writerIndex;
 /*
     void WriteToNVS(const String& name, const String& value);
@@ -169,7 +169,7 @@ class DeviceConfig : public IJSONSerializable
         RemoveJSONFile(DEVICE_CONFIG_FILE);
     }
 
-    virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
+    virtual const std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>>& GetSettingSpecs()
     {
         if (settingSpecs.size() == 0)
         {
