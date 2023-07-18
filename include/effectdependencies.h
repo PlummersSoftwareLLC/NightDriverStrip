@@ -88,8 +88,9 @@
 #endif
 
     // A block of 3D-ish effects using Particle systems or Boids.
-    #include "effects/matrix/PatternSMBlurringColors.h"
+    #include "effects/matrix/PatternSMFlowFields.h"
 #if BOOGER
+    #include "effects/matrix/PatternSMBlurringColors.h"
     #include "effects/matrix/PatternSMSupernova.h"
     #include "effects/matrix/PatternSMBoidExplosion.h"
     #include "effects/matrix/PatternSMTixyLand.h" // Dozens of simple effects

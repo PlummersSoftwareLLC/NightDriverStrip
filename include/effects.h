@@ -145,6 +145,7 @@
 #define EFFECT_MATRIX_SMBOID_EXPLOSION                 172
 #define EFFECT_MATRIX_SMSUPERNOVA                      173
 #define EFFECT_MATRIX_SMBLURRING_COLORS                174
+#define EFFECT_MATRIX_SMFLOW_FIELDS                    175
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1

@@ -358,14 +358,15 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA, PatternSMBlurringColors);
+        ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS, PatternSMFlowFields);
+        // ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA, PatternSMBlurringColors);
         // ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA, PatternSMSupernova);
         // ADD_EFFECT(EFFECT_MATRIX_SMBOID_EXPLOSION, PatternSMBoidExplosion);
         // ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND, PatternSMTixyLand);
         // ADD_EFFECT(EFFECT_MATRIX_SMXOR_CIRCLES, PatternSMXorCircles);
         // ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMHypnosis);
-        //ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRainbowTunnel);
+        // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRainbowTunnel);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRadialWave);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMirage);
         // ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);
