@@ -86,7 +86,7 @@ public:
     // EstimatePowerDraw
     //
     // Estimate the total power load for the board and matrix by walking the pixels and adding our previously measured
-    // power draw per pixel based on what color and brightness each pixel is/
+    // power draw per pixel based on what color and brightness each pixel is
 
     int EstimatePowerDraw()
     {

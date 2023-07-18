@@ -169,39 +169,42 @@ void MatrixPreDraw()
 //
 // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
 
-void MatrixPostDraw()
+void MatrixPostDraw(size_t pixelsDrawn)
 {
-    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>( g_ptrSystem->EffectManager().g() );
+    if (pixelsDrawn > 0)
+    {
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>( g_ptrSystem->EffectManager().g() );
 
-    constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
-    g_MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                             // What our drawn pixels will consume
+        constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
+        g_MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                             // What our drawn pixels will consume
 
-    if (pMatrix->GetCaptionTransparency() > 0)
-        g_MatrixPowerMilliwatts += kCaptionPower;
+        if (pMatrix->GetCaptionTransparency() > 0)
+            g_MatrixPowerMilliwatts += kCaptionPower;
 
-    const auto kMaxPower = 5000.0;
-    uint8_t scaledBrightness = std::clamp(kMaxPower / g_MatrixPowerMilliwatts, 0.0, 1.0) * 255;
+        const auto kMaxPower = 5000.0;
+        uint8_t scaledBrightness = std::clamp(kMaxPower / g_MatrixPowerMilliwatts, 0.0, 1.0) * 255;
 
-    // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
-    // somewhat slowly to avoid flicker.  We do this by using a weighted average of the current and former brightness.  To avoid
-    // an ansymptote near the max, we always increase by at least one step if we're lower than the target.
+        // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
+        // somewhat slowly to avoid flicker.  We do this by using a weighted average of the current and former brightness.  To avoid
+        // an ansymptote near the max, we always increase by at least one step if we're lower than the target.
 
-    constexpr auto kWeightedAverageAmount = 10;
-    if (scaledBrightness <= g_MatrixScaledBrightness)
-        g_MatrixScaledBrightness = scaledBrightness;
-    else
-        g_MatrixScaledBrightness = std::max(g_MatrixScaledBrightness + 1, 
-                                            (( (g_MatrixScaledBrightness * (kWeightedAverageAmount-1)) ) + scaledBrightness) / kWeightedAverageAmount);
+        constexpr auto kWeightedAverageAmount = 10;
+        if (scaledBrightness <= g_MatrixScaledBrightness)
+            g_MatrixScaledBrightness = scaledBrightness;
+        else
+            g_MatrixScaledBrightness = std::max(g_MatrixScaledBrightness + 1, 
+                                                (( (g_MatrixScaledBrightness * (kWeightedAverageAmount-1)) ) + scaledBrightness) / kWeightedAverageAmount);
 
-    // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
-    // whichever is lowest, so that we can fade between effects without having to change the brightness setting. 
+        // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
+        // whichever is lowest, so that we can fade between effects without having to change the brightness setting. 
 
-    auto targetBrightness = min({ g_Brightness, g_Fader, g_MatrixScaledBrightness });
-    
-    debugV("MW: %d, Setting Scaled Brightness to: %d", g_MatrixPowerMilliwatts, targetBrightness);
-    pMatrix->SetBrightness(targetBrightness );
+        auto targetBrightness = min({ g_Brightness, g_Fader, g_MatrixScaledBrightness });
+        
+        debugV("MW: %d, Setting Scaled Brightness to: %d", g_MatrixPowerMilliwatts, targetBrightness);
+        pMatrix->SetBrightness(targetBrightness );
 
-    LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+        LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+    }
 }
 #endif
 
@@ -484,8 +487,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             localPixelsDrawn = LocalDraw();
 
         #if USE_MATRIX
-            // Swap the back buffer forward, set the auto-brightness
-            MatrixPostDraw();
+            // Swap the back buffer forward, set the auto-brightness.  It only does anything if pixels were drawn,
+            // but is always called for orthogonality with the PreDraw() call.
+            MatrixPostDraw(localPixelsDrawn + wifiPixelsDrawn);
         #endif
 
         #if USE_STRIP
