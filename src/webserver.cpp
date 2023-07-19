@@ -41,7 +41,7 @@ const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
     { DeviceConfig::PowerLimitTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } }
 };
 
-std::vector<SettingSpec> CWebServer::mySettingSpecs = {};
+std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
 std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
 
 // Member function template specialzations

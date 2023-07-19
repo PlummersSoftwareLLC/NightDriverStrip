@@ -87,7 +87,6 @@ void BasicInfoSummary(bool bRedraw)
 
     if (bRedraw)
         display.fillScreen(bkgndColor);
-        //display.fillRect(1, 1, display.height() - 2, display.width() - 2, bkgndColor);
 
     // Status line 1
 
@@ -230,6 +229,7 @@ void BasicInfoSummary(bool bRedraw)
 void CurrentEffectSummary(bool bRedraw)
 {
     auto& display = g_ptrSystem->Display();
+    display.StartFrame();
 
     if (bRedraw)
         display.fillScreen(BLACK16);
@@ -299,9 +299,9 @@ void CurrentEffectSummary(bool bRedraw)
             lastSerial = g_Analyzer._serialFPS;
             lastAudio = g_Analyzer._AudioFPS;
             display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
-            yh = display.height() - display.fontHeight() + 6;
             display.setTextColor(YELLOW16, backColor);
             display.setTextSize(1);
+            yh = display.height() - display.fontHeight();
             String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
             auto w = display.textWidth(strOut);
             display.setCursor(display.width() / 2 - w / 2, yh);
@@ -348,6 +348,8 @@ void CurrentEffectSummary(bool bRedraw)
         assert(bandHeight * val <= bandHeight);
         display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }
+
+    display.EndFrame();
 
     // Draw horizontal lines so the bars look like they are made of segments
 

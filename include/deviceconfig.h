@@ -70,9 +70,9 @@ class DeviceConfig : public IJSONSerializable
     bool   rememberCurrentEffect = false;
     int    powerLimit = POWER_LIMIT_DEFAULT;
 
-    std::vector<SettingSpec>                         settingSpecs;
+    std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
-    size_t                                           writerIndex;
+    size_t writerIndex;
 
     void SaveToJSON();
 
@@ -346,14 +346,14 @@ class DeviceConfig : public IJSONSerializable
     ValidateResponse ValidatePowerLimit(const String& newPowerLimit)
     {
         if (newPowerLimit.toInt() < POWER_LIMIT_MIN)
-            return { false, "powerLimit is below minimum value" };
+            return { false, String("powerLimit is below minimum value of ") + POWER_LIMIT_MIN };
 
         return { true, "" };
     }
 
     void SetPowerLimit(int newPowerLimit)
     {
-        if (powerLimit >= POWER_LIMIT_MIN)
+        if (newPowerLimit >= POWER_LIMIT_MIN)
             SetAndSave(powerLimit, newPowerLimit);
     }
 };

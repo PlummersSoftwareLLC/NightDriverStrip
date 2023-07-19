@@ -153,39 +153,42 @@ void MatrixPreDraw()
 //
 // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
 
-void MatrixPostDraw()
+void MatrixPostDraw(size_t pixelsDrawn)
 {
-    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>( g_ptrSystem->EffectManager().g() );
+    if (pixelsDrawn > 0)
+    {
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>( g_ptrSystem->EffectManager().g() );
 
-    constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
-    g_Values.MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                      // What our drawn pixels will consume
+        constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
+        g_Values.MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                             // What our drawn pixels will consume
 
-    if (pMatrix->GetCaptionTransparency() > 0)
-        g_Values.MatrixPowerMilliwatts += kCaptionPower;
+        if (pMatrix->GetCaptionTransparency() > 0)
+            g_Values.MatrixPowerMilliwatts += kCaptionPower;
 
-    const auto kMaxPower = double(g_ptrSystem->DeviceConfig().GetPowerLimit());
-    uint8_t scaledBrightness = std::clamp(kMaxPower / g_Values.MatrixPowerMilliwatts, 0.0, 1.0) * 255;
+        const double kMaxPower = g_ptrSystem->DeviceConfig().GetPowerLimit();
+        uint8_t scaledBrightness = std::clamp(kMaxPower / g_Values.MatrixPowerMilliwatts, 0.0, 1.0) * 255;
 
-    // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
-    // somewhat slowly to avoid flicker.  We do this by using a weighted average of the current and former brightness.  To avoid
-    // an ansymptote near the max, we always increase by at least one step if we're lower than the target.
+        // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
+        // somewhat slowly to avoid flicker.  We do this by using a weighted average of the current and former brightness.  To avoid
+        // an ansymptote near the max, we always increase by at least one step if we're lower than the target.
 
-    constexpr auto kWeightedAverageAmount = 10;
-    if (scaledBrightness <= g_Values.MatrixScaledBrightness)
-        g_Values.MatrixScaledBrightness = scaledBrightness;
-    else
-        g_Values.MatrixScaledBrightness = std::max(g_Values.MatrixScaledBrightness + 1,
-                                                   (( (g_Values.MatrixScaledBrightness * (kWeightedAverageAmount-1)) ) + scaledBrightness) / kWeightedAverageAmount);
+        constexpr auto kWeightedAverageAmount = 10;
+        if (scaledBrightness <= g_Values.MatrixScaledBrightness)
+            g_Values.MatrixScaledBrightness = scaledBrightness;
+        else
+            g_Values.MatrixScaledBrightness = std::max(g_Values.MatrixScaledBrightness + 1,
+                                                       (( g_Values.MatrixScaledBrightness * (kWeightedAverageAmount-1) ) + scaledBrightness) / kWeightedAverageAmount);
 
-    // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
-    // whichever is lowest, so that we can fade between effects without having to change the brightness setting.
+        // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
+        // whichever is lowest, so that we can fade between effects without having to change the brightness setting.
 
-    auto targetBrightness = std::min({ g_Values.Brightness, g_Values.Fader, g_Values.MatrixScaledBrightness });
+        auto targetBrightness = min({ g_Values.Brightness, g_Values.Fader, g_Values.MatrixScaledBrightness });
 
-    debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
-    pMatrix->SetBrightness(targetBrightness );
+        debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
+        pMatrix->SetBrightness(targetBrightness );
 
-    LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+        LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+    }
 }
 #endif
 
@@ -453,13 +456,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             localPixelsDrawn = LocalDraw();
 
         #if USE_MATRIX
-            if (wifiPixelsDrawn + localPixelsDrawn > 0)
-            {
-                FastLED.countFPS();
-                g_Values.FPS = FastLED.getFPS();
-            }
-            // Swap the back buffer forward, set the auto-brightness
-            MatrixPostDraw();
+            // Swap the back buffer forward, set the auto-brightness.  It only does anything if pixels were drawn,
+            // but is always called for orthogonality with the PreDraw() call.
+            MatrixPostDraw(localPixelsDrawn + wifiPixelsDrawn);
         #endif
 
         #if USE_STRIP
@@ -485,9 +484,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         ShowOnboardPixel();
         ShowOnboardRGBLED();
 
-        // Delay at least 1ms and not more than 1s until next frame is due
+        // Delay at least 5ms and not more than 1s until next frame is due
 
-        delay( CalcDelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn) );
+        constexpr auto minimumDelay = 5;
+        delay( std::max(minimumDelay, CalcDelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn) ));
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
         // so we'll slow down to share the CPU a bit once the update has begun

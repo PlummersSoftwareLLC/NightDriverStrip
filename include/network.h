@@ -28,6 +28,7 @@
 #pragma once
 
 #include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
+#include "types.h"
 
 #if INCOMING_WIFI_ENABLED
     #include "socketserver.h"
@@ -142,7 +143,7 @@
           {}
       };
 
-      std::vector<ReaderEntry> readers;
+      std::vector<ReaderEntry, psram_allocator<ReaderEntry>> readers;
 
     public:
 

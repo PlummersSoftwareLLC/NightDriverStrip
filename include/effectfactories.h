@@ -46,9 +46,9 @@ using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectCon
 
 // -----------------------------------------------------------------------------
 // Class: EffectFactories
-// 
-// This class manages a collection of default and JSON effect factories. Each 
-// factory is associated with a unique effect number. Factories are categorized 
+//
+// This class manages a collection of default and JSON effect factories. Each
+// factory is associated with a unique effect number. Factories are categorized
 // into two types: default and JSON, managed separately using respective containers.
 //
 // Sub-Structure:
@@ -57,7 +57,7 @@ using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectCon
 //
 // Member Variables:
 //
-// defaultFactories: A vector of NumberedFactory instances. Each NumberedFactory holds an 
+// defaultFactories: A vector of NumberedFactory instances. Each NumberedFactory holds an
 //                   effect number and a DefaultEffectFactory instance.
 // jsonFactories: A map linking each effect number to its corresponding JSONEffectFactory.
 //
@@ -72,8 +72,8 @@ using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectCon
 // IsEmpty: Returns a boolean indicating whether both defaultFactories and jsonFactories are empty.
 // ClearDefaultFactories: Clears the vector of default factories.
 //
-// Note: The 'extern DRAM_ATTR EffectFactories g_EffectFactories;' line at the bottom of this code 
-//       indicates that an EffectFactories object named 'g_EffectFactories' is declared elsewhere, 
+// Note: The 'extern DRAM_ATTR EffectFactories g_EffectFactories;' line at the bottom of this code
+//       indicates that an EffectFactories object named 'g_EffectFactories' is declared elsewhere,
 //       and it is available for use throughout the program.
 // -----------------------------------------------------------------------------
 
@@ -97,17 +97,17 @@ class EffectFactories
 
   private:
 
-    std::vector<NumberedFactory> defaultFactories;
-    std::map<int, JSONEffectFactory> jsonFactories;
+    std::vector<NumberedFactory, psram_allocator<NumberedFactory>> defaultFactories;
+    std::map<int, JSONEffectFactory, std::less<int>, psram_allocator<std::pair<const int, JSONEffectFactory>>> jsonFactories;
 
   public:
 
-    const std::vector<NumberedFactory>& GetDefaultFactories()
+    const std::vector<NumberedFactory, psram_allocator<NumberedFactory>>& GetDefaultFactories()
     {
         return defaultFactories;
     }
 
-    const std::map<int, JSONEffectFactory>& GetJSONFactories()
+    const std::map<int, JSONEffectFactory, std::less<int>, psram_allocator<std::pair<const int, JSONEffectFactory>>>& GetJSONFactories()
     {
         return jsonFactories;
     }

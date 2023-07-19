@@ -52,7 +52,7 @@ class LEDStripEffect : public IJSONSerializable
   private:
 
     bool   _coreEffect = false;
-    static std::vector<SettingSpec> _baseSettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> _baseSettingSpecs;
 
   protected:
 

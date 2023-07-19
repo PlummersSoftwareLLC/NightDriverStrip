@@ -153,7 +153,7 @@ class LEDBuffer
 class LEDBufferManager
 {
     std::unique_ptr<std::vector<std::shared_ptr<LEDBuffer>>> _ppBuffers;          // The circular array of buffer ptrs
-    std::shared_ptr<LEDBuffer>                           _pLastBufferAdded;   // Keeps track of the MRU buffer
+    std::shared_ptr<LEDBuffer> _pLastBufferAdded;   // Keeps track of the MRU buffer
     size_t                                               _iNextBuffer;        // Head pointer index
     size_t                                               _iLastBuffer;        // Tail pointer index
     uint32_t                                             _cBuffers;           // Number of buffers
@@ -173,7 +173,7 @@ class LEDBufferManager
         // are returned back out to callers so they must be shared pointers.
 
         for (int i = 0; i < _cBuffers; i++)
-            _ppBuffers->push_back(std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX));
+            _ppBuffers->push_back(make_shared_psram<LEDBuffer>(pGFX));
     }
 
     float AgeOfOldestBuffer()

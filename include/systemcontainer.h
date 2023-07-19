@@ -9,6 +9,7 @@
 #include "socketserver.h"
 #include "remotecontrol.h"
 #include "webserver.h"
+#include "types.h"
 
 // SystemContainer
 //
@@ -28,8 +29,8 @@
 // forwarding Setup method, and the Has and getter methods.
 //
 // Most macros accept two parameters:
-// - The type of the property, as held/returned by this class
 // - The name of the property, as used in the Setup, Has and getter methods
+// - The type of the property, as held/returned by this class
 //
 // The actual composition of this class is largely driven by the macros mentioned, only irregular Setup methods are
 // coded manually.
@@ -38,56 +39,56 @@
 #define SC_MEMBER(name) _ptr ## name
 
 // Declares the member variable for a property with indicated type and name
-#define SC_DECLARE(typeName, name) \
+#define SC_DECLARE(name, ...) \
   private: \
-    std::unique_ptr<::typeName> SC_MEMBER(name) = nullptr;
+    std::unique_ptr<::__VA_ARGS__> SC_MEMBER(name) = nullptr;
 
 // Creates a Setup method for a property (with indicated type and name) that invokes a parameterless constructor
-#define SC_SIMPLE_SETUP_FOR(typeName, name) \
+#define SC_SIMPLE_SETUP_FOR(name, ...) \
   public: \
-    ::typeName& Setup ## name() \
+    ::__VA_ARGS__& Setup ## name() \
     { \
         if (!SC_MEMBER(name)) \
-            SC_MEMBER(name).reset(new ::typeName()); \
+            SC_MEMBER(name).reset(new ::__VA_ARGS__()); \
         return *SC_MEMBER(name); \
     }
 
 // Creates a Setup method for a property (with indicated type and name) that forwards any arguments to the constructor
-#define SC_FORWARDING_SETUP_FOR(typeName, name) \
+#define SC_FORWARDING_SETUP_FOR(name, ...) \
   public: \
     template<typename... Args> \
-    ::typeName& Setup ## name(Args&&... args) \
+    ::__VA_ARGS__& Setup ## name(Args&&... args) \
     { \
         if (!SC_MEMBER(name)) \
-            SC_MEMBER(name).reset(new ::typeName(std::forward<Args>(args)...)); \
+            SC_MEMBER(name).reset(new ::__VA_ARGS__(std::forward<Args>(args)...)); \
         return *SC_MEMBER(name); \
     }
 
 // Creates the Has and getter methods for a property with indicated type and name
-#define SC_GETTERS_FOR(typeName, name) \
+#define SC_GETTERS_FOR(name, ...) \
   public: \
     bool Has ## name() const \
     { \
         return !!SC_MEMBER(name); \
     } \
     \
-    ::typeName& name() const \
+    ::__VA_ARGS__& name() const \
     { \
         CheckPointer(SC_MEMBER(name), #name); \
         return *SC_MEMBER(name); \
     }
 
 // Creates a full property with the type and name indicated, having a simple Setup method
-#define SC_SIMPLE_PROPERTY(typeName, name) \
-    SC_DECLARE(typeName, name) \
-    SC_SIMPLE_SETUP_FOR(typeName, name) \
-    SC_GETTERS_FOR(typeName, name)
+#define SC_SIMPLE_PROPERTY(name, ...) \
+    SC_DECLARE(name, __VA_ARGS__) \
+    SC_SIMPLE_SETUP_FOR(name, __VA_ARGS__) \
+    SC_GETTERS_FOR(name, __VA_ARGS__)
 
 // Creates a full property with the type and name indicated, having a forwarding Setup method
-#define SC_FORWARDING_PROPERTY(typeName, name) \
-    SC_DECLARE(typeName, name) \
-    SC_FORWARDING_SETUP_FOR(typeName, name) \
-    SC_GETTERS_FOR(typeName, name)
+#define SC_FORWARDING_PROPERTY(name, ...) \
+    SC_DECLARE(name, __VA_ARGS__) \
+    SC_FORWARDING_SETUP_FOR(name, __VA_ARGS__) \
+    SC_GETTERS_FOR(name, __VA_ARGS__)
 
 class SystemContainer
 {
@@ -107,14 +108,14 @@ class SystemContainer
     // -------------------------------------------------------------
     // Devices
 
-    SC_SIMPLE_PROPERTY(std::vector<std::shared_ptr<GFXBase>>, Devices)
+    SC_SIMPLE_PROPERTY(Devices, std::vector<std::shared_ptr<GFXBase>>)
 
     // -------------------------------------------------------------
     // BufferManagers
 
-    SC_DECLARE(std::vector<LEDBufferManager>, BufferManagers)
+    SC_DECLARE(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
 
-    public: std::vector<LEDBufferManager>& SetupBufferManagers()
+    public: std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>& SetupBufferManagers()
     {
         if (!!SC_MEMBER(BufferManagers))
             return *SC_MEMBER(BufferManagers);
@@ -148,7 +149,7 @@ class SystemContainer
 
         debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
-        SC_MEMBER(BufferManagers) = std::make_unique<std::vector<LEDBufferManager>>();
+        SC_MEMBER(BufferManagers) = make_unique_psram<std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>>();
 
         for (auto& device : *SC_MEMBER(Devices))
             SC_MEMBER(BufferManagers)->emplace_back(cBuffers, device);
@@ -156,17 +157,17 @@ class SystemContainer
         return *SC_MEMBER(BufferManagers);
     }
 
-    SC_GETTERS_FOR(std::vector<LEDBufferManager>, BufferManagers)
+    SC_GETTERS_FOR(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
 
     // -------------------------------------------------------------
     // EffectManager
 
-    SC_FORWARDING_PROPERTY(EffectManager<GFXBase>, EffectManager)
+    SC_FORWARDING_PROPERTY(EffectManager, EffectManager<GFXBase>)
 
     // -------------------------------------------------------------
     // TaskManager
 
-    SC_DECLARE(NightDriverTaskManager, TaskManager)
+    SC_DECLARE(TaskManager, NightDriverTaskManager)
 
     // Creates, begins and returns the TaskManager
     public: ::NightDriverTaskManager& SetupTaskManager()
@@ -180,13 +181,13 @@ class SystemContainer
         return *SC_MEMBER(TaskManager);
     }
 
-    SC_GETTERS_FOR(NightDriverTaskManager, TaskManager)
+    SC_GETTERS_FOR(TaskManager, NightDriverTaskManager)
 
     // -------------------------------------------------------------
     // Config objects: JSONWriter, DeviceConfig
 
-    SC_DECLARE(DeviceConfig, DeviceConfig);
-    SC_DECLARE(JSONWriter, JSONWriter);
+    SC_DECLARE(DeviceConfig, DeviceConfig)
+    SC_DECLARE(JSONWriter, JSONWriter)
 
     // Creates and returns the config objects. Requires TaskManager to have already been setup.
     public: void SetupConfig()
@@ -224,7 +225,7 @@ class SystemContainer
     // WebServer
 
     #if ENABLE_WIFI && ENABLE_WEBSERVER
-        SC_SIMPLE_PROPERTY(CWebServer, WebServer)
+        SC_SIMPLE_PROPERTY(WebServer, CWebServer)
     #endif
 
     // -------------------------------------------------------------
@@ -245,7 +246,7 @@ class SystemContainer
     // Display
 
     #if USE_SCREEN
-        SC_DECLARE(Screen, Display)
+        SC_DECLARE(Display, Screen)
 
         // Creates and returns the display. The exact screen type is a template argument.
         public: template<typename Ts, typename... Args>
@@ -256,7 +257,7 @@ class SystemContainer
             return *SC_MEMBER(Display);
         }
 
-        SC_GETTERS_FOR(Screen, Display)
+        SC_GETTERS_FOR(Display, Screen)
     #endif
 };
 
