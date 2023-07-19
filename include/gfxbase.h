@@ -144,10 +144,6 @@ public:
     {
     }
 
-    virtual void InitializeHardware()
-    {
-    }
-
     #if USE_NOISE
     Noise &GetNoise()
     {
