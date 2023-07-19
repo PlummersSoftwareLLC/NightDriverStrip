@@ -48,7 +48,7 @@ class LEDStripEffect : public IJSONSerializable
   private:
 
     bool   _coreEffect = false;
-    static std::vector<SettingSpec> _baseSettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> _baseSettingSpecs;
 
   protected:
 
@@ -57,7 +57,7 @@ class LEDStripEffect : public IJSONSerializable
     int    _effectNumber;
     bool   _enabled = true;
     size_t _maximumEffectTime = SIZE_MAX;
-    std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
+    std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>> _settingSpecs;
 
     std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
 
@@ -479,7 +479,7 @@ class LEDStripEffect : public IJSONSerializable
         return _coreEffect;
     }
 
-    virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
+    virtual const std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>>& GetSettingSpecs()
     {
         FillSettingSpecs();
 

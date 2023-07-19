@@ -73,7 +73,7 @@ extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 template <typename GFXTYPE>
 class  EffectManager : public IJSONSerializable
 {
-    std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
+    std::vector<std::shared_ptr<LEDStripEffect>, psram_allocator<LEDStripEffect>> _vEffects;
 
     size_t _iCurrentEffect = 0;
     uint _effectStartTime;
@@ -632,7 +632,7 @@ public:
             SaveEffectManagerConfig();
     }
 
-    const std::vector<std::shared_ptr<LEDStripEffect>> & EffectsList() const
+    const std::vector<std::shared_ptr<LEDStripEffect>, psram_allocator<LEDStripEffect>> & EffectsList() const
     {
         return _vEffects;
     }

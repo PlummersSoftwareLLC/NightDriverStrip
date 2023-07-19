@@ -835,8 +835,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if SPECTRUM_WROVER_KIT
         #define LED_PIN0        5
+    #elif ELECROW
+        #define LED_PIN0        19
     #else
         #define LED_PIN0        26
+    #endif
+
+    #if ELECROW
+        #define IR_REMOTE_PIN   20
     #endif
 
     #define NUM_CHANNELS    1
@@ -851,10 +857,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define TOGGLE_BUTTON_1 37
-    #define TOGGLE_BUTTON_2 39
+    #if ELECROW
+    #else
+        #define TOGGLE_BUTTON_1 37
+        #define TOGGLE_BUTTON_2 39
+    #endif
 
-    #ifdef SPECTRUM_WROVER_KIT
+    #if SPECTRUM_WROVER_KIT
     #else
         #define NUM_INFO_PAGES          2
         #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -1284,6 +1293,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
+    #elif ELECROW
+    
+        // Implies ElecrowScreen 
+
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
@@ -1380,6 +1393,8 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
     #ifndef INPUT_PIN
         #if TTGO
             #define INPUT_PIN (36)
+        #elif ELECROW 
+            #define INPUT_PIN (41)
         #elif M5STACKCORE2
             #define INPUT_PIN (0)
             #define IO_PIN    (0)
