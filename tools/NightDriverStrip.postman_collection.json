@@ -208,6 +208,12 @@
 							"description": "Included to test if irrelevant parameters are correctly ignored",
 							"type": "text",
 							"disabled": true
+						},
+						{
+							"key": "powerLimit",
+							"value": "1500",
+							"type": "text",
+							"disabled": true
 						}
 					]
 				},
