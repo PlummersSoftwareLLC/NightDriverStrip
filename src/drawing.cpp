@@ -60,22 +60,6 @@ DRAM_ATTR uint64_t g_usLastWifiDraw = 0;
 
 #if USE_MATRIX
 
-// MatrixInit
-//
-// One time setup we need to do with the matrix before drawing to it
-
-void MatrixInit()
-{
-    // We don't need color correction on the title layer, but we want it on the main background
-
-    LEDMatrixGFX::titleLayer.enableColorCorrection(false);
-    LEDMatrixGFX::backgroundLayer.enableColorCorrection(true);
-
-    // Starting the effect might need to draw, so we need to set the leds up before doing so
-    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().g());
-    pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
-}
-
 // MatrixPreDraw
 //
 // Gets the matrix ready for the effect or wifi to render into
