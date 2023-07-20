@@ -39,13 +39,13 @@
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
 #include <secrets.h>
-#include <RemoteDebug.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
 #include <thread>
 #include <map>
 #include "effects.h"
+#include "types.h"
 
 #define WEATHER_INTERVAL_SECONDS (10*60)
 #define WEATHER_CHECK_WIFI_WAIT 5000
@@ -71,7 +71,7 @@ extern const uint8_t thunderstorm_end[]      asm("_binary_assets_bmp_thunderstor
 
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
-static std::map<int, EmbeddedFile> weatherIcons =
+static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int, EmbeddedFile>>> weatherIcons =
 {
     { 1, EmbeddedFile(clearsky_start, clearsky_end) },
     { 2, EmbeddedFile(fewclouds_start, fewclouds_end) },
@@ -337,7 +337,7 @@ public:
         g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

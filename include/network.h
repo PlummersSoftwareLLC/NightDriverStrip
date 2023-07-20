@@ -28,15 +28,13 @@
 #pragma once
 
 #include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
+#include "types.h"
 
 #if INCOMING_WIFI_ENABLED
     #include "socketserver.h"
 #endif
 
 #if ENABLE_WIFI
-    extern uint8_t g_Brightness;
-    extern bool    g_bUpdateStarted;
-    extern WiFiUDP g_Udp;
     void processRemoteDebugCmd();
 
     bool ConnectToWiFi(uint cRetries);
@@ -145,7 +143,7 @@
           {}
       };
 
-      std::vector<ReaderEntry> readers;
+      std::vector<ReaderEntry, psram_allocator<ReaderEntry>> readers;
 
     public:
 

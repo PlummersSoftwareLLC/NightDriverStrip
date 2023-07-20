@@ -33,8 +33,6 @@
 
 #if ENABLE_AUDIO
 
-extern DRAM_ATTR AppTime g_AppTime;
-
 class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
   protected:
@@ -44,7 +42,7 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
     virtual void Draw() override
     {
         BeatEffectBase::ProcessAudio();
-        fadeAllChannelsToBlackBy(min(255.0, g_AppTime.LastFrameTime() * 1500.0));
+        fadeAllChannelsToBlackBy(min(255.0, g_Values.AppTime.LastFrameTime() * 1500.0));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)
@@ -87,7 +85,7 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
     virtual void Draw() override
     {
         BeatEffectBase::ProcessAudio();
-        fadeAllChannelsToBlackBy(min(255.0, g_AppTime.LastFrameTime() * 1500.0));
+        fadeAllChannelsToBlackBy(min(255.0, g_Values.AppTime.LastFrameTime() * 1500.0));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)

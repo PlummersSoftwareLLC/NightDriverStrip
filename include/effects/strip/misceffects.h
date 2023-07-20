@@ -356,7 +356,7 @@ class StatusEffect : public LEDStripEffect
     {
         CRGB color = _color;
 
-        if (g_bUpdateStarted)
+        if (g_Values.UpdateStarted)
           color = CRGB::Purple;
         else if (!WiFi.isConnected())
           color = CRGB::Red;
@@ -482,7 +482,7 @@ class TwinkleEffect : public LEDStripEffect
 class OuterHexRingEffect : public LEDStripEffect
 {
   public:
-    
+
     OuterHexRingEffect() : LEDStripEffect(EFFECT_HEXAGON_OUTER_RING, "OuterRingHexEffect")
     {
     }

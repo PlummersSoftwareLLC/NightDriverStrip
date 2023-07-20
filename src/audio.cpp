@@ -39,11 +39,6 @@ SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio ca
 
 #include <esp_task_wdt.h>
 
-extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
-extern uint32_t g_Watts;
-extern float g_Brite;
-extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
-
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
 
@@ -51,7 +46,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 {
     debugI(">>> Sampler Task Started");
 
-    // Enable microphone input 
+    // Enable microphone input
     pinMode(INPUT_PIN, INPUT);
 
     g_Analyzer.SampleBufferInitI2S();

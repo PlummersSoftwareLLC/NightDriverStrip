@@ -49,9 +49,6 @@
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
-extern uint8_t g_Brightness;
-extern uint8_t g_Fader;
-
 // References to functions in other C files
 
 void InitSplashEffectManager();
@@ -63,7 +60,6 @@ bool ReadCurrentEffectIndex(size_t& index);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
 // EffectManager
@@ -73,7 +69,7 @@ extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 template <typename GFXTYPE>
 class  EffectManager : public IJSONSerializable
 {
-    std::vector<std::shared_ptr<LEDStripEffect>, psram_allocator<LEDStripEffect>> _vEffects;
+    std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
 
     size_t _iCurrentEffect = 0;
     uint _effectStartTime;
@@ -84,7 +80,7 @@ class  EffectManager : public IJSONSerializable
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
 
-    std::shared_ptr<GFXTYPE> * _gfx;
+    std::vector<std::shared_ptr<GFXTYPE>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
 
     void construct(bool clearTempEffect)
@@ -95,8 +91,11 @@ class  EffectManager : public IJSONSerializable
         {
             _clearTempEffectWhenExpired = true;
 
-            // This is a hacky way to ensure that we start the correct effect after the temporary one
-            // REVIEW: Explain, I don't get it!
+            // This is a hacky way to ensure that we start the correct effect after the temporary one.
+            //   The switching to the next effect is taken care of by NextEffect(), which starts with
+            //   increasing _iCurrentEffect. We therefore need to decrease it here, to make sure that
+            //   the first effect after the temporary one is the one we want (either the then current
+            //   one when the chip was powered off, or the one at index 0).
             _iCurrentEffect--;
         }
     }
@@ -171,7 +170,7 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::vector<std::shared_ptr<GFXTYPE>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
@@ -182,7 +181,7 @@ public:
         construct(false);
     }
 
-    EffectManager(std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(std::vector<std::shared_ptr<GFXTYPE>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
@@ -190,7 +189,7 @@ public:
         LoadDefaultEffects();
     }
 
-    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXTYPE>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
@@ -355,6 +354,11 @@ public:
         return _gfx[index];
     }
 
+    size_t gCount()
+    {
+        return _gfx.size();
+    }
+
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
     inline std::shared_ptr<GFXTYPE> g() const
     {
@@ -414,7 +418,7 @@ public:
                     effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
 
-            if (effect->Init(g_aptrDevices))
+            if (effect->Init(_gfx))
             {
                 _tempEffect = effect;
                 StartEffect();
@@ -631,7 +635,7 @@ public:
             SaveEffectManagerConfig();
     }
 
-    const std::vector<std::shared_ptr<LEDStripEffect>, psram_allocator<LEDStripEffect>> & EffectsList() const
+    const std::vector<std::shared_ptr<LEDStripEffect>> & EffectsList() const
     {
         return _vEffects;
     }
@@ -815,13 +819,13 @@ public:
 
         if (EffectCount() < 2)
         {
-            g_Fader = 255;
+            g_Values.Fader = 255;
             return;
         }
 
         if (_effectInterval == 0)
         {
-            g_Fader = 255;
+            g_Values.Fader = 255;
             return;
         }
 
@@ -830,15 +834,15 @@ public:
 
         if (e < msFadeTime)
         {
-            g_Fader = 255 * (e / msFadeTime); // Fade in
+            g_Values.Fader = 255 * (e / msFadeTime); // Fade in
         }
         else if (r < msFadeTime)
         {
-            g_Fader = 255 * (r / msFadeTime); // Fade out
+            g_Values.Fader = 255 * (r / msFadeTime); // Fade out
         }
         else
         {
-            g_Fader = 255; // No fade, not at start or end
+            g_Values.Fader = 255; // No fade, not at start or end
         }
     }
 };
