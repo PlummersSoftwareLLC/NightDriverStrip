@@ -153,7 +153,7 @@ class JSONWriter
         {}
     };
 
-    std::vector<WriterEntry> writers;
+    std::vector<WriterEntry, psram_allocator<WriterEntry>> writers;
     std::atomic_ulong        latestFlagMs;
     std::atomic_bool         flushRequested;
     std::atomic_bool         haltWrites;

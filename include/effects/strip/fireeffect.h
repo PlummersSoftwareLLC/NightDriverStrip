@@ -33,8 +33,8 @@
 
 #include "globals.h"
 #include "musiceffect.h"
+#include "soundanalyzer.h"
 
-extern AppTime g_AppTime;
 class FireEffect : public LEDStripEffect
 {
     void construct()
@@ -365,13 +365,6 @@ public:
 
     virtual void Draw() override
     {
-        //static float lastDraw = 0;
-
-        //if (g_AppTime.FrameStartTime() - lastDraw < 1.0 / 40.0)
-        //    return;
-        //lastDraw = g_AppTime.FrameStartTime();
-
-        //  Fire(55, 180, 1);               //  The original
         Fire(_Cooling, 180, 5);
         delay(20);
     }
@@ -419,9 +412,6 @@ public:
         {
             setPixelHeatColor(j, heat[j]);
         }
-
-        //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-        //    blur1d(_GFX[channel]->leds(), _cLEDs, 255);
     }
 
     void setPixelWithMirror(int Pixel, CRGB temperature)
@@ -543,7 +533,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
@@ -560,15 +550,9 @@ public:
         free(_Temperatures);
     }
 
-    //float lastDraw = 0;
-
     virtual void Draw() override
     {
-        //if (g_AppTime.FrameStartTime() - lastDraw < 1.0/33.0)
-        //    return;
-        //lastDraw = g_AppTime.FrameStartTime();
-
-        float deltaTime = (float)g_AppTime.LastFrameTime();
+        float deltaTime = (float)g_Values.AppTime.LastFrameTime();
         setAllOnAllChannels(0, 0, 0);
 
         float cooldown = randomfloat(0, _Cooling) * deltaTime;

@@ -32,8 +32,6 @@
 
 #include "effects.h"
 
-extern AppTime g_AppTime;
-
 class DoublePaletteEffect : public LEDStripEffect
 {
   private:
@@ -72,7 +70,7 @@ class DoublePaletteEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         if (!_PaletteEffect1.Init(gfx) || !_PaletteEffect2.Init(gfx))
