@@ -85,7 +85,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
         // Delay enough time to yield 60fps max
-        // We wait a minimum of 5ms even if busy so we don't Bogart the CPU
+        // We wait a minimum even if busy so we don't Bogart the CPU
 
         unsigned long elapsed = millis() - lastFrame;
         constexpr auto kMaxFPS = 60;

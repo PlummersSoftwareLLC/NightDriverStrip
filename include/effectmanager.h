@@ -800,7 +800,7 @@ public:
         if ((_gfx[0])->GetLEDCount() == 0)
             return;
 
-        const float msFadeTime = EFFECT_CROSS_FADE_TIME;
+        constexpr auto msFadeTime = EFFECT_CROSS_FADE_TIME;
 
         CheckEffectTimerExpired();
 

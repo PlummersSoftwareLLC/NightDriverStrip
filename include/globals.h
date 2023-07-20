@@ -1234,11 +1234,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 120
+#define MATRIX_REFRESH_RATE 180
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 2
+#define MATRIX_CALC_DIVIDER 3
 #endif
 
 
@@ -1610,6 +1610,13 @@ inline String str_sprintf(const char *fmt, ...)
 // C Helpers
 //
 // Simple inline utility functions like random numbers, mapping, conversion, etc
+
+inline static uint8_t randombyte(uint8_t lower = 0, uint8_t upper = 255)
+{
+    auto result = (lower + ((upper - lower) * rand()) / RAND_MAX);
+    return result;
+}
+
 
 inline static float randomfloat(float lower, float upper)
 {

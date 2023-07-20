@@ -684,7 +684,8 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual void Start() override
     {
-        // Doesn't clear during drawing, so we need to clear to start the frame
+        // This effect doesn't clear during drawing, so we need to clear to start the frame
+
         g()->Clear();
     }
 

@@ -59,6 +59,7 @@ void LEDMatrixGFX::StartMatrix()
 
   matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
   matrix.setRefreshRate(MATRIX_REFRESH_RATE);
+  matrix.setMaxCalculationCpuPercentage(95);
   matrix.begin();
 
   Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
@@ -77,7 +78,7 @@ CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
   for (int i = 0; i < NUM_CHANNELS; i++)
     g_aptrDevices[i]->UpdatePaletteCycle();
 
-  return (CRGB *)backgroundLayer.getRealBackBuffer();
+  return (CRGB *)backgroundLayer.backBuffer();
 }
 
 void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)

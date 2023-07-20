@@ -515,9 +515,9 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         ShowOnboardPixel();
         ShowOnboardRGBLED();
 
-        // Delay at least 5ms and not more than 1s until next frame is due
+        // Delay at least 2ms and not more than 1s until next frame is due
 
-        constexpr auto minimumDelay = 5;
+        constexpr auto minimumDelay = 2;
         delay( std::max(minimumDelay, CalcDelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn) ));
 
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
