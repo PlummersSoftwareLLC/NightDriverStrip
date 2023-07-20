@@ -153,7 +153,7 @@ private:
         {
             for (int j = 0; j<_cLength; j++)                            // fade brightness all LEDs one step
             {
-                if (randomfloat(0, 10)>5)
+                if (random_range(0, 10)>5)
                 {
                     CRGB c = _GFX[0]->getPixel(j);
                     c.fadeToBlackBy(10);

@@ -641,7 +641,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
     void DrawGraph()

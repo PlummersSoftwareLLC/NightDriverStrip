@@ -77,8 +77,8 @@ public:
             hueval %= 256;
             hue[i] = hueval;
             iPos[i] = (pGFX->GetLEDCount() / meteorCount) * i;
-            //bLeft[i] = (bool) randomfloat(0, 1);
-            speed[i] = randomfloat(meteorSpeedMin, meteorSpeedMax);
+            //bLeft[i] = (bool) random_range(0, 1);
+            speed[i] = random_range(meteorSpeedMin, meteorSpeedMax);
             lastBeat[i] = g_AppTime.FrameStartTime();
             bLeft[i] = i & 2;
         }
@@ -97,7 +97,7 @@ public:
 
         for (int j = 0; j<pGFX->GetLEDCount(); j++)                         // fade brightness all LEDs one step
         {
-            if ((!meteorRandomDecay) || (randomfloat(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight
+            if ((!meteorRandomDecay) || (random_range(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight
             {
                 CRGB c = pGFX->getPixel(j);
                 c.fadeToBlackBy(meteorTrailDecay);

@@ -560,18 +560,12 @@ public:
         free(_Temperatures);
     }
 
-    //float lastDraw = 0;
-
     virtual void Draw() override
     {
-        //if (g_AppTime.FrameStartTime() - lastDraw < 1.0/33.0)
-        //    return;
-        //lastDraw = g_AppTime.FrameStartTime();
-
         float deltaTime = (float)g_AppTime.LastFrameTime();
         setAllOnAllChannels(0, 0, 0);
 
-        float cooldown = randomfloat(0, _Cooling) * deltaTime;
+        float cooldown = random_range(0.0f, _Cooling) * deltaTime;
 
         for (int i = 0; i < _cLEDs; i++)
             if (cooldown > _Temperatures[i])
@@ -600,11 +594,11 @@ public:
         // Randomly ignite new 'sparks' near the bottom
         for (int frame = 0; frame < _Sparks; frame++)
         {
-            if (randomfloat(0, 1.0f) < 0.70f)
+            if (random_range(0.0f, 1.0f) < 0.70f)
             {
                 // NB: This randomly rolls over sometimes of course, and that's essential to the effect
-                int y = randomfloat(0, _SparkHeight);
-                _Temperatures[y] = (_Temperatures[y] + randomfloat(0.6f, 1.0f));
+                int y = random_range(0, _SparkHeight);
+                _Temperatures[y] = (_Temperatures[y] + random_range(0.6f, 1.0f));
 
                 if (!_Turbo)
                     while (_Temperatures[y] > 1.0)

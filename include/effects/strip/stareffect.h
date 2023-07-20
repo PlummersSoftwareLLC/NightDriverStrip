@@ -262,7 +262,7 @@ class ColorCycleStar : public Star
     ColorCycleStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
       : Star(palette, blendType, maxSpeed)
     {
-        _brightness = randomfloat(128,255);
+        _brightness = random_range(128,255);
     }
 
     static int GetStarTypeNumber()
@@ -297,8 +297,8 @@ class MultiColorStar : public Star
     MultiColorStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
       : Star(palette, blendType, maxSpeed)
     {
-        _brightness = randomfloat(128,255);
-        _hue        = randomfloat(0, 255);
+        _brightness = random_range(128,255);
+        _hue        = random_range(0, 255);
     }
 
     virtual CRGB Render(TBlendType blend)
@@ -331,7 +331,7 @@ class ChristmasLightStar : public Star
       : Star(palette, blendType, maxSpeed, 1.0)
 
     {
-        int iColor = randomfloat(0,255);
+        int iColor = random_range(0,255);
         _colorIndex = iColor;
     }
 
@@ -400,7 +400,7 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
     {
         ObjectType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
         // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-        newstar._iPos = (int) randomfloat(0, _cLEDs-1-starWidth);
+        newstar._iPos = (int) random_range(0, _cLEDs-1-starWidth);
         _allParticles.push_back(newstar);
 
     }
@@ -511,11 +511,11 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                 }
             #endif
 
-            if (randomdouble(0, 2.0) < g_AppTime.LastFrameTime() * prob)
+            if (random_range(0.0, 2.0) < g_AppTime.LastFrameTime() * prob)
             {
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                 // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                newstar._iPos = (int) randomfloat(0, _cLEDs-1-starWidth);
+                newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
                 _allParticles.push_back(newstar);
             }
         }
@@ -626,7 +626,7 @@ public:
             setPixelsOnAllChannels(buffer[0], 0, 0, 0);
 
         // Pick a random pixel and put it in the TOP slot
-        int iNew = (int) randomfloat(0, _cLEDs);
+        int iNew = (int) random_range(0U, _cLEDs);
         setPixelOnAllChannels(iNew, RandomRainbowColor());
         buffer[NUM_TWINKLES - 1] = iNew;
     }
