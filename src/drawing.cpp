@@ -123,9 +123,10 @@ void MatrixPreDraw()
             LEDMatrixGFX::titleLayer.drawString(x, y + 1, shadowColor, szCaption);
             LEDMatrixGFX::titleLayer.drawString(x, y, titleColor, szCaption);
 
-            // We enable the chromakey overlay just for the strip of screen where it appears
+            // We enable the chromakey overlay just for the strip of screen where it appears.  This support is only
+            // present in the private fork of SmartMatrix that is linked to the mesermizer project.
 
-            LEDMatrixGFX::titleLayer.enableChromaKey(true, y, y+kCharHeight);                    
+            LEDMatrixGFX::titleLayer.enableChromaKey(true);                                
             LEDMatrixGFX::titleLayer.setBrightness(brite); // 255 would obscure it entirely
 
 
