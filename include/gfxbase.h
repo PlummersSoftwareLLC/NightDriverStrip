@@ -341,7 +341,7 @@ public:
             setPixel(x, CRGB(r, g, b));
         else
             debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
-        
+
     }
 
     virtual void setPixel(int x, CRGB color)
@@ -353,7 +353,7 @@ public:
     }
 
     // DrawSafeCircle
-    // 
+    //
     // Draws a circle, but does not draw pixels that are out of bounds.  This is useful
     // for drawing circles that are larger than the matrix, or for drawing circles that
     // are partially off the matrix.  This is important for the pulsar effect.   Note that

@@ -34,9 +34,6 @@
 #include <IRutils.h>
 #include <limits>
 
-extern DRAM_ATTR uint8_t g_Brightness;
-extern DRAM_ATTR uint8_t g_Fader;
-
 #if ENABLE_REMOTE
 
 #define key24  true

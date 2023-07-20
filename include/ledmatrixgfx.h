@@ -78,11 +78,31 @@ public:
     {
     }
 
+    static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
+    {
+        StartMatrix();
+
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            auto matrix = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            devices.push_back(matrix);
+            matrix->loadPalette(0);
+        }
+
+        // We don't need color correction on the title layer, but we want it on the main background
+
+        titleLayer.enableColorCorrection(false);
+        backgroundLayer.enableColorCorrection(true);
+
+        // Starting an effect might need to draw, so we need to set the leds up before doing so
+        std::static_pointer_cast<LEDMatrixGFX>(devices[0])->setLeds(GetMatrixBackBuffer());
+    }
+
     void SetBrightness(byte amount)
     {
         matrix.setBrightness(amount);
     }
-    
+
     // EstimatePowerDraw
     //
     // Estimate the total power load for the board and matrix by walking the pixels and adding our previously measured
@@ -125,7 +145,7 @@ public:
 
     virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
     {
-        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.
 
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }

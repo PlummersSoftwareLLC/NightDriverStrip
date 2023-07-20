@@ -32,8 +32,6 @@
 
 #include "effects.h"
 
-extern AppTime g_AppTime;
-
 // BouncingBallEffect
 //
 // Draws a set of N bouncing balls using a simple little kinematics formula.  Clears the section first.
@@ -112,7 +110,7 @@ private:
         return 61;
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -130,7 +128,7 @@ private:
         {
             Height[i]                   = StartHeight;
             ImpactVelocity[i]           = ImpactVelocityStart;
-            ClockTimeSinceLastBounce[i] = g_AppTime.FrameStartTime();
+            ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();
             Dampening[i]                = 1.0 - i / pow(_cBalls, 2);               // Was 0.9
             TimeSinceLastBounce[i]      = 0;
             Colors[i]                   = ballColors[i % ARRAYSIZE(ballColors)];
@@ -165,14 +163,14 @@ private:
         // Draw each of the the balls
         for (size_t i = 0; i < BallCount; i++)
         {
-            TimeSinceLastBounce[i] = (g_AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 3;        // BUGBUG hardcoded was 3 for NightDriverStrip
+            TimeSinceLastBounce[i] = (g_Values.AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 3;        // BUGBUG hardcoded was 3 for NightDriverStrip
             Height[i] = 0.5 * Gravity * pow(TimeSinceLastBounce[i], 2.0) + ImpactVelocity[i] * TimeSinceLastBounce[i];
 
             if (Height[i] < 0)
             {
                 Height[i] = 0;
                 ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
-                ClockTimeSinceLastBounce[i] = g_AppTime.FrameStartTime();;
+                ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();;
 
                 if (ImpactVelocity[i] < 0.5 * ImpactVelocityStart)                                    // Was .01 and not multiplied by anything
                     ImpactVelocity[i] = ImpactVelocityStart;

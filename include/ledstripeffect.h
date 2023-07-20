@@ -33,11 +33,15 @@
 #include "effects.h"
 #include "jsonserializer.h"
 #include "types.h"
+#include "gfxbase.h"
+#include "ledmatrixgfx.h"
 #include <memory>
 #include <list>
 #include <stdlib.h>
 
-#define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return true
+#define RETURN_IF_SET(settingName, propertyName, property, value) \
+    if (SetIfSelected(settingName, propertyName, property, value)) \
+        return true
 
 // LEDStripEffect
 //
@@ -57,9 +61,9 @@ class LEDStripEffect : public IJSONSerializable
     int    _effectNumber;
     bool   _enabled = true;
     size_t _maximumEffectTime = SIZE_MAX;
-    std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>> _settingSpecs;
+    std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
-    std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
+    std::vector<std::shared_ptr<GFXBase>> _GFX;
 
     #define SET_IF_NAMES_MATCH(firstName, secondName, property, value)  if (firstName == secondName) \
     { \
@@ -181,12 +185,12 @@ class LEDStripEffect : public IJSONSerializable
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
         debugV("Init %s", _friendlyName.c_str());
 
-        for (int i = 0; i < NUM_CHANNELS; i++)                      // There are up to 8 channel in play per effect and when we
-            _GFX[i] = gfx[i];                                       //   start up, we are given copies to their graphics interfaces
+        _GFX = gfx;                                                 // There are up to 8 channel in play per effect and when we
+                                                                    //   start up, we are given copies to their graphics interfaces
                                                                     //   so that we can call them directly later from other calls
         _cLEDs = _GFX[0]->GetLEDCount();
 
@@ -334,11 +338,10 @@ class LEDStripEffect : public IJSONSerializable
             return;
         }
 
-        for (int n = 0; n < NUM_CHANNELS; n++)
+        for (auto& device : _GFX)
         {
             for (int i = iStart; i < iStart + numToFill; i+= everyN)
-                _GFX[n]->setPixel(i, color);
-
+                device->setPixel(i, color);
         }
     }
 
@@ -348,8 +351,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void ClearFrameOnAllChannels()
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->Clear();
+        for (auto& device : _GFX)
+            device->Clear();
     }
 
     // ColorFraction
@@ -397,11 +400,11 @@ class LEDStripEffect : public IJSONSerializable
 
     void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
+        for (auto& device : _GFX)
         {
-            CRGB crgb = _GFX[i]->getPixel(pixel);
+            CRGB crgb = device->getPixel(pixel);
             crgb.fadeToBlackBy(fadeValue);
-            _GFX[i]->setPixel(pixel, crgb);
+            device->setPixel(pixel, crgb);
         }
     }
 
@@ -413,9 +416,9 @@ class LEDStripEffect : public IJSONSerializable
 
     void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const
     {
-        for (int n = 0; n < NUM_CHANNELS; n++)
+        for (auto& device : _GFX)
             for (int i = 0; i < _cLEDs; i++)
-                _GFX[n]->setPixel(i, r, g, b);
+                device->setPixel(i, r, g, b);
     }
 
     // setPixelOnAllChannels
@@ -424,8 +427,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void setPixelOnAllChannels(int i, CRGB c)
     {
-        for (int j = 0; j < NUM_CHANNELS; j++)
-            _GFX[j]->setPixel(i, c);
+        for (auto& device : _GFX)
+            device->setPixel(i, c);
     }
 
     // setPixelsOnAllChannels
@@ -435,8 +438,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->setPixelsF(fPos, count, c, bMerge);
+        for (auto& device : _GFX)
+            device->setPixelsF(fPos, count, c, bMerge);
     }
 
     // SerializeToJSON
@@ -479,7 +482,7 @@ class LEDStripEffect : public IJSONSerializable
         return _coreEffect;
     }
 
-    virtual const std::vector<std::reference_wrapper<SettingSpec>, psram_allocator<SettingSpec>>& GetSettingSpecs()
+    virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
         FillSettingSpecs();
 
