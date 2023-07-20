@@ -34,10 +34,8 @@
 #include "esp_attr.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
-#include "types.h"
+#include "values.h"
 #include "systemcontainer.h"
-
-extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
 
 #if ENABLE_AUDIO
 
@@ -92,7 +90,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         ProcessAudio();
         ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
 
-        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.LastFrameTime()));
+        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_Values.AppTime.LastFrameTime()));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)
@@ -108,7 +106,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         // REVIEW(davepl) This might look interesting if it didn't erase...
         bool bFlash = g_Analyzer._VURatio > 1.99 && span > 1.9 && elapsed > 0.25;
 
-        _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
+        _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
     }
 };
 
@@ -556,7 +554,7 @@ class GhostWave : public WaveformEffect
     virtual size_t DesiredFramesPerSecond() const override
     {
         // Looks cool at the low-50s it can actually achieve
-        return _blur > 0 ? 60 : 30;
+        return _blur > 0 ? 45 : 30;
     }
 
     virtual void Draw() override
@@ -636,7 +634,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const override
     {
-        return 90;
+        return 45;
     }
 
     virtual bool RequiresDoubleBuffering() const override

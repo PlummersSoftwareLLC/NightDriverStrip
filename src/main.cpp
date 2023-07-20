@@ -160,13 +160,13 @@
 #include "globals.h"
 #include "deviceconfig.h"
 #include "systemcontainer.h"
+#include "values.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern volatile double g_FreeDrawTime;
-extern uint32_t g_Watts;
-extern float g_Brite;
 
+// Global support objects and global values
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
+DRAM_ATTR Values g_Values;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
@@ -177,24 +177,7 @@ ImprovSerial<typeof(Serial)> g_ImprovSerial;
 // Global Variables
 //
 
-#if NUM_INFO_PAGES > 0
-DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;                                  // Default to last page
-#else
-DRAM_ATTR uint8_t giInfoPage = 0;                                                   // Default to first page
-#endif
-
-DRAM_ATTR WiFiUDP g_Udp;                                                            // UDP object used for NNTP, etc
-DRAM_ATTR uint32_t g_FPS = 0;                                                       // Our global framerate
-DRAM_ATTR bool g_bUpdateStarted = false;                                            // Has an OTA update started?
-DRAM_ATTR AppTime g_AppTime;                                                        // Keeps track of frame times
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
-
-#if USE_MATRIX
-    extern int g_MatrixPowerMilliwatts;                                             // Matrix power draw in mw
-    extern uint8_t g_MatrixScaledBrightness;                                        // 0-255 scaled brightness to stay in limit
-#endif
-
-DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                     // The array of GFXBase devices (each strip channel, for example)
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
 
@@ -214,12 +197,6 @@ DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
     RING_SIZE_3,
     RING_SIZE_4
 };
-
-//
-// External Variables
-//
-
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
 
 //
 // Optional Components
@@ -465,74 +442,35 @@ void setup()
 
     #endif
 
-    #if USE_MATRIX
-        LEDMatrixGFX::StartMatrix();
-    #endif
+    // Create the vector with devices (channels)
+    g_ptrSystem->SetupDevices();
+    auto& devices = g_ptrSystem->Devices();
+
 
     // Initialize the strand controllers depending on how many channels we have
 
     // LEDStripGFX is used for simple strips or for matrices woven from strips
 
     #if USE_STRIP
-        for (int i = 0; i < NUM_CHANNELS; i++)
-        {
-            debugW("Allocating LEDStripGFX for channel %d", i);
-            g_aptrDevices[i] = make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
-        }
+        LEDStripGFX::InitializeHardware(devices);
     #endif
 
     // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
 
     #if HEXAGON
-        for (int i = 0; i < NUM_CHANNELS; i++)
-        {
-            debugW("Allocating HexagonGFX for channel %d", i);
-            g_aptrDevices[i] = make_shared_psram<HexagonGFX>(NUM_LEDS);
-        }
+        HexagonGFX::InitializeHardware(devices);
     #endif
 
     // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
-    
+
     #if USE_MATRIX
-        for (int i = 0; i < NUM_CHANNELS; i++)
-        {
-            g_aptrDevices[i] = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
-            g_aptrDevices[i]->loadPalette(0);
-        }
+        LEDMatrixGFX::InitializeHardware(devices);
     #endif
 
     TJpgDec.setJpgScale(1);
     TJpgDec.setCallback(bitmap_output);
 
-    #if USE_PSRAM
-        uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
-    #else
-        uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
-    #endif
-
-    uint32_t memtoalloc = (NUM_CHANNELS * ((sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB))));
-    uint32_t cBuffers = memtouse / memtoalloc;
-
-    if (cBuffers < MIN_BUFFERS)
-    {
-        debugI("Not enough memory, could only allocate %d buffers and need %d\n", cBuffers, MIN_BUFFERS);
-        throw std::runtime_error("Could not allocate all buffers");
-    }
-    if (cBuffers > MAX_BUFFERS)
-    {
-        debugI("Could allocate %d buffers but limiting it to %d\n", cBuffers, MAX_BUFFERS);
-        cBuffers = MAX_BUFFERS;
-    }
-
-    debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
-
-
-    for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
-
     // Initialize all of the built in effects
-
-    debugI("Adding LEDs to FastLED...");
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
     // Onboard PWM LED
@@ -546,72 +484,7 @@ void setup()
         ledcSetup(3, 12000, 8);
     #endif
 
-    //g_pDisplay->ScreenStatus("Initializing LED strips");
-
-    #if USE_STRIP
-
-        #if NUM_CHANNELS == 1
-            debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
-
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[0]->leds, g_aptrDevices[0]->GetLEDCount());
-            //FastLED.setMaxRefreshRate(100, false);
-            pinMode(LED_PIN0, OUTPUT);
-        #endif
-
-        #if NUM_CHANNELS >= 2
-            pinMode(LED_PIN0, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[0]->GetLEDCount());
-
-            pinMode(LED_PIN1, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[1]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 3
-            pinMode(LED_PIN2, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[2]->leds,g_aptrDevices[2]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 4
-            pinMode(LED_PIN3, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[3]->leds,g_aptrDevices[3]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 5
-            pinMode(LED_PIN4, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[4]->leds,g_aptrDevices[4]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 6
-            pinMode(LED_PIN5, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[5]->leds,g_aptrDevices[5]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 7
-            pinMode(LED_PIN6, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[6]->leds,g_aptrDevices[6]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 8
-            pinMode(LED_PIN7, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[7]->leds,g_aptrDevices[7]->GetLEDCount());
-        #endif
-
-        #ifdef POWER_LIMIT_MW
-            set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
-        #endif
-
-        g_Brightness = 255;
-
-        #if ATOMLIGHT                                                   // BUGBUG Why input?  Shouldn't they be output?
-            pinMode(4, INPUT);
-            pinMode(12, INPUT);
-            pinMode(13, INPUT);
-            pinMode(14, INPUT);
-            pinMode(15, INPUT);
-        #endif
-    #endif
-
-    //g_pDisplay->ScreenStatus("Initializing Effects Manager");
+    g_ptrSystem->SetupBufferManagers();
 
     // Show splash effect on matrix
     #if USE_MATRIX
@@ -683,14 +556,14 @@ void loop()
             #endif
 
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
-            strOutput += str_sprintf("LED FPS: %d ", g_FPS);
+            strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
             #if USE_STRIP
-                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Watts, g_Brite);
+                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Values.Watts, g_Values.Brite);
             #endif
 
             #if USE_MATRIX
-                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_MatrixPowerMilliwatts, g_MatrixScaledBrightness / 2.55);
+                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
             #endif
 
             #if ENABLE_AUDIO
@@ -702,19 +575,19 @@ void loop()
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                strOutput += str_sprintf("Buffer: %d/%d, ", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount());
+                auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+                strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
             #endif
 
             auto& taskManager = g_ptrSystem->TaskManager();
-            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
             Serial.println(strOutput);
         }
 
         // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise we delay a bit to share the CPU.
 
-        
-        if (!g_bUpdateStarted)
+        if (!g_Values.UpdateStarted)
             delay(10);
     }
 }
