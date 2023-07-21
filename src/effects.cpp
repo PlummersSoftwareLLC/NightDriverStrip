@@ -358,8 +358,9 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMGAMMA, PatternSMHolidayLights);
-        // ADD_EFFECT(EFFECT_MATRIX_SMGAMMA, PatternSMStarshipTroopers);
+        ADD_EFFECT(EFFECT_MATRIX_SMGOOGLE_NEXUS, PatternSMGoogleNexus);
+        // ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, PatternSMHolidayLights);
+        // ADD_EFFECT(EFFECT_MATRIX_SMSTARSHIP_TROOPERS, PatternSMStarshipTroopers);
         // ADD_EFFECT(EFFECT_MATRIX_SMGAMMA, PatternSMGamma);
         // ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS, PatternSMFlowFields);
         // ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA, PatternSMBlurringColors);

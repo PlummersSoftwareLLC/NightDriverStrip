@@ -3,6 +3,8 @@
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
 
+// Derived from https://editor.soulmatelights.com/gallery/552-festive-lighting-green-with-toys
+
 #if ENABLE_AUDIO
 class PatternSMHolidayLights : public BeatEffectBase, public LEDStripEffect
 #else
@@ -10,7 +12,7 @@ class PatternSMHolidayLights : public LEDStripEffect
 #endif
 {
 private:
-  //Holiday lights
+//Holiday lights
 //@stepko
 //Merry Christmas and Happy New Year
 

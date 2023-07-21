@@ -148,7 +148,8 @@
 #define EFFECT_MATRIX_SMFLOW_FIELDS                    175
 #define EFFECT_MATRIX_SMGAMMA                          176
 #define EFFECT_MATRIX_SMSTARSHIP_TROOPERS              177
-#define EFFECT_MATRIX_SMHOLIDAY_LIGHTS                 177
+#define EFFECT_MATRIX_SMHOLIDAY_LIGHTS                 178
+#define EFFECT_MATRIX_SMGOOGLE_NEXUS                   179
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1
