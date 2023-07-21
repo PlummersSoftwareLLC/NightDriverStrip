@@ -92,7 +92,7 @@ class CWebServer
         {}
     };
 
-    static std::vector<SettingSpec> mySettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
     static std::vector<std::reference_wrapper<SettingSpec>> deviceSettingSpecs;
     static const std::map<String, ValueValidator> settingValidators;
 

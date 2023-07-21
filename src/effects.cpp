@@ -32,8 +32,6 @@
 #include "effectdependencies.h"
 #include "systemcontainer.h"
 
-extern std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
 // Palettes
 //
 // Palettes that are referenced by effects need to be instantiated first
@@ -239,8 +237,8 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
     CHSV hueColor = rgb2hsv_approximate(color1);
-    auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
-    if (object->Init(g_aptrDevices))
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
+    if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
 }
@@ -249,8 +247,8 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
     CHSV hueColor = rgb2hsv_approximate(color);
     CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
-    if (object->Init(g_aptrDevices))
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
+    if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
 }
@@ -264,21 +262,21 @@ DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<Star>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<Star>>(jsonObject); } },
     { EFFECT_STAR_BUBBLY,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<BubblyStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<BubblyStar>>(jsonObject); } },
     { EFFECT_STAR_HOT_WHITE,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<HotWhiteStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<HotWhiteStar>>(jsonObject); } },
     { EFFECT_STAR_LONG_LIFE_SPARKLE,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<LongLifeSparkleStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<LongLifeSparkleStar>>(jsonObject); } },
 
 #if ENABLE_AUDIO
     { EFFECT_STAR_MUSIC,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<MusicStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<MusicStar>>(jsonObject); } },
 #endif
 
     { EFFECT_STAR_QUIET,
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return std::make_shared<StarryNightEffect<QuietStar>>(jsonObject); } },
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<QuietStar>>(jsonObject); } },
 };
 
 std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
@@ -291,11 +289,11 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 }
 
 #define ADD_EFFECT(effectNumber, effectType, ...)   g_ptrEffectFactories->AddEffect(effectNumber, \
-    []()                                 ->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(__VA_ARGS__); }, \
-    [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return std::make_shared<effectType>(jsonObject); })
+    []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(__VA_ARGS__); }, \
+    [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(jsonObject); })
 
 #define ADD_STARRY_NIGHT_EFFECT(starType, ...)      g_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
-    []()                                 ->std::shared_ptr<LEDStripEffect> { return std::make_shared<StarryNightEffect<starType>>(__VA_ARGS__); }, \
+    []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<starType>>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); })
 
 void LoadEffectFactories()
@@ -304,7 +302,7 @@ void LoadEffectFactories()
     if (g_ptrEffectFactories)
         return;
 
-    g_ptrEffectFactories = std::make_unique<EffectFactories>();
+    g_ptrEffectFactories = make_unique_psram<EffectFactories>();
 
     // Fill effect factories
     #if DEMO
@@ -328,52 +326,52 @@ void LoadEffectFactories()
     #elif MESMERIZER
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave", 0, 30, false, 10);
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "PlasmaWave", 0, 255,  false);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "GhostWave", 0, 30, false, 10);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25);
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.75, 1.75);
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,         0);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,           0, 0, 0.75, 0.75);
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 1.25, 1.25);
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 32,            spectrumBasicColors, 100, 0, 0.25, 1.25);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 32,            spectrumBasicColors, 100, 0, 0.75, 0.75);
 
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0);
 
-        ADD_EFFECT(EFFECT_MATRIX_WAVEFORM, WaveformEffect, "WaveIn", 8);
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "WaveOut", 0, 0, true, 0);
+        ADD_EFFECT(EFFECT_MATRIX_WAVEFORM,          WaveformEffect, "WaveIn", 8);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "WaveOut", 0, 0, true, 0);
 
         ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
 
-        ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,    PatternPongClock);
-        ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,   PatternSubscribers);
-        ADD_EFFECT(EFFECT_MATRIX_WEATHER,       PatternWeather);
+        ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,        PatternPongClock);
+        ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
+        ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
 
-        ADD_EFFECT(EFFECT_MATRIX_CUBE,          PatternCube);
-        ADD_EFFECT(EFFECT_MATRIX_LIFE,          PatternLife);
-        ADD_EFFECT(EFFECT_MATRIX_ROSE,          PatternRose);
-        ADD_EFFECT(EFFECT_MATRIX_PINWHEEL,      PatternPinwheel);
-        ADD_EFFECT(EFFECT_MATRIX_SUNBURST,      PatternSunburst);
-        ADD_EFFECT(EFFECT_MATRIX_FLOW_FIELD,    PatternFlowField);
-        ADD_EFFECT(EFFECT_MATRIX_CLOCK,         PatternClock);
-        ADD_EFFECT(EFFECT_MATRIX_ALIEN_TEXT,    PatternAlienText);
-        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,       PatternCircuit);
-        ADD_EFFECT(EFFECT_MATRIX_PULSAR,        PatternPulsar);
-        ADD_EFFECT(EFFECT_MATRIX_BOUNCE,        PatternBounce);
-        ADD_EFFECT(EFFECT_MATRIX_SPIRO,         PatternSpiro);
-        ADD_EFFECT(EFFECT_MATRIX_WAVE,          PatternWave);
-        ADD_EFFECT(EFFECT_MATRIX_SWIRL,         PatternSwirl);
-        ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,   PatternSerendipity);
-        ADD_EFFECT(EFFECT_MATRIX_MANDALA,       PatternMandala);
-        ADD_EFFECT(EFFECT_MATRIX_PALETTE_SMEAR, PatternPaletteSmear);
-        ADD_EFFECT(EFFECT_MATRIX_CURTAIN,       PatternCurtain);
-        ADD_EFFECT(EFFECT_MATRIX_GRID_LIGHTS,   PatternGridLights);
-        ADD_EFFECT(EFFECT_MATRIX_MUNCH,         PatternMunch);
-        ADD_EFFECT(EFFECT_MATRIX_MAZE,          PatternMaze);
+        ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
+        ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
+        ADD_EFFECT(EFFECT_MATRIX_ROSE,              PatternRose);
+        ADD_EFFECT(EFFECT_MATRIX_PINWHEEL,          PatternPinwheel);
+        ADD_EFFECT(EFFECT_MATRIX_SUNBURST,          PatternSunburst);
+        ADD_EFFECT(EFFECT_MATRIX_FLOW_FIELD,        PatternFlowField);
+        ADD_EFFECT(EFFECT_MATRIX_CLOCK,             PatternClock);
+        ADD_EFFECT(EFFECT_MATRIX_ALIEN_TEXT,        PatternAlienText);
+        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
+        ADD_EFFECT(EFFECT_MATRIX_PULSAR,            PatternPulsar);
+        ADD_EFFECT(EFFECT_MATRIX_BOUNCE,            PatternBounce);
+        ADD_EFFECT(EFFECT_MATRIX_SPIRO,             PatternSpiro);
+        ADD_EFFECT(EFFECT_MATRIX_WAVE,              PatternWave);
+        ADD_EFFECT(EFFECT_MATRIX_SWIRL,             PatternSwirl);
+        ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
+        ADD_EFFECT(EFFECT_MATRIX_MANDALA,           PatternMandala);
+        ADD_EFFECT(EFFECT_MATRIX_PALETTE_SMEAR,     PatternPaletteSmear);
+        ADD_EFFECT(EFFECT_MATRIX_CURTAIN,           PatternCurtain);
+        ADD_EFFECT(EFFECT_MATRIX_GRID_LIGHTS,       PatternGridLights);
+        ADD_EFFECT(EFFECT_MATRIX_MUNCH,             PatternMunch);
+        ADD_EFFECT(EFFECT_MATRIX_MAZE,              PatternMaze);
 
-        // std::make_shared<PatternInfinity>(),
-        // std::make_shared<PatternQR>(),
+        // make_shared_psram<PatternInfinity>(),
+        // make_shared_psram<PatternQR>(),
 
     #elif UMBRELLA
 
@@ -489,15 +487,15 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24, RainbowColors_p);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave One", 4);
 
-        //std::make_shared<GhostWave>("GhostWave Rainbow", &rainbowPalette),
+        //make_shared_psram<GhostWave>("GhostWave Rainbow", &rainbowPalette),
 
     #elif ATOMLIGHT
 
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, CRGB::White, 1);
-        // std::make_shared<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
-        // std::make_shared<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
-        // std::make_shared<HueFireFanEffect>(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
-        //  std::make_shared<HueFireFanEffect>(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
+        // make_shared_psram<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false),
+        // make_shared_psram<FireFanEffect>(NUM_LEDS, 1, 15, 80, 2, 7, Sequential, true, false, true),
+        // make_shared_psram<HueFireFanEffect>(NUM_LEDS, 2, 5, 120, 1, 1, Sequential, true, false, false, HUE_BLUE),
+        //  make_shared_psram<HueFireFanEffect>(NUM_LEDS, 2, 3, 100, 1, 1, Sequential, true, false, false, HUE_GREEN),
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 60, 0);
         ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, Sequential);
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0);
@@ -505,7 +503,7 @@ void LoadEffectFactories()
 
         ADD_STARRY_NIGHT_EFFECT(BubblyStar, "Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 4); // Blooming Little Rainbow Stars
         ADD_STARRY_NIGHT_EFFECT(BubblyStar, "Big Blooming Rainbow Stars", RainbowColors_p, 20, 12, LINEARBLEND, 1.0, 0.0, 2); // Blooming Rainbow Stars
-        //        std::make_shared<StarryNightEffect<FanStar>>("FanStars", RainbowColors_p, 8.0, 1.0, LINEARBLEND, 80.0, 0, 2.0),
+        //        make_shared_psram<StarryNightEffect<FanStar>>("FanStars", RainbowColors_p, 8.0, 1.0, LINEARBLEND, 80.0, 0, 2.0),
 
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 20, 1, 25, .15, .05);
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 12, 1, 25, .15, .08);
@@ -581,7 +579,7 @@ DRAM_ATTR size_t g_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max()
     {
         debugW("InitSplashEffectManager");
 
-        g_ptrSystem->SetupEffectManager(std::make_shared<SplashLogoEffect>(), g_aptrDevices);
+        g_ptrSystem->SetupEffectManager(make_shared_psram<SplashLogoEffect>(), g_ptrSystem->Devices());
     }
 
 #endif
@@ -614,7 +612,7 @@ void InitEffectsManager()
         if (g_ptrSystem->HasEffectManager())
             g_ptrSystem->EffectManager().DeserializeFromJSON((pJsonDoc->as<JsonObjectConst>()));
         else
-            g_ptrSystem->SetupEffectManager(pJsonDoc->as<JsonObjectConst>(), g_aptrDevices);
+            g_ptrSystem->SetupEffectManager(pJsonDoc->as<JsonObjectConst>(), g_ptrSystem->Devices());
     }
     else
     {
@@ -623,7 +621,7 @@ void InitEffectsManager()
         if (g_ptrSystem->HasEffectManager())
             g_ptrSystem->EffectManager().LoadDefaultEffects();
         else
-            g_ptrSystem->SetupEffectManager(g_aptrDevices);
+            g_ptrSystem->SetupEffectManager(g_ptrSystem->Devices());
     }
 
     if (false == g_ptrSystem->EffectManager().Init())
@@ -703,16 +701,6 @@ bool ReadCurrentEffectIndex(size_t& index)
     }
 
     return readIndex;
-}
-
-// Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
-// any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
-// more than one matrix and some FastLED functions like blur2d, this would be why.
-
-uint16_t XY(uint8_t x, uint8_t y)
-{
-    // Have a drink on me!
-    return g_ptrSystem->EffectManager()[0]->xy(x, y);
 }
 
 // btimap_output

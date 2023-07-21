@@ -33,8 +33,8 @@
 
 #include "globals.h"
 #include "musiceffect.h"
+#include "soundanalyzer.h"
 
-extern AppTime g_AppTime;
 class FireEffect : public LEDStripEffect
 {
     void construct()
@@ -365,20 +365,13 @@ public:
 
     virtual void Draw() override
     {
-        //static float lastDraw = 0;
-
-        //if (g_AppTime.FrameStartTime() - lastDraw < 1.0 / 40.0)
-        //    return;
-        //lastDraw = g_AppTime.FrameStartTime();
-
-        //  Fire(55, 180, 1);               //  The original
         Fire(_Cooling, 180, 5);
         delay(20);
     }
 
     void Fire(int Cooling, int Sparking, int Sparks)
     {
-        static std::unique_ptr<uint8_t []> heat = std::make_unique<uint8_t []>(NUM_LEDS);
+        static std::unique_ptr<uint8_t []> heat = make_unique_psram_array<uint8_t>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
 
         int cooldown;
@@ -419,9 +412,6 @@ public:
         {
             setPixelHeatColor(j, heat[j]);
         }
-
-        //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-        //    blur1d(_GFX[channel]->leds(), _cLEDs, 255);
     }
 
     void setPixelWithMirror(int Pixel, CRGB temperature)
@@ -543,7 +533,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
@@ -560,18 +550,12 @@ public:
         free(_Temperatures);
     }
 
-    //float lastDraw = 0;
-
     virtual void Draw() override
     {
-        //if (g_AppTime.FrameStartTime() - lastDraw < 1.0/33.0)
-        //    return;
-        //lastDraw = g_AppTime.FrameStartTime();
-
-        float deltaTime = (float)g_AppTime.LastFrameTime();
+        float deltaTime = (float)g_Values.AppTime.LastFrameTime();
         setAllOnAllChannels(0, 0, 0);
 
-        float cooldown = randomfloat(0, _Cooling) * deltaTime;
+        float cooldown = random_range(0.0f, _Cooling) * deltaTime;
 
         for (int i = 0; i < _cLEDs; i++)
             if (cooldown > _Temperatures[i])
@@ -600,11 +584,11 @@ public:
         // Randomly ignite new 'sparks' near the bottom
         for (int frame = 0; frame < _Sparks; frame++)
         {
-            if (randomfloat(0, 1.0f) < 0.70f)
+            if (random_range(0.0f, 1.0f) < 0.70f)
             {
                 // NB: This randomly rolls over sometimes of course, and that's essential to the effect
-                int y = randomfloat(0, _SparkHeight);
-                _Temperatures[y] = (_Temperatures[y] + randomfloat(0.6f, 1.0f));
+                int y = random_range(0, _SparkHeight);
+                _Temperatures[y] = (_Temperatures[y] + random_range(0.6f, 1.0f));
 
                 if (!_Turbo)
                     while (_Temperatures[y] > 1.0)

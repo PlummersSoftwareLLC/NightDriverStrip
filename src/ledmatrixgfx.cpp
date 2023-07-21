@@ -32,9 +32,6 @@
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
 
-extern DRAM_ATTR AppTime g_AppTime; // Keeps track of frame times
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
-
 #if USE_MATRIX
 
 #include <SmartMatrix.h>
@@ -59,6 +56,7 @@ void LEDMatrixGFX::StartMatrix()
 
   matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
   matrix.setRefreshRate(MATRIX_REFRESH_RATE);
+  matrix.setMaxCalculationCpuPercentage(95);
   matrix.begin();
 
   Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
@@ -74,8 +72,8 @@ void LEDMatrixGFX::StartMatrix()
 
 CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
 {
-  for (int i = 0; i < NUM_CHANNELS; i++)
-    g_aptrDevices[i]->UpdatePaletteCycle();
+  for (auto& device : g_ptrSystem->Devices())
+    device->UpdatePaletteCycle();
 
   return (CRGB *)backgroundLayer.getRealBackBuffer();
 }
@@ -86,7 +84,7 @@ void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
   // can swap without waiting for a copy.
   matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
   matrix.setRefreshRate(MATRIX_REFRESH_RATE);
-  matrix.setMaxCalculationCpuPercentage(100);
+  matrix.setMaxCalculationCpuPercentage(95);
 
   backgroundLayer.swapBuffers(bSwapBackground);
   titleLayer.swapBuffers(bSwapTitle);

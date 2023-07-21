@@ -136,6 +136,7 @@ public:
         g()->GetNoise().noise_z += dz * 4;
 
         g()->FillGetNoise();
+  
         ShowNoiseLayer(0, 1, 0);
 
         g()->Caleidoscope3();

@@ -37,10 +37,11 @@
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
-    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } }
+    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } },
+    { DeviceConfig::PowerLimitTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } }
 };
 
-std::vector<SettingSpec> CWebServer::mySettingSpecs = {};
+std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
 std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
 
 // Member function template specialzations
@@ -62,6 +63,16 @@ bool CWebServer::PushPostParamIfPresent<size_t>(AsyncWebServerRequest * pRequest
     return PushPostParamIfPresent<size_t>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
     {
         return strtoul(param->value().c_str(), NULL, 10);
+    });
+}
+
+// Push param that represents an int
+template<>
+bool CWebServer::PushPostParamIfPresent<int>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<int> setter)
+{
+    return PushPostParamIfPresent<int>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
+    {
+        return std::stoi(param->value().c_str());
     });
 }
 
@@ -142,7 +153,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
     auto& j = response->getRoot();
 
-    j["LED_FPS"]               = g_FPS;
+    j["LED_FPS"]               = g_Values.FPS;
     j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
     j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
 
@@ -377,6 +388,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(deviceConfig.SetUseCelsius(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(deviceConfig.SetNTPServer(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(deviceConfig.SetRememberCurrentEffect(value)));
+    PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
 }
 
 // Set settings and return resulting config

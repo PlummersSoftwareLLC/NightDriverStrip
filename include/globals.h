@@ -110,7 +110,7 @@
 
 #include <WiFi.h>
 
-#include "RemoteDebug.h"
+#include <RemoteDebug.h>
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
 // value.  So if version = 020,
@@ -208,7 +208,7 @@
 // Drawing must be on Core 1 if using SmartMatrix unless you specify SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1
 
 #define DRAWING_CORE            1
-#define NET_CORE                0
+#define NET_CORE                1
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        1
 #define SCREEN_CORE             0
@@ -717,7 +717,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define HEX_MAX_DIMENSION 19                 // How big the hex is - it's biggest row and the number of rows
     #define HEX_HALF_DIMENSION 10                // How many rows from top to middle inclusive
-    
+
 #elif LEDSTRIP
 
     // The LED strips I use for Christmas lights under my eaves
@@ -835,8 +835,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if SPECTRUM_WROVER_KIT
         #define LED_PIN0        5
+    #elif ELECROW
+        #define LED_PIN0        19
     #else
         #define LED_PIN0        26
+    #endif
+
+    #if ELECROW
+        #define IR_REMOTE_PIN   20
     #endif
 
     #define NUM_CHANNELS    1
@@ -851,10 +857,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define TOGGLE_BUTTON_1 37
-    #define TOGGLE_BUTTON_2 39
+    #if ELECROW
+    #else
+        #define TOGGLE_BUTTON_1 37
+        #define TOGGLE_BUTTON_2 39
+    #endif
 
-    #ifdef SPECTRUM_WROVER_KIT
+    #if SPECTRUM_WROVER_KIT
     #else
         #define NUM_INFO_PAGES          2
         #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -1133,11 +1142,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef ENABLE_AUDIO_SMOOTHING
         #define ENABLE_AUDIO_SMOOTHING 1
     #endif
-    #ifndef BARBEAT_ENHANCE       
+    #ifndef BARBEAT_ENHANCE
         #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
     #endif
     #ifndef SPECTRUMBARBEAT_ENHANCE
-        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music 
+        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
     #endif
 #endif
 
@@ -1225,11 +1234,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 120
+#define MATRIX_REFRESH_RATE 180
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 2
+#define MATRIX_CALC_DIVIDER 3
 #endif
 
 
@@ -1283,6 +1292,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #elif TTGO
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
+
+    #elif ELECROW
+
+        // Implies ElecrowScreen
 
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
@@ -1339,8 +1352,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 // Common globals
 
-extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: davepl - why are some DRAM?)
-
 // g_aRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
@@ -1380,6 +1391,8 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
     #ifndef INPUT_PIN
         #if TTGO
             #define INPUT_PIN (36)
+        #elif ELECROW
+            #define INPUT_PIN (41)
         #elif M5STACKCORE2
             #define INPUT_PIN (0)
             #define IO_PIN    (0)
@@ -1431,123 +1444,6 @@ inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SEC
     return FPS;
 }
 
-// Custom Allocator for allocate_unique, which is like make_unique but can use PSRAM
-
-template<typename Alloc>
-struct alloc_deleter
-{
-  alloc_deleter(const Alloc& a) : a(a) { }
-
-  typedef typename std::allocator_traits<Alloc>::pointer pointer;
-
-  void operator()(pointer p) const
-  {
-    Alloc aa(a);
-    std::allocator_traits<Alloc>::destroy(aa, std::addressof(*p));
-    std::allocator_traits<Alloc>::deallocate(aa, p, 1);
-  }
-
-private:
-  Alloc a;
-};
-
-template<typename T, typename Alloc, typename... Args>
-auto
-allocate_unique(const Alloc& alloc, Args&&... args)
-{
-  using AT = std::allocator_traits<Alloc>;
-  static_assert(std::is_same<typename AT::value_type, std::remove_cv_t<T>>{}(),
-                "Allocator has the wrong value_type");
-
-  Alloc a(alloc);
-  auto p = AT::allocate(a, 1);
-  try {
-    AT::construct(a, std::addressof(*p), std::forward<Args>(args)...);
-    using D = alloc_deleter<Alloc>;
-    return std::unique_ptr<T, D>(p, D(a));
-  }
-  catch (...)
-  {
-    AT::deallocate(a, p, 1);
-    throw;
-  }
-}
-
-// PreferPSRAMAlloc
-//
-// Will return PSRAM if it's available, regular ram otherwise
-
-inline void * PreferPSRAMAlloc(size_t s)
-{
-    if (psramInit())
-    {
-        debugV("PSRAM Array Request for %u bytes\n", s);
-        return ps_malloc(s);
-    }
-    else
-    {
-        return malloc(s);
-    }
-}
-
-// psram_allocator
-//
-// A C++ allocator that allocates from PSRAM instead of the regular heap. Initially
-// I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
-// with make_shared<> so I had to provide this allocator instead.
-//
-// When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
-// of them is still in base ram.
-//
-// (Davepl - I opted to make this *prefer* psram but return regular ram otherwise. It
-//           avoids a lot of ifdef USE_PSRAM in the code.  But I've only proved it
-//           correct, not tried it on a chip without yet.
-
-template <typename T>
-class psram_allocator
-{
-public:
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef T value_type;
-
-    psram_allocator(){}
-    ~psram_allocator(){}
-
-    template <class U> struct rebind { typedef psram_allocator<U> other; };
-    template <class U> psram_allocator(const psram_allocator<U>&){}
-
-    pointer address(reference x) const {return &x;}
-    const_pointer address(const_reference x) const {return &x;}
-    size_type max_size() const throw() {return size_t(-1) / sizeof(value_type);}
-
-    pointer allocate(size_type n, const void * hint = 0)
-    {
-        void * pmem = PreferPSRAMAlloc(n*sizeof(T));
-        return static_cast<pointer>(pmem) ;
-    }
-
-    void deallocate(pointer p, size_type n)
-    {
-        free(p);
-    }
-
-    template< class U, class... Args >
-    void construct( U* p, Args&&... args )
-    {
-        ::new((void *) p ) U(std::forward<Args>(args)...);
-    }
-
-    void destroy(pointer p)
-    {
-        p->~T();
-    }
-};
-
 // str_snprintf
 //
 // va-args style printf that returns the formatted string as a reuslt
@@ -1581,21 +1477,24 @@ inline String str_sprintf(const char *fmt, ...)
 //
 // Simple inline utility functions like random numbers, mapping, conversion, etc
 
-inline static float randomfloat(float lower, float upper)
-{
-    float result = (lower + ((upper - lower) * rand()) / RAND_MAX);
-    return result;
-}
+#include <random>
+#include <type_traits>
 
-inline static double randomdouble(double lower, double upper)
+template <typename T>
+inline static T random_range(T lower, T upper)
 {
-    double result = (lower + ((upper - lower) * rand()) / (double)RAND_MAX);
-    return result;
-}
+    static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
 
-template<typename T> inline float map(T x, T in_min, T in_max, T out_min, T out_max)
-{
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    static std::random_device rd; 
+    static std::mt19937 gen(rd());
+
+    if constexpr (std::is_integral<T>::value) {
+        std::uniform_int_distribution<T> distrib(lower, upper);
+        return distrib(gen);
+    } else if constexpr (std::is_floating_point<T>::value) {
+        std::uniform_real_distribution<T> distrib(lower, upper);
+        return distrib(gen);
+    }
 }
 
 inline uint64_t ULONGFromMemory(uint8_t * payloadData)

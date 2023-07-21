@@ -50,7 +50,7 @@ class PatternSubscribers : public LEDStripEffect
     String youtubeChannelGuid               = DEFAULT_CHANNEL_GUID;
     String youtubeChannelName               = DEFAULT_CHANNEL_NAME;
     bool guidUpdated                        = true;
-    std::vector<SettingSpec> mySettingSpecs;
+    std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
     size_t readerIndex                      = std::numeric_limits<size_t>::max();
 
     unsigned long msLastCheck;
@@ -188,7 +188,7 @@ class PatternSubscribers : public LEDStripEffect
         return false;
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

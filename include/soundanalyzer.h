@@ -38,8 +38,6 @@
 #include <driver/adc.h>
 // #include <driver/adc_deprecated.h>
 
-extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
-
 #define SUPERSAMPLES 1                                    // How many supersamples to take
 #define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
@@ -89,7 +87,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 
 #define MIN_VU 256              // Minimum VU value to use for the span when computing VURatio.  Contributes to
                                 // how dynamic the music is (smaller values == more dynamic)
-                                
+
 
 #ifndef GAINDAMPEN
     #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
@@ -229,7 +227,7 @@ class SoundAnalyzer : public AudioVariables
         for (int i = 0; i < NUM_BANDS; i++)
             if (frequency < _cutOffsBand[i])
                 return i;
-                   
+
         // If we never found a band that includes the freq under its limit, it's in the top bar
         return NUM_BANDS-1;
     }
@@ -279,8 +277,8 @@ class SoundAnalyzer : public AudioVariables
         int16_t sampleBuffer[MAX_SAMPLES];
         size_t bytesRead = 0;
 
-        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
-            i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS));
+        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
         #else
             ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
             ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
@@ -299,8 +297,8 @@ class SoundAnalyzer : public AudioVariables
 
     // UpdateVU
     //
-    // This function is responsible for updating the Volume Unit (VU) values: the current VU (_VU), 
-    // the peak VU (_PeakVU), and the minimum VU (_MinVU). 
+    // This function is responsible for updating the Volume Unit (VU) values: the current VU (_VU),
+    // the peak VU (_PeakVU), and the minimum VU (_MinVU).
     //
     // Firstly, it updates the current VU (_VU) based on the new incoming value (newval).
     // If the new value is greater than the old VU (_oldVU), it assigns the new value to _VU.
@@ -427,7 +425,7 @@ class SoundAnalyzer : public AudioVariables
             auto peaks = GetPeakData();
             debugV("Audio Data -- Sum: %0.2f, _MinVU: %f0.2, _PeakVU: %f0.2, _VU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
         }
-    
+
         return PeakData(_vPeaks);
     }
 
@@ -499,11 +497,11 @@ public:
     // Looks like pure voodoo, but it returns the multiplier by which to scale a vale to enhance it
     // by the current VURatioFade amount.  The amt amount is the amount of your factor that should be
     // made up of the VURatioFade multiplier.  So passing a 0.75 is a lot of beat enhancement, whereas
-    // 0.25 is a little bit.  
+    // 0.25 is a little bit.
 
     float BeatEnhance(float amt)
     {
-        return ((1.0 - amt) + (_VURatioFade / 2.0) * amt);        
+        return ((1.0 - amt) + (_VURatioFade / 2.0) * amt);
     }
 
     // flash record size, for recording 5 second
@@ -567,7 +565,33 @@ public:
         i2s_set_pin(I2S_NUM_0, &pin_config);
         i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
-#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
+#elif ELECROW
+
+        const i2s_config_t i2s_config = {
+                .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
+                .sample_rate = SAMPLING_FREQUENCY,
+                .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+                .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+                .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+                .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+                .dma_buf_count = 2,
+                .dma_buf_len = (int) MAX_SAMPLES,
+                .use_apll = false
+            };
+
+            // i2s pin configuration
+            const i2s_pin_config_t pin_config = {
+                .bck_io_num = 39,
+                .ws_io_num = 38,
+                .data_out_num = -1,  // not used
+                .data_in_num = INPUT_PIN
+            };
+
+            ESP_ERROR_CHECK( i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL) );
+            ESP_ERROR_CHECK( i2s_set_pin(I2S_NUM_0, &pin_config) );
+            ESP_ERROR_CHECK( i2s_start(I2S_NUM_0) );
+
+#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT 
 
         i2s_config_t i2s_config;
         i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
@@ -616,8 +640,8 @@ public:
     unsigned long g_lastPeak1Time[NUM_BANDS] = {0};
     float g_peak1Decay[NUM_BANDS] = {0};
     float g_peak2Decay[NUM_BANDS] = {0};
-    float g_peak1DecayRate = 1.25f;
-    float g_peak2DecayRate = 1.25f;
+    float g_peak1DecayRate = 0.25f;
+    float g_peak2DecayRate = 0.25f;
 
     // DecayPeaks
     //
@@ -625,8 +649,8 @@ public:
 
     inline void DecayPeaks()
     {
-        float decayAmount1 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak1DecayRate);
-        float decayAmount2 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak2DecayRate);
+        float decayAmount1 = std::max(0.0, g_Values.AppTime.LastFrameTime() * g_peak1DecayRate);
+        float decayAmount2 = std::max(0.0, g_Values.AppTime.LastFrameTime() * g_peak2DecayRate);
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
         {
@@ -634,7 +658,7 @@ public:
             g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);
         }
 
-        // Manual smoothing if desired 
+        // Manual smoothing if desired
 
         #if ENABLE_AUDIO_SMOOTHING
             for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)

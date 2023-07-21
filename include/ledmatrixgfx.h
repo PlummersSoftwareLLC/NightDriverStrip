@@ -78,22 +78,42 @@ public:
     {
     }
 
+    static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
+    {
+        StartMatrix();
+
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            auto matrix = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            devices.push_back(matrix);
+            matrix->loadPalette(0);
+        }
+
+        // We don't need color correction on the title layer, but we want it on the main background
+
+        titleLayer.enableColorCorrection(false);
+        backgroundLayer.enableColorCorrection(true);
+
+        // Starting an effect might need to draw, so we need to set the leds up before doing so
+        std::static_pointer_cast<LEDMatrixGFX>(devices[0])->setLeds(GetMatrixBackBuffer());
+    }
+
     void SetBrightness(byte amount)
     {
         matrix.setBrightness(amount);
     }
-    
+
     // EstimatePowerDraw
     //
     // Estimate the total power load for the board and matrix by walking the pixels and adding our previously measured
-    // power draw per pixel based on what color and brightness each pixel is/
+    // power draw per pixel based on what color and brightness each pixel is
 
     int EstimatePowerDraw()
     {
-        const auto kBaseLoad       = 1500;          // Experimentally derived values
-        const auto mwPerPixelRed   = 4.10f;
-        const auto mwPerPixelGreen = 0.82f;
-        const auto mwPerPixelBlue  = 1.75f;
+        constexpr auto kBaseLoad       = 1500;          // Experimentally derived values
+        constexpr auto mwPerPixelRed   = 4.10f;
+        constexpr auto mwPerPixelGreen = 0.82f;
+        constexpr auto mwPerPixelBlue  = 1.75f;
 
         float totalPower = kBaseLoad;
         for (int i = 0; i < NUM_LEDS; i++)
@@ -125,7 +145,7 @@ public:
 
     virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
     {
-        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.
 
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }
@@ -207,7 +227,7 @@ public:
     // Matrix interop
 
     static void StartMatrix();
-    static CRGB *GetMatrixBackBuffer();
+    static CRGB * GetMatrixBackBuffer();
     static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
 };
 #endif

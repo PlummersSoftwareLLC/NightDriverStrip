@@ -35,6 +35,7 @@
 #include <cmath>
 #include "effects.h"
 #include "paletteeffect.h"
+#include "soundanalyzer.h"
 
 // Simple definitions of what direction we're talking about
 
@@ -157,7 +158,7 @@ inline void ClearFanPixels(float fPos, float count, PixelOrder order = Sequentia
   fPos += iFan * FAN_SIZE;
   while (count > 0)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
       FastLED[i][GetFanPixelOrder(fPos + (int)count, order)] = CRGB::Black;
     count--;
   }
@@ -250,7 +251,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
 
   if (remaining > 0.0f && amtFirstPixel > 0.0f && iPos < NUM_LEDS)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       auto index = GetFanPixelOrder(iPos, order);
       CRGB newColor = LEDStripEffect::ColorFraction(color, amtFirstPixel);
@@ -266,7 +267,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
 
   while (remaining > 1.0f && iPos < NUM_LEDS)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
       FastLED[i][GetFanPixelOrder(iPos, order)] += color;
     iPos++;
     remaining--;
@@ -276,7 +277,7 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
 
   if (remaining > 0.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
       FastLED[i][GetFanPixelOrder(iPos, order)] += LEDStripEffect::ColorFraction(color, remaining);
     iPos++;
   }
@@ -318,7 +319,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
   iPos %= GetRingSize(iRing);
   if (remaining > 0.0f && amtFirstPixel > 0.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
@@ -331,7 +332,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
 
   while (remaining > 1.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       iPos %= GetRingSize(iRing);
       if (!bMerge)
@@ -346,7 +347,7 @@ inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, 
   iPos %= GetRingSize(iRing);
   if (remaining > 0.0f)
   {
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < FastLED.count(); i++)
     {
       if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
@@ -439,7 +440,7 @@ public:
     {
       if (g_Analyzer._VURatio > 1.5)
       {
-        if (randomfloat(1.0, 3.0) < g_Analyzer._VURatio)
+        if (random_range(1.0, 3.0) < g_Analyzer._VURatio)
         {
           latch = false;
           OnBeat();
@@ -749,7 +750,7 @@ public:
         CRGB c = ColorFromPalette(_Palette, 255.0 * q / FAN_SIZE, 255, NOBLEND);
         if (_bReplaceMagenta && c == CRGB(CRGB::Magenta))
           c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
-        if (randomfloat(0, 1) < _sparkleChance)
+        if (random_range(0.0f, 10.f) < _sparkleChance)
           c = CRGB::White;
         DrawFanPixels(x, 1, c, Sequential, i);
       }
@@ -1021,7 +1022,7 @@ public:
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
-    abHeat = std::make_unique<uint8_t[]>(CellCount());
+    abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
   }
 
   virtual bool SerializeToJSON(JsonObject& jsonObject) override
@@ -1109,7 +1110,7 @@ public:
       // for (int iCell = 0; iCell < CellsPerLED; iCell++)
       //   maxv = max(maxv, heat[i * CellsPerLED + iCell]);
 
-      for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
+      for (int iChannel = 0; iChannel < FastLED.count(); iChannel++)
       {
         CRGB color = GetBlackBodyHeatColor(abHeat[i * CellsPerLED]);
 

@@ -55,8 +55,7 @@
 #define AUDIO_STACK_SIZE   4096
 #define JSON_STACK_SIZE    4096
 #define SOCKET_STACK_SIZE  4096
-
-
+#define NET_STACK_SIZE     4096
 class IdleTask
 {
   private:
@@ -309,7 +308,7 @@ public:
     {
         #if ENABLE_WIFI
             Serial.print( str_sprintf(">> Launching Network Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
-            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", DEFAULT_STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
+            xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", NET_STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
         #endif
     }
 
