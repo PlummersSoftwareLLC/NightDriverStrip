@@ -86,9 +86,10 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
-    #include "effects/matrix/PatternSMGoogleNexus.h"
-
+    #include "effects/matrix/PatternSMFlocking.h"
 #if BOOGER
+    #include "effects/matrix/PatternSMGravityBalls.h"
+    #include "effects/matrix/PatternSMGoogleNexus.h"
     #include "effects/matrix/PatternSMHolidayLights.h"
     #include "effects/matrix/PatternSMStarshipTroopers.h"
     #include "effects/matrix/PatternSMGamma.h"
