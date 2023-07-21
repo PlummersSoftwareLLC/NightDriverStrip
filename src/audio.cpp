@@ -30,10 +30,6 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-// The SoundAnalyzer is present even when Audio is not defined, but it then a mere stub class
-// with a few stats fields. In the Audio case, it's the full class
-
-SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio case, real in audio case
 
 #if ENABLE_AUDIO
 
