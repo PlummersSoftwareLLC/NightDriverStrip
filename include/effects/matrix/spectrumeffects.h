@@ -368,12 +368,16 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    virtual void Start() override
     {
-        // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
+        // The peaks and their decay rates are global, so we load up our values every time we display so they're current
 
         g_Analyzer.g_peak1DecayRate = _peak1DecayRate;
         g_Analyzer.g_peak2DecayRate = _peak2DecayRate;
+    }
+
+    virtual void Draw() override
+    {
 
         auto pGFXChannel = _GFX[0];
 

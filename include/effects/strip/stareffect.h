@@ -509,7 +509,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                 }
             #endif
 
-            if (random_range(0.0, 2.0) < g_Values.AppTime.LastFrameTime() * prob)
+            constexpr auto kProbabilitySpan = 2.5;
+            if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
             {
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                 // This always starts stars on even pixel boundaries so they look like the desired width if not moving

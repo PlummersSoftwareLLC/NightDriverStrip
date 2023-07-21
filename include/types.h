@@ -48,8 +48,8 @@ class CAppTime
 {
   protected:
 
-    double _lastFrame;
-    double _deltaTime;
+    double _lastFrame = CurrentTime();
+    double _deltaTime = 1.0;
 
   public:
 

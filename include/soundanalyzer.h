@@ -640,8 +640,8 @@ public:
     unsigned long g_lastPeak1Time[NUM_BANDS] = {0};
     float g_peak1Decay[NUM_BANDS] = {0};
     float g_peak2Decay[NUM_BANDS] = {0};
-    float g_peak1DecayRate = 1.25f;
-    float g_peak2DecayRate = 1.25f;
+    float g_peak1DecayRate = 0.25f;
+    float g_peak2DecayRate = 0.25f;
 
     // DecayPeaks
     //
