@@ -28,9 +28,10 @@
 //
 //---------------------------------------------------------------------------
 
+#include "globals.h"
+
 #if USE_MATRIX
 
-#include "globals.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
 #include <SmartMatrix.h>
