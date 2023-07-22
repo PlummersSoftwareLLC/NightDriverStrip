@@ -71,7 +71,7 @@ public:
         #define ADD_CHANNEL(channel) \
             debugI("Adding %d LEDs to channel %d on FastLED.", devices[channel]->GetLEDCount(), channel); \
             FastLED.addLeds<WS2812B, LED_PIN ## channel, COLOR_ORDER>(devices[channel]->leds, devices[channel]->GetLEDCount()); \
-            pinMode(LED_PIN ## channel , OUTPUT);
+            pinMode(LED_PIN ## channel, OUTPUT);
 
         debugI("Adding LEDs to FastLED...");
 
@@ -236,6 +236,43 @@ class HexagonGFX : public LEDStripGFX
         for (int i = indent; i < getRowWidth(HEX_MAX_DIMENSION-indent-1)-indent; ++i)
             setPixel(getStartIndexOfRow(HEX_MAX_DIMENSION-indent-1) + i, color);
 
+    }
+
+    // PostProcessFrame
+    //
+    // PostProcessFrame sends the data to the LED strip.  If it's fewer than the size of the strip, we only send that many.
+
+    virtual void PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixelsDrawn) override
+    {
+        auto pixelsDrawn = wifiPixelsDrawn ? wifiPixelsDrawn : localPixelsDrawn;
+
+        // If we drew no pixels, there's nothing to post process
+        if (pixelsDrawn == 0)
+        {
+            debugV("Frame draw ended without any pixels drawn.");
+            return;
+        }
+
+        // If we've drawn anything from either source, we can now show it if we have LEDs to output to
+        if (FastLED.count() == 0)
+        {
+            debugW("Draw loop is drawing before LEDs are ready, so delaying 100ms...");
+            delay(100);
+            return;
+        }
+
+        debugV("Telling FastLED that we'll be drawing %d pixels\n", pixelsDrawn);
+
+        auto& effectManager = g_ptrSystem->EffectManager();
+
+        for (int i = 0; i < FastLED.count(); i++)
+            FastLED[i].setLeds(effectManager[i]->leds, pixelsDrawn);
+
+        FastLED.show(g_Values.Fader);
+
+        g_Values.FPS = FastLED.getFPS();
+        g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Values.Brightness, POWER_LIMIT_MW) / 255;
+        g_Values.Watts = calculate_unscaled_power_mW(effectManager.g()->leds, pixelsDrawn) / 1000; // 1000 for mw->W
     }
 };
 

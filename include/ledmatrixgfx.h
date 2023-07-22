@@ -63,12 +63,10 @@ public:
     static const uint8_t kDefaultBrightness = 255; // full (100%) brightness
     static const rgb24   defaultBackgroundColor;
 
-    #if USE_MATRIX
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
     static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
-    #endif
 
     LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
@@ -223,6 +221,18 @@ public:
             memcpy(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
         }
     }
+
+    // PrepareFrame
+    //
+    // Gets the matrix ready for the effect or wifi to render into
+
+    virtual void PrepareFrame() override;
+
+    // PostProcessFrame
+    //
+    // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
+
+    virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
 
     // Matrix interop
 

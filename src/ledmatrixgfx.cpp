@@ -28,22 +28,23 @@
 //
 //---------------------------------------------------------------------------
 
+#if USE_MATRIX
+
 #include "globals.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-
-#if USE_MATRIX
-
 #include <SmartMatrix.h>
 #include "ledmatrixgfx.h"
+#include "systemcontainer.h"
 
 const rgb24 LEDMatrixGFX::defaultBackgroundColor = {0x40, 0, 0};
 
-// The delcarations create the "layers" that make up the matrix display
+// The declarations create the "layers" that make up the matrix display
 
 SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::backgroundLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
 SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::titleLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
-SmartMatrixHub75Refresh<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> matrixRefresh;
+SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
+
 
 void LEDMatrixGFX::StartMatrix()
 {
@@ -67,6 +68,112 @@ void LEDMatrixGFX::StartMatrix()
   backgroundLayer.swapBuffers(false);
 
   matrix.setBrightness(255);
+}
+
+void LEDMatrixGFX::PrepareFrame()
+{
+  // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
+  // both 24-bits RGB triplets.  Or at least the same size!
+
+  static_assert(sizeof(CRGB) == sizeof(SM_RGB), "Code assumes 24 bits in both places");
+
+  EVERY_N_MILLIS(MILLIS_PER_FRAME)
+  {
+    #if SHOW_FPS_ON_MATRIX
+      backgroundLayer.setFont(gohufont11);
+      // 3 is half char width at curret font size, 5 is half the height.
+      string output = "FPS: " + std::to_string(g_Values.FPS);
+      backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
+    #endif
+
+    matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
+    matrix.setRefreshRate(MATRIX_REFRESH_RATE);
+
+    setLeds(GetMatrixBackBuffer());
+
+    // We set ourselves to the lower of the fader value or the brightness value,
+    // so that we can fade between effects without having to change the brightness
+    // setting.
+
+    if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle() && GetCaptionTransparency() > 0.00)
+    {
+      titleLayer.setFont(font3x5);
+      uint8_t brite = (uint8_t)(GetCaptionTransparency() * 255.0);
+      titleLayer.setBrightness(brite); // 255 would obscure it entirely
+      debugV("Caption: %d", brite);
+
+      rgb24 chromaKeyColor = rgb24(255, 0, 255);
+      rgb24 shadowColor = rgb24(0, 0, 0);
+      rgb24 titleColor = rgb24(255, 255, 255);
+
+      titleLayer.setChromaKeyColor(chromaKeyColor);
+      titleLayer.enableChromaKey(true);
+      titleLayer.setFont(font6x10);
+      titleLayer.fillScreen(chromaKeyColor);
+
+      const size_t kCharWidth = 6;
+      const size_t kCharHeight = 10;
+
+      const auto caption = GetCaption();
+
+      int y = MATRIX_HEIGHT - 2 - kCharHeight;
+      int w = caption.length() * kCharWidth;
+      int x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
+
+      auto szCaption = caption.c_str();
+      titleLayer.drawString(x - 1, y, shadowColor, szCaption);
+      titleLayer.drawString(x + 1, y, shadowColor, szCaption);
+      titleLayer.drawString(x, y - 1, shadowColor, szCaption);
+      titleLayer.drawString(x, y + 1, shadowColor, szCaption);
+      titleLayer.drawString(x, y, titleColor, szCaption);
+    }
+    else
+    {
+      titleLayer.enableChromaKey(false);
+      titleLayer.setBrightness(0);
+    }
+  }
+}
+
+// PostProcessFrame
+//
+// Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
+
+void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+{
+  // If we drew no pixels, there's nothing to post process
+  if ((localPixelsDrawn + wifiPixelsDrawn) == 0)
+    return;
+
+  constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
+  g_Values.MatrixPowerMilliwatts = EstimatePowerDraw();                             // What our drawn pixels will consume
+
+  if (GetCaptionTransparency() > 0)
+    g_Values.MatrixPowerMilliwatts += kCaptionPower;
+
+  const double kMaxPower = g_ptrSystem->DeviceConfig().GetPowerLimit();
+  uint8_t scaledBrightness = std::clamp(kMaxPower / g_Values.MatrixPowerMilliwatts, 0.0, 1.0) * 255;
+
+  // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
+  // somewhat slowly to avoid flicker.  We do this by using a weighted average of the current and former brightness.  To avoid
+  // an ansymptote near the max, we always increase by at least one step if we're lower than the target.
+
+  constexpr auto kWeightedAverageAmount = 10;
+  if (scaledBrightness <= g_Values.MatrixScaledBrightness)
+    g_Values.MatrixScaledBrightness = scaledBrightness;
+  else
+    g_Values.MatrixScaledBrightness = std::max(g_Values.MatrixScaledBrightness + 1,
+                                               (( g_Values.MatrixScaledBrightness * (kWeightedAverageAmount-1) ) + scaledBrightness) / kWeightedAverageAmount);
+
+  // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
+  // whichever is lowest, so that we can fade between effects without having to change the brightness setting.
+
+  auto targetBrightness = min({ g_Values.Brightness, g_Values.Fader, g_Values.MatrixScaledBrightness });
+
+  debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
+  SetBrightness(targetBrightness );
+
+  MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), GetCaptionTransparency() > 0);
 }
 
 CRGB *LEDMatrixGFX::GetMatrixBackBuffer()

@@ -69,6 +69,7 @@
 #include "pixeltypes.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
+#include "globals.h"
 #include <memory>
 
 #if USE_MATRIX
@@ -1261,6 +1262,10 @@ public:
             }
         } // end column loop
     }     /// MoveY
+
+    virtual void PrepareFrame() {}
+
+    virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) {}
 
     #if USE_NOISE
         void MoveFractionalNoiseX(uint8_t amt = 16)
