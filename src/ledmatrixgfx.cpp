@@ -87,7 +87,6 @@ void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
   matrix.setMaxCalculationCpuPercentage(95);
 
   backgroundLayer.swapBuffers(bSwapBackground);
-  titleLayer.swapBuffers(bSwapTitle);
 }
 
 #endif

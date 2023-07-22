@@ -126,10 +126,9 @@ void MatrixPreDraw()
             // We enable the chromakey overlay just for the strip of screen where it appears.  This support is only
             // present in the private fork of SmartMatrix that is linked to the mesermizer project.
 
-            LEDMatrixGFX::titleLayer.enableChromaKey(true);                                
+            LEDMatrixGFX::titleLayer.swapBuffers(false);
+            LEDMatrixGFX::titleLayer.enableChromaKey(true, y, y + kCharHeight);                              
             LEDMatrixGFX::titleLayer.setBrightness(brite); // 255 would obscure it entirely
-
-
         }
         else
         {
@@ -177,7 +176,7 @@ void MatrixPostDraw(size_t pixelsDrawn)
         debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
         pMatrix->SetBrightness(targetBrightness );
 
-        LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+        LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0, false);
     }
 }
 #endif

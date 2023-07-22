@@ -258,8 +258,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         for (int i = 0; i < 8; i++)
         {
             int iBand = map(i, 0, 7, 0, NUM_BANDS-2);
-            uint8_t low   = g_Analyzer.g_peak2Decay[iBand] * MAXPET;
-            uint8_t high  = g_Analyzer.g_peak2Decay[iBand+1] * MAXPET;
+            uint8_t low   = g_Analyzer._peak2Decay[iBand] * MAXPET;
+            uint8_t high  = g_Analyzer._peak2Decay[iBand+1] * MAXPET;
             data.peaks[i] = (high << 4) + low;
         }
 

@@ -91,7 +91,7 @@ public:
 
     virtual bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
     virtual void Start() override
