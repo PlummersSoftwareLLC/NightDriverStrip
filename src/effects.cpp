@@ -358,7 +358,9 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
+        ADD_EFFECT(EFFECT_MATRIX_SMGRAVITY_BALLS, PatternSMBubbles);
         ADD_EFFECT(EFFECT_MATRIX_SMGRAVITY_BALLS, PatternSMFlocking);
+
         // ADD_EFFECT(EFFECT_MATRIX_SMGRAVITY_BALLS, PatternSMGravityBalls);
         // ADD_EFFECT(EFFECT_MATRIX_SMGOOGLE_NEXUS, PatternSMGoogleNexus);
         // ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, PatternSMHolidayLights);

@@ -86,6 +86,7 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
+    #include "effects/matrix/PatternSMBubbles.h"
     #include "effects/matrix/PatternSMFlocking.h"
 #if BOOGER
     #include "effects/matrix/PatternSMGravityBalls.h"

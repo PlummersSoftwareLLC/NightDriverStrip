@@ -152,6 +152,7 @@
 #define EFFECT_MATRIX_SMGOOGLE_NEXUS                   179
 #define EFFECT_MATRIX_SMGRAVITY_BALLS                  180
 #define EFFECT_MATRIX_SMFLOCKING                       181
+#define EFFECT_MATRIX_SMBUBBLES                        182
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1
