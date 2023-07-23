@@ -33,7 +33,7 @@ uint8_t deltaValue;                                // просто повтор�
 uint16_t ff_x, ff_y, ff_z;                         // большие счётчики
 const TProgmemRGBPalette16 *curPalette = &PartyColors_p;
 
-#define NUM_LAYERSMAX 2
+static constexpr int  NUM_LAYERSMAX = 2;
 uint8_t noise3d[NUM_LAYERSMAX][MATRIX_WIDTH][MATRIX_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
 uint8_t line[MATRIX_WIDTH];                               // свойство пикселей в размер строки матрицы
 uint8_t shiftHue[MATRIX_HEIGHT];                          // свойство пикселей в размер столбца матрицы

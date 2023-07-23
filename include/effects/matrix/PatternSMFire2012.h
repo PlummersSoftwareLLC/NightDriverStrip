@@ -28,7 +28,7 @@ const TProgmemRGBPalette16 *palette_arr[9] = {
     &RainbowStripeColors_p};
 const TProgmemRGBPalette16 *curPalette = palette_arr[0];
 
-#define NUM_LAYERSMAX 2
+static constexpr int NUM_LAYERSMAX  = 2;
   uint8_t noise3d[NUM_LAYERSMAX][MATRIX_WIDTH][MATRIX_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
 
   static inline uint8_t wrapX(int8_t x){

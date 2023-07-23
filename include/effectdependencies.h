@@ -57,28 +57,25 @@
 // Externals
 //
 
-#define BOOGER 0
 #if USE_MATRIX
     #include "ledmatrixgfx.h"
     #include "effects/strip/misceffects.h"
     #include "effects/matrix/PatternBalls.h"
-#if 1
+
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSMOneRing.h"
     #include "effects/matrix/PatternSMLumenjerPalette.h"
     #include "effects/matrix/PatternSMSquaresAndDots.h"
     #include "effects/matrix/PatternSMTraffic.h"
     #include "effects/matrix/PatternSM2DDPR.h"
-    #include "effects/matrix/PatternSMSinusoidSin16.h"
+
     #include "effects/matrix/PatternSMFireworks.h"
     #include "effects/matrix/PatternSMStarDeep.h"
-#if BOOGER
     #include "effects/matrix/PatternSMMagma.h"
     #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSMFire2012.h"
     #include "effects/matrix/PatternSMFire2021.h"
-    #include "effects/matrix/PatternSMWisp.h"
-#endif
+//    #include "effects/matrix/PatternSMWisp.h"
     #include "effects/matrix/PatternSMNoise.h"
     #include "effects/matrix/PatternSMFPicasso3in1.h"
     #include "effects/matrix/PatternSMSnakes.h"
@@ -87,7 +84,6 @@
     #include "effects/matrix/PatternSMPastelFlutter.h"
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
-#endif
     #include "effects/matrix/PatternSMLightning.h"
     #include "effects/matrix/PatternSMEyeTunnel.h"
     #include "effects/matrix/PatternSMPSPCloud.h"
@@ -96,19 +92,14 @@
     #include "effects/matrix/PatternSMTwist.h"
     #include "effects/matrix/PatternSMTwister.h"
     #include "effects/matrix/PatternSMMetaBalls.h"
-#if BOOGER
     #include "effects/matrix/PatternSMFlying.h"
-#endif
-
     #include "effects/matrix/PatternSMSinDots.h"
     #include "effects/matrix/PatternSMSunRadiation.h"
     #include "effects/matrix/PatternSMPatternTrick.h"
     #include "effects/matrix/PatternSMGravityBalls.h"
     #include "effects/matrix/PatternSMGoogleNexus.h"
-#if BOOGER
     #include "effects/matrix/PatternSMHolidayLights.h"
     #include "effects/matrix/PatternSMStarshipTroopers.h"
-#endif
     #include "effects/matrix/PatternSMGamma.h"
     // A Small block of 3D-ish effects using Particle systems or Boids.
     #include "effects/matrix/PatternSMBubbles.h" // Boids
@@ -122,9 +113,7 @@
     #include "effects/matrix/PatternSMXorCircles.h"
     #include "effects/matrix/PatternSMWalkingMachine.h"
     #include "effects/matrix/PatternSMHypnosis.h"
-#if BOOGER
     #include "effects/matrix/PatternSMRainbowTunnel.h"
-#endif
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMMirage.h"
     #include "effects/matrix/PatternSMMaze2.h"
@@ -133,7 +122,6 @@
     #include "effects/matrix/PatternSMAurora.h"
     #include "effects/matrix/PatternSMSmoke.h"
     #include "effects/matrix/PatternSMRainbowSwirl.h"
-#if BOOGER
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -159,8 +147,8 @@
 #if ENABLE_WIFI
     #include "effects/matrix/PatternWeather.h"
 #endif
-#endif // BOOGER
-#endif
+#endif  // USE_MATRIX
+
 
 #ifdef USESTRIP
     #include "ledstripgfx.h"
