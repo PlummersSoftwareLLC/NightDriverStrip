@@ -62,7 +62,7 @@ class PatternSMFlying : public LEDStripEffect
     g()->drawLine(x4, y4, x2, y2, color);
     g()->drawLine(x4, y4, x3, y3, color);
 
-    g()->blur2d(g()->leds, MATRIX_WIDTH-1, 0, MATRIX_HEIGHT-1, 0, 8);
+    g()->blur2d(g()->leds, MATRIX_WIDTH - 1, 0, MATRIX_HEIGHT - 1, 0, 8);
   }
 
 #if ENABLE_AUDIO
