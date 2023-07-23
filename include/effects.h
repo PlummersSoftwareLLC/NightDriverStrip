@@ -157,6 +157,7 @@
 #define EFFECT_MATRIX_SMSUN_RADIATION                  184
 #define EFFECT_MATRIX_SMSIN_DOTS                       185
 #define EFFECT_MATRIX_SMFLYING                         186
+#define EFFECT_MATRIX_SMMETA_BALLS                     187
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1

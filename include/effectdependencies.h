@@ -86,10 +86,11 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
+    #include "effects/matrix/PatternSMMetaBalls.h"
+#if BOOGER
     #include "effects/matrix/PatternSMFlying.h"
     #include "effects/matrix/PatternSMSinDots.h"
     #include "effects/matrix/PatternSMSunRadiation.h"
-#if BOOGER
     #include "effects/matrix/PatternSMPatternTrick.h"
     #include "effects/matrix/PatternSMGravityBalls.h"
     #include "effects/matrix/PatternSMGoogleNexus.h"
