@@ -62,7 +62,7 @@
     #include "ledmatrixgfx.h"
     #include "effects/strip/misceffects.h"
     #include "effects/matrix/PatternBalls.h"
-#if BOOGER
+#if 1
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSMOneRing.h"
     #include "effects/matrix/PatternSMLumenjerPalette.h"
@@ -72,11 +72,13 @@
     #include "effects/matrix/PatternSMSinusoidSin16.h"
     #include "effects/matrix/PatternSMFireworks.h"
     #include "effects/matrix/PatternSMStarDeep.h"
+#if BOOGER
     #include "effects/matrix/PatternSMMagma.h"
     #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSMFire2012.h"
     #include "effects/matrix/PatternSMFire2021.h"
     #include "effects/matrix/PatternSMWisp.h"
+#endif
     #include "effects/matrix/PatternSMNoise.h"
     #include "effects/matrix/PatternSMFPicasso3in1.h"
     #include "effects/matrix/PatternSMSnakes.h"
@@ -105,8 +107,8 @@
     #include "effects/matrix/PatternSMGoogleNexus.h"
 #if BOOGER
     #include "effects/matrix/PatternSMHolidayLights.h"
-#endif
     #include "effects/matrix/PatternSMStarshipTroopers.h"
+#endif
     #include "effects/matrix/PatternSMGamma.h"
     // A Small block of 3D-ish effects using Particle systems or Boids.
     #include "effects/matrix/PatternSMBubbles.h" // Boids
@@ -122,6 +124,7 @@
     #include "effects/matrix/PatternSMHypnosis.h"
 #if BOOGER
     #include "effects/matrix/PatternSMRainbowTunnel.h"
+#endif
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMMirage.h"
     #include "effects/matrix/PatternSMMaze2.h"
@@ -130,6 +133,7 @@
     #include "effects/matrix/PatternSMAurora.h"
     #include "effects/matrix/PatternSMSmoke.h"
     #include "effects/matrix/PatternSMRainbowSwirl.h"
+#if BOOGER
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
