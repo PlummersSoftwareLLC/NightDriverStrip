@@ -37,7 +37,7 @@ class PatternSMFlying : public LEDStripEffect
 #endif
     static byte hue = 0;
     EVERY_N_MILLISECONDS(30) { hue++; }  // 30 - speed of hue change
-#define speed -5                         // global speed of dots move
+    static constexpr int speed = -5;     // global speed of dots move
 
     byte x1 = beatsin8(18 + speed, 0, (MATRIX_WIDTH - 1));
     byte x2 = beatsin8(23 + speed, 0, (MATRIX_WIDTH - 1));
