@@ -161,6 +161,7 @@
 #define EFFECT_MATRIX_SMTWISTER                        188
 #define EFFECT_MATRIX_SMTWIST                          189
 #define EFFECT_MATRIX_SMSPIRO_PULSE                    190
+#define EFFECT_MATRIX_SMCOLOR_POPCORN                  191
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1

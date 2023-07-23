@@ -358,7 +358,8 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE, PatternSMSpiroPulse);
+        ADD_EFFECT(EFFECT_MATRIX_SMCOLOR_POPCORN, PatternSMColorPopcorn);
+        //ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE, PatternSMSpiroPulse);
         // ADD_EFFECT(EFFECT_MATRIX_SMTWIST, PatternSMTwist);
         // ADD_EFFECT(EFFECT_MATRIX_SMTWISTER, PatternSMTwister);
         // ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMMetaBalls);
