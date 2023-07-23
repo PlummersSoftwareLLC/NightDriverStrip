@@ -86,8 +86,9 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
-    #include "effects/matrix/PatternSMColorPopcorn.h"
+    #include "effects/matrix/PatternSMPSPCloud.h"
 #if BOOGER
+    #include "effects/matrix/PatternSMColorPopcorn.h"
     #include "effects/matrix/PatternSMSpiroPulse.h"
     #include "effects/matrix/PatternSMTwist.h"
     #include "effects/matrix/PatternSMTwister.h"
