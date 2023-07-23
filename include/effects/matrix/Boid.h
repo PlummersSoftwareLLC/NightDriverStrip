@@ -120,6 +120,19 @@ class Boid
       acceleration *= 0;
     }
 
+    // Method to update location
+    void update(Boid boids [], uint8_t boidCount) {
+      // Update velocity
+      flock(boids, boidCount);
+      velocity += acceleration;
+      // Limit speed
+      velocity.limit(maxspeed);
+
+      location += velocity;
+      // Reset acceleration to 0 each cycle
+      acceleration *= 0;
+    }
+
     void applyForce(PVector force) {
       // We could add mass here if we want A = F / M
       acceleration += force;
