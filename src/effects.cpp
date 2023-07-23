@@ -358,7 +358,8 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMEYE_TUNNEL, PatternSMEyeTunnel);
+        ADD_EFFECT(EFFECT_MATRIX_SMLIGHTNING, PatternSMLightning);
+        // ADD_EFFECT(EFFECT_MATRIX_SMEYE_TUNNEL, PatternSMEyeTunnel);
         // ADD_EFFECT(EFFECT_MATRIX_SMPSP_CLOUD, PatternSMPSPCloud);
         // ADD_EFFECT(EFFECT_MATRIX_SMCOLOR_POPCORN, PatternSMColorPopcorn);
         //ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE, PatternSMSpiroPulse);
