@@ -153,6 +153,7 @@
 #define EFFECT_MATRIX_SMGRAVITY_BALLS                  180
 #define EFFECT_MATRIX_SMFLOCKING                       181
 #define EFFECT_MATRIX_SMBUBBLES                        182
+#define EFFECT_MATRIX_SMPATTERN_TRICK                  183
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1

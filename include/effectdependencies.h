@@ -86,8 +86,7 @@
     #include "effects/matrix/PatternSMSand.h"
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
-    #include "effects/matrix/PatternSMBubbles.h" // Boids
-    #include "effects/matrix/PatternSMFlocking.h" // Boids
+    #include "effects/matrix/PatternSMPatternTrick.h"
 #if BOOGER
     #include "effects/matrix/PatternSMGravityBalls.h"
     #include "effects/matrix/PatternSMGoogleNexus.h"
@@ -95,6 +94,8 @@
     #include "effects/matrix/PatternSMStarshipTroopers.h"
     #include "effects/matrix/PatternSMGamma.h"
     // A Small block of 3D-ish effects using Particle systems or Boids.
+    #include "effects/matrix/PatternSMBubbles.h" // Boids
+    #include "effects/matrix/PatternSMFlocking.h" // Boids
     #include "effects/matrix/PatternSMFlocking.h"
     #include "effects/matrix/PatternSMFlowFields.h"
     #include "effects/matrix/PatternSMBlurringColors.h"
