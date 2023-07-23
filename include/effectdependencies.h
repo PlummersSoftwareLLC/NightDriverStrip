@@ -60,9 +60,9 @@
 #define BOOGER 0
 #if USE_MATRIX
     #include "ledmatrixgfx.h"
-#if BOOGER
     #include "effects/strip/misceffects.h"
     #include "effects/matrix/PatternBalls.h"
+#if BOOGER
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSMOneRing.h"
     #include "effects/matrix/PatternSMLumenjerPalette.h"
@@ -87,7 +87,6 @@
     #include "effects/matrix/PatternSMSpiro.h"
 #endif
     #include "effects/matrix/PatternSMLightning.h"
-#if BOOGER
     #include "effects/matrix/PatternSMEyeTunnel.h"
     #include "effects/matrix/PatternSMPSPCloud.h"
     #include "effects/matrix/PatternSMColorPopcorn.h"
@@ -95,13 +94,18 @@
     #include "effects/matrix/PatternSMTwist.h"
     #include "effects/matrix/PatternSMTwister.h"
     #include "effects/matrix/PatternSMMetaBalls.h"
+#if BOOGER
     #include "effects/matrix/PatternSMFlying.h"
+#endif
+
     #include "effects/matrix/PatternSMSinDots.h"
     #include "effects/matrix/PatternSMSunRadiation.h"
     #include "effects/matrix/PatternSMPatternTrick.h"
     #include "effects/matrix/PatternSMGravityBalls.h"
     #include "effects/matrix/PatternSMGoogleNexus.h"
+#if BOOGER
     #include "effects/matrix/PatternSMHolidayLights.h"
+#endif
     #include "effects/matrix/PatternSMStarshipTroopers.h"
     #include "effects/matrix/PatternSMGamma.h"
     // A Small block of 3D-ish effects using Particle systems or Boids.
@@ -116,6 +120,7 @@
     #include "effects/matrix/PatternSMXorCircles.h"
     #include "effects/matrix/PatternSMWalkingMachine.h"
     #include "effects/matrix/PatternSMHypnosis.h"
+#if BOOGER
     #include "effects/matrix/PatternSMRainbowTunnel.h"
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMMirage.h"
