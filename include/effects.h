@@ -154,6 +154,8 @@
 #define EFFECT_MATRIX_SMFLOCKING                       181
 #define EFFECT_MATRIX_SMBUBBLES                        182
 #define EFFECT_MATRIX_SMPATTERN_TRICK                  183
+#define EFFECT_MATRIX_SMSUN_RADIATION                  184
+#define EFFECT_MATRIX_SMSIN_DOTS                       185
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1
