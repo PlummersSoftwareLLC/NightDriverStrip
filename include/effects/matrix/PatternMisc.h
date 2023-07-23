@@ -77,23 +77,25 @@ class PatternSunburst : public LEDStripEffect
 
     virtual void Draw() override
     {
-      uint8_t dim = beatsin8(2, 210, 250);
-      g()->DimAll(dim);
+        uint8_t dim = beatsin8(2, 210, 250);
+        g()->DimAll(dim);
 
-      for (int i = 2; i <= MATRIX_WIDTH / 2; i++)
-      {
-        CRGB color = g()->ColorFromCurrentPalette((i - 2) * (240 / (MATRIX_WIDTH / 2)));
+        for (int i = 2; i <= MATRIX_WIDTH / 2; i++)
+        {
+            CRGB color = g()->ColorFromCurrentPalette((i - 2) * (240 / (MATRIX_WIDTH / 2)));
 
-        // The LIB8TION library defines beatsin8, but this needed beatcos8 which did not exist, so I
-        // added it to the graphics interface rathe than adding it to a custom version of lib8tion
+            // The LIB8TION library defines beatsin8, but this needed beatcos8 which did not exist, so I
+            // added it to the graphics interface rathe than adding it to a custom version of lib8tion
 
-        uint8_t x = g()->beatcos8((17 - i) * 2, MATRIX_CENTER_X - i, MATRIX_CENTER_X + i);
-        uint8_t y = beatsin8((17 - i) * 2, MATRIX_CENTER_Y - i, MATRIX_CENTER_Y + i);
+            uint8_t x = g()->beatcos8((17 - i) * 2, MATRIX_CENTER_X - i, MATRIX_CENTER_X + i);
+            uint8_t y = beatsin8((17 - i) * 2, MATRIX_CENTER_Y - i, MATRIX_CENTER_Y + i);
 
-        if (color.r != 0 || color.g != 0 || color.b !=0 )
-          if (g()->isValidPixel(x,y))
-            g()->setPixel(x, y, color);
-      }
+            if (color.r != 0 || color.g != 0 || color.b != 0)
+            {
+                if (g()->isValidPixel(x,y))
+                    g()->setPixel(x, y, color);
+            }
+        }
     }
 };
 
@@ -121,32 +123,33 @@ class PatternRose : public LEDStripEffect
 
     virtual void Draw() override
     {
-      uint8_t dim = beatsin8(2, 170, 250);
-      g()->DimAll(dim);
+        uint8_t dim = beatsin8(2, 170, 250);
+        g()->DimAll(dim);
 
 
-      for (uint16_t i = 0; i < MATRIX_HEIGHT; i++)
-      {
-        CRGB color;
-
-        uint8_t x = 0;
-        uint8_t y = 0;
-
-        if (i < 16) {
-          x = g()->beatcos8((i + 1) * 2, i, MATRIX_HEIGHT - i) + 16;
-          y = beatsin8((i + 1) * 2, i, MATRIX_HEIGHT - i);
-          color = g()->ColorFromCurrentPalette(i * 14);
-        }
-        else
+        for (uint16_t i = 0; i < MATRIX_HEIGHT; i++)
         {
-          x = beatsin8((32 - i) * 2, MATRIX_WIDTH - i, i + 1) + 16;
-          y = g()->beatcos8((32 - i) * 2, MATRIX_WIDTH - i, i + 1);
-          color = g()->ColorFromCurrentPalette((31 - i) * 14);
-        }
+            CRGB color;
 
-        if (g()->isValidPixel(x, y))
-          g()->setPixel(x, y, color);
-      }
+            uint8_t x = 0;
+            uint8_t y = 0;
+
+            if (i < 16)
+            {
+                x = g()->beatcos8((i + 1) * 2, i, MATRIX_HEIGHT - i) + 16;
+                y = beatsin8((i + 1) * 2, i, MATRIX_HEIGHT - i);
+                color = g()->ColorFromCurrentPalette(i * 14);
+            }
+            else
+            {
+                x = beatsin8((32 - i) * 2, MATRIX_WIDTH - i, i + 1) + 16;
+                y = g()->beatcos8((32 - i) * 2, MATRIX_WIDTH - i, i + 1);
+                color = g()->ColorFromCurrentPalette((31 - i) * 14);
+            }
+
+            if (g()->isValidPixel(x, y))
+                g()->setPixel(x, y, color);
+        }
     }
 };
 
@@ -164,7 +167,7 @@ class PatternPinwheel : public LEDStripEffect
 
     virtual void Start() override
     {
-      g()->Clear();
+        g()->Clear();
     }
 
     virtual size_t DesiredFramesPerSecond() const override
@@ -174,23 +177,23 @@ class PatternPinwheel : public LEDStripEffect
 
     virtual void Draw() override
     {
-      uint8_t dim = beatsin8(2, 30, 70);
-      fadeAllChannelsToBlackBy(dim);
+        uint8_t dim = beatsin8(2, 30, 70);
+        fadeAllChannelsToBlackBy(dim);
 
-      for (uint8_t i = 0; i < 64; i++)
-      {
-        CRGB color;
+        for (uint8_t i = 0; i < 64; i++)
+        {
+            CRGB color;
 
-        uint8_t x = 0;
-        uint8_t y = 0;
+            uint8_t x = 0;
+            uint8_t y = 0;
 
-        x = beatsin8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1) + 16;
-        y = g()->beatcos8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1);
-        color = g()->ColorFromCurrentPalette((64 - i) * 14);
+            x = beatsin8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1) + 16;
+            y = g()->beatcos8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1);
+            color = g()->ColorFromCurrentPalette((64 - i) * 14);
 
-        if (g()->isValidPixel(x, y))
-          g()->setPixel(x, y, color);
-      }
+            if (g()->isValidPixel(x, y))
+                g()->setPixel(x, y, color);
+        }
     }
 };
 
@@ -240,8 +243,8 @@ public:
         // draw a pixel at x,y using a color from the current palette
         if (_lastX == -1)
         {
-          _lastX = x;
-          _lastY = y;
+            _lastX = x;
+            _lastY = y;
         }
 
         g()->drawLine(_lastX, _lastY, x, y, g()->ColorFromCurrentPalette(hue));
@@ -283,34 +286,31 @@ public:
 
     virtual void Draw() override
     {
-
-        for (uint16_t x = 0; x < MATRIX_WIDTH; x++) {
-            for (uint16_t y = 0; y < MATRIX_HEIGHT; y++) {
-                g()->leds[g()->xy(x, y)] =
-                  (x ^ y ^ flip) < count ?
-                      g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)
+        for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
+        {
+            for (uint16_t y = 0; y < MATRIX_HEIGHT; y++)
+            {
+                g()->leds[g()->xy(x, y)] = (x ^ y ^ flip) < count
+                    ? g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)
                     : CRGB::Black;
-
-                // The below is more pleasant
-               // effects.leds[XY(x, y)] = effects.ColorFromCurrentPalette(((x ^ y) << 2) + generation) ;
             }
         }
 
         count += dir;
 
         if (count <= 0 || count >= MATRIX_WIDTH) {
-          dir = -dir;
+            dir = -dir;
         }
 
-        if (count <= 0) {
-          if (flip == 0)
-            flip = MATRIX_WIDTH-1;
-          else
-            flip = 0;
+        if (count <= 0)
+        {
+            if (flip == 0)
+                flip = MATRIX_WIDTH-1;
+            else
+                flip = 0;
         }
 
         generation++;
-
     }
 };
 

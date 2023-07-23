@@ -162,7 +162,7 @@ class SystemContainer
     // -------------------------------------------------------------
     // EffectManager
 
-    SC_FORWARDING_PROPERTY(EffectManager, EffectManager<GFXBase>)
+    SC_FORWARDING_PROPERTY(EffectManager, EffectManager)
 
     // -------------------------------------------------------------
     // TaskManager

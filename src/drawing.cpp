@@ -35,13 +35,12 @@
 #include "effects/matrix/spectrumeffects.h"
 #include "systemcontainer.h"
 
-CRGB g_SinglePixel = CRGB::Blue;
-CLEDController *g_ledSinglePixel;
+static DRAM_ATTR CRGB l_SinglePixel = CRGB::Blue;
 
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
 // from the led buffer.
 
-extern std::mutex g_buffer_mutex;
+extern DRAM_ATTR std::mutex g_buffer_mutex;
 
 extern const CRGBPalette16 vuPaletteGreen;
 
@@ -221,7 +220,7 @@ void ShowOnboardRGBLED()
 void PrepareOnboardPixel()
 {
     #ifdef ONBOARD_PIXEL_POWER
-        g_ledSinglePixel = &FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(&g_SinglePixel, 1);
+        FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(&l_SinglePixel, 1);
         pinMode(ONBOARD_PIXEL_POWER, OUTPUT);
         digitalWrite(ONBOARD_PIXEL_POWER, HIGH);
     #endif
@@ -233,7 +232,7 @@ void ShowOnboardPixel()
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
     #ifdef ONBOARD_PIXEL_POWER
-        g_SinglePixel = FastLED[0].leds()[0];
+        l_SinglePixel = FastLED[0].leds()[0];
     #endif
 }
 

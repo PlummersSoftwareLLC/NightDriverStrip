@@ -180,8 +180,10 @@ ImprovSerial<typeof(Serial)> g_ImprovSerial;
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
+DRAM_ATTR String WiFi_ssid;
+DRAM_ATTR String WiFi_password;
+DRAM_ATTR std::mutex g_buffer_mutex;
 
-extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
@@ -426,7 +428,7 @@ void setup()
         #endif
 
     #elif ELECROW
-    
+
             debugW("Creating Elecrow Screen");
             g_ptrSystem->SetupDisplay<ElecrowScreen>(TFT_HEIGHT, TFT_WIDTH);
 
@@ -446,29 +448,18 @@ void setup()
     g_ptrSystem->SetupDevices();
     auto& devices = g_ptrSystem->Devices();
 
-
     // Initialize the strand controllers depending on how many channels we have
 
-    // LEDStripGFX is used for simple strips or for matrices woven from strips
-
     #if USE_STRIP
+        // LEDStripGFX is used for simple strips or for matrices woven from strips
         LEDStripGFX::InitializeHardware(devices);
-    #endif
-
-    // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
-
-    #if HEXAGON
+    #elif HEXAGON
+        // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
         HexagonGFX::InitializeHardware(devices);
-    #endif
-
-    // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
-
-    #if USE_MATRIX
+    #elif USE_MATRIX
+        // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
         LEDMatrixGFX::InitializeHardware(devices);
     #endif
-
-    TJpgDec.setJpgScale(1);
-    TJpgDec.setCallback(bitmap_output);
 
     // Initialize all of the built in effects
 
@@ -485,6 +476,14 @@ void setup()
     #endif
 
     g_ptrSystem->SetupBufferManagers();
+
+    TJpgDec.setJpgScale(1);
+    TJpgDec.setCallback([](int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+    {
+        auto pgfx = g_ptrSystem->EffectManager().g();
+        pgfx->drawRGBBitmap(x, y, bitmap, w, h);
+        return true;
+    });
 
     // Show splash effect on matrix
     #if USE_MATRIX
