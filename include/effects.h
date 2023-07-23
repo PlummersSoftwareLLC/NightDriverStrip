@@ -158,6 +158,7 @@
 #define EFFECT_MATRIX_SMSIN_DOTS                       185
 #define EFFECT_MATRIX_SMFLYING                         186
 #define EFFECT_MATRIX_SMMETA_BALLS                     187
+#define EFFECT_MATRIX_SMTWISTER                        188
 
 // 999999rry Night star variations
 #define EFFECT_STAR                                      1

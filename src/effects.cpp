@@ -358,7 +358,8 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PULSAR, PatternPulsar);
 #endif
-        ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMMetaBalls);
+        ADD_EFFECT(EFFECT_MATRIX_SMTWISTER, PatternSMTwister);
+        // ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMMetaBalls);
         // ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMFlying);
         // ADD_EFFECT(EFFECT_MATRIX_SMSIN_DOTS, PatternSMSinDots);
         // ADD_EFFECT(EFFECT_MATRIX_SMPATTERN_TRICK, PatternSMSunRadiation);
