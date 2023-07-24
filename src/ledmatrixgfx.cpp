@@ -88,7 +88,7 @@ void LEDMatrixGFX::PrepareFrame()
             backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
         #endif
 
-        auto graphics = g_ptrSystem->EffectManager()[0];
+        auto graphics = g_ptrSystem->EffectManager().g();
 
         matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         matrix.setRefreshRate(MATRIX_REFRESH_RATE);

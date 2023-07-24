@@ -77,6 +77,7 @@
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
 //              Jun-10-2023  v037       Davepl      New Screen classes
+//              Jul-24-2023  v038       Davepl      NTP clock fix
 //
 //---------------------------------------------------------------------------
 
@@ -120,7 +121,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          37    // Update ONLY this to increment the version number
+#define FLASH_VERSION          38    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
     #ifndef USE_STRIP

@@ -344,8 +344,7 @@ public:
             _tempEffect = nullptr;
 
         #if (USE_MATRIX)
-            auto pMatrix = (*this)[0];
-            pMatrix->PausePalette(false);
+            g()->PausePalette(false);
         #endif
     }
 
