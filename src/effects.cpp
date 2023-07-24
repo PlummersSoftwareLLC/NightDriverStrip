@@ -258,7 +258,8 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
+static DRAM_ATTR std::unique_ptr<EffectFactories> l_ptrEffectFactories = nullptr;
+static std::map<int, JSONEffectFactory> l_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<Star>>(jsonObject); } },
@@ -280,28 +281,28 @@ std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
 
 std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
 {
-    auto entry = g_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
+    auto entry = l_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
 
-    return entry != g_JsonStarryNightEffectFactories.end()
+    return entry != l_JsonStarryNightEffectFactories.end()
         ? entry->second(jsonObject)
         : nullptr;
 }
 
-#define ADD_EFFECT(effectNumber, effectType, ...)   g_ptrEffectFactories->AddEffect(effectNumber, \
+#define ADD_EFFECT(effectNumber, effectType, ...)   l_ptrEffectFactories->AddEffect(effectNumber, \
     []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(jsonObject); })
 
-#define ADD_STARRY_NIGHT_EFFECT(starType, ...)      g_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
+#define ADD_STARRY_NIGHT_EFFECT(starType, ...)      l_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
     []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<starType>>(__VA_ARGS__); }, \
     [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); })
 
 void LoadEffectFactories()
 {
     // Check if the factories have already been loaded
-    if (g_ptrEffectFactories)
+    if (l_ptrEffectFactories)
         return;
 
-    g_ptrEffectFactories = make_unique_psram<EffectFactories>();
+    l_ptrEffectFactories = make_unique_psram<EffectFactories>();
 
     // Fill effect factories
     #if DEMO
@@ -565,12 +566,12 @@ void LoadEffectFactories()
     // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
     // add the list of effects in this table as shown for the various other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
-    assert(!g_ptrEffectFactories->IsEmpty());
+    assert(!l_ptrEffectFactories->IsEmpty());
 }
 
-DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
-DRAM_ATTR size_t g_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
-DRAM_ATTR size_t g_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
+static DRAM_ATTR size_t l_EffectsManagerJSONBufferSize = 0;
+static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
+static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
 
 #if USE_MATRIX
 
@@ -597,14 +598,14 @@ void InitEffectsManager()
 
     LoadEffectFactories();
 
-    g_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        []() { SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()); }
+    l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(
+        []() { SaveToJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()); }
     );
-    g_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
+    l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
 
-    if (LoadJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, pJsonDoc))
+    if (LoadJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, pJsonDoc))
     {
         debugI("Creating EffectManager from JSON config");
 
@@ -627,14 +628,14 @@ void InitEffectsManager()
         throw std::runtime_error("Could not initialize effect manager");
 
     // We won't need the default factories any more, so swipe them from memory
-    g_ptrEffectFactories->ClearDefaultFactories();
+    l_ptrEffectFactories->ClearDefaultFactories();
 }
 
 void SaveEffectManagerConfig()
 {
     debugV("Saving effect manager config...");
     // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-    g_ptrSystem->JSONWriter().FlagWriter(g_EffectsManagerJSONWriterIndex);
+    g_ptrSystem->JSONWriter().FlagWriter(l_EffectsManagerJSONWriterIndex);
 }
 
 void RemoveEffectManagerConfig()
@@ -648,7 +649,7 @@ void SaveCurrentEffectIndex()
 {
     if (g_ptrSystem->DeviceConfig().RememberCurrentEffect())
         // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-        g_ptrSystem->JSONWriter().FlagWriter(g_CurrentEffectWriterIndex);
+        g_ptrSystem->JSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
 }
 
 void WriteCurrentEffectIndexFile()
@@ -702,14 +703,117 @@ bool ReadCurrentEffectIndex(size_t& index)
     return readIndex;
 }
 
-// btimap_output
-//
-// Output function for the jpeg library.  It doesn't provide any mechanism for passing a this pointer or other context,
-// so it has to assume that it will be drawing to the main channel 0.
-
-bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
 {
-    auto pgfx = g_ptrSystem->EffectManager().g();
-    pgfx->drawRGBBitmap(x, y, bitmap, w, h);
-    return true;
+    std::set<int> loadedEffectNumbers;
+
+    // Create effects from JSON objects, using the respective factories in g_EffectFactories
+    auto& jsonFactories = l_ptrEffectFactories->GetJSONFactories();
+
+    for (auto effectObject : effectsArray)
+    {
+        int effectNumber = effectObject[PTY_EFFECTNR];
+        auto factoryEntry = jsonFactories.find(effectNumber);
+
+        if (factoryEntry == jsonFactories.end())
+            continue;
+
+        auto pEffect = factoryEntry->second(effectObject);
+        if (pEffect)
+        {
+            if (effectObject[PTY_COREEFFECT].as<int>())
+                pEffect->MarkAsCoreEffect();
+
+            _vEffects.push_back(pEffect);
+            loadedEffectNumbers.insert(effectNumber);
+        }
+    }
+
+    // Now add missing effects from the default factory list
+    auto &defaultFactories = l_ptrEffectFactories->GetDefaultFactories();
+
+    // We iterate manually, so we can use where we are as the starting point for a later inner loop
+    for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
+    {
+        int effectNumber = iter->EffectNumber;
+
+        // If we've already loaded this effect (number) from JSON, we can move on to check the next one
+        if (loadedEffectNumbers.count(effectNumber))
+            continue;
+
+        // We found an effect (number) in the default list that we have not yet loaded from JSON.
+        //   So, we go through the rest of the default factory list to create and add to our effects
+        //   list all instances of this effect.
+        std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
+            {
+                if (numberedFactory.EffectNumber != effectNumber)
+                    return;
+
+                auto pEffect = numberedFactory.Factory();
+                if (pEffect)
+                {
+                    // Effects in the default list are core effects. These can be disabled but not deleted.
+                    pEffect->MarkAsCoreEffect();
+                    _vEffects.push_back(pEffect);
+                }
+            }
+        );
+
+        // Register that we added this effect number, so we don't add the respective effects more than once
+        loadedEffectNumbers.insert(effectNumber);
+    }
+}
+
+void EffectManager::LoadDefaultEffects()
+{
+    for (auto &numberedFactory : l_ptrEffectFactories->GetDefaultFactories())
+    {
+        auto pEffect = numberedFactory.Factory();
+        if (pEffect)
+        {
+            // Effects in the default list are core effects. These can be disabled but not deleted.
+            pEffect->MarkAsCoreEffect();
+            _vEffects.push_back(pEffect);
+        }
+    }
+
+    for (int i = 0; i < _vEffects.size(); i++)
+        EnableEffect(i, true);
+
+    SetInterval(DEFAULT_EFFECT_INTERVAL, true);
+
+    construct(true);
+}
+
+std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
+{
+    if (index >= _vEffects.size())
+    {
+        debugW("Invalid index for CopyEffect");
+        return nullptr;
+    }
+
+    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+
+    auto& sourceEffect = _vEffects[index];
+
+    std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
+
+    SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
+        [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
+
+    auto jsonEffectFactories = l_ptrEffectFactories->GetJSONFactories();
+    auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
+
+    if (factoryEntry == jsonEffectFactories.end())
+        return nullptr;
+
+    auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
+
+    if (!copiedEffect)
+        return nullptr;
+
+    copiedEffect->SetEnabled(false);
+
+    return copiedEffect;
 }

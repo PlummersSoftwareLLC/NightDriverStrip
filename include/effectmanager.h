@@ -60,13 +60,11 @@ bool ReadCurrentEffectIndex(size_t& index);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
-extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
 // EffectManager
 //
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
-template <typename GFXTYPE>
 class  EffectManager : public IJSONSerializable
 {
     std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
@@ -80,7 +78,7 @@ class  EffectManager : public IJSONSerializable
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
 
-    std::vector<std::shared_ptr<GFXTYPE>> _gfx;
+    std::vector<std::shared_ptr<GFXBase>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
 
     void construct(bool clearTempEffect)
@@ -100,66 +98,8 @@ class  EffectManager : public IJSONSerializable
         }
     }
 
-    void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
-    {
-        std::set<int> loadedEffectNumbers;
-
-        // Create effects from JSON objects, using the respective factories in g_EffectFactories
-        auto& jsonFactories = g_ptrEffectFactories->GetJSONFactories();
-
-        for (auto effectObject : effectsArray)
-        {
-            int effectNumber = effectObject[PTY_EFFECTNR];
-            auto factoryEntry = jsonFactories.find(effectNumber);
-
-            if (factoryEntry == jsonFactories.end())
-                continue;
-
-            auto pEffect = factoryEntry->second(effectObject);
-            if (pEffect)
-            {
-                if (effectObject[PTY_COREEFFECT].as<int>())
-                    pEffect->MarkAsCoreEffect();
-
-                _vEffects.push_back(pEffect);
-                loadedEffectNumbers.insert(effectNumber);
-            }
-        }
-
-        // Now add missing effects from the default factory list
-        auto &defaultFactories = g_ptrEffectFactories->GetDefaultFactories();
-
-        // We iterate manually, so we can use where we are as the starting point for a later inner loop
-        for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
-        {
-            int effectNumber = iter->EffectNumber;
-
-            // If we've already loaded this effect (number) from JSON, we can move on to check the next one
-            if (loadedEffectNumbers.count(effectNumber))
-                continue;
-
-            // We found an effect (number) in the default list that we have not yet loaded from JSON.
-            //   So, we go through the rest of the default factory list to create and add to our effects
-            //   list all instances of this effect.
-            std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
-                {
-                    if (numberedFactory.EffectNumber != effectNumber)
-                        return;
-
-                    auto pEffect = numberedFactory.Factory();
-                    if (pEffect)
-                    {
-                        // Effects in the default list are core effects. These can be disabled but not deleted.
-                        pEffect->MarkAsCoreEffect();
-                        _vEffects.push_back(pEffect);
-                    }
-                }
-            );
-
-            // Register that we added this effect number, so we don't add the respective effects more than once
-            loadedEffectNumbers.insert(effectNumber);
-        }
-    }
+    // Implementation is in effects.cpp
+    void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
     void ClearEffects()
     {
@@ -170,7 +110,7 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::vector<std::shared_ptr<GFXTYPE>>& gfx)
+    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
@@ -181,7 +121,7 @@ public:
         construct(false);
     }
 
-    EffectManager(std::vector<std::shared_ptr<GFXTYPE>>& gfx)
+    EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
@@ -189,7 +129,7 @@ public:
         LoadDefaultEffects();
     }
 
-    EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXTYPE>>& gfx)
+    EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
@@ -218,26 +158,8 @@ public:
         _newFrameAvailable = available;
     }
 
-    void LoadDefaultEffects()
-    {
-        for (auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
-        {
-            auto pEffect = numberedFactory.Factory();
-            if (pEffect)
-            {
-                // Effects in the default list are core effects. These can be disabled but not deleted.
-                pEffect->MarkAsCoreEffect();
-                _vEffects.push_back(pEffect);
-            }
-        }
-
-        for (int i = 0; i < _vEffects.size(); i++)
-            EnableEffect(i, true);
-
-        SetInterval(DEFAULT_EFFECT_INTERVAL, true);
-
-        construct(true);
-    }
+    // Implementation is in effects.cpp
+    void LoadDefaultEffects();
 
     // DeserializeFromJSON
     //
@@ -349,18 +271,13 @@ public:
         return true;
     }
 
-    std::shared_ptr<GFXTYPE> operator[](size_t index) const
+    std::shared_ptr<GFXBase> operator[](size_t index) const
     {
         return _gfx[index];
     }
 
-    size_t gCount()
-    {
-        return _gfx.size();
-    }
-
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
-    inline std::shared_ptr<GFXTYPE> g() const
+    inline std::shared_ptr<GFXBase> g() const
     {
         return _gfx[0];
     }
@@ -543,39 +460,8 @@ public:
     }
 
     // Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
-    //   use the AppendEffect() function for that.
-    std::shared_ptr<LEDStripEffect> CopyEffect(size_t index)
-    {
-        if (index >= _vEffects.size())
-        {
-            debugW("Invalid index for CopyEffect");
-            return nullptr;
-        }
-
-        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-
-        auto& sourceEffect = _vEffects[index];
-
-        std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
-
-        SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
-            [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
-
-        auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
-        auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
-
-        if (factoryEntry == jsonEffectFactories.end())
-            return nullptr;
-
-        auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
-
-        if (!copiedEffect)
-            return nullptr;
-
-        copiedEffect->SetEnabled(false);
-
-        return copiedEffect;
-    }
+    //   use the AppendEffect() function for that. Implementation is in effects.cpp.
+    std::shared_ptr<LEDStripEffect> CopyEffect(size_t index);
 
     // Adds an effect to the effect list and enables it. If an effect is added that is already in the effect list then the result
     //   is undefined but potentially messy.

@@ -41,8 +41,8 @@
     void SetupOTA(const String & strHostname);
     bool ReadWiFiConfig();
     bool WriteWiFiConfig();
-    extern String WiFi_password;
-    extern String WiFi_ssid;
+    extern DRAM_ATTR String WiFi_password;
+    extern DRAM_ATTR String WiFi_ssid;
 
     // Static Helpers
     //

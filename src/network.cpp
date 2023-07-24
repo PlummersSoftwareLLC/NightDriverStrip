@@ -35,16 +35,13 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
-#if USE_WIFI_MANAGER
-#include <ESP_WiFiManager.h>
-DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
-#endif
+extern DRAM_ATTR std::mutex g_buffer_mutex;
 
-std::mutex g_buffer_mutex;
-String WiFi_ssid;
-String WiFi_password;
-DRAM_ATTR WiFiUDP g_Udp;              // UDP object used for NNTP, etc
+static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
+// Static initializers
+DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 
 // processRemoteDebugCmd
 //
@@ -58,7 +55,7 @@ DRAM_ATTR WiFiUDP g_Udp;              // UDP object used for NNTP, etc
         if (str.equalsIgnoreCase("clock"))
         {
             debugA("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
         }
         else if (str.equalsIgnoreCase("stats"))
         {
@@ -286,7 +283,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_NTP
             debugI("Setting Clock...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
         #endif
 
         #if ENABLE_WEBSERVER
@@ -748,9 +745,15 @@ bool WriteWiFiConfig()
     {
         if (WiFi.isConnected())
         {
-            debugV("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+            static unsigned long lastUpdate = 0;
 
+            // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
+            if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
+            {
+                debugV("Refreshing Time from Server...");
+                if (NTPTimeClient::UpdateClockFromWeb(&l_Udp))
+                    lastUpdate = millis();
+            }
         }
     }
 #endif
