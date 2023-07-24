@@ -100,7 +100,7 @@ void RemoteControl::handle()
     else if (IR_SMOOTH == result)
     {
         effectManager.ClearRemoteColor();
-        effectManager.SetInterval(EffectManager<GFXBase>::csSmoothButtonSpeed);
+        effectManager.SetInterval(EffectManager::csSmoothButtonSpeed);
     }
     else if (IR_STROBE == result)
     {

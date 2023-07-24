@@ -169,10 +169,12 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 //
 
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
-DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 DRAM_ATTR Values g_Values;
-DRAM_ATTR SoundAnalyzer g_Analyzer;                    
+DRAM_ATTR SoundAnalyzer g_Analyzer;
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
+DRAM_ATTR String WiFi_ssid;
+DRAM_ATTR String WiFi_password;
+DRAM_ATTR std::mutex g_buffer_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
@@ -193,12 +195,6 @@ DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
     RING_SIZE_3,
     RING_SIZE_4
 };
-// 
-// Static instances
-//
-
-DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
-DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 
 extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
 
@@ -358,7 +354,12 @@ void setup()
         // We create the network reader here, so classes can register their readers from this point onwards.
         //   Note that the thread that executes the readers is started further down, along with other networking
         //   threads.
-        g_ptrSystem->SetupNetworkReader();
+        auto& networkReader = g_ptrSystem->SetupNetworkReader();
+
+        #if ENABLE_NTP
+            // Register a network reader to update the device clock at regular intervals
+            networkReader.RegisterReader(UpdateNTPTime, (NTP_DELAY_ERROR_SECONDS) * 1000UL);
+        #endif
     #endif
 
     #if INCOMING_WIFI_ENABLED
@@ -422,7 +423,7 @@ void setup()
         #endif
 
     #elif ELECROW
-    
+
             debugW("Creating Elecrow Screen");
             g_ptrSystem->SetupDisplay<ElecrowScreen>(TFT_HEIGHT, TFT_WIDTH);
 
@@ -442,29 +443,18 @@ void setup()
     g_ptrSystem->SetupDevices();
     auto& devices = g_ptrSystem->Devices();
 
-
     // Initialize the strand controllers depending on how many channels we have
 
-    // LEDStripGFX is used for simple strips or for matrices woven from strips
-
-    #if USE_STRIP
+    #if USE_MATRIX
+        // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
+        LEDMatrixGFX::InitializeHardware(devices);
+    #elif HEXAGON
+        // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
+        HexagonGFX::InitializeHardware(devices);
+    #elif USE_STRIP
+        // LEDStripGFX is used for simple strips or for matrices woven from strips
         LEDStripGFX::InitializeHardware(devices);
     #endif
-
-    // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
-
-    #if HEXAGON
-        HexagonGFX::InitializeHardware(devices);
-    #endif
-
-    // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
-
-    #if USE_MATRIX
-        LEDMatrixGFX::InitializeHardware(devices);
-    #endif
-
-    TJpgDec.setJpgScale(1);
-    TJpgDec.setCallback(bitmap_output);
 
     // Initialize all of the built in effects
 
@@ -481,6 +471,14 @@ void setup()
     #endif
 
     g_ptrSystem->SetupBufferManagers();
+
+    TJpgDec.setJpgScale(1);
+    TJpgDec.setCallback([](int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+    {
+        auto pgfx = g_ptrSystem->EffectManager().g();
+        pgfx->drawRGBBitmap(x, y, bitmap, w, h);
+        return true;
+    });
 
     // Show splash effect on matrix
     #if USE_MATRIX

@@ -35,16 +35,13 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
-#if USE_WIFI_MANAGER
-#include <ESP_WiFiManager.h>
-DRAM_ATTR ESP_WiFiManager g_WifiManager("NightDriverWiFi");
-#endif
+extern DRAM_ATTR std::mutex g_buffer_mutex;
 
-std::mutex g_buffer_mutex;
-String WiFi_ssid;
-String WiFi_password;
-DRAM_ATTR WiFiUDP g_Udp;              // UDP object used for NNTP, etc
+static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
+// Static initializers
+DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 
 // processRemoteDebugCmd
 //
@@ -58,7 +55,7 @@ DRAM_ATTR WiFiUDP g_Udp;              // UDP object used for NNTP, etc
         if (str.equalsIgnoreCase("clock"))
         {
             debugA("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
         }
         else if (str.equalsIgnoreCase("stats"))
         {
@@ -286,7 +283,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_NTP
             debugI("Setting Clock...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
         #endif
 
         #if ENABLE_WEBSERVER
@@ -298,6 +295,13 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return true;
     }
 
+    #if ENABLE_NTP
+        void UpdateNTPTime()
+        {
+            debugI("Setting Clock...");
+            NTPTimeClient::UpdateClockFromWeb(&l_Udp);        
+        }
+    #endif
 #endif // ENABLE_WIFI
 
 // ProcessIncomingData
@@ -676,18 +680,6 @@ bool WriteWiFiConfig()
                 }
             }
 
-            #if ENABLE_NTP
-                EVERY_N_MINUTES(30)
-                {
-                    if (WiFi.isConnected())
-                    {
-                        debugV("Refreshing Time from Server...");
-                        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-
-                    }
-                }
-            #endif
-            
             // If the reader container isn't available yet, we'll sleep for a second before we check again
             if (!g_ptrSystem->HasNetworkReader())
             {
