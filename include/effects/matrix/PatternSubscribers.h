@@ -185,7 +185,7 @@ class PatternSubscribers : public LEDStripEffect
 
     virtual bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;            // BUGBUG Flickers without this, but should NOT need it?
     }
 
     virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override

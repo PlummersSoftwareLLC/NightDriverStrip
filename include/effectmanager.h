@@ -271,15 +271,10 @@ public:
         return true;
     }
 
-    std::shared_ptr<GFXBase> operator[](size_t index) const
-    {
-        return _gfx[index];
-    }
-
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
-    inline std::shared_ptr<GFXBase> g() const
+    inline std::shared_ptr<GFXBase> g(int iChannel = 0) const
     {
-        return _gfx[0];
+        return _gfx[iChannel];
     }
 
     // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.

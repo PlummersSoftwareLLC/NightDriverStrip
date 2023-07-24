@@ -51,13 +51,10 @@ void LEDStripGFX::PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixel
         return;
     }
 
-    debugV("Telling FastLED that we'll be drawing %d pixels\n", pixelsDrawn);
-
     auto& effectManager = g_ptrSystem->EffectManager();
 
-    for (int i = 0; i < FastLED.count(); i++)
-        FastLED[i].setLeds(effectManager[i]->leds, pixelsDrawn);
-
+    for (int i = 0; i < NUM_CHANNELS; i++)
+        FastLED[i].setLeds(effectManager.g(i)->leds, pixelsDrawn);
     FastLED.show(g_Values.Fader);
 
     g_Values.FPS = FastLED.getFPS();

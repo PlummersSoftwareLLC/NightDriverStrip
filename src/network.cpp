@@ -628,9 +628,9 @@ bool WriteWiFiConfig()
                     pPacket->header = COLOR_DATA_PACKET_HEADER;
                     pPacket->width  = effectManager.g()->width();
                     pPacket->height = effectManager.g()->height();
-                    if (effectManager[0]->leds != nullptr)
+                    if (effectManager.g()->leds != nullptr)
                     {
-                        memcpy(pPacket->colors, effectManager[0]->leds, sizeof(CRGB) * NUM_LEDS);
+                        memcpy(pPacket->colors, effectManager.g()->leds, sizeof(CRGB) * NUM_LEDS);
 
                         if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
                         {
