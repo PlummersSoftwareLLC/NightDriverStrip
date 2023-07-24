@@ -155,7 +155,7 @@ class VUInsulatorsEffect : public LEDStripEffect
         iPeakVUy = 0;
       }
 
-      const int weight = 10;
+      constexpr int weight = 10;
       bars = (_last * weight + bars)  / (_last * (weight + 1));
       bars = max(bars, 1);
       _last = bars;

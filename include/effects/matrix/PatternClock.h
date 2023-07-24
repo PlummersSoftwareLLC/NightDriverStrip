@@ -37,9 +37,6 @@ class PatternClock : public LEDStripEffect
     // on rectangular display
 
     int    radius;
-    const size_t SECONDS_PER_MINUTE = 60;
-    const size_t SECONDS_PER_HOUR   = SECONDS_PER_MINUTE * 60;
-    const size_t SECONDS_PER_DAY    = SECONDS_PER_HOUR * 24;
 
   public:
 

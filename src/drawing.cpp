@@ -97,7 +97,6 @@ void MatrixPreDraw()
         {
             LEDMatrixGFX::titleLayer.setFont(font3x5);
             uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
-            LEDMatrixGFX::titleLayer.setBrightness(brite); // 255 would obscure it entirely
             debugV("Caption: %d", brite);
 
             rgb24 chromaKeyColor = rgb24(255, 0, 255);
@@ -105,7 +104,6 @@ void MatrixPreDraw()
             rgb24 titleColor = rgb24(255, 255, 255);
 
             LEDMatrixGFX::titleLayer.setChromaKeyColor(chromaKeyColor);
-            LEDMatrixGFX::titleLayer.enableChromaKey(true);
             LEDMatrixGFX::titleLayer.setFont(font6x10);
             LEDMatrixGFX::titleLayer.fillScreen(chromaKeyColor);
 
@@ -124,6 +122,13 @@ void MatrixPreDraw()
             LEDMatrixGFX::titleLayer.drawString(x, y - 1, shadowColor, szCaption);
             LEDMatrixGFX::titleLayer.drawString(x, y + 1, shadowColor, szCaption);
             LEDMatrixGFX::titleLayer.drawString(x, y, titleColor, szCaption);
+
+            // We enable the chromakey overlay just for the strip of screen where it appears.  This support is only
+            // present in the private fork of SmartMatrix that is linked to the mesermizer project.
+
+            LEDMatrixGFX::titleLayer.swapBuffers(false);
+            LEDMatrixGFX::titleLayer.enableChromaKey(true, y, y + kCharHeight);                              
+            LEDMatrixGFX::titleLayer.setBrightness(brite); // 255 would obscure it entirely
         }
         else
         {
@@ -171,7 +176,7 @@ void MatrixPostDraw(size_t pixelsDrawn)
         debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
         pMatrix->SetBrightness(targetBrightness );
 
-        LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), pMatrix->GetCaptionTransparency() > 0);
+        LEDMatrixGFX::MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0, false);
     }
 }
 #endif
@@ -468,7 +473,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         ShowOnboardPixel();
         ShowOnboardRGBLED();
 
-        // Delay at least 5ms and not more than 1s until next frame is due
+        // Delay at least 2ms and not more than 1s until next frame is due
 
         constexpr auto minimumDelay = 5;
         delay( std::max(minimumDelay, CalcDelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn) ));

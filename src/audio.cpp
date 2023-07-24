@@ -30,10 +30,6 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-// The SoundAnalyzer is present even when Audio is not defined, but it then a mere stub class
-// with a few stats fields. In the Audio case, it's the full class
-
-SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio case, real in audio case
 
 #if ENABLE_AUDIO
 
@@ -80,7 +76,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
         // Delay enough time to yield 60fps max
-        // We wait a minimum of 5ms even if busy so we don't Bogart the CPU
+        // We wait a minimum even if busy so we don't Bogart the CPU
 
         unsigned long elapsed = millis() - lastFrame;
         constexpr auto kMaxFPS = 60;
@@ -262,8 +258,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         for (int i = 0; i < 8; i++)
         {
             int iBand = map(i, 0, 7, 0, NUM_BANDS-2);
-            uint8_t low   = g_Analyzer.g_peak2Decay[iBand] * MAXPET;
-            uint8_t high  = g_Analyzer.g_peak2Decay[iBand+1] * MAXPET;
+            uint8_t low   = g_Analyzer._peak2Decay[iBand] * MAXPET;
+            uint8_t high  = g_Analyzer._peak2Decay[iBand+1] * MAXPET;
             data.peaks[i] = (high << 4) + low;
         }
 

@@ -447,7 +447,6 @@ public:
         #if USE_MATRIX
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
-//            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
         #endif
 
         effect->Start();
@@ -804,7 +803,7 @@ public:
         if ((_gfx[0])->GetLEDCount() == 0)
             return;
 
-        const float msFadeTime = EFFECT_CROSS_FADE_TIME;
+        constexpr auto msFadeTime = EFFECT_CROSS_FADE_TIME;
 
         CheckEffectTimerExpired();
 

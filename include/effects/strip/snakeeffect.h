@@ -220,11 +220,11 @@ class SnakeEffect : public LEDStripEffect
         {   // Only 1 range in non-wrap-around.
             if (direction == dForward)
             {
-                return randomfloat(std::max(snakeHead, wrapIndex), lastLEDIndex);
+                return random_range(std::max(snakeHead, wrapIndex), lastLEDIndex);
             }
             else
             {
-                return randomfloat(0, std::min(snakeHead, wrapIndex));
+                return random_range(0, std::min(snakeHead, wrapIndex));
             }
         }
         else
@@ -247,7 +247,7 @@ class SnakeEffect : public LEDStripEffect
         // Assume r1s < r1e && r2s < r2e
 
         int r1Diff = (r1e - r1s);
-        int random = randomfloat(0, r1Diff + (r2e - r2s));
+        int random = random_range(0, r1Diff + (r2e - r2s));
 
         if (random <= r1Diff)
         {
