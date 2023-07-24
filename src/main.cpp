@@ -202,16 +202,6 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
 
 extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
 
-
-
-//
-// Optional Components
-//
-
-#if ENABLE_WIFI && ENABLE_NTP
-void UpdateNTPTime();
-#endif
-
 // CheckHeap
 //
 // Quick and dirty debug test to make sure the heap has not been corrupted

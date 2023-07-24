@@ -199,16 +199,23 @@ class FireEffect : public LEDStripEffect
 
         for (int i = 0; i < LEDCount; i++)
         {
+            auto sum = 0;
+            for (int j = 0; j < CellsPerLED; j++)
+                sum += heat[i*CellsPerLED + j];
+            auto avg = sum / CellsPerLED;
 
-            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]/(float)std::numeric_limits<uint8_t>::max());
+            #if LANTERN
+                CRGB color = CRGB(avg, avg * .45, avg * .08);
+            #else
+                CRGB color = GetBlackBodyHeatColor(avg/(float)std::numeric_limits<uint8_t>::max());
+            #endif
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
-
             int j = (!bReversed) ? i : LEDCount - 1 - i;
             setPixelsOnAllChannels(j, 1, color, false);
-            //if (bMirrored)
-            //    setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
+            if (bMirrored)
+                setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
         }
     }
 };

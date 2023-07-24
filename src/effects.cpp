@@ -320,7 +320,8 @@ void LoadEffectFactories()
 
     #elif LANTERN
 
-        ADD_EFFECT(EFFECT_STRIP_LANTERN, LanternEffect);
+        ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true);
+        // ADD_EFFECT(EFFECT_STRIP_LANTERN, LanternEffect);
 
     #elif MESMERIZER
 

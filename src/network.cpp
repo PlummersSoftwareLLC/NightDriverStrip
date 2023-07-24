@@ -676,6 +676,18 @@ bool WriteWiFiConfig()
                 }
             }
 
+            #if ENABLE_NTP
+                EVERY_N_MINUTES(30)
+                {
+                    if (WiFi.isConnected())
+                    {
+                        debugV("Refreshing Time from Server...");
+                        NTPTimeClient::UpdateClockFromWeb(&g_Udp);
+
+                    }
+                }
+            #endif
+            
             // If the reader container isn't available yet, we'll sleep for a second before we check again
             if (!g_ptrSystem->HasNetworkReader())
             {
@@ -742,18 +754,6 @@ bool WriteWiFiConfig()
         }
     }
 #endif // ENABLE_WIFI
-
-#if ENABLE_WIFI && ENABLE_NTP
-    void UpdateNTPTime()
-    {
-        if (WiFi.isConnected())
-        {
-            debugV("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&g_Udp);
-
-        }
-    }
-#endif
 
 #if ENABLE_WIFI
     size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval, bool flag)

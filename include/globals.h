@@ -298,8 +298,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RING_SIZE_1             12
     #define RING_SIZE_2             8
     #define RING_SIZE_3             1
-    #define MATRIX_WIDTH            FAN_SIZE
-    #define MATRIX_HEIGHT           1
+    #define MATRIX_WIDTH            6
+    #define MATRIX_HEIGHT           2
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
     #define ENABLE_AUDIO            1
@@ -316,7 +316,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
     #if M5STICKC
-        #define LED_PIN0 26
+        #define LED_PIN0 33
     #elif M5STICKCPLUS || M5STACKCORE2
         #define LED_PIN0 32
     #else
@@ -726,12 +726,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Ledstrip"
     #endif
 
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
-    #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
-
+    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
+    #define ENABLE_WIFI                 1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI               1   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL           5   // How many seconds before the lamp times out and shows local content
+    #define COLORDATA_SERVER_ENABLED    1   // Also provides a response packet
     #define NUM_CHANNELS    1
     #define MATRIX_WIDTH    (8*144)     // My maximum run, and about all you can do at 30fps
     #define MATRIX_HEIGHT   1
