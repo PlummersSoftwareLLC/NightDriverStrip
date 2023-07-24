@@ -1,7 +1,7 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
-#if COLORDATA_SERVER_ENABLED
+#if INCOMING_WIFI_ENABLED
 
 int SocketServer::ProcessIncomingConnectionsLoop()
 {
