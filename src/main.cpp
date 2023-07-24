@@ -450,15 +450,15 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #if USE_STRIP
-        // LEDStripGFX is used for simple strips or for matrices woven from strips
-        LEDStripGFX::InitializeHardware(devices);
+    #if USE_MATRIX
+        // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
+        LEDMatrixGFX::InitializeHardware(devices);
     #elif HEXAGON
         // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
         HexagonGFX::InitializeHardware(devices);
-    #elif USE_MATRIX
-        // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
-        LEDMatrixGFX::InitializeHardware(devices);
+    #elif USE_STRIP
+        // LEDStripGFX is used for simple strips or for matrices woven from strips
+        LEDStripGFX::InitializeHardware(devices);
     #endif
 
     // Initialize all of the built in effects

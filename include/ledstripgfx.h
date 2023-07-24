@@ -39,33 +39,9 @@
 
 class LEDStripGFX : public GFXBase
 {
-public:
-
-    LEDStripGFX(size_t w, size_t h) : GFXBase(w, h)
+protected:
+    static void AddLEDsToFastLED(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
-        debugV("Creating Device of size %d x %d", w, h);
-        leds = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
-        if(!leds)
-            throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
-    }
-
-    virtual ~LEDStripGFX()
-    {
-        free(leds);
-        leds = nullptr;
-    }
-
-    static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
-    {
-        // We can't have more than 8 channels, because we don't have more than 8 pins
-        int channelCount = std::min(NUM_CHANNELS, 8);
-
-        for (int i = 0; i < channelCount; i++)
-        {
-            debugW("Allocating LEDStripGFX for channel %d", i);
-            devices.push_back(make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
-        }
-
         // Macro to add LEDs to a channel
 
         #define ADD_CHANNEL(channel) \
@@ -115,6 +91,36 @@ public:
         #endif
 
         g_Values.Brightness = 255;
+    }
+
+public:
+
+    LEDStripGFX(size_t w, size_t h) : GFXBase(w, h)
+    {
+        debugV("Creating Device of size %d x %d", w, h);
+        leds = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
+        if(!leds)
+            throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
+    }
+
+    virtual ~LEDStripGFX()
+    {
+        free(leds);
+        leds = nullptr;
+    }
+
+    static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
+    {
+        // We can't have more than 8 channels, because we don't have more than 8 pins
+        int channelCount = std::min(NUM_CHANNELS, 8);
+
+        for (int i = 0; i < channelCount; i++)
+        {
+            debugW("Allocating LEDStripGFX for channel %d", i);
+            devices.push_back(make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
+        }
+
+        AddLEDsToFastLED(devices);
 
         #if ATOMLIGHT                                                   // BUGBUG Why input?  Shouldn't they be output?
             pinMode(4, INPUT);
@@ -149,11 +155,16 @@ class HexagonGFX : public LEDStripGFX
 
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
+        // We can't have more than 8 channels, because we don't have more than 8 pins
+        int channelCount = std::min(NUM_CHANNELS, 8);
+
+        for (int i = 0; i < channelCount; i++)
         {
             debugW("Allocating HexagonGFX for channel %d", i);
             devices.push_back(make_shared_psram<HexagonGFX>(NUM_LEDS));
         }
+
+        AddLEDsToFastLED(devices);
     }
 
     virtual int getStartIndexOfRow(int row) const
