@@ -45,12 +45,27 @@ void RemoteControl::handle()
     uint result = results.value;    
     _IR_Receive.resume();
 
-    debugW("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
+    debugV("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
 
-    if (0xFFFFFFFF == result)
+    if (0xFFFFFFFF == result || result == lastResult)
     {
-        debugV("Remote Repeat; lastResult == %08x\n", lastResult);
-        result = lastResult;
+        static uint lastRepeatTime = millis();
+
+        // Only the OFF key runs at the full unbounded speed, so you can rapidly dim.  But everything
+        // else has its repeat rate clamped here.
+
+        const auto kMinRepeatms = (lastResult == IR_OFF) ? 0 : 200;
+
+        if (millis() - lastRepeatTime > kMinRepeatms)
+        {
+            debugV("Remote Repeat; lastResult == %08x, elapsed = %d\n", lastResult, millis()-lastRepeatTime);
+            result = lastResult;
+            lastRepeatTime = millis();
+        }
+        else
+        {
+            return;
+        }
     }
     lastResult = result;
 
