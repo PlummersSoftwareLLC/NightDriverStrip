@@ -56,6 +56,7 @@ void LEDMatrixGFX::StartMatrix()
 
   matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
   matrix.setRefreshRate(MATRIX_REFRESH_RATE);
+  matrix.setMaxCalculationCpuPercentage(95);
   matrix.begin();
 
   Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
@@ -86,7 +87,6 @@ void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
   matrix.setMaxCalculationCpuPercentage(95);
 
   backgroundLayer.swapBuffers(bSwapBackground);
-  titleLayer.swapBuffers(bSwapTitle);
 }
 
 #endif

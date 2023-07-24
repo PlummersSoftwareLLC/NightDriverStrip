@@ -110,7 +110,7 @@ private:
 
     virtual bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
     // A table of seed vs generation count.  These are seeds that net long runs of at least 3000 generations.

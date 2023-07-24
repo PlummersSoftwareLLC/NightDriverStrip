@@ -110,10 +110,10 @@ public:
 
     int EstimatePowerDraw()
     {
-        const auto kBaseLoad       = 1500;          // Experimentally derived values
-        const auto mwPerPixelRed   = 4.10f;
-        const auto mwPerPixelGreen = 0.82f;
-        const auto mwPerPixelBlue  = 1.75f;
+        constexpr auto kBaseLoad       = 1500;          // Experimentally derived values
+        constexpr auto mwPerPixelRed   = 4.10f;
+        constexpr auto mwPerPixelGreen = 0.82f;
+        constexpr auto mwPerPixelBlue  = 1.75f;
 
         float totalPower = kBaseLoad;
         for (int i = 0; i < NUM_LEDS; i++)
@@ -227,7 +227,7 @@ public:
     // Matrix interop
 
     static void StartMatrix();
-    static CRGB *GetMatrixBackBuffer();
+    static CRGB * GetMatrixBackBuffer();
     static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
 };
 #endif

@@ -341,10 +341,10 @@ void CurrentEffectSummary(bool bRedraw)
         CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
         int bandWidth = display.width() / NUM_BANDS;
         auto color16 = display.to16bit(bandColor);
-        auto topSection = bandHeight - bandHeight * g_Analyzer.g_peak2Decay[iBand];
+        auto topSection = bandHeight - bandHeight * g_Analyzer._peak2Decay[iBand];
         if (topSection > 0)
             display.fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
-        auto val = min(1.0f, g_Analyzer.g_peak2Decay[iBand]);
+        auto val = min(1.0f, g_Analyzer._peak2Decay[iBand]);
         assert(bandHeight * val <= bandHeight);
         display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }

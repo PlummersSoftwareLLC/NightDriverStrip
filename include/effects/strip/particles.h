@@ -81,7 +81,9 @@ public:
 
     MovingObject(float maxSpeed = 0.25) : _maxSpeed(maxSpeed)
     {
-        _velocity = randomfloat(0, _maxSpeed * 2) - _maxSpeed;
+        // Return a random value between -maxSpeed and +maxSpeed
+        
+        _velocity = random_range(0.0f, _maxSpeed * 2) - _maxSpeed;
     }
 
     virtual ~MovingObject()

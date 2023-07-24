@@ -258,7 +258,6 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
@@ -330,11 +329,11 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25);
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 1.75, 1.75);
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,         0);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,           0, 0, 0.75, 0.75);
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 1.25, 1.25);
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 32,            spectrumBasicColors, 100, 0, 0.25, 1.25);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 32,            spectrumBasicColors, 100, 0, 0.75, 0.75);
 
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0);
@@ -701,16 +700,6 @@ bool ReadCurrentEffectIndex(size_t& index)
     }
 
     return readIndex;
-}
-
-// Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
-// any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
-// more than one matrix and some FastLED functions like blur2d, this would be why.
-
-uint16_t XY(uint8_t x, uint8_t y)
-{
-    // Have a drink on me!
-    return g_ptrSystem->EffectManager()[0]->xy(x, y);
 }
 
 // btimap_output

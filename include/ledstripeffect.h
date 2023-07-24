@@ -284,7 +284,7 @@ class LEDStripEffect : public IJSONSerializable
                 CRGB::Indigo,
                 CRGB::Violet
             };
-        int randomColorIndex = (int)randomfloat(0, ARRAYSIZE(colors));
+        int randomColorIndex = random_range(0U, ARRAYSIZE(colors));
         return colors[randomColorIndex];
     }
 
@@ -295,7 +295,7 @@ class LEDStripEffect : public IJSONSerializable
     static CRGB RandomSaturatedColor()
     {
         CRGB c;
-        c.setHSV((uint8_t)randomfloat(0, 255), 255, 255);
+        c.setHSV(random_range(0,255), 255, 255);
         return c;
     }
 

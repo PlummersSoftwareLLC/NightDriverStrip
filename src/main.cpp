@@ -164,24 +164,20 @@
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 
-// Global support objects and global values
+//
+// Global Variables
+//
+
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
+DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 DRAM_ATTR Values g_Values;
+DRAM_ATTR SoundAnalyzer g_Analyzer;                    
+DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
 ImprovSerial<typeof(Serial)> g_ImprovSerial;
-
-//
-// Global Variables
-//
-
-DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
-DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
-DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
-
-extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
@@ -197,6 +193,16 @@ DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
     RING_SIZE_3,
     RING_SIZE_4
 };
+// 
+// Static instances
+//
+
+DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
+
+extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
+
+
 
 //
 // Optional Components
@@ -337,41 +343,41 @@ void setup()
     // Setup config objects
     g_ptrSystem->SetupConfig();
 
-#if ENABLE_WIFI
+    #if ENABLE_WIFI
 
-    debugW("Starting ImprovSerial");
-    String name = "NDESP32" + get_mac_address().substring(6);
-    g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
+        debugW("Starting ImprovSerial");
+        String name = "NDESP32" + get_mac_address().substring(6);
+        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
 
-    // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
+        // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
-    if (!ReadWiFiConfig())
-    {
-        debugW("Could not read WiFI Credentials");
-        WiFi_password = cszPassword;
-        WiFi_ssid     = cszSSID;
-        if (!WriteWiFiConfig())
-            debugW("Could not even write defaults to WiFi Credentials");
-    }
-    else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
-    {
-        WiFi_password = cszPassword;
-        WiFi_ssid     = cszSSID;
-    }
+        if (!ReadWiFiConfig())
+        {
+            debugW("Could not read WiFI Credentials");
+            WiFi_password = cszPassword;
+            WiFi_ssid     = cszSSID;
+            if (!WriteWiFiConfig())
+                debugW("Could not even write defaults to WiFi Credentials");
+        }
+        else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+        {
+            WiFi_password = cszPassword;
+            WiFi_ssid     = cszSSID;
+        }
 
-    // We create the network reader here, so classes can register their readers from this point onwards.
-    //   Note that the thread that executes the readers is started further down, along with other networking
-    //   threads.
-    g_ptrSystem->SetupNetworkReader();
-#endif
+        // We create the network reader here, so classes can register their readers from this point onwards.
+        //   Note that the thread that executes the readers is started further down, along with other networking
+        //   threads.
+        g_ptrSystem->SetupNetworkReader();
+    #endif
 
-#if INCOMING_WIFI_ENABLED
-    g_ptrSystem->SetupSocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
-#endif
+    #if INCOMING_WIFI_ENABLED
+        g_ptrSystem->SetupSocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
+    #endif
 
-#if ENABLE_WIFI && ENABLE_WEBSERVER
-    g_ptrSystem->SetupWebServer();
-#endif
+    #if ENABLE_WIFI && ENABLE_WEBSERVER
+        g_ptrSystem->SetupWebServer();
+    #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 
