@@ -144,11 +144,11 @@ private:
         void draw(std::shared_ptr<GFXBase> graphics, CRGB colors[SNAKE_LENGTH])
         {
             for (uint8_t i = 0; i < SNAKE_LENGTH; i++)
-                graphics->leds[graphics->xy(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH / 4));
+                graphics->leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH / 4));
 
             uint8_t m = random(20, 100);
-            graphics->leds[graphics->xy(pixels[SNAKE_LENGTH - 1].x, pixels[SNAKE_LENGTH - 1].y)] = CRGB(0, m, 0); // End tail with random dark green
-            graphics->leds[graphics->xy(pixels[0].x, pixels[0].y)] = CRGB::White;                                 // Head end bright white dot
+            graphics->leds[XY(pixels[SNAKE_LENGTH - 1].x, pixels[SNAKE_LENGTH - 1].y)] = CRGB(0, m, 0); // End tail with random dark green
+            graphics->leds[XY(pixels[0].x, pixels[0].y)] = CRGB::White;                                 // Head end bright white dot
         }
     };
 

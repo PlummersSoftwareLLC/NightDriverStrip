@@ -152,18 +152,18 @@ public:
 
   virtual void Draw() override
   {
-    g()->DimAll(10);
+    g()->DimAll(20);
 
     // draw a rainbow color palette
     for (uint16_t y = 0; y < MATRIX_HEIGHT; y++)
     {
       for (uint16_t x = 0; x < MATRIX_CENTER_X; x++)
       {
-        g()->leds[g()->xy(x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
+        g()->leds[XY(x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
       for (uint16_t x = 0; x < MATRIX_CENTER_X; x++)
       {
-        g()->leds[g()->xy(MATRIX_WIDTH - 1 - x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
+        g()->leds[XY(MATRIX_WIDTH - 1 - x, y)] += g()->ColorFromCurrentPalette(x * 8, y * 8 + 7);
       }
 
     }

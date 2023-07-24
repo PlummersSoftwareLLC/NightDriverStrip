@@ -232,18 +232,18 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             // bar 16, for example, it will take all of bar 4 and none of bar 5.  For bar 17, it will take 3/4 of bar 4 and 1/4 of bar 5.
 
             int ib = iBar % barsPerBand;
-            value  = (g_Analyzer.g_peak1Decay[iBand] * (barsPerBand - ib) + g_Analyzer.g_peak1Decay[iNextBand] * (ib) ) / barsPerBand * (pGFXChannel->height() - 1);
-            value2 = (g_Analyzer.g_peak2Decay[iBand] * (barsPerBand - ib) + g_Analyzer.g_peak2Decay[iNextBand] * (ib) ) / barsPerBand *  pGFXChannel->height();
+            value  = (g_Analyzer._peak1Decay[iBand] * (barsPerBand - ib) + g_Analyzer._peak1Decay[iNextBand] * (ib) ) / barsPerBand * (pGFXChannel->height() - 1);
+            value2 = (g_Analyzer._peak2Decay[iBand] * (barsPerBand - ib) + g_Analyzer._peak2Decay[iNextBand] * (ib) ) / barsPerBand *  pGFXChannel->height();
         }
         else
         {
             // One to one case, just use the actual band value we mapped to
 
-            value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-            value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
+            value  = g_Analyzer._peak1Decay[iBand] * (pGFXChannel->height() - 1);
+            value2 = g_Analyzer._peak2Decay[iBand] *  pGFXChannel->height();
         }
 
-        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer.g_peak1Decay[iBar] );
+        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer._peak1Decay[iBar] );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
@@ -284,7 +284,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             {
                 const int PeakFadeTime_ms = 1000;
 
-                unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
+                unsigned long msPeakAge = millis() - g_Analyzer._lastPeak1Time[iBand];
                 if (msPeakAge > PeakFadeTime_ms)
                     msPeakAge = PeakFadeTime_ms;
 
@@ -368,12 +368,16 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
+    virtual void Start() override
+    {
+        // The peaks and their decay rates are global, so we load up our values every time we display so they're current
+
+        g_Analyzer._peak1DecayRate = _peak1DecayRate;
+        g_Analyzer._peak2DecayRate = _peak2DecayRate;
+    }
+
     virtual void Draw() override
     {
-        // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
-
-        g_Analyzer.g_peak1DecayRate = _peak1DecayRate;
-        g_Analyzer.g_peak2DecayRate = _peak2DecayRate;
 
         auto pGFXChannel = _GFX[0];
 
@@ -639,7 +643,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
     void DrawGraph()
@@ -661,7 +665,7 @@ class SpectrumBarEffect : public LEDStripEffect
         {
             // Draw the spike
 
-            auto value =  g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE) * g_Analyzer.g_peak1Decay[iBand];
+            auto value =  g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE) * g_Analyzer._peak1Decay[iBand];
             auto top    = std::max(0.0f, halfHeight - value * halfHeight);
             auto bottom = std::min(MATRIX_HEIGHT-1.0f, halfHeight + value * halfHeight + 1);
             auto x1     = halfWidth - ((iBand * 2 + offset) % halfWidth);
@@ -682,7 +686,8 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual void Start() override
     {
-        // Doesn't clear during drawing, so we need to clear to start the frame
+        // This effect doesn't clear during drawing, so we need to clear to start the frame
+
         g()->Clear();
     }
 

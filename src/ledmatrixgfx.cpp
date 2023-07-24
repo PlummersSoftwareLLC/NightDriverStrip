@@ -38,12 +38,12 @@
 #include "ledmatrixgfx.h"
 #include "systemcontainer.h"
 
-const rgb24 LEDMatrixGFX::defaultBackgroundColor = {0x40, 0, 0};
+const rgb24 defaultBackgroundColor = {0x40, 0, 0};
 
 // The declarations create the "layers" that make up the matrix display
 
-SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::backgroundLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
-SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::titleLayer(LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight);
+SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::backgroundLayer(kMatrixWidth, kMatrixHeight);
+SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::titleLayer(kMatrixWidth, kMatrixHeight);
 SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
 
 void LEDMatrixGFX::StartMatrix()
@@ -57,6 +57,7 @@ void LEDMatrixGFX::StartMatrix()
 
     matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
     matrix.setRefreshRate(MATRIX_REFRESH_RATE);
+    matrix.setMaxCalculationCpuPercentage(95);
     matrix.begin();
 
     Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
@@ -79,6 +80,7 @@ void LEDMatrixGFX::PrepareFrame()
 
     EVERY_N_MILLIS(MILLIS_PER_FRAME)
     {
+
         #if SHOW_FPS_ON_MATRIX
             backgroundLayer.setFont(gohufont11);
             // 3 is half char width at curret font size, 5 is half the height.
@@ -86,20 +88,22 @@ void LEDMatrixGFX::PrepareFrame()
             backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
         #endif
 
+        auto graphics = g_ptrSystem->EffectManager()[0];
+
         matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
-        setLeds(GetMatrixBackBuffer());
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
+        pMatrix->setLeds(GetMatrixBackBuffer());
 
         // We set ourselves to the lower of the fader value or the brightness value,
         // so that we can fade between effects without having to change the brightness
         // setting.
 
-        if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle() && GetCaptionTransparency() > 0.00)
+        if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
             titleLayer.setFont(font3x5);
-            uint8_t brite = (uint8_t)(GetCaptionTransparency() * 255.0);
-            titleLayer.setBrightness(brite); // 255 would obscure it entirely
+            uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
             debugV("Caption: %d", brite);
 
             rgb24 chromaKeyColor = rgb24(255, 0, 255);
@@ -107,14 +111,13 @@ void LEDMatrixGFX::PrepareFrame()
             rgb24 titleColor = rgb24(255, 255, 255);
 
             titleLayer.setChromaKeyColor(chromaKeyColor);
-            titleLayer.enableChromaKey(true);
             titleLayer.setFont(font6x10);
             titleLayer.fillScreen(chromaKeyColor);
 
             const size_t kCharWidth = 6;
             const size_t kCharHeight = 10;
 
-            const auto caption = GetCaption();
+            const auto caption = pMatrix->GetCaption();
 
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
             int w = caption.length() * kCharWidth;
@@ -126,6 +129,13 @@ void LEDMatrixGFX::PrepareFrame()
             titleLayer.drawString(x, y - 1, shadowColor, szCaption);
             titleLayer.drawString(x, y + 1, shadowColor, szCaption);
             titleLayer.drawString(x, y, titleColor, szCaption);
+
+            // We enable the chromakey overlay just for the strip of screen where it appears.  This support is only
+            // present in the private fork of SmartMatrix that is linked to the mesermizer project.
+
+            titleLayer.swapBuffers(false);
+            titleLayer.enableChromaKey(true, y, y + kCharHeight);
+            titleLayer.setBrightness(brite); // 255 would obscure it entirely
         }
         else
         {
@@ -145,10 +155,12 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     if ((localPixelsDrawn + wifiPixelsDrawn) == 0)
         return;
 
-    constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
-    g_Values.MatrixPowerMilliwatts = EstimatePowerDraw();                             // What our drawn pixels will consume
+    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().g());
 
-    if (GetCaptionTransparency() > 0)
+    constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
+    g_Values.MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                             // What our drawn pixels will consume
+
+    if (pMatrix->GetCaptionTransparency() > 0)
         g_Values.MatrixPowerMilliwatts += kCaptionPower;
 
     const double kMaxPower = g_ptrSystem->DeviceConfig().GetPowerLimit();
@@ -163,7 +175,7 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
         g_Values.MatrixScaledBrightness = scaledBrightness;
     else
         g_Values.MatrixScaledBrightness = std::max(g_Values.MatrixScaledBrightness + 1,
-                                                   (( g_Values.MatrixScaledBrightness * (kWeightedAverageAmount-1) ) + scaledBrightness) / kWeightedAverageAmount);
+                                                    (( g_Values.MatrixScaledBrightness * (kWeightedAverageAmount-1) ) + scaledBrightness) / kWeightedAverageAmount);
 
     // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
     // whichever is lowest, so that we can fade between effects without having to change the brightness setting.
@@ -171,9 +183,9 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     auto targetBrightness = min({ g_Values.Brightness, g_Values.Fader, g_Values.MatrixScaledBrightness });
 
     debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
-    SetBrightness(targetBrightness );
+    pMatrix->SetBrightness(targetBrightness );
 
-    MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering(), GetCaptionTransparency() > 0);
+    MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0, false);
 }
 
 CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
@@ -193,7 +205,6 @@ void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
     matrix.setMaxCalculationCpuPercentage(95);
 
     backgroundLayer.swapBuffers(bSwapBackground);
-    titleLayer.swapBuffers(bSwapTitle);
 }
 
 #endif

@@ -118,7 +118,7 @@ class PatternRose : public LEDStripEffect
 
     virtual bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
     virtual void Draw() override

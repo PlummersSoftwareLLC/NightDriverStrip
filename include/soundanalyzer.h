@@ -637,11 +637,11 @@ public:
         return _MicMode;
     }
 
-    unsigned long g_lastPeak1Time[NUM_BANDS] = {0};
-    float g_peak1Decay[NUM_BANDS] = {0};
-    float g_peak2Decay[NUM_BANDS] = {0};
-    float g_peak1DecayRate = 1.25f;
-    float g_peak2DecayRate = 1.25f;
+    unsigned long _lastPeak1Time[NUM_BANDS] = {0};
+    float _peak1Decay[NUM_BANDS] = {0};
+    float _peak2Decay[NUM_BANDS] = {0};
+    float _peak1DecayRate = 0.25f;
+    float _peak2DecayRate = 0.25f;
 
     // DecayPeaks
     //
@@ -649,13 +649,13 @@ public:
 
     inline void DecayPeaks()
     {
-        float decayAmount1 = std::max(0.0, g_Values.AppTime.LastFrameTime() * g_peak1DecayRate);
-        float decayAmount2 = std::max(0.0, g_Values.AppTime.LastFrameTime() * g_peak2DecayRate);
+        float decayAmount1 = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate);
+        float decayAmount2 = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak2DecayRate);
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
         {
-            g_peak1Decay[iBand] -= min(decayAmount1, g_peak1Decay[iBand]);
-            g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);
+            _peak1Decay[iBand] -= min(decayAmount1, _peak1Decay[iBand]);
+            _peak2Decay[iBand] -= min(decayAmount2, _peak2Decay[iBand]);
         }
 
         // Manual smoothing if desired
@@ -663,8 +663,8 @@ public:
         #if ENABLE_AUDIO_SMOOTHING
             for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
             {
-                g_peak1Decay[iBand] = (g_peak1Decay[iBand] * 2 + g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 4;
-                g_peak2Decay[iBand] = (g_peak2Decay[iBand] * 2 + g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 4;
+                _peak1Decay[iBand] = (_peak1Decay[iBand] * 2 + _peak1Decay[iBand - 1] + _peak1Decay[iBand + 1]) / 4;
+                _peak2Decay[iBand] = (_peak2Decay[iBand] * 2 + _peak2Decay[iBand - 1] + _peak2Decay[iBand + 1]) / 4;
             }
         #endif
     }
@@ -676,14 +676,14 @@ public:
     {
         for (int i = 0; i < NUM_BANDS; i++)
         {
-            if (_Peaks[i] > g_peak1Decay[i])
+            if (_Peaks[i] > _peak1Decay[i])
             {
-                g_peak1Decay[i] = _Peaks[i];
-                g_lastPeak1Time[i] = millis();
+                _peak1Decay[i] = _Peaks[i];
+                _lastPeak1Time[i] = millis();
             }
-            if (_Peaks[i] > g_peak2Decay[i])
+            if (_Peaks[i] > _peak2Decay[i])
             {
-                g_peak2Decay[i] = _Peaks[i];
+                _peak2Decay[i] = _Peaks[i];
             }
         }
     }

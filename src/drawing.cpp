@@ -36,6 +36,7 @@
 #include "systemcontainer.h"
 
 static DRAM_ATTR CRGB l_SinglePixel = CRGB::Blue;
+static DRAM_ATTR uint64_t l_usLastWifiDraw = 0;
 
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
 // from the led buffer.
@@ -43,13 +44,6 @@ static DRAM_ATTR CRGB l_SinglePixel = CRGB::Blue;
 extern DRAM_ATTR std::mutex g_buffer_mutex;
 
 extern const CRGBPalette16 vuPaletteGreen;
-
-// DrawLoop
-//
-// Pull packets from the Wifi buffer if they've come due and draw them - if it-'s a few seconds without a WiFi frame,
-// we will draw the local effect instead
-
-DRAM_ATTR uint64_t g_usLastWifiDraw = 0;
 
 // WiFiDraw
 //
@@ -87,7 +81,7 @@ uint16_t WiFiDraw()
 
             if (pBuffer)
             {
-                g_usLastWifiDraw = micros();
+                l_usLastWifiDraw = micros();
                 debugV("Calling LEDBuffer::Draw from wire with %d/%d pixels.", pixelsDrawn, NUM_LEDS);
                 pBuffer->DrawBuffer();
                 // In case we drew some pixels and then drew 0 due a failure, we want to return a positive
@@ -119,7 +113,7 @@ uint16_t LocalDraw()
         if (effectManager.EffectCount() > 0)
         {
             // If we've never drawn from wifi before, now would also be a good time to local draw
-            if (g_usLastWifiDraw == 0 || (micros() - g_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
+            if (l_usLastWifiDraw == 0 || (micros() - l_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
             {
                 effectManager.Update(); // Draw the current built in effect
 
@@ -134,7 +128,7 @@ uint16_t LocalDraw()
             }
             else
             {
-                debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - g_usLastWifiDraw) / (float)MICROS_PER_SECOND);
+                debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - l_usLastWifiDraw) / (float)MICROS_PER_SECOND);
                 // It's important to return 0 when you do not draw so that the caller knows we did not
                 // render any pixels, and we can/should wait until the next frame.  Otherwise the caller might
                 // draw the strip needlessly, which can take significant time.
@@ -294,7 +288,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         ShowOnboardPixel();
         ShowOnboardRGBLED();
 
-        // Delay at least 5ms and not more than 1s until next frame is due
+        // Delay at least 2ms and not more than 1s until next frame is due
 
         constexpr auto minimumDelay = 5;
         delay( std::max(minimumDelay, CalcDelayUntilNextFrame(frameStartTime, localPixelsDrawn, wifiPixelsDrawn) ));

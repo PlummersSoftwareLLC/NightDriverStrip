@@ -39,6 +39,10 @@ extern DRAM_ATTR std::mutex g_buffer_mutex;
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
+// Static initializers
+DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
+DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
+
 // processRemoteDebugCmd
 //
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls

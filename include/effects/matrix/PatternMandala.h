@@ -91,7 +91,7 @@ public:
 
     virtual bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
     virtual void Start() override
@@ -136,6 +136,7 @@ public:
         g()->GetNoise().noise_z += dz * 4;
 
         g()->FillGetNoise();
+  
         ShowNoiseLayer(0, 1, 0);
 
         g()->Caleidoscope3();

@@ -42,7 +42,7 @@ void RemoteControl::handle()
     if (!_IR_Receive.decode(&results))
         return;
 
-    uint result = results.value;
+    uint result = results.value;    
     _IR_Receive.resume();
 
     debugW("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
@@ -52,6 +52,7 @@ void RemoteControl::handle()
         debugV("Remote Repeat; lastResult == %08x\n", lastResult);
         result = lastResult;
     }
+    lastResult = result;
 
     auto &effectManager = g_ptrSystem->EffectManager();
 
