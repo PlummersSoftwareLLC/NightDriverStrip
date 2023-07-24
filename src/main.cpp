@@ -184,7 +184,6 @@ DRAM_ATTR String WiFi_ssid;
 DRAM_ATTR String WiFi_password;
 DRAM_ATTR std::mutex g_buffer_mutex;
 
-
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
 //
@@ -364,7 +363,12 @@ void setup()
     // We create the network reader here, so classes can register their readers from this point onwards.
     //   Note that the thread that executes the readers is started further down, along with other networking
     //   threads.
-    g_ptrSystem->SetupNetworkReader();
+    auto& networkReader = g_ptrSystem->SetupNetworkReader();
+
+    // Register a network reader to update the device clock at regular intervals
+    #if ENABLE_NTP
+        networkReader.RegisterReader(UpdateNTPTime, (NTP_DELAY_COUNT) * 1000UL);
+    #endif
 #endif
 
 #if INCOMING_WIFI_ENABLED
