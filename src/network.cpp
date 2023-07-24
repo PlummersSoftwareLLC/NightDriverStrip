@@ -298,8 +298,15 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     #if ENABLE_NTP
         void UpdateNTPTime()
         {
-            debugI("Setting Clock...");
-            NTPTimeClient::UpdateClockFromWeb(&l_Udp);        
+            if (WiFi.isConnected())
+            {
+                debugI("Setting Clock...");
+                NTPTimeClient::UpdateClockFromWeb(&l_Udp);        
+            }
+            else
+            {
+                debugW("UpdateNTPTime called with no WIFI.");
+            }
         }
     #endif
 #endif // ENABLE_WIFI
