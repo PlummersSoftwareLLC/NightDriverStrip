@@ -5,8 +5,8 @@
 #include "effects/matrix/Vector.h"
 #include "effects/strip/musiceffect.h"
 
-// Inspired by https://editor.soulmatelights.com/gallery/2254-flocking
-// Almost a textbook Boid demo: Separation, Cohesion, Alignment.
+// Derived from https://editor.soulmatelights.com/gallery/2132-F
+// This makes a very cool green vine that grows up the display.
 
 #if ENABLE_AUDIO
 class PatternSMFlocking : public BeatEffectBase,
@@ -16,13 +16,17 @@ class PatternSMFlocking : public LEDStripEffect
 #endif
 {
  private:
-  // With 10 they have just about enough time to spread after a collision on a 64x32.
-  static constexpr int NUM_PARTICLES = 10;
-  Boid boids[NUM_PARTICLES];
+  const int WIDTH = MATRIX_WIDTH;
+  const int HEIGHT = MATRIX_HEIGHT;
+  const int COLS = MATRIX_WIDTH;
+  const int ROWS = MATRIX_HEIGHT;
+  static const int NUM_PARTICLES =
+      20;  // set this to the number of particles. the varialbe describes what
+           // it's supposed to be. it works with 50 but it's a little slow. on
+           // an esp32 it looks pretty nice at that number 15 is a safe number
 
   CRGB getPixColorXY(uint8_t x, uint8_t y) {
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
-    // return g()->leds[g()->xy(x, y)];
   }
 
   void drawPixelXY(int8_t x, int8_t y, CRGB color) {
@@ -36,19 +40,16 @@ class PatternSMFlocking : public LEDStripEffect
 #undef WU_WEIGHT
 static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
 
-  void drawPixelXYF(float x, float y, CRGB color)  //, uint8_t darklevel = 0U)
-  {
-    //  if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
-    //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
+  void drawPixelXYF(float x, float y, CRGB color) {
+    // if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
+    // как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
     // extract the fractional parts and derive their inverses
     uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx,
             iy = 255 - yy;
 // calculate the intensities for each affected pixel
 // #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
-    uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy),
-                     WU_WEIGHT(xx, yy)};
-    // multiply the intensities by the colour, and saturating-add them to the
-    // pixels
+    std::array<uint8_t, 4> wu{WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                              WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
     for (uint8_t i = 0; i < 4; i++) {
       int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
       CRGB clr = getPixColorXY(xn, yn);
@@ -59,6 +60,16 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
     }
   }
 
+  byte hue = 0;
+  std::array<Boid, NUM_PARTICLES> boids;  // this makes the boids
+
+  uint16_t x;
+  uint16_t y;
+  uint16_t z;
+
+  uint16_t speed = 10;
+  uint16_t scale = 30;
+
  public:
   PatternSMFlocking()
       :
@@ -68,7 +79,7 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
         LEDStripEffect(EFFECT_MATRIX_SMFLOCKING, "Flocking") {
   }
 
-  PatternSMFlocking(const JsonObjectConst& jsonObject)
+  PatternSMFlocking(const JsonObjectConst &jsonObject)
       :
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
@@ -78,8 +89,13 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
 
   virtual void Start() override {
     g()->Clear();
-    for (int i = 0; i < NUM_PARTICLES; i++) {
-      boids[i] = Boid(random(MATRIX_WIDTH), 0);
+
+    x = random16();
+    y = random16();
+    z = random16();
+
+    for (auto &boid : boids) {
+      boid = Boid(random(COLS), 0);
     }
   }
 
@@ -87,17 +103,18 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif
-    for (auto& boid : boids) {
-      boid.flock(boids, NUM_PARTICLES);
-      //   	   	boid.avoidBorders();
-      boid.bounceOffBorders(.7);
-      boid.update();
+    for (auto &boid : boids) {
+      boid.avoidBorders();
+      boid.update(boids, NUM_PARTICLES);
+
       drawPixelXYF(
           boid.location.x, boid.location.y,
           ColorFromPalette(PartyColors_p, boid.hue * 15, 255, LINEARBLEND));
     }
-    // fadeToBlackBy(g()->leds, NUM_LEDS,75);
     fadeAllChannelsToBlackBy(75);
+    x += speed;
+    y += speed;
+    z += speed;
   }
 
 #if ENABLE_AUDIO

@@ -34,15 +34,19 @@ void blur() {
   }
 }
 
-void drawDot(float x, float y, byte a){
+#undef WU_WEIGHT
+//static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
+
+void drawDot(float x, float y, byte a) {
 uint8_t xx = (x - (int) x) * 255, yy = (y - (int) y) * 255, ix = 255 - xx, iy = 255 - yy;
-#define WU_WEIGHT(a, b)((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+ #define WU_WEIGHT(a, b)((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
   uint8_t wu[4] = {
     WU_WEIGHT(ix, iy),
     WU_WEIGHT(xx, iy),
     WU_WEIGHT(ix, yy),
     WU_WEIGHT(xx, yy)
   };
+#undef WU_WEIGHT
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);

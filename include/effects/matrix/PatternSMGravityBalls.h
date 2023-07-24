@@ -22,11 +22,14 @@ float velx[COUNT], vely[COUNT];
 float accel[COUNT];
 byte init = 1;
 
+#undef WU_WEIGHT
+static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
+
 void drawPixelXYF(float x, float y, CRGB color) {
   if (x < 0 || y < 0 || x > ((float) MATRIX_WIDTH - 1) || y > ((float) MATRIX_HEIGHT - 1)) return;
   uint8_t xx = (x - (int) x) * 255, yy = (y - (int) y) * 255, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a, b)((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+  // #define WU_WEIGHT(a, b)((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
   uint8_t wu[4] = {
     WU_WEIGHT(ix, iy),
     WU_WEIGHT(xx, iy),

@@ -31,13 +31,15 @@ private:
     uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT -1  - (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
+#undef WU_WEIGHT
+static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
 
 void drawPixelXYF(float x, float y, CRGB color) {
   // if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+  // #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   std::array<uint8_t, 4> wu{WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
                             WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
   for (uint8_t i = 0; i < 4; i++) {

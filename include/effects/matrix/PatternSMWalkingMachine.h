@@ -19,12 +19,14 @@ private:
 //Second name is "dreams in night"
   static constexpr int LED_COLS = MATRIX_WIDTH;
   static constexpr int LED_ROWS = MATRIX_HEIGHT;
+  #undef WU_WEIGHT
+static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
+
 void drawPixelXYF(float x, float y,
   const CRGB & color) {
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int) x) * 255, yy = (y - (int) y) * 255, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a, b)((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
   uint8_t wu[4] = {
     WU_WEIGHT(ix, iy),
     WU_WEIGHT(xx, iy),
