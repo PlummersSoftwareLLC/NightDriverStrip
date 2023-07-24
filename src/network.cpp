@@ -741,9 +741,15 @@ bool WriteWiFiConfig()
     {
         if (WiFi.isConnected())
         {
-            debugV("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
+            static unsigned long lastUpdate = 0;
 
+            // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
+            if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
+            {
+                debugV("Refreshing Time from Server...");
+                if (NTPTimeClient::UpdateClockFromWeb(&l_Udp))
+                    lastUpdate = millis();
+            }
         }
     }
 #endif

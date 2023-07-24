@@ -365,9 +365,9 @@ void setup()
     //   threads.
     auto& networkReader = g_ptrSystem->SetupNetworkReader();
 
-    // Register a network reader to update the device clock at regular intervals
     #if ENABLE_NTP
-        networkReader.RegisterReader(UpdateNTPTime, (NTP_DELAY_COUNT) * 1000UL);
+        // Register a network reader to update the device clock at regular intervals
+        networkReader.RegisterReader(UpdateNTPTime, (NTP_DELAY_ERROR_SECONDS) * 1000UL);
     #endif
 #endif
 

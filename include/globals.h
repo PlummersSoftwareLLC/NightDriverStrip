@@ -138,7 +138,8 @@
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
 #define FASTLED_INTERNAL        1       // Silence FastLED build banners
-#define NTP_DELAY_COUNT         10*60   // delay count for ntp update, in seconds
+#define NTP_DELAY_SECONDS       30*60   // delay count for NTP update, in seconds
+#define NTP_DELAY_ERROR_SECONDS 30      // delay count for NTP updates if no time was set, in seconds
 #define NTP_PACKET_LENGTH       48      // ntp packet length
 
 // C Helpers and Macros
