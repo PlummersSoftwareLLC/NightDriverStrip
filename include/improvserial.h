@@ -44,8 +44,8 @@ enum ImprovSerialType : uint8_t
 
 static const uint8_t IMPROV_SERIAL_VERSION = 1;
 
-extern String WiFi_ssid;
-extern String WiFi_password;
+extern DRAM_ATTR String WiFi_ssid;
+extern DRAM_ATTR String WiFi_password;
 bool ReadWiFiConfig();
 bool WriteWiFiConfig();
 bool ConnectToWiFi(uint cRetries);
@@ -54,7 +54,7 @@ template <typename SERIALTYPE>
 class ImprovSerial
 {
 public:
-    
+
     void setup(const String &firmware,
                              const String &version,
                              const String &variant,
@@ -87,7 +87,7 @@ public:
             this->rx_buffer_.clear();
             this->last_read_byte_ = now;
         }
-        
+
         while (this->available_())
         {
             uint8_t byte = this->read_byte_();
@@ -223,7 +223,7 @@ protected:
                 this->command_.command  = command.command;
                 this->command_.ssid     = command.ssid;
                 this->command_.password = command.password;
-                
+
                 return true;
             }
 
@@ -249,7 +249,7 @@ protected:
                 return true;
             }
 
-            case improv::GET_WIFI_NETWORKS: 
+            case improv::GET_WIFI_NETWORKS:
             {
                 auto numSsid = WiFi.scanNetworks();
                 if (numSsid > 0)
@@ -264,7 +264,7 @@ protected:
                 }
 
                 // Send empty response to signify the end of the list.
-    
+
                 std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<String>{}, false);
                 this->send_response_(data);
                 return true;

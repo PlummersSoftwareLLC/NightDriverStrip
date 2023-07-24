@@ -450,8 +450,6 @@ public:
   }
 };
 
-extern void ShowTM1814();
-
 class CountEffect : public LEDStripEffect
 {
   using LEDStripEffect::LEDStripEffect;
@@ -479,11 +477,8 @@ class CountEffect : public LEDStripEffect
         if (t >= OPEN_LEN)
           t -= OPEN_LEN;
       }
-#if ATOMISTRING
-      ShowTM1814();
-#else
+
       FastLED.show();
-#endif
     }
   }
 
