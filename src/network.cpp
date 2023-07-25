@@ -743,10 +743,10 @@ bool WriteWiFiConfig()
 #if ENABLE_WIFI && ENABLE_NTP
     void UpdateNTPTime()
     {
+        static unsigned long lastUpdate = 0;
+
         if (WiFi.isConnected())
         {
-            static unsigned long lastUpdate = 0;
-
             // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
             if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
             {

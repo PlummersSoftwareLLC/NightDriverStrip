@@ -112,9 +112,11 @@ public:
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
         // We can't have more than 8 channels, because we don't have more than 8 pins
-        int channelCount = std::min(NUM_CHANNELS, 8);
+        #if NUM_CHANNELS > 8
+            #error The maximum value of NUM_CHANNELS is 8
+        #endif
 
-        for (int i = 0; i < channelCount; i++)
+        for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating LEDStripGFX for channel %d", i);
             devices.push_back(make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
@@ -156,9 +158,11 @@ class HexagonGFX : public LEDStripGFX
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
         // We can't have more than 8 channels, because we don't have more than 8 pins
-        int channelCount = std::min(NUM_CHANNELS, 8);
+        #if NUM_CHANNELS > 8
+            #error The maximum value of NUM_CHANNELS is 8
+        #endif
 
-        for (int i = 0; i < channelCount; i++)
+        for (int i = 0; i < NUM_CHANNELS; i++)
         {
             debugW("Allocating HexagonGFX for channel %d", i);
             devices.push_back(make_shared_psram<HexagonGFX>(NUM_LEDS));
