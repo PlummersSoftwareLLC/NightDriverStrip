@@ -81,7 +81,7 @@ public:
 // We check for loops by keeping a number of hashes of previous frames.  A walker that goes up and across
 // the screen cycles every 2 times it crosses, so max dimension times 2 is a good place to start
 
-#define CRC_LENGTH (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 2)
+constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 
 class PatternLife : public LEDStripEffect
 {

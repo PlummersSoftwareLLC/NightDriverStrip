@@ -1,7 +1,7 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
-#if COLORDATA_SERVER_ENABLED
+#if INCOMING_WIFI_ENABLED
 
 int SocketServer::ProcessIncomingConnectionsLoop()
 {
@@ -107,6 +107,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
             }
             ResetReadBuffer();
+            bSendResponsePacket = true;            
         }
         else
         {
@@ -183,11 +184,12 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
                 if (false == ProcessIncomingData(_pBuffer, totalExpected))
                 {
+                    debugW("Error in processing pixel data from wifi\n");
                     break;
                 }
 
                 // Consume the data by resetting the buffer
-                debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
+                debugW("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
                 ResetReadBuffer();
 
                 bSendResponsePacket = true;
@@ -205,6 +207,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
         if (bSendResponsePacket)
         {
+            debugV("Sending Response Packet from Socket Server");
             auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
             SocketResponse response = {

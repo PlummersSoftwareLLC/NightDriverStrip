@@ -57,7 +57,6 @@ public:
 
     // Define the drawable area for the spectrum to render into the status area
 
-    const int TopMargin = 52;
     const int BottomMargin = 12;
 
     virtual void ScreenStatus(const String &strStatus)
