@@ -111,7 +111,7 @@ public:
 
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
-        // We can't have more than 8 channels, because we don't support more than 8 parallel channels
+        // We don't support more than 8 parallel channels
         #if NUM_CHANNELS > 8
             #error The maximum value of NUM_CHANNELS (number of parallel channels) is 8
         #endif
@@ -157,7 +157,7 @@ class HexagonGFX : public LEDStripGFX
 
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
-        // We can't have more than 8 channels, because we don't support more than 8 parallel channels
+        // We don't support more than 8 parallel channels
         #if NUM_CHANNELS > 8
             #error The maximum value of NUM_CHANNELS (number of parallel channels) is 8
         #endif

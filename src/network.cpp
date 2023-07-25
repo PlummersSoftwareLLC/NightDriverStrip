@@ -755,9 +755,7 @@ bool WriteWiFiConfig()
             notifyWait = pdMS_TO_TICKS(holdMs);
         }
     }
-#endif // ENABLE_WIFI
 
-#if ENABLE_WIFI
     size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset
