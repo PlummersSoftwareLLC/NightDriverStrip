@@ -295,23 +295,23 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return true;
     }
 
-#if ENABLE_WIFI && ENABLE_NTP
-    void UpdateNTPTime()
-    {
-        if (WiFi.isConnected())
+    #if ENABLE_NTP
+        void UpdateNTPTime()
         {
             static unsigned long lastUpdate = 0;
 
-            // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
-            if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
+            if (WiFi.isConnected())
             {
-                debugV("Refreshing Time from Server...");
-                if (NTPTimeClient::UpdateClockFromWeb(&l_Udp))
-                    lastUpdate = millis();
+                // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
+                if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
+                {
+                    debugV("Refreshing Time from Server...");
+                    if (NTPTimeClient::UpdateClockFromWeb(&l_Udp))
+                        lastUpdate = millis();
+                }
             }
         }
-    }
-#endif
+    #endif
 #endif // ENABLE_WIFI
 
 // ProcessIncomingData
