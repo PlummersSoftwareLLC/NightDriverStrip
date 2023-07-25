@@ -1319,7 +1319,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifdef ESP32FEATHERTFT
-    #define ONBOARD_PIXEL_ORDER     EOrder::GRB
+    #define ONBOARD_PIXEL_ORDER     EOrder::RGB
     #define ONBOARD_PIXEL_POWER     34
     #define ONBOARD_PIXEL_DATA      33
 #endif

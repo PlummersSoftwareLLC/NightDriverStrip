@@ -186,6 +186,8 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     pMatrix->SetBrightness(targetBrightness );
 
     MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0, false);
+
+    FastLED.countFPS();
 }
 
 CRGB *LEDMatrixGFX::GetMatrixBackBuffer()

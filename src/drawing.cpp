@@ -270,23 +270,22 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         if (wifiPixelsDrawn == 0)
             localPixelsDrawn = LocalDraw();
 
-        graphics->PostProcessFrame(wifiPixelsDrawn, localPixelsDrawn);
-
         // If we drew any pixels by any method, we'll call that a frame and track it for FPS purposes.  We also notify the
         // color data thread that a new frame is available and can be transmitted to clients
 
         if (wifiPixelsDrawn + localPixelsDrawn > 0)
         {
-            FastLED.countFPS();
+            // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
+            // is on LED #0 of Channel #0.
+
+            ShowOnboardPixel();
+            ShowOnboardRGBLED();
+
             g_Values.FPS = FastLED.getFPS();
             g_ptrSystem->EffectManager().SetNewFrameAvailable(true);
         }
 
-        // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
-        // is on LED #0 of Channel #0.
-
-        ShowOnboardPixel();
-        ShowOnboardRGBLED();
+        graphics->PostProcessFrame(wifiPixelsDrawn, localPixelsDrawn);
 
         // Delay at least 2ms and not more than 1s until next frame is due
 

@@ -488,6 +488,8 @@ void setup()
 
     InitEffectsManager();
 
+    // Start things that do not depend on the network
+
     taskManager.StartDrawThread();
     taskManager.StartScreenThread();
     taskManager.StartAudioThread();
@@ -503,7 +505,7 @@ void setup()
         Debug.setSerialEnabled(true);
     #endif
 
-    // Start the services
+    // Start the network-dependent services.  These will be NOPs on a non-wifi build.
 
     taskManager.StartSerialThread();
     taskManager.StartNetworkThread();
@@ -576,7 +578,7 @@ void loop()
             auto& taskManager = g_ptrSystem->TaskManager();
             strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
-            Serial.println(strOutput);
+            debugI("%s", strOutput.c_str());
         }
 
         // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise we delay a bit to share the CPU.

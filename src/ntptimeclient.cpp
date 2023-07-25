@@ -35,9 +35,23 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     while (pUDP->parsePacket() != 0)
         pUDP->flush();
 
-    pUDP->beginPacket(ipNtpServer, 123);
-    pUDP->write((const uint8_t *)chNtpPacket, NTP_PACKET_LENGTH);
-    pUDP->endPacket();
+    if (!pUDP->beginPacket(ipNtpServer, 123))
+    {
+        debugW("beginPacket failed in time set");
+        return false;
+    }
+
+    if (NTP_PACKET_LENGTH != pUDP->write((const uint8_t *)chNtpPacket, NTP_PACKET_LENGTH))
+    {
+        debugW("Could not write to UDP in time set");
+        return false;
+    }
+
+    if (!pUDP->endPacket())
+    {
+        debugW("EndPacket failed in time set.");
+        return false;
+    }
 
     debugV("NTP clock: ntp packet sent to ntp server.");
     debugV("NTP clock: awaiting response from ntp server");
@@ -96,19 +110,21 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     timeval tvOld;
     gettimeofday(&tvOld, nullptr);
 
-    float dOld = tvOld.tv_sec + (tvOld.tv_usec / (float) MICROS_PER_SECOND);
-    float dNew = tvNew.tv_sec + (tvNew.tv_usec / (float) MICROS_PER_SECOND);
+    double dOld = tvOld.tv_sec + (tvOld.tv_usec / (float) MICROS_PER_SECOND);
+    double dNew = tvNew.tv_sec + (tvNew.tv_usec / (float) MICROS_PER_SECOND);
 
     // If the clock is off by more than a quarter second, update it
 
-    auto delta = fabs(dNew - dOld);
-    if (delta < 0.25)
+    constexpr auto kMaxTimeDelta = 0.25;
+
+    auto delta = abs(dNew - dOld);
+    if (delta < kMaxTimeDelta)
     {
-        debugV("Clock is only off by %lf so not updating the RTC.", delta);
+        debugI("Clock is only off by %lf so not updating the RTC.", delta);
     }
     else
     {
-        debugV("Adjusting time by %lf to %lf", delta, dNew);
+        debugI("Adjusting time by %lf to %lf", delta, dNew);
         settimeofday(&tvNew, NULL);                                 // Set the ESP32 rtc.
         time_t newtime = time(NULL);
         debugV("New Time: %s", ctime(&newtime));
@@ -120,7 +136,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     char chBuffer[64];
     struct tm * tmPointer = localtime(&tvNew.tv_sec);
     strftime(chBuffer, sizeof(chBuffer), "%d %b %y %H:%M:%S", tmPointer);
-    debugV("NTP clock: response received, time written to ESP32 rtc: %ld.%ld, DELTA: %lf\n",
+    debugI("NTP clock: response received, updated time to: %ld.%ld, DELTA: %lf\n",
             tvNew.tv_sec,
             tvNew.tv_usec,
             dNew - dOld );

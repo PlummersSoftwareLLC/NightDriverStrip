@@ -282,7 +282,7 @@ public:
     virtual bool ShowVU(bool bShow)
     {
         bool bResult = _bShowVU;
-        debugW("Setting ShowVU to %d\n", bShow);
+        debugI("Setting ShowVU to %d\n", bShow);
         _bShowVU = bShow;
 
         // Erase any exising pixels since effects don't all clear each frame
@@ -304,7 +304,7 @@ public:
 
     void SetGlobalColor(CRGB color)
     {
-        debugW("Setting Global Color");
+        debugI("Setting Global Color");
 
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
