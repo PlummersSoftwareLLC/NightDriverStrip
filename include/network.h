@@ -38,6 +38,7 @@
     void processRemoteDebugCmd();
 
     bool ConnectToWiFi(uint cRetries);
+    void UpdateNTPTime();
     void SetupOTA(const String & strHostname);
     bool ReadWiFiConfig();
     bool WriteWiFiConfig();

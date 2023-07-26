@@ -248,7 +248,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings` |
+| URL | `/settings/effect` |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to change settings for. |
 | | | One or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications). |

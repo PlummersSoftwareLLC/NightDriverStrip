@@ -295,6 +295,23 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return true;
     }
 
+    #if ENABLE_NTP
+        void UpdateNTPTime()
+        {
+            static unsigned long lastUpdate = 0;
+
+            if (WiFi.isConnected())
+            {
+                // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
+                if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
+                {
+                    debugV("Refreshing Time from Server...");
+                    if (NTPTimeClient::UpdateClockFromWeb(&l_Udp))
+                        lastUpdate = millis();
+                }
+            }
+        }
+    #endif
 #endif // ENABLE_WIFI
 
 // ProcessIncomingData
@@ -614,9 +631,9 @@ bool WriteWiFiConfig()
                     pPacket->header = COLOR_DATA_PACKET_HEADER;
                     pPacket->width  = effectManager.g()->width();
                     pPacket->height = effectManager.g()->height();
-                    if (effectManager[0]->leds != nullptr)
+                    if (effectManager.g()->leds != nullptr)
                     {
-                        memcpy(pPacket->colors, effectManager[0]->leds, sizeof(CRGB) * NUM_LEDS);
+                        memcpy(pPacket->colors, effectManager.g()->leds, sizeof(CRGB) * NUM_LEDS);
 
                         if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
                         {
@@ -738,27 +755,7 @@ bool WriteWiFiConfig()
             notifyWait = pdMS_TO_TICKS(holdMs);
         }
     }
-#endif // ENABLE_WIFI
 
-#if ENABLE_WIFI && ENABLE_NTP
-    void UpdateNTPTime()
-    {
-        if (WiFi.isConnected())
-        {
-            static unsigned long lastUpdate = 0;
-
-            // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
-            if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
-            {
-                debugV("Refreshing Time from Server...");
-                if (NTPTimeClient::UpdateClockFromWeb(&l_Udp))
-                    lastUpdate = millis();
-            }
-        }
-    }
-#endif
-
-#if ENABLE_WIFI
     size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset

@@ -248,6 +248,9 @@ void CurrentEffectSummary(bool bRedraw)
     static auto lastSerial = 0;
     auto yh = 2; // Start at top of screen
 
+    display.setTextSize(display.width() > 160 ? 2 : 1);
+    const int topMargin = display.fontHeight() * 3 + 4;
+
     if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
     {
         lastFullDraw = millis();
@@ -255,9 +258,9 @@ void CurrentEffectSummary(bool bRedraw)
             lasteffect != g_ptrSystem->EffectManager().GetCurrentEffectIndex() ||
             sip != WiFi.localIP().toString())
         {
-            display.fillRect(0, 0, display.width(), display.TopMargin, backColor);
+            display.fillRect(0, 0, display.width(), topMargin, backColor);
             display.fillRect(0, display.height() - display.BottomMargin, display.width(), display.BottomMargin, backColor);
-            display.fillRect(0, display.TopMargin - 1, display.width(), 1, BLUE16);
+            display.fillRect(0, topMargin - 1, display.width(), 1, BLUE16);
             display.fillRect(0, display.height() - display.BottomMargin + 1, display.width(), 1, BLUE16);
 
             lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
@@ -265,7 +268,6 @@ void CurrentEffectSummary(bool bRedraw)
             lastFPS = g_Values.FPS;
 
             //display.setFont();
-            display.setTextSize(2);
             display.setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
                              String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
@@ -327,13 +329,13 @@ void CurrentEffectSummary(bool bRedraw)
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
     {
         uint16_t color16 = iPixel > litBlocks ? BLACK16 : display.to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
-        display.fillRect(xHalf - iPixel * xSize, display.TopMargin, xSize - 1, ySizeVU, color16);
-        display.fillRect(xHalf + iPixel * xSize, display.TopMargin, xSize - 1, ySizeVU, color16);
+        display.fillRect(xHalf - iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
+        display.fillRect(xHalf + iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
     }
 
     // Draw the spectrum analyzer bars
 
-    int spectrumTop = display.TopMargin + ySizeVU + 1; // Start at the bottom of the VU meter
+    int spectrumTop = topMargin + ySizeVU + 1; // Start at the bottom of the VU meter
     int bandHeight = display.height() - spectrumTop - display.BottomMargin;
 
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
