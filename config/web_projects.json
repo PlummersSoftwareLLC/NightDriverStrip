@@ -151,7 +151,8 @@
             "projects": [
                 {
                     "tag": "mesmerizer",
-                    "name": "Mesmerizer"
+                    "name": "Mesmerizer",
+                    "suffix": "8M"
                 }
             ]
         },
