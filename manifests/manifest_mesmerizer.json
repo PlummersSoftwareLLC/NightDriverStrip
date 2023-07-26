@@ -1,6 +1,6 @@
 {
   "name": "Mesmerizer for Mesmerizer",
-  "version": "v037",
+  "version": "v038",
   "builds": [
     {
       "chipFamily": "ESP32",

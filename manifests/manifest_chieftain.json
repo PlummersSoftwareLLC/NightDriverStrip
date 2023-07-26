@@ -1,6 +1,6 @@
 {
   "name": "Chieftain for TinyPICO",
-  "version": "v037",
+  "version": "v038",
   "builds": [
     {
       "chipFamily": "ESP32",

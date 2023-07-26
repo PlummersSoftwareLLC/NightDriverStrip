@@ -1,6 +1,6 @@
 {
   "name": "Atom Light for Heltec Wifi Kit 32",
-  "version": "v037",
+  "version": "v038",
   "builds": [
     {
       "chipFamily": "ESP32",

@@ -1,6 +1,6 @@
 {
   "name": "Ledstrip for ESP32",
-  "version": "v037",
+  "version": "v038",
   "builds": [
     {
       "chipFamily": "ESP32",
