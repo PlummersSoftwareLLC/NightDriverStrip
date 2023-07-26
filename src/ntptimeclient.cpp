@@ -82,7 +82,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 
     struct timeval tvNew = { 0 };
 
-    uint32_t frac  = (uint32_t) chNtpPacket[44] << 24
+    uint32_t frac  =  (uint32_t) chNtpPacket[44] << 24
                     | (uint32_t) chNtpPacket[45] << 16
                     | (uint32_t) chNtpPacket[46] <<  8
                     | (uint32_t) chNtpPacket[47] <<  0;
@@ -97,7 +97,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
         return false;
     }
 
-    debugV("NTP clock: Raw values sec=%u, usec=%u", frac, microsecs);
+    debugW("NTP clock: Raw values sec=%u, usec=%u", frac, microsecs);
 
     tvNew.tv_sec = ((unsigned long)chNtpPacket[40] << 24) +       // bits 24 through 31 of ntp time
         ((unsigned long)chNtpPacket[41] << 16) +                        // bits 16 through 23 of ntp time
@@ -126,14 +126,12 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     {
         debugI("Adjusting time by %lf to %lf", delta, dNew);
         settimeofday(&tvNew, NULL);                                 // Set the ESP32 rtc.
-        time_t newtime = time(NULL);
-        debugV("New Time: %s", ctime(&newtime));
     }
 
     // Time has been received.
     // Output date and time to serial.
 
-    char chBuffer[64];
+    char chBuffer[128];
     struct tm * tmPointer = localtime(&tvNew.tv_sec);
     strftime(chBuffer, sizeof(chBuffer), "%d %b %y %H:%M:%S", tmPointer);
     debugI("NTP clock: response received, updated time to: %ld.%ld, DELTA: %lf\n",

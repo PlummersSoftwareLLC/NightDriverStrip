@@ -78,6 +78,7 @@
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
 //              Jun-10-2023  v037       Davepl      New Screen classes
 //              Jul-24-2023  v038       Davepl      NTP clock fix
+//              Jul-26-2023  v039       Davepl      NTP every minute, stack sizes
 //
 //---------------------------------------------------------------------------
 
@@ -121,7 +122,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          38    // Update ONLY this to increment the version number
+#define FLASH_VERSION          39    // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
     #ifndef USE_STRIP
@@ -139,7 +140,7 @@
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
 #define FASTLED_INTERNAL        1       // Silence FastLED build banners
-#define NTP_DELAY_SECONDS       30*60   // delay count for NTP update, in seconds
+#define NTP_DELAY_SECONDS       1*60    // delay count for NTP update, in seconds
 #define NTP_DELAY_ERROR_SECONDS 30      // delay count for NTP updates if no time was set, in seconds
 #define NTP_PACKET_LENGTH       48      // ntp packet length
 
