@@ -85,13 +85,11 @@ jobs:
         cp platformio.ini platformio.ini.orig
         grep -v ^default_envs platformio.ini.orig > platformio.ini
         pio run
-        pio run -t buildfs
         python tools/bake_installer.py
         touch WebInstaller/.nojekyll
 
     - name: Push to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: pages
-        FOLDER: WebInstaller
+        folder: WebInstaller
+        branch: pages
