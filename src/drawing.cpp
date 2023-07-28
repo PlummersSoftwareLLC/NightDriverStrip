@@ -147,6 +147,8 @@ uint16_t LocalDraw()
 
 int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
+    constexpr auto kMinDelay = 0.001;
+
     // Delay enough to slow down to the desired framerate
 
 #if MILLIS_PER_FRAME == 0
@@ -161,22 +163,27 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
     else if (wifiPixelsDrawn > 0)
     {
         // Look through all the channels to see how far away the next wifi frame is times for.  We can then delay
-        // up to the minimum value found
-        double t = 0.04;
+        // up to the minimum value found across all buffer managers.
+
+        double t = std::numeric_limits<double>::max();
+        bool bFoundFrame = false;
+
         for (auto& bufferManager : g_ptrSystem->BufferManagers())
         {
             auto pOldest = bufferManager.PeekOldestBuffer();
             if (pOldest)
-                t = std::min(t, (pOldest->Seconds() + pOldest->MicroSeconds() / (double) MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime());
+            {
+                t = std::min(t, pOldest->TimeTillDue());
+                bFoundFrame = true;
+            }
         }
-
-        g_Values.FreeDrawTime = std::clamp(t, 0.0, 1.0);
+        g_Values.FreeDrawTime = bFoundFrame ? std::clamp(t, 0.0, 1.0) : kMinDelay;
     }
     else
     {
         debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
         // Nothing drawn this pass - check back soon
-        g_Values.FreeDrawTime = .001;
+        g_Values.FreeDrawTime = kMinDelay;
     }
 
     return g_Values.FreeDrawTime * MILLIS_PER_SECOND;

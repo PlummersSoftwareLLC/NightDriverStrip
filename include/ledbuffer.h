@@ -69,6 +69,11 @@ class LEDBuffer
     uint64_t Seconds()      const  { return _timeStampSeconds;      }
     uint64_t MicroSeconds() const  { return _timeStampMicroseconds; }
     uint32_t Length()       const  { return _pixelCount;            }
+    
+    double TimeTillDue() const  
+    { 
+        return g_Values.AppTime.CurrentTime() - _timeStampSeconds - (_timeStampMicroseconds / (double) MICROS_PER_SECOND); 
+    }
 
     bool IsBufferOlderThan(const timeval & tv) const
     {
