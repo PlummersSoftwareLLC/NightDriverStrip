@@ -115,10 +115,7 @@ class EffectFactories
     void AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
     {
         defaultFactories.emplace_back(effectNumber, defaultFactory);
-
-        // BUGBUG perf (davepl) Consider using 'jsonFactories.try_emplace without the first lookup
-        if (jsonFactories.count(effectNumber) == 0)
-            jsonFactories[effectNumber] = jsonFactory;
+        jsonFactories.try_emplace(effectNumber, jsonFactory);    
     }
 
     bool IsEmpty()

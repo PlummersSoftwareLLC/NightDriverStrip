@@ -527,12 +527,7 @@ public:
 
     const bool AreEffectsEnabled() const
     {
-        // BUGBUG (davepl) Consider using std::any_of algorithm instead of a raw loop
-        for (const auto & pEffect : _vEffects)
-            if (pEffect->IsEnabled())
-                return true;
-
-        return false;
+        return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
     }
 
     const size_t GetCurrentEffectIndex() const
