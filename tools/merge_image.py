@@ -2,6 +2,8 @@ import string, os
 
 Import("env")
 
+MERGED_BIN = os.path.join("${BUILD_DIR}", "${PROGNAME}_merged.bin")
+
 def merge_bin(source, target, env):
     # The list contains all extra images (bootloader, partitions, eboot) and
     # the final application binary
@@ -36,7 +38,7 @@ def merge_bin(source, target, env):
                 "--flash_freq",
                 flash_freq,
                 "-o",
-                "${BUILD_DIR}/${PROGNAME}_merged.bin",
+                MERGED_BIN,
             ]
             + flash_images
         )
@@ -50,5 +52,5 @@ env.Replace(
     UPLOADERFLAGS=[
         ]
         + ["0x0", MERGED_BIN],
-    UPLOADCMD='"$PYTHONEXE" "$UPLOADER" $UPLOADERFLAGS',
+    UPLOADCMD='"${PYTHONEXE}" "${UPLOADER}" ${UPLOADERFLAGS}',
 )
