@@ -174,7 +174,7 @@ public:
             _Level[i] *= GetBandScalar(mic, i);
     }
 
-    void SetData(const double const * pDoubles)
+    void SetData(const double * pDoubles)
     {
         for (int i = 0; i < NUM_BANDS; i++)
             _Level[i] = pDoubles[i];
