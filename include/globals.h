@@ -79,6 +79,7 @@
 //              Jun-10-2023  v037       Davepl      New Screen classes
 //              Jul-24-2023  v038       Davepl      NTP clock fix
 //              Jul-26-2023  v039       Davepl      NTP every minute, stack sizes
+//              Jul-26-2023  v040       Davepl      NTP every 5 minutes, Wifi delay code
 //
 //---------------------------------------------------------------------------
 

@@ -120,7 +120,7 @@ public:
 
     virtual void Draw() override
     {
-        // a new parameter set every 15 seconds
+        // a new parameter set every 30 seconds
         EVERY_N_SECONDS(30)
         {
             // SetupRandomPalette3();
