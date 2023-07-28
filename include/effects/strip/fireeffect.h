@@ -127,7 +127,7 @@ class FireEffect : public LEDStripEffect
         return 45;
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp *= 255;
         uint8_t t192 = round((temp/255.0f)*191);
@@ -264,7 +264,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp = min(1.0f, temp);
         int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
@@ -313,7 +313,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
   protected:
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         if (elapsed > 1)
         {
@@ -382,13 +382,10 @@ public:
         static std::unique_ptr<uint8_t []> heat = make_unique_psram_array<uint8_t>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
 
-        int cooldown;
-
         // Step 1.  Cool down every cell a little
         for (int i = 0; i < _cLEDs; i++)
         {
-            cooldown = random(0, Cooling);
-
+            int cooldown = random_range(0, Cooling);
             if (cooldown > heat[i])
             {
                 heat[i] = 0;
@@ -480,7 +477,7 @@ private:
     bool _Turbo;
     bool _Mirrored;
 
-    float *_Temperatures;
+    float * _Temperatures = nullptr;
 
 public:
     // Parameter:   Cooling   Sparks    driftPasses  drift sparkHeight   Turbo
@@ -579,8 +576,8 @@ public:
                 float amount = 0.2f + g_Analyzer._VURatio; // MIN(0.85f, _Drift * deltaTime);
                 float c0 = 1.0f - amount;
                 float c1 = amount * 0.33f;
-                float c2 = amount * 0.33f;
-                float c3 = amount * 0.33f;
+                float c2 = c1;
+                float c3 = c1;
 
                 _Temperatures[k] = _Temperatures[k] * c0 +
                                    _Temperatures[k - 1] * c1 +

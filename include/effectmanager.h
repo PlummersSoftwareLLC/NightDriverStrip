@@ -121,7 +121,7 @@ public:
         construct(false);
     }
 
-    EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
+    explicit EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
@@ -527,7 +527,8 @@ public:
 
     const bool AreEffectsEnabled() const
     {
-        for (auto& pEffect : _vEffects)
+        // BUGBUG (davepl) Consider using std::any_of algorithm instead of a raw loop
+        for (const auto & pEffect : _vEffects)
             if (pEffect->IsEnabled())
                 return true;
 
@@ -618,8 +619,7 @@ public:
 
     void PreviousPalette()
     {
-        auto g = _gfx[0];
-        g->CyclePalette(-1);
+        g()->CyclePalette(-1);
     }
     // Update to the next effect and abort the current effect.
 

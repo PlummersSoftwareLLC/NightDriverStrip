@@ -129,7 +129,6 @@ public:
     void release()
     {
         _pBuffer.release();
-        _pBuffer = nullptr;
 
         if (_server_fd)
         {

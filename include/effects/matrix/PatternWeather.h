@@ -430,7 +430,7 @@ public:
         // Figure out which day of the week it is
 
         time_t today = time(nullptr);
-        tm * todayTime = localtime(&today);
+        const tm * todayTime = localtime(&today);
         const char * pszToday = pszDaysOfWeek[todayTime->tm_wday];
         const char * pszTomorrow = pszDaysOfWeek[ (todayTime->tm_wday + 1) % 7 ];
 

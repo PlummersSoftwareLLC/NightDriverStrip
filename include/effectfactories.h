@@ -116,6 +116,7 @@ class EffectFactories
     {
         defaultFactories.emplace_back(effectNumber, defaultFactory);
 
+        // BUGBUG perf (davepl) Consider using 'jsonFactories.try_emplace without the first lookup
         if (jsonFactories.count(effectNumber) == 0)
             jsonFactories[effectNumber] = jsonFactory;
     }

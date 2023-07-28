@@ -56,7 +56,7 @@ class LEDStripEffect : public IJSONSerializable
 
   protected:
 
-    size_t _cLEDs;
+    size_t _cLEDs = 0;
     int    _effectNumber;
     String _friendlyName;
     bool   _enabled = true;
@@ -110,8 +110,8 @@ class LEDStripEffect : public IJSONSerializable
         int colorIndex = 0;
 
         auto componentsArray = src.as<JsonArrayConst>();
-        for (auto value : componentsArray)
-            colors[colorIndex++] = value.as<CRGB>();
+        for (auto v : componentsArray)
+            colors[colorIndex++] = v.as<CRGB>();
 
         property = CRGBPalette16(colors);
 
@@ -303,7 +303,7 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Given a temp in the 0-1 range, returns a fire-appropriate black body radiator color for it
 
-    static CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const
     {
         temp = std::clamp(temp, 0.0f, 1.0f);
         uint8_t temperature = (uint8_t)(255 * temp);

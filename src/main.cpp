@@ -354,7 +354,7 @@ void setup()
         // We create the network reader here, so classes can register their readers from this point onwards.
         //   Note that the thread that executes the readers is started further down, along with other networking
         //   threads.
-        auto& networkReader = g_ptrSystem->SetupNetworkReader();
+        auto & networkReader = g_ptrSystem->SetupNetworkReader();
 
         #if ENABLE_NTP
             // Register a network reader to update the device clock at regular intervals
@@ -575,8 +575,7 @@ void loop()
                 strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
             #endif
 
-            auto& taskManager = g_ptrSystem->TaskManager();
-            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
+            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", g_ptrSystem->TaskManager().GetCPUUsagePercent(0), g_ptrSystem->TaskManager().GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
             debugI("%s", strOutput.c_str());
         }

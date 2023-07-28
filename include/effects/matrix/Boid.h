@@ -160,7 +160,7 @@ class Boid
 
     // Separation
     // Method checks for nearby boids and steers away
-    PVector separate(Boid boids [], uint8_t boidCount) {
+    PVector separate(const Boid boids [], uint8_t boidCount) {
       PVector steer = PVector(0, 0);
       int count = 0;
       // For every boid in the system, check if it's too close
@@ -225,7 +225,7 @@ class Boid
 
     // Cohesion
     // For the average location (i.e. center) of all nearby boids, calculate steering vector towards that location
-    PVector cohesion(Boid boids [], uint8_t boidCount) {
+    PVector cohesion(const Boid boids [], uint8_t boidCount) {
       PVector sum = PVector(0, 0);   // Start with empty vector to accumulate all locations
       int count = 0;
       for (int i = 0; i < boidCount; i++) {

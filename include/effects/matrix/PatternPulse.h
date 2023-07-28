@@ -129,10 +129,10 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
     {
       public:
 
-        int hue;
-        int centerX;
-        int centerY;
-        int maxSteps = random(8)+6;
+        int hue = HUE_RED;
+        int centerX = 0;
+        int centerY = 0;
+        int maxSteps = random_range(0, 8)+6;
         int step = -1;
     };
 

@@ -1117,9 +1117,10 @@ public:
     {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int err = dx + dy, e2;
         for (;;)
         {
+            int err = dx + dy, e2;
+
             if (isValidPixel(x0, y0))
                 leds[XY(x0, y0)] = bMerge ? leds[XY(x0, y0)] + color : color;
 

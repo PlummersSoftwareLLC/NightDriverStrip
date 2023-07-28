@@ -131,8 +131,8 @@ class PatternPongClock : public LEDStripEffect
 
     virtual void Draw() override
     {
-        time_t ttime = time(0);
-        tm *local_time = localtime(&ttime);
+        const time_t ttime = time(0);
+        const tm *local_time = localtime(&ttime);
 
         g()->Clear();
 

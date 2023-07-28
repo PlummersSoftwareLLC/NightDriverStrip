@@ -279,7 +279,6 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
   {
     for (int i = 0; i < NUM_CHANNELS; i++)
       FastLED[i][GetFanPixelOrder(iPos, order)] += LEDStripEffect::ColorFraction(color, remaining);
-    iPos++;
   }
 }
 
@@ -398,8 +397,7 @@ public:
 
   void OnBeat()
   {
-    int passes = random(1, map(g_Analyzer._VURatio, 1.0, 2.0, 1, 3));
-    passes = g_Analyzer._VURatio;
+    int passes = g_Analyzer._VURatio;
     for (int iPass = 0; iPass < passes; iPass++)
     {
       int iFan = random(0, NUM_FANS);
@@ -480,10 +478,6 @@ class CountEffect : public LEDStripEffect
 
       FastLED.show();
     }
-  }
-
-  void DrawEffect()
-  {
   }
 };
 
@@ -1041,7 +1035,7 @@ public:
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
-  virtual CRGB GetBlackBodyHeatColor(byte temp)
+  CRGB GetBlackBodyHeatColorByte(byte temp) const
   {
     return ColorFromPalette(Palette, temp, 255);
   }
@@ -1107,7 +1101,7 @@ public:
 
       for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
       {
-        CRGB color = GetBlackBodyHeatColor(abHeat[i * CellsPerLED]);
+        CRGB color = GetBlackBodyHeatColorByte(abHeat[i * CellsPerLED]);
 
         // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
@@ -1259,11 +1253,8 @@ protected:
   {
     val = min(val, 255);
     val = max(val, 0);
-#if LANTERN
+
     return CRGB(val, val * .30, val * .05);
-#else
-    return LEDStripEffect::GetBlackBodyHeatColor(val / 255.0f * .20 + 0.25);
-#endif
   }
 
   // Generate a vector of how bright each of the surrounding 8 LEDs on the unit circle should be

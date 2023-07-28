@@ -121,6 +121,7 @@ public:
 
     PeakData()
     {
+        // BUGBUG (davepl) consider std::fill
         for (auto & i: _Level)
             i = 0.0f;
     }
@@ -173,7 +174,7 @@ public:
             _Level[i] *= GetBandScalar(mic, i);
     }
 
-    void SetData(double *pDoubles)
+    void SetData(const double const * pDoubles)
     {
         for (int i = 0; i < NUM_BANDS; i++)
             _Level[i] = pDoubles[i];
@@ -207,20 +208,6 @@ class SoundAnalyzer : public AudioVariables
     PeakData _Peaks;
 
     PeakData::MicrophoneType _MicMode = PeakData::M5;
-
-    // BucketFrequency
-    //
-    // Return the frequency corresponding to the Nth sample bucket.  Skips the first two
-    // buckets which are overall amplitude and something else.
-
-    int BucketFrequency(int iBucket) const
-    {
-        if (iBucket <= 1)
-            return 0;
-
-        int iOffset = iBucket - 2;
-        return _cutOffsBand[iOffset];
-    }
 
     int GetBandIndex(float frequency)
     {
@@ -437,7 +424,7 @@ class SoundAnalyzer : public AudioVariables
     {
         if (NUM_BANDS == 16)
         {
-            static int cutOffs16Band[16] =
+            static const int cutOffs16Band[16] =
                 {200, 380, 580, 800, 980, 1200, 1360, 1584, 1996, 2412, 3162, 3781, 5312, 6310, 8400, (int)HIGHEST_FREQ};
 
             for (int i = 0; i < NUM_BANDS; i++)
@@ -458,15 +445,6 @@ class SoundAnalyzer : public AudioVariables
                 debugV("BAND %d: %d\n", i, _cutOffsBand[i]);
             }
         }
-    }
-
-    // BandCutoffTable
-    //
-    // Depending on how many bands we have, returns the cutoffs of where those bands are in the spectrum
-
-    const int *BandCutoffTable(int bandCount)
-    {
-        return _cutOffsBand;
     }
 
 public:
