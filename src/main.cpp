@@ -574,8 +574,9 @@ void loop()
                 auto& bufferManager = g_ptrSystem->BufferManagers()[0];
                 strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
             #endif
-
-            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", g_ptrSystem->TaskManager().GetCPUUsagePercent(0), g_ptrSystem->TaskManager().GetCPUUsagePercent(1), g_Values.FreeDrawTime);
+            
+            auto& taskManager = g_ptrSystem->TaskManager();
+            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
             debugI("%s", strOutput.c_str());
         }
