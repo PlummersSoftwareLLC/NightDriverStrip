@@ -189,16 +189,16 @@ public:
 
 class SoundAnalyzer : public AudioVariables
 {
-    const size_t MAX_SAMPLES = 256;
+    static const size_t MAX_SAMPLES = 256;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
 
-    const size_t SAMPLING_FREQUENCY = 20000;
-    const size_t LOWEST_FREQ = 40;
-    const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
+    static const size_t SAMPLING_FREQUENCY = 20000;
+    static const size_t LOWEST_FREQ = 40;
+    static const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
-    const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
+    static const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
     double * _vPeaks;
     int      _cutOffsBand[NUM_BANDS];
@@ -261,25 +261,27 @@ class SoundAnalyzer : public AudioVariables
 
     void FillBufferI2S()
     {
-        int16_t sampleBuffer[MAX_SAMPLES];
+        std::unique_ptr<uint16_t[]> ptrSampleBuffer(new uint16_t[MAX_SAMPLES]);
+        constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+
         size_t bytesRead = 0;
 
         #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW
-            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
         #else
             ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
-            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
+            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
             ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
         #endif
 
-        if (bytesRead != sizeof(sampleBuffer))
+        if (bytesRead != bytesExpected)
         {
-            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, sizeof(sampleBuffer));
+            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
             return;
         }
 
-        for (int i = 0; i < ARRAYSIZE(sampleBuffer); i++)
-            _vReal[i] = sampleBuffer[i];
+        for (int i = 0; i < MAX_SAMPLES; i++)
+            _vReal[i] = ptrSampleBuffer[i];
     }
 
     // UpdateVU
@@ -448,8 +450,8 @@ class SoundAnalyzer : public AudioVariables
     }
 
 public:
+
     SoundAnalyzer()
-        : _sampling_period_us(PERIOD_FROM_FREQ(SAMPLING_FREQUENCY))
     {
         _vReal      = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));

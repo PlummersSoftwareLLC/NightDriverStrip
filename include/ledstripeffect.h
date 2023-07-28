@@ -109,8 +109,8 @@ class LEDStripEffect : public IJSONSerializable
         CRGB colors[16];
         int colorIndex = 0;
 
-        auto componentsArray = src.as<JsonArrayConst>();
-        for (auto v : componentsArray)
+        const auto & componentsArray = src.as<JsonArrayConst>();
+        for (const auto & v : componentsArray)
             colors[colorIndex++] = v.as<CRGB>();
 
         property = CRGBPalette16(colors);
