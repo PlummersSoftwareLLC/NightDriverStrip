@@ -121,11 +121,11 @@
       // Writer function and flag combo
       struct ReaderEntry
       {
-          std::atomic_bool flag = false;
-          std::atomic_bool canceled = false;
+          std::function<void()> reader;
           std::atomic_ulong readInterval;
           std::atomic_ulong lastReadMs;
-          std::function<void()> reader;
+          std::atomic_bool flag = false;
+          std::atomic_bool canceled = false;
 
           ReaderEntry(std::function<void()> reader, unsigned long interval) :
               reader(reader),

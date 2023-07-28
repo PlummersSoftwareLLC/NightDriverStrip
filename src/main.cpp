@@ -235,6 +235,7 @@ void PrintOutputHeader()
 
 void TerminateHandler()
 {
+
     debugE("-------------------------------------------------------------------------------------");
     debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
     debugE("-------------------------------------------------------------------------------------");
@@ -246,9 +247,10 @@ void TerminateHandler()
     }
     catch (std::exception &ex) {
         debugE("Terminated due to exception: %s", ex.what());
+        Serial.flush();
+        for(;;)
+            delay(10);
     }
-
-    Serial.flush();
 }
 
 #ifdef TOGGLE_BUTTON_1
@@ -553,7 +555,7 @@ void loop()
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
             #if USE_STRIP
-                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Values.Watts, g_Values.Brite);
+                strOutput += str_sprintf("LED Bright: %03.0f%%, LED Watts: %d, ", g_Values.Brite, g_Values.Watts);
             #endif
 
             #if USE_MATRIX

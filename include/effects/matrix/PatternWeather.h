@@ -167,7 +167,7 @@ private:
 
         if (httpResponseCode <= 0)
         {
-            debugW("Error fetching coordinates for location: %s", configLocation);
+            debugW("Error fetching coordinates for location: %s", configLocation.c_str());
             http.end();
             return false;
         }
@@ -304,9 +304,13 @@ private:
         {
             debugW("Got today's weather");
             if (getTomorrowTemps(highTomorrow, loTomorrow))
+            {
                 debugI("Got tomorrow's weather");
+            }
             else
+            {
                 debugW("Failed to get tomorrow's weather");
+            }
         }
         else
         {

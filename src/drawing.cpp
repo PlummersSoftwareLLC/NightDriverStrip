@@ -249,7 +249,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     // Run the draw loop
 
     debugW("Entering main draw loop!");
-
+  
     for (;;)
     {
         g_Values.AppTime.NewFrame();

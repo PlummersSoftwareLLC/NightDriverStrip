@@ -606,7 +606,7 @@ public:
 
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
-            debugV("Current Effect: %s", GetCurrentEffectName());
+            debugV("Current Effect: %s", GetCurrentEffectName().c_str());
         }
     }
 
@@ -662,15 +662,15 @@ public:
 
         for (int i = 0; i < _vEffects.size(); i++)
         {
-            debugV("About to init effect %s", _vEffects[i]->FriendlyName());
+            debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
             if (false == _vEffects[i]->Init(_gfx))
             {
-                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName());
+                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
                 return false;
             }
-            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName());
+            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
         }
-        debugV("First Effect: %s", GetCurrentEffectName());
+        debugV("First Effect: %s", GetCurrentEffectName().c_str());
         return true;
     }
 

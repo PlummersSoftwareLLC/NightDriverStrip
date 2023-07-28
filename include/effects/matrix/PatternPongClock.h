@@ -149,7 +149,11 @@ class PatternPongClock : public LEDStripEffect
         }
 
         LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
-        char buffer[3];
+
+        // The compiler warns that with a nul terminator, 4 bytes could be needed, which is true
+        // but we're only writing 3 bytes, but I'll waste the byte to avoid the warning.
+
+        char buffer[4];
 
         auto clockColor = rgb24(255,255,255);
         sprintf(buffer, "%2d", hours);

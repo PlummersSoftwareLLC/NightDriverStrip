@@ -58,7 +58,7 @@ void RemoteControl::handle()
 
         if (millis() - lastRepeatTime > kMinRepeatms)
         {
-            debugV("Remote Repeat; lastResult == %08x, elapsed = %d\n", lastResult, millis()-lastRepeatTime);
+            debugV("Remote Repeat; lastResult == %08x, elapsed = %lu\n", lastResult, millis()-lastRepeatTime);
             result = lastResult;
             lastRepeatTime = millis();
         }

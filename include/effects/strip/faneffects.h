@@ -430,7 +430,7 @@ public:
         minVUSeen = g_Analyzer._VURatio;
     }
 
-    if (g_Analyzer._VURatio < 0.25) // Crossing center going up
+    if (g_Analyzer._VURatio < 0.25f) // Crossing center going up
     {
       latch = true;
       minVUSeen = g_Analyzer._VURatio;
@@ -438,9 +438,9 @@ public:
 
     if (latch)
     {
-      if (g_Analyzer._VURatio > 1.5)
+      if (g_Analyzer._VURatio > 1.5f)
       {
-        if (random_range(1.0, 3.0) < g_Analyzer._VURatio)
+        if (random_range(1.0f, 3.0f) < g_Analyzer._VURatio)
         {
           latch = false;
           OnBeat();
@@ -523,7 +523,7 @@ public:
             }
             else
             {
-              ReelDir[i] -= .5;
+              ReelDir[i] -= .5f;
             }
           }
           else if (action == 2)
@@ -534,7 +534,7 @@ public:
             }
             else
             {
-              ReelDir[i] += .5;
+              ReelDir[i] += .5f;
             }
           }
         }
@@ -604,7 +604,7 @@ public:
           }
           else if (action == 1)
           {
-            if (g_Analyzer._VURatio > 0.5)
+            if (g_Analyzer._VURatio > 0.5f)
             {
               if (ReelDir[i] == 0)
               {
@@ -613,13 +613,13 @@ public:
               }
               else
               {
-                ReelDir[i] -= .5;
+                ReelDir[i] -= .5f;
               }
             }
           }
           else if (action == 2)
           {
-            if (g_Analyzer._VURatio > 0.5)
+            if (g_Analyzer._VURatio > 0.5f)
             {
               if (ReelDir[i] == 0) // 2 -> Spin Forwards, or accel if already doing so
               {
@@ -628,7 +628,7 @@ public:
               }
               else
               {
-                ReelDir[i] += .5;
+                ReelDir[i] += .5f;
               }
             }
           }
@@ -742,7 +742,7 @@ public:
       for (int x = 0; x < FAN_SIZE; x++)
       {
         float q = fmod(ReelPos[i] + x, FAN_SIZE);
-        CRGB c = ColorFromPalette(_Palette, 255.0 * q / FAN_SIZE, 255, NOBLEND);
+        CRGB c = ColorFromPalette(_Palette, 255.0f * q / FAN_SIZE, 255, NOBLEND);
         if (_bReplaceMagenta && c == CRGB(CRGB::Magenta))
           c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
         if (random_range(0.0f, 10.f) < _sparkleChance)
@@ -948,6 +948,7 @@ public:
 class FireFanEffect : public LEDStripEffect
 {
 protected:
+  CRGBPalette16 Palette;
   int LEDCount; // Number of LEDs total
   int CellsPerLED;
   int Cooling;     // Rate at which the pixels cool off
@@ -956,7 +957,6 @@ protected:
   int Sparking;    // Probability of a spark each attempt
   bool bReversed;  // If reversed we draw from 0 outwards
   bool bMirrored;  // If mirrored we split and duplicate the drawing
-  CRGBPalette16 Palette;
 
   PixelOrder Order;
 
@@ -1270,7 +1270,7 @@ protected:
 
   std::vector<float> led_brightness(float wandering_x, float wandering_y)
   {
-    constexpr float sqrt2 = std::sqrt(2);
+    const float sqrt2 = std::sqrt(2);
 
     const std::vector<std::pair<float, float>> unit_circle_coords = {
         {1, 0},
@@ -1363,8 +1363,6 @@ public:
 
 
     rotation += 0.0;
-
-    float scalar = 1; // .5 + g_Analyzer._VURatio / 2;
 
     // Draw four outer pixels in second ring outwards.  We draw 1.05 to take advantage of the non-linear red response in
     // the second pixels (when drawn at 5%, the red will show up more, depending on color correction).

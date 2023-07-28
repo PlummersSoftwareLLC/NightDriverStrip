@@ -426,8 +426,8 @@ public:
           We fill pixel with .75 worth of color
         */
 
-        uint8_t fade1 = (std::max(frac1, 1.0f - count)) * 255; // Fraction is how far past pixel boundary we are (up to our total size) so larger fraction is more dimming
-        uint8_t fade2 = (1.0 - frac2) * 255;                   // Fraction is how far we are poking into this pixel, so larger fraction is less dimming
+        uint8_t fade1 = (uint8_t) (std::max(frac1, 1.0f - count)) * 255; // Fraction is how far past pixel boundary we are (up to our total size) so larger fraction is more dimming
+        uint8_t fade2 = (uint8_t) (1.0f - frac2) * 255;                   // Fraction is how far we are poking into this pixel, so larger fraction is less dimming
         CRGB c1 = c;
         CRGB c2 = c;
         c1 = c1.fadeToBlackBy(fade1);
@@ -442,8 +442,8 @@ public:
             for (int i = 0; i < NUM_CHANNELS; i++)
                 leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
 
-        p = fPos + (1.0 - frac1);
-        count -= (1.0 - frac1);
+        p = fPos + (1.0f - frac1);
+        count -= (1.0f - frac1);
 
         // Middle (body) pixels
 

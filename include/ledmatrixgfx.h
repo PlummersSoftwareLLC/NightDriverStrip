@@ -154,8 +154,8 @@ public:
         //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
         //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
 
-        memset(backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
-        memset(leds, 0, sizeof(CRGB) * _width * _height);
+        memset((void *) backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
+        memset((void *) leds, 0, sizeof(CRGB) * _width * _height);
     }
 
     const String & GetCaption()

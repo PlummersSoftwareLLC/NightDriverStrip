@@ -176,29 +176,29 @@ class LEDBufferManager
             _ppBuffers->push_back(make_shared_psram<LEDBuffer>(pGFX));
     }
 
-    float AgeOfOldestBuffer()
+    double AgeOfOldestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pOldest = PeekOldestBuffer();
-            return (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
+            return (pOldest->Seconds() + pOldest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
         }
         else
         {
-            return 0.0f;
+            return 0.0;
         }
     }
 
-    float AgeOfNewestBuffer()
+    double AgeOfNewestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pNewest = PeekNewestBuffer();
-            return (pNewest->Seconds() + pNewest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
+            return (pNewest->Seconds() + pNewest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
         }
         else
         {
-            return 0.0f;
+            return 0.0;
         }
     }
 
