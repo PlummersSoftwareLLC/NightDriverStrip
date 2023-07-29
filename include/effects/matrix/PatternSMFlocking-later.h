@@ -25,7 +25,7 @@ class PatternSMFlocking : public LEDStripEffect
            // it's supposed to be. it works with 50 but it's a little slow. on
            // an esp32 it looks pretty nice at that number 15 is a safe number
 
-  CRGB getPixColorXY(uint8_t x, uint8_t y) {
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
   }
 

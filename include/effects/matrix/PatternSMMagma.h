@@ -150,7 +150,7 @@ void LeapersRestart_leaper(uint8_t l) {
 
 #if 1
 // функция получения цвета пикселя по его номеру
-uint32_t getPixColor(uint32_t thisSegm)
+uint32_t getPixColor(uint32_t thisSegm) const
 {
   uint32_t thisPixel = thisSegm;// * SEGMENTS;
   if (thisPixel > NUM_LEDS - 1) return 0;

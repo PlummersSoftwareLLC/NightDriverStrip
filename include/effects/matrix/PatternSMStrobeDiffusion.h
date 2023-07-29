@@ -93,7 +93,7 @@ public:
 	}
 
 	// функция получения цвета пикселя в матрице по его координатам
-	CRGB getPixColorXY(uint8_t x, uint8_t y)
+	[[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
 	{
 	  // Just don't think about what this does to prefetch and prediction...
 	  return g()->leds[g()->xy(x, y)];

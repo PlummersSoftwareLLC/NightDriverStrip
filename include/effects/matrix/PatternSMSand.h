@@ -55,7 +55,7 @@ public:
     g()->Clear();
   }
 
-  CRGB getPixColorXY(uint8_t x, uint8_t y) const
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
   {
     // Just don't think about what this does to prefetch and prediction...
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];

@@ -76,7 +76,7 @@ void starfield2Emit(uint8_t i){
   IsShift[i] = true; // particle->isAlive
 }
 
-  CRGB getPixColorXY(uint8_t x, uint8_t y)
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
   {
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
     //return g()->leds[g()->xy(x, y)];

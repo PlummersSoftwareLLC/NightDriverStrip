@@ -53,7 +53,7 @@ class PatternSMStarshipTroopers : public LEDStripEffect
                      const double out_min, const double out_max) {
     return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
   }
-  CRGB getPixel(uint8_t x, uint8_t y) {
+  [[nodiscard]] CRGB getPixel(uint8_t x, uint8_t y) const {
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
     // return g()->leds[g()->xy(x, y)];
   }

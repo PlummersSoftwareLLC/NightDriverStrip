@@ -2,7 +2,7 @@
 
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
-#include <inttypes.h>
+#include <cinttypes>
 
 // Inspired from https://editor.soulmatelights.com/gallery/1165-fireworks-by-shaitan
 

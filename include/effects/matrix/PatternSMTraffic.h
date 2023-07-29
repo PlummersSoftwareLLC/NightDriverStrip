@@ -2,7 +2,7 @@
 
 #include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
-#include <inttypes.h>
+#include <cinttypes>
 
 // Derived from https://editor.soulmatelights.com/gallery/1404-traffic
 
@@ -70,7 +70,7 @@ public:
   }
 
   // функция получения цвета пикселя по его номеру
-  CRGB getPixColor(uint32_t thisSegm)
+  CRGB getPixColor(uint32_t thisSegm) const
   {
     uint32_t thisPixel = thisSegm;// * SEGMENTS;
     if (thisPixel > NUM_LEDS - 1) return 0;
@@ -78,7 +78,7 @@ public:
   }
 
   // функция получения цвета пикселя в матрице по его координатам
-  CRGB getPixColorXY(uint8_t x, uint8_t y)
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
   {
     // Just don't think about what this does to prefetch and prediction...
     return g()->leds[g()->xy(x, y)];

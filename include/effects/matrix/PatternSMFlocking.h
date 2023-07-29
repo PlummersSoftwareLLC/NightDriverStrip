@@ -20,7 +20,7 @@ class PatternSMFlocking : public LEDStripEffect
   static constexpr int NUM_PARTICLES = 10;
   Boid boids[NUM_PARTICLES];
 
-  CRGB getPixColorXY(uint8_t x, uint8_t y) {
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
     // return g()->leds[g()->xy(x, y)];
   }

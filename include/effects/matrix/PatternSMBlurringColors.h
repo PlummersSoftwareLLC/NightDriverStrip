@@ -43,7 +43,8 @@ uint8_t deltaValue;                                // просто повтор�
 uint8_t step;                                      // какой-нибудь счётчик кадров или последовательностей операций
 
 
-  CRGB getPixColorXY(uint8_t x, uint8_t y) {
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
+  {
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
     //return g()->leds[g()->xy(x, y)];
   }
