@@ -164,7 +164,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                 uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
                 uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
 
-                debugW("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
+                debugV("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
 
                 size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
                 if (totalExpected > MAXIMUM_PACKET_SIZE)
@@ -189,7 +189,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                 }
 
                 // Consume the data by resetting the buffer
-                debugW("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
+                debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
                 ResetReadBuffer();
 
                 bSendResponsePacket = true;

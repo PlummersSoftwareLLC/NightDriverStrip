@@ -236,7 +236,6 @@ class PatternSubscribers : public LEDStripEffect
     bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<384> jsonDoc;
-        auto rootObject = jsonDoc.to<JsonObject>();
 
         LEDStripEffect::SerializeSettingsToJSON(jsonObject);
 

@@ -66,9 +66,9 @@ public:
     {
     }
 
-    uint16_t x;
-    uint16_t y;
-    uint16_t z;
+    uint16_t x = 0;
+    uint16_t y = 0;
+    uint16_t z = 0;
 
     uint16_t speed = 1;
     uint16_t scale = 26;

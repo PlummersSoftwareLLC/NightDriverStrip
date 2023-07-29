@@ -235,6 +235,7 @@ void PrintOutputHeader()
 
 void TerminateHandler()
 {
+
     debugE("-------------------------------------------------------------------------------------");
     debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
     debugE("-------------------------------------------------------------------------------------");
@@ -246,9 +247,10 @@ void TerminateHandler()
     }
     catch (std::exception &ex) {
         debugE("Terminated due to exception: %s", ex.what());
+        Serial.flush();
+        for(;;)
+            delay(10);
     }
-
-    Serial.flush();
 }
 
 #ifdef TOGGLE_BUTTON_1
@@ -352,7 +354,7 @@ void setup()
         // We create the network reader here, so classes can register their readers from this point onwards.
         //   Note that the thread that executes the readers is started further down, along with other networking
         //   threads.
-        auto& networkReader = g_ptrSystem->SetupNetworkReader();
+        auto & networkReader = g_ptrSystem->SetupNetworkReader();
 
         #if ENABLE_NTP
             // Register a network reader to update the device clock at regular intervals
@@ -553,7 +555,7 @@ void loop()
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
             #if USE_STRIP
-                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Values.Watts, g_Values.Brite);
+                strOutput += str_sprintf("LED Bright: %03.0f%%, LED Watts: %d, ", g_Values.Brite, g_Values.Watts);
             #endif
 
             #if USE_MATRIX
@@ -572,8 +574,8 @@ void loop()
                 auto& bufferManager = g_ptrSystem->BufferManagers()[0];
                 strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
             #endif
-
-            auto& taskManager = g_ptrSystem->TaskManager();
+            
+            const auto & taskManager = g_ptrSystem->TaskManager();
             strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
             debugI("%s", strOutput.c_str());

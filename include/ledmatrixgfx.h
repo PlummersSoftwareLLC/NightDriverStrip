@@ -46,8 +46,8 @@ class LEDMatrixGFX : public GFXBase
 {
 protected:
     String strCaption;
-    unsigned long captionStartTime;
-    float captionDuration;
+    unsigned long captionStartTime = 0;
+    float captionDuration = 0;
     const float captionFadeInTime = 500;
     const float captionFadeOutTime = 1000;
 
@@ -126,10 +126,11 @@ public:
 
     uint16_t xy(uint16_t x, uint16_t y) const override
     {
-        if (x >= 0 && x < _width && y >= 0 && y < _height)
+        // Note the x,y are unsigned so can't be less than zero
+        if (x < _width && y < _height)
             return y * MATRIX_WIDTH + x;
         else
-            throw std::runtime_error(str_sprintf("Invalid index in xy: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
+            throw std::runtime_error(str_sprintf("Invalid index in xy: x=%u, y=%u, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 
     // Whereas an LEDStripGFX would track it's own memory for the CRGB array, we simply point to the buffer already used for
@@ -154,8 +155,8 @@ public:
         //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
         //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
 
-        memset(backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
-        memset(leds, 0, sizeof(CRGB) * _width * _height);
+        memset((void *) backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
+        memset((void *) leds, 0, sizeof(CRGB) * _width * _height);
     }
 
     const String & GetCaption()

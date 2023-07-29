@@ -154,10 +154,10 @@ private:
     }
 
     Point createPoint(int x, int y) {
-        Point point;
-        point.x = x;
-        point.y = y;
-        return point;
+        Point p;
+        p.x = x;
+        p.y = y;
+        return p;
     }
 
     CRGB chooseColor(int index)

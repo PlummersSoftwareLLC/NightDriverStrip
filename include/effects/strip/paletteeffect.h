@@ -126,7 +126,7 @@ class PaletteEffect : public LEDStripEffect
         // A single color step in a palette is 32 increments.  There are 256 total in a palette, and 144 pixels per meter typical, so this
         // scaling yields a color rotation of "one full palette per meter" by default.  We go backwards (-1) to match pixel scrolling direction.
 
-        _paletteIndex = _paletteIndex - deltaTime * _paletteSpeed * 32 * _density * 256/144.0;
+        _paletteIndex = _paletteIndex - deltaTime * _paletteSpeed * 32 * _density * 256.0f/144.0f;
 
         float iColor = fmodf(_paletteIndex + _startIndex * _density, 256);
 

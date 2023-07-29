@@ -127,10 +127,10 @@ class FireEffect : public LEDStripEffect
         return 45;
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp *= 255;
-        uint8_t t192 = round((temp/255.0)*191);
+        uint8_t t192 = round((temp/255.0f)*191);
 
         // calculate ramp up from
         uint8_t heatramp = t192 & 0x3F; // 0..63
@@ -257,7 +257,6 @@ public:
     {
         AllocatedJsonDocument jsonDoc(512);
 
-        JsonObject root = jsonDoc.to<JsonObject>();
         FireEffect::SerializeToJSON(jsonObject);
 
         jsonObject[PTY_PALETTE] = _palette;
@@ -265,7 +264,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp = min(1.0f, temp);
         int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
@@ -296,23 +295,25 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        :   BeatEffectBase(1.00, 0.01),
-            PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
+        : PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+          BeatEffectBase(1.00, 0.01)
+            
 
     {
         construct();
     }
 
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
-        : BeatEffectBase(1.00, 0.01),
-          PaletteFlameEffect(jsonObject)
+        : PaletteFlameEffect(jsonObject),
+          BeatEffectBase(1.00, 0.01)
+          
     {
         construct();
     }
 
   protected:
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         if (elapsed > 1)
         {
@@ -381,13 +382,10 @@ public:
         static std::unique_ptr<uint8_t []> heat = make_unique_psram_array<uint8_t>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
 
-        int cooldown;
-
         // Step 1.  Cool down every cell a little
         for (int i = 0; i < _cLEDs; i++)
         {
-            cooldown = random(0, Cooling);
-
+            int cooldown = random_range(0, Cooling);
             if (cooldown > heat[i])
             {
                 heat[i] = 0;
@@ -479,7 +477,7 @@ private:
     bool _Turbo;
     bool _Mirrored;
 
-    float *_Temperatures;
+    float * _Temperatures = nullptr;
 
 public:
     // Parameter:   Cooling   Sparks    driftPasses  drift sparkHeight   Turbo
@@ -577,9 +575,9 @@ public:
             {
                 float amount = 0.2f + g_Analyzer._VURatio; // MIN(0.85f, _Drift * deltaTime);
                 float c0 = 1.0f - amount;
-                float c1 = amount * 0.33;
-                float c2 = amount * 0.33;
-                float c3 = amount * 0.33;
+                float c1 = amount * 0.33f;
+                float c2 = c1;
+                float c3 = c1;
 
                 _Temperatures[k] = _Temperatures[k] * c0 +
                                    _Temperatures[k - 1] * c1 +
@@ -598,7 +596,7 @@ public:
                 _Temperatures[y] = (_Temperatures[y] + random_range(0.6f, 1.0f));
 
                 if (!_Turbo)
-                    while (_Temperatures[y] > 1.0)
+                    while (_Temperatures[y] > 1.0f)
                         _Temperatures[y] -= 1.0f;
                 else
                     _Temperatures[y] = min(_Temperatures[y], 1.0f);
@@ -632,14 +630,16 @@ class BaseFireEffect : public LEDStripEffect
     }
 
   protected:
-    int     LEDCount;           // Number of LEDs total
-    int     CellCount;          // How many heat cells to represent entire flame
     int     Cooling;            // Rate at which the pixels cool off
     int     Sparks;             // How many sparks will be attempted each frame
     int     SparkHeight;        // If created, max height for a spark
     int     Sparking;           // Probability of a spark each attempt
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
+
+    int     LEDCount;           // Number of LEDs total
+    int     CellCount;          // How many heat cells to represent entire flame
+
     std::unique_ptr<uint8_t []> heat;
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)

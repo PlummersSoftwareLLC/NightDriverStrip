@@ -236,7 +236,6 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
 {
-    CHSV hueColor = rgb2hsv_approximate(color1);
     auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
     if (object->Init(g_ptrSystem->Devices()))
         return object;
