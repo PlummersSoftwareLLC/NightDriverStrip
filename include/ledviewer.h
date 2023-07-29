@@ -65,7 +65,7 @@ private:
 
 public:
 
-    LEDViewer(int port) :
+    explicit LEDViewer(int port) :
         _port(port),
         _server_fd(-1)
     {

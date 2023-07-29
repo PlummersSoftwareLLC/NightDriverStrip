@@ -134,7 +134,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
         delay(1);
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         CRGB c;
         int  cInsulators = 1;

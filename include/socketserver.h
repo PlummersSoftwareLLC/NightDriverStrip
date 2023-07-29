@@ -204,7 +204,7 @@ public:
 
             // Read data from the socket until we have _bcNeeded bytes in the buffer
 
-            int cbRead = read(socket, _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
+            int cbRead = read(socket, (uint8_t *) _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
 
             // Restore the old state
 

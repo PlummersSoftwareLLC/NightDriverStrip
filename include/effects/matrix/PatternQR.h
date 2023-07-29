@@ -88,7 +88,6 @@ public:
         const int topMargin = 4;
         const int borderSize = 2;
         const uint16_t foregroundColor = WHITE16;
-        const uint16_t backgroundColor = g()->to16bit(CRGB(0,0,144));
         const uint16_t borderColor = BLUE16;
         if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
         throw std::runtime_error("Matrix can't hold the QR code height");
