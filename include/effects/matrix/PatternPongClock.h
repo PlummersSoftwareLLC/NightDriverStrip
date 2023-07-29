@@ -108,12 +108,12 @@ class PatternPongClock : public LEDStripEffect
         return 35;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
@@ -129,7 +129,7 @@ class PatternPongClock : public LEDStripEffect
             hours = 12;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);

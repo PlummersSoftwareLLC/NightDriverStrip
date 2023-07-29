@@ -99,7 +99,7 @@ class FireEffect : public LEDStripEffect
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -122,7 +122,7 @@ class FireEffect : public LEDStripEffect
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const override
+    size_t DesiredFramesPerSecond() const override
     {
         return 45;
     }
@@ -146,7 +146,7 @@ class FireEffect : public LEDStripEffect
         }
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         FastLED.clear(false);
         DrawFire();
@@ -253,7 +253,7 @@ public:
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -356,7 +356,7 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -370,7 +370,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         Fire(_Cooling, 180, 5);
         delay(20);
@@ -521,7 +521,7 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -540,7 +540,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
@@ -557,7 +557,7 @@ public:
         free(_Temperatures);
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         float deltaTime = (float)g_Values.AppTime.LastFrameTime();
         setAllOnAllChannels(0, 0, 0);
@@ -687,7 +687,7 @@ class BaseFireEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -724,7 +724,7 @@ class BaseFireEffect : public LEDStripEffect
         }
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         FastLED.showColor(CRGB::Red);
         return;

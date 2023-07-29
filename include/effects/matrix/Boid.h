@@ -68,7 +68,7 @@
 
 #include "Vector.h"
 
-class Boid 
+class Boid
 {
   public:
 

@@ -82,10 +82,10 @@ class RandomPaletteColorStar : public MovingFadingPaletteObject, public ObjectSi
 
 class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
 {
-    virtual float PreignitionTime() const         { return .25f;  }
-    virtual float IgnitionTime()    const         { return 5.0f;  }
-    virtual float HoldTime()        const         { return 0.00f; }
-    virtual float FadeTime()        const         { return 0.0f;  }
+    float PreignitionTime() const override         { return .25f;  }
+    float IgnitionTime()    const override         { return 5.0f;  }
+    float HoldTime()        const override         { return 0.00f; }
+    float FadeTime()        const override         { return 0.0f;  }
 
   public:
 
@@ -140,10 +140,10 @@ class QuietStar : public RandomPaletteColorStar
       : RandomPaletteColorStar(palette, blendType, maxSpeed, starSize)
     {}
 
-    virtual float PreignitionTime() const { return 1.0f; }
-    virtual float IgnitionTime()    const { return 0.00f; }
-    virtual float HoldTime()        const { return 0.00f; }
-    virtual float FadeTime()        const { return 2.0f;  }
+    float PreignitionTime() const override { return 1.0f; }
+    float IgnitionTime()    const override { return 0.00f; }
+    float HoldTime()        const override { return 0.00f; }
+    float FadeTime()        const override { return 2.0f;  }
     virtual float StarSize()        const { return 1;     }
 };
 
@@ -218,7 +218,7 @@ class BubblyStar : public Star
         return EFFECT_STAR_BUBBLY;
     }
 
-    virtual float GetStarSize()
+    float GetStarSize() override
     {
         float x = Age()/TotalLifetime();
         float ratio1 = -1 * (2*(x-.5)) * (2*(x-.5)) + 1;
@@ -226,13 +226,13 @@ class BubblyStar : public Star
         return width;
     }
 
-    virtual ~BubblyStar()
+    ~BubblyStar() override
     {}
 
-    virtual float PreignitionTime() const  { return 0.00f; }
-    virtual float IgnitionTime()    const  { return 0.05f; }
-    virtual float HoldTime()        const  { return 0.25f; }
-    virtual float FadeTime()        const  { return 0.50f; }
+    float PreignitionTime() const override  { return 0.00f; }
+    float IgnitionTime()    const override  { return 0.05f; }
+    float HoldTime()        const override  { return 0.25f; }
+    float FadeTime()        const override  { return 0.50f; }
 };
 
 class FlashStar : public Star
@@ -244,10 +244,10 @@ class FlashStar : public Star
         return EFFECT_STAR_FLASH;
     }
 
-    virtual float PreignitionTime() const  { return 0.00f; }
-    virtual float IgnitionTime()    const  { return 0.10f; }
-    virtual float HoldTime()        const  { return 0.10f; }
-    virtual float FadeTime()        const  { return 0.05f; }
+    float PreignitionTime() const override  { return 0.00f; }
+    float IgnitionTime()    const override  { return 0.10f; }
+    float HoldTime()        const override  { return 0.10f; }
+    float FadeTime()        const override  { return 0.05f; }
 };
 
 class ColorCycleStar : public Star
@@ -275,13 +275,13 @@ class ColorCycleStar : public Star
         return c;
     }
 
-    virtual ~ColorCycleStar()
+    ~ColorCycleStar() override
     {}
 
-    virtual float PreignitionTime() const { return 2.0f; }
-    virtual float IgnitionTime()    const { return 0.0f;}
-    virtual float HoldTime()        const { return 2.00f; }
-    virtual float FadeTime()        const { return 0.5f;  }
+    float PreignitionTime() const override { return 2.0f; }
+    float IgnitionTime()    const override { return 0.0f;}
+    float HoldTime()        const override { return 2.00f; }
+    float FadeTime()        const override { return 0.5f;  }
     virtual float StarSize()        const { return 1;     }
 };
 
@@ -306,7 +306,7 @@ class MultiColorStar : public Star
         return c;
     }
 
-    virtual ~MultiColorStar()
+    ~MultiColorStar() override
     {}
 
     static int GetStarTypeNumber()
@@ -314,10 +314,10 @@ class MultiColorStar : public Star
         return EFFECT_STAR_MULTI_COLOR;
     }
 
-    virtual float PreignitionTime() const { return 2.0f; }
-    virtual float IgnitionTime()    const { return 0.0f; }
-    virtual float HoldTime()        const { return 2.00f;}
-    virtual float FadeTime()        const { return 0.5f; }
+    float PreignitionTime() const override { return 2.0f; }
+    float IgnitionTime()    const override { return 0.0f; }
+    float HoldTime()        const override { return 2.00f;}
+    float FadeTime()        const override { return 0.5f; }
     virtual float StarSize()        const { return 1;    }
 };
 
@@ -333,7 +333,7 @@ class ChristmasLightStar : public Star
         _colorIndex = iColor;
     }
 
-    virtual ~ChristmasLightStar()
+    ~ChristmasLightStar() override
     {}
 
     static int GetStarTypeNumber()
@@ -341,10 +341,10 @@ class ChristmasLightStar : public Star
         return EFFECT_STAR_CHRISTMAS;
     }
 
-    virtual float PreignitionTime() const { return 0.20f; }
-    virtual float IgnitionTime()    const { return 0.00f; }
-    virtual float HoldTime()        const { return 6.0f;  }
-    virtual float FadeTime()        const { return 1.25f; }
+    float PreignitionTime() const override { return 0.20f; }
+    float IgnitionTime()    const override { return 0.00f; }
+    float HoldTime()        const override { return 6.0f;  }
+    float FadeTime()        const override { return 1.25f; }
     virtual float StarSize()        const { return 0.00f; }
 };
 
@@ -359,7 +359,7 @@ class HotWhiteStar : public Star
     {
     }
 
-    virtual ~HotWhiteStar()
+    ~HotWhiteStar() override
     {}
 
     static int GetStarTypeNumber()
@@ -367,10 +367,10 @@ class HotWhiteStar : public Star
         return EFFECT_STAR_HOT_WHITE;
     }
 
-    virtual float PreignitionTime() const { return 0.00f;  }
-    virtual float IgnitionTime()    const { return 0.20f;  }
-    virtual float HoldTime()        const { return 0.00f;  }
-    virtual float FadeTime()        const { return 2.00f;  }
+    float PreignitionTime() const override { return 0.00f;  }
+    float IgnitionTime()    const override { return 0.20f;  }
+    float HoldTime()        const override { return 0.00f;  }
+    float FadeTime()        const override { return 2.00f;  }
 
     virtual CRGB RenderColor(TBlendType blend)
     {
@@ -465,7 +465,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -531,7 +531,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             _allParticles.pop_back();
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         CreateStars();
         Update();
@@ -600,7 +600,7 @@ public:
     {
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         for (int i = 0; i < NUM_TWINKLES; i++)
@@ -608,7 +608,7 @@ public:
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
 
         // Init all the memory slots to -1 which means "empty slot"

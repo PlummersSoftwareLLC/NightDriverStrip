@@ -66,16 +66,16 @@ public:
         free(qrcodeData);
     }
 
-    virtual void Start() override
+    void Start() override
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const override
+    size_t DesiredFramesPerSecond() const override
     {
         return 20;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         String sIP = WiFi.isConnected() ? "http://" + WiFi.localIP().toString() : "No Wifi";
         if (sIP != lastData)

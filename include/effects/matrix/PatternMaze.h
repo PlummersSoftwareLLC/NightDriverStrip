@@ -255,7 +255,7 @@ public:
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         if (cellCount < 1)
         {
@@ -297,7 +297,7 @@ public:
         return true;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         g()->Clear();
     }

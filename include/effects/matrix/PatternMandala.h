@@ -89,12 +89,12 @@ public:
         return 30;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return true;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         // set to reasonable values to avoid a black out
         g()->GetNoise().noisesmoothing = 100;
@@ -118,7 +118,7 @@ public:
         dsy = random8();
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         // a new parameter set every 15 seconds
         EVERY_N_SECONDS(15)
@@ -136,7 +136,7 @@ public:
         g()->GetNoise().noise_z += dz * 4;
 
         g()->FillGetNoise();
-  
+
         ShowNoiseLayer(0, 1, 0);
 
         g()->Caleidoscope3();

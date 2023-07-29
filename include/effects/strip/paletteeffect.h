@@ -89,7 +89,7 @@ class PaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -113,7 +113,7 @@ class PaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         if (_bErase)
           setAllOnAllChannels(0,0,0);

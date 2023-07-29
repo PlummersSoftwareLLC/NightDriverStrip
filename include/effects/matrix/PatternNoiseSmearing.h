@@ -69,7 +69,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     g()->DimAll(235);
     g()->BlurFrame(50);
@@ -109,7 +109,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     g()->DimAll(230);
 
@@ -150,7 +150,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     g()->DimAll(20);
 
@@ -198,7 +198,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     g()->DimAll(10);
 

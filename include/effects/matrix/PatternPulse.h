@@ -80,7 +80,7 @@ class PatternPulse : public LEDStripEffect
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         auto graphics = g();
 
@@ -176,7 +176,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         ProcessAudio();
         fadeAllChannelsToBlackBy(10);

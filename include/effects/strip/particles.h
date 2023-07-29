@@ -111,7 +111,7 @@ class FadingObject : public Lifespan
 
   public:
 
-    virtual double TotalLifetime() const
+    double TotalLifetime() const override
     {
         return PreignitionTime() + IgnitionTime() + HoldTime() + FadeTime();
     }
@@ -367,10 +367,10 @@ class RingParticle : public FadingColoredObject
         }
     }
 
-    virtual float PreignitionTime() const         { return 0.0f;          }
-    virtual float IgnitionTime()    const         { return _ignitionTime; }
-    virtual float HoldTime()        const         { return 0.0f;          }
-    virtual float FadeTime()        const         { return _fadeTime;     }
+    float PreignitionTime() const override         { return 0.0f;          }
+    float IgnitionTime()    const override         { return _ignitionTime; }
+    float HoldTime()        const override         { return 0.0f;          }
+    float FadeTime()        const override         { return _fadeTime;     }
 };
 
 
@@ -608,10 +608,10 @@ class SpinningPaletteRingParticle : public FadingObject
           _GFX[0]->setPixelsF(_start + random(0, _length), 1, CRGB::White, true);
     }
 
-    virtual float PreignitionTime() const         { return 0.0f;          }
-    virtual float IgnitionTime() const            { return _ignitionTime; }
-    virtual float HoldTime() const                { return 0.0f;          }
-    virtual float FadeTime() const                { return 1.00;          }
+    float PreignitionTime() const override         { return 0.0f;          }
+    float IgnitionTime() const override            { return _ignitionTime; }
+    float HoldTime() const override                { return 0.0f;          }
+    float FadeTime() const override                { return 1.00;          }
 };
 
 
@@ -681,10 +681,10 @@ class HotWhiteRingParticle : public FadingObject
         }
     }
 
-    virtual float PreignitionTime() const         { return 0.0f;          }
-    virtual float IgnitionTime()    const         { return _ignitionTime; }
-    virtual float HoldTime()        const         { return 0.0f;          }
-    virtual float FadeTime()        const         { return _fadeTime;     }
+    float PreignitionTime() const override         { return 0.0f;          }
+    float IgnitionTime()    const override         { return _ignitionTime; }
+    float HoldTime()        const override         { return 0.0f;          }
+    float FadeTime()        const override         { return _fadeTime;     }
 };
 
 #if ENABLE_AUDIO

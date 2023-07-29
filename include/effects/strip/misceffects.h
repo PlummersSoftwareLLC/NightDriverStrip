@@ -61,7 +61,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
         debugV("SimpleRainbowTestEffect JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -74,7 +74,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         fillRainbowAllChannels(0, _cLEDs, beatsin16(4, 0, 256), 8, _EveryNth);
         delay(10);
@@ -109,7 +109,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         debugV("RainbowFill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -122,7 +122,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         static float hue = 0.0f;
         static unsigned long lastms = millis();
@@ -172,7 +172,7 @@ protected:
         debugV("RainbowFill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -185,7 +185,7 @@ protected:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         static float hue = 0.0f;
         static unsigned long lastms = millis();
@@ -232,7 +232,7 @@ protected:
         debugV("Color Fill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -245,7 +245,7 @@ protected:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
@@ -288,12 +288,12 @@ class SplashLogoEffect : public LEDStripEffect
         return 5.0 * MILLIS_PER_SECOND;
     }
 
-    virtual bool CanDisplayVUMeter() const override
+    bool CanDisplayVUMeter() const override
     {
         return false;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         fillSolidOnAllChannels(CRGB::Black);
         if (JDR_OK != TJpgDec.drawJpg(0, 0, logo.contents, logo.length))        // Draw the image
@@ -339,7 +339,7 @@ class StatusEffect : public LEDStripEffect
         debugV("Status Fill JSON constructor");
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -352,7 +352,7 @@ class StatusEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         CRGB color = _color;
 
@@ -413,7 +413,7 @@ class TwinkleEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -432,7 +432,7 @@ class TwinkleEffect : public LEDStripEffect
 
     std::deque<size_t> litPixels;
 
-    virtual void Draw() override
+    void Draw() override
     {
         EVERY_N_MILLISECONDS(_updateSpeed)
         {
