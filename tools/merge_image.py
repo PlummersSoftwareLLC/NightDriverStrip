@@ -52,5 +52,5 @@ env.Replace(
     UPLOADERFLAGS=[
         ]
         + ["0x0", MERGED_BIN],
-    UPLOADCMD='"${PYTHONEXE}" "${UPLOADER}" ${UPLOADERFLAGS}',
+    UPLOADCMD='"${PYTHONEXE}" "${UPLOADER}" write_flash ${UPLOADERFLAGS}',
 )
