@@ -109,9 +109,9 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
         LEDStripEffect(jsonObject) {
   }
 
-  virtual void Start() override { g()->Clear(); }
+  void Start() override { g()->Clear(); }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

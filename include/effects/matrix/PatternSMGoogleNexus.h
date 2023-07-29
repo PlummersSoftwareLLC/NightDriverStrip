@@ -127,7 +127,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
     for (byte i = 0; i < GOOGLE_NEXUS; i++) {
@@ -139,7 +139,7 @@ public:
     }
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

@@ -40,7 +40,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
     if (Scale > 100U) Scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
@@ -58,7 +58,7 @@ public:
     pcnt = map(step, 1U, 255U, 20U, 128U); // nblend 3th param
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

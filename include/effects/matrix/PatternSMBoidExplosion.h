@@ -175,7 +175,7 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
   Attractor attractor;
   Attractor attractor2;
 
-  virtual void Start() override {
+  void Start() override {
     g()->Clear();
 
     int direction = random(0, 2);
@@ -193,7 +193,7 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
     attractor2.location = PVector(ROWS / 1.5, COLS / 4);
   }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

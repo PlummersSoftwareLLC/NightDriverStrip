@@ -38,7 +38,7 @@ class PatternSMRadialFire : public LEDStripEffect
         LEDStripEffect(jsonObject) {
   }
 
-  virtual void Start() override {
+  void Start() override {
     g()->Clear();
     for (int8_t x = -C_X; x < C_X + (LED_COLS % 2); x++) {
       for (int8_t y = -C_Y; y < C_Y + (LED_ROWS % 2); y++) {
@@ -48,7 +48,7 @@ class PatternSMRadialFire : public LEDStripEffect
     }
   }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

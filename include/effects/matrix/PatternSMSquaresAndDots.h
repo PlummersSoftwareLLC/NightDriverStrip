@@ -56,7 +56,7 @@ public:
     }
 }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
     for (byte x = 0; x < MATRIX_WIDTH / 3 + 1; x++) {
@@ -66,7 +66,7 @@ public:
     }
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     EVERY_N_MILLISECONDS(300) {
     printSpr((random8(MATRIX_WIDTH) % (MATRIX_WIDTH / 3 + 1)) * 3, (random8(MATRIX_HEIGHT) % (MATRIX_HEIGHT / 3 + 1)) * 3, random8(2));

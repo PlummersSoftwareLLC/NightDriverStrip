@@ -132,7 +132,7 @@ class PatternSMColorPopcorn : public LEDStripEffect
         LEDStripEffect(jsonObject) {
   }
 
-  virtual void Start() override {
+  void Start() override {
     g()->Clear();
     for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
       rockets[r].x = random8() * MATRIX_WIDTH - 1;
@@ -140,7 +140,7 @@ class PatternSMColorPopcorn : public LEDStripEffect
     }
   }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

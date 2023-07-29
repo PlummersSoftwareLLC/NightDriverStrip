@@ -112,7 +112,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
   }
@@ -131,7 +131,7 @@ public:
     LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

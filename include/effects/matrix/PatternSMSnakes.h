@@ -58,7 +58,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
     speedfactor = (float)Speed / 555.0f + 0.001f;
@@ -79,7 +79,7 @@ public:
   }
 }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

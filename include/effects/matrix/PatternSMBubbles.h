@@ -84,7 +84,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
 		x = random16();
@@ -99,7 +99,7 @@ public:
 		}
 	}
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

@@ -279,12 +279,12 @@ class PatternSMPicasso3in1 : public LEDStripEffect
           (Scale - 34U) / 33.0 * (enlargedOBJECT_MAX_COUNT - 1U) + 1U;
   }
 
-  virtual void Start() override {
+  void Start() override {
     g()->Clear();
     RecalibrateDrawnObjects();
   }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

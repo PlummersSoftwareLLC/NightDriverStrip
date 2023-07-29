@@ -72,7 +72,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
     for (int i = 0; i < COUNT;i++){
@@ -84,7 +84,7 @@ public:
     }
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

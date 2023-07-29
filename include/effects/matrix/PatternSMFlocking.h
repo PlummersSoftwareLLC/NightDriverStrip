@@ -76,14 +76,14 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
         LEDStripEffect(jsonObject) {
   }
 
-  virtual void Start() override {
+  void Start() override {
     g()->Clear();
     for (int i = 0; i < NUM_PARTICLES; i++) {
       boids[i] = Boid(random(MATRIX_WIDTH), 0);
     }
   }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

@@ -80,7 +80,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
   #if 1
@@ -91,7 +91,7 @@ public:
   #endif
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
       nscale8(g()->leds, NUM_LEDS, DIMSPEED);
 

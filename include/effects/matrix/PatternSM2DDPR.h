@@ -42,7 +42,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
   }
 
@@ -65,7 +65,7 @@ public:
     return dist;
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     effTimer =sin8 (millis()/6000)/10;
 

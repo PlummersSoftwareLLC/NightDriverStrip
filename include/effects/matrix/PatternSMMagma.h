@@ -60,7 +60,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
 
@@ -202,7 +202,7 @@ void drawPixelXYF(float x, float y, CRGB color) //, uint8_t darklevel = 0U)
   }
 }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

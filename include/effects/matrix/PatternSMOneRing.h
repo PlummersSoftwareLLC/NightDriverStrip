@@ -32,7 +32,7 @@ public:
   {
   }
 
-	virtual void Start() override
+	void Start() override
   {
   }
 
@@ -59,7 +59,7 @@ public:
     g()->leds[g()->xy(x, y)].setRGB(bri, bri, 0);
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     double t = millis() / 1000.0; // some formulas is hardcoded and fps get down. this speedup it
     for (byte x = 0; x < MATRIX_WIDTH; x++) {

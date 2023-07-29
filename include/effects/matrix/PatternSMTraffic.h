@@ -58,7 +58,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
     deltaValue = 255U - Speed + 1U;
@@ -132,7 +132,7 @@ public:
     }
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
       if (step >= deltaValue) {
         step = 0U;

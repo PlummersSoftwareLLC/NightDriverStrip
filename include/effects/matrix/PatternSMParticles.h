@@ -63,7 +63,7 @@ class PatternSMParticles : public LEDStripEffect
         LEDStripEffect(jsonObject) {
   }
 
-  virtual void Start() override { g()->Clear(); }
+  void Start() override { g()->Clear(); }
 
   void drawPixelXY(int8_t x, int8_t y, CRGB color) {
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
@@ -72,7 +72,7 @@ class PatternSMParticles : public LEDStripEffect
     g()->leds[thisPixel] = color;
   }  // служебные функции
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

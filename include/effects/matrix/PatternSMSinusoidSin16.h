@@ -59,7 +59,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
       g()->Clear();
       //deltaHue = (Scale - 1U) % ... + 1U;
@@ -82,7 +82,7 @@ public:
   // 2nd upd by Stepko https://wokwi.com/arduino/projects/287675911209222664
   // 3rd proper by SottNick
 
-  virtual void Draw() override
+  void Draw() override
   {
       float e_s3_size = 3. * Scale / 100.0 + 2;    // amplitude of the curves
 

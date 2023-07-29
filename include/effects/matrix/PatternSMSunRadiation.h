@@ -83,12 +83,12 @@ class PatternSMSunRadiation : public LEDStripEffect
         LEDStripEffect(jsonObject) {
   }
 
-  virtual void Start() override {
+  void Start() override {
     g()->Clear();
     generateCHSVlut();
   }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif

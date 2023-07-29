@@ -49,7 +49,7 @@ public:
   {
   }
 
-	virtual void Start() override
+	void Start() override
   {
 //  	  FPSdelay = 25U; // LOW_DELAY;
 //    hue2 = 1;
@@ -99,7 +99,7 @@ public:
 	  return g()->leds[g()->xy(x, y)];
 	}
 
-  virtual void Draw() override
+  void Draw() override
   {
   const uint8_t SIZE = 3U;
   const uint8_t DELTA = 1U;         // центровка по вертикали

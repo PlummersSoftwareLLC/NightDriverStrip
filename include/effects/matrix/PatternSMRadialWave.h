@@ -43,7 +43,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
       for (int8_t x = -C_X; x < C_X + (LED_COLS % 2); x++) {
@@ -54,7 +54,7 @@ public:
     }
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

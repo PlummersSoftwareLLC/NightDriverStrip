@@ -131,7 +131,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
     g()->Clear();
     enlargedObjectNUM = 200;
@@ -142,7 +142,7 @@ public:
       IsShift[i] = false; // particle->isAlive
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
 #if ENABLE_AUDIO
     ProcessAudio();

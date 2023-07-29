@@ -128,9 +128,9 @@ class PatternSMHolidayLights : public LEDStripEffect
         LEDStripEffect(jsonObject) {
   }
 
-  virtual void Start() override { g()->Clear(); }
+  void Start() override { g()->Clear(); }
 
-  virtual void Draw() override {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif
