@@ -110,8 +110,10 @@ class LEDStripEffect : public IJSONSerializable
         int colorIndex = 0;
 
         const auto & componentsArray = src.as<JsonArrayConst>();
-        for (const auto & v : componentsArray)
+        for (const auto &v: componentsArray)
+        {
             colors[colorIndex++] = v.as<CRGB>();
+        }
 
         property = CRGBPalette16(colors);
 
@@ -194,7 +196,7 @@ class LEDStripEffect : public IJSONSerializable
                                                                     //   so that we can call them directly later from other calls
         _cLEDs = _GFX[0]->GetLEDCount();
 
-        debugV("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
+        debugV("Init Effect %s with %ld LEDs\n", _friendlyName.c_str(), _cLEDs);
         return true;
     }
 
