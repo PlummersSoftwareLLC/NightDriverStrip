@@ -55,7 +55,10 @@
 #define AUDIO_STACK_SIZE   4096
 #define JSON_STACK_SIZE    4096
 #define SOCKET_STACK_SIZE  4096
-#define NET_STACK_SIZE     4096
+#define NET_STACK_SIZE     8192
+#define DEBUG_STACK_SIZE   8192                 // Needs a lot of stack for output if UpdateClockFromWeb is called from debugger
+#define REMOTE_STACK_SIZE  4096
+
 class IdleTask
 {
   private:
@@ -316,7 +319,7 @@ public:
     {
         #if ENABLE_WIFI
             Serial.print( str_sprintf(">> Launching Debug Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
-            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", DEFAULT_STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
+            xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", DEBUG_STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
         #endif
     }
 
@@ -332,7 +335,7 @@ public:
     {
         #if ENABLE_REMOTE
             Serial.print( str_sprintf(">> Launching Remote Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
-            xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", DEFAULT_STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
+            xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", REMOTE_STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
         #endif
     }
 

@@ -120,8 +120,8 @@ public:
 
     virtual void Draw() override
     {
-        // a new parameter set every 15 seconds
-        EVERY_N_SECONDS(15)
+        // a new parameter set every 30 seconds
+        EVERY_N_SECONDS(30)
         {
             // SetupRandomPalette3();
             dy = random16(500) - 250; // random16(2000) - 1000 is pretty fast but works fine, too
@@ -158,7 +158,7 @@ public:
                 // assign a color depending on the actual palette
                 CRGB pixel = ColorFromPalette(g()->GetCurrentPalette(), colorrepeat * (color + colorshift), bri);
 
-                g()->leds[g()->xy(i, j)] = pixel;
+                g()->leds[XY(i, j)] = pixel;
             }
         }
     }

@@ -382,11 +382,11 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
 
   public:
 
-    ColorBeatWithFlash(const String & strName) : LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_WITH_FLASH, strName), BeatEffectBase(), ParticleSystem<RingParticle>()
+    ColorBeatWithFlash(const String & strName) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_WITH_FLASH, strName)
     {
     }
 
-    ColorBeatWithFlash(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject), BeatEffectBase(), ParticleSystem<RingParticle>()
+    ColorBeatWithFlash(const JsonObjectConst& jsonObject) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(jsonObject)
     {
     }
 
@@ -430,7 +430,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
     }
 };
 
-class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase, public virtual ParticleSystem<RingParticle>
+class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<RingParticle>
 {
     int  _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
@@ -690,7 +690,7 @@ class HotWhiteRingParticle : public FadingObject
 #if ENABLE_AUDIO
 
 
-class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffectBase, public virtual ParticleSystem<SpinningPaletteRingParticle>
+class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
@@ -932,7 +932,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
     }
 };
 
-class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectBase, public virtual ParticleSystem<HotWhiteRingParticle>
+class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<HotWhiteRingParticle>
 {
     int  _iLastInsulator = 0;
     CRGB _baseColor      = CRGB::Black;

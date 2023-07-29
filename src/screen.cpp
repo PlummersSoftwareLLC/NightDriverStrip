@@ -138,8 +138,8 @@ void BasicInfoSummary(bool bRedraw)
 
     display.setCursor(xMargin + 0, yMargin + lineHeight * 2);
     display.println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
-                                min(99.99f, bufferManager.AgeOfOldestBuffer()),
-                                min(99.99f, bufferManager.AgeOfNewestBuffer())));
+                                std::min(99.99, bufferManager.AgeOfOldestBuffer()),
+                                std::min(99.99, bufferManager.AgeOfNewestBuffer())));
 
     // Clock info Line 5
     //
@@ -170,11 +170,17 @@ void BasicInfoSummary(bool bRedraw)
 
     if (display.height() >= lineHeight * 7)
     {
+        auto& taskManager = g_ptrSystem->TaskManager();
         display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
-        display.println(str_sprintf("PRAM:%dK/%dK\n",
-                                    ESP.getFreePsram() / 1024,
-                                    ESP.getPsramSize() / 1024));
+        display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
+
+    /* Old PSRAM code 
+    display.setCursor(xMargin + 0, yMargin + lineHeight * 7);
+    display.println(str_sprintf("PRAM:%dK/%dK\n",
+                                ESP.getFreePsram() / 1024,
+                                ESP.getPsramSize() / 1024));
+    */
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
     //             that conveys the overall status
@@ -216,6 +222,7 @@ void BasicInfoSummary(bool bRedraw)
             display.drawRect(xMargin, top, width, height, WHITE16);
         #endif
     }
+
 
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32
     display.drawRect(0, 0, display.width(), display.height(), borderColor);
@@ -277,8 +284,6 @@ void CurrentEffectSummary(bool bRedraw)
             display.setCursor(display.width() / 2 - w / 2, yh);
             display.print(sEffect.c_str());
             yh += display.fontHeight();
-            // get effect name length and switch text size accordingly
-            int effectnamelen = g_ptrSystem->EffectManager().GetCurrentEffectName().length();
 
             display.setTextColor(WHITE16, backColor);
             w = display.textWidth(g_ptrSystem->EffectManager().GetCurrentEffectName());

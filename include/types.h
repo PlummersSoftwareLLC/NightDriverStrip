@@ -178,7 +178,7 @@ struct SettingSpec
 
     virtual String TypeName() const
     {
-        String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color" };
+        const String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color" };
         return names[static_cast<int>(Type)];
     }
 };
