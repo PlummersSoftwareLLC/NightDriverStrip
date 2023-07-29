@@ -1110,33 +1110,42 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
+void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
+{
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+
+    int err = dx + dy;  // Error must be declared here
+
+    for (;;)
     {
-        int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        for (;;)
+        if (isValidPixel(x0, y0))
+            leds[XY(x0, y0)] = bMerge ? leds[XY(x0, y0)] + color : color;
+
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        int e2 = 2 * err;
+        if (e2 >= dy)
         {
-            int err = dx + dy, e2;
-
-            if (isValidPixel(x0, y0))
-                leds[XY(x0, y0)] = bMerge ? leds[XY(x0, y0)] + color : color;
-
-            if (x0 == x1 && y0 == y1)
-                break;
-
-            e2 = 2 * err;
-            if (e2 > dy)
-            {
-                err += dy;
-                x0 += sx;
-            }
-            if (e2 < dx)
-            {
-                err += dx;
-                y0 += sy;
-            }
+            err += dy;
+            x0 += sx;
         }
+        // Recheck after x-axis update
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        if (e2 <= dx)
+        {
+            err += dx;
+            y0 += sy;
+        }
+        // Recheck after y-axis update
+        if (x0 == x1 && y0 == y1)
+            break;
     }
+}
+
 
     void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
     {

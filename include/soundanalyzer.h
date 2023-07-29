@@ -85,7 +85,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
 // results are simplified down to this small class of band peaks.
 
-#define MIN_VU 256              // Minimum VU value to use for the span when computing VURatio.  Contributes to
+#define MIN_VU 128              // Minimum VU value to use for the span when computing VURatio.  Contributes to
                                 // how dynamic the music is (smaller values == more dynamic)
 
 
