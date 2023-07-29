@@ -179,6 +179,7 @@ DRAM_ATTR std::mutex g_buffer_mutex;
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
+
 ImprovSerial<typeof(Serial)> g_ImprovSerial;
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
@@ -195,20 +196,6 @@ DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
     RING_SIZE_3,
     RING_SIZE_4
 };
-
-// CheckHeap
-//
-// Quick and dirty debug test to make sure the heap has not been corrupted
-
-inline void CheckHeap()
-{
-    #if CHECK_HEAP
-        if (false == heap_caps_check_integrity_all(true))
-        {
-            throw std::runtime_error("Heap FAILED checks!");
-        }
-    #endif
-}
 
 // PrintOutputHeader
 //
@@ -312,7 +299,6 @@ void setup()
     // Start Debug
     debugI("Starting DebugLoopTaskEntry");
     taskManager.StartDebugThread();
-    CheckHeap();
 
     // Initialize Non-Volatile Storage
     esp_err_t err = nvs_flash_init();

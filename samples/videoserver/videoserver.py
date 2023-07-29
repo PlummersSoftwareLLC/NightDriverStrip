@@ -126,5 +126,5 @@ while True:
         sock.close()
         sock = None
 
-    time.sleep(1.0 / 100)                                        # Div by two is a manual hack to get timing closer
+    time.sleep(1.0 / 40)                                        # Div by two is a manual hack to get timing closer
 

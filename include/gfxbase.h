@@ -219,16 +219,16 @@ public:
         memset(leds, 0, sizeof(CRGB) * _width * _height);
     }
 
-    virtual bool isValidPixel(int x, int y) const
+    virtual bool isValidPixel(uint x, uint y) const
     {
         // Check that the pixel location is within the matrix's bounds
-        return x >= 0 && x < _width && y >= 0 && y < _height;
+        return x < _width && y < _height;
     }
 
-    virtual bool isValidPixel(int n) const
+    virtual bool isValidPixel(uint n) const
     {
         // Check that the pixel location is within the matrix's bounds
-        return n >= 0 && n < _width * _height;
+        return n < _width * _height;
     }
 
     // Matrices that are built from individually addressable strips like WS2812b generally
@@ -438,9 +438,8 @@ public:
         // if needed...
 
         float p = fPos;
-        if (p >= 0 && p < GetLEDCount())
-            for (int i = 0; i < NUM_CHANNELS; i++)
-                leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
+        if (p >= 0 && isValidPixel(p))
+            leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
 
         p = fPos + (1.0 - frac1);
         count -= (1.0 - frac1);
@@ -449,18 +448,16 @@ public:
 
         while (count >= 1)
         {
-            if (p >= 0 && p < GetLEDCount())
-                for (int i = 0; i < NUM_CHANNELS; i++)
-                    leds[(int)p] = bMerge ? leds[(int)p] + c : c;
+            if (p >= 0 && isValidPixel(p))
+                leds[(int)p] = bMerge ? leds[(int)p] + c : c;
             count--;
             p++;
         };
 
         // Final pixel, if in bounds
         if (count > 0)
-            if (p >= 0 && p < GetLEDCount())
-                for (int i = 0; i < NUM_CHANNELS; i++)
-                    leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
+            if (p >= 0 && isValidPixel(p))
+                leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
     void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
