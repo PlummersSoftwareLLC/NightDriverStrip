@@ -115,9 +115,7 @@ class EffectFactories
     void AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
     {
         defaultFactories.emplace_back(effectNumber, defaultFactory);
-
-        if (jsonFactories.count(effectNumber) == 0)
-            jsonFactories[effectNumber] = jsonFactory;
+        jsonFactories.try_emplace(effectNumber, jsonFactory);    
     }
 
     bool IsEmpty()

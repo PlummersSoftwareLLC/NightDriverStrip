@@ -3,6 +3,12 @@
 
 bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 {
+    if (g_Values.UpdateStarted)
+    {
+        debugW("Update already in progress, skipping time check, as it seems to disturb the update process.");
+        return false;
+    }
+
     debugV("Updating Clock From Web...");
 
     std::lock_guard<std::mutex> guard(_clockMutex);
@@ -80,14 +86,14 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 
     // Obtain the time from the packet, convert to Unix time, and adjust for the time zone.
 
-    struct timeval tvNew = { 0 };
+    struct timeval tvNew;
+    memset(&tvNew, 0, sizeof(tvNew));
 
-    uint32_t frac  =  (uint32_t) chNtpPacket[44] << 24
-                    | (uint32_t) chNtpPacket[45] << 16
-                    | (uint32_t) chNtpPacket[46] <<  8
-                    | (uint32_t) chNtpPacket[47] <<  0;
-
-    uint32_t microsecs = ((uint64_t) frac * 1000000) >> 32;
+    auto frac  =  (uint32_t) chNtpPacket[44] << 24
+                | (uint32_t) chNtpPacket[45] << 16
+                | (uint32_t) chNtpPacket[46] <<  8
+                | (uint32_t) chNtpPacket[47] <<  0;
+    auto microsecs = ((uint64_t) frac * 1000000) >> 32;
 
     // BUGBUG (davepl): I've been gettin back odd packets where the clock is year 2036 and micros is 0. I ignore those.
 
@@ -97,21 +103,22 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
         return false;
     }
 
-    debugW("NTP clock: Raw values sec=%u, usec=%u", frac, microsecs);
+    debugW("NTP clock: Raw values sec=%u, usec=%llu", frac, microsecs);
 
     tvNew.tv_sec = ((unsigned long)chNtpPacket[40] << 24) +       // bits 24 through 31 of ntp time
         ((unsigned long)chNtpPacket[41] << 16) +                        // bits 16 through 23 of ntp time
         ((unsigned long)chNtpPacket[42] << 8) +                         // bits  8 through 15 of ntp time
         ((unsigned long)chNtpPacket[43]) -                              // bits  0 through  7 of ntp time
         (((70UL * 365UL) + 17UL) * 86400UL);                            // ntp to unix conversion
-
     tvNew.tv_usec = microsecs;
 
     timeval tvOld;
     gettimeofday(&tvOld, nullptr);
 
-    double dOld = tvOld.tv_sec + (tvOld.tv_usec / (float) MICROS_PER_SECOND);
-    double dNew = tvNew.tv_sec + (tvNew.tv_usec / (float) MICROS_PER_SECOND);
+    double dOld = tvOld.tv_sec + ((double) tvOld.tv_usec / MICROS_PER_SECOND);
+    double dNew = tvNew.tv_sec + ((double) tvNew.tv_usec / MICROS_PER_SECOND);
+
+    debugI("Old Time: %lf, New Time: %lf, Delta: %lf", dOld, dNew, abs(dNew - dOld));
 
     // If the clock is off by more than a quarter second, update it
 
@@ -133,7 +140,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 
     char chBuffer[128];
     struct tm * tmPointer = localtime(&tvNew.tv_sec);
-    strftime(chBuffer, sizeof(chBuffer), "%d %b %y %H:%M:%S", tmPointer);
+    strftime(chBuffer, sizeof(chBuffer), "%d %b %Y %H:%M:%S", tmPointer);
     debugI("NTP clock: response received, updated time to: %ld.%ld, DELTA: %lf\n",
             tvNew.tv_sec,
             tvNew.tv_usec,
