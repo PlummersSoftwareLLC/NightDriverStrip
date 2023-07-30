@@ -46,11 +46,3 @@ def merge_bin(source, target, env):
 
 # Add a post action that runs esptoolpy to merge available flash images
 env.AddPostAction("${BUILD_DIR}/${PROGNAME}.bin", merge_bin)
-
-# Patch the upload command to flash the merged binary at address 0x0
-env.Replace(
-    UPLOADERFLAGS=[
-        ]
-        + ["0x0", MERGED_BIN],
-    UPLOADCMD='"${PYTHONEXE}" "${UPLOADER}" write_flash ${UPLOADERFLAGS}',
-)
