@@ -141,7 +141,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     char chBuffer[128];
     struct tm * tmPointer = localtime(&tvNew.tv_sec);
     strftime(chBuffer, sizeof(chBuffer), "%d %b %Y %H:%M:%S", tmPointer);
-    debugI("NTP clock: response received, updated time to: %ld.%d, DELTA: %lf\n",
+    debugI("NTP clock: response received, updated time to: %ld.%ld, DELTA: %lf\n",
             tvNew.tv_sec,
             tvNew.tv_usec,
             dNew - dOld );
