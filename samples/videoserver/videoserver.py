@@ -129,7 +129,4 @@ while True:
         sock.close()
         sock = None
 
-    if (--maxframes == 0):
-        break
-
     time.sleep(1.0 /50)                                        # Sleep for 1ms to avoid overloading the ESP32

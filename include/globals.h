@@ -1238,11 +1238,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 100
+#define MATRIX_REFRESH_RATE 180
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 2
+#define MATRIX_CALC_DIVIDER 3
 #endif
 
 

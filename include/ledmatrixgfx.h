@@ -129,8 +129,9 @@ public:
         // Note the x,y are unsigned so can't be less than zero
         if (x < _width && y < _height)
             return y * MATRIX_WIDTH + x;
-        else
-            throw std::runtime_error(str_sprintf("Invalid index in xy: x=%u, y=%u, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
+
+        debugE("%s", str_sprintf("Invalid index in xy: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
+        return 0;
     }
 
     // Whereas an LEDStripGFX would track it's own memory for the CRGB array, we simply point to the buffer already used for
