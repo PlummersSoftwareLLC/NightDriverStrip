@@ -60,10 +60,11 @@ for device in devices:
 
     for project in device['projects']:
         tag = project['tag']
-        project_firmware_target_dir = os.path.join(firmware_target_dir, tag)
 
         subprocess.run(['pio', 'run', '-e', tag])
         subprocess.run(['pio', 'run', '-e', tag, '-t', 'buildfs'])
+
+        project_firmware_target_dir = os.path.join(firmware_target_dir, tag)
 
         if not os.path.exists(project_firmware_target_dir):
             os.makedirs(project_firmware_target_dir)
