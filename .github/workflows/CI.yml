@@ -63,6 +63,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Check disk space
+      run: df
+
     - name: Maximize build space
       uses: easimon/maximize-build-space@master
       with:
@@ -101,6 +104,5 @@ jobs:
     - name: Push to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: pages
-        FOLDER: WebInstaller
+        branch: pages
+        folder: WebInstaller
