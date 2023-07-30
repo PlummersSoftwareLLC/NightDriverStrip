@@ -113,7 +113,7 @@ public:
       CRGB color = graphics->ColorFromCurrentPalette(hueoffset + i * spirooffset, 128);
       graphics->leds[graphics->xy(x2, y2)] += color;
 
-      if ((x2 == MATRIX_CENTER_X && y2 == MATRIX_CENTER_Y) || (x2 == MATRIX_CENTER_X && y2 == MATRIX_CENTER_Y))
+      if (x2 == MATRIX_CENTER_X && y2 == MATRIX_CENTER_Y)
         change = true;
     }
 
