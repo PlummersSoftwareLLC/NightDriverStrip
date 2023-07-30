@@ -66,8 +66,10 @@ jobs:
       PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio
 
     steps:
-    - name: Check disk space
-      run: df
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
 
     - name: Maximize build space
       uses: easimon/maximize-build-space@master
@@ -79,11 +81,6 @@ jobs:
         remove-haskell: 'true'
 
     - uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
 
     - name: Install PlatformIO
       run: |
