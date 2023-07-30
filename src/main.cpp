@@ -540,7 +540,7 @@ void loop()
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
             #if USE_STRIP
-                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Values.Watts, g_Values.Brite);
+                strOutput += str_sprintf("LED Bright: %f, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
             #endif
 
             #if USE_MATRIX
@@ -560,7 +560,7 @@ void loop()
                 strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
             #endif
 
-            auto& taskManager = g_ptrSystem->TaskManager();
+            const auto& taskManager = g_ptrSystem->TaskManager();
             strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
             debugI("%s", strOutput.c_str());
