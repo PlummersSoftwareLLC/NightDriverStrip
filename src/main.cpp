@@ -234,10 +234,9 @@ void TerminateHandler()
     }
     catch (std::exception &ex) {
         debugE("Terminated due to exception: %s", ex.what());
-        Serial.flush();
-        for(;;)
-            delay(10);
-   }
+    }
+
+    Serial.flush();
 }
 
 #ifdef TOGGLE_BUTTON_1
