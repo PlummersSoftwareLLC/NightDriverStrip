@@ -87,7 +87,7 @@ jobs:
         PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio
       run: |
         python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
-        echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
+        echo "${PLATFORMIO_CORE_DIR}/penv/bin" >> $GITHUB_PATH
 
     - name: Copy secrets and clear SSID
       run: |
