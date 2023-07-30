@@ -63,6 +63,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+        remove-android: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+        remove-dotnet: 'true'
+        remove-haskell: 'true'
+
     - uses: actions/checkout@v3
 
     - name: Set up Python
