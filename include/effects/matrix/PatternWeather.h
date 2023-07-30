@@ -115,12 +115,12 @@ private:
         return false;
     }
 
-    virtual size_t DesiredFramesPerSecond() const override
+    size_t DesiredFramesPerSecond() const override
     {
         return 25;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
@@ -341,7 +341,7 @@ public:
         g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -351,7 +351,7 @@ public:
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         const int fontHeight = 7;
         const int fontWidth  = 5;

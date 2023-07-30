@@ -93,7 +93,7 @@ public:
   {
       return 120;
   }
-  virtual void Draw() override
+  void Draw() override
   {
     auto graphics = g();
     graphics->DimAll(253);

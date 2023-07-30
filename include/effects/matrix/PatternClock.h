@@ -48,12 +48,12 @@ class PatternClock : public LEDStripEffect
     {
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         // Get the hours, minutes, and seconds of hte current time
 

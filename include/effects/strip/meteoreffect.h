@@ -54,7 +54,7 @@ public:
 
     }
 
-    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
+    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, int size = 4, int decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
     {
         meteorCount = meteors;
         meteorSize = size;
@@ -178,7 +178,7 @@ class MeteorEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -194,7 +194,7 @@ class MeteorEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -209,7 +209,7 @@ class MeteorEffect : public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         for (int i = 0; i < _Meteors.size(); i++)
             _Meteors[i].Draw(_GFX[i]);

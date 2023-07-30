@@ -77,7 +77,7 @@ public:
   {
   }
 
-  virtual void Start() override
+  void Start() override
   {
       x = leftMargin;
       y = topMargin;
@@ -85,7 +85,7 @@ public:
       debugW("Starting AlienText...");
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     std::shared_ptr<GFXBase> graphics = _GFX[0];
 

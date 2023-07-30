@@ -90,7 +90,7 @@ private:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -110,7 +110,7 @@ private:
         return 61;
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -140,7 +140,7 @@ private:
     //
     // Draw each of the balls.  When any ball gets too little energy it would just sit at the base so it is re-kicked with new energy.#pragma endregion
 
-    virtual void Draw() override
+    void Draw() override
     {
         // Erase the drawing area
         if (_bErase)
