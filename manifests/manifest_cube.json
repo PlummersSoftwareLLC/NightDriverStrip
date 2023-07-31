@@ -1,6 +1,6 @@
 {
   "name": "Cube for M5StickC Plus",
-  "version": "v038",
+  "version": "v040",
   "builds": [
     {
       "chipFamily": "ESP32",

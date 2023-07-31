@@ -1,6 +1,6 @@
 {
   "name": "TTGO for ESP32",
-  "version": "v038",
+  "version": "v040",
   "builds": [
     {
       "chipFamily": "ESP32",

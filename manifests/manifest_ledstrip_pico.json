@@ -1,6 +1,6 @@
 {
   "name": "Ledstrip for TinyPICO",
-  "version": "v038",
+  "version": "v040",
   "builds": [
     {
       "chipFamily": "ESP32",
