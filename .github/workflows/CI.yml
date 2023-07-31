@@ -5,8 +5,6 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
 
   collect-environments:
-    if: ( github.repository_owner != 'PlummersSoftwareLLC' || github.ref != 'refs/heads/main' ) && ( github.repository_owner != 'rbergen' || github.ref != 'refs/heads/staging' )
-
     runs-on: ubuntu-latest
 
     steps:
@@ -25,8 +23,6 @@ jobs:
       envs: ${{ steps.envs.outputs.envs }}
 
   build-environment:
-    if: ( github.repository_owner != 'PlummersSoftwareLLC' || github.ref != 'refs/heads/main' ) && ( github.repository_owner != 'rbergen' || github.ref != 'refs/heads/staging' )
-
     runs-on: ubuntu-latest
 
     needs: [collect-environments]
@@ -57,41 +53,52 @@ jobs:
     - name: "Build environment: ${{ matrix.envname }}"
       run: pio run -e ${{ matrix.envname }}
 
-  build-and-publish-all-environments:
+  build-and-publish-installer:
     if: ( github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' ) || ( github.repository_owner == 'rbergen' && github.ref == 'refs/heads/staging' )
 
     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v3
+    needs: [build-environment]
 
+    env:
+      PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio
+
+    steps:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
 
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+        remove-android: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+        remove-dotnet: 'true'
+        remove-haskell: 'true'
+
+    - uses: actions/checkout@v3
+
     - name: Install PlatformIO
       run: |
         python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
-        echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
+        echo "${PLATFORMIO_CORE_DIR}/penv/bin" >> $GITHUB_PATH
 
     - name: Copy secrets and clear SSID
       run: |
         grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
         echo '#define cszSSID ""' >> include/secrets.h
 
-    - name: Build all environments and web installer
+    - name: Build web installer environments and installer
       run: |
         cp platformio.ini platformio.ini.orig
         grep -v ^default_envs platformio.ini.orig > platformio.ini
-        pio run
-        pio run -t buildfs
         python tools/bake_installer.py
         touch WebInstaller/.nojekyll
 
     - name: Push to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: pages
-        FOLDER: WebInstaller
+        branch: pages
+        folder: WebInstaller
