@@ -22,7 +22,7 @@
 //
 // Description:
 //
-//    Network loop, remote contol, debug loop, etc.
+//    Network loop, remote control, debug loop, etc.
 //
 // History:     May-11-2021         Davepl      Commented
 //
@@ -62,9 +62,9 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
             auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
             debugA("Displaying statistics....");
-            debugA("%s:%dx%d %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
+            debugA("%s:%zux%d %uK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
             debugA("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            debugA("BUFR:%02d/%02d [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
+            debugA("BUFR:%02zu/%02zu [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
             debugA("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
             #if ENABLE_AUDIO
@@ -72,7 +72,7 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                debugA("Socket Buffer _cbReceived: %d", g_ptrSystem->SocketServer()._cbReceived);
+                debugA("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
             #endif
         }
         else if (str.equalsIgnoreCase("clearsettings"))
@@ -181,7 +181,7 @@ void SetupOTA(const String & strHostname)
 
 // RemoteLoopEntry
 //
-// If enabled, this is the main thread loop for the remote control.  It is intialized and then
+// If enabled, this is the main thread loop for the remote control.  It is initialized and then
 // called once every 20ms to pump its work queue and scan for new remote codes, etc.  If no
 // remote is being used, this code and thread doesn't exist in the build.
 
@@ -328,7 +328,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
     uint16_t command16 = payloadData[1] << 8 | payloadData[0];
 
-    debugV("payloadLength: %u, command16: %d", payloadLength, command16);
+    debugV("payloadLength: %zu, command16: %d", payloadLength, command16);
 
     // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
     // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
@@ -453,7 +453,7 @@ bool ReadWiFiConfig()
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_ssid), szBuffer, &len);
         if (ESP_OK != err)
         {
-            debugE("Coud not read WiFi_ssid from NVS");
+            debugE("Could not read WiFi_ssid from NVS");
             nvs_close(nvsROHandle);
             return false;
         }
@@ -463,7 +463,7 @@ bool ReadWiFiConfig()
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_password), szBuffer, &len);
         if (ESP_OK != err)
         {
-            debugE("Coud not read WiFi_password from NVS");
+            debugE("Could not read WiFi_password from NVS");
             nvs_close(nvsROHandle);
             return false;
         }

@@ -364,7 +364,7 @@ class EmptyEffect : public LEDStripEffect
 {
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -388,7 +388,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     fadeToBlackBy(FastLED.leds(), NUM_LEDS, 20);
     DrawEffect();
@@ -455,7 +455,7 @@ class CountEffect : public LEDStripEffect
   const int DRAW_LEN = 16;
   const int OPEN_LEN = NUM_FANS * FAN_SIZE - DRAW_LEN;
 
-  virtual void Draw() override
+  void Draw() override
   {
     static float i = 0;
     EVERY_N_MILLISECONDS(30)
@@ -496,7 +496,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     EVERY_N_MILLISECONDS(250)
     {
@@ -583,7 +583,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     EVERY_N_MILLISECONDS(250)
     {
@@ -693,7 +693,7 @@ public:
   {
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject) override
+  bool SerializeToJSON(JsonObject& jsonObject) override
   {
     AllocatedJsonDocument jsonDoc(512);
 
@@ -707,7 +707,7 @@ public:
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     EVERY_N_MILLISECONDS(20) // Update the reels based on the direction
     {
@@ -768,7 +768,7 @@ public:
   {
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject) override
+  bool SerializeToJSON(JsonObject& jsonObject) override
   {
     StaticJsonDocument<128> jsonDoc;
 
@@ -781,7 +781,7 @@ public:
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -805,7 +805,7 @@ class ColorCycleEffectBottomUp : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -829,7 +829,7 @@ class ColorCycleEffectTopDown : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -853,7 +853,7 @@ class ColorCycleEffectSequential : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -879,7 +879,7 @@ class SpinningPaletteEffect : public PaletteEffect
 public:
   using PaletteEffect::PaletteEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     PaletteEffect::Draw();
     for (int i = 0; i < NUM_FANS; i++)
@@ -900,7 +900,7 @@ class ColorCycleEffectRightLeft : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -922,7 +922,7 @@ class ColorCycleEffectLeftRight : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawEffect();
@@ -1014,7 +1014,7 @@ public:
     abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
   }
 
-  virtual bool SerializeToJSON(JsonObject& jsonObject) override
+  bool SerializeToJSON(JsonObject& jsonObject) override
   {
     AllocatedJsonDocument jsonDoc(512);
 
@@ -1040,13 +1040,13 @@ public:
     return ColorFromPalette(Palette, temp, 255);
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear(false);
     DrawFire(Order);
   }
 
-  virtual size_t DesiredFramesPerSecond() const override
+  size_t DesiredFramesPerSecond() const override
   {
     return 60;
   }
@@ -1166,7 +1166,7 @@ public:
     DrawFanPixels(q, lineLen, color, BottomUp);
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear();
     DrawColor(CRGB::Red, 0);
@@ -1182,7 +1182,7 @@ class HueTest : public LEDStripEffect
 public:
   using LEDStripEffect::LEDStripEffect;
 
-  virtual void Draw() override
+  void Draw() override
   {
     FastLED.clear();
     int iFan = 0;
@@ -1205,7 +1205,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     for (int i = 0; i < NUM_FANS; i++)
     {
@@ -1395,12 +1395,12 @@ public:
   {
   }
 
-  virtual size_t DesiredFramesPerSecond() const override
+  size_t DesiredFramesPerSecond() const override
   {
     return 30;
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     fadeAllChannelsToBlackBy(20);
     for (int i = 0; i < _maxParticles; i++)

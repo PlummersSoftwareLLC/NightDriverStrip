@@ -72,12 +72,12 @@ public:
     {
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return true;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         unsigned int colorWidth = 256 / count;
         for (int i = 0; i < count; i++)
@@ -92,7 +92,7 @@ public:
         }
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         // dim all pixels on the display
 

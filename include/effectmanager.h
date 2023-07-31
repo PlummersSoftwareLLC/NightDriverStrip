@@ -183,7 +183,7 @@ public:
     //
     // Lastly, the function calls the construct() method, indicating successful deserialization.
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
+    bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         ClearEffects();
 
@@ -252,7 +252,7 @@ public:
     //
     // If all effects are successfully serialized, the function returns true, indicating successful serialization.
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;

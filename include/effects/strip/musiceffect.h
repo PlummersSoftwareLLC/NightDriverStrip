@@ -123,7 +123,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
 
     int _iLastInsulator = -1;
 
-    virtual void Draw() override
+    void Draw() override
     {
         ProcessAudio();
 
@@ -134,7 +134,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
         delay(1);
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+    void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         CRGB c;
         int  cInsulators = 1;

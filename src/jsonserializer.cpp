@@ -124,7 +124,7 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
     }
 
     size_t bytesWritten = serializeJson(*pJsonDoc, file);
-    debugI("Number of bytes written to JSON file %s: %d", fileName.c_str(), bytesWritten);
+    debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), bytesWritten);
 
     file.flush();
     file.close();

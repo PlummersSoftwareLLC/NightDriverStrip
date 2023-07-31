@@ -112,7 +112,7 @@ class DeviceConfig : public IJSONSerializable
 
     DeviceConfig();
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         return SerializeToJSON(jsonObject, true);
     }
@@ -138,7 +138,7 @@ class DeviceConfig : public IJSONSerializable
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
+    bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         return DeserializeFromJSON(jsonObject, false);
     }

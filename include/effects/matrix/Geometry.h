@@ -4,7 +4,7 @@
  *
  * Portions of this code are adapted from Noel Bundy's work: https://github.com/TwystNeko/Object3d
  * Copyright (c) 2014 Noel Bundy
- * 
+ *
  * Portions of this code are adapted from the Petty library: https://code.google.com/p/peggy/
  * Copyright (c) 2008 Windell H Oskay.  All right reserved.
  *
@@ -139,7 +139,7 @@ struct triFace
     this->sommets[2]=c;
   }
   void set(int a, int b, int c)
-  { 
+  {
     this->length =3;
     this->sommets[0]=a;
     this->sommets[1]=b;

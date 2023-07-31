@@ -77,7 +77,7 @@ public:
 
     uint8_t hue = 0;
 
-    virtual void Start() override
+    void Start() override
     {
         x = random16();
         y = random16();
@@ -94,7 +94,7 @@ public:
         return 16;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         g()->DimAll(240);
 
