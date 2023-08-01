@@ -71,7 +71,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
             if (expandedSize > MAXIMUM_PACKET_SIZE)
             {
-                debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
+                debugE("Expanded packet would be %d but buffer is only %lu !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
                 break;
             }
 
@@ -135,13 +135,13 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
                     if (length32 != numbands * sizeof(float))
                     {
-                        debugE("Expecting %d bytes for %d audio bands, but received %d.  Ensure float size and endianness matches between sender and receiver systems.", totalExpected, NUM_BANDS, _cbReceived);
+                        debugE("Expecting %zu bytes for %d audio bands, but received %zu.  Ensure float size and endianness matches between sender and receiver systems.", totalExpected, NUM_BANDS, _cbReceived);
                         break;
                     }
 
                     if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
-                        debugE("Error in getting peak data from wifi, could not read the %d bytes", totalExpected);
+                        debugE("Error in getting peak data from wifi, could not read the %zu bytes", totalExpected);
                         break;
                     }
 
@@ -149,7 +149,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                         break;
 
                     // Consume the data by resetting the buffer
-                    debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %d down 0.", _cbReceived);
+                    debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %zu down 0.", _cbReceived);
 
                 #endif
                 ResetReadBuffer();
@@ -169,7 +169,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                 size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
                 if (totalExpected > MAXIMUM_PACKET_SIZE)
                 {
-                    debugW("Too many bytes promised (%u) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIMUM_PACKET_SIZE);
+                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIMUM_PACKET_SIZE);
                     break;
                 }
 
