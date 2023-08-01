@@ -80,7 +80,7 @@ class SnakeEffect : public LEDStripEffect
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -107,7 +107,7 @@ class SnakeEffect : public LEDStripEffect
         winMode = 0;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         setAllOnAllChannels(0,0,0); // Clear
 

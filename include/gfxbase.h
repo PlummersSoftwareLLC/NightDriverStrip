@@ -141,7 +141,7 @@ public:
         ResetOscillators();
     }
 
-    virtual ~GFXBase()
+    ~GFXBase() override
     {
     }
 
@@ -219,16 +219,16 @@ public:
         memset(leds, 0, sizeof(CRGB) * _width * _height);
     }
 
-    virtual bool isValidPixel(int x, int y) const
+    virtual bool isValidPixel(uint x, uint y) const
     {
         // Check that the pixel location is within the matrix's bounds
-        return x >= 0 && x < _width && y >= 0 && y < _height;
+        return x < _width && y < _height;
     }
 
-    virtual bool isValidPixel(int n) const
+    virtual bool isValidPixel(uint n) const
     {
         // Check that the pixel location is within the matrix's bounds
-        return n >= 0 && n < _width * _height;
+        return n < _width * _height;
     }
 
     // Matrices that are built from individually addressable strips like WS2812b generally
@@ -302,7 +302,7 @@ public:
             debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
@@ -438,9 +438,8 @@ public:
         // if needed...
 
         float p = fPos;
-        if (p >= 0 && p < GetLEDCount())
-            for (int i = 0; i < NUM_CHANNELS; i++)
-                leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
+        if (p >= 0 && isValidPixel(p))
+            leds[(int)p] = bMerge ? leds[(int)p] + c1 : c1;
 
         p = fPos + (1.0f - frac1);
         count -= (1.0f - frac1);
@@ -449,18 +448,16 @@ public:
 
         while (count >= 1)
         {
-            if (p >= 0 && p < GetLEDCount())
-                for (int i = 0; i < NUM_CHANNELS; i++)
-                    leds[(int)p] = bMerge ? leds[(int)p] + c : c;
+            if (p >= 0 && isValidPixel(p))
+                leds[(int)p] = bMerge ? leds[(int)p] + c : c;
             count--;
             p++;
         };
 
         // Final pixel, if in bounds
         if (count > 0)
-            if (p >= 0 && p < GetLEDCount())
-                for (int i = 0; i < NUM_CHANNELS; i++)
-                    leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
+            if (p >= 0 && isValidPixel(p))
+                leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
     void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
@@ -1117,29 +1114,38 @@ public:
     {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+
+        int err = dx + dy;  // Error must be declared here
+
         for (;;)
         {
-            int err = dx + dy, e2;
-
             if (isValidPixel(x0, y0))
                 leds[XY(x0, y0)] = bMerge ? leds[XY(x0, y0)] + color : color;
 
             if (x0 == x1 && y0 == y1)
                 break;
 
-            e2 = 2 * err;
-            if (e2 > dy)
+            int e2 = 2 * err;
+            if (e2 >= dy)
             {
                 err += dy;
                 x0 += sx;
             }
-            if (e2 < dx)
+            // Recheck after x-axis update
+            if (x0 == x1 && y0 == y1)
+                break;
+
+            if (e2 <= dx)
             {
                 err += dx;
                 y0 += sy;
             }
+            // Recheck after y-axis update
+            if (x0 == x1 && y0 == y1)
+                break;
         }
     }
+
 
     void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
     {

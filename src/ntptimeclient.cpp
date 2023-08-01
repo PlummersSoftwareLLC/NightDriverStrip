@@ -95,7 +95,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
                 | (uint32_t) chNtpPacket[47] <<  0;
     auto microsecs = ((uint64_t) frac * 1000000) >> 32;
 
-    // BUGBUG (davepl): I've been gettin back odd packets where the clock is year 2036 and micros is 0. I ignore those.
+    // BUGBUG (davepl): I've been getting back odd packets where the clock is year 2036 and micros is 0. I ignore those.
 
     if (microsecs == 0)
     {

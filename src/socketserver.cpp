@@ -107,7 +107,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
             }
             ResetReadBuffer();
-            bSendResponsePacket = true;            
+            bSendResponsePacket = true;
         }
         else
         {

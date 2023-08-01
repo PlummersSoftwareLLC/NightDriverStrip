@@ -90,7 +90,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -103,7 +103,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         debugW("Initialized LaserLine Effect");
         _gfx = gfx[0];
@@ -112,7 +112,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() 
     {
         ProcessAudio();
 

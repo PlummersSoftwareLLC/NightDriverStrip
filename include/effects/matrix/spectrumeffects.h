@@ -687,6 +687,13 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual void Start() override
     {
+        constexpr auto kPeakDecaySpectrumBar = 2.5;
+
+        // Set the peak decay rates to something that looks good for this effect
+        
+        g_Analyzer._peak1DecayRate = kPeakDecaySpectrumBar;
+        g_Analyzer._peak2DecayRate = kPeakDecaySpectrumBar;
+        
         // This effect doesn't clear during drawing, so we need to clear to start the frame
 
         g()->Clear();

@@ -103,7 +103,7 @@ public:
             throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
     }
 
-    virtual ~LEDStripGFX()
+    ~LEDStripGFX() override
     {
         free(leds);
         leds = nullptr;
@@ -137,7 +137,7 @@ public:
     //
     // PostProcessFrame sends the data to the LED strip.  If it's fewer than the size of the strip, we only send that many.
 
-    virtual void PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixelsDrawn) override;
+    void PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixelsDrawn) override;
 };
 
 #if HEXAGON

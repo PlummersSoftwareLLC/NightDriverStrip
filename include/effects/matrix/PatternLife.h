@@ -95,7 +95,7 @@ private:
     unsigned long seed;
 
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
 
@@ -108,7 +108,7 @@ private:
         return true;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return true;
     }
@@ -208,7 +208,7 @@ public:
         bStuckInLoop = 0;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         if (cGeneration == 0)
             Reset();
