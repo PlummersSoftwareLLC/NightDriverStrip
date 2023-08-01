@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//   Provides a Adafruit_GFX implementation for our RGB LED panel so that
+//   Provides an Adafruit_GFX implementation for our RGB LED panel so that
 //   we can use primitives such as lines and fills on it.
 //
 // History:     Oct-9-2018         Davepl      Created from other projects
@@ -45,13 +45,13 @@ protected:
         // Macro to add LEDs to a channel
 
         #define ADD_CHANNEL(channel) \
-            debugI("Adding %d LEDs to channel %d on FastLED.", devices[channel]->GetLEDCount(), channel); \
+            debugI("Adding %zu LEDs to pin %d from channel %d on FastLED.", devices[channel]->GetLEDCount(), LED_PIN ## channel, channel); \
             FastLED.addLeds<WS2812B, LED_PIN ## channel, COLOR_ORDER>(devices[channel]->leds, devices[channel]->GetLEDCount()); \
-            pinMode(LED_PIN ## channel, OUTPUT);
+            pinMode(LED_PIN ## channel, OUTPUT)
 
         debugI("Adding LEDs to FastLED...");
 
-        // The following "unrolled conditional compile loop" to set up the channels is needed because the led pin
+        // The following "unrolled conditional compile loop" to set up the channels is needed because the LED pin
         //   is a template parameter to FastLED.addLeds()
 
         #if NUM_CHANNELS >= 1
@@ -97,7 +97,7 @@ public:
 
     LEDStripGFX(size_t w, size_t h) : GFXBase(w, h)
     {
-        debugV("Creating Device of size %d x %d", w, h);
+        debugV("Creating Device of size %zu x %zu", w, h);
         leds = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
         if(!leds)
             throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
