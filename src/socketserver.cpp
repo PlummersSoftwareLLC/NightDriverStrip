@@ -169,11 +169,11 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                 size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
                 if (totalExpected > MAXIMUM_PACKET_SIZE)
                 {
-                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIMUM_PACKET_SIZE);
+                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%lu)\n", totalExpected, MAXIMUM_PACKET_SIZE);
                     break;
                 }
 
-                debugV("Expecting %d total bytes", totalExpected);
+                debugV("Expecting %zu total bytes", totalExpected);
                 if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                 {
                     debugW("Error in getting pixel data from wifi\n");
@@ -189,7 +189,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                 }
 
                 // Consume the data by resetting the buffer
-                debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %d down 0.", _cbReceived);
+                debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %zu down 0.", _cbReceived);
                 ResetReadBuffer();
 
                 bSendResponsePacket = true;
