@@ -47,7 +47,7 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
     {
         if (file.size() > 0)
         {
-            debugI("Attempting to read JSON file %s", fileName);
+            debugI("Attempting to read JSON file %s", fileName.c_str());
 
             if (bufferSize == 0)
                 bufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
@@ -65,7 +65,7 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
                     file.seek(0);
                     bufferSize += JSON_BUFFER_INCREMENT;
 
-                    debugW("Out of memory reading JSON from file %s - increasing buffer to %zu bytes", fileName, bufferSize);
+                    debugW("Out of memory reading JSON from file %s - increasing buffer to %zu bytes", fileName.c_str(), bufferSize);
                 }
                 else if (error == DeserializationError::Ok)
                 {
@@ -74,7 +74,7 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
                 }
                 else
                 {
-                    debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName);
+                    debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName.c_str());
                     break;
                 }
             }
@@ -119,19 +119,19 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
 
     if (!file)
     {
-        debugE("Unable to open file %s to write JSON!", fileName);
+        debugE("Unable to open file %s to write JSON!", fileName.c_str());
         return false;
     }
 
     size_t bytesWritten = serializeJson(*pJsonDoc, file);
-    debugI("Number of bytes written to JSON file %s: %d", fileName, bytesWritten);
+    debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), bytesWritten);
 
     file.flush();
     file.close();
 
     if (bytesWritten == 0)
     {
-        debugE("Unable to write JSON to file %s!", fileName);
+        debugE("Unable to write JSON to file %s!", fileName.c_str());
         SPIFFS.remove(fileName);
         return false;
     }

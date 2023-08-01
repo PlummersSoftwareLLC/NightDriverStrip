@@ -121,7 +121,7 @@ public:
         construct(false);
     }
 
-    EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
+    explicit EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
@@ -183,7 +183,7 @@ public:
     //
     // Lastly, the function calls the construct() method, indicating successful deserialization.
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
+    bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         ClearEffects();
 
@@ -252,7 +252,7 @@ public:
     //
     // If all effects are successfully serialized, the function returns true, indicating successful serialization.
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
@@ -527,11 +527,7 @@ public:
 
     const bool AreEffectsEnabled() const
     {
-        for (auto& pEffect : _vEffects)
-            if (pEffect->IsEnabled())
-                return true;
-
-        return false;
+        return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
     }
 
     const size_t GetCurrentEffectIndex() const
@@ -606,7 +602,7 @@ public:
 
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
-            debugV("Current Effect: %s", GetCurrentEffectName());
+            debugV("Current Effect: %s", GetCurrentEffectName().c_str());
         }
     }
 
@@ -618,8 +614,7 @@ public:
 
     void PreviousPalette()
     {
-        auto g = _gfx[0];
-        g->CyclePalette(-1);
+        g()->CyclePalette(-1);
     }
     // Update to the next effect and abort the current effect.
 
@@ -662,15 +657,15 @@ public:
 
         for (int i = 0; i < _vEffects.size(); i++)
         {
-            debugV("About to init effect %s", _vEffects[i]->FriendlyName());
+            debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
             if (false == _vEffects[i]->Init(_gfx))
             {
-                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName());
+                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
                 return false;
             }
-            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName());
+            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
         }
-        debugV("First Effect: %s", GetCurrentEffectName());
+        debugV("First Effect: %s", GetCurrentEffectName().c_str());
         return true;
     }
 

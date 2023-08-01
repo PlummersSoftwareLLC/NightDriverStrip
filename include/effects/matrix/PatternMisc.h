@@ -75,7 +75,7 @@ class PatternSunburst : public LEDStripEffect
         return 60;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         uint8_t dim = beatsin8(2, 210, 250);
         g()->DimAll(dim);
@@ -116,12 +116,12 @@ class PatternRose : public LEDStripEffect
         return 60;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         uint8_t dim = beatsin8(2, 170, 250);
         g()->DimAll(dim);
@@ -165,7 +165,7 @@ class PatternPinwheel : public LEDStripEffect
     {
     }
 
-    virtual void Start() override
+    void Start() override
     {
         g()->Clear();
     }
@@ -175,7 +175,7 @@ class PatternPinwheel : public LEDStripEffect
         return 45;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         uint8_t dim = beatsin8(2, 30, 70);
         fadeAllChannelsToBlackBy(dim);
@@ -217,7 +217,7 @@ public:
     int _lastX = -1;
     int _lastY = -1;
 
-    virtual void Draw() override
+    void Draw() override
     {
         // dim all pixels on the display slightly
         // to 250/255 (98%) of their current brightness
@@ -279,12 +279,12 @@ public:
         return 16;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
         {

@@ -44,7 +44,7 @@ const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
 std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
 
-// Member function template specialzations
+// Member function template specializations
 
 // Push param that represents a bool. Values considered true are text "true" and any whole number not equal to 0
 template<>
@@ -135,7 +135,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
             {
                 bufferOverflow = true;
                 jsonBufferSize += JSON_BUFFER_INCREMENT;
-                debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+                debugV("JSON response buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
                 break;
             }
         }
@@ -319,7 +319,7 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
             {
                 bufferOverflow = true;
                 jsonBufferSize += JSON_BUFFER_INCREMENT;
-                debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+                debugV("JSON response buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
                 break;
             }
         }
@@ -447,7 +447,7 @@ void CWebServer::SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, st
         }
 
         jsonBufferSize += JSON_BUFFER_INCREMENT;
-        debugV("JSON reponse buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+        debugV("JSON response buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
     } while (true);
 }
 

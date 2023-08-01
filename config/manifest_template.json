@@ -2,12 +2,14 @@
   "name": "<name>",
   "version": "v<version>",
   "new_install_prompt_erase": true,
+  "new_install_improv_wait_time": 15,
   "builds": [
     {
       "chipFamily": "<chipfamily>",
-      "parts":
-      [
-        { "path": "../firmware/<tag>/firmware_merged.bin", "offset": 0 }
+      "parts": [
+        { "path": "../firmware/<tag>/bootloader.bin", "offset": 4096  },
+        { "path": "../firmware/<tag>/partitions.bin", "offset": 32768 },
+        { "path": "../firmware/<tag>/firmware.bin", "offset": 65536 }
       ]
     }
   ]

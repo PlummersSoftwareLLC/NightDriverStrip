@@ -89,12 +89,12 @@ public:
         return 30;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return true;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         // set to reasonable values to avoid a black out
         g()->GetNoise().noisesmoothing = 100;
@@ -118,10 +118,10 @@ public:
         dsy = random8();
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
-        // a new parameter set every 15 seconds
-        EVERY_N_SECONDS(15)
+        // a new parameter set every 30 seconds
+        EVERY_N_SECONDS(30)
         {
             // SetupRandomPalette3();
             dy = random16(500) - 250; // random16(2000) - 1000 is pretty fast but works fine, too
@@ -136,7 +136,7 @@ public:
         g()->GetNoise().noise_z += dz * 4;
 
         g()->FillGetNoise();
-  
+
         ShowNoiseLayer(0, 1, 0);
 
         g()->Caleidoscope3();
@@ -158,7 +158,7 @@ public:
                 // assign a color depending on the actual palette
                 CRGB pixel = ColorFromPalette(g()->GetCurrentPalette(), colorrepeat * (color + colorshift), bri);
 
-                g()->leds[g()->xy(i, j)] = pixel;
+                g()->leds[XY(i, j)] = pixel;
             }
         }
     }

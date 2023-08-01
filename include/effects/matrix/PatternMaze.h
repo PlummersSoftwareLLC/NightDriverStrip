@@ -154,10 +154,10 @@ private:
     }
 
     Point createPoint(int x, int y) {
-        Point point;
-        point.x = x;
-        point.y = y;
-        return point;
+        Point p;
+        p.x = x;
+        p.y = y;
+        return p;
     }
 
     CRGB chooseColor(int index)
@@ -255,7 +255,7 @@ public:
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         if (cellCount < 1)
         {
@@ -297,7 +297,7 @@ public:
         return true;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         g()->Clear();
     }

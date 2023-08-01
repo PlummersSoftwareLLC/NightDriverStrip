@@ -80,14 +80,14 @@ public:
     float speed = speedStart;
     float velocity = velocityStart;
 
-    virtual void Start() override
+    void Start() override
     {
         speed = speedStart;
         velocity = velocityStart;
         degrees = 0;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         g()->DimAll(190);
 

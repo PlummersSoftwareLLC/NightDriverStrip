@@ -126,7 +126,7 @@ class PatternSubscribers : public LEDStripEffect
 
   protected:
 
-    virtual bool FillSettingSpecs() override
+    bool FillSettingSpecs() override
     {
         if (!LEDStripEffect::FillSettingSpecs())
             return false;
@@ -170,7 +170,7 @@ class PatternSubscribers : public LEDStripEffect
         g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -183,12 +183,12 @@ class PatternSubscribers : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return true;            // BUGBUG Flickers without this, but should NOT need it?
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -198,7 +198,7 @@ class PatternSubscribers : public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(0, 16, 64));
         LEDMatrixGFX::backgroundLayer.setFont(font5x7);
@@ -233,10 +233,9 @@ class PatternSubscribers : public LEDStripEffect
         LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
     }
 
-    virtual bool SerializeSettingsToJSON(JsonObject& jsonObject) override
+    bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<384> jsonDoc;
-        auto rootObject = jsonDoc.to<JsonObject>();
 
         LEDStripEffect::SerializeSettingsToJSON(jsonObject);
 
@@ -246,7 +245,7 @@ class PatternSubscribers : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool SetSetting(const String& name, const String& value) override
+    bool SetSetting(const String& name, const String& value) override
     {
         RETURN_IF_SET(name, NAME_OF(youtubeChannelGuid), youtubeChannelGuid, value);
         RETURN_IF_SET(name, NAME_OF(youtubeChannelName), youtubeChannelName, value);

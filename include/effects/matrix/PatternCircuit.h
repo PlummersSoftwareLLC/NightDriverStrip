@@ -186,7 +186,7 @@ public:
         g()->Clear();
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         // Reset after 20 seconds
         const auto kResetEveryNSeconds = 20;

@@ -115,12 +115,12 @@ private:
         return false;
     }
 
-    virtual size_t DesiredFramesPerSecond() const override
+    size_t DesiredFramesPerSecond() const override
     {
         return 25;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
@@ -167,7 +167,7 @@ private:
 
         if (httpResponseCode <= 0)
         {
-            debugW("Error fetching coordinates for location: %s", configLocation);
+            debugW("Error fetching coordinates for location: %s", configLocation.c_str());
             http.end();
             return false;
         }
@@ -304,9 +304,13 @@ private:
         {
             debugW("Got today's weather");
             if (getTomorrowTemps(highTomorrow, loTomorrow))
+            {
                 debugI("Got tomorrow's weather");
+            }
             else
+            {
                 debugW("Failed to get tomorrow's weather");
+            }
         }
         else
         {
@@ -337,7 +341,7 @@ public:
         g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -347,7 +351,7 @@ public:
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         const int fontHeight = 7;
         const int fontWidth  = 5;
@@ -426,7 +430,7 @@ public:
         // Figure out which day of the week it is
 
         time_t today = time(nullptr);
-        tm * todayTime = localtime(&today);
+        const tm * todayTime = localtime(&today);
         const char * pszToday = pszDaysOfWeek[todayTime->tm_wday];
         const char * pszTomorrow = pszDaysOfWeek[ (todayTime->tm_wday + 1) % 7 ];
 

@@ -189,15 +189,16 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 {
   protected:
 
-    bool      _bShowVU;
+    uint8_t   _numBars;
     uint8_t   _colorOffset;
     uint16_t  _scrollSpeed;
     uint8_t   _fadeRate;
-    uint8_t   _numBars;
 
     const CRGBPalette16 _palette;
     float _peak1DecayRate;
     float _peak2DecayRate;
+
+    bool      _bShowVU;
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -686,6 +687,13 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual void Start() override
     {
+        constexpr auto kPeakDecaySpectrumBar = 2.5;
+
+        // Set the peak decay rates to something that looks good for this effect
+        
+        g_Analyzer._peak1DecayRate = kPeakDecaySpectrumBar;
+        g_Analyzer._peak2DecayRate = kPeakDecaySpectrumBar;
+        
         // This effect doesn't clear during drawing, so we need to clear to start the frame
 
         g()->Clear();

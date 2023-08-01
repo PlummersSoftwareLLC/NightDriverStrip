@@ -96,10 +96,10 @@ public:
         construct();
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         auto graphics = g();
-        
+
         int n = 0;
 
         switch (rotation) {
@@ -119,7 +119,7 @@ public:
                 for (int y = 0; y < MATRIX_HEIGHT; y++) {
                     n = quadwave8(y * 2 + theta) / scale;
                     if (n < MATRIX_WIDTH)
-                    {                    
+                    {
                         graphics->setPixel(n, y, graphics->ColorFromCurrentPalette(y + hue));
                         if (waveCount == 2)
                             graphics->setPixel(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));

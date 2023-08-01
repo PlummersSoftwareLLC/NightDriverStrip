@@ -80,7 +80,7 @@ class PatternPulse : public LEDStripEffect
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         auto graphics = g();
 
@@ -129,10 +129,10 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
     {
       public:
 
-        int hue;
-        int centerX;
-        int centerY;
-        int maxSteps = random(8)+6;
+        int hue = HUE_RED;
+        int centerX = 0;
+        int centerY = 0;
+        int maxSteps = random_range(0, 8)+6;
         int step = -1;
     };
 
@@ -176,7 +176,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         ProcessAudio();
         fadeAllChannelsToBlackBy(10);

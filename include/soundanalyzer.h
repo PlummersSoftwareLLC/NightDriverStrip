@@ -85,7 +85,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
 // results are simplified down to this small class of band peaks.
 
-#define MIN_VU 256              // Minimum VU value to use for the span when computing VURatio.  Contributes to
+#define MIN_VU 128              // Minimum VU value to use for the span when computing VURatio.  Contributes to
                                 // how dynamic the music is (smaller values == more dynamic)
 
 
@@ -121,6 +121,7 @@ public:
 
     PeakData()
     {
+        // BUGBUG (davepl) consider std::fill
         for (auto & i: _Level)
             i = 0.0f;
     }
@@ -173,7 +174,7 @@ public:
             _Level[i] *= GetBandScalar(mic, i);
     }
 
-    void SetData(double *pDoubles)
+    void SetData(const double * pDoubles)
     {
         for (int i = 0; i < NUM_BANDS; i++)
             _Level[i] = pDoubles[i];
@@ -188,16 +189,16 @@ public:
 
 class SoundAnalyzer : public AudioVariables
 {
-    const size_t MAX_SAMPLES = 256;
+    static const size_t MAX_SAMPLES = 256;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
 
-    const size_t SAMPLING_FREQUENCY = 20000;
-    const size_t LOWEST_FREQ = 40;
-    const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
+    static const size_t SAMPLING_FREQUENCY = 20000;
+    static const size_t LOWEST_FREQ = 40;
+    static const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
-    const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
+    static const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
     double * _vPeaks;
     int      _cutOffsBand[NUM_BANDS];
@@ -207,20 +208,6 @@ class SoundAnalyzer : public AudioVariables
     PeakData _Peaks;
 
     PeakData::MicrophoneType _MicMode = PeakData::M5;
-
-    // BucketFrequency
-    //
-    // Return the frequency corresponding to the Nth sample bucket.  Skips the first two
-    // buckets which are overall amplitude and something else.
-
-    int BucketFrequency(int iBucket) const
-    {
-        if (iBucket <= 1)
-            return 0;
-
-        int iOffset = iBucket - 2;
-        return _cutOffsBand[iOffset];
-    }
 
     int GetBandIndex(float frequency)
     {
@@ -274,25 +261,27 @@ class SoundAnalyzer : public AudioVariables
 
     void FillBufferI2S()
     {
-        int16_t sampleBuffer[MAX_SAMPLES];
+        std::unique_ptr<uint16_t[]> ptrSampleBuffer(new uint16_t[MAX_SAMPLES]);
+        constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+
         size_t bytesRead = 0;
 
         #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW
-            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
         #else
             ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
-            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
+            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
             ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
         #endif
 
-        if (bytesRead != sizeof(sampleBuffer))
+        if (bytesRead != bytesExpected)
         {
-            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, sizeof(sampleBuffer));
+            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
             return;
         }
 
-        for (int i = 0; i < ARRAYSIZE(sampleBuffer); i++)
-            _vReal[i] = sampleBuffer[i];
+        for (int i = 0; i < MAX_SAMPLES; i++)
+            _vReal[i] = ptrSampleBuffer[i];
     }
 
     // UpdateVU
@@ -437,7 +426,7 @@ class SoundAnalyzer : public AudioVariables
     {
         if (NUM_BANDS == 16)
         {
-            static int cutOffs16Band[16] =
+            static const int cutOffs16Band[16] =
                 {200, 380, 580, 800, 980, 1200, 1360, 1584, 1996, 2412, 3162, 3781, 5312, 6310, 8400, (int)HIGHEST_FREQ};
 
             for (int i = 0; i < NUM_BANDS; i++)
@@ -460,18 +449,9 @@ class SoundAnalyzer : public AudioVariables
         }
     }
 
-    // BandCutoffTable
-    //
-    // Depending on how many bands we have, returns the cutoffs of where those bands are in the spectrum
-
-    const int *BandCutoffTable(int bandCount)
-    {
-        return _cutOffsBand;
-    }
-
 public:
+
     SoundAnalyzer()
-        : _sampling_period_us(PERIOD_FROM_FREQ(SAMPLING_FREQUENCY))
     {
         _vReal      = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));

@@ -111,7 +111,7 @@ class FadingObject : public Lifespan
 
   public:
 
-    virtual double TotalLifetime() const
+    double TotalLifetime() const override
     {
         return PreignitionTime() + IgnitionTime() + HoldTime() + FadeTime();
     }
@@ -367,10 +367,10 @@ class RingParticle : public FadingColoredObject
         }
     }
 
-    virtual float PreignitionTime() const         { return 0.0f;          }
-    virtual float IgnitionTime()    const         { return _ignitionTime; }
-    virtual float HoldTime()        const         { return 0.0f;          }
-    virtual float FadeTime()        const         { return _fadeTime;     }
+    float PreignitionTime() const override         { return 0.0f;          }
+    float IgnitionTime()    const override         { return _ignitionTime; }
+    float HoldTime()        const override         { return 0.0f;          }
+    float FadeTime()        const override         { return _fadeTime;     }
 };
 
 
@@ -382,11 +382,11 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
 
   public:
 
-    ColorBeatWithFlash(const String & strName) : LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_WITH_FLASH, strName), BeatEffectBase(), ParticleSystem<RingParticle>()
+    ColorBeatWithFlash(const String & strName) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_WITH_FLASH, strName)
     {
     }
 
-    ColorBeatWithFlash(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject), BeatEffectBase(), ParticleSystem<RingParticle>()
+    ColorBeatWithFlash(const JsonObjectConst& jsonObject) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(jsonObject)
     {
     }
 
@@ -430,7 +430,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
     }
 };
 
-class ColorBeatOverRed : public LEDStripEffect, public virtual BeatEffectBase, public virtual ParticleSystem<RingParticle>
+class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<RingParticle>
 {
     int  _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
@@ -608,10 +608,10 @@ class SpinningPaletteRingParticle : public FadingObject
           _GFX[0]->setPixelsF(_start + random(0, _length), 1, CRGB::White, true);
     }
 
-    virtual float PreignitionTime() const         { return 0.0f;          }
-    virtual float IgnitionTime() const            { return _ignitionTime; }
-    virtual float HoldTime() const                { return 0.0f;          }
-    virtual float FadeTime() const                { return 1.00;          }
+    float PreignitionTime() const override         { return 0.0f;          }
+    float IgnitionTime() const override            { return _ignitionTime; }
+    float HoldTime() const override                { return 0.0f;          }
+    float FadeTime() const override                { return 1.00;          }
 };
 
 
@@ -681,16 +681,16 @@ class HotWhiteRingParticle : public FadingObject
         }
     }
 
-    virtual float PreignitionTime() const         { return 0.0f;          }
-    virtual float IgnitionTime()    const         { return _ignitionTime; }
-    virtual float HoldTime()        const         { return 0.0f;          }
-    virtual float FadeTime()        const         { return _fadeTime;     }
+    float PreignitionTime() const override         { return 0.0f;          }
+    float IgnitionTime()    const override         { return _ignitionTime; }
+    float HoldTime()        const override         { return 0.0f;          }
+    float FadeTime()        const override         { return _fadeTime;     }
 };
 
 #if ENABLE_AUDIO
 
 
-class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public virtual BeatEffectBase, public virtual ParticleSystem<SpinningPaletteRingParticle>
+class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
@@ -932,7 +932,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
     }
 };
 
-class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectBase, public virtual ParticleSystem<HotWhiteRingParticle>
+class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<HotWhiteRingParticle>
 {
     int  _iLastInsulator = 0;
     CRGB _baseColor      = CRGB::Black;

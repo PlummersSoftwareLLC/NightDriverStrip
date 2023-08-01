@@ -31,6 +31,7 @@ import datetime
 matrix_width  = 64
 matrix_height = 32
 future_delay  = 5
+maxframes = 180
 
 # YouTube video URL
 # url = "https://youtu.be/7eMpKGIQ6RM"
@@ -53,7 +54,7 @@ if not cap.isOpened():
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.39'      
+client = '192.168.8.92'      
 sock = None
 
 # Get a timestamp slightly into the future for buffering
@@ -85,15 +86,17 @@ while True:
 
     # Resize the frame match the matrix
     resized = cv2.resize(rgb_frame, (matrix_width, matrix_height))
-    pixels = bytes(resized) # resized.reshape((-1, 1))
+    pixels = bytes(resized) 
 
     # Timestamp for when this frame shoud be shown, such as 2 seconds from now.  Advance the clock
     # by one frame's worth of time as we send each packet
     
-    future = future + datetime.timedelta(seconds = 1.0 / stream.fps)
+    future = future + datetime.timedelta(seconds = 1.0 / 20)
     seconds = int(future.timestamp())
     microseconds = future.microsecond    
     
+    print(seconds, microseconds)
+
     # Compose and send the PIXELDATA packet to be sent to the ESP32 NightDriverStrip instance
 
     command = 3                                                         # WIFI_COMMAND_PIXELDATA64 == 3
@@ -120,11 +123,10 @@ while True:
     compressed_packet = (0x44415645).to_bytes(4, byteorder='little') + compressedSizeData + expandedSizeData + reservedData + compressed_data
     
     try:
-        sock.send(compressed_packet)
+        sock.send(complete_packet)
     except socket.error as e:
         print("Socket error!");
         sock.close()
         sock = None
 
-    time.sleep(1.0 / 100)                                        # Div by two is a manual hack to get timing closer
-
+    time.sleep(1.0 /50)                                        # Sleep for 1ms to avoid overloading the ESP32

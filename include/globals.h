@@ -78,6 +78,8 @@
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
 //              Jun-10-2023  v037       Davepl      New Screen classes
 //              Jul-24-2023  v038       Davepl      NTP clock fix
+//              Jul-26-2023  v039       Davepl      NTP every minute, stack sizes
+//              Jul-26-2023  v040       Davepl      NTP every 5 minutes, Wifi delay code
 //
 //---------------------------------------------------------------------------
 
@@ -121,7 +123,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          38    // Update ONLY this to increment the version number
+#define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
     #ifndef USE_STRIP
@@ -139,7 +141,7 @@
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
 #define FASTLED_INTERNAL        1       // Silence FastLED build banners
-#define NTP_DELAY_SECONDS       30*60   // delay count for NTP update, in seconds
+#define NTP_DELAY_SECONDS       5*60    // delay count for NTP update, in seconds
 #define NTP_DELAY_ERROR_SECONDS 30      // delay count for NTP updates if no time was set, in seconds
 #define NTP_PACKET_LENGTH       48      // ntp packet length
 
@@ -1236,11 +1238,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 100
+#define MATRIX_REFRESH_RATE 180
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 2
+#define MATRIX_CALC_DIVIDER 3
 #endif
 
 
@@ -1361,7 +1363,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 extern DRAM_ATTR const int g_aRingSizeTable[];
 
-#define MICROS_PER_SECOND   1000000
+#define MICROS_PER_SECOND   1000000UL
 #define MILLIS_PER_SECOND   1000
 #define MICROS_PER_MILLI    1000
 

@@ -66,9 +66,9 @@ public:
     {
     }
 
-    uint16_t x;
-    uint16_t y;
-    uint16_t z;
+    uint16_t x = 0;
+    uint16_t y = 0;
+    uint16_t z = 0;
 
     uint16_t speed = 1;
     uint16_t scale = 26;
@@ -77,7 +77,7 @@ public:
 
     uint8_t hue = 0;
 
-    virtual void Start() override
+    void Start() override
     {
         x = random16();
         y = random16();
@@ -94,7 +94,7 @@ public:
         return 16;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         g()->DimAll(240);
 
