@@ -38,6 +38,7 @@
             "tag": "esp32esp32-s3",
             "chipfamily": "ESP32-S3",
             "name": "ESP32ESP32-S3-DevKitC-1",
+            "merge": true,
             "projects": [
                 {
                     "tag": "panlee",
@@ -151,7 +152,8 @@
             "projects": [
                 {
                     "tag": "mesmerizer",
-                    "name": "Mesmerizer"
+                    "name": "Mesmerizer",
+                    "merge": true
                 }
             ]
         },
