@@ -187,7 +187,7 @@ class PatternCube : public LEDStripEffect
         return 40;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
@@ -209,7 +209,7 @@ class PatternCube : public LEDStripEffect
       construct();
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
       g()->Clear();
       zCamera = beatsin8(2, 100, 140);

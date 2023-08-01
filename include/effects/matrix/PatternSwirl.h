@@ -83,7 +83,7 @@ public:
         graphics->leds[graphics->xy(i, j)] += color;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         auto graphics = _GFX[0];
 

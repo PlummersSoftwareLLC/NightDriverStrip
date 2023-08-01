@@ -141,7 +141,7 @@ public:
         ResetOscillators();
     }
 
-    virtual ~GFXBase()
+    ~GFXBase() override
     {
     }
 
@@ -302,7 +302,7 @@ public:
             debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);

@@ -124,7 +124,7 @@ public:
         return (int) totalPower;
     }
 
-    virtual uint16_t xy(uint16_t x, uint16_t y) const override
+    uint16_t xy(uint16_t x, uint16_t y) const override
     {
         // Note the x,y are unsigned so can't be less than zero
         if (x < _width && y < _height)
@@ -143,14 +143,14 @@ public:
         leds = pLeds;
     }
 
-    virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
+    void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
     {
         // A mesmerizer panel has the same layout as in memory, so we can memcpy.
 
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }
 
-    virtual void Clear() override
+    void Clear() override
     {
         // NB: We directly clear the backbuffer because otherwise effects would start with a snapshot of the effect
         //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
@@ -192,7 +192,7 @@ public:
         captionStartTime = millis();
     }
 
-    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
+    void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll.  We should technically use memmove instead
@@ -208,7 +208,7 @@ public:
         }
     }
 
-    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
+    void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll.  We should technically use memmove instead
@@ -228,13 +228,13 @@ public:
     //
     // Gets the matrix ready for the effect or wifi to render into
 
-    virtual void PrepareFrame() override;
+    void PrepareFrame() override;
 
     // PostProcessFrame
     //
     // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
 
-    virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
+    void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
 
     // Matrix interop
 

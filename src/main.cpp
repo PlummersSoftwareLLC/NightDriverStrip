@@ -33,7 +33,7 @@
 //    row is unbounded but realistically limited to about 1000 which
 //    still allows for about 24 frames per second of updates.  There
 //    can be 8 such channels connected to 8 different pins.
-//    By default NightDriver draws client effects, and there many
+//    By default, NightDriver draws client effects, and there many
 //    built in, from marquees to fire.  But it can also receive color
 //    data from a server.  So it firsts checks to see if there is
 //    data coming in, and if so, draws that.  If not it falls back
@@ -41,7 +41,7 @@
 //    an LED count, timestamp, and then the color data for the LEDs.
 //    The ESP32 app has buffer of about 30 frames when 1000 LEDs are
 //    in use.  The server generates frames 1/2 second in the future and
-//    sets the timestamps accordinging.  The client app waits until
+//    sets the timestamps according.  The client app waits until
 //    the next packet in its buffer is due for drawing and then draws
 //    it and discards it.  A circular queue is used.
 //
@@ -62,7 +62,7 @@
 //    It also handles groups of rings.  In one incarnation, 10 RGB
 //    LED PC fans are connected in a LianLi case plus the 32 or so
 //    on the front of the case.  The fans are grouped into NUM_FANS
-//    fans.  It also suports concentrically nested rings of varying
+//    fans.  It also supports concentrically nested rings of varying
 //    size, which I use for a Christmas-tree project where each tree
 //    is made up of a "stack" of rings - 32 leds, 18, 10, 4, 1.
 //    It's up to individual effects to take advantage of them but
@@ -83,7 +83,7 @@
 //    MAIN.CPP --------------------------------------------------------
 //
 //    When the ESP32 chip boots it starts here, in the setup() function.
-//    Setup sets pin directions, starts wifi, initalized the LEDs, etc.
+//    Setup sets pin directions, starts wifi, initialized the LEDs, etc.
 //    Then loop() is called repeatedly until the end of time.  The loop
 //    code (optionally) receives color data over Wifi.  If it hasn't had
 //    any for a bit of time, it falls back to rotating through a table
@@ -185,7 +185,7 @@ ImprovSerial<typeof(Serial)> g_ImprovSerial;
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
 //
-// Imagine a setup of 5 christmas trees, where each tree was made up of 4 concentric rings of descreasing
+// Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of descreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
 DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
@@ -255,7 +255,7 @@ Bounce2::Button Button2;
 // Threads (tasks) created here can include:
 //
 // DebugLoopTaskEntry           - Run a little debug console accessible via telnet and serial
-// ScreenUpdateLoopEntry        - Displays stats on the attached OLED/TFT screen about drawing, network, etc
+// ScreenUpdateLoopEntry        - Displays stats on the attached OLED/TFT screen about drawing, network, etc.
 // DrawLoopTaskEntry            - Handles drawing from local or wifi data
 // RemoteLoop                   - Handles the remote control loop
 // NetworkHandlingLoopEntry     - Connects to WiFi, handles reconnects, OTA updates, web server
@@ -273,7 +273,7 @@ void setup()
     Debug.setSerialEnabled(true);
 
     if (!SPIFFS.begin(true))
-        Serial.println("WARNING: SPIFFs could not be intialized!");
+        Serial.println("WARNING: SPIFFs could not be initialized!");
 
     // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
     // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default
@@ -293,7 +293,7 @@ void setup()
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
-    // Display a simple statup header on the serial port
+    // Display a simple startup header on the serial port
     PrintOutputHeader();
     debugI("Startup!");
 
@@ -441,7 +441,7 @@ void setup()
         LEDStripGFX::InitializeHardware(devices);
     #endif
 
-    // Initialize all of the built in effects
+    // Initialize all the built-in effects
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
     // Onboard PWM LED
@@ -566,7 +566,7 @@ void loop()
             debugI("%s", strOutput.c_str());
         }
 
-        // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise we delay a bit to share the CPU.
+        // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise, we delay a bit to share the CPU.
 
         if (!g_Values.UpdateStarted)
             delay(10);
