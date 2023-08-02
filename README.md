@@ -25,7 +25,7 @@ A web application has been made available that can be used to install the majori
 
 Note that the installer requires a browser that supports Web Serial. At the time of writing, browsers that include such support are recent versions of Chrome, Edge and Opera.
 
-Please follow these steps to flash your device:
+Please follow these steps to flash and, if supported, set up WiFi on your device:
 
 1. Connect your device to your computer with a USB cable.
 
@@ -47,13 +47,15 @@ Please follow these steps to flash your device:
 9. A dialog will appear showing you the progress of the installation. Usually, this will take about 2 minutes. When flashing has completed, click NEXT.
 
 10. At this point, three things can happen:
-    - The device reboots, and a dialog is shown to ask for WiFi connection  information. In this case, please skip to point 11.
+    - The device reboots, and a dialog is shown to ask for WiFi connection  information. In this case you can skip to point 11.
     - The device reboots and it supports WiFi, but the dialog to enter WiFi connection information is not shown. In this case, click on LOGS & CONSOLE and check that logging information is shown. If so, click BACK. You should now see an option to CONNECT TO WI-FI. If so, click that option and skip to point 11.
-    - The device does not reboot, or the CONNECT TO WI-FI option is still not shown. In that case, power cycle or reset your device, and give it a few seconds to boot. Then reload your browser window and reconnect to your device by following steps 3 to 5 in these instructions, with the device connected to your computer with the USB cable. The CONNECT TO WI-FI option should now be available. Click that option.
+    - The device does not reboot, or the CONNECT TO WI-FI option is still not shown while WiFi is supported. In that case, power cycle or reset your device, and give it a few seconds to boot. Then reload your browser window and reconnect to your device by following steps 3 to 5 in these instructions, with the device connected to your computer with the USB cable. The CONNECT TO WI-FI option should now be available. Click that option.
+
+    If your device not support WiFi you can skip to point 12.
 
 11. In the WiFi connection information dialog, select or enter your SSID and password. Click CONNECT. In some cases, the WiFi connection dialog appears again after a successful connection was actually made. In that case, click SKIP. It is also possible that a time-out is reported while WiFi has actually successfully connected. In that case, click BACK.
 
-12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again, visit the device's web application, change the WiFi settings, and show the device's logs & console. Note that if you flashed a device image that includes a web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
+12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again and show the device's logs & console. Furthermore, if your device supports WiFi then options will be available to visit the device's web application or change the WiFi settings. Note that if you flashed a device image that includes a web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
 
 ## Beyond the Web Installer
 
