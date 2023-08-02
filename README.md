@@ -19,6 +19,92 @@ NightDriverStrip is a source code package for building a flash program that you 
 
 More recently, a web installer has been added to the project with which most of the NightDriver projects can be flashed on supported devices, using nothing but a web browser. Please refer to the section called [Using the Web Installer](#using-the-web-installer) if this is how you'd like to get started.
 
+## Using the Web Installer
+
+A web application has been made available that can be used to install the majority of NightDriver projects on supported devices. This will allow you to quickly flash a project on your ESP32 device, have it connect to WiFi and start using it without immediately having to work with the source code.
+
+Note that the installer requires a browser that supports Web Serial. At the time of writing, browsers that include such support are recent versions of Chrome, Edge and Opera.
+
+Please follow these steps to flash your device:
+
+1. Connect your device to your computer with a USB cable.
+
+2. Navigate to the following URL in your browser: <https://plummerssoftwarellc.github.io/NightDriverStrip>. It should then show a screen that looks like this:
+   ![Installer start screen](assets/installer-start.png)
+
+3. Select your device (like "M5StickC Plus") from the drop-down list. A second drop-down with supported projects on that device will then appear.
+
+4. Select the project you want to flash in the second drop-down. When you do, a CONNECT button will appear below it.
+
+5. Click the CONNECT button. A dialog will apear asking you to select a serial port. Depending on your system, it may show only one or a list of them. In case multiple are shown, it'll generally be the one plainly called "USB Serial Port (COMn)". Select the correct port and click Connect.
+
+6. A new dialog will show. One of the options it offers is "INSTALL &lt;project&gt; FOR &lt;device&gt;". Click that option.
+
+7. A dialog will show asking you if you want to erase the device. Check the box if this is the first time you flash NightDriverStrip onto your device, or you want to flash a clean install. This will reset all settings to their defaults. Click NEXT.
+
+8. You will now be asked to confirm you want to flash the device. Click INSTALL.
+
+9. A dialog will appear showing you the progress of the installation. Usually, this will take about 2 minutes. When flashing has completed, click NEXT.
+
+10. At this point, three things can happen:
+    - The device reboots, and a dialog is shown to ask for WiFi connection  information. In this case, please skip to point 11.
+    - The device reboots and it supports WiFi, but the dialog to enter WiFi connection information is not shown. In this case, click on LOGS & CONSOLE and check that logging information is shown. If so, click BACK. You should now see an option to CONNECT TO WI-FI. If so, click that option and skip to point 11.
+    - The device does not reboot, or the CONNECT TO WI-FI option is still not shown. In that case, power cycle or reset your device, and give it a few seconds to boot. Then reload your browser window and reconnect to your device by following steps 3 to 5 in these instructions, with the device connected to your computer with the USB cable. The CONNECT TO WI-FI option should now be available. Click that option.
+
+11. In the WiFi connection information dialog, select or enter your SSID and password. Click CONNECT. In some cases, the WiFi connection dialog appears again after a successful connection was actually made. In that case, click SKIP. It is also possible that a time-out is reported while WiFi has actually successfully connected. In that case, click BACK.
+
+12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again, visit the device's web application, change the WiFi settings, and show the device's logs & console. Note that if you flashed a device image that includes a web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
+
+## Beyond the Web Installer
+
+The images included in the installer are built using the current state of the source code in this repository. If there's anything you'd like to change in (the configuration of) the project you want to use, then it is time to move to the next stage.
+
+## Device web UI and API
+
+On devices with WiFi, NightDriverStrip can start a webserver that hosts the web UI that is part of the project. It can be used to view and change what effect is running, and get live performance statistics of the device.
+
+When the device is started with the webserver enabled, the web UI can be accessed by opening a web browser and typing the IP address of your device in the address bar. Once loaded, the icons at the left of the screen can be used to toggle views within the UI on and off.
+
+More information about the web UI can be found [in its own README.md](site/README.md).
+
+Besides the web UI, the webserver also publishes a REST-like API. Amongst others, a range of configuration settings can be read and changed using it.
+More information about the API is available in [REST_API.md](./REST_API.md).
+
+## Getting Started with the Source Code
+
+I recommend you do the following:
+
+- Copy include/secrets.example.h to include/secrets.h; Set your WiFi SSID and password in include/secrets.h.
+- Build the source code. In particular, build the `DEMO` configuration. Some pointers on what's needed to do this can be found [below](#build-pointers).
+- Upload the resultant binary to the ESP32
+- Connect PIN5 and GND and 5V of a WS2812B strip to the ESP32
+- Provide an adequate power source for the LEDs and ESP32
+- Enjoy the pretty lights
+- Start enabling features in the `globals.h` or platformio.ini file like WiFi and WebServer. See [Feature Defines](#feature-defines) below.
+- Connect to the ESP32's web user interface with a browser to its IP address
+
+## Wifi Setup
+
+Ensure your WiFi SSID and password are set in include/secrets.h, which can be created by making a copy of include/secrets.example.h.<br/>
+Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
+
+Enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h.
+
+```C++
+#define ENABLE_WIFI 1
+```
+
+This can also be configured in the platformio.ini file, as described in the [Feature Defines](#feature-defines) section below.
+
+## File system
+
+To build and upload the file system that can be used by effects (although currently none do), you will need to build and upload the SPIFFS image to your board's flash using platformio. You can do this using the platformio user interface, or using the pio command line tool:
+
+```ShellConsole
+pio run --target buildfs --environment <project name>
+pio run --target uploadfs --environment <project name>
+```
+
 ## Adding new effects
 
 To add new effects, you:
@@ -37,80 +123,6 @@ The simplest configuration, `DEMO`, assumes you have a single meter strip of 144
 Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the composition of the effect list configuration of individual effects can be changed using the device web application. The API endpoints to facilitate this are already available and ready for use (see [Device web UI and API](#device-web-ui-and-api), below.)
 
 This makes that an override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the friendly name and effect number. Those two properties are (de)serialized from/to JSON by `LEDStripEffect` by default.
-
-## Using the Web Installer
-
-A web application has been made available that can be used to install the majority of NightDriver projects on supported devices. This will allow you to quickly flash a project on your ESP32 device, have it connect to WiFi and start using it without immediately having to work with the source code.
-
-Note that the installer requires a browser that supports Web Serial. At the time of writing, browsers that include such support are recent versions of Chrome, Edge and Opera.
-
-To use the installer, follow these steps:
-
-1. Connect your device to your computer with a USB cable.
-
-2. Navigate to the following URL in your browser: <https://plummerssoftwarellc.github.io/NightDriverStrip>. It should then show a screen that looks like this:
-   ![Installer start screen](assets/installer-start.png)
-
-3. Select your device (like "M5StickC Plus") from the drop-down list. A second drop-down with supported projects on that device will then appear.
-
-4. Select the project you want to flash in the second drop-down. When you do, a CONNECT button will appear below it.
-
-5. Click the CONNECT button. A dialog will apear asking you to select a serial port. Depending on your system, it may show only one or a list of them. In case multiple are shown, it'll generally be the one plainly called "USB Serial Port (COMn)". Select the correct port and click Connect.
-
-6. A new dialog will show. One of the options it offers is "INSTALL &lt;project&gt; FOR &lt;device&gt;". Click that option. You will be asked to confirm you want to flash the device. Click INSTALL.
-
-7. A dialog will appear showing you the progress of the installation. Usually, this will take about 2 minutes. When flashing has completed, click NEXT.
-
-8. If your device supports WiFi, you will now be asked for the WiFi connection information. Select/enter your SSID and password. Click CONNECT. In some cases, the WiFi connection dialog appears again after a successful connection was actually made. In that case, click SKIP.
-
-9. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again, visit the device's web application, change the WiFi settings, and show the device's logs & console. Note that if you flashed a device image that includes a web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
-
-The images included in the installer are built using the current state of the source code in this repository. If there's anything you'd like to change in (the configuration of) the project you want to use, then it is time to move to the next stage and start interacting with the source code itself.
-
-## Device web UI and API
-
-On devices with WiFi, NightDriverStrip can start a webserver that hosts the web UI that is part of the project. It can be used to view and change what effect is running, and get live performance statistics of the device.
-
-When the device is started with the webserver enabled, the web UI can be accessed by opening a web browser and typing the IP address of your device in the address bar. Once loaded, the icons at the left of the screen can be used to toggle views within the UI on and off.
-
-More information about the web UI can be found [in its own README.md](site/README.md).
-
-Besides the web UI, the webserver also publishes a REST-like API. More information about it is available in [REST_API.md](./REST_API.md).
-
-## Getting Started with the Source Code
-
-I recommend you do the following:
-
-- Copy include/secrets.example.h to include/secrets.h; Set your WiFi SSID and password in include/secrets.h.
-- Build the source code. In particular, build the `DEMO` configuration. Some pointers on what's needed to do this can be found [below](#build-pointers).
-- Upload the resultant binary to the ESP32
-- Connect PIN5 and GND and 5V of a WS2812B strip to the ESP32
-- Provide an adequate power source for the LEDs and ESP32
-- Enjoy the pretty lights
-- Start enabling features in the `globals.h` or platformio.ini file like WiFi and WebServer. See [Feature Defines](#feature-defines) below.
-- Connect to the ESP32's web user interface with a browser to its IP address
-
-## Wifi Setup
-
-Ensure your WiFi SSID and password are set in include/secrets.h.<br/>
-Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
-
-Enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h
-
-```C++
-#define ENABLE_WIFI 1
-```
-
-This can also be configured in the platformio.ini file, as described in the [Feature Defines](#feature-defines) section below.
-
-## File system
-
-To build and upload the file system that can be used by effects (although currently none do), you will need to build and upload the SPIFFS image to your board's flash using platformio. You can do this using the platformio user interface, or using the pio command line tool:
-
-```ShellConsole
-pio run --target buildfs --environment <project name>
-pio run --target uploadfs --environment <project name>
-```
 
 ## Tools
 

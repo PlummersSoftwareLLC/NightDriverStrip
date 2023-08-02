@@ -75,7 +75,7 @@ for device in devices:
     if 'merge' in device:
         device_merge_firmware = device['merge']
     else:
-        device_merge_firmware = False
+        device_merge_firmware = True
 
     for project in device['projects']:
         tag = project['tag']

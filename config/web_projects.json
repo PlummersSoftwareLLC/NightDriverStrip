@@ -152,8 +152,7 @@
             "projects": [
                 {
                     "tag": "mesmerizer",
-                    "name": "Mesmerizer",
-                    "merge": true
+                    "name": "Mesmerizer"
                 }
             ]
         },
