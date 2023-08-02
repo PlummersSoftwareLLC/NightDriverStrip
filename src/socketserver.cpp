@@ -71,7 +71,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
             if (expandedSize > MAXIMUM_PACKET_SIZE)
             {
-                debugE("Expanded packet would be %d but buffer is only %d !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
+                debugE("Expanded packet would be %u but buffer is only %u !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
                 break;
             }
 
