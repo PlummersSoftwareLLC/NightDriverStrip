@@ -67,6 +67,15 @@ with open(webprojects_path, "r", encoding='utf-8') as f:
     json_data = json.load(f)
     devices = json_data['devices']
 
+# Find out how many projects we're going to build
+projectCount = 0
+
+for device in devices:
+    projectCount += len(device['projects'])
+
+currentProject = 0
+
+# Start building images!
 for device in devices:
     device_name = device['name']
     chip_family = device['chipfamily']
@@ -79,6 +88,12 @@ for device in devices:
 
     for project in device['projects']:
         tag = project['tag']
+
+        currentProject += 1
+
+        print('=' * 50)
+        print('=== Building Web Installer project ' + tag + ' (' + currentProject + ' of ' + projectCount + ')')
+        print('=' * 50)
 
         # Build the firmware and the merged image
         subprocess.run(['pio', 'run', '-e', tag])

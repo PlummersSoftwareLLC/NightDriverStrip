@@ -109,6 +109,7 @@ div#container {
           populateDevicesDropdown(devices);
         });
 
+      // Show/hide connect message and connect button, dependent of is manifest file name is passed
       function setManifest(manifest) {
         if (manifest !== undefined) {
           installButton.manifest = manifest;
@@ -124,8 +125,19 @@ div#container {
         }
       }
 
+      // Show connect message and hide connect button
       function clearManifest() {
         setManifest(undefined);
+      }
+
+      // Set or clear manifest based on project dropdown selection
+      function updateManifest() {
+        let tag = projectsDropdown.value;
+
+        if (tag)
+          setManifest(`manifests/manifest_${tag}.json`);
+        else
+          clearManifest();
       }
 
       // Populate devices dropdown
@@ -170,7 +182,7 @@ div#container {
           projectsDropdown.disabled = false;
         }
 
-        clearManifest();
+        updateManifest();
       }
 
       devicesDropdown.addEventListener("change", function() {
@@ -180,14 +192,7 @@ div#container {
         populateProjectsDropdown(selectedDevice?.projects);
       });
 
-      projectsDropdown.addEventListener("change", function() {
-        let tag = projectsDropdown.value;
-
-        if (tag)
-          setManifest(`manifests/manifest_${tag}.json`);
-        else
-          clearManifest();
-      });
+      projectsDropdown.addEventListener("change", updateManifest);
 
       /*
       bitratesDropdown.addEventListener("change", function() {
