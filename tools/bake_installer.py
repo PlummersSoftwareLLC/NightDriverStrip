@@ -115,6 +115,7 @@ for device in devices:
 
         if merge_firmware:
             # Copy only the merged image from the build directory
+            print('=== Copying merged firmware file ' + merged_image)
             shutil.copy(os.path.join(build_dir, merged_image), firmware_target_dir)
 
             template = merged_template
@@ -124,6 +125,7 @@ for device in devices:
 
             for bin_file in bin_files:
                 if not bin_file.endswith(merged_image):
+                    print('=== Copying binary file ' + bin_file)
                     shutil.copy(bin_file, firmware_target_dir)
 
             template = unmerged_template
@@ -133,7 +135,10 @@ for device in devices:
         manifest = manifest.replace('<chipfamily>', chip_family)
         manifest = manifest.replace('<tag>', tag)
 
-        with open(os.path.join(manifest_target_dir, Manifest.base + tag + Manifest.ext), 'w', encoding='utf-8') as f:
+        manifest_file = Manifest.base + tag + Manifest.ext
+        print('=== Writing manifest file ' + manifest_file)
+        with open(os.path.join(manifest_target_dir, manifest_file), 'w', encoding='utf-8') as f:
             f.write(manifest)
 
+        print('=== Removing build directory ' + build_dir, flush = True)
         shutil.rmtree(build_dir)
