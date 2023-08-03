@@ -44,7 +44,7 @@ manifest_target_dir = os.path.join(Dirs.webinstaller, Dirs.manifests)
 if not os.path.exists(manifest_target_dir):
     os.makedirs(manifest_target_dir)
 
-# Load template for unmerged and merged firmware images - the former is the default
+# Load template for unmerged and merged firmware images
 with open(os.path.join(Dirs.config, Manifest.unmerged_template), "r", encoding='utf-8') as f:
     unmerged_template = f.read()
 
