@@ -71,7 +71,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
             if (expandedSize > MAXIMUM_PACKET_SIZE)
             {
-                debugE("Expanded packet would be %d but buffer is only %lu !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
+                debugE("Expanded packet would be %u but buffer is only %u !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
                 break;
             }
 
@@ -107,7 +107,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
             }
             ResetReadBuffer();
-            bSendResponsePacket = true;            
+            bSendResponsePacket = true;
         }
         else
         {
@@ -169,7 +169,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                 size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
                 if (totalExpected > MAXIMUM_PACKET_SIZE)
                 {
-                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%lu)\n", totalExpected, MAXIMUM_PACKET_SIZE);
+                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIMUM_PACKET_SIZE);
                     break;
                 }
 
