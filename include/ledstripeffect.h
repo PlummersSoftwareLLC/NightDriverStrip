@@ -196,7 +196,7 @@ class LEDStripEffect : public IJSONSerializable
                                                                     //   so that we can call them directly later from other calls
         _cLEDs = _GFX[0]->GetLEDCount();
 
-        debugV("Init Effect %s with %ld LEDs\n", _friendlyName.c_str(), _cLEDs);
+        debugV("Init Effect %s with %zu LEDs\n", _friendlyName.c_str(), _cLEDs);
         return true;
     }
 

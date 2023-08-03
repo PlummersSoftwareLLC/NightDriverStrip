@@ -730,12 +730,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Ledstrip"
     #endif
 
-    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
+    #define ENABLE_WEBSERVER            0   // Turn on the internal webserver
     #define ENABLE_WIFI                 1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI               1   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL           5   // How many seconds before the lamp times out and shows local content
-    #define COLORDATA_SERVER_ENABLED    1   // Also provides a response packet
+    #define COLORDATA_SERVER_ENABLED    0   // Also provides a response packet
     #define NUM_CHANNELS    1
     #define MATRIX_WIDTH    (8*144)     // My maximum run, and about all you can do at 30fps
     #define MATRIX_HEIGHT   1
@@ -1225,7 +1225,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
   #ifdef USE_PSRAM
     #define RESERVE_MEMORY 1000000
   #else
-    #define RESERVE_MEMORY 180000
+    #define RESERVE_MEMORY 150000
   #endif
 #endif
 

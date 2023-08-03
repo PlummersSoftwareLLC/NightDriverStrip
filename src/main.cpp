@@ -540,7 +540,7 @@ void loop()
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
             #if USE_STRIP
-                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Values.Watts, g_Values.Brite);
+                strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %d, ", g_Values.Brite, g_Values.Watts );
             #endif
 
             #if USE_MATRIX
