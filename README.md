@@ -15,15 +15,19 @@ _Davepl, 9/19/2021_
 
 ## What NightDriverStrip is
 
-NightDriverStrip is a source code package for building a flash program that you upload to the [ESP32 microcontroller](https://en.wikipedia.org/wiki/ESP32). It can drive up to 8 channels of WS2812B style LEDs connected to the chip pins and display fancy colors and patterns and designs on them. There are numerous effects built in that can be configured to be shown on the LED strip, including audio/music/beat-reactive effects for modules equipped with a microphone. It can also optionally receive color data for the LEDs in a simple LZ-compressed (or noncompressed) format over a TCP/IP socket that is opened by default on port 49152. The ESP32 keeps its clock in sync using NTP.
+NightDriverStrip is a source code package for building a flash program that you upload to the [ESP32 microcontroller](https://en.wikipedia.org/wiki/ESP32). It can drive up to 8 channels of WS2812B style LEDs connected to the chip pins and display fancy colors and patterns and designs on them. There are numerous effects built in that can be configured to be shown on the LED strip, including audio/music/beat-reactive effects for modules equipped with a microphone. It can also optionally receive color data for the LEDs in a simple LZ-compressed (or non-compressed) format over a TCP/IP socket that is opened by default on port 49152. The ESP32 keeps its clock in sync using NTP.
 
-More recently, a web installer has been added to the project with which most of the NightDriver projects can be flashed on supported devices, using nothing but a web browser. Please refer to the section called [Using the Web Installer](#using-the-web-installer) if this is how you'd like to get started.
+More recently, a web installer has been added to the project with which most of the NightDriver projects can be flashed on supported devices, using nothing but a web browser. Please refer to the next section if this is how you'd like to get started.
 
 ## Using the Web Installer
+
+### Introduction
 
 A web application has been made available that can be used to install the majority of NightDriver projects on supported devices. This will allow you to quickly flash a project on your ESP32 device, have it connect to WiFi and start using it without immediately having to work with the source code.
 
 Note that the installer requires a browser that supports Web Serial. At the time of writing, browsers that include such support are recent versions of Chrome, Edge and Opera.
+
+### (Re)flashing your device with the Web Installer
 
 Please follow these steps to flash and, if supported, set up WiFi on your device:
 
@@ -40,22 +44,42 @@ Please follow these steps to flash and, if supported, set up WiFi on your device
 
 6. A new dialog will show. One of the options it offers is "INSTALL &lt;project&gt; FOR &lt;device&gt;". Click that option.
 
-7. A dialog will show asking you if you want to erase the device. Check the box if this is the first time you flash NightDriverStrip onto your device, or you want to flash a clean install. This will reset all settings to their defaults. Click NEXT.
+7. A dialog will show asking you if you want to erase the device. Check the box if this is the first time you flash NightDriverStrip onto your device, or you want to flash a clean install. This will reset all settings to their defaults. **Note** that the WiFi configuration will be cleared whether you choose to erase, or not. Click NEXT.
 
 8. You will now be asked to confirm you want to flash the device. Click INSTALL.
 
 9. A dialog will appear showing you the progress of the installation. Usually, this will take about 2 minutes. When flashing has completed, click NEXT.
 
-10. At this point, three things can happen:
+10. At this point, four things can happen:
     - The device reboots, and a dialog is shown to ask for WiFi connection  information. In this case you can skip to point 11.
-    - The device reboots and it supports WiFi, but the dialog to enter WiFi connection information is not shown. In this case, click on LOGS & CONSOLE and check that logging information is shown. If so, click BACK. You should now see an option to CONNECT TO WI-FI. If so, click that option and skip to point 11.
-    - The device does not reboot, or the CONNECT TO WI-FI option is still not shown while WiFi is supported. In that case, power cycle or reset your device, and give it a few seconds to boot. Then reload your browser window and reconnect to your device by following steps 3 to 5 in these instructions, with the device connected to your computer with the USB cable. The CONNECT TO WI-FI option should now be available. Click that option.
+    - The device reboots and it supports WiFi, but the dialog to enter WiFi connection information is not shown. In this case, click on "LOGS & CONSOLE" and check that logging information is shown. If so, click BACK. You should now see an option to "CONNECT TO WI-FI". If so, click that option and skip to point 11.
+    - The device does not reboot, or the "CONNECT TO WI-FI" option is still not shown while WiFi is supported. In that case, power cycle or reset your device, and give it a few seconds to boot. Then reload your browser window and reconnect to your device by following steps 3 to 5 in these instructions, with the device connected to your computer with the USB cable. The "CONNECT TO WI-FI" option should now either be available, or appear when you open the "LOGS & CONSOLE" window until log lines appear, and then back out of it. Click the "CONNECT TO WI-FI" option when it shows.
+    - None of the above. In that case, please open an issue to let us know what you're experiencing.
 
-    If your device not support WiFi you can skip to point 12.
+    If your device does not support WiFi you can skip to point 12.
 
 11. In the WiFi connection information dialog, select or enter your SSID and password. Click CONNECT. In some cases, the WiFi connection dialog appears again after a successful connection was actually made. In that case, click SKIP. It is also possible that a time-out is reported while WiFi has actually successfully connected. In that case, click BACK.
 
 12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again and show the device's logs & console. Furthermore, if your device supports WiFi then options will be available to visit the device's web application or change the WiFi settings. Note that if you flashed a device image that includes a web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
+
+### Reconfiguring WiFi using the Web Installer
+
+If you want to change the WiFi configuration on an already flashed device, use the following steps:
+
+1. Connect your device to your computer with a USB cable.
+
+2. Navigate to the following URL in your browser: <https://plummerssoftwarellc.github.io/NightDriverStrip>.
+
+3. Select your device (like "M5StickC Plus") from the drop-down list. A second drop-down with supported projects on that device will then appear.
+
+4. Select the project you flashed earlier, in the second drop-down. When you do, a CONNECT button will appear below it.
+
+5. Click the CONNECT button. A dialog will apear asking you to select a serial port. Depending on your system, it may show only one or a list of them. In case multiple are shown, it'll generally be the one plainly called "USB Serial Port (COMn)". Select the correct port and click Connect.
+
+6. A new dialog will show. If it does not yet show the "CONNECT TO WI-FI" or "CHANGE WI-FI" options, open the "LOGS & CONSOLE" window, and wait until log lines appear. Then close the window by clicking BACK.
+   When the "CONNECT TO WI-FI" or "CHANGE WI-FI" option is shown, click it.
+
+7. In the WiFi connection information dialog, select or enter your SSID and password. Click CONNECT. In some cases, the WiFi connection dialog appears again after a successful connection was actually made. In that case, click SKIP. It is also possible that a time-out is reported while WiFi has actually successfully connected. In that case, click BACK.
 
 ## Beyond the Web Installer
 
