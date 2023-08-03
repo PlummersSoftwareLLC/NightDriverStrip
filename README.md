@@ -44,7 +44,7 @@ Please follow these steps to flash and, if supported, set up WiFi on your device
 
 6. A new dialog will show. One of the options it offers is "INSTALL &lt;project&gt; FOR &lt;device&gt;". Click that option.
 
-7. A dialog will show asking you if you want to erase the device. Check the box if this is the first time you flash NightDriverStrip onto your device, or you want to flash a clean install. This will reset all settings to their defaults. **Note** that the WiFi configuration will be cleared whether you choose to erase, or not. Click NEXT.
+7. A dialog will show asking you if you want to erase the device. Check the box if this is the first time you flash NightDriverStrip onto your device, or you want to flash a clean install. This will reset all settings to their defaults. Note that the WiFi configuration will be cleared whether you choose to erase or not. Click NEXT.
 
 8. You will now be asked to confirm you want to flash the device. Click INSTALL.
 
