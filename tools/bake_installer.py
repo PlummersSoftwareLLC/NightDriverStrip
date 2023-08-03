@@ -91,11 +91,11 @@ for device in devices:
 
         currentProject += 1
 
-        print()
+        print('===')
         print('=' * 79)
         print('=== Building Web Installer project ' + tag + ' (' + str(currentProject) + ' of ' + str(projectCount) + ')')
         print('=' * 79)
-        print(flush = True)
+        print('===', flush = True)
 
         # Build the firmware and the merged image
         subprocess.run(['pio', 'run', '-e', tag])
