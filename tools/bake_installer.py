@@ -92,7 +92,7 @@ for device in devices:
         currentProject += 1
 
         print('=' * 50)
-        print('=== Building Web Installer project ' + tag + ' (' + currentProject + ' of ' + projectCount + ')')
+        print('=== Building Web Installer project ' + tag + ' (' + str(currentProject) + ' of ' + str(projectCount) + ')')
         print('=' * 50)
 
         # Build the firmware and the merged image
