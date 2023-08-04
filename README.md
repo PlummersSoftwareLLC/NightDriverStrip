@@ -52,7 +52,7 @@ Please follow these steps to flash and, if supported, set up WiFi on your device
 
 10. At this point, four things can happen:
     - The device reboots, and a dialog is shown to ask for WiFi connection  information. In this case you can skip to point 11.
-    - The device reboots and it supports WiFi, but the dialog to enter WiFi connection information is not shown. In this case, click on "LOGS & CONSOLE" and check that logging information is shown. If so, click BACK. You should now see an option to "CONNECT TO WI-FI". If so, click that option and skip to point 11.
+    - The device reboots and it supports WiFi, but the dialog to enter WiFi connection information is not shown. In this case, click on "LOGS & CONSOLE" and check that logging information is shown - please allow a few seconds for the first lines to appear. If and when they do, click BACK. You should now see an option to "CONNECT TO WI-FI". If so, click that option and skip to point 11.
     - The device does not reboot, or the "CONNECT TO WI-FI" option is still not shown while WiFi is supported. In that case, power cycle or reset your device, and give it a few seconds to boot. Then reload your browser window and reconnect to your device by following steps 3 to 5 in these instructions, with the device connected to your computer with the USB cable. The "CONNECT TO WI-FI" option should now either be available, or appear when you open the "LOGS & CONSOLE" window until log lines appear, and then back out of it. Click the "CONNECT TO WI-FI" option when it shows.
     - None of the above. In that case, please open an issue to let us know what you're experiencing.
 
