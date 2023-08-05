@@ -342,7 +342,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_WAVEFORM,          WaveformEffect, "WaveIn", 8);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "WaveOut", 0, 0, true, 0);
 
-        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
 
         ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,        PatternPongClock);
         ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
