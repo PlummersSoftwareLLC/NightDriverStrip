@@ -330,7 +330,7 @@ void setup()
             if (!WriteWiFiConfig())
                 debugW("Could not even write defaults to WiFi Credentials");
         }
-        else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+        else if (WiFi_ssid.length() == 0)
         {
             WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;

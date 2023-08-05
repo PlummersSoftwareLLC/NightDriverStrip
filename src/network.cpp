@@ -218,12 +218,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
 
-        if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
-        {
-            debugW("WiFi Credentials not set, cannot connect");
-            return false;
-        }
-
         debugV("Wifi.disconnect");
         WiFi.disconnect();
         debugV("Wifi.mode");
@@ -232,12 +226,20 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         for (uint iPass = 0; iPass < cRetries; iPass++)
         {
-            debugW("Pass %u of %u: Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                    iPass + 1, cRetries, WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+            if (WiFi_ssid.length() == 0)
+            {
+                debugW("WiFi credentials not set, cannot connect. Waiting for credentials to be set...");
+                iPass = 0;
+            }
+            else
+            {
+                debugW("Pass %u of %u: Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                        iPass + 1, cRetries, WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
-            WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
+                WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
-            debugV("Done Wifi.begin, waiting for connection...");
+                debugV("Done Wifi.begin, waiting for connection...");
+            }
 
             // Give the module a few seconds to connect
             delay(4000 + iPass * 1000);
@@ -250,7 +252,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         }
 
         // Additional Services onwwards reliant on network so close if not up.
-        if (false == WiFi.isConnected())
+        if (!WiFi.isConnected())
         {
             debugW("Giving up on WiFi\n");
             return false;
