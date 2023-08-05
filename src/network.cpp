@@ -208,7 +208,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 #if ENABLE_WIFI
 
-    bool ConnectToWiFi(uint cRetries)
+    bool ConnectToWiFi(uint cRetries, bool waitForCredentials = false)
     {
         static bool bPreviousConnection = false;
 
@@ -228,8 +228,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         {
             if (WiFi_ssid.length() == 0)
             {
-                debugW("WiFi credentials not set, cannot connect. Waiting for credentials to be set...");
-                iPass = 0;
+                debugW("WiFi credentials not set, cannot connect.");
+
+                if (waitForCredentials)
+                {
+                    debugW("Waiting for WiFi credentials to be set...");
+                    iPass = 0;
+                }
+                else
+                {
+                    break;
+                }
             }
             else
             {
