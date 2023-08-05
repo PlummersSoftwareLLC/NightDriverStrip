@@ -81,10 +81,7 @@ for device in devices:
     chip_family = device['chipfamily']
 
     # If the merge firmware flag was set at the device level then pick it up, otherwise default to true
-    if 'merge' in device:
-        device_merge_firmware = device['merge']
-    else:
-        device_merge_firmware = True
+    device_merge_firmware = device['merge'] if 'merge' in device else True
 
     for project in device['projects']:
         tag = project['tag']
@@ -101,10 +98,7 @@ for device in devices:
         subprocess.run(['pio', 'run', '-e', tag])
 
         # If the merge firmware flag was set at the project level then pick it up, otherwise default to the device flag
-        if 'merge' in project:
-            merge_firmware = project['merge']
-        else:
-            merge_firmware = device_merge_firmware
+        merge_firmware = project['merge'] if 'merge' in project else device_merge_firmware
 
         firmware_target_dir = os.path.join(firmware_target_root, tag)
 
