@@ -573,7 +573,7 @@ static DRAM_ATTR size_t l_EffectsManagerJSONBufferSize = 0;
 static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
 static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
 
-#if USE_MATRIX
+#if USE_HUB75
 
     void InitSplashEffectManager()
     {

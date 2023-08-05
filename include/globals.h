@@ -125,9 +125,9 @@
 
 #define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
-#ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
-    #ifndef USE_STRIP
-        #define USE_STRIP 1
+#ifndef USE_HUB75                   // We support strips by default unless specifically defined out
+    #ifndef USE_NEOPIXEL
+        #define USE_NEOPIXEL 1
     #endif
 #endif
 
@@ -1074,7 +1074,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define PROJECT_NAME        "NightDriver"
 #endif
 
-#if USE_MATRIX
+#if USE_HUB75
 #include "MatrixHardware_ESP32_Custom.h"
 #define SM_INTERNAL     // Silence build messages from their header
 #include <SmartMatrix.h>
@@ -1583,7 +1583,7 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 
 // Conditional includes depending on which project is being build
 
-#if USE_MATRIX
+#if USE_HUB75
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
 
