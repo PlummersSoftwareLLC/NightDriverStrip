@@ -85,6 +85,7 @@ class EffectFactories
     {
         int EffectNumber;
         DefaultEffectFactory Factory;
+        bool LoadDisabled = false;
 
         NumberedFactory(int effectNumber, const DefaultEffectFactory& factory)
           : EffectNumber(effectNumber),
@@ -112,10 +113,12 @@ class EffectFactories
         return jsonFactories;
     }
 
-    void AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
+    NumberedFactory& AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
     {
-        defaultFactories.emplace_back(effectNumber, defaultFactory);
-        jsonFactories.try_emplace(effectNumber, jsonFactory);    
+        auto& numberedFactory = defaultFactories.emplace_back(effectNumber, defaultFactory);
+        jsonFactories.try_emplace(effectNumber, jsonFactory);
+
+        return numberedFactory;
     }
 
     bool IsEmpty()
