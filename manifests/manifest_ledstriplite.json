@@ -1,15 +1,12 @@
 {
   "name": "Ledstrip for ESP32",
   "version": "v040",
+  "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "ESP32",
-      "parts": 
-      [
-        { "path": "../firmware/ledstriplite/bootloader.bin", "offset": 4096  },
-        { "path": "../firmware/ledstriplite/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/ledstriplite/firmware.bin", "offset": 65536 },
-        { "path": "../firmware/ledstriplite/spiffs.bin", "offset": 3342336 }
+      "parts": [
+        { "path": "../firmware/ledstriplite/merged_image.bin", "offset": 0 }
       ]
     }
   ]

@@ -1,15 +1,12 @@
 {
   "name": "Mesmerizer for Mesmerizer",
   "version": "v040",
+  "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "ESP32",
-      "parts": 
-      [
-        { "path": "../firmware/mesmerizer/bootloader.bin", "offset": 4096  },
-        { "path": "../firmware/mesmerizer/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/mesmerizer/firmware.bin", "offset": 65536 },
-        { "path": "../firmware/mesmerizer/spiffs.bin", "offset": 3342336 }
+      "parts": [
+        { "path": "../firmware/mesmerizer/merged_image.bin", "offset": 0 }
       ]
     }
   ]
