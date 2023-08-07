@@ -20,12 +20,14 @@ class PatternSMFlowFields : public LEDStripEffect
   const int HEIGHT = MATRIX_HEIGHT;
   const int COLS = MATRIX_WIDTH;
   const int ROWS = MATRIX_HEIGHT;
-  static const int NUM_PARTICLES =
-      40;  // set this to the number of particles. the varialbe describes what
-           // it's supposed to be. it works with 50 but it's a little slow. on an
-           // esp32 it looks pretty nice at that number 15 is a safe number
+  static const int NUM_PARTICLES = 40;
+  // set this to the number of particles. the varialbe describes what
+  // it's supposed to be. it works with 50 but it's a little slow. on an
+  // esp32 it looks pretty nice at that number 15 is a safe number
 
   [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
+    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+      return 0;
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
   }
 
@@ -42,6 +44,11 @@ class PatternSMFlowFields : public LEDStripEffect
   }
 
   void drawPixelXYF(float x, float y, CRGB color) {
+    // This are prechecked in the lone caller.
+    assert ((x >= 0) && (x < MATRIX_WIDTH));
+    assert ((y >= 0) && (y < MATRIX_HEIGHT));
+    //if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+    //  return;
     // if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
     // как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
     // extract the fractional parts and derive their inverses
@@ -114,9 +121,6 @@ class PatternSMFlowFields : public LEDStripEffect
       boid.velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);
       boid.update();
 
-      drawPixelXYF(
-          boid.location.x, boid.location.y,
-          ColorFromPalette(ForestColors_p, boid.hue, 255, LINEARBLEND));
       // NightDriver Bugfix: The original had COLS and ROWS swapped here,
       // clamping to the wrong axis.
       if (boid.location.x < 0 || boid.location.x >= COLS ||
@@ -124,6 +128,9 @@ class PatternSMFlowFields : public LEDStripEffect
         boid.location.x = random(COLS);
         boid.location.y = 0;
       }
+      drawPixelXYF(
+          boid.location.x, boid.location.y,
+          ColorFromPalette(ForestColors_p, boid.hue, 255, LINEARBLEND));
     }
     fadeAllChannelsToBlackBy(15);
 
