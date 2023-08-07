@@ -330,7 +330,7 @@ void setup()
             if (!WriteWiFiConfig())
                 debugW("Could not even write defaults to WiFi Credentials");
         }
-        else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+        else if (WiFi_ssid.length() == 0)
         {
             WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;
@@ -482,7 +482,7 @@ void setup()
 
     #if ENABLE_WIFI && WAIT_FOR_WIFI
         debugI("Calling ConnectToWifi()\n");
-        if (false == ConnectToWiFi(99))
+        if (false == ConnectToWiFi(99, true))
         {
             debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
             throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");

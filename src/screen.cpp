@@ -175,7 +175,7 @@ void BasicInfoSummary(bool bRedraw)
         display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
 
-    /* Old PSRAM code 
+    /* Old PSRAM code
     display.setCursor(xMargin + 0, yMargin + lineHeight * 7);
     display.println(str_sprintf("PRAM:%dK/%dK\n",
                                 ESP.getFreePsram() / 1024,
