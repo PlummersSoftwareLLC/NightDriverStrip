@@ -14,7 +14,7 @@ struct Values
     bool UpdateStarted = false;                                             // Has an OTA update started?
     uint8_t Brightness = 255;
     uint8_t Fader = 255;
-#if USE_MATRIX
+#if USE_HUB75
     int MatrixPowerMilliwatts = 0;                                         // Matrix power draw in mw
     uint8_t MatrixScaledBrightness = 255;                                  // 0-255 scaled brightness to stay in limit
 #endif

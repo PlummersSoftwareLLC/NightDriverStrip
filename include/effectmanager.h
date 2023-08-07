@@ -309,7 +309,7 @@ public:
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
 
-        #if (USE_MATRIX)
+        #if (USE_HUB75)
                 auto pMatrix = g();
                 pMatrix->setPalette(CRGBPalette16(oldColor, color));
                 pMatrix->PausePalette(true);
@@ -343,7 +343,7 @@ public:
         if (!retainRemoteEffect)
             _tempEffect = nullptr;
 
-        #if (USE_MATRIX)
+        #if (USE_HUB75)
             g()->PausePalette(false);
         #endif
     }
@@ -355,7 +355,7 @@ public:
 
         std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
-        #if USE_MATRIX
+        #if USE_HUB75
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
         #endif
