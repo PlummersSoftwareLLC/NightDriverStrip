@@ -126,8 +126,8 @@
 #define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
 #ifndef USE_HUB75                   // We support strips by default unless specifically defined out
-    #ifndef USE_NEOPIXEL
-        #define USE_NEOPIXEL 1
+    #ifndef USE_WS281X
+        #define USE_WS281X 1
     #endif
 #endif
 
@@ -1487,7 +1487,7 @@ inline static T random_range(T lower, T upper)
 {
     static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
 
-    static std::random_device rd; 
+    static std::random_device rd;
     static std::mt19937 gen(rd());
 
     if constexpr (std::is_integral<T>::value) {
