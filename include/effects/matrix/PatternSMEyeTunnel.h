@@ -15,14 +15,16 @@ class PatternSMEyeTunnel : public LEDStripEffect
 #endif
 {
  private:
-  #undef WU_WEIGHT
-  static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
+#undef WU_WEIGHT
+  static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {
+    return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
+  }
 
   void wu_pixel(int16_t x, int16_t y, CRGB* col) {
     // extract the fractional parts and derive their inverses
     uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
-// calculate the intensities for each affected pixel
-// #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+    // calculate the intensities for each affected pixel
+    // #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
     uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy),
                      WU_WEIGHT(xx, yy)};
 #undef WU_WEIGHT

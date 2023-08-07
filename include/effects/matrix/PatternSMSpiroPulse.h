@@ -35,8 +35,10 @@ class PatternSMSpiroPulse : public LEDStripEffect
     g()->leds[thisPixel] = color;
   }
 
-  #undef WU_WEIGHT
-  static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
+#undef WU_WEIGHT
+  static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {
+    return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
+  }
 
   void drawPixelXYF(float x, float y, CRGB color)  //, uint8_t darklevel = 0U)
   {

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
+#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2007-amber-rain
 
 class Circle {
-public:
+ public:
   float thickness = 3.0;
   long startTime;
   uint16_t offset;
@@ -35,17 +35,17 @@ public:
 };
 const int NUMBER_OF_CIRCLES = 20;
 
-
 #if ENABLE_AUDIO
-class PatternSMAmberRain : public BeatEffectBase, public LEDStripEffect
+class PatternSMAmberRain : public BeatEffectBase,
+                           public LEDStripEffect
 #else
 class PatternSMAmberRain : public LEDStripEffect
 #endif
 {
-private:
-    Circle circles[NUMBER_OF_CIRCLES] = {};
+ private:
+  Circle circles[NUMBER_OF_CIRCLES] = {};
 
-   void drawCircle(Circle circle) {
+  void drawCircle(Circle circle) {
     int16_t centerX = circle.centerX;
     int16_t centerY = circle.centerY;
     int hue = circle.hue;
@@ -59,14 +59,12 @@ private:
     for (int16_t x = startX; x < endX; x++) {
       for (int16_t y = startY; y < endY; y++) {
         int16_t index = g()->xy(x, y);
-        if (index < 0 || index > NUM_LEDS)
-          continue;
+        if (index < 0 || index > NUM_LEDS) continue;
         double distance = sqrt(sq(x - centerX) + sq(y - centerY));
-        if (distance > radius)
-          continue;
+        if (distance > radius) continue;
 
         uint16_t brightness;
-        if (radius < 1) { // last pixel
+        if (radius < 1) {  // last pixel
           brightness = 255.0 * radius;
         } else {
           double percentage = distance / radius;
@@ -78,33 +76,31 @@ private:
     }
   }
 
-public:
-  PatternSMAmberRain() :
+ public:
+  PatternSMAmberRain()
+      :
 #if ENABLE_AUDIO
-    BeatEffectBase(1.50, 0.05),
+        BeatEffectBase(1.50, 0.05),
 #endif
-    LEDStripEffect(EFFECT_MATRIX_SMAMBERRAIN, "Amber Rain")
-    {
-    }
-
-  PatternSMAmberRain(const JsonObjectConst& jsonObject) :
-#if ENABLE_AUDIO
-    BeatEffectBase(1.50, 0.05),
-#endif
-    LEDStripEffect(jsonObject)
-  {
+        LEDStripEffect(EFFECT_MATRIX_SMAMBERRAIN, "Amber Rain") {
   }
 
-  void Start() override
-  {
+  PatternSMAmberRain(const JsonObjectConst& jsonObject)
+      :
+#if ENABLE_AUDIO
+        BeatEffectBase(1.50, 0.05),
+#endif
+        LEDStripEffect(jsonObject) {
+  }
+
+  void Start() override {
     g()->Clear();
     for (int i = 0; i < NUMBER_OF_CIRCLES; i++) {
       circles[i].reset();
     }
   }
 
-  void Draw() override
-  {
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif
@@ -119,9 +115,6 @@ public:
   }
 
 #if ENABLE_AUDIO
-  virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-  {
-
-  }
+  virtual void HandleBeat(bool bMajor, float elapsed, float span) override {}
 #endif
 };

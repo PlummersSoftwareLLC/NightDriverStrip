@@ -20,9 +20,7 @@ class PatternSMColorPopcorn : public LEDStripEffect
   uint8_t gravity = 16;
 #define NUM_ROCKETS 8
 
-  using Rocket = struct {
-    int32_t x, y, xd, yd;
-  };
+  using Rocket = struct { int32_t x, y, xd, yd; };
 
   Rocket rockets[NUM_ROCKETS];
 

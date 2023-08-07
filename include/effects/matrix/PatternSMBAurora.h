@@ -1,39 +1,36 @@
 #pragma once
 
-#include "effects/strip/musiceffect.h"
 #include "effectmanager.h"
+#include "effects/strip/musiceffect.h"
 
 #if ENABLE_AUDIO
-class PatternSMStrobeDiffusion : public BeatEffectBase, public LEDStripEffect
+class PatternSMStrobeDiffusion : public BeatEffectBase,
+                                 public LEDStripEffect
 #else
 class PatternSMStrobeDiffusion : public LEDStripEffect
 #endif
 {
-private:
-public:
-  PatternSMStrobeDiffusion() :
+ private:
+ public:
+  PatternSMStrobeDiffusion()
+      :
 #if ENABLE_AUDIO
-    BeatEffectBase(1.50, 0.05),
+        BeatEffectBase(1.50, 0.05),
 #endif
-    LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Strobe Diffusion")
-    {
-    }
-
-  PatternSMStrobeDiffusion(const JsonObjectConst& jsonObject) :
-#if ENABLE_AUDIO
-    BeatEffectBase(1.50, 0.05),
-#endif
-    LEDStripEffect(jsonObject)
-  {
+        LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Strobe Diffusion") {
   }
 
-  void Start() override
-  {
-    g()->Clear();
+  PatternSMStrobeDiffusion(const JsonObjectConst& jsonObject)
+      :
+#if ENABLE_AUDIO
+        BeatEffectBase(1.50, 0.05),
+#endif
+        LEDStripEffect(jsonObject) {
   }
 
-  void Draw() override
-  {
+  void Start() override { g()->Clear(); }
+
+  void Draw() override {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif
@@ -58,9 +55,6 @@ public:
   }
 
 #if ENABLE_AUDIO
-  virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-  {
-
-  }
+  virtual void HandleBeat(bool bMajor, float elapsed, float span) override {}
 #endif
 };

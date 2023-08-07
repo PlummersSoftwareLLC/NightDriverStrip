@@ -22,8 +22,8 @@ class PatternSMBoidExplosion : public LEDStripEffect
   static constexpr int COLS = MATRIX_WIDTH;
   static constexpr int ROWS = MATRIX_HEIGHT;
 
-#define NUM_PARTICLES 35 \
-      // set this to the number of particles. the varialbe describes what it's
+#define NUM_PARTICLES \
+  35  // set this to the number of particles. the varialbe describes what it's
       // supposed to be. it works with 50 but it's a little slow. on an esp32 it
       // looks pretty nice at that number 15 is a safe number
   static const int count = NUM_PARTICLES;
@@ -46,14 +46,16 @@ class PatternSMBoidExplosion : public LEDStripEffect
   }
 
 #undef WU_WEIGHT
-static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
+  static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {
+    return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
+  }
 
   void drawPixelXYF(float x, float y, CRGB color) {
     uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx,
             iy = 255 - yy;
     // calculate the intensities for each affected pixel
-    static const uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy),
-                     WU_WEIGHT(xx, yy)};
+    static const uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                                  WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
     // multiply the intensities by the colour, and saturating-add them to the
     // pixels
     for (uint8_t i = 0; i < 4; i++) {
@@ -125,8 +127,8 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
       location = PVector(
           ROWS / (float)2.0,
           COLS / (float)coldiv);  // PVector(ROWS /
-                                  // (float)random((float)1.1,(float)4.0), COLS /
-                                  // (float)random((float)1.1,(float)4.0));
+                                  // (float)random((float)1.1,(float)4.0), COLS
+                                  // / (float)random((float)1.1,(float)4.0));
       mass = 11.0F;  // random(5.5,8);
       G = 11.0F;     //(float)random((float)1.5F,(float)2.9F);//random(.5,1.1);
       coldiv = 1.5F;

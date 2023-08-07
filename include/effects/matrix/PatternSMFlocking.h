@@ -16,7 +16,8 @@ class PatternSMFlocking : public LEDStripEffect
 #endif
 {
  private:
-  // With 10 they have just about enough time to spread after a collision on a 64x32.
+  // With 10 they have just about enough time to spread after a collision on a
+  // 64x32.
   static constexpr int NUM_PARTICLES = 10;
   Boid boids[NUM_PARTICLES];
 
@@ -34,7 +35,9 @@ class PatternSMFlocking : public LEDStripEffect
   }
 
 #undef WU_WEIGHT
-static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);}
+  static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {
+    return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
+  }
 
   void drawPixelXYF(float x, float y, CRGB color)  //, uint8_t darklevel = 0U)
   {
@@ -43,8 +46,8 @@ static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {return (uint8_t)(((a) * (
     // extract the fractional parts and derive their inverses
     uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx,
             iy = 255 - yy;
-// calculate the intensities for each affected pixel
-// #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+    // calculate the intensities for each affected pixel
+    // #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
     uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy),
                      WU_WEIGHT(xx, yy)};
     // multiply the intensities by the colour, and saturating-add them to the

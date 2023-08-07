@@ -24,7 +24,6 @@
 //
 // I could (and probably should) have rewritten this in less time.
 
-
 // Good freakin' grief.
 #define now_weekMs 0 * 1000ul + millis()  // - tmr
 
@@ -81,16 +80,20 @@ class PatternSMParticles : public LEDStripEffect
     // This relies on 'now_weekMs' changing on every loop iteration.
     byte amount = (thisScale >> 3) + 1;
     for (int i = 0; i < amount; i++) {
-      int homeX = inoise16(i * 100000000ul + (now_weekMs << 3) * CUR_PRES_speed / 255);
+      int homeX =
+          inoise16(i * 100000000ul + (now_weekMs << 3) * CUR_PRES_speed / 255);
       homeX = map(homeX, 15000, 50000, 0, cfg_width);
-      int offsX = inoise8(i * 2500 + (now_weekMs >> 1) * CUR_PRES_speed / 255) - 128;
+      int offsX =
+          inoise8(i * 2500 + (now_weekMs >> 1) * CUR_PRES_speed / 255) - 128;
       offsX = cfg_width / 2 * offsX / 128;
       unsigned int thisX = homeX + offsX;
 
       int homeY = inoise16(i * 100000000ul + 2000000000ul +
                            (now_weekMs << 3) * CUR_PRES_speed / 255);
       homeY = map(homeY, 15000, 50000, 0, cfg_length);
-      int offsY = inoise8(i * 2500 + 30000 + (now_weekMs >> 1) * CUR_PRES_speed / 255) - 128;
+      int offsY =
+          inoise8(i * 2500 + 30000 + (now_weekMs >> 1) * CUR_PRES_speed / 255) -
+          128;
       offsY = cfg_length / 2 * offsY / 128;
       int thisY = homeY + offsY;
       drawPixelXY(thisX, thisY, CRGB(CHSV(CUR_PRES_color, 255, 255)));
