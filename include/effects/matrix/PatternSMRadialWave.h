@@ -33,7 +33,7 @@ class PatternSMRadialWave : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMRADIALWAVE, "Radial Wave") {
+        LEDStripEffect(EFFECT_MATRIX_SMRADIAL_WAVE, "Radial Wave") {
   }
 
   PatternSMRadialWave(const JsonObjectConst& jsonObject)

@@ -134,10 +134,10 @@
 #define EFFECT_MATRIX_SMSPIRO                          160
 #define EFFECT_MATRIX_SMAURORA                         161
 #define EFFECT_MATRIX_SMPRISMATA                       162
-#define EFFECT_MATRIX_SMRADIALFIRE                     163
+#define EFFECT_MATRIX_SMRADIAL_FIRE                    163
 #define EFFECT_MATRIX_SMMAZE2                          164
 #define EFFECT_MATRIX_SMMIRAGE                         165
-#define EFFECT_MATRIX_SMRADIALWAVE                     166
+#define EFFECT_MATRIX_SMRADIAL_WAVE                    166
 #define EFFECT_MATRIX_SMRAINBOW_TUNNEL                 167
 #define EFFECT_MATRIX_SMHYPNOSIS                       168
 #define EFFECT_MATRIX_SMWALKING_MACHINE                169

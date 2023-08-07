@@ -27,7 +27,7 @@ class PatternSMRadialFire : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMRADIALFIRE, "Radial Fire") {
+        LEDStripEffect(EFFECT_MATRIX_SMRADIAL_FIRE, "Radial Fire") {
   }
 
   PatternSMRadialFire(const JsonObjectConst& jsonObject)

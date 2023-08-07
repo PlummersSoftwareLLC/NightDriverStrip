@@ -333,10 +333,10 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE, PatternSMSpiroPulse);
         ADD_EFFECT(EFFECT_MATRIX_SMTWIST, PatternSMTwist);
         ADD_EFFECT(EFFECT_MATRIX_SMTWISTER, PatternSMTwister);
-        ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMMetaBalls);
+        ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS, PatternSMMetaBalls);
         ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMFlying);
         ADD_EFFECT(EFFECT_MATRIX_SMSIN_DOTS, PatternSMSinDots);
-        ADD_EFFECT(EFFECT_MATRIX_SMPATTERN_TRICK, PatternSMSunRadiation);
+        ADD_EFFECT(EFFECT_MATRIX_SMSUN_RADIATION, PatternSMSunRadiation);
         ADD_EFFECT(EFFECT_MATRIX_SMPATTERN_TRICK, PatternSMPatternTrick);
         ADD_EFFECT(EFFECT_MATRIX_SMBUBBLES, PatternSMBubbles);
         ADD_EFFECT(EFFECT_MATRIX_SMFLOCKING, PatternSMFlocking);
@@ -346,18 +346,18 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMSTARSHIP_TROOPERS, PatternSMStarshipTroopers);
         ADD_EFFECT(EFFECT_MATRIX_SMGAMMA, PatternSMGamma);
         ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS, PatternSMFlowFields);
-        ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA, PatternSMBlurringColors);
+        ADD_EFFECT(EFFECT_MATRIX_SMBLURRING_COLORS, PatternSMBlurringColors);
         ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA, PatternSMSupernova);
         ADD_EFFECT(EFFECT_MATRIX_SMBOID_EXPLOSION, PatternSMBoidExplosion);
         ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND, PatternSMTixyLand);
         ADD_EFFECT(EFFECT_MATRIX_SMXOR_CIRCLES, PatternSMXorCircles);
         ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);
-        ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMHypnosis);
-        ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRainbowTunnel);
-        ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMRadialWave);
-        ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMirage);
+        ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS, PatternSMHypnosis);
+        ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL, PatternSMRainbowTunnel);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE, PatternSMRadialWave);
+        ADD_EFFECT(EFFECT_MATRIX_SMMIRAGE, PatternSMMirage);
         ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);
-        ADD_EFFECT(EFFECT_MATRIX_SMRADIALFIRE, PatternSMRadialFire);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE, PatternSMRadialFire);
         ADD_EFFECT(EFFECT_MATRIX_SMPRISMATA, PatternSMPrismata);
         ADD_EFFECT(EFFECT_MATRIX_SMAURORA, PatternSMAurora);
         ADD_EFFECT(EFFECT_MATRIX_SMSPIRO, PatternSMSpiro);
@@ -385,6 +385,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMONE_RING, PatternSMOneRing);
         ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION, PatternSMStrobeDiffusion);
         ADD_EFFECT(EFFECT_MATRIX_BALLS, PatternBalls);
+	// Audiograph isn't even compiled, but it's shown for 'Balls' !
 #else
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
