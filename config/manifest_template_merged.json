@@ -1,0 +1,13 @@
+{
+  "name": "<name>",
+  "version": "v<version>",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "<chipfamily>",
+      "parts": [
+        { "path": "../firmware/<tag>/merged_image.bin", "offset": 0 }
+      ]
+    }
+  ]
+}

@@ -92,8 +92,6 @@ jobs:
 
     - name: Build web installer environments and installer
       run: |
-        cp platformio.ini platformio.ini.orig
-        grep -v ^default_envs platformio.ini.orig > platformio.ini
         python tools/bake_installer.py
         touch WebInstaller/.nojekyll
 
