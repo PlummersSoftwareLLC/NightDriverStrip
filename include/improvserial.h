@@ -48,7 +48,6 @@ extern DRAM_ATTR String WiFi_ssid;
 extern DRAM_ATTR String WiFi_password;
 bool ReadWiFiConfig();
 bool WriteWiFiConfig();
-bool ConnectToWiFi(uint cRetries);
 
 template <typename SERIALTYPE>
 class ImprovSerial
