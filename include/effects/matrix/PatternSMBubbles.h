@@ -33,6 +33,8 @@ class PatternSMBubbles : public LEDStripEffect
   int count = NUM_PARTICLES;
 
   [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
+    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 1 || y > (MATRIX_HEIGHT - 1))
+      return 0;
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
     // return g()->leds[g()->xy(x, y)];
   }
@@ -51,7 +53,8 @@ class PatternSMBubbles : public LEDStripEffect
 
   void drawPixelXYF(float x, float y, CRGB color)  //, uint8_t darklevel = 0U)
   {
-    //  if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
+    if ((x > MATRIX_WIDTH -1) || (y > MATRIX_HEIGHT - 1)) return;
+    if ((x<0) || (y<0)) return; //не похоже, чтобы отрицательные значения хоть
     //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
     // extract the fractional parts and derive their inverses
     uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx,
@@ -64,6 +67,7 @@ class PatternSMBubbles : public LEDStripEffect
     // pixels
     for (uint8_t i = 0; i < 4; i++) {
       int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
+      if (yn > (MATRIX_WIDTH - 1)) continue;
       CRGB clr = getPixColorXY(xn, yn);
       clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
       clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
