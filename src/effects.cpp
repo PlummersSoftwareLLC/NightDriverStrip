@@ -287,17 +287,23 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
         : nullptr;
 }
 
-#define ADD_EFFECT(effectNumber, effectType, ...)           l_ptrEffectFactories->AddEffect(effectNumber, \
-    []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(__VA_ARGS__); }, \
-    [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(jsonObject); })
+#define ADD_EFFECT(effectNumber, effectType, ...) \
+    l_ptrEffectFactories->AddEffect(effectNumber, \
+        []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(__VA_ARGS__); }, \
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(jsonObject); }\
+    )
 
-#define ADD_EFFECT_DISABLED(effectNumber, effectType, ...)  ADD_EFFECT(effectNumber, effectType, __VA_ARGS__).LoadDisabled = true
+#define ADD_EFFECT_DISABLED(effectNumber, effectType, ...) \
+    ADD_EFFECT(effectNumber, effectType, __VA_ARGS__).LoadDisabled = true
 
-#define ADD_STARRY_NIGHT_EFFECT(starType, ...)              l_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
-    []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<starType>>(__VA_ARGS__); }, \
-    [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); })
+#define ADD_STARRY_NIGHT_EFFECT(starType, ...) \
+    l_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
+        []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<starType>>(__VA_ARGS__); }, \
+        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); }\
+    )
 
-#define ADD_STARRY_NIGHT_EFFECT_DISABLED(starType, ...)     ADD_STARRY_NIGHT_EFFECT(starType, __VA_ARGS__).LoadDisabled = true
+#define ADD_STARRY_NIGHT_EFFECT_DISABLED(starType, ...) \
+    ADD_STARRY_NIGHT_EFFECT(starType, __VA_ARGS__).LoadDisabled = true
 
 void LoadEffectFactories()
 {
