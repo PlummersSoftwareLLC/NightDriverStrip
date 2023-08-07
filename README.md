@@ -126,7 +126,9 @@ I recommend you do the following:
 - Copy include/secrets.example.h to include/secrets.h; Set your WiFi SSID and password in include/secrets.h.
 - Build the source code. In particular, build the `DEMO` configuration. Some pointers on what's needed to do this can be found [below](#build-pointers).
 - Upload the resultant binary to the ESP32
-- Connect PIN5 and GND and 5V of a WS2812B strip to the ESP32
+- Connect the wire associated with LED_PIN0 in your include/globals.h and GND and 5V of a WS2812B strip to the ESP32. For
+  example, this will be Pin 5 for ATOMLIGHT, but even for DEMO, may be Pin 32 for M5STICKC, M5STICKCPLUS, or M5STACKCORE2
+  or 21 for the LILYGOTDISPLAYS3.
 - Provide an adequate power source for the LEDs and ESP32
 - Enjoy the pretty lights
 - Start enabling features in the `globals.h` or platformio.ini file like WiFi and WebServer. See [Feature Defines](#feature-defines) below.

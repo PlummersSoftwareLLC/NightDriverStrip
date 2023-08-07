@@ -72,7 +72,7 @@
 #include "globals.h"
 #include <memory>
 
-#if USE_MATRIX
+#if USE_HUB75
 #define USE_NOISE 1
 #endif
 
@@ -266,7 +266,7 @@ public:
     // it's a very simple layout.  Others may need to override this function.  Using a #define here allows
     // us to avoid an extra virtual function call in the inner loop of the effects.
 
-    #if USE_MATRIX
+    #if USE_HUB75
         #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
     #else
         #define XY(x, y) xy(x, y)
