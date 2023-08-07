@@ -280,7 +280,7 @@ class PatternSMSnakes : public LEDStripEffect
   }
 
 #if ENABLE_AUDIO
-  virtual void HandleBeat(bool bMajor, float elapsed, float span) override {
+  void HandleBeat(bool bMajor, float elapsed, float span) override {
     // Kinda dumb, but make the snakes and the board visibly respond. It would
     // be nice to animate camera altitude pans or something, but changing all
     // the paramaters at runtine just makes the code explode. Settle for

@@ -183,7 +183,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
   }
 
 #if ENABLE_AUDIO
-  virtual void HandleBeat(bool bMajor, float elapsed, float span) override {
+  void HandleBeat(bool bMajor, float elapsed, float span) override {
     debugI("HandleBeat");
     // Just light eye candy to show we react.
     hue2 += 128;

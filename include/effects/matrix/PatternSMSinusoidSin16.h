@@ -468,7 +468,7 @@ class PatternSMSinusoidSin16 : public LEDStripEffect
   }
 
 #if ENABLE_AUDIO
-  virtual void HandleBeat(bool bMajor, float elapsed, float span) override {
+  void HandleBeat(bool bMajor, float elapsed, float span) override {
     // Hacky. Just an external control to turn the knob without a debugger...
     deltaValue = (deltaValue + 1) % 9U;
     debugI("HandleBeat - New delta: %d", deltaValue);

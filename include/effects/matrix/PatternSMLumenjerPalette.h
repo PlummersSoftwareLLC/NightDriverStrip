@@ -143,6 +143,6 @@ class PatternSMLumenjerPalette : public LEDStripEffect
       g()->leds[g()->xy(x, y)] += ColorFromPalette(*curPalette, hue++);
   }
 #if USE_AUDIO
-  virtual void HandleBeat(bool bMajor, float elapsed, float span) override {}
+  void HandleBeat(bool bMajor, float elapsed, float span) override {}
 #endif
 };

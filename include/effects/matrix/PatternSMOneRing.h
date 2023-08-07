@@ -63,6 +63,6 @@ class PatternSMOneRing : public LEDStripEffect
   }
 
 #if USE_AUDIO
-  virtual void HandleBeat(bool bMajor, float elapsed, float span) override {}
+  void HandleBeat(bool bMajor, float elapsed, float span) override {}
 #endif
 };
