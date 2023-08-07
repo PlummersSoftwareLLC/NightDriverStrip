@@ -166,7 +166,7 @@
 #define EFFECT_MATRIX_SMEYE_TUNNEL                     193
 #define EFFECT_MATRIX_SMLIGHTNING                      194
 
-// 999999rry Night star variations
+// Starry Night star variations
 #define EFFECT_STAR                                      1
 #define EFFECT_STAR_RANDOM_PALETTE_COLOR                 2
 #define EFFECT_STAR_LONG_LIFE_SPARKLE                    3
