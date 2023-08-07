@@ -3,6 +3,8 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 
+// Inspired by https://editor.soulmatelights.com/gallery/1923-supernova
+
 #if ENABLE_AUDIO
 class PatternSMSupernova : public BeatEffectBase,
                            public LEDStripEffect
@@ -33,14 +35,14 @@ class PatternSMSupernova : public LEDStripEffect
                       // цикличный счётчик
   uint8_t step;  // какой-нибудь счётчик кадров или последовательностей операций
   uint8_t deltaValue;  // просто повторно используемая переменная
-#define enlargedOBJECT_MAX_COUNT \
-  (MATRIX_WIDTH * 2)  // максимальное количество сложных отслеживаемых объектов
-                      // (меньше, чем MAX_COUNT)
+  static constexpr int enlargedOBJECT_MAX_COUNT = (MATRIX_WIDTH * 2);
+  // максимальное количество сложных отслеживаемых объектов
+  // (меньше, чем MAX_COUNT)
   uint8_t enlargedObjectNUM;  // используемое в эффекте количество объектов
   long enlargedObjectTime[enlargedOBJECT_MAX_COUNT];
-#define MAX_COUNT \
-  (254U)  // максимальное количество отслеживаемых объектов (очень влияет на
-          // расход памяти)
+  static constexpr int MAX_COUNT = (254U);
+  // максимальное количество отслеживаемых объектов (очень влияет на
+  // расход памяти)
   float PosX[MAX_COUNT];
   float PosY[MAX_COUNT];
   uint8_t Hue[MAX_COUNT];
@@ -108,6 +110,8 @@ class PatternSMSupernova : public LEDStripEffect
   }
 
   [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
+    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+      return 0;
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
     // return g()->leds[g()->xy(x, y)];
   }
@@ -127,6 +131,8 @@ class PatternSMSupernova : public LEDStripEffect
 
   void drawPixelXYF(float x, float y, CRGB color)  //, uint8_t darklevel = 0U)
   {
+    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+      return;
     //  if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
     //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
     // extract the fractional parts and derive their inverses
