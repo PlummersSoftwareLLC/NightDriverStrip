@@ -135,6 +135,8 @@ class PatternSMColorPopcorn : public LEDStripEffect
     for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
       rockets[r].x = random8() * MATRIX_WIDTH - 1;
       rockets[r].y = random8() * MATRIX_HEIGHT - 1;
+      rockets[r].xd = 0;
+      rockets[r].yd = 0;
     }
   }
 
