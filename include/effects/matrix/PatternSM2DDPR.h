@@ -21,9 +21,9 @@ class PatternSM2DDPR : public LEDStripEffect
   const int Speed = 215;
   uint32_t effTimer;
 
-  float HALF_WIDTH = MATRIX_WIDTH * .5;
-  float HALF_HEIGHT = MATRIX_HEIGHT * .5;
-  float radius = HALF_WIDTH;
+  const float HALF_WIDTH = MATRIX_WIDTH * .5;
+  const float HALF_HEIGHT = MATRIX_HEIGHT * .5;
+  const float radius = HALF_WIDTH;
   //   byte effect = 1;
 
  public:

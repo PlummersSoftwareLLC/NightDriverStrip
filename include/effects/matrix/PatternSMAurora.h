@@ -4,7 +4,7 @@
 #include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1244-aurora-borealis
-// Could use some fine tuning on timings. speed doesn't work like the original.
+// Could use some fine-tuning on timings. speed doesn't work like the original.
 
 #if ENABLE_AUDIO
 class PatternSMAurora : public BeatEffectBase,
@@ -20,7 +20,7 @@ class PatternSMAurora : public LEDStripEffect
   byte speed = 7;   // Scale  0-255
   byte scale = 60;  // Speed 0-255
 
-  float adjastHeight = fmap(LED_ROWS, 8, 32, 28, 12);
+  float adjustHeight = fmap(LED_ROWS, 8, 32, 28, 12);
   uint16_t adjScale = map(LED_COLS, 8, 64, 310, 63);
 
   static constexpr TProgmemRGBPalette16 GreenAuroraColors_p FL_PROGMEM = {
@@ -68,7 +68,7 @@ class PatternSMAurora : public LEDStripEffect
             GreenAuroraColors_p,
             qsub8(inoise8(timer % 2 + x * _scale, y * 16 + timer % 16,
                           timer / _speed),
-                  fabs((float)LED_ROWS / 2 - (float)y) * adjastHeight));
+                  fabs((float)LED_ROWS / 2 - (float)y) * adjustHeight));
       }
     }
   }

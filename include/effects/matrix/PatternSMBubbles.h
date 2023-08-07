@@ -98,7 +98,6 @@ class PatternSMBubbles : public LEDStripEffect
     for (int i = 0; i < count; i++) {
       boids[i] = Boid(random(MATRIX_WIDTH), 0);
       boids[i].hue = random(40, 255);
-      ;
       xboids[i].mass = random(1.0, 2.5);
       xboids[i].scale = random(0.5, 68.5);
     }
