@@ -1,7 +1,7 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Derived from https://editor.soulmatelights.com/gallery/1956-maze
 // We have another maze generator, but this is self-solving.
 
