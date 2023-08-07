@@ -208,6 +208,10 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 #if ENABLE_WIFI
 
+    #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
+    #define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
+
+
     bool ConnectToWiFi(uint cRetries, bool waitForCredentials = false)
     {
         static bool bPreviousConnection = false;
@@ -251,7 +255,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
 
             // Give the module a few seconds to connect
-            delay(4000 + iPass * 1000);
+            delay(WIFI_WAIT_BASE + iPass * WIFI_WAIT_INCREASE);
 
             if (WiFi.isConnected())
             {

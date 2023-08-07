@@ -436,7 +436,7 @@ void setup()
     #elif HEXAGON
         // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
         HexagonGFX::InitializeHardware(devices);
-    #elif USE_NEOPIXEL
+    #elif USE_WS281X
         // LEDStripGFX is used for simple strips or for matrices woven from strips
         LEDStripGFX::InitializeHardware(devices);
     #endif
@@ -539,7 +539,7 @@ void loop()
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
-            #if USE_NEOPIXEL
+            #if USE_WS281X
                 strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
             #endif
 
