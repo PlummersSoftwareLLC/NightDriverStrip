@@ -73,56 +73,57 @@ public:
         return *this;
     }
 
-    bool isEmpty()
+    bool isEmpty() const
     {
         return x == 0 && y == 0;
     }
 
-    bool operator==(Vector2 &v)
+    bool operator==(const Vector2 &v) const
     {
         return x == v.x && y == v.y;
     }
 
-    bool operator!=(Vector2 &v)
+    bool operator!=(const Vector2 &v) const
     {
         return !(x == y);
     }
 
-    Vector2 operator+(Vector2 &v)
+    Vector2 operator+(const Vector2 &v) const
     {
         return Vector2(x + v.x, y + v.y);
     }
-    Vector2 operator-(Vector2 &v)
+    
+    Vector2 operator-(const Vector2 &v) const
     {
         return Vector2(x - v.x, y - v.y);
     }
 
-    Vector2 &operator+=(Vector2 &v)
+    Vector2 &operator+=(const Vector2 &v)
     {
         x += v.x;
         y += v.y;
         return *this;
     }
-    Vector2 &operator-=(Vector2 &v)
+    Vector2 &operator-=(const Vector2 &v)
     {
         x -= v.x;
         y -= v.y;
         return *this;
     }
 
-    Vector2 operator+(float s)
+    Vector2 operator+(float s) const
     {
         return Vector2(x + s, y + s);
     }
-    Vector2 operator-(float s)
+    Vector2 operator-(float s) const
     {
         return Vector2(x - s, y - s);
     }
-    Vector2 operator*(float s)
+    Vector2 operator*(float s) const
     {
         return Vector2(x * s, y * s);
     }
-    Vector2 operator/(float s)
+    Vector2 operator/(float s) const
     {
         return Vector2(x / s, y / s);
     }
@@ -160,7 +161,7 @@ public:
 
     void rotate(float deg)
     {
-        float theta = deg / 180.0 * M_PI;
+        float theta = deg / 180.0f * (float) M_PI;
         float c = cos(theta);
         float s = sin(theta);
         float tx = x * c - y * s;
@@ -173,7 +174,7 @@ public:
     {
         if (length() == 0)
             return *this;
-        *this *= (1.0 / length());
+        *this *= (1.0f / length());
         return *this;
     }
 
@@ -192,7 +193,7 @@ public:
         return length();
     }
 
-    float magSq()
+    float magSq() const
     {
         return (x * x + y * y);
     }
@@ -209,16 +210,16 @@ public:
         return Vector2(y, -x);
     }
 
-    static float dot(Vector2 v1, Vector2 v2)
+    static float dot(Vector2 v1, Vector2 v2) 
     {
         return v1.x * v2.x + v1.y * v2.y;
     }
-    static float cross(Vector2 v1, Vector2 v2)
+    static float cross(Vector2 v1, Vector2 v2) 
     {
         return (v1.x * v2.y) - (v1.y * v2.x);
     }
 
-    void limit(float max)
+    void limit(float max) 
     {
         if (magSq() > max * max)
         {

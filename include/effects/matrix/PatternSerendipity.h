@@ -102,7 +102,7 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -148,7 +148,7 @@ public:
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         auto graphics = g();
 

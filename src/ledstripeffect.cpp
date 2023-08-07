@@ -33,4 +33,4 @@
 #include "types.h"
 #include "ledstripeffect.h"
 
-std::vector<SettingSpec> LEDStripEffect::_baseSettingSpecs = {};
+std::vector<SettingSpec, psram_allocator<SettingSpec>> LEDStripEffect::_baseSettingSpecs = {};

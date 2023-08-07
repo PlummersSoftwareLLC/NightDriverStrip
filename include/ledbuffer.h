@@ -2,7 +2,7 @@
 //
 // File:        LEDBuffer.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.  
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -10,12 +10,12 @@
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
 //    (at your option) any later version.
-//   
+//
 //    NightDriver is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
-//   
+//
 //    You should have received a copy of the GNU General Public License
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
@@ -36,24 +36,24 @@
 #include <pixeltypes.h>
 #include <memory>
 #include <iostream>
+#include "values.h"
 
-extern DRAM_ATTR AppTime g_AppTime;                       
 class LEDBuffer
 {
   public:
-  
+
      std::shared_ptr<GFXBase> _pStrand;
 
   private:
-    
+
     std::unique_ptr<CRGB []> _leds;
     uint32_t                 _pixelCount;
     uint64_t                 _timeStampMicroseconds;
     uint64_t                 _timeStampSeconds;
-   
+
   public:
 
-    explicit LEDBuffer(std::shared_ptr<GFXBase> pStrand) : 
+    explicit LEDBuffer(std::shared_ptr<GFXBase> pStrand) :
                  _pStrand(pStrand),
                  _pixelCount(0),
                  _timeStampMicroseconds(0),
@@ -69,16 +69,21 @@ class LEDBuffer
     uint64_t Seconds()      const  { return _timeStampSeconds;      }
     uint64_t MicroSeconds() const  { return _timeStampMicroseconds; }
     uint32_t Length()       const  { return _pixelCount;            }
+    
+    double TimeTillDue() const  
+    { 
+        return g_Values.AppTime.CurrentTime() - _timeStampSeconds - (_timeStampMicroseconds / (double) MICROS_PER_SECOND); 
+    }
 
     bool IsBufferOlderThan(const timeval & tv) const
     {
         if (Seconds() < tv.tv_sec)
             return true;
-        
+
         if (Seconds() == tv.tv_sec)
             if (MicroSeconds() < tv.tv_usec)
                 return true;
-        
+
         return false;
     }
 
@@ -95,7 +100,7 @@ class LEDBuffer
         }
 
         #if 0
-            debugV("========");              
+            debugV("========");
             for (int i = 0; i < 24; i++)
                 debugV("%02x ", payloadData[i]);
             debugV("========");
@@ -127,7 +132,7 @@ class LEDBuffer
             return false;
         }
         debugV("PayloadLength: %d, command16: %d, Length32: %d", payloadLength, command16, length32);
-        
+
         CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
 
         memcpy(_leds.get(), pRGB, length32 * sizeof(CRGB));
@@ -136,7 +141,7 @@ class LEDBuffer
         return true;
     }
 
-    void DrawBuffer() 
+    void DrawBuffer()
     {
         _timeStampMicroseconds = 0;
         _timeStampSeconds      = 0;
@@ -152,18 +157,18 @@ class LEDBuffer
 
 class LEDBufferManager
 {
-    const std::unique_ptr<std::shared_ptr<LEDBuffer> []> _ppBuffers;          // The circular array of buffer ptrs
-    std::shared_ptr<LEDBuffer>                           _pLastBufferAdded;   // Keeps track of the MRU buffer
+    std::unique_ptr<std::vector<std::shared_ptr<LEDBuffer>>> _ppBuffers;          // The circular array of buffer ptrs
+    std::shared_ptr<LEDBuffer> _pLastBufferAdded;   // Keeps track of the MRU buffer
     size_t                                               _iNextBuffer;        // Head pointer index
     size_t                                               _iLastBuffer;        // Tail pointer index
     uint32_t                                             _cBuffers;           // Number of buffers
     float                                                _BufferAgeOldest = 0;
     float                                                _BufferAgeNewest = 0;
-   
+
   public:
 
     LEDBufferManager(uint32_t cBuffers, std::shared_ptr<GFXBase> pGFX)
-     : _ppBuffers(std::make_unique<std::shared_ptr<LEDBuffer> []>(cBuffers)), // Create the circular array of ptrs
+     : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer>>>()), // Create the circular array of ptrs
        _iNextBuffer(0),
        _iLastBuffer(0),
        _cBuffers(cBuffers)
@@ -173,32 +178,32 @@ class LEDBufferManager
         // are returned back out to callers so they must be shared pointers.
 
         for (int i = 0; i < _cBuffers; i++)
-            _ppBuffers[i] = std::allocate_shared<LEDBuffer>(psram_allocator<LEDBuffer>(), pGFX);
+            _ppBuffers->push_back(make_shared_psram<LEDBuffer>(pGFX));
     }
 
-    float AgeOfOldestBuffer()
+    double AgeOfOldestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pOldest = PeekOldestBuffer();
-            return (pOldest->Seconds() + pOldest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pOldest->Seconds() + pOldest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
         }
         else
         {
-            return 0.0f;
+            return 0.0;
         }
     }
 
-    float AgeOfNewestBuffer()
+    double AgeOfNewestBuffer()
     {
         if (false == IsEmpty())
         {
             auto pNewest = PeekNewestBuffer();
-            return (pNewest->Seconds() + pNewest->MicroSeconds() / (float) MICROS_PER_SECOND) - g_AppTime.CurrentTime();
+            return (pNewest->Seconds() + pNewest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
         }
         else
         {
-            return 0.0f;
+            return 0.0;
         }
     }
 
@@ -206,13 +211,13 @@ class LEDBufferManager
     //
     // The fixed, maximum size of the whole thing if it were full
 
-    size_t BufferCount() const   
-    { 
-        return _cBuffers; 
+    size_t BufferCount() const
+    {
+        return _cBuffers;
     }
-    
+
     // Depth
-    // 
+    //
     // The variable, current count of buffers in use
 
     size_t Depth() const
@@ -235,7 +240,7 @@ class LEDBufferManager
     std::shared_ptr<LEDBuffer> PeekNewestBuffer() const
     {
         if (IsEmpty())
-            return nullptr; 
+            return nullptr;
         return _pLastBufferAdded;
     }
 
@@ -246,32 +251,32 @@ class LEDBufferManager
 
     std::shared_ptr<LEDBuffer> GetNewBuffer()
     {
-        auto pResult = _ppBuffers[_iNextBuffer++];
+        auto pResult = (*_ppBuffers)[_iNextBuffer++];
 
         if (IsEmpty())
             _iLastBuffer++;
 
         _iLastBuffer %= _cBuffers;
         _iNextBuffer %= _cBuffers;
-        
+
         _pLastBufferAdded = pResult;
-        
+
         return pResult;
     }
 
     // GetOldestBuffer
-    // 
+    //
     // Return a pointer to the very oldest buffer, or nullptr if empty
 
-    std::shared_ptr<LEDBuffer> GetOldestBuffer() 
+    std::shared_ptr<LEDBuffer> GetOldestBuffer()
     {
         if (IsEmpty())
-            return nullptr; 
+            return nullptr;
 
-        auto pResult = _ppBuffers[_iLastBuffer];
+        auto pResult = (*_ppBuffers)[_iLastBuffer];
         _iLastBuffer++;
         _iLastBuffer %= _cBuffers;
-        
+
         return pResult;
     }
 
@@ -282,17 +287,17 @@ class LEDBufferManager
     const std::shared_ptr<LEDBuffer> PeekOldestBuffer() const
     {
         if (IsEmpty())
-            return nullptr; 
-        
-        return _ppBuffers[_iLastBuffer];
+            return nullptr;
+
+        return (*_ppBuffers)[_iLastBuffer];
     }
 
     const std::shared_ptr<LEDBuffer> operator[](size_t index) const
     {
         if (IsEmpty())
-            return nullptr; 
+            return nullptr;
         size_t i = (_iLastBuffer + index) % _cBuffers;
-        return _ppBuffers[i];
+        return (*_ppBuffers)[i];
     }
 };
 

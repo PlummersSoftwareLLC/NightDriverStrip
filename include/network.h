@@ -28,24 +28,22 @@
 #pragma once
 
 #include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
+#include "types.h"
 
 #if INCOMING_WIFI_ENABLED
     #include "socketserver.h"
-    extern SocketServer g_SocketServer;
 #endif
 
 #if ENABLE_WIFI
-    extern uint8_t g_Brightness;
-    extern bool    g_bUpdateStarted;
-    extern WiFiUDP g_Udp;
     void processRemoteDebugCmd();
 
     bool ConnectToWiFi(uint cRetries);
+    void UpdateNTPTime();
     void SetupOTA(const String & strHostname);
     bool ReadWiFiConfig();
     bool WriteWiFiConfig();
-    extern String WiFi_password;
-    extern String WiFi_ssid;
+    extern DRAM_ATTR String WiFi_password;
+    extern DRAM_ATTR String WiFi_ssid;
 
     // Static Helpers
     //
@@ -107,6 +105,12 @@
       return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
 
+    // NetworkReader
+    //
+    // Allows functions to be registered that are called at regular intervals and/or on request, in the
+    // background. As the name of the class implies, this is intended to be used to execute network
+    // requests, like for effects that require data from RESTful APIs.
+
     class NetworkReader
     {
       // We allow the main network task entry point function to access private members
@@ -117,11 +121,11 @@
       // Writer function and flag combo
       struct ReaderEntry
       {
-          std::atomic_bool flag = false;
-          std::atomic_bool canceled = false;
+          std::function<void()> reader;
           std::atomic_ulong readInterval;
           std::atomic_ulong lastReadMs;
-          std::function<void()> reader;
+          std::atomic_bool flag = false;
+          std::atomic_bool canceled = false;
 
           ReaderEntry(std::function<void()> reader, unsigned long interval) :
               reader(reader),
@@ -140,7 +144,7 @@
           {}
       };
 
-      std::vector<ReaderEntry> readers;
+      std::vector<ReaderEntry, psram_allocator<ReaderEntry>> readers;
 
     public:
 
@@ -156,5 +160,4 @@
       void CancelReader(size_t index);
   };
 
-  extern DRAM_ATTR std::unique_ptr<NetworkReader> g_ptrNetworkReader;
 #endif

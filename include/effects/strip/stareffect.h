@@ -33,8 +33,6 @@
 
 #include "particles.h"
 
-extern AppTime g_AppTime;
-
 const int cMaxNewStarsPerFrame = 144;
 const int cMaxStars = 500;
 const int starWidth = 1;
@@ -84,10 +82,10 @@ class RandomPaletteColorStar : public MovingFadingPaletteObject, public ObjectSi
 
 class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
 {
-    virtual float PreignitionTime() const         { return .25f;  }
-    virtual float IgnitionTime()    const         { return 5.0f;  }
-    virtual float HoldTime()        const         { return 0.00f; }
-    virtual float FadeTime()        const         { return 0.0f;  }
+    float PreignitionTime() const override         { return .25f;  }
+    float IgnitionTime()    const override         { return 5.0f;  }
+    float HoldTime()        const override         { return 0.00f; }
+    float FadeTime()        const override         { return 0.0f;  }
 
   public:
 
@@ -142,10 +140,10 @@ class QuietStar : public RandomPaletteColorStar
       : RandomPaletteColorStar(palette, blendType, maxSpeed, starSize)
     {}
 
-    virtual float PreignitionTime() const { return 1.0f; }
-    virtual float IgnitionTime()    const { return 0.00f; }
-    virtual float HoldTime()        const { return 0.00f; }
-    virtual float FadeTime()        const { return 2.0f;  }
+    float PreignitionTime() const override { return 1.0f; }
+    float IgnitionTime()    const override { return 0.00f; }
+    float HoldTime()        const override { return 0.00f; }
+    float FadeTime()        const override { return 2.0f;  }
     virtual float StarSize()        const { return 1;     }
 };
 
@@ -220,7 +218,7 @@ class BubblyStar : public Star
         return EFFECT_STAR_BUBBLY;
     }
 
-    virtual float GetStarSize()
+    float GetStarSize() override
     {
         float x = Age()/TotalLifetime();
         float ratio1 = -1 * (2*(x-.5)) * (2*(x-.5)) + 1;
@@ -228,13 +226,13 @@ class BubblyStar : public Star
         return width;
     }
 
-    virtual ~BubblyStar()
+    ~BubblyStar() override
     {}
 
-    virtual float PreignitionTime() const  { return 0.00f; }
-    virtual float IgnitionTime()    const  { return 0.05f; }
-    virtual float HoldTime()        const  { return 0.25f; }
-    virtual float FadeTime()        const  { return 0.50f; }
+    float PreignitionTime() const override  { return 0.00f; }
+    float IgnitionTime()    const override  { return 0.05f; }
+    float HoldTime()        const override  { return 0.25f; }
+    float FadeTime()        const override  { return 0.50f; }
 };
 
 class FlashStar : public Star
@@ -246,10 +244,10 @@ class FlashStar : public Star
         return EFFECT_STAR_FLASH;
     }
 
-    virtual float PreignitionTime() const  { return 0.00f; }
-    virtual float IgnitionTime()    const  { return 0.10f; }
-    virtual float HoldTime()        const  { return 0.10f; }
-    virtual float FadeTime()        const  { return 0.05f; }
+    float PreignitionTime() const override  { return 0.00f; }
+    float IgnitionTime()    const override  { return 0.10f; }
+    float HoldTime()        const override  { return 0.10f; }
+    float FadeTime()        const override  { return 0.05f; }
 };
 
 class ColorCycleStar : public Star
@@ -262,7 +260,7 @@ class ColorCycleStar : public Star
     ColorCycleStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
       : Star(palette, blendType, maxSpeed)
     {
-        _brightness = randomfloat(128,255);
+        _brightness = random_range(128,255);
     }
 
     static int GetStarTypeNumber()
@@ -277,13 +275,13 @@ class ColorCycleStar : public Star
         return c;
     }
 
-    virtual ~ColorCycleStar()
+    ~ColorCycleStar() override
     {}
 
-    virtual float PreignitionTime() const { return 2.0f; }
-    virtual float IgnitionTime()    const { return 0.0f;}
-    virtual float HoldTime()        const { return 2.00f; }
-    virtual float FadeTime()        const { return 0.5f;  }
+    float PreignitionTime() const override { return 2.0f; }
+    float IgnitionTime()    const override { return 0.0f;}
+    float HoldTime()        const override { return 2.00f; }
+    float FadeTime()        const override { return 0.5f;  }
     virtual float StarSize()        const { return 1;     }
 };
 
@@ -297,8 +295,8 @@ class MultiColorStar : public Star
     MultiColorStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
       : Star(palette, blendType, maxSpeed)
     {
-        _brightness = randomfloat(128,255);
-        _hue        = randomfloat(0, 255);
+        _brightness = random_range(128,255);
+        _hue        = random_range(0, 255);
     }
 
     virtual CRGB Render(TBlendType blend)
@@ -308,7 +306,7 @@ class MultiColorStar : public Star
         return c;
     }
 
-    virtual ~MultiColorStar()
+    ~MultiColorStar() override
     {}
 
     static int GetStarTypeNumber()
@@ -316,10 +314,10 @@ class MultiColorStar : public Star
         return EFFECT_STAR_MULTI_COLOR;
     }
 
-    virtual float PreignitionTime() const { return 2.0f; }
-    virtual float IgnitionTime()    const { return 0.0f; }
-    virtual float HoldTime()        const { return 2.00f;}
-    virtual float FadeTime()        const { return 0.5f; }
+    float PreignitionTime() const override { return 2.0f; }
+    float IgnitionTime()    const override { return 0.0f; }
+    float HoldTime()        const override { return 2.00f;}
+    float FadeTime()        const override { return 0.5f; }
     virtual float StarSize()        const { return 1;    }
 };
 
@@ -331,11 +329,11 @@ class ChristmasLightStar : public Star
       : Star(palette, blendType, maxSpeed, 1.0)
 
     {
-        int iColor = randomfloat(0,255);
+        int iColor = random_range(0,255);
         _colorIndex = iColor;
     }
 
-    virtual ~ChristmasLightStar()
+    ~ChristmasLightStar() override
     {}
 
     static int GetStarTypeNumber()
@@ -343,10 +341,10 @@ class ChristmasLightStar : public Star
         return EFFECT_STAR_CHRISTMAS;
     }
 
-    virtual float PreignitionTime() const { return 0.20f; }
-    virtual float IgnitionTime()    const { return 0.00f; }
-    virtual float HoldTime()        const { return 6.0f;  }
-    virtual float FadeTime()        const { return 1.25f; }
+    float PreignitionTime() const override { return 0.20f; }
+    float IgnitionTime()    const override { return 0.00f; }
+    float HoldTime()        const override { return 6.0f;  }
+    float FadeTime()        const override { return 1.25f; }
     virtual float StarSize()        const { return 0.00f; }
 };
 
@@ -361,7 +359,7 @@ class HotWhiteStar : public Star
     {
     }
 
-    virtual ~HotWhiteStar()
+    ~HotWhiteStar() override
     {}
 
     static int GetStarTypeNumber()
@@ -369,10 +367,10 @@ class HotWhiteStar : public Star
         return EFFECT_STAR_HOT_WHITE;
     }
 
-    virtual float PreignitionTime() const { return 0.00f;  }
-    virtual float IgnitionTime()    const { return 0.20f;  }
-    virtual float HoldTime()        const { return 0.00f;  }
-    virtual float FadeTime()        const { return 2.00f;  }
+    float PreignitionTime() const override { return 0.00f;  }
+    float IgnitionTime()    const override { return 0.20f;  }
+    float HoldTime()        const override { return 0.00f;  }
+    float FadeTime()        const override { return 2.00f;  }
 
     virtual CRGB RenderColor(TBlendType blend)
     {
@@ -400,7 +398,7 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
     {
         ObjectType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
         // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-        newstar._iPos = (int) randomfloat(0, _cLEDs-1-starWidth);
+        newstar._iPos = (int) random_range(0, _cLEDs-1-starWidth);
         _allParticles.push_back(newstar);
 
     }
@@ -467,7 +465,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -511,11 +509,12 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                 }
             #endif
 
-            if (randomdouble(0, 2.0) < g_AppTime.LastFrameTime() * prob)
+            constexpr auto kProbabilitySpan = 2.5;
+            if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
             {
                 StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                 // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                newstar._iPos = (int) randomfloat(0, _cLEDs-1-starWidth);
+                newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
                 _allParticles.push_back(newstar);
             }
         }
@@ -532,7 +531,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             _allParticles.pop_back();
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         CreateStars();
         Update();
@@ -601,7 +600,7 @@ public:
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         for (int i = 0; i < NUM_TWINKLES; i++)
@@ -609,7 +608,7 @@ public:
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
 
         // Init all the memory slots to -1 which means "empty slot"
@@ -626,7 +625,7 @@ public:
             setPixelsOnAllChannels(buffer[0], 0, 0, 0);
 
         // Pick a random pixel and put it in the TOP slot
-        int iNew = (int) randomfloat(0, _cLEDs);
+        int iNew = (int) random_range(0U, _cLEDs);
         setPixelOnAllChannels(iNew, RandomRainbowColor());
         buffer[NUM_TWINKLES - 1] = iNew;
     }

@@ -66,9 +66,9 @@ public:
     {
     }
 
-    uint16_t x;
-    uint16_t y;
-    uint16_t z;
+    uint16_t x = 0;
+    uint16_t y = 0;
+    uint16_t z = 0;
 
     uint16_t speed = 1;
     uint16_t scale = 26;
@@ -77,7 +77,7 @@ public:
 
     uint8_t hue = 0;
 
-    virtual void Start() override
+    void Start() override
     {
         x = random16();
         y = random16();
@@ -94,7 +94,7 @@ public:
         return 16;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         g()->DimAll(240);
 
@@ -113,7 +113,8 @@ public:
             boid->velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);
             boid->update();
 
-            g()->drawPixel(boid->location.x, boid->location.y, g()->ColorFromCurrentPalette(angle + hue)); // color
+            if (g()->isValidPixel(boid->location.x, boid->location.y))
+                g()->drawPixel(boid->location.x, boid->location.y, g()->ColorFromCurrentPalette(angle + hue)); // color
 
             if (boid->location.x < 0 || boid->location.x >= MATRIX_WIDTH ||
                 boid->location.y < 0 || boid->location.y >= MATRIX_HEIGHT)

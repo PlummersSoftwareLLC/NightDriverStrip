@@ -32,8 +32,6 @@
 
 #include "effects.h"
 
-extern AppTime g_AppTime;
-
 class PaletteEffect : public LEDStripEffect
 {
   private:
@@ -91,7 +89,7 @@ class PaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
@@ -115,12 +113,12 @@ class PaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         if (_bErase)
           setAllOnAllChannels(0,0,0);
 
-        float deltaTime = g_AppTime.LastFrameTime();
+        float deltaTime = g_Values.AppTime.LastFrameTime();
         float increment = (deltaTime * _LEDSPerSecond);
         const int totalSize = _gapSize + _lightSize + 1;
         _startIndex   = totalSize > 1 ? fmodf(_startIndex + increment, totalSize) : 0;
@@ -128,7 +126,7 @@ class PaletteEffect : public LEDStripEffect
         // A single color step in a palette is 32 increments.  There are 256 total in a palette, and 144 pixels per meter typical, so this
         // scaling yields a color rotation of "one full palette per meter" by default.  We go backwards (-1) to match pixel scrolling direction.
 
-        _paletteIndex = _paletteIndex - deltaTime * _paletteSpeed * 32 * _density * 256/144.0;
+        _paletteIndex = _paletteIndex - deltaTime * _paletteSpeed * 32 * _density * 256.0f/144.0f;
 
         float iColor = fmodf(_paletteIndex + _startIndex * _density, 256);
 

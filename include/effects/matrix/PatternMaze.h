@@ -56,7 +56,7 @@
 #ifndef PatternMaze_H
 #define PatternMaze_H
 
-class PatternMaze : public LEDStripEffect 
+class PatternMaze : public LEDStripEffect
 {
 private:
     enum Directions {
@@ -119,7 +119,7 @@ private:
 
     static const int width = MATRIX_WIDTH / 4;
     static const int height = MATRIX_HEIGHT / 2;
-    
+
 
     Directions grid[width][height];
 
@@ -154,13 +154,13 @@ private:
     }
 
     Point createPoint(int x, int y) {
-        Point point;
-        point.x = x;
-        point.y = y;
-        return point;
+        Point p;
+        p.x = x;
+        p.y = y;
+        return p;
     }
 
-    CRGB chooseColor(int index) 
+    CRGB chooseColor(int index)
     {
         switch (algorithm) {
             case 0:
@@ -170,8 +170,8 @@ private:
                 return CHSV(hue + 128, 255, 200);
         }
     }
-  
-    int chooseIndex(int max) 
+
+    int chooseIndex(int max)
     {
         switch (algorithm) {
             case 0:
@@ -195,7 +195,7 @@ private:
         }
     }
 
-    void drawNextCell() 
+    void drawNextCell()
     {
         int index = chooseIndex(cellCount);
 
@@ -212,12 +212,12 @@ private:
         g()->drawPixel(imagePoint.x, imagePoint.y, color);
         g()->drawPixel(MATRIX_WIDTH - 1 - imagePoint.x, imagePoint.y, color);
 
-        for (int i = 0; i < 4; i++) 
+        for (int i = 0; i < 4; i++)
         {
             Directions direction = directions[i];
 
             Point newPoint = point.Move(direction);
-            if (newPoint.x >= 0 && newPoint.y >= 0 && newPoint.x < width && newPoint.y < height && grid[newPoint.y][newPoint.x] == None) 
+            if (newPoint.x >= 0 && newPoint.y >= 0 && newPoint.x < width && newPoint.y < height && grid[newPoint.y][newPoint.x] == None)
             {
                 grid[point.y][point.x]       = (Directions) ((int) grid[point.y][point.x] | (int) direction);
                 grid[newPoint.y][newPoint.x] = (Directions) ((int) grid[newPoint.y][newPoint.x] | (int) point.Opposite(direction));
@@ -255,9 +255,9 @@ public:
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
-        if (cellCount < 1) 
+        if (cellCount < 1)
         {
             hue = random(256);
             g()->Clear();
@@ -287,7 +287,7 @@ public:
         }
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -297,7 +297,7 @@ public:
         return true;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         g()->Clear();
     }

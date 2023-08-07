@@ -49,9 +49,6 @@
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
-extern uint8_t g_Brightness;
-extern uint8_t g_Fader;
-
 // References to functions in other C files
 
 void InitSplashEffectManager();
@@ -63,14 +60,12 @@ bool ReadCurrentEffectIndex(size_t& index);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
-extern DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];
 
 // EffectManager
 //
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
-template <typename GFXTYPE>
-class EffectManager : public IJSONSerializable
+class  EffectManager : public IJSONSerializable
 {
     std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
 
@@ -83,7 +78,7 @@ class EffectManager : public IJSONSerializable
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
 
-    std::shared_ptr<GFXTYPE> * _gfx;
+    std::vector<std::shared_ptr<GFXBase>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
 
     void construct(bool clearTempEffect)
@@ -94,71 +89,17 @@ class EffectManager : public IJSONSerializable
         {
             _clearTempEffectWhenExpired = true;
 
-            // This is a hacky way to ensure that we start the correct effect after the temporary one
+            // This is a hacky way to ensure that we start the correct effect after the temporary one.
+            //   The switching to the next effect is taken care of by NextEffect(), which starts with
+            //   increasing _iCurrentEffect. We therefore need to decrease it here, to make sure that
+            //   the first effect after the temporary one is the one we want (either the then current
+            //   one when the chip was powered off, or the one at index 0).
             _iCurrentEffect--;
         }
     }
 
-    void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
-    {
-        std::set<int> loadedEffectNumbers;
-
-        // Create effects from JSON objects, using the respective factories in g_EffectFactories
-        auto& jsonFactories = g_EffectFactories.GetJSONFactories();
-
-        for (auto effectObject : effectsArray)
-        {
-            int effectNumber = effectObject[PTY_EFFECTNR];
-            auto factoryEntry = jsonFactories.find(effectNumber);
-
-            if (factoryEntry == jsonFactories.end())
-                continue;
-
-            auto pEffect = factoryEntry->second(effectObject);
-            if (pEffect)
-            {
-                if (effectObject[PTY_COREEFFECT].as<int>())
-                    pEffect->MarkAsCoreEffect();
-
-                _vEffects.push_back(pEffect);
-                loadedEffectNumbers.insert(effectNumber);
-            }
-        }
-
-        // Now add missing effects from the default factory list
-        auto &defaultFactories = g_EffectFactories.GetDefaultFactories();
-
-        // We iterate manually, so we can use where we are as the starting point for a later inner loop
-        for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
-        {
-            int effectNumber = iter->EffectNumber;
-
-            // If we've already loaded this effect (number) from JSON, we can move on to check the next one
-            if (loadedEffectNumbers.count(effectNumber))
-                continue;
-
-            // We found an effect (number) in the default list that we have not yet loaded from JSON.
-            //   So, we go through the rest of the default factory list to create and add to our effects
-            //   list all instances of this effect.
-            std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
-                {
-                    if (numberedFactory.EffectNumber != effectNumber)
-                        return;
-
-                    auto pEffect = numberedFactory.Factory();
-                    if (pEffect)
-                    {
-                        // Effects in the default list are core effects. These can be disabled but not deleted.
-                        pEffect->MarkAsCoreEffect();
-                        _vEffects.push_back(pEffect);
-                    }
-                }
-            );
-
-            // Register that we added this effect number, so we don't add the respective effects more than once
-            loadedEffectNumbers.insert(effectNumber);
-        }
-    }
+    // Implementation is in effects.cpp
+    void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
     void ClearEffects()
     {
@@ -169,7 +110,7 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
@@ -180,7 +121,7 @@ public:
         construct(false);
     }
 
-    EffectManager(std::shared_ptr<GFXTYPE> gfx [])
+    explicit EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
@@ -188,7 +129,7 @@ public:
         LoadDefaultEffects();
     }
 
-    EffectManager(const JsonObjectConst& jsonObject, std::shared_ptr<GFXTYPE> gfx [])
+    EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
@@ -202,6 +143,11 @@ public:
         ClearEffects();
     }
 
+    std::shared_ptr<GFXBase> GetBaseGraphics()
+    {
+        return _gfx[0];
+    }
+
     bool IsNewFrameAvailable() const
     {
         return _newFrameAvailable;
@@ -211,27 +157,9 @@ public:
     {
         _newFrameAvailable = available;
     }
-    
-    void LoadDefaultEffects()
-    {
-        for (auto &numberedFactory : g_EffectFactories.GetDefaultFactories())
-        {
-            auto pEffect = numberedFactory.Factory();
-            if (pEffect)
-            {
-                // Effects in the default list are core effects. These can be disabled but not deleted.
-                pEffect->MarkAsCoreEffect();
-                _vEffects.push_back(pEffect);
-            }
-        }
 
-        for (int i = 0; i < _vEffects.size(); i++)
-            EnableEffect(i, true);
-
-        SetInterval(DEFAULT_EFFECT_INTERVAL, true);
-
-        construct(true);
-    }
+    // Implementation is in effects.cpp
+    void LoadDefaultEffects();
 
     // DeserializeFromJSON
     //
@@ -255,7 +183,7 @@ public:
     //
     // Lastly, the function calls the construct() method, indicating successful deserialization.
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
+    bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         ClearEffects();
 
@@ -324,7 +252,7 @@ public:
     //
     // If all effects are successfully serialized, the function returns true, indicating successful serialization.
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
@@ -343,15 +271,10 @@ public:
         return true;
     }
 
-    std::shared_ptr<GFXTYPE> operator[](size_t index) const
-    {
-        return _gfx[index];
-    }
-
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
-    inline std::shared_ptr<GFXTYPE> g() const
+    inline std::shared_ptr<GFXBase> g(int iChannel = 0) const
     {
-        return _gfx[0];
+        return _gfx[iChannel];
     }
 
     // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.
@@ -359,7 +282,7 @@ public:
     virtual bool ShowVU(bool bShow)
     {
         bool bResult = _bShowVU;
-        debugW("Setting ShowVU to %d\n", bShow);
+        debugI("Setting ShowVU to %d\n", bShow);
         _bShowVU = bShow;
 
         // Erase any exising pixels since effects don't all clear each frame
@@ -371,7 +294,7 @@ public:
 
     virtual bool IsVUVisible() const
     {
-        return _bShowVU && GetCurrentEffect()->CanDisplayVUMeter();
+        return _bShowVU && GetCurrentEffect().CanDisplayVUMeter();
     }
 
     // SetGlobalColor
@@ -381,7 +304,7 @@ public:
 
     void SetGlobalColor(CRGB color)
     {
-        debugW("Setting Global Color");
+        debugI("Setting Global Color");
 
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
@@ -394,20 +317,20 @@ public:
             std::shared_ptr<LEDStripEffect> effect;
 
             if (color == CRGB(CRGB::White))
-                effect = std::make_shared<ColorFillEffect>(CRGB::White, 1);
+                effect = make_shared_psram<ColorFillEffect>(CRGB::White, 1);
             else
 
                 #if ENABLE_AUDIO
                     #if SPECTRUM
                         effect = GetSpectrumAnalyzer(color, oldColor);
                     #else
-                        effect = std::make_shared<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                        effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                     #endif
                 #else
-                    effect = std::make_shared<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
 
-            if (effect->Init(g_aptrDevices))
+            if (effect->Init(_gfx))
             {
                 _tempEffect = effect;
                 StartEffect();
@@ -421,8 +344,7 @@ public:
             _tempEffect = nullptr;
 
         #if (USE_MATRIX)
-            auto pMatrix = (*this)[0];
-            pMatrix->PausePalette(false);
+            g()->PausePalette(false);
         #endif
     }
 
@@ -435,8 +357,7 @@ public:
 
         #if USE_MATRIX
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
-            pMatrix->SetCaption(effect->FriendlyName(), 3000);
-            pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+            pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
         #endif
 
         effect->Start();
@@ -533,39 +454,8 @@ public:
     }
 
     // Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
-    //   use the AppendEffect() function for that.
-    std::shared_ptr<LEDStripEffect> CopyEffect(size_t index)
-    {
-        if (index >= _vEffects.size())
-        {
-            debugW("Invalid index for CopyEffect");
-            return nullptr;
-        }
-
-        static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-
-        auto& sourceEffect = _vEffects[index];
-
-        std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
-
-        SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
-            [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
-
-        auto jsonEffectFactories = g_EffectFactories.GetJSONFactories();
-        auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
-
-        if (factoryEntry == jsonEffectFactories.end())
-            return nullptr;
-
-        auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
-
-        if (!copiedEffect)
-            return nullptr;
-
-        copiedEffect->SetEnabled(false);
-
-        return copiedEffect;
-    }
+    //   use the AppendEffect() function for that. Implementation is in effects.cpp.
+    std::shared_ptr<LEDStripEffect> CopyEffect(size_t index);
 
     // Adds an effect to the effect list and enables it. If an effect is added that is already in the effect list then the result
     //   is undefined but potentially messy.
@@ -637,11 +527,7 @@ public:
 
     const bool AreEffectsEnabled() const
     {
-        for (auto& pEffect : _vEffects)
-            if (pEffect->IsEnabled())
-                return true;
-
-        return false;
+        return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
     }
 
     const size_t GetCurrentEffectIndex() const
@@ -649,9 +535,9 @@ public:
         return _iCurrentEffect;
     }
 
-    const std::shared_ptr<LEDStripEffect> GetCurrentEffect() const
+    LEDStripEffect& GetCurrentEffect() const
     {
-        return _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
+        return *(_tempEffect ? _tempEffect : _vEffects[_iCurrentEffect]);
     }
 
     const String & GetCurrentEffectName() const
@@ -696,14 +582,14 @@ public:
     uint GetInterval() const
     {
         // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
-        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect()->MaximumEffectTime());
+        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect().MaximumEffectTime());
     }
 
     void CheckEffectTimerExpired()
     {
         // If interval is zero, the current effect never expires unless it thas a max effect time set
 
-        if (_effectInterval == 0 && !GetCurrentEffect()->HasMaximumEffectTime())
+        if (_effectInterval == 0 && !GetCurrentEffect().HasMaximumEffectTime())
             return;
 
         if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
@@ -716,7 +602,7 @@ public:
 
             debugV("%ldms elapsed: Next Effect", millis() - _effectStartTime);
             NextEffect();
-            debugV("Current Effect: %s", GetCurrentEffectName());
+            debugV("Current Effect: %s", GetCurrentEffectName().c_str());
         }
     }
 
@@ -728,8 +614,7 @@ public:
 
     void PreviousPalette()
     {
-        auto g = _gfx[0];
-        g->CyclePalette(-1);
+        g()->CyclePalette(-1);
     }
     // Update to the next effect and abort the current effect.
 
@@ -772,15 +657,15 @@ public:
 
         for (int i = 0; i < _vEffects.size(); i++)
         {
-            debugV("About to init effect %s", _vEffects[i]->FriendlyName());
+            debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
             if (false == _vEffects[i]->Init(_gfx))
             {
-                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName());
+                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
                 return false;
             }
-            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName());
+            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
         }
-        debugV("First Effect: %s", GetCurrentEffectName());
+        debugV("First Effect: %s", GetCurrentEffectName().c_str());
         return true;
     }
 
@@ -793,7 +678,7 @@ public:
         if ((_gfx[0])->GetLEDCount() == 0)
             return;
 
-        const float msFadeTime = EFFECT_CROSS_FADE_TIME;
+        constexpr auto msFadeTime = EFFECT_CROSS_FADE_TIME;
 
         CheckEffectTimerExpired();
 
@@ -809,13 +694,13 @@ public:
 
         if (EffectCount() < 2)
         {
-            g_Fader = 255;
+            g_Values.Fader = 255;
             return;
         }
 
         if (_effectInterval == 0)
         {
-            g_Fader = 255;
+            g_Values.Fader = 255;
             return;
         }
 
@@ -824,17 +709,15 @@ public:
 
         if (e < msFadeTime)
         {
-            g_Fader = 255 * (e / msFadeTime); // Fade in
+            g_Values.Fader = 255 * (e / msFadeTime); // Fade in
         }
         else if (r < msFadeTime)
         {
-            g_Fader = 255 * (r / msFadeTime); // Fade out
+            g_Values.Fader = 255 * (r / msFadeTime); // Fade out
         }
         else
         {
-            g_Fader = 255; // No fade, not at start or end
+            g_Values.Fader = 255; // No fade, not at start or end
         }
     }
 };
-
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;

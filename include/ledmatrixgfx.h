@@ -2,8 +2,6 @@
 //
 // File:        ledmatrixgfx.h
 //
-// File:        NTPTimeClient.h
-//
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
@@ -48,8 +46,8 @@ class LEDMatrixGFX : public GFXBase
 {
 protected:
     String strCaption;
-    unsigned long captionStartTime;
-    float captionDuration;
+    unsigned long captionStartTime = 0;
+    float captionDuration = 0;
     const float captionFadeInTime = 500;
     const float captionFadeOutTime = 1000;
 
@@ -63,14 +61,12 @@ public:
     static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING   /* | SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1 */); // see http://docs.pixelmatix.com/SmartMatrix for options
     static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
     static const uint8_t kDefaultBrightness = 255; // full (100%) brightness
-    static const rgb24 defaultBackgroundColor;
+    static const rgb24   defaultBackgroundColor;
 
-    #if USE_MATRIX
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
     static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
-    #endif
 
     LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
@@ -80,31 +76,88 @@ public:
     {
     }
 
+    static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
+    {
+        StartMatrix();
+
+        for (int i = 0; i < NUM_CHANNELS; i++)
+        {
+            auto matrix = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            devices.push_back(matrix);
+            matrix->loadPalette(0);
+        }
+
+        // We don't need color correction on the title layer, but we want it on the main background
+
+        titleLayer.enableColorCorrection(false);
+        backgroundLayer.enableColorCorrection(true);
+
+        // Starting an effect might need to draw, so we need to set the leds up before doing so
+        std::static_pointer_cast<LEDMatrixGFX>(devices[0])->setLeds(GetMatrixBackBuffer());
+    }
+
     void SetBrightness(byte amount)
     {
         matrix.setBrightness(amount);
     }
-    
-    virtual uint16_t xy(uint16_t x, uint16_t y) const override
+
+    // EstimatePowerDraw
+    //
+    // Estimate the total power load for the board and matrix by walking the pixels and adding our previously measured
+    // power draw per pixel based on what color and brightness each pixel is
+
+    int EstimatePowerDraw()
     {
-        return y * MATRIX_WIDTH + x;    
+        constexpr auto kBaseLoad       = 1500;          // Experimentally derived values
+        constexpr auto mwPerPixelRed   = 4.10f;
+        constexpr auto mwPerPixelGreen = 0.82f;
+        constexpr auto mwPerPixelBlue  = 1.75f;
+
+        float totalPower = kBaseLoad;
+        for (int i = 0; i < NUM_LEDS; i++)
+        {
+            const auto pixel = leds[i];
+            totalPower += pixel.r * mwPerPixelRed   / 255.0f;
+            totalPower += pixel.g * mwPerPixelGreen / 255.0f;
+            totalPower += pixel.b * mwPerPixelBlue  / 255.0f;
+        }
+        return (int) totalPower;
+    }
+
+    uint16_t xy(uint16_t x, uint16_t y) const override
+    {
+        // Note the x,y are unsigned so can't be less than zero
+        if (x < _width && y < _height)
+            return y * MATRIX_WIDTH + x;
+
+        debugE("%s", str_sprintf("Invalid index in xy: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
+        return 0;
     }
 
     // Whereas an LEDStripGFX would track it's own memory for the CRGB array, we simply point to the buffer already used for
     // the matrix display memory.  That also eliminated having a local draw buffer that is then copied, because the effects
-    // can render directly to the right back buffer automatically.  
+    // can render directly to the right back buffer automatically.
 
     void setLeds(CRGB *pLeds)
     {
         leds = pLeds;
     }
 
-    virtual void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
+    void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
     {
-        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
-        // so we do it the "slow" way for other matrices
+        // A mesmerizer panel has the same layout as in memory, so we can memcpy.
 
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
+    }
+
+    void Clear() override
+    {
+        // NB: We directly clear the backbuffer because otherwise effects would start with a snapshot of the effect
+        //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
+        //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
+
+        memset((void *) backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
+        memset((void *) leds, 0, sizeof(CRGB) * _width * _height);
     }
 
     const String & GetCaption()
@@ -116,10 +169,10 @@ public:
     {
         unsigned long now = millis();
         if (strCaption == nullptr)
-            return 0;
+            return 0.0f;
 
         if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
-            return 0;
+            return 0.0f;
 
         float elapsed = now - captionStartTime;
 
@@ -127,9 +180,9 @@ public:
             return elapsed / captionFadeInTime;
 
         if (elapsed > captionFadeInTime + captionDuration)
-            return 1.0 - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
+            return 1.0f - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
 
-        return 1.0;
+        return 1.0f;
     }
 
     void SetCaption(const String & str, uint32_t duration)
@@ -139,7 +192,7 @@ public:
         captionStartTime = millis();
     }
 
-    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
+    void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll.  We should technically use memmove instead
@@ -151,11 +204,11 @@ public:
             auto pLinemem = leds + y * MATRIX_WIDTH;
             auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
             memcpy(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-            memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));                
+            memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
         }
     }
 
-    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
+    void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
         // out in order to do the scroll.  We should technically use memmove instead
@@ -170,6 +223,18 @@ public:
             memcpy(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
         }
     }
+
+    // PrepareFrame
+    //
+    // Gets the matrix ready for the effect or wifi to render into
+
+    void PrepareFrame() override;
+
+    // PostProcessFrame
+    //
+    // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
+
+    void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
 
     // Matrix interop
 

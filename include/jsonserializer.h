@@ -34,7 +34,6 @@
 #include <atomic>
 #include <ArduinoJson.h>
 #include "jsonbase.h"
-#include "FastLED.h"
 
 struct IJSONSerializable
 {
@@ -154,7 +153,7 @@ class JSONWriter
         {}
     };
 
-    std::vector<WriterEntry> writers;
+    std::vector<WriterEntry, psram_allocator<WriterEntry>> writers;
     std::atomic_ulong        latestFlagMs;
     std::atomic_bool         flushRequested;
     std::atomic_bool         haltWrites;
@@ -171,4 +170,3 @@ class JSONWriter
     void FlushWrites(bool halt = false);
 };
 
-extern DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter;

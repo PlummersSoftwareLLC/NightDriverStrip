@@ -69,7 +69,7 @@ public:
   {
   }
 
-  virtual void Draw() override
+  void Draw() override
   {
     auto graphics = (GFXBase *)_GFX[0].get();
     graphics->DimAll(254);

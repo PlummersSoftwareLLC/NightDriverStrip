@@ -31,13 +31,11 @@
 
 #pragma once
 
+#include "esp_attr.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
-#include "effectmanager.h"
-
-extern AppTime  g_AppTime;
-extern DRAM_ATTR uint8_t giInfoPage;                   // Which page of the display is being shown
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
+#include "values.h"
+#include "systemcontainer.h"
 
 #if ENABLE_AUDIO
 
@@ -92,7 +90,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         ProcessAudio();
         ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
 
-        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_AppTime.LastFrameTime()));
+        fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_Values.AppTime.LastFrameTime()));
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span)
@@ -108,7 +106,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         // REVIEW(davepl) This might look interesting if it didn't erase...
         bool bFlash = g_Analyzer._VURatio > 1.99 && span > 1.9 && elapsed > 0.25;
 
-        _allParticles.push_back(SpinningPaletteRingParticle(_GFX, iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
+        _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
     }
 };
 
@@ -182,7 +180,6 @@ class VUMeterEffect
     }
 };
 
-
 // SpectrumAnalyzerEffect
 //
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
@@ -192,15 +189,16 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 {
   protected:
 
-    bool      _bShowVU;
+    uint8_t   _numBars;
     uint8_t   _colorOffset;
     uint16_t  _scrollSpeed;
     uint8_t   _fadeRate;
-    uint8_t   _numBars;
 
     const CRGBPalette16 _palette;
     float _peak1DecayRate;
     float _peak2DecayRate;
+
+    bool      _bShowVU;
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -226,46 +224,27 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         int iBand = ::map(iBar, 0, _numBars, 0, NUM_BANDS);
         int iNextBand = (iBand + 1) % NUM_BANDS;
+        int barsPerBand = _numBars / NUM_BANDS;
 
-        if (_numBars >= NUM_BANDS * 4)
+        if (barsPerBand >= 2)
         {
-            // Interpolate across four bars
+            // Interpolate the value for the Nth bar by taking a proportional average of this band and the next band, depending on how
+            // far we are in between bars.  ib is the substep, so if you have 64 bars and 16 bands, ib will range from 0 to 3, and for
+            // bar 16, for example, it will take all of bar 4 and none of bar 5.  For bar 17, it will take 3/4 of bar 4 and 1/4 of bar 5.
 
-            if (iBar % 4 == 0)
-            {
-                value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-                value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
-            }
-            else if (iBar % 4 == 1)
-            {
-                value  = (g_Analyzer.g_peak1Decay[iBand] * 3 + g_Analyzer.g_peak1Decay[iNextBand] * 1 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 3 + g_Analyzer.g_peak2Decay[iNextBand] * 1 ) / 4 *  pGFXChannel->height();
-            }
-            else if (iBar % 4 == 2)
-            {
-                value  = (g_Analyzer.g_peak1Decay[iBand] * 2 + g_Analyzer.g_peak1Decay[iNextBand] * 2 ) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 2 + g_Analyzer.g_peak2Decay[iNextBand] * 2 ) / 4 *  pGFXChannel->height();
-            }
-            else if (iBar % 4 == 3)
-            {
-                value  = (g_Analyzer.g_peak1Decay[iBand] * 1 + g_Analyzer.g_peak1Decay[iNextBand] * 3) / 4 * (pGFXChannel->height() - 1);
-                value2 = (g_Analyzer.g_peak2Decay[iBand] * 1 + g_Analyzer.g_peak2Decay[iNextBand] * 3) / 4 *  pGFXChannel->height();
-            }
-        }
-        else if ((_numBars > NUM_BANDS) && (iBar % 2 == 1))
-        {
-            // For odd bars, average the bars to the left and right of this one
-            value  = ((g_Analyzer.g_peak1Decay[iBand] + g_Analyzer.g_peak1Decay[iNextBand]) / 2) * (pGFXChannel->height() - 1);
-            value2 = ((g_Analyzer.g_peak2Decay[iBand] + g_Analyzer.g_peak2Decay[iNextBand]) / 2) *  pGFXChannel->height();
+            int ib = iBar % barsPerBand;
+            value  = (g_Analyzer._peak1Decay[iBand] * (barsPerBand - ib) + g_Analyzer._peak1Decay[iNextBand] * (ib) ) / barsPerBand * (pGFXChannel->height() - 1);
+            value2 = (g_Analyzer._peak2Decay[iBand] * (barsPerBand - ib) + g_Analyzer._peak2Decay[iNextBand] * (ib) ) / barsPerBand *  pGFXChannel->height();
         }
         else
         {
-            // One to one case
-            value  = g_Analyzer.g_peak1Decay[iBand] * (pGFXChannel->height() - 1);
-            value2 = g_Analyzer.g_peak2Decay[iBand] *  pGFXChannel->height();
+            // One to one case, just use the actual band value we mapped to
+
+            value  = g_Analyzer._peak1Decay[iBand] * (pGFXChannel->height() - 1);
+            value2 = g_Analyzer._peak2Decay[iBand] *  pGFXChannel->height();
         }
 
-        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer.g_peak1Decay[iBar] );
+        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer._peak1Decay[iBar] );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
@@ -275,8 +254,18 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
         int barWidth  = pGFXChannel->width() / _numBars;
         int xOffset   = iBar * barWidth;
-        int yOffset   = pGFXChannel->height() - value;
-        int yOffset2  = pGFXChannel->height() - value2;
+
+        // The top of the bar is normally just matrix height less the value.  Here, however, we "enhance" the bar by pulsing it a bit with
+        // the beat of the music.  We do this by taking the value and subtracting a fraction of itself, which makes the bar taller when the
+        // beat is higher.  We also subtract a fraction of the VU fade, which makes the bar taller when the VU is higher.  The net effect is
+        // that the bar is taller when the beat is higher, and the beat is higher when the VU is higher, so the bar is taller when the VU is
+        // higher.
+
+        value *= g_Analyzer.BeatEnhance(BARBEAT_ENHANCE);
+        value2 *= g_Analyzer.BeatEnhance(BARBEAT_ENHANCE);
+
+        int yOffset   = pGFXChannel->height() - value ;
+        int yOffset2  = pGFXChannel->height() - value2 ;
 
         for (int y = yOffset2; y < pGFXChannel->height(); y++)
             for (int x = xOffset; x < xOffset + barWidth; x++)
@@ -296,18 +285,18 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             {
                 const int PeakFadeTime_ms = 1000;
 
-                unsigned long msPeakAge = millis() - g_Analyzer.g_lastPeak1Time[iBand];
+                unsigned long msPeakAge = millis() - g_Analyzer._lastPeak1Time[iBand];
                 if (msPeakAge > PeakFadeTime_ms)
                     msPeakAge = PeakFadeTime_ms;
 
                 float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
                 uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
                 colorHighlight.fadeToBlackBy(fadeAmount);
-                pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
+                pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth, max(0, yOffset-1), colorHighlight);
             }
             else
             {
-                pGFXChannel->drawLine(xOffset, max(0, yOffset2-1), xOffset + barWidth - 1, max(0, yOffset2-1), colorHighlight);
+                pGFXChannel->drawLine(xOffset, max(0, yOffset2-1), xOffset + barWidth, max(0, yOffset2-1), colorHighlight);
             }
         }
     }
@@ -371,21 +360,25 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _palette;
-        jsonDoc["nmb"] = _numBars;
-        jsonDoc[PTY_SPEED] = _scrollSpeed;
-        jsonDoc["frt"] = _fadeRate;
-        jsonDoc["pd1"] = _peak1DecayRate;
-        jsonDoc["pd2"] = _peak2DecayRate;
+        jsonDoc["nmb"]       = _numBars;
+        jsonDoc[PTY_SPEED]   = _scrollSpeed;
+        jsonDoc["frt"]       = _fadeRate;
+        jsonDoc["pd1"]       = _peak1DecayRate;
+        jsonDoc["pd2"]       = _peak2DecayRate;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
+    virtual void Start() override
+    {
+        // The peaks and their decay rates are global, so we load up our values every time we display so they're current
+
+        g_Analyzer._peak1DecayRate = _peak1DecayRate;
+        g_Analyzer._peak2DecayRate = _peak2DecayRate;
+    }
+
     virtual void Draw() override
     {
-        // The peaks and their decay rates are global, so we load up our values every time we draw so they're current
-
-        g_Analyzer.g_peak1DecayRate = _peak1DecayRate;
-        g_Analyzer.g_peak2DecayRate = _peak2DecayRate;
 
         auto pGFXChannel = _GFX[0];
 
@@ -409,7 +402,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             //
             // If the palette is scrolling, we do a smooth blend.  Otherwise we do a straight color lookup, which makes the stripes
             // on the USA flag solid red rather than pinkish...
-            
+
             if (pGFXChannel->IsPalettePaused())
             {
                 int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
@@ -468,8 +461,6 @@ class WaveformEffect : public LEDStripEffect
         v = std::min(v, 1.0f);
         v = std::max(v, 0.0f);
 
-        auto g = g_ptrEffectManager->g();
-
         int yTop = (MATRIX_HEIGHT / 2) - v * (MATRIX_HEIGHT  / 2);
         int yBottom = (MATRIX_HEIGHT / 2) + v * (MATRIX_HEIGHT / 2) ;
         if (yTop < 0)
@@ -491,10 +482,10 @@ class WaveformEffect : public LEDStripEffect
                 if (y < 2 || y > (MATRIX_HEIGHT - 2))
                     color  = CRGB::Red;
                 else
-                    color = g->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
+                    color = g()->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
             }
 
-            bErase ? g->setPixel(x, y, color) : g->drawPixel(x, y, color);
+            bErase ? g()->setPixel(x, y, color) : g()->drawPixel(x, y, color);
 
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
@@ -509,11 +500,9 @@ class WaveformEffect : public LEDStripEffect
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
-
-        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
-        g->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
-        DrawSpike(63, g_Analyzer._VURatio/2.0);
+        int top = g_ptrSystem->EffectManager().IsVUVisible() ? 1 : 0;
+        g()->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
+        DrawSpike(MATRIX_WIDTH-1, g_Analyzer._VURatio/2.0);
         DrawSpike(0, g_Analyzer._VURatio/2.0);
     }
 };
@@ -570,30 +559,153 @@ class GhostWave : public WaveformEffect
     virtual size_t DesiredFramesPerSecond() const override
     {
         // Looks cool at the low-50s it can actually achieve
-        return _blur > 0 ? 60 : 30;
+        return _blur > 0 ? 45 : 30;
     }
 
     virtual void Draw() override
     {
-        auto g = g_ptrEffectManager->g();
+        auto& effectManager = g_ptrSystem->EffectManager();
+        int top = effectManager.IsVUVisible() ? 1 : 0;
 
-        int top = g_ptrEffectManager->IsVUVisible() ? 1 : 0;
-
-        g->MoveOutwardsX(top);
+        g()->MoveOutwardsX(top);
 
         if (_fade)
-            g->DimAll(255-_fade);
+            g()->DimAll(255-_fade);
 
         if (_blur)
-            g->blurRows(g->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blur);
-        
+            g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 1, _blur);
+
         // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 
         float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
-        
+
         // Offsetting by 0.25, which is a very low ratio, helps keep the line thin when sound is low
-        DrawSpike(MATRIX_WIDTH/2, (audioLevel - 0.25) / 1.75, _erase);
-        DrawSpike(MATRIX_WIDTH/2-1, (audioLevel - 0.25) / 1.75, _erase);
+        //audioLevel = (audioLevel - 0.25) / 1.75;
+
+        // Now pulse it by some amount based on the beat
+        audioLevel = audioLevel * g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE);
+
+        DrawSpike(MATRIX_WIDTH/2, audioLevel, _erase);
+        DrawSpike(MATRIX_WIDTH/2-1, audioLevel, _erase);
+    }
+};
+
+// SpectrumBarEffect
+//
+// Draws an approximation of the waveform by mirroring the spectrum analyzer bars in four quadrants
+
+class SpectrumBarEffect : public LEDStripEffect
+{
+    byte _hueIncrement = 0;
+    byte _scrollIncrement = 0;
+    byte _hueStep = 0;
+
+    void construct()
+    {
+        _effectNumber = EFFECT_MATRIX_SPECTRUMBAR;
+    }
+
+    public:
+
+    SpectrumBarEffect(const char   * pszFriendlyName, byte hueStep = 16, byte hueIncrement = 4, byte scrollIncrement = 0)
+        :LEDStripEffect(EFFECT_MATRIX_SPECTRUMBAR, pszFriendlyName),
+        _hueIncrement(hueIncrement),
+        _scrollIncrement(scrollIncrement),
+        _hueStep(hueStep)
+    {
+    }
+
+    SpectrumBarEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject),
+          _hueIncrement(jsonObject[PTY_DELTAHUE]),
+          _scrollIncrement(jsonObject[PTY_SPEED]),
+          _hueStep(jsonObject[PTY_HUESTEP])
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_SPEED]    = _scrollIncrement;
+        jsonDoc[PTY_DELTAHUE] = _hueIncrement;
+        jsonDoc[PTY_HUESTEP]  = _hueStep;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
+    {
+        return 45;
+    }
+
+    virtual bool RequiresDoubleBuffering() const override
+    {
+        return true;
+    }
+
+    void DrawGraph()
+    {
+        constexpr size_t halfHeight = MATRIX_HEIGHT / 2;
+        constexpr size_t halfWidth  = MATRIX_WIDTH  / 2;
+
+        // We step the hue ever 30ms
+        static byte hue = 0;
+        EVERY_N_MILLISECONDS(30)
+            hue -= _hueIncrement;
+
+        // We scroll the bars ever 50ms
+        static byte offset = 0;
+        EVERY_N_MILLISECONDS(50)
+            offset += _scrollIncrement;
+
+        for (int iBand = 0; iBand < NUM_BANDS; iBand++)
+        {
+            // Draw the spike
+
+            auto value =  g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE) * g_Analyzer._peak1Decay[iBand];
+            auto top    = std::max(0.0f, halfHeight - value * halfHeight);
+            auto bottom = std::min(MATRIX_HEIGHT-1.0f, halfHeight + value * halfHeight + 1);
+            auto x1     = halfWidth - ((iBand * 2 + offset) % halfWidth);
+            auto x2     = halfWidth + ((iBand * 2 + offset) % halfWidth);
+
+            if (value == 0.0f)
+                bottom = top;
+
+            if (x1 < 0 || x2 >= MATRIX_WIDTH)
+                break;
+
+            CRGB  color = g()->IsPalettePaused() ? g()->ColorFromCurrentPalette() : CHSV(hue + iBand * _hueStep, 255, 255);
+            g()->drawLine(x1, top, x1, bottom, color);
+            g()->drawLine(x2, top, x2, bottom, color);
+        }
+        g()->drawLine(0, halfHeight, MATRIX_WIDTH - 1, halfHeight, CRGB::Grey);
+     }
+
+    virtual void Start() override
+    {
+        constexpr auto kPeakDecaySpectrumBar = 2.5;
+
+        // Set the peak decay rates to something that looks good for this effect
+        
+        g_Analyzer._peak1DecayRate = kPeakDecaySpectrumBar;
+        g_Analyzer._peak2DecayRate = kPeakDecaySpectrumBar;
+        
+        // This effect doesn't clear during drawing, so we need to clear to start the frame
+
+        g()->Clear();
+    }
+
+    virtual void Draw() override
+    {
+        // Rather than clearing the screen, we fade it out quickly, which gives a nice persistence of vision effect
+        // as the bars fade back to black once the line has receeded
+
+        g()->DimAll(200);
+        DrawGraph();
     }
 };
 

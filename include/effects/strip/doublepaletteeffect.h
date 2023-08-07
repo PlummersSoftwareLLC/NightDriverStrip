@@ -32,8 +32,6 @@
 
 #include "effects.h"
 
-extern AppTime g_AppTime;
-
 class DoublePaletteEffect : public LEDStripEffect
 {
   private:
@@ -57,7 +55,7 @@ class DoublePaletteEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(896);
 
@@ -72,7 +70,7 @@ class DoublePaletteEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         if (!_PaletteEffect1.Init(gfx) || !_PaletteEffect2.Init(gfx))
@@ -80,7 +78,7 @@ class DoublePaletteEffect : public LEDStripEffect
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         setAllOnAllChannels(0,0,0);
         _PaletteEffect1.Draw();

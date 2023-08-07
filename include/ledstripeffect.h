@@ -33,11 +33,15 @@
 #include "effects.h"
 #include "jsonserializer.h"
 #include "types.h"
+#include "gfxbase.h"
+#include "ledmatrixgfx.h"
 #include <memory>
 #include <list>
 #include <stdlib.h>
 
-#define RETURN_IF_SET(settingName, propertyName, property, value) if (SetIfSelected(settingName, propertyName, property, value)) return true
+#define RETURN_IF_SET(settingName, propertyName, property, value) \
+    if (SetIfSelected(settingName, propertyName, property, value)) \
+        return true
 
 // LEDStripEffect
 //
@@ -48,18 +52,18 @@ class LEDStripEffect : public IJSONSerializable
   private:
 
     bool   _coreEffect = false;
-    static std::vector<SettingSpec> _baseSettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> _baseSettingSpecs;
 
   protected:
 
-    size_t _cLEDs;
-    String _friendlyName;
+    size_t _cLEDs = 0;
     int    _effectNumber;
+    String _friendlyName;
     bool   _enabled = true;
     size_t _maximumEffectTime = SIZE_MAX;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
-    std::shared_ptr<GFXBase> _GFX[NUM_CHANNELS];
+    std::vector<std::shared_ptr<GFXBase>> _GFX;
 
     #define SET_IF_NAMES_MATCH(firstName, secondName, property, value)  if (firstName == secondName) \
     { \
@@ -105,9 +109,11 @@ class LEDStripEffect : public IJSONSerializable
         CRGB colors[16];
         int colorIndex = 0;
 
-        auto componentsArray = src.as<JsonArrayConst>();
-        for (auto value : componentsArray)
-            colors[colorIndex++] = value.as<CRGB>();
+        const auto & componentsArray = src.as<JsonArrayConst>();
+        for (const auto &v: componentsArray)
+        {
+            colors[colorIndex++] = v.as<CRGB>();
+        }
 
         property = CRGBPalette16(colors);
 
@@ -181,16 +187,16 @@ class LEDStripEffect : public IJSONSerializable
     {
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS])
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
         debugV("Init %s", _friendlyName.c_str());
 
-        for (int i = 0; i < NUM_CHANNELS; i++)                      // There are up to 8 channel in play per effect and when we
-            _GFX[i] = gfx[i];                                       //   start up, we are given copies to their graphics interfaces
+        _GFX = gfx;                                                 // There are up to 8 channel in play per effect and when we
+                                                                    //   start up, we are given copies to their graphics interfaces
                                                                     //   so that we can call them directly later from other calls
         _cLEDs = _GFX[0]->GetLEDCount();
 
-        debugV("Init Effect %s with %d LEDs\n", _friendlyName.c_str(), _cLEDs);
+        debugV("Init Effect %s with %zu LEDs\n", _friendlyName.c_str(), _cLEDs);
         return true;
     }
 
@@ -208,6 +214,13 @@ class LEDStripEffect : public IJSONSerializable
       std::shared_ptr<LEDMatrixGFX> mg(size_t channel = 0)
       {
         return std::static_pointer_cast<LEDMatrixGFX>(_GFX[channel]);
+      }
+    #endif
+
+    #if HEXAGON
+      std::shared_ptr<HexagonGFX> hg(size_t channel = 0)
+      {
+        return std::static_pointer_cast<HexagonGFX>(_GFX[channel]);
       }
     #endif
 
@@ -273,7 +286,7 @@ class LEDStripEffect : public IJSONSerializable
                 CRGB::Indigo,
                 CRGB::Violet
             };
-        int randomColorIndex = (int)randomfloat(0, ARRAYSIZE(colors));
+        int randomColorIndex = random_range(0U, ARRAYSIZE(colors));
         return colors[randomColorIndex];
     }
 
@@ -284,7 +297,7 @@ class LEDStripEffect : public IJSONSerializable
     static CRGB RandomSaturatedColor()
     {
         CRGB c;
-        c.setHSV((uint8_t)randomfloat(0, 255), 255, 255);
+        c.setHSV(random_range(0,255), 255, 255);
         return c;
     }
 
@@ -292,7 +305,7 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Given a temp in the 0-1 range, returns a fire-appropriate black body radiator color for it
 
-    static CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const
     {
         temp = std::clamp(temp, 0.0f, 1.0f);
         uint8_t temperature = (uint8_t)(255 * temp);
@@ -327,11 +340,10 @@ class LEDStripEffect : public IJSONSerializable
             return;
         }
 
-        for (int n = 0; n < NUM_CHANNELS; n++)
+        for (auto& device : _GFX)
         {
             for (int i = iStart; i < iStart + numToFill; i+= everyN)
-                _GFX[n]->setPixel(i, color);
-
+                device->setPixel(i, color);
         }
     }
 
@@ -341,8 +353,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void ClearFrameOnAllChannels()
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->Clear();
+        for (auto& device : _GFX)
+            device->Clear();
     }
 
     // ColorFraction
@@ -390,11 +402,11 @@ class LEDStripEffect : public IJSONSerializable
 
     void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
+        for (auto& device : _GFX)
         {
-            CRGB crgb = _GFX[i]->getPixel(pixel);
+            CRGB crgb = device->getPixel(pixel);
             crgb.fadeToBlackBy(fadeValue);
-            _GFX[i]->setPixel(pixel, crgb);
+            device->setPixel(pixel, crgb);
         }
     }
 
@@ -406,9 +418,9 @@ class LEDStripEffect : public IJSONSerializable
 
     void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const
     {
-        for (int n = 0; n < NUM_CHANNELS; n++)
+        for (auto& device : _GFX)
             for (int i = 0; i < _cLEDs; i++)
-                _GFX[n]->setPixel(i, r, g, b);
+                device->setPixel(i, r, g, b);
     }
 
     // setPixelOnAllChannels
@@ -417,8 +429,8 @@ class LEDStripEffect : public IJSONSerializable
 
     void setPixelOnAllChannels(int i, CRGB c)
     {
-        for (int j = 0; j < NUM_CHANNELS; j++)
-            _GFX[j]->setPixel(i, c);
+        for (auto& device : _GFX)
+            device->setPixel(i, c);
     }
 
     // setPixelsOnAllChannels
@@ -428,15 +440,15 @@ class LEDStripEffect : public IJSONSerializable
 
     void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const
     {
-        for (int i = 0; i < NUM_CHANNELS; i++)
-            _GFX[i]->setPixelsF(fPos, count, c, bMerge);
+        for (auto& device : _GFX)
+            device->setPixelsF(fPos, count, c, bMerge);
     }
 
     // SerializeToJSON
     //
     // Serialize this effects paramters to a JSON document
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 

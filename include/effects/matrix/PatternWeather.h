@@ -39,42 +39,39 @@
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
 #include <secrets.h>
-#include <RemoteDebug.h>
-#include <FastLED.h>
 #include <ArduinoJson.h>
-#include "globals.h"
-#include "deviceconfig.h"
-#include "jsonserializer.h"
+#include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
 #include <thread>
 #include <map>
 #include "effects.h"
+#include "types.h"
 
 #define WEATHER_INTERVAL_SECONDS (10*60)
 #define WEATHER_CHECK_WIFI_WAIT 5000
 
-extern const uint8_t brokenclouds_start[] asm("_binary_assets_bmp_brokenclouds_jpg_start");
-extern const uint8_t brokenclouds_end[] asm("_binary_assets_bmp_brokenclouds_jpg_end");
-extern const uint8_t clearsky_start[] asm("_binary_assets_bmp_clearsky_jpg_start");
-extern const uint8_t clearsky_end[] asm("_binary_assets_bmp_clearsky_jpg_end");
-extern const uint8_t fewclouds_start[] asm("_binary_assets_bmp_fewclouds_jpg_start");
-extern const uint8_t fewclouds_end[] asm("_binary_assets_bmp_fewclouds_jpg_end");
-extern const uint8_t mist_start[] asm("_binary_assets_bmp_mist_jpg_start");
-extern const uint8_t mist_end[] asm("_binary_assets_bmp_mist_jpg_end");
-extern const uint8_t rain_start[] asm("_binary_assets_bmp_rain_jpg_start");
-extern const uint8_t rain_end[] asm("_binary_assets_bmp_rain_jpg_end");
+extern const uint8_t brokenclouds_start[]    asm("_binary_assets_bmp_brokenclouds_jpg_start");
+extern const uint8_t brokenclouds_end[]      asm("_binary_assets_bmp_brokenclouds_jpg_end");
+extern const uint8_t clearsky_start[]        asm("_binary_assets_bmp_clearsky_jpg_start");
+extern const uint8_t clearsky_end[]          asm("_binary_assets_bmp_clearsky_jpg_end");
+extern const uint8_t fewclouds_start[]       asm("_binary_assets_bmp_fewclouds_jpg_start");
+extern const uint8_t fewclouds_end[]         asm("_binary_assets_bmp_fewclouds_jpg_end");
+extern const uint8_t mist_start[]            asm("_binary_assets_bmp_mist_jpg_start");
+extern const uint8_t mist_end[]              asm("_binary_assets_bmp_mist_jpg_end");
+extern const uint8_t rain_start[]            asm("_binary_assets_bmp_rain_jpg_start");
+extern const uint8_t rain_end[]              asm("_binary_assets_bmp_rain_jpg_end");
 extern const uint8_t scatteredclouds_start[] asm("_binary_assets_bmp_scatteredclouds_jpg_start");
-extern const uint8_t scatteredclouds_end[] asm("_binary_assets_bmp_scatteredclouds_jpg_end");
-extern const uint8_t showerrain_start[] asm("_binary_assets_bmp_showerrain_jpg_start");
-extern const uint8_t showerrain_end[] asm("_binary_assets_bmp_showerrain_jpg_end");
-extern const uint8_t snow_start[] asm("_binary_assets_bmp_snow_jpg_start");
-extern const uint8_t snow_end[] asm("_binary_assets_bmp_snow_jpg_end");
-extern const uint8_t thunderstorm_start[] asm("_binary_assets_bmp_thunderstorm_jpg_start");
-extern const uint8_t thunderstorm_end[] asm("_binary_assets_bmp_thunderstorm_jpg_end");
+extern const uint8_t scatteredclouds_end[]   asm("_binary_assets_bmp_scatteredclouds_jpg_end");
+extern const uint8_t showerrain_start[]      asm("_binary_assets_bmp_showerrain_jpg_start");
+extern const uint8_t showerrain_end[]        asm("_binary_assets_bmp_showerrain_jpg_end");
+extern const uint8_t snow_start[]            asm("_binary_assets_bmp_snow_jpg_start");
+extern const uint8_t snow_end[]              asm("_binary_assets_bmp_snow_jpg_end");
+extern const uint8_t thunderstorm_start[]    asm("_binary_assets_bmp_thunderstorm_jpg_start");
+extern const uint8_t thunderstorm_end[]      asm("_binary_assets_bmp_thunderstorm_jpg_end");
 
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
-static std::map<int, EmbeddedFile> weatherIcons =
+static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int, EmbeddedFile>>> weatherIcons =
 {
     { 1, EmbeddedFile(clearsky_start, clearsky_end) },
     { 2, EmbeddedFile(fewclouds_start, fewclouds_end) },
@@ -118,12 +115,12 @@ private:
         return false;
     }
 
-    virtual size_t DesiredFramesPerSecond() const override
+    size_t DesiredFramesPerSecond() const override
     {
         return 25;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
@@ -140,7 +137,7 @@ private:
 
     inline float KelvinToLocal(float K)
     {
-        if (g_ptrDeviceConfig->UseCelsius())
+        if (g_ptrSystem->DeviceConfig().UseCelsius())
             return KelvinToCelsius(K);
         else
             return KelvinToFarenheit(K);
@@ -154,23 +151,23 @@ private:
         if (!HasLocationChanged())
             return false;
 
-        const String& configLocation = g_ptrDeviceConfig->GetLocation();
-        const String& configCountryCode = g_ptrDeviceConfig->GetCountryCode();
-        const bool configLocationIsZip = g_ptrDeviceConfig->IsLocationZip();
+        const String& configLocation = g_ptrSystem->DeviceConfig().GetLocation();
+        const String& configCountryCode = g_ptrSystem->DeviceConfig().GetCountryCode();
+        const bool configLocationIsZip = g_ptrSystem->DeviceConfig().IsLocationZip();
 
         if (configLocationIsZip)
             url = "http://api.openweathermap.org/geo/1.0/zip"
-                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         else
             url = "http://api.openweathermap.org/geo/1.0/direct"
-                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
 
         http.begin(url);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode <= 0)
         {
-            debugW("Error fetching coordinates for location: %s", configLocation);
+            debugW("Error fetching coordinates for location: %s", configLocation.c_str());
             http.end();
             return false;
         }
@@ -198,7 +195,7 @@ private:
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -257,7 +254,7 @@ private:
         HTTPClient http;
 
         String url = "http://api.openweathermap.org/data/2.5/weather"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrDeviceConfig->GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -307,9 +304,13 @@ private:
         {
             debugW("Got today's weather");
             if (getTomorrowTemps(highTomorrow, loTomorrow))
+            {
                 debugI("Got tomorrow's weather");
+            }
             else
+            {
                 debugW("Failed to get tomorrow's weather");
+            }
         }
         else
         {
@@ -319,8 +320,8 @@ private:
 
     bool HasLocationChanged()
     {
-        String configLocation = g_ptrDeviceConfig->GetLocation();
-        String configCountryCode = g_ptrDeviceConfig->GetCountryCode();
+        String configLocation = g_ptrSystem->DeviceConfig().GetLocation();
+        String configCountryCode =g_ptrSystem->DeviceConfig().GetCountryCode();
 
         return strLocation != configLocation || strCountryCode != configCountryCode;
     }
@@ -337,20 +338,20 @@ public:
 
     ~PatternWeather()
     {
-        g_ptrNetworkReader->CancelReader(readerIndex);
+        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        readerIndex = g_ptrNetworkReader->RegisterReader([this]() { UpdateWeather(); });
+        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this]() { UpdateWeather(); });
 
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         const int fontHeight = 7;
         const int fontWidth  = 5;
@@ -374,7 +375,7 @@ public:
 
             debugW("Triggering thread to check weather now...");
             // Trigger the weather reader.
-            g_ptrNetworkReader->FlagReader(readerIndex);
+            g_ptrSystem->NetworkReader().FlagReader(readerIndex);
         }
 
         // Draw the graphics
@@ -402,7 +403,7 @@ public:
         g()->setTextColor(WHITE16);
         String showLocation = strLocation;
         showLocation.toUpperCase();
-        if (g_ptrDeviceConfig->GetOpenWeatherAPIKey().isEmpty())
+        if (g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
             g()->print("No API Key");
         else
             g()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
@@ -429,7 +430,7 @@ public:
         // Figure out which day of the week it is
 
         time_t today = time(nullptr);
-        tm * todayTime = localtime(&today);
+        const tm * todayTime = localtime(&today);
         const char * pszToday = pszDaysOfWeek[todayTime->tm_wday];
         const char * pszTomorrow = pszDaysOfWeek[ (todayTime->tm_wday + 1) % 7 ];
 

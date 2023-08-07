@@ -34,7 +34,6 @@
 #pragma once
 
 #include <mutex>
-//#include <freefonts.h>
 #include "gfxbase.h"
 
 class Screen : public GFXBase
@@ -58,10 +57,9 @@ public:
 
     // Define the drawable area for the spectrum to render into the status area
 
-    const int TopMargin = 52;
     const int BottomMargin = 12;
 
-    virtual void ScreenStatus(const String &strStatus) 
+    virtual void ScreenStatus(const String &strStatus)
     {
         fillScreen(BLACK16);
         //setFont();
@@ -77,7 +75,7 @@ public:
     //
     // Returns the height of the current font
 
-    virtual int fontHeight() 
+    virtual int fontHeight()
     {
         int16_t x1, y1;
         uint16_t w, h;
@@ -86,7 +84,7 @@ public:
     }
 
     // textHeight
-    // 
+    //
     // Returns the height of a string in screen pixels
 
     virtual int textHeight(const String & str)
@@ -172,14 +170,14 @@ public:
         TFTScreen(int w, int h) : Screen(w, h)
         {
             tft.begin();
-            
+
             pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
             digitalWrite(TFT_BL, 128);
 
             tft.setRotation(3);
-            tft.fillScreen(TFT_GREEN);    
-            tft.setTextDatum(L_BASELINE);   
-        }   
+            tft.fillScreen(TFT_GREEN);
+            tft.setTextDatum(L_BASELINE);
+        }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
         {
@@ -218,7 +216,7 @@ public:
         {
             oled.begin();
             oled.clear();
-        }   
+        }
 
         virtual void StartFrame() override
         {
@@ -251,7 +249,7 @@ public:
     #include <U8g2lib.h>                // Library for monochrome displays
     #include <gfxfont.h>                // Adafruit GFX font structs
     #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
-    #include <heltec.h>                // Display 
+    #include <heltec.h>                // Display
 
     class SSD1306Screen : public Screen
     {
@@ -261,7 +259,7 @@ public:
         {
             Heltec.begin(true /*DisplayEnable Enable*/, true /*LoRa Disable*/, false /*Serial Enable*/);
             Heltec.display->screenRotate(ANGLE_180_DEGREE);
-        }   
+        }
 
         virtual void StartFrame() override
         {
@@ -287,6 +285,155 @@ public:
     };
 #endif
 
+#if ELECROW
+    // ElecrowScreen
+    //
+    // Display code for the Elecrow display on their 3.5" 
+
+    #define LGFX_USE_V1
+
+    #include <U8g2lib.h>                // Library for monochrome displays
+    #include <gfxfont.h>                // Adafruit GFX font structs
+    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
+    #include <LovyanGFX.hpp>            // For the Elecrow display
+
+    // TFT Pinout
+    
+    #define LCD_MOSI 13
+    #define LCD_MISO 14 
+    #define LCD_SCK  12
+    #define LCD_CS    3
+    #define LCD_RST  -1 
+    #define LCD_DC   42  
+
+    class ElecrowScreen : public Screen, lgfx::LGFX_Device
+    {
+        lgfx::Panel_ILI9488 _panel_instance;
+        lgfx::Bus_SPI _bus_instance;
+
+    public:
+
+        ElecrowScreen(int w, int h) : Screen(w, h)
+        {
+             // I'm not a fan of these local clauses but it keeps it the same as the original sample code
+            
+             {
+                auto cfg = _bus_instance.config();
+                cfg.spi_host = SPI3_HOST;
+                cfg.spi_mode = 0;
+                cfg.freq_write = 60000000;
+                cfg.freq_read = 16000000;
+                cfg.spi_3wire = true;
+                cfg.use_lock = true;
+                cfg.dma_channel = SPI_DMA_CH_AUTO;
+                cfg.pin_sclk = LCD_SCK;
+                cfg.pin_mosi = LCD_MOSI;
+                cfg.pin_miso = LCD_MISO;
+                cfg.pin_dc = LCD_DC;
+                _bus_instance.config(cfg);
+                _panel_instance.setBus(&_bus_instance);
+            }
+
+            {
+                auto cfg = _panel_instance.config();
+
+                cfg.pin_cs = LCD_CS;
+                cfg.pin_rst = LCD_RST;
+                cfg.pin_busy = -1;
+                cfg.memory_width = h;
+                cfg.memory_height = w;
+                cfg.panel_width = h;
+                cfg.panel_height = w;
+                cfg.offset_x = 0;
+                cfg.offset_y = 0;
+                cfg.offset_rotation = 0;
+                cfg.dummy_read_pixel = 8;
+                cfg.dummy_read_bits = 1;
+                cfg.readable = true;
+                cfg.invert = false;
+                cfg.rgb_order = false;
+                cfg.dlen_16bit = false;
+                cfg.bus_shared = true;
+                _panel_instance.config(cfg);
+            }
+            setPanel(&_panel_instance);
+
+            constexpr auto LCD_BL = 46;
+            lgfx::LGFX_Device::init();     
+            lgfx::LGFX_Device::setRotation( 1 ); 
+            pinMode(LCD_BL, OUTPUT);
+            digitalWrite(LCD_BL, HIGH);
+            lgfx::LGFX_Device::fillScreen(TFT_BLUE);
+            lgfx::LGFX_Device::setTextDatum(lgfx::baseline_left);
+        }
+
+        virtual void startWrite(void) override
+        {
+            lgfx::LGFX_Device::startWrite();
+        }
+
+        virtual void endWrite(void) override
+        {
+            lgfx::LGFX_Device::endWrite();
+        }   
+
+        virtual void StartFrame() override
+        {
+            lgfx::LGFX_Device::startWrite();
+        }
+
+        virtual void EndFrame() override
+        {
+            lgfx::LGFX_Device::endWrite();
+        }
+
+        virtual void writePixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            lgfx::LGFX_Device::writePixel(x, y, color);
+        }   
+
+        virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
+        {
+            lgfx::LGFX_Device::writeFillRect(x, y, w, h, color);
+        }
+
+        virtual void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override
+        {
+            lgfx::LGFX_Device::writeFastVLine(x, y, h, color);
+        }
+        
+        virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override
+        {
+            lgfx::LGFX_Device::writeFastHLine(x, y, w, color);
+        }
+
+        virtual void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) override
+        {
+            lgfx::LGFX_Device::drawLine(x0, y0, x1, y1, color);
+        }
+
+        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            lgfx::LGFX_Device::drawPixel(x, y, color);
+        }
+
+        virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
+        {
+            lgfx::LGFX_Device::fillRect(x, y, w, h, color);
+        }
+
+        virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
+        {
+            lgfx::LGFX_Device::drawRect(x, y, w, h, color);
+        }
+
+        virtual void fillScreen(uint16_t color) override
+        {
+            lgfx::LGFX_Device::fillScreen(color);
+        }
+    };
+#endif
+
 #if USE_LCD
 
     #include <Adafruit_ILI9341.h>
@@ -294,7 +441,7 @@ public:
     // LCDScreen
     //
     // Screen class that works with the WROVER devkit board
-    
+
     class LCDScreen : public Screen
     {
         SPIClass hspi;
@@ -315,7 +462,7 @@ public:
             pLCD->begin();
             pLCD->setRotation(1);
             pLCD->fillScreen(GREEN16);
-        }   
+        }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
         {
@@ -329,8 +476,3 @@ public:
 
     };
 #endif
-
-#if USE_SCREEN
-extern std::unique_ptr<Screen> g_pDisplay;
-#endif
-

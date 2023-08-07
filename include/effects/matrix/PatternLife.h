@@ -81,7 +81,7 @@ public:
 // We check for loops by keeping a number of hashes of previous frames.  A walker that goes up and across
 // the screen cycles every 2 times it crosses, so max dimension times 2 is a good place to start
 
-#define CRC_LENGTH (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 2)
+constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 
 class PatternLife : public LEDStripEffect
 {
@@ -95,7 +95,7 @@ private:
     unsigned long seed;
 
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
 
@@ -108,9 +108,9 @@ private:
         return true;
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
     // A table of seed vs generation count.  These are seeds that net long runs of at least 3000 generations.
@@ -208,7 +208,7 @@ public:
         bStuckInLoop = 0;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         if (cGeneration == 0)
             Reset();

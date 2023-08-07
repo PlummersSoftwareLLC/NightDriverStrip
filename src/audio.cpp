@@ -30,21 +30,10 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-// The SoundAnalyzer is present even when Audio is not defined, but it then a mere stub class
-// with a few stats fields. In the Audio case, it's the full class
-
-SoundAnalyzer g_Analyzer;                    // Dummy stub class in non-audio case, real in audio case
 
 #if ENABLE_AUDIO
 
 #include <esp_task_wdt.h>
-
-
-extern NightDriverTaskManager g_TaskManager;
-extern DRAM_ATTR uint32_t g_FPS;          // Our global framerate
-extern uint32_t g_Watts;
-extern float g_Brite;
-extern DRAM_ATTR bool g_bUpdateStarted;                     // Has an OTA update started?
 
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
@@ -53,7 +42,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 {
     debugI(">>> Sampler Task Started");
 
-    // Enable microphone input 
+    // Enable microphone input
     pinMode(INPUT_PIN, INPUT);
 
     g_Analyzer.SampleBufferInitI2S();
@@ -87,11 +76,12 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
         // Delay enough time to yield 60fps max
-        // We wait a minimum of 5ms even if busy so we don't Bogart the CPU
+        // We wait a minimum even if busy so we don't Bogart the CPU
 
         unsigned long elapsed = millis() - lastFrame;
-        const auto targetDelay = PERIOD_FROM_FREQ(60) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(max(10.0, targetDelay - elapsed));
+        constexpr auto kMaxFPS = 60;
+        const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
+        delay(max(1.0, targetDelay - elapsed));
 
         g_Analyzer._AudioFPS = FPS(lastFrame, millis());
     }
@@ -139,7 +129,6 @@ public:
     void release()
     {
         _pBuffer.release();
-        _pBuffer = nullptr;
 
         if (_server_fd)
         {
@@ -268,8 +257,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         for (int i = 0; i < 8; i++)
         {
             int iBand = map(i, 0, 7, 0, NUM_BANDS-2);
-            uint8_t low   = g_Analyzer.g_peak2Decay[iBand] * MAXPET;
-            uint8_t high  = g_Analyzer.g_peak2Decay[iBand+1] * MAXPET;
+            uint8_t low   = g_Analyzer._peak2Decay[iBand] * MAXPET;
+            uint8_t high  = g_Analyzer._peak2Decay[iBand+1] * MAXPET;
             data.peaks[i] = (high << 4) + low;
         }
 

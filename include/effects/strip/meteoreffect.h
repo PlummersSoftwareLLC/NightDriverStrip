@@ -31,8 +31,6 @@
 
 #pragma once
 
-extern AppTime g_AppTime;
-
 class MeteorChannel
 {
     std::vector<float> hue;
@@ -56,7 +54,7 @@ public:
 
     }
 
-    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
+    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, int size = 4, int decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
     {
         meteorCount = meteors;
         meteorSize = size;
@@ -77,9 +75,8 @@ public:
             hueval %= 256;
             hue[i] = hueval;
             iPos[i] = (pGFX->GetLEDCount() / meteorCount) * i;
-            //bLeft[i] = (bool) randomfloat(0, 1);
-            speed[i] = randomfloat(meteorSpeedMin, meteorSpeedMax);
-            lastBeat[i] = g_AppTime.FrameStartTime();
+            speed[i] = random_range(meteorSpeedMin, meteorSpeedMax);
+            lastBeat[i] = g_Values.AppTime.FrameStartTime();
             bLeft[i] = i & 2;
         }
     }
@@ -97,7 +94,7 @@ public:
 
         for (int j = 0; j<pGFX->GetLEDCount(); j++)                         // fade brightness all LEDs one step
         {
-            if ((!meteorRandomDecay) || (randomfloat(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight
+            if ((!meteorRandomDecay) || (random_range(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight
             {
                 CRGB c = pGFX->getPixel(j);
                 c.fadeToBlackBy(meteorTrailDecay);
@@ -105,15 +102,6 @@ public:
             }
         }
 
-            // If there's a beat to the music in a band, reverse the direction of the meteor indexed by the same number
-        /*
-        if (g_Beats.IsBeat[0] && (g_AppTime.FrameStartTime() - lastBeat[0] > minTimeBetweenBeats))
-        {
-            lastBeat[0] = g_AppTime.FrameStartTime();
-            for (int j = 0; j < meteorCount; j++)
-                Reverse(j);
-        }
-        */
         for (int i = 0; i < meteorCount; i++)
         {
             float spd = speed[i];
@@ -158,14 +146,13 @@ public:
 class MeteorEffect : public LEDStripEffect
 {
   private:
-    MeteorChannel   _Meteors[NUM_CHANNELS];
-    std::shared_ptr<GFXBase> * _gfx;
+    std::vector<MeteorChannel> _Meteors;
 
-    int             _cMeteors;
-    uint8_t         _meteorSize;
-    uint8_t         _meteorTrailDecay;
-    float          _meteorSpeedMin;
-    float          _meteorSpeedMax;
+    int                        _cMeteors;
+    uint8_t                    _meteorSize;
+    uint8_t                    _meteorTrailDecay;
+    float                      _meteorSpeedMin;
+    float                      _meteorSpeedMax;
 
   public:
 
@@ -191,7 +178,7 @@ class MeteorEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -207,19 +194,24 @@ class MeteorEffect : public LEDStripEffect
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
-        _gfx = gfx;
         if (!LEDStripEffect::Init(gfx))
             return false;
-        for (int i = 0; i < ARRAYSIZE(_Meteors); i++)
-            _Meteors[i].Init(gfx[i], _cMeteors, _meteorSize, _meteorTrailDecay, _meteorSpeedMin, _meteorSpeedMax);
+
+        for (auto& device : gfx)
+        {
+            MeteorChannel channel;
+            channel.Init(device, _cMeteors, _meteorSize, _meteorTrailDecay, _meteorSpeedMin, _meteorSpeedMax);
+            _Meteors.push_back(channel);
+        }
+
         return true;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
-        for (int i = 0; i < ARRAYSIZE(_Meteors); i++)
-            _Meteors[i].Draw(_gfx[i]);
+        for (int i = 0; i < _Meteors.size(); i++)
+            _Meteors[i].Draw(_GFX[i]);
     }
 };

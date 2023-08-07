@@ -76,7 +76,10 @@
 //              Nov-15-2022  v034       Davepl      Fixed buffer full condition
 //              Jan-19-2023  v035       Davepl      After LaserLine episode merge
 //              Jan-29-2023  v036       Davepl      After Char *, string, includes, soundanalyzer
-//              Jun-10-2023  v037       Davepl      New Screen classes 
+//              Jun-10-2023  v037       Davepl      New Screen classes
+//              Jul-24-2023  v038       Davepl      NTP clock fix
+//              Jul-26-2023  v039       Davepl      NTP every minute, stack sizes
+//              Jul-26-2023  v040       Davepl      NTP every 5 minutes, Wifi delay code
 //
 //---------------------------------------------------------------------------
 
@@ -110,7 +113,7 @@
 
 #include <WiFi.h>
 
-#include "RemoteDebug.h"
+#include <RemoteDebug.h>
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
 // value.  So if version = 020,
@@ -120,11 +123,11 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          37    // Update ONLY this to increment the version number
+#define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
 #ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
-    #ifndef USESTRIP
-        #define USESTRIP 1
+    #ifndef USE_STRIP
+        #define USE_STRIP 1
     #endif
 #endif
 
@@ -137,10 +140,10 @@
 #define FLASH_VERSION_NAME_X(x) "v"#x
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
-#define FASTLED_INTERNAL        1   // Silence FastLED build banners
-#define NTP_DELAY_COUNT         20  // delay count for ntp update
-#define NTP_PACKET_LENGTH       48  // ntp packet length
-#define TIME_ZONE             (-8)  // My offset from London (UTC-8)
+#define FASTLED_INTERNAL        1       // Silence FastLED build banners
+#define NTP_DELAY_SECONDS       5*60    // delay count for NTP update, in seconds
+#define NTP_DELAY_ERROR_SECONDS 30      // delay count for NTP updates if no time was set, in seconds
+#define NTP_PACKET_LENGTH       48      // ntp packet length
 
 // C Helpers and Macros
 
@@ -209,7 +212,7 @@
 // Drawing must be on Core 1 if using SmartMatrix unless you specify SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1
 
 #define DRAWING_CORE            1
-#define NET_CORE                0
+#define NET_CORE                1
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        1
 #define SCREEN_CORE             0
@@ -299,8 +302,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RING_SIZE_1             12
     #define RING_SIZE_2             8
     #define RING_SIZE_3             1
-    #define MATRIX_WIDTH            FAN_SIZE
-    #define MATRIX_HEIGHT           1
+    #define MATRIX_WIDTH            6
+    #define MATRIX_HEIGHT           2
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
     #define ENABLE_AUDIO            1
@@ -317,7 +320,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
     #if M5STICKC
-        #define LED_PIN0 26
+        #define LED_PIN0 33
     #elif M5STICKCPLUS || M5STACKCORE2
         #define LED_PIN0 32
     #else
@@ -362,7 +365,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT     RING_SIZE_0
     #define NUM_FANS          MATRIX_WIDTH
     #define FAN_SIZE          MATRIX_HEIGHT
-    #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define ENABLE_REMOTE     1                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
@@ -436,7 +438,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   1
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (8 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
@@ -467,7 +468,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1  // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0   // Accept over the air flash updates
+    #define ENABLE_OTA              1   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
     #define SCALE_AUDIO_EXPONENTIAL 0
@@ -526,7 +527,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   16
     #define NUM_FANS        MATRIX_WIDTH
     #define FAN_SIZE        MATRIX_HEIGHT
-    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define IR_REMOTE_PIN   22
     #define LED_FAN_OFFSET_BU 6
@@ -568,7 +568,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   5
     #define FAN_SIZE        MATRIX_WIDTH
     #define NUM_FANS        MATRIX_HEIGHT
-    #define NUM_BANDS       16
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define IR_REMOTE_PIN   25
     #define LED_FAN_OFFSET_BU 6
@@ -694,6 +693,35 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define POWER_LIMIT_MW 10000
 
+#elif HEXAGON
+
+    // The LED strips I use for Christmas lights under my eaves
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Hexagon"
+    #endif
+
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
+
+    #define NUM_CHANNELS    1
+    #define MATRIX_WIDTH    (271)     // My maximum run, and about all you can do at 30fps
+    #define MATRIX_HEIGHT   1
+    #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
+    #define ENABLE_REMOTE   0                     // IR Remote Control
+    #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
+    #define LED_PIN0        5
+
+    #define POWER_LIMIT_MW (INT_MAX)              // Unlimited power for long strips, up to you to limit here or supply enough!
+
+    #define DEFAULT_EFFECT_INTERVAL     (1000*20)
+
+    #define HEX_MAX_DIMENSION 19                 // How big the hex is - it's biggest row and the number of rows
+    #define HEX_HALF_DIMENSION 10                // How many rows from top to middle inclusive
+
 #elif LEDSTRIP
 
     // The LED strips I use for Christmas lights under my eaves
@@ -702,12 +730,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Ledstrip"
     #endif
 
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
-    #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           1   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       5   // How many seconds before the lamp times out and shows local content
-
+    #define ENABLE_WEBSERVER            0   // Turn on the internal webserver
+    #define ENABLE_WIFI                 1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI               1   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL           5   // How many seconds before the lamp times out and shows local content
+    #define COLORDATA_SERVER_ENABLED    0   // Also provides a response packet
     #define NUM_CHANNELS    1
     #define MATRIX_WIDTH    (8*144)     // My maximum run, and about all you can do at 30fps
     #define MATRIX_HEIGHT   1
@@ -811,8 +839,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if SPECTRUM_WROVER_KIT
         #define LED_PIN0        5
+    #elif ELECROW
+        #define LED_PIN0        19
     #else
         #define LED_PIN0        26
+    #endif
+
+    #if ELECROW
+        #define IR_REMOTE_PIN   20
     #endif
 
     #define NUM_CHANNELS    1
@@ -827,10 +861,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    #define TOGGLE_BUTTON_1 37
-    #define TOGGLE_BUTTON_2 39
+    #if ELECROW
+    #else
+        #define TOGGLE_BUTTON_1 37
+        #define TOGGLE_BUTTON_2 39
+    #endif
 
-    #ifdef SPECTRUM_WROVER_KIT
+    #if SPECTRUM_WROVER_KIT
     #else
         #define NUM_INFO_PAGES          2
         #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
@@ -949,7 +986,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT     RING_SIZE_0
     #define NUM_FANS          MATRIX_WIDTH
     #define FAN_SIZE          MATRIX_HEIGHT
-    #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define ENABLE_REMOTE     0                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
@@ -989,7 +1025,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT     RING_SIZE_0
     #define NUM_FANS          MATRIX_WIDTH
     #define FAN_SIZE          MATRIX_HEIGHT
-    #define NUM_BANDS         16
     #define NUM_LEDS          (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define ENABLE_REMOTE     0                     // IR Remote Control
     #define ENABLE_AUDIO      1                     // Listen for audio from the microphone and process it
@@ -1100,10 +1135,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 10000.0
+        #define NOISE_FLOOR (MAX_VU / 2)
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF   2000
+        #define NOISE_CUTOFF 2000
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
@@ -1111,7 +1146,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef ENABLE_AUDIO_SMOOTHING
         #define ENABLE_AUDIO_SMOOTHING 1
     #endif
+    #ifndef BARBEAT_ENHANCE
+        #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
+    #endif
+    #ifndef SPECTRUMBARBEAT_ENHANCE
+        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
+    #endif
 #endif
+
 
 #ifndef LED_PIN0                // Which pin the LEDs are connected to
 #define LED_PIN0 5
@@ -1183,7 +1225,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
   #ifdef USE_PSRAM
     #define RESERVE_MEMORY 1000000
   #else
-    #define RESERVE_MEMORY 180000
+    #define RESERVE_MEMORY 150000
   #endif
 #endif
 
@@ -1196,11 +1238,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 120
+#define MATRIX_REFRESH_RATE 180
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 2
+#define MATRIX_CALC_DIVIDER 3
 #endif
 
 
@@ -1226,7 +1268,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define USE_OLED 1
         #define USE_SSD1306 1
 
-    #elif ARDUINO_HELTEC_WIFI_KIT_32      
+    #elif ARDUINO_HELTEC_WIFI_KIT_32
                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
@@ -1255,6 +1297,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
+    #elif ELECROW
+
+        // Implies ElecrowScreen
+
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
     #endif
@@ -1275,7 +1321,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifdef ESP32FEATHERTFT
-    #define ONBOARD_PIXEL_ORDER     EOrder::GRB
+    #define ONBOARD_PIXEL_ORDER     EOrder::RGB
     #define ONBOARD_PIXEL_POWER     34
     #define ONBOARD_PIXEL_DATA      33
 #endif
@@ -1310,8 +1356,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 // Common globals
 
-extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: davepl - why are some DRAM?)
-
 // g_aRingSizeTable
 //
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
@@ -1319,7 +1363,7 @@ extern DRAM_ATTR uint32_t g_FPS;               // Our global framerate (BUGBUG: 
 
 extern DRAM_ATTR const int g_aRingSizeTable[];
 
-#define MICROS_PER_SECOND   1000000
+#define MICROS_PER_SECOND   1000000UL
 #define MILLIS_PER_SECOND   1000
 #define MICROS_PER_MILLI    1000
 
@@ -1351,6 +1395,8 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
     #ifndef INPUT_PIN
         #if TTGO
             #define INPUT_PIN (36)
+        #elif ELECROW
+            #define INPUT_PIN (41)
         #elif M5STACKCORE2
             #define INPUT_PIN (0)
             #define IO_PIN    (0)
@@ -1402,123 +1448,6 @@ inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SEC
     return FPS;
 }
 
-// Custom Allocator for allocate_unique, which is like make_unique but can use PSRAM
-
-template<typename Alloc>
-struct alloc_deleter
-{
-  alloc_deleter(const Alloc& a) : a(a) { }
-
-  typedef typename std::allocator_traits<Alloc>::pointer pointer;
-
-  void operator()(pointer p) const
-  {
-    Alloc aa(a);
-    std::allocator_traits<Alloc>::destroy(aa, std::addressof(*p));
-    std::allocator_traits<Alloc>::deallocate(aa, p, 1);
-  }
-
-private:
-  Alloc a;
-};
-
-template<typename T, typename Alloc, typename... Args>
-auto
-allocate_unique(const Alloc& alloc, Args&&... args)
-{
-  using AT = std::allocator_traits<Alloc>;
-  static_assert(std::is_same<typename AT::value_type, std::remove_cv_t<T>>{}(),
-                "Allocator has the wrong value_type");
-
-  Alloc a(alloc);
-  auto p = AT::allocate(a, 1);
-  try {
-    AT::construct(a, std::addressof(*p), std::forward<Args>(args)...);
-    using D = alloc_deleter<Alloc>;
-    return std::unique_ptr<T, D>(p, D(a));
-  }
-  catch (...)
-  {
-    AT::deallocate(a, p, 1);
-    throw;
-  }
-}
-
-// PreferPSRAMAlloc
-//
-// Will return PSRAM if it's available, regular ram otherwise
-
-inline void * PreferPSRAMAlloc(size_t s)
-{
-    if (psramInit())
-    {
-        debugV("PSRAM Array Request for %u bytes\n", s);
-        return ps_malloc(s);
-    }
-    else
-    {
-        return malloc(s);
-    }
-}
-
-// psram_allocator
-//
-// A C++ allocator that allocates from PSRAM instead of the regular heap. Initially
-// I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
-// with make_shared<> so I had to provide this allocator instead.
-//
-// When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
-// of them is still in base ram.
-//
-// (Davepl - I opted to make this *prefer* psram but return regular ram otherwise. It
-//           avoids a lot of ifdef USE_PSRAM in the code.  But I've only proved it
-//           correct, not tried it on a chip without yet.
-
-template <typename T>
-class psram_allocator
-{
-public:
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef T value_type;
-
-    psram_allocator(){}
-    ~psram_allocator(){}
-
-    template <class U> struct rebind { typedef psram_allocator<U> other; };
-    template <class U> psram_allocator(const psram_allocator<U>&){}
-
-    pointer address(reference x) const {return &x;}
-    const_pointer address(const_reference x) const {return &x;}
-    size_type max_size() const throw() {return size_t(-1) / sizeof(value_type);}
-
-    pointer allocate(size_type n, const void * hint = 0)
-    {
-        void * pmem = PreferPSRAMAlloc(n*sizeof(T));
-        return static_cast<pointer>(pmem) ;
-    }
-
-    void deallocate(pointer p, size_type n)
-    {
-        free(p);
-    }
-
-    template< class U, class... Args >
-    void construct( U* p, Args&&... args )
-    {
-        ::new((void *) p ) U(std::forward<Args>(args)...);
-    }
-
-    void destroy(pointer p)
-    {
-        p->~T();
-    }
-};
-
 // str_snprintf
 //
 // va-args style printf that returns the formatted string as a reuslt
@@ -1546,100 +1475,30 @@ inline String str_sprintf(const char *fmt, ...)
     return String(str.get());
 }
 
-
-// AppTime
-//
-// A class that keeps track of the clock, how long the last frame took, calculating FPS, etc.
-
-class AppTime
-{
-  protected:
-
-    double _lastFrame;
-    double _deltaTime;
-
-  public:
-
-    // NewFrame
-    //
-    // Call this at the start of every frame or udpate, and it'll figure out and keep track of how
-    // long between frames
-
-    void NewFrame()
-    {
-        timeval tv;
-        gettimeofday(&tv, nullptr);
-        double current = CurrentTime();
-        _deltaTime = current - _lastFrame;
-
-        // Cap the delta time at one full second
-
-        if (_deltaTime > 1.0)
-            _deltaTime = 1.0;
-
-        _lastFrame = current;
-    }
-
-    AppTime() : _lastFrame(CurrentTime())
-    {
-        NewFrame();
-    }
-
-    double FrameStartTime() const
-    {
-        return _lastFrame;
-    }
-
-    static double CurrentTime()
-    {
-        timeval tv;
-        gettimeofday(&tv, nullptr);
-        return (double)tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
-    }
-
-    double FrameElapsedTime() const
-    {
-        return FrameStartTime() - CurrentTime();
-    }
-
-    static double TimeFromTimeval(const timeval & tv)
-    {
-        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
-    }
-
-    static timeval TimevalFromTime(double t)
-    {
-        timeval tv;
-        tv.tv_sec = (long)t;
-        tv.tv_usec = t - tv.tv_sec;
-        return tv;
-    }
-
-    double LastFrameTime() const
-    {
-        return _deltaTime;
-    }
-};
+#include "types.h"
 
 // C Helpers
 //
 // Simple inline utility functions like random numbers, mapping, conversion, etc
 
-inline static float randomfloat(float lower, float upper)
-{
-    float result = (lower + ((upper - lower) * rand()) / RAND_MAX);
-    return result;
-}
+#include <random>
+#include <type_traits>
 
-inline static double randomdouble(double lower, double upper)
+template <typename T>
+inline static T random_range(T lower, T upper)
 {
-    double result = (lower + ((upper - lower) * rand()) / (double)RAND_MAX);
-    return result;
-}
+    static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
 
-template<typename T> inline float map(T x, T in_min, T in_max, T out_min, T out_max)
-{
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    static std::random_device rd; 
+    static std::mt19937 gen(rd());
+
+    if constexpr (std::is_integral<T>::value) {
+        std::uniform_int_distribution<T> distrib(lower, upper);
+        return distrib(gen);
+    } else if constexpr (std::is_floating_point<T>::value) {
+        std::uniform_real_distribution<T> distrib(lower, upper);
+        return distrib(gen);
+    }
 }
 
 inline uint64_t ULONGFromMemory(uint8_t * payloadData)
@@ -1722,19 +1581,12 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
     #include <TFT_eSPI.h>
     #include <SPI.h>
-
-    extern std::unique_ptr<Screen> g_pDisplay;
 #endif
 
 // Conditional includes depending on which project is being build
 
 #if USE_MATRIX
-    #include <YouTubeSight.h>                       // For fetching YouTube sub count
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-#endif
-
-#if USE_SCREEN
-    // #include "freefonts.h"
 #endif
 
 #if ENABLE_WIFI && ENABLE_WEBSERVER

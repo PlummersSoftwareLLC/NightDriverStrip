@@ -38,12 +38,10 @@
 #include <driver/adc.h>
 // #include <driver/adc_deprecated.h>
 
-extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
-
-#define SUPERSAMPLES 2                                    // How many supersamples to take
+#define SUPERSAMPLES 1                                    // How many supersamples to take
 #define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
-#define MAX_VU 32767
+#define MAX_VU (MAX_ANALOG_IN / 2)
 #define MS_PER_SECOND 1000
 
 // These are the audio variables that are referenced by many audio effects.  In order to allow non-audio code to reference them too without
@@ -87,7 +85,9 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
 // results are simplified down to this small class of band peaks.
 
-#define MIN_VU 512
+#define MIN_VU 180              // Minimum VU value to use for the span when computing VURatio.  Contributes to
+                                // how dynamic the music is (smaller values == more dynamic)
+
 
 #ifndef GAINDAMPEN
     #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
@@ -121,6 +121,7 @@ public:
 
     PeakData()
     {
+        // BUGBUG (davepl) consider std::fill
         for (auto & i: _Level)
             i = 0.0f;
     }
@@ -148,7 +149,7 @@ public:
       {
         case MESMERIZERMIC:
         {
-            static const float Scalars16[16] = {0.4, .35, 0.4, 0.7, 0.8, 0.8, 1.0, 1.0, 1.2, 1.5, 2.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static const float Scalars16[16] = {0.4, .5, 0.75, 1.0, 0.6, 0.6, 0.8, 0.8, 1.2, 1.5, 3.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
             float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -173,7 +174,7 @@ public:
             _Level[i] *= GetBandScalar(mic, i);
     }
 
-    void SetData(double *pDoubles)
+    void SetData(const double * pDoubles)
     {
         for (int i = 0; i < NUM_BANDS; i++)
             _Level[i] = pDoubles[i];
@@ -188,16 +189,16 @@ public:
 
 class SoundAnalyzer : public AudioVariables
 {
-    const size_t MAX_SAMPLES = 256;
+    static const size_t MAX_SAMPLES = 256;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
-    // school that you need to sample at doube the frequency you want to process, so 24000 is 12K
+    // school that you need to sample at double the frequency you want to process, so 24000 is 12K
 
-    const size_t SAMPLING_FREQUENCY = 24000;
-    const size_t LOWEST_FREQ = 40;
-    const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
+    static const size_t SAMPLING_FREQUENCY = 20000;
+    static const size_t LOWEST_FREQ = 40;
+    static const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
-    const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
+    static const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
     double * _vPeaks;
     int      _cutOffsBand[NUM_BANDS];
@@ -208,26 +209,12 @@ class SoundAnalyzer : public AudioVariables
 
     PeakData::MicrophoneType _MicMode = PeakData::M5;
 
-    // BucketFrequency
-    //
-    // Return the frequency corresponding to the Nth sample bucket.  Skips the first two
-    // buckets which are overall amplitude and something else.
-
-    int BucketFrequency(int iBucket) const
-    {
-        if (iBucket <= 1)
-            return 0;
-
-        int iOffset = iBucket - 2;
-        return _cutOffsBand[iOffset];
-    }
-
     int GetBandIndex(float frequency)
     {
         for (int i = 0; i < NUM_BANDS; i++)
             if (frequency < _cutOffsBand[i])
                 return i;
-                   
+
         // If we never found a band that includes the freq under its limit, it's in the top bar
         return NUM_BANDS-1;
     }
@@ -266,7 +253,7 @@ class SoundAnalyzer : public AudioVariables
     {
         arduinoFFT _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
         _FFT.DCRemoval();
-        _FFT.Windowing(FFT_WIN_TYP_RECTANGLE, FFT_FORWARD);
+        _FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
         _FFT.Compute(FFT_FORWARD);
         _FFT.ComplexToMagnitude();
         _FFT.MajorPeak();
@@ -274,31 +261,33 @@ class SoundAnalyzer : public AudioVariables
 
     void FillBufferI2S()
     {
-        int16_t sampleBuffer[MAX_SAMPLES];
+        std::unique_ptr<uint16_t[]> ptrSampleBuffer(new uint16_t[MAX_SAMPLES]);
+        constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+
         size_t bytesRead = 0;
 
-        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
-            i2s_read(I2S_NUM_0, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS));
+        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
         #else
             ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
-            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *)sampleBuffer, sizeof(sampleBuffer), &bytesRead, (100 / portTICK_RATE_MS)));
+            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
             ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
         #endif
 
-        if (bytesRead != sizeof(sampleBuffer))
+        if (bytesRead != bytesExpected)
         {
-            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, sizeof(sampleBuffer));
+            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
             return;
         }
 
-        for (int i = 0; i < ARRAYSIZE(sampleBuffer); i++)
-            _vReal[i] = sampleBuffer[i];
+        for (int i = 0; i < MAX_SAMPLES; i++)
+            _vReal[i] = ptrSampleBuffer[i];
     }
 
     // UpdateVU
     //
-    // This function is responsible for updating the Volume Unit (VU) values: the current VU (_VU), 
-    // the peak VU (_PeakVU), and the minimum VU (_MinVU). 
+    // This function is responsible for updating the Volume Unit (VU) values: the current VU (_VU),
+    // the peak VU (_PeakVU), and the minimum VU (_MinVU).
     //
     // Firstly, it updates the current VU (_VU) based on the new incoming value (newval).
     // If the new value is greater than the old VU (_oldVU), it assigns the new value to _VU.
@@ -347,7 +336,7 @@ class SoundAnalyzer : public AudioVariables
     {
         // Find the peak and the average
 
-        float averageSum = 0.0f;
+        double averageSum = 0.0f;
 
         int hitCount[NUM_BANDS] = {0};
         for (int i = 0; i < NUM_BANDS; i++)
@@ -415,7 +404,8 @@ class SoundAnalyzer : public AudioVariables
         // We'll use the average as the gVU.  I assume the average of the samples tracks sound pressure level, but don't really know...
 
         float newval = averageSum / (MAX_SAMPLES / 2 - 2);
-        debugV("AverageSumL: %f", averageSum);
+        debugV("AverageSum : %f", averageSum);
+        debugV("Newval     : %f", newval);
 
         UpdateVU(newval);
 
@@ -424,7 +414,7 @@ class SoundAnalyzer : public AudioVariables
             auto peaks = GetPeakData();
             debugV("Audio Data -- Sum: %0.2f, _MinVU: %f0.2, _PeakVU: %f0.2, _VU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
         }
-    
+
         return PeakData(_vPeaks);
     }
 
@@ -436,7 +426,7 @@ class SoundAnalyzer : public AudioVariables
     {
         if (NUM_BANDS == 16)
         {
-            static int cutOffs16Band[16] =
+            static const int cutOffs16Band[16] =
                 {200, 380, 580, 800, 980, 1200, 1360, 1584, 1996, 2412, 3162, 3781, 5312, 6310, 8400, (int)HIGHEST_FREQ};
 
             for (int i = 0; i < NUM_BANDS; i++)
@@ -459,18 +449,9 @@ class SoundAnalyzer : public AudioVariables
         }
     }
 
-    // BandCutoffTable
-    //
-    // Depending on how many bands we have, returns the cutoffs of where those bands are in the spectrum
-
-    const int *BandCutoffTable(int bandCount)
-    {
-        return _cutOffsBand;
-    }
-
 public:
+
     SoundAnalyzer()
-        : _sampling_period_us(PERIOD_FROM_FREQ(SAMPLING_FREQUENCY))
     {
         _vReal      = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
@@ -489,6 +470,18 @@ public:
         free(_vReal);
         free(_vImaginary);
         free(_vPeaks);
+    }
+
+    // BeatEnhance
+    //
+    // Looks like pure voodoo, but it returns the multiplier by which to scale a vale to enhance it
+    // by the current VURatioFade amount.  The amt amount is the amount of your factor that should be
+    // made up of the VURatioFade multiplier.  So passing a 0.75 is a lot of beat enhancement, whereas
+    // 0.25 is a little bit.
+
+    float BeatEnhance(float amt)
+    {
+        return ((1.0 - amt) + (_VURatioFade / 2.0) * amt);
     }
 
     // flash record size, for recording 5 second
@@ -552,7 +545,33 @@ public:
         i2s_set_pin(I2S_NUM_0, &pin_config);
         i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
 
-#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
+#elif ELECROW
+
+        const i2s_config_t i2s_config = {
+                .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
+                .sample_rate = SAMPLING_FREQUENCY,
+                .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+                .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+                .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+                .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+                .dma_buf_count = 2,
+                .dma_buf_len = (int) MAX_SAMPLES,
+                .use_apll = false
+            };
+
+            // i2s pin configuration
+            const i2s_pin_config_t pin_config = {
+                .bck_io_num = 39,
+                .ws_io_num = 38,
+                .data_out_num = -1,  // not used
+                .data_in_num = INPUT_PIN
+            };
+
+            ESP_ERROR_CHECK( i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL) );
+            ESP_ERROR_CHECK( i2s_set_pin(I2S_NUM_0, &pin_config) );
+            ESP_ERROR_CHECK( i2s_start(I2S_NUM_0) );
+
+#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT 
 
         i2s_config_t i2s_config;
         i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
@@ -598,11 +617,11 @@ public:
         return _MicMode;
     }
 
-    unsigned long g_lastPeak1Time[NUM_BANDS] = {0};
-    float g_peak1Decay[NUM_BANDS] = {0};
-    float g_peak2Decay[NUM_BANDS] = {0};
-    float g_peak1DecayRate = 1.25f;
-    float g_peak2DecayRate = 1.25f;
+    unsigned long _lastPeak1Time[NUM_BANDS] = {0};
+    float _peak1Decay[NUM_BANDS] = {0};
+    float _peak2Decay[NUM_BANDS] = {0};
+    float _peak1DecayRate = 1.25f;
+    float _peak2DecayRate = 1.25f;
 
     // DecayPeaks
     //
@@ -610,22 +629,22 @@ public:
 
     inline void DecayPeaks()
     {
-        float decayAmount1 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak1DecayRate);
-        float decayAmount2 = std::max(0.0, g_AppTime.LastFrameTime() * g_peak2DecayRate);
+        float decayAmount1 = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate);
+        float decayAmount2 = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak2DecayRate);
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
         {
-            g_peak1Decay[iBand] -= min(decayAmount1, g_peak1Decay[iBand]);
-            g_peak2Decay[iBand] -= min(decayAmount2, g_peak2Decay[iBand]);
+            _peak1Decay[iBand] -= min(decayAmount1, _peak1Decay[iBand]);
+            _peak2Decay[iBand] -= min(decayAmount2, _peak2Decay[iBand]);
         }
 
-        // Manual smoothing if desired 
+        // Manual smoothing if desired
 
         #if ENABLE_AUDIO_SMOOTHING
             for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
             {
-                g_peak1Decay[iBand] = (g_peak1Decay[iBand] + g_peak1Decay[iBand - 1] + g_peak1Decay[iBand + 1]) / 3;
-                g_peak2Decay[iBand] = (g_peak2Decay[iBand] + g_peak2Decay[iBand - 1] + g_peak2Decay[iBand + 1]) / 3;
+                _peak1Decay[iBand] = (_peak1Decay[iBand] * 2 + _peak1Decay[iBand - 1] + _peak1Decay[iBand + 1]) / 4;
+                _peak2Decay[iBand] = (_peak2Decay[iBand] * 2 + _peak2Decay[iBand - 1] + _peak2Decay[iBand + 1]) / 4;
             }
         #endif
     }
@@ -637,14 +656,14 @@ public:
     {
         for (int i = 0; i < NUM_BANDS; i++)
         {
-            if (_Peaks[i] > g_peak1Decay[i])
+            if (_Peaks[i] > _peak1Decay[i])
             {
-                g_peak1Decay[i] = _Peaks[i];
-                g_lastPeak1Time[i] = millis();
+                _peak1Decay[i] = _Peaks[i];
+                _lastPeak1Time[i] = millis();
             }
-            if (_Peaks[i] > g_peak2Decay[i])
+            if (_Peaks[i] > _peak2Decay[i])
             {
-                g_peak2Decay[i] = _Peaks[i];
+                _peak2Decay[i] = _Peaks[i];
             }
         }
     }
@@ -690,7 +709,7 @@ public:
 
             // Scale it so that its not always in the top red
             _MicMode = PeakData::PCREMOTE;
-            UpdateVU(sum);
+            UpdateVU(sum / NUM_BANDS);
         }
     }
 };

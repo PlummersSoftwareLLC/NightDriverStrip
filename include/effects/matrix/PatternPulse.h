@@ -80,7 +80,7 @@ class PatternPulse : public LEDStripEffect
     {
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         auto graphics = g();
 
@@ -96,7 +96,7 @@ class PatternPulse : public LEDStripEffect
 
         if (step == 0)
         {
-            graphics->drawCircle(centerX, centerY, step, graphics->to16bit(graphics->ColorFromCurrentPalette(hue)));
+            graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(graphics->ColorFromCurrentPalette(hue)));
             step++;
         }
         else
@@ -104,12 +104,12 @@ class PatternPulse : public LEDStripEffect
             if (step < maxSteps)
             {
                 // initial pulse
-                graphics->drawCircle(centerX, centerY, step, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
 
                 // secondary pulse
                 if (step > 5)
                 {
-                    graphics->drawCircle(centerX, centerY, step - 3, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                    graphics->DrawSafeCircle(centerX, centerY, step - 3, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
                 }
                 step++;
             }
@@ -129,10 +129,10 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
     {
       public:
 
-        int hue;
-        int centerX;
-        int centerY;
-        int maxSteps = random(32)+16;
+        int hue = HUE_RED;
+        int centerX = 0;
+        int centerY = 0;
+        int maxSteps = random_range(0, 8)+6;
         int step = -1;
     };
 
@@ -170,17 +170,15 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         else
         {
             PulsePop small;
-            small.maxSteps = random(12)+4;
+            small.maxSteps = random(8)+4;
             _pops.push_back( small );
         }
 
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         ProcessAudio();
-        //VUMeterEffect::DrawVUMeter(graphics, 0);
-        //blur2d(graphics->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 25);
         fadeAllChannelsToBlackBy(10);
 
         // Add some sparkle
@@ -203,7 +201,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
             if (pop->step == 0)
             {
-                g()->drawCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
+                g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
                 pop->step++;
                 pop++;
             }
@@ -212,11 +210,11 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
                 if (pop->step < pop->maxSteps)
                 {
                     // initial pulse
-                    g()->drawCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
+                    g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
 
                     // secondary pulse
                     if (pop->step > 3)
-                        g()->drawCircle(pop->centerX, pop->centerY, pop->step - 3, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                        g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step - 3, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
 
                     // This looks like PDP-11 code to me.  double post-inc for the win!
                     pop++->step++;

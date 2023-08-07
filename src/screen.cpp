@@ -29,11 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;
-
-float g_Brite;
-uint32_t g_Watts;
+#include "systemcontainer.h"
 
 #if USE_SCREEN
 
@@ -42,27 +38,16 @@ uint32_t g_Watts;
 #include <SPI.h>
 #endif
 
-#if USE_SCREEN
-std::unique_ptr<Screen> g_pDisplay;
+#define SHOW_FPS    true                                // Indicates whether little lcd should show FPS
+
+DRAM_ATTR std::mutex Screen::_screenMutex;              // The storage for the mutex of the screen class
+
+// What page of screen we are showing
+#if NUM_INFO_PAGES > 0
+DRAM_ATTR uint8_t g_InfoPage = NUM_INFO_PAGES - 1;      // Default to last page
+#else
+DRAM_ATTR uint8_t g_InfoPage = 0;                       // Default to first page
 #endif
-
-//
-// Externals - Mostly things that the screen will report or display for us
-//
-
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-
-extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
-extern DRAM_ATTR bool g_bUpdateStarted; // Has an OTA update started?
-extern uint8_t g_Brightness;            // Global brightness from drawing.cpp
-extern DRAM_ATTR AppTime g_AppTime;     // For keeping track of frame timings
-extern DRAM_ATTR uint32_t g_FPS;        // Our global framerate
-extern DRAM_ATTR uint8_t giInfoPage;    // What page of screen we are showing
-extern volatile double g_FreeDrawTime;  // Idle drawing time
-
-DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the screen class
-
-bool g_ShowFPS = true; // Indicates whether little lcd should show FPS
 
 // BasicInfoSummary
 //
@@ -98,9 +83,10 @@ void BasicInfoSummary(bool bRedraw)
 
     // bRedraw is set for full redraw, in which case we fill the screen
 
+    auto& display = g_ptrSystem->Display();
+
     if (bRedraw)
-        g_pDisplay->fillScreen(bkgndColor);
-        //g_pDisplay->fillRect(1, 1, g_pDisplay->height() - 2, g_pDisplay->width() - 2, bkgndColor);
+        display.fillScreen(bkgndColor);
 
     // Status line 1
 
@@ -110,48 +96,50 @@ void BasicInfoSummary(bool bRedraw)
     char chStatus = szStatus[c2];
     cStatus++;
 
-    //g_pDisplay->setFont();
-    g_pDisplay->setTextSize(g_pDisplay->width() >= 240 ? 2 : 1);
+    //display.setFont();
+    display.setTextSize(display.width() >= 240 ? 2 : 1);
     #if USE_OLED
-        g_pDisplay->setTextColor(WHITE16, BLACK16);
+        display.setTextColor(WHITE16, BLACK16);
     #else
-        g_pDisplay->setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
+        display.setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
     #endif
 
-    g_pDisplay->setCursor(xMargin, yMargin);
-    g_pDisplay->println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, NUM_CHANNELS, NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
+    display.setCursor(xMargin, yMargin);
+    display.println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
 
     // WiFi info line 2
 
-    auto lineHeight = g_pDisplay->fontHeight();
-    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight);
+    auto lineHeight = display.fontHeight();
+    display.setCursor(xMargin + 0, yMargin + lineHeight);
 
     if (WiFi.isConnected() == false)
     {
-        g_pDisplay->println("No Wifi");
+        display.println("No Wifi");
     }
     else
     {
         const IPAddress address = WiFi.localIP();
-        g_pDisplay->println(str_sprintf("%ddB:%d.%d.%d.%d",
+        display.println(str_sprintf("%ddB:%d.%d.%d.%d",
                                     (int)labs(WiFi.RSSI()), // skip sign in first character
                                     address[0], address[1], address[2], address[3]));
     }
 
     // Buffer Status Line 3
 
-    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 4);
-    g_pDisplay->println(str_sprintf("BUFR:%02d/%02d %dfps ",
-                                g_aptrBufferManager[0]->Depth(),
-                                g_aptrBufferManager[0]->BufferCount(),
-                                g_FPS));
+    auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+
+    display.setCursor(xMargin + 0, yMargin + lineHeight * 4);
+    display.println(str_sprintf("BUFR:%02d/%02d %dfps ",
+                                bufferManager.Depth(),
+                                bufferManager.BufferCount(),
+                                g_Values.FPS));
 
     // Data Status Line 4
 
-    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 2);
-    g_pDisplay->println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
-                                min(99.99f, g_aptrBufferManager[0]->AgeOfOldestBuffer()),
-                                min(99.99f, g_aptrBufferManager[0]->AgeOfNewestBuffer())));
+    display.setCursor(xMargin + 0, yMargin + lineHeight * 2);
+    display.println(str_sprintf("DATA:%+06.2lf-%+06.2lf",
+                                std::min(99.99, bufferManager.AgeOfOldestBuffer()),
+                                std::min(99.99, bufferManager.AgeOfNewestBuffer())));
 
     // Clock info Line 5
     //
@@ -163,40 +151,46 @@ void BasicInfoSummary(bool bRedraw)
     char szTime[16];
     strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
 
-    g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 3);
-    g_pDisplay->println(str_sprintf("CLCK:%s %04.3lf",
-                                g_AppTime.CurrentTime() > 100000 ? szTime : "Unset",
-                                g_FreeDrawTime));
+    display.setCursor(xMargin + 0, yMargin + lineHeight * 3);
+    display.println(str_sprintf("CLCK:%s %04.3lf",
+                                g_Values.AppTime.CurrentTime() > 100000 ? szTime : "Unset",
+                                g_Values.FreeDrawTime));
 
     // LED Power Info Line 6 - only if display tall enough
 
-    if (g_pDisplay->height() >= lineHeight * 5 + lineHeight)
+    if (display.height() >= lineHeight * 5 + lineHeight)
     {
-        g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 5);
-        g_pDisplay->println(str_sprintf("POWR:%3.0lf%% %4uW\n",
-                                    g_Brite,
-                                    g_Watts));
+        display.setCursor(xMargin + 0, yMargin + lineHeight * 5);
+        display.println(str_sprintf("POWR:%3.0lf%% %4uW\n",
+                                    g_Values.Brite,
+                                    g_Values.Watts));
     }
 
     // PSRAM Info Line 7 - only if display tall enough
 
-    if (g_pDisplay->height() >= lineHeight * 7)
+    if (display.height() >= lineHeight * 7)
     {
-        g_pDisplay->setCursor(xMargin + 0, yMargin + lineHeight * 6);
-        g_pDisplay->println(str_sprintf("PRAM:%dK/%dK\n",
-                                    ESP.getFreePsram() / 1024,
-                                    ESP.getPsramSize() / 1024));
+        auto& taskManager = g_ptrSystem->TaskManager();
+        display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
+        display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
+
+    /* Old PSRAM code 
+    display.setCursor(xMargin + 0, yMargin + lineHeight * 7);
+    display.println(str_sprintf("PRAM:%dK/%dK\n",
+                                ESP.getFreePsram() / 1024,
+                                ESP.getPsramSize() / 1024));
+    */
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
     //             that conveys the overall status
 
-    if (g_pDisplay->height() >= lineHeight * 8)
+    if (display.height() >= lineHeight * 8)
     {
-        int top = g_pDisplay->height() - lineHeight;
+        int top = display.height() - lineHeight;
         int height = lineHeight - 3;
-        int width = g_pDisplay->width() - xMargin * 2;
-        float ratio = (float)g_aptrBufferManager[0]->Depth() / (float)g_aptrBufferManager[0]->BufferCount();
+        int width = display.width() - xMargin * 2;
+        float ratio = (float)bufferManager.Depth() / (float)bufferManager.BufferCount();
         ratio = std::min(1.0f, ratio);
         int filled = (width - 2) * ratio;
 
@@ -205,32 +199,33 @@ void BasicInfoSummary(bool bRedraw)
         uint16_t color = RED16;
         if (ratio > 0.25)
         {
-            color = g_pDisplay->to16bit(CRGB::Orange);
+            color = display.to16bit(CRGB::Orange);
             if (ratio > 0.5)
             {
-                color = g_pDisplay->to16bit(CRGB::Green);
+                color = display.to16bit(CRGB::Green);
                 if (ratio > 0.92)
                 {
-                    color = g_pDisplay->to16bit(CRGB::Orange);
+                    color = display.to16bit(CRGB::Orange);
                     if (ratio > 0.96)
-                        color = g_pDisplay->to16bit(CRGB::Red);
+                        color = display.to16bit(CRGB::Red);
                 }
             }
         }
 
         #if USE_OLED
-            g_pDisplay->fillRect(xMargin + 1, top, filled, height, WHITE16);
-            g_pDisplay->fillRect(xMargin + filled, top, width - filled, height, BLACK16);
-            g_pDisplay->drawRect(xMargin, top, width, height, WHITE16);
+            display.fillRect(xMargin + 1, top, filled, height, WHITE16);
+            display.fillRect(xMargin + filled, top, width - filled, height, BLACK16);
+            display.drawRect(xMargin, top, width, height, WHITE16);
         #else
-            g_pDisplay->fillRect(xMargin + 1, top + 1, filled, height - 2, color);
-            g_pDisplay->fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
-            g_pDisplay->drawRect(xMargin, top, width, height, WHITE16);
+            display.fillRect(xMargin + 1, top + 1, filled, height - 2, color);
+            display.fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
+            display.drawRect(xMargin, top, width, height, WHITE16);
         #endif
     }
 
+
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32
-    g_pDisplay->drawRect(0, 0, g_pDisplay->width(), g_pDisplay->height(), borderColor);
+    display.drawRect(0, 0, display.width(), display.height(), borderColor);
 #endif
 }
 
@@ -240,8 +235,11 @@ void BasicInfoSummary(bool bRedraw)
 
 void CurrentEffectSummary(bool bRedraw)
 {
+    auto& display = g_ptrSystem->Display();
+    display.StartFrame();
+
     if (bRedraw)
-        g_pDisplay->fillScreen(BLACK16);
+        display.fillScreen(BLACK16);
 
     uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
 
@@ -249,73 +247,73 @@ void CurrentEffectSummary(bool bRedraw)
     // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
     // last time and check each time to see if its any different before drawing.
 
-    static auto lasteffect = g_ptrEffectManager->GetCurrentEffectIndex();
+    static auto lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
     static auto sip = WiFi.localIP().toString();
-    static auto lastFPS = g_FPS;
+    static auto lastFPS = g_Values.FPS;
     static auto lastFullDraw = 0;
     static auto lastAudio = 0;
     static auto lastSerial = 0;
     auto yh = 2; // Start at top of screen
 
+    display.setTextSize(display.width() > 160 ? 2 : 1);
+    const int topMargin = display.fontHeight() * 3 + 4;
+
     if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
     {
         lastFullDraw = millis();
         if (bRedraw != false ||
-            lasteffect != g_ptrEffectManager->GetCurrentEffectIndex() ||
+            lasteffect != g_ptrSystem->EffectManager().GetCurrentEffectIndex() ||
             sip != WiFi.localIP().toString())
         {
-            g_pDisplay->fillRect(0, 0, g_pDisplay->width(), g_pDisplay->TopMargin, backColor);
-            g_pDisplay->fillRect(0, g_pDisplay->height() - g_pDisplay->BottomMargin, g_pDisplay->width(), g_pDisplay->BottomMargin, backColor);
-            g_pDisplay->fillRect(0, g_pDisplay->TopMargin - 1, g_pDisplay->width(), 1, BLUE16);
-            g_pDisplay->fillRect(0, g_pDisplay->height() - g_pDisplay->BottomMargin + 1, g_pDisplay->width(), 1, BLUE16);
+            display.fillRect(0, 0, display.width(), topMargin, backColor);
+            display.fillRect(0, display.height() - display.BottomMargin, display.width(), display.BottomMargin, backColor);
+            display.fillRect(0, topMargin - 1, display.width(), 1, BLUE16);
+            display.fillRect(0, display.height() - display.BottomMargin + 1, display.width(), 1, BLUE16);
 
-            lasteffect = g_ptrEffectManager->GetCurrentEffectIndex();
+            lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
             sip = WiFi.localIP().toString();
-            lastFPS = g_FPS;
+            lastFPS = g_Values.FPS;
 
-            //g_pDisplay->setFont();
-            g_pDisplay->setTextSize(2);
-            g_pDisplay->setTextColor(YELLOW16, backColor);
+            //display.setFont();
+            display.setTextColor(YELLOW16, backColor);
             String sEffect = String("Current Effect: ") +
-                             String(g_ptrEffectManager->GetCurrentEffectIndex() + 1) +
+                             String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
                              String("/") +
-                             String(g_ptrEffectManager->EffectCount());
-            auto w = g_pDisplay->textWidth(sEffect);
-            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
-            g_pDisplay->print(sEffect.c_str());
-            yh += g_pDisplay->fontHeight();
-            // get effect name length and switch text size accordingly
-            int effectnamelen = g_ptrEffectManager->GetCurrentEffectName().length();
+                             String(g_ptrSystem->EffectManager().EffectCount());
+            auto w = display.textWidth(sEffect);
+            display.setCursor(display.width() / 2 - w / 2, yh);
+            display.print(sEffect.c_str());
+            yh += display.fontHeight();
 
-            g_pDisplay->setTextColor(WHITE16, backColor);
-            w = g_pDisplay->textWidth(g_ptrEffectManager->GetCurrentEffectName());
-            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
-            g_pDisplay->print(g_ptrEffectManager->GetCurrentEffectName());
-            yh += g_pDisplay->fontHeight();
-            
+            display.setTextColor(WHITE16, backColor);
+            w = display.textWidth(g_ptrSystem->EffectManager().GetCurrentEffectName());
+            display.setCursor(display.width() / 2 - w / 2, yh);
+            display.print(g_ptrSystem->EffectManager().GetCurrentEffectName());
+            yh += display.fontHeight();
+
             String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
-            g_pDisplay->setTextColor(YELLOW16, backColor);
-            w = g_pDisplay->textWidth(sIP);
-            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
-            yh += g_pDisplay->fontHeight();
-            g_pDisplay->print(sIP);
+            display.setTextColor(YELLOW16, backColor);
+            w = display.textWidth(sIP);
+            display.setCursor(display.width() / 2 - w / 2, yh);
+            yh += display.fontHeight();
+            display.print(sIP);
         }
 
 #if ENABLE_AUDIO
-        if ((g_ShowFPS && ((lastFPS != g_FPS) || (lastAudio != g_Analyzer._AudioFPS) || (lastSerial != g_Analyzer._serialFPS))))
+        if (SHOW_FPS && ((lastFPS != g_Values.FPS) || (lastAudio != g_Analyzer._AudioFPS) || (lastSerial != g_Analyzer._serialFPS)))
         {
-            lastFPS = g_FPS;
+            lastFPS = g_Values.FPS;
             lastSerial = g_Analyzer._serialFPS;
             lastAudio = g_Analyzer._AudioFPS;
-            g_pDisplay->fillRect(0, g_pDisplay->height() - g_pDisplay->BottomMargin, g_pDisplay->width(), 1, BLUE16);
-            yh = g_pDisplay->height() - g_pDisplay->fontHeight() + 6;
-            g_pDisplay->setTextColor(YELLOW16, backColor);
-            g_pDisplay->setTextSize(1);
-            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
-            auto w = g_pDisplay->textWidth(strOut);
-            g_pDisplay->setCursor(g_pDisplay->width() / 2 - w / 2, yh);
-            g_pDisplay->print(strOut);
-            yh += g_pDisplay->fontHeight();
+            display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
+            display.setTextColor(YELLOW16, backColor);
+            display.setTextSize(1);
+            yh = display.height() - display.fontHeight();
+            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
+            auto w = display.textWidth(strOut);
+            display.setCursor(display.width() / 2 - w / 2, yh);
+            display.print(strOut);
+            yh += display.fontHeight();
         }
 #endif
     }
@@ -327,41 +325,43 @@ void CurrentEffectSummary(bool bRedraw)
 
     static unsigned long lastDraw = millis();
 
-    int xHalf = g_pDisplay->width() / 2 - 1;   // xHalf is half the screen width
-    float ySizeVU = g_pDisplay->height() / 16; // vu is 1/20th the screen height, height of each block
+    int xHalf = display.width() / 2 - 1;   // xHalf is half the screen width
+    float ySizeVU = display.height() / 16; // vu is 1/20th the screen height, height of each block
     int cPixels = 16;
     float xSize = xHalf / cPixels + 1;                          // xSize is count of pixels in each block
     int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
 
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
     {
-        uint16_t color16 = iPixel > litBlocks ? BLACK16 : g_pDisplay->to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
-        g_pDisplay->fillRect(xHalf - iPixel * xSize, g_pDisplay->TopMargin, xSize - 1, ySizeVU, color16);
-        g_pDisplay->fillRect(xHalf + iPixel * xSize, g_pDisplay->TopMargin, xSize - 1, ySizeVU, color16);
+        uint16_t color16 = iPixel > litBlocks ? BLACK16 : display.to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
+        display.fillRect(xHalf - iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
+        display.fillRect(xHalf + iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
     }
 
     // Draw the spectrum analyzer bars
 
-    int spectrumTop = g_pDisplay->TopMargin + ySizeVU + 1; // Start at the bottom of the VU meter
-    int bandHeight = g_pDisplay->height() - spectrumTop - g_pDisplay->BottomMargin;
+    int spectrumTop = topMargin + ySizeVU + 1; // Start at the bottom of the VU meter
+    int bandHeight = display.height() - spectrumTop - display.BottomMargin;
 
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
     {
         CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
-        int bandWidth = g_pDisplay->width() / NUM_BANDS;
-        auto color16 = g_pDisplay->to16bit(bandColor);
-        auto topSection = bandHeight - bandHeight * g_Analyzer.g_peak2Decay[iBand];
+        int bandWidth = display.width() / NUM_BANDS;
+        auto color16 = display.to16bit(bandColor);
+        auto topSection = bandHeight - bandHeight * g_Analyzer._peak2Decay[iBand];
         if (topSection > 0)
-            g_pDisplay->fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
-        auto val = min(1.0f, g_Analyzer.g_peak2Decay[iBand]);
+            display.fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
+        auto val = min(1.0f, g_Analyzer._peak2Decay[iBand]);
         assert(bandHeight * val <= bandHeight);
-        g_pDisplay->fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
+        display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
     }
+
+    display.EndFrame();
 
     // Draw horizontal lines so the bars look like they are made of segments
 
-//    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += g_pDisplay->height() / 25)
-//        g_pDisplay->drawLine(0, iLine, g_pDisplay->width()-1, iLine, BLACK16);
+//    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += display.height() / 25)
+//        display.drawLine(0, iLine, display.width()-1, iLine, BLACK16);
 #endif
 }
 
@@ -379,11 +379,13 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
     // We don't want to be in the middle of drawing and have someone one another thread set the dirty
     // flag on us, so access to the flag is guarded by a mutex
 
-    std::lock_guard<std::mutex> guard(g_pDisplay->_screenMutex);
+    auto& display = g_ptrSystem->Display();
 
-    g_pDisplay->StartFrame();
+    std::lock_guard<std::mutex> guard(display._screenMutex);
 
-    switch (giInfoPage)
+    display.StartFrame();
+
+    switch (g_InfoPage)
     {
     case 0:
         BasicInfoSummary(bRedraw);
@@ -398,7 +400,7 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
         break;
     }
 
-    g_pDisplay->EndFrame();
+    display.EndFrame();
 
 #endif
 }
@@ -431,11 +433,11 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         Button1.update();
         if (Button1.pressed())
         {
-            std::lock_guard<std::mutex> guard(g_pDisplay->_screenMutex);
+            std::lock_guard<std::mutex> guard(g_ptrSystem->Display()._screenMutex);
 
             // When the button is pressed advance to the next information page on the little display
 
-            giInfoPage = (giInfoPage + 1) % NUM_INFO_PAGES;
+            g_InfoPage = (g_InfoPage + 1) % NUM_INFO_PAGES;
             bRedraw = true;
         }
 #endif
@@ -444,13 +446,13 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         Button2.update();
         if (Button2.pressed())
         {
-            g_ptrEffectManager->NextEffect();
+            g_ptrSystem->EffectManager().NextEffect();
             bRedraw = true;
         }
 #endif
 
         UpdateScreen(bRedraw);
-        if (g_bUpdateStarted)
+        if (g_Values.UpdateStarted)
             delay(200);
         else
             delay(50);

@@ -69,15 +69,15 @@ class CWebServer
     // Device stats that don't change after startup
     struct StaticStatistics
     {
-        uint32_t HeapSize;
-        size_t DmaHeapSize;
-        uint32_t PsramSize;
-        const char *ChipModel;
-        uint8_t ChipCores;
-        uint32_t CpuFreqMHz;
-        uint32_t SketchSize;
-        uint32_t FreeSketchSpace;
-        uint32_t FlashChipSize;
+        uint32_t HeapSize       = 0;
+        size_t DmaHeapSize      = 0;
+        uint32_t PsramSize      = 0;
+        const char *ChipModel   = nullptr;
+        uint8_t ChipCores       = 0;
+        uint32_t CpuFreqMHz     = 0;
+        uint32_t SketchSize     = 0;
+        uint32_t FreeSketchSpace= 0;
+        uint32_t FlashChipSize  = 0;
     };
 
     // Properties of files baked into the image
@@ -92,7 +92,7 @@ class CWebServer
         {}
     };
 
-    static std::vector<SettingSpec> mySettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
     static std::vector<std::reference_wrapper<SettingSpec>> deviceSettingSpecs;
     static const std::map<String, ValueValidator> settingValidators;
 
@@ -195,7 +195,7 @@ class CWebServer
   public:
 
     CWebServer()
-        : _server(80)
+        : _server(80), _staticStats()
     {}
 
     // begin - register page load handlers and start serving pages
@@ -281,8 +281,8 @@ class CWebServer
 };
 
 // Set value in lambda using a forwarding function. Always returns true
-#define SET_VALUE(functionCall) [=](auto value) { functionCall; return true; }
+#define SET_VALUE(functionCall) [&](auto value) { functionCall; return true; }
 
 // Set value in lambda using a forwarding function. Reports success based on function's return value,
 //   which must be implicitly convertable to bool
-#define CONFIRM_VALUE(functionCall) [=](auto value)->bool { return functionCall; }
+#define CONFIRM_VALUE(functionCall) [&](auto value)->bool { return functionCall; }

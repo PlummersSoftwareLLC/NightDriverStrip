@@ -33,7 +33,7 @@
 //    row is unbounded but realistically limited to about 1000 which
 //    still allows for about 24 frames per second of updates.  There
 //    can be 8 such channels connected to 8 different pins.
-//    By default NightDriver draws client effects, and there many
+//    By default, NightDriver draws client effects, and there many
 //    built in, from marquees to fire.  But it can also receive color
 //    data from a server.  So it firsts checks to see if there is
 //    data coming in, and if so, draws that.  If not it falls back
@@ -41,7 +41,7 @@
 //    an LED count, timestamp, and then the color data for the LEDs.
 //    The ESP32 app has buffer of about 30 frames when 1000 LEDs are
 //    in use.  The server generates frames 1/2 second in the future and
-//    sets the timestamps accordinging.  The client app waits until
+//    sets the timestamps according.  The client app waits until
 //    the next packet in its buffer is due for drawing and then draws
 //    it and discards it.  A circular queue is used.
 //
@@ -62,7 +62,7 @@
 //    It also handles groups of rings.  In one incarnation, 10 RGB
 //    LED PC fans are connected in a LianLi case plus the 32 or so
 //    on the front of the case.  The fans are grouped into NUM_FANS
-//    fans.  It also suports concentrically nested rings of varying
+//    fans.  It also supports concentrically nested rings of varying
 //    size, which I use for a Christmas-tree project where each tree
 //    is made up of a "stack" of rings - 32 leds, 18, 10, 4, 1.
 //    It's up to individual effects to take advantage of them but
@@ -83,7 +83,7 @@
 //    MAIN.CPP --------------------------------------------------------
 //
 //    When the ESP32 chip boots it starts here, in the setup() function.
-//    Setup sets pin directions, starts wifi, initalized the LEDs, etc.
+//    Setup sets pin directions, starts wifi, initialized the LEDs, etc.
 //    Then loop() is called repeatedly until the end of time.  The loop
 //    code (optionally) receives color data over Wifi.  If it hasn't had
 //    any for a bit of time, it falls back to rotating through a table
@@ -159,50 +159,33 @@
 
 #include "globals.h"
 #include "deviceconfig.h"
+#include "systemcontainer.h"
+#include "values.h"
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-extern volatile double g_FreeDrawTime;
-extern uint32_t g_Watts;
-extern float g_Brite;
-
-//
-// Task Handles to our running threads
-//
-NightDriverTaskManager g_TaskManager;
-
-// The one and only instance of ImprovSerial.  We instantiate it as the type needed
-// for the serial port on this module.  That's usually HardwareSerial but can be
-// other types on the S2, etc... which is why it's a template class.
-ImprovSerial<typeof(Serial)> g_ImprovSerial;
 
 //
 // Global Variables
 //
 
-#if NUM_INFO_PAGES > 0
-DRAM_ATTR uint8_t giInfoPage = NUM_INFO_PAGES - 1;                                  // Default to last page
-#else
-DRAM_ATTR uint8_t giInfoPage = 0;                                                   // Default to first page
-#endif
-
-DRAM_ATTR WiFiUDP g_Udp;                                                            // UDP object used for NNTP, etc
-DRAM_ATTR uint32_t g_FPS = 0;                                                       // Our global framerate
-DRAM_ATTR bool g_bUpdateStarted = false;                                            // Has an OTA update started?
-DRAM_ATTR AppTime g_AppTime;                                                        // Keeps track of frame times
-DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
-
-extern DRAM_ATTR std::unique_ptr<EffectManager<GFXBase>> g_ptrEffectManager;       // The one and only global effect manager
-
-DRAM_ATTR std::shared_ptr<GFXBase> g_aptrDevices[NUM_CHANNELS];                     // The array of GFXBase devices (each strip channel, for example)
-DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
+DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
+DRAM_ATTR Values g_Values;
+DRAM_ATTR SoundAnalyzer g_Analyzer;
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
+DRAM_ATTR String WiFi_ssid;
+DRAM_ATTR String WiFi_password;
+DRAM_ATTR std::mutex g_buffer_mutex;
 
-extern bool bitmap_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);  // Global function for drawing a bitmap to channel 0
+// The one and only instance of ImprovSerial.  We instantiate it as the type needed
+// for the serial port on this module.  That's usually HardwareSerial but can be
+// other types on the S2, etc... which is why it's a template class.
+
+ImprovSerial<typeof(Serial)> g_ImprovSerial;
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
 //
-// Imagine a setup of 5 christmas trees, where each tree was made up of 4 concentric rings of descreasing
+// Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of descreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
 DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
@@ -214,45 +197,6 @@ DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
     RING_SIZE_4
 };
 
-//
-// External Variables
-//
-
-extern DRAM_ATTR std::unique_ptr<LEDBufferManager> g_aptrBufferManager[NUM_CHANNELS];
-
-//
-// Optional Components
-//
-
-#if ENABLE_WIFI && ENABLE_WEBSERVER
-    DRAM_ATTR CWebServer g_WebServer;
-#endif
-
-#if INCOMING_WIFI_ENABLED
-    DRAM_ATTR SocketServer g_SocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
-#endif
-
-#if ENABLE_REMOTE
-    DRAM_ATTR RemoteControl g_RemoteControl;
-#endif
-
-#if ENABLE_WIFI && ENABLE_NTP
-void UpdateNTPTime();
-#endif
-
-// CheckHeap
-//
-// Quick and dirty debug test to make sure the heap has not been corrupted
-
-inline void CheckHeap()
-{
-    #if CHECK_HEAP
-        if (false == heap_caps_check_integrity_all(true))
-        {
-            throw std::runtime_error("Heap FAILED checks!");
-        }
-    #endif
-}
 
 // PrintOutputHeader
 //
@@ -279,26 +223,20 @@ void PrintOutputHeader()
 
 void TerminateHandler()
 {
-    Serial.println("-------------------------------------------------------------------------------------");
-    Serial.println("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
-    Serial.println("-------------------------------------------------------------------------------------");
+    debugE("-------------------------------------------------------------------------------------");
+    debugE("- NightDriverStrip Guru Meditation                              Unhandled Exception -");
+    debugE("-------------------------------------------------------------------------------------");
 
     PrintOutputHeader();
 
-/*
     try {
         std::rethrow_exception(std::current_exception());
     }
     catch (std::exception &ex) {
         debugE("Terminated due to exception: %s", ex.what());
     }
-*/
-    Serial.flush();
 
-    while(true)
-    {
-        sleep(1);
-    }
+    Serial.flush();
 }
 
 #ifdef TOGGLE_BUTTON_1
@@ -317,7 +255,7 @@ Bounce2::Button Button2;
 // Threads (tasks) created here can include:
 //
 // DebugLoopTaskEntry           - Run a little debug console accessible via telnet and serial
-// ScreenUpdateLoopEntry        - Displays stats on the attached OLED/TFT screen about drawing, network, etc
+// ScreenUpdateLoopEntry        - Displays stats on the attached OLED/TFT screen about drawing, network, etc.
 // DrawLoopTaskEntry            - Handles drawing from local or wifi data
 // RemoteLoop                   - Handles the remote control loop
 // NetworkHandlingLoopEntry     - Connects to WiFi, handles reconnects, OTA updates, web server
@@ -335,7 +273,7 @@ void setup()
     Debug.setSerialEnabled(true);
 
     if (!SPIFFS.begin(true))
-        Serial.println("WARNING: SPIFFs could not be intialized!");
+        Serial.println("WARNING: SPIFFs could not be initialized!");
 
     // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
     // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default
@@ -347,19 +285,21 @@ void setup()
 
     uzlib_init();
 
+    // Create the SystemContainer that holds primary device management objects.
+    g_ptrSystem = make_unique_psram<SystemContainer>();
+
     // Start the Task Manager which takes over the watchdog role and measures CPU usage
-    g_TaskManager.begin();
+    auto& taskManager = g_ptrSystem->SetupTaskManager();
 
     esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
 
-    // Display a simple statup header on the serial port
+    // Display a simple startup header on the serial port
     PrintOutputHeader();
     debugI("Startup!");
 
     // Start Debug
     debugI("Starting DebugLoopTaskEntry");
-    g_TaskManager.StartDebugThread();
-    CheckHeap();
+    taskManager.StartDebugThread();
 
     // Initialize Non-Volatile Storage
     esp_err_t err = nvs_flash_init();
@@ -371,45 +311,55 @@ void setup()
     }
     ESP_ERROR_CHECK(err);
 
-    // Create the JSON writer and start its background thread
-    g_ptrJSONWriter = std::make_unique<JSONWriter>();
-    g_TaskManager.StartJSONWriterThread();
+    // Setup config objects
+    g_ptrSystem->SetupConfig();
 
-    // Create and load device config from SPIFFS if possible
-    g_ptrDeviceConfig = std::make_unique<DeviceConfig>();
+    #if ENABLE_WIFI
 
-#if ENABLE_WIFI
+        debugW("Starting ImprovSerial");
+        String name = "NDESP32" + get_mac_address().substring(6);
+        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
 
-    debugW("Starting ImprovSerial");
-    String name = "NDESP32" + get_mac_address().substring(6);
-    g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, "ESP32", name.c_str(), &Serial);
+        // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
-    // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
+        if (!ReadWiFiConfig())
+        {
+            debugW("Could not read WiFI Credentials");
+            WiFi_password = cszPassword;
+            WiFi_ssid     = cszSSID;
+            if (!WriteWiFiConfig())
+                debugW("Could not even write defaults to WiFi Credentials");
+        }
+        else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+        {
+            WiFi_password = cszPassword;
+            WiFi_ssid     = cszSSID;
+        }
 
-    if (!ReadWiFiConfig())
-    {
-        debugW("Could not read WiFI Credentials");
-        WiFi_password = cszPassword;
-        WiFi_ssid     = cszSSID;
-        if (!WriteWiFiConfig())
-            debugW("Could not even write defaults to WiFi Credentials");
-    }
-    else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
-    {
-        WiFi_password = cszPassword;
-        WiFi_ssid     = cszSSID;
-    }
+        // We create the network reader here, so classes can register their readers from this point onwards.
+        //   Note that the thread that executes the readers is started further down, along with other networking
+        //   threads.
+        auto & networkReader = g_ptrSystem->SetupNetworkReader();
 
-    // We create the network reader here, so classes can register their readers from this point onwards.
-    //   Note that the thread that executes the readers is started further down, along with other networking
-    //   threads.
-    g_ptrNetworkReader = std::make_unique<NetworkReader>();
-#endif
+        #if ENABLE_NTP
+            // Register a network reader to update the device clock at regular intervals
+            networkReader.RegisterReader(UpdateNTPTime, (NTP_DELAY_ERROR_SECONDS) * 1000UL);
+        #endif
+    #endif
+
+    #if INCOMING_WIFI_ENABLED
+        g_ptrSystem->SetupSocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
+    #endif
+
+    #if ENABLE_WIFI && ENABLE_WEBSERVER
+        g_ptrSystem->SetupWebServer();
+    #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 
     #if ENABLE_REMOTE
         pinMode(IR_REMOTE_PIN, INPUT);
+        g_ptrSystem->SetupRemoteControl();
     #endif
 
     #if ENABLE_AUDIO
@@ -439,89 +389,59 @@ void setup()
     #if USE_TFTSPI
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
-        Serial.println("Creating TFT Screen");
-        g_pDisplay = std::make_unique<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
+        debugW("Creating TFT Screen");
+        g_ptrSystem->SetupDisplay<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif USE_LCD
 
-        Serial.println("Creating LCD Screen");
-        g_pDisplay = std::make_unique<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
+        debugW("Creating LCD Screen");
+        g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
     #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
 
         #if USE_M5DISPLAY
             M5.begin();
-            Serial.println("Creating M5 Screen");
-            g_pDisplay = std::make_unique<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
+            debugW("Creating M5 Screen");
+            g_ptrSystem->SetupDisplay<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
         #else
             M5.begin(false);
         #endif
 
+    #elif ELECROW
+
+            debugW("Creating Elecrow Screen");
+            g_ptrSystem->SetupDisplay<ElecrowScreen>(TFT_HEIGHT, TFT_WIDTH);
+
     #elif USE_OLED
 
         #if USE_SSD1306
-            Serial.println("Creating SSD1306 Screen");
-            g_pDisplay = std::make_unique<SSD1306Screen>(128, 64);
+            debugW("Creating SSD1306 Screen");
+            g_ptrSystem->SetupDisplay<SSD1306Screen>(128, 64);
         #else
-        Serial.println("Creating OLED Screen");
-            g_pDisplay = std::make_unique<OLEDScreen>(128, 64);
+        debugW("Creating OLED Screen");
+            g_ptrSystem->SetupDisplay<OLEDScreen>(128, 64);
         #endif
 
     #endif
 
-    #if USE_MATRIX
-        LEDMatrixGFX::StartMatrix();
-    #endif
+    // Create the vector with devices (channels)
+    g_ptrSystem->SetupDevices();
+    auto& devices = g_ptrSystem->Devices();
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #if USESTRIP
-        for (int i = 0; i < NUM_CHANNELS; i++)
-        {
-            debugW("Allocating LEDStripGFX for channel %d", i);
-            g_aptrDevices[i] = std::make_shared<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
-        }
-    #endif
-
     #if USE_MATRIX
-        for (int i = 0; i < NUM_CHANNELS; i++)
-        {
-            g_aptrDevices[i] = std::make_shared<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
-            g_aptrDevices[i]->loadPalette(0);
-        }
+        // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
+        LEDMatrixGFX::InitializeHardware(devices);
+    #elif HEXAGON
+        // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
+        HexagonGFX::InitializeHardware(devices);
+    #elif USE_STRIP
+        // LEDStripGFX is used for simple strips or for matrices woven from strips
+        LEDStripGFX::InitializeHardware(devices);
     #endif
 
-    TJpgDec.setJpgScale(1);
-    TJpgDec.setCallback(bitmap_output);
-
-    #if USE_PSRAM
-        uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
-    #else
-        uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
-    #endif
-
-    uint32_t memtoalloc = (NUM_CHANNELS * ((sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB))));
-    uint32_t cBuffers = memtouse / memtoalloc;
-
-    if (cBuffers < MIN_BUFFERS)
-    {
-        debugI("Not enough memory, could only allocate %d buffers and need %d\n", cBuffers, MIN_BUFFERS);
-        throw std::runtime_error("Could not allocate all buffers");
-    }
-    if (cBuffers > MAX_BUFFERS)
-    {
-        debugI("Could allocate %d buffers but limiting it to %d\n", cBuffers, MAX_BUFFERS);
-        cBuffers = MAX_BUFFERS;
-    }
-
-    debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
-
-    for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-        g_aptrBufferManager[iChannel] = std::make_unique<LEDBufferManager>(cBuffers, g_aptrDevices[iChannel]);
-
-    // Initialize all of the built in effects
-
-    debugI("Adding LEDs to FastLED...");
+    // Initialize all the built-in effects
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
     // Onboard PWM LED
@@ -535,72 +455,15 @@ void setup()
         ledcSetup(3, 12000, 8);
     #endif
 
-    //g_pDisplay->ScreenStatus("Initializing LED strips");
+    g_ptrSystem->SetupBufferManagers();
 
-    #if USESTRIP
-
-        #if NUM_CHANNELS == 1
-            debugI("Adding %d LEDs to FastLED.", g_aptrDevices[0]->GetLEDCount());
-
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[0]->leds, g_aptrDevices[0]->GetLEDCount());
-            //FastLED.setMaxRefreshRate(100, false);
-            pinMode(LED_PIN0, OUTPUT);
-        #endif
-
-        #if NUM_CHANNELS >= 2
-            pinMode(LED_PIN0, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[0]->GetLEDCount());
-
-            pinMode(LED_PIN1, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[1]->leds,g_aptrDevices[1]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 3
-            pinMode(LED_PIN2, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[2]->leds,g_aptrDevices[2]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 4
-            pinMode(LED_PIN3, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[3]->leds,g_aptrDevices[3]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 5
-            pinMode(LED_PIN4, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[4]->leds,g_aptrDevices[4]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 6
-            pinMode(LED_PIN5, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[5]->leds,g_aptrDevices[5]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 7
-            pinMode(LED_PIN6, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[6]->leds,g_aptrDevices[6]->GetLEDCount());
-        #endif
-
-        #if NUM_CHANNELS >= 8
-            pinMode(LED_PIN7, OUTPUT);
-            FastLED.addLeds<WS2812B, LED_PIN0, COLOR_ORDER>(g_aptrDevices[7]->leds,g_aptrDevices[7]->GetLEDCount());
-        #endif
-
-        #ifdef POWER_LIMIT_MW
-            set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
-        #endif
-
-        g_Brightness = 255;
-
-        #if ATOMLIGHT                                                   // BUGBUG Why input?  Shouldn't they be output?
-            pinMode(4, INPUT);
-            pinMode(12, INPUT);
-            pinMode(13, INPUT);
-            pinMode(14, INPUT);
-            pinMode(15, INPUT);
-        #endif
-    #endif
-
-    //g_pDisplay->ScreenStatus("Initializing Effects Manager");
+    TJpgDec.setJpgScale(1);
+    TJpgDec.setCallback([](int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+    {
+        auto pgfx = g_ptrSystem->EffectManager().g();
+        pgfx->drawRGBBitmap(x, y, bitmap, w, h);
+        return true;
+    });
 
     // Show splash effect on matrix
     #if USE_MATRIX
@@ -608,15 +471,14 @@ void setup()
         InitSplashEffectManager();
     #endif
 
-    // Connect to Wifi and wait for it if so requested
-
-
     InitEffectsManager();
 
-    g_TaskManager.StartDrawThread();
-    g_TaskManager.StartScreenThread();
-    g_TaskManager.StartAudioThread();
-    g_TaskManager.StartRemoteThread();
+    // Start things that do not depend on the network
+
+    taskManager.StartDrawThread();
+    taskManager.StartScreenThread();
+    taskManager.StartAudioThread();
+    taskManager.StartRemoteThread();
 
     #if ENABLE_WIFI && WAIT_FOR_WIFI
         debugI("Calling ConnectToWifi()\n");
@@ -628,12 +490,12 @@ void setup()
         Debug.setSerialEnabled(true);
     #endif
 
-    // Start the services
+    // Start the network-dependent services.  These will be NOPs on a non-wifi build.
 
-    g_TaskManager.StartSerialThread();
-    g_TaskManager.StartNetworkThread();
-    g_TaskManager.StartColorDataThread();
-    g_TaskManager.StartSocketThread();
+    taskManager.StartSerialThread();
+    taskManager.StartNetworkThread();
+    taskManager.StartColorDataThread();
+    taskManager.StartSocketThread();
 
     SaveEffectManagerConfig();
 }
@@ -655,17 +517,14 @@ void loop()
         #endif
 
         #if ENABLE_OTA
-            EVERY_N_MILLIS(20)
+            try
             {
-                try
-                {
-                    if (WiFi.isConnected())
-                        ArduinoOTA.handle();
-                }
-                catch(const std::exception& e)
-                {
-                    debugW("Exception in OTA code caught");
-                }
+                if (WiFi.isConnected())
+                    ArduinoOTA.handle();
+            }
+            catch(const std::exception& e)
+            {
+                debugW("Exception in OTA code caught");
             }
         #endif
 
@@ -677,15 +536,15 @@ void loop()
                 strOutput += str_sprintf("WiFi: %s, IP: %s, ", WLtoString(WiFi.status()), WiFi.localIP().toString().c_str());
             #endif
 
-            strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
-            strOutput += str_sprintf("LED FPS: %d ", g_FPS);
+            strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
+            strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
-            #if USESTRIP
-                strOutput += str_sprintf("LED Bright: %d, LED Watts: %d, ", g_Watts, g_Brite);
+            #if USE_STRIP
+                strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
             #endif
 
             #if USE_MATRIX
-                strOutput += str_sprintf("Refresh: %d Hz, ", LEDMatrixGFX::matrix.getRefreshRate());
+                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
             #endif
 
             #if ENABLE_AUDIO
@@ -697,14 +556,19 @@ void loop()
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                strOutput += str_sprintf("Buffer: %d/%d, ", g_aptrBufferManager[0]->Depth(), g_aptrBufferManager[0]->BufferCount());
+                auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+                strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
             #endif
 
-            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", g_TaskManager.GetCPUUsagePercent(0), g_TaskManager.GetCPUUsagePercent(1), g_FreeDrawTime);
+            const auto& taskManager = g_ptrSystem->TaskManager();
+            strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
-            Serial.println(strOutput);
+            debugI("%s", strOutput.c_str());
         }
 
-        delay(10);
+        // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise, we delay a bit to share the CPU.
+
+        if (!g_Values.UpdateStarted)
+            delay(10);
     }
 }

@@ -33,8 +33,8 @@
 
 #include "globals.h"
 #include "musiceffect.h"
+#include "soundanalyzer.h"
 
-extern AppTime g_AppTime;
 class FireEffect : public LEDStripEffect
 {
     void construct()
@@ -99,7 +99,7 @@ class FireEffect : public LEDStripEffect
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -122,15 +122,15 @@ class FireEffect : public LEDStripEffect
     {
     }
 
-    virtual size_t DesiredFramesPerSecond() const override
+    size_t DesiredFramesPerSecond() const override
     {
         return 45;
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp *= 255;
-        uint8_t t192 = round((temp/255.0)*191);
+        uint8_t t192 = round((temp/255.0f)*191);
 
         // calculate ramp up from
         uint8_t heatramp = t192 & 0x3F; // 0..63
@@ -146,7 +146,7 @@ class FireEffect : public LEDStripEffect
         }
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         FastLED.clear(false);
         DrawFire();
@@ -199,16 +199,23 @@ class FireEffect : public LEDStripEffect
 
         for (int i = 0; i < LEDCount; i++)
         {
+            auto sum = 0;
+            for (int j = 0; j < CellsPerLED; j++)
+                sum += heat[i*CellsPerLED + j];
+            auto avg = sum / CellsPerLED;
 
-            CRGB color = GetBlackBodyHeatColor(heat[i*CellsPerLED]/(float)std::numeric_limits<uint8_t>::max());
+            #if LANTERN
+                CRGB color = CRGB(avg, avg * .45, avg * .08);
+            #else
+                CRGB color = GetBlackBodyHeatColor(avg/(float)std::numeric_limits<uint8_t>::max());
+            #endif
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
-
             int j = (!bReversed) ? i : LEDCount - 1 - i;
             setPixelsOnAllChannels(j, 1, color, false);
-            //if (bMirrored)
-            //    setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
+            if (bMirrored)
+                setPixelsOnAllChannels(!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i, 1, color, false);
         }
     }
 };
@@ -246,11 +253,10 @@ public:
         construct();
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         AllocatedJsonDocument jsonDoc(512);
 
-        JsonObject root = jsonDoc.to<JsonObject>();
         FireEffect::SerializeToJSON(jsonObject);
 
         jsonObject[PTY_PALETTE] = _palette;
@@ -258,7 +264,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp)
+    virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp = min(1.0f, temp);
         int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
@@ -289,23 +295,25 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        :   BeatEffectBase(1.00, 0.01),
-            PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored)
+        : PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+          BeatEffectBase(1.00, 0.01)
+            
 
     {
         construct();
     }
 
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
-        : BeatEffectBase(1.00, 0.01),
-          PaletteFlameEffect(jsonObject)
+        : PaletteFlameEffect(jsonObject),
+          BeatEffectBase(1.00, 0.01)
+          
     {
         construct();
     }
 
   protected:
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         if (elapsed > 1)
         {
@@ -349,7 +357,7 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -363,31 +371,21 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
-        //static float lastDraw = 0;
-
-        //if (g_AppTime.FrameStartTime() - lastDraw < 1.0 / 40.0)
-        //    return;
-        //lastDraw = g_AppTime.FrameStartTime();
-
-        //  Fire(55, 180, 1);               //  The original
         Fire(_Cooling, 180, 5);
         delay(20);
     }
 
     void Fire(int Cooling, int Sparking, int Sparks)
     {
-        static std::unique_ptr<uint8_t []> heat = std::make_unique<uint8_t []>(NUM_LEDS);
+        static std::unique_ptr<uint8_t []> heat = make_unique_psram_array<uint8_t>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
-
-        int cooldown;
 
         // Step 1.  Cool down every cell a little
         for (int i = 0; i < _cLEDs; i++)
         {
-            cooldown = random(0, Cooling);
-
+            int cooldown = random_range(0, Cooling);
             if (cooldown > heat[i])
             {
                 heat[i] = 0;
@@ -419,9 +417,6 @@ public:
         {
             setPixelHeatColor(j, heat[j]);
         }
-
-        //for (int channel = 0; channel < NUM_CHANNELS; channel++)
-        //    blur1d(_GFX[channel]->leds(), _cLEDs, 255);
     }
 
     void setPixelWithMirror(int Pixel, CRGB temperature)
@@ -482,7 +477,7 @@ private:
     bool _Turbo;
     bool _Mirrored;
 
-    float *_Temperatures;
+    float * _Temperatures = nullptr;
 
 public:
     // Parameter:   Cooling   Sparks    driftPasses  drift sparkHeight   Turbo
@@ -524,7 +519,7 @@ public:
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<128> jsonDoc;
 
@@ -543,7 +538,7 @@ public:
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool Init(std::shared_ptr<GFXBase> gfx[NUM_CHANNELS]) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
         _Temperatures = (float *)PreferPSRAMAlloc(sizeof(float) * _cLEDs);
@@ -560,18 +555,12 @@ public:
         free(_Temperatures);
     }
 
-    //float lastDraw = 0;
-
-    virtual void Draw() override
+    void Draw() override
     {
-        //if (g_AppTime.FrameStartTime() - lastDraw < 1.0/33.0)
-        //    return;
-        //lastDraw = g_AppTime.FrameStartTime();
-
-        float deltaTime = (float)g_AppTime.LastFrameTime();
+        float deltaTime = (float)g_Values.AppTime.LastFrameTime();
         setAllOnAllChannels(0, 0, 0);
 
-        float cooldown = randomfloat(0, _Cooling) * deltaTime;
+        float cooldown = random_range(0.0f, _Cooling) * deltaTime;
 
         for (int i = 0; i < _cLEDs; i++)
             if (cooldown > _Temperatures[i])
@@ -586,9 +575,9 @@ public:
             {
                 float amount = 0.2f + g_Analyzer._VURatio; // MIN(0.85f, _Drift * deltaTime);
                 float c0 = 1.0f - amount;
-                float c1 = amount * 0.33;
-                float c2 = amount * 0.33;
-                float c3 = amount * 0.33;
+                float c1 = amount * 0.33f;
+                float c2 = c1;
+                float c3 = c1;
 
                 _Temperatures[k] = _Temperatures[k] * c0 +
                                    _Temperatures[k - 1] * c1 +
@@ -600,14 +589,14 @@ public:
         // Randomly ignite new 'sparks' near the bottom
         for (int frame = 0; frame < _Sparks; frame++)
         {
-            if (randomfloat(0, 1.0f) < 0.70f)
+            if (random_range(0.0f, 1.0f) < 0.70f)
             {
                 // NB: This randomly rolls over sometimes of course, and that's essential to the effect
-                int y = randomfloat(0, _SparkHeight);
-                _Temperatures[y] = (_Temperatures[y] + randomfloat(0.6f, 1.0f));
+                int y = random_range(0, _SparkHeight);
+                _Temperatures[y] = (_Temperatures[y] + random_range(0.6f, 1.0f));
 
                 if (!_Turbo)
-                    while (_Temperatures[y] > 1.0)
+                    while (_Temperatures[y] > 1.0f)
                         _Temperatures[y] -= 1.0f;
                 else
                     _Temperatures[y] = min(_Temperatures[y], 1.0f);
@@ -641,14 +630,16 @@ class BaseFireEffect : public LEDStripEffect
     }
 
   protected:
-    int     LEDCount;           // Number of LEDs total
-    int     CellCount;          // How many heat cells to represent entire flame
     int     Cooling;            // Rate at which the pixels cool off
     int     Sparks;             // How many sparks will be attempted each frame
     int     SparkHeight;        // If created, max height for a spark
     int     Sparking;           // Probability of a spark each attempt
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
+
+    int     LEDCount;           // Number of LEDs total
+    int     CellCount;          // How many heat cells to represent entire flame
+
     std::unique_ptr<uint8_t []> heat;
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
@@ -696,7 +687,7 @@ class BaseFireEffect : public LEDStripEffect
     {
     }
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         StaticJsonDocument<256> jsonDoc;
 
@@ -733,7 +724,7 @@ class BaseFireEffect : public LEDStripEffect
         }
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         FastLED.showColor(CRGB::Red);
         return;

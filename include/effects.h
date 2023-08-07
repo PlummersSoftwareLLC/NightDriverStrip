@@ -106,6 +106,7 @@
 #define EFFECT_MATRIX_WAVEFORM                         133
 #define EFFECT_MATRIX_GHOST_WAVE                       134
 #define EFFECT_MATRIX_MAZE                             135
+
 #define EFFECT_MATRIX_BALLS                            136
 #define EFFECT_MATRIX_SMSTROBE_DIFFUSION               137
 #define EFFECT_MATRIX_SMONE_RING                       138
@@ -166,6 +167,11 @@
 #define EFFECT_MATRIX_SMEYE_TUNNEL                     193
 #define EFFECT_MATRIX_SMLIGHTNING                      194
 
+#define EFFECT_MATRIX_SPECTRUMBAR                      195
+
+// Hexagon Effects
+#define EFFECT_HEXAGON_OUTER_RING                      201
+
 // Starry Night star variations
 #define EFFECT_STAR                                      1
 #define EFFECT_STAR_RANDOM_PALETTE_COLOR                 2
@@ -208,5 +214,6 @@
 #define PTY_BLUR            "blr"
 #define PTY_FADE            "fde"
 #define PTY_VERSION         "ver"
+#define PTY_HUESTEP         "hst"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

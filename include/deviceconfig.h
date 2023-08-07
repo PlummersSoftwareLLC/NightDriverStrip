@@ -36,7 +36,9 @@
 #include "jsonserializer.h"
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
-#define DEFAULT_NTP_SERVER "0.pool.ntp.org"
+#define NTP_SERVER_DEFAULT "0.pool.ntp.org"
+#define POWER_LIMIT_MIN 2000
+#define POWER_LIMIT_DEFAULT 4500
 
 // DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should
 // be managed using overrides of the respective methods in LEDStripEffect (HasSettings(), GetSettingSpecs(),
@@ -45,8 +47,9 @@
 // Adding a setting to the list of known/saved settings requires the following:
 // 1. Adding the setting variable to the list at the top of the class definition
 // 2. Adding a corresponding Tag to the list of static constexpr const char * strings further below
-// 3. Adding a corresponding SettingSpec at the top of the DeviceConfig() constructor (in deviceconfig.cpp)
-// 4. In the same constructor, adding logic to set a default in case the JSON load isn't possible
+// 3. Adding a corresponding SettingSpec in the GetSettingSpecs() function
+// 4. Adding logic to set a default in case the JSON load isn't possible in the DeviceConfig() constructor
+//    (in deviceconfig.cpp)
 // 5. Adding (de)serialization logic for the setting to the SerializeToJSON()/DeserializeFromJSON() methods
 // 6. Adding a Get/Set method for the setting (and, where applicable, their implementation in deviceconfig.cpp)
 //
@@ -57,22 +60,20 @@ class DeviceConfig : public IJSONSerializable
 {
     // Add variables for additional settings to this list
     String location;
-    bool locationIsZip = false;
+    bool   locationIsZip = false;
     String countryCode;
     String timeZone;
     String openWeatherApiKey;
-    bool use24HourClock = false;
-    bool useCelsius = false;
+    bool   use24HourClock = false;
+    bool   useCelsius = false;
     String ntpServer;
-    bool rememberCurrentEffect = false;
+    bool   rememberCurrentEffect = false;
+    int    powerLimit = POWER_LIMIT_DEFAULT;
 
-    std::vector<SettingSpec> settingSpecs;
+    std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
     size_t writerIndex;
-/*
-    void WriteToNVS(const String& name, const String& value);
-    void WriteToNVS(const String& name, bool value);
-*/
+
     void SaveToJSON();
 
     template <typename T>
@@ -107,10 +108,11 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
     static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
+    static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
 
     DeviceConfig();
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
         return SerializeToJSON(jsonObject, true);
     }
@@ -128,6 +130,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[UseCelsiusTag] = useCelsius;
         jsonDoc[NTPServerTag] = ntpServer;
         jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
+        jsonDoc[PowerLimitTag] = powerLimit;
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
@@ -135,7 +138,7 @@ class DeviceConfig : public IJSONSerializable
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
+    bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
         return DeserializeFromJSON(jsonObject, false);
     }
@@ -151,9 +154,10 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
         SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
         SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
+        SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
 
         if (ntpServer.isEmpty())
-            ntpServer = DEFAULT_NTP_SERVER;
+            ntpServer = NTP_SERVER_DEFAULT;
 
         if (jsonObject.containsKey(TimeZoneTag))
             return SetTimeZone(jsonObject[TimeZoneTag], true);
@@ -231,6 +235,13 @@ class DeviceConfig : public IJSONSerializable
                 "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
                 SettingSpec::SettingType::Boolean
             );
+            settingSpecs.emplace_back(
+                NAME_OF(powerLimit),
+                "Power limit",
+                "The maximum power in mW that the matrix attached to the board is allowed to use. As the previous sentence implies, this "
+                "setting only applies if a matrix is used.",
+                SettingSpec::SettingType::Integer
+            ).MinimumValue = POWER_LIMIT_MIN;
 
             settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
         }
@@ -326,6 +337,23 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(rememberCurrentEffect, newRememberCurrentEffect);
     }
-};
 
-extern DRAM_ATTR std::unique_ptr<DeviceConfig> g_ptrDeviceConfig;
+    int GetPowerLimit() const
+    {
+        return powerLimit;
+    }
+
+    ValidateResponse ValidatePowerLimit(const String& newPowerLimit)
+    {
+        if (newPowerLimit.toInt() < POWER_LIMIT_MIN)
+            return { false, String("powerLimit is below minimum value of ") + POWER_LIMIT_MIN };
+
+        return { true, "" };
+    }
+
+    void SetPowerLimit(int newPowerLimit)
+    {
+        if (newPowerLimit >= POWER_LIMIT_MIN)
+            SetAndSave(powerLimit, newPowerLimit);
+    }
+};

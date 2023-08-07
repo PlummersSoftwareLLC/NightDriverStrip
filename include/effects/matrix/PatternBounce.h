@@ -72,12 +72,12 @@ public:
     {
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
-        return false;
+        return true;
     }
 
-    virtual void Start() override
+    void Start() override
     {
         unsigned int colorWidth = 256 / count;
         for (int i = 0; i < count; i++)
@@ -92,12 +92,12 @@ public:
         }
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         // dim all pixels on the display
 
-        // Blue columns only. Skip the first row of each column if the VU meter is being shown, so we don't blend it onto ourselves
-        g()->blurColumns(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_ptrEffectManager->IsVUVisible() ? 1 : 0, 200);
+        // Blue columns only, and skip the first row of each column if the VU meter is being shown so we don't blend it onto ourselves
+        g()->blurColumns(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, g_ptrSystem->EffectManager().IsVUVisible() ? 1 : 0, 200);
         g()->DimAll(250);
 
         for (int i = 0; i < count; i++)
@@ -106,7 +106,8 @@ public:
             boid.applyForce(gravity);
             boid.update();
 
-            g()->setPixel(boid.location.x, boid.location.y, g()->ColorFromCurrentPalette(boid.colorIndex));
+            if (g()->isValidPixel(boid.location.x, boid.location.y))
+                g()->setPixel(boid.location.x, boid.location.y, g()->ColorFromCurrentPalette(boid.colorIndex));
 
             if (boid.location.y >= MATRIX_HEIGHT - 1)
             {

@@ -36,10 +36,7 @@ class PatternClock : public LEDStripEffect
     // Radius is the lesser of the height and width so that the round clock can fit
     // on rectangular display
 
-    const int    radius = std::min(MATRIX_WIDTH, MATRIX_HEIGHT) / 2 - 1;
-    const size_t SECONDS_PER_MINUTE = 60;
-    const size_t SECONDS_PER_HOUR   = SECONDS_PER_MINUTE * 60;
-    const size_t SECONDS_PER_DAY    = SECONDS_PER_HOUR * 24;
+    int    radius;
 
   public:
 
@@ -51,12 +48,12 @@ class PatternClock : public LEDStripEffect
     {
     }
 
-    virtual bool RequiresDoubleBuffering() const override
+    bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
-    virtual void Draw() override
+    void Draw() override
     {
         // Get the hours, minutes, and seconds of hte current time
 
@@ -70,9 +67,10 @@ class PatternClock : public LEDStripEffect
 
         // Draw the clock face, outer ring and inner dot where the hands mount
 
+        radius = std::min(MATRIX_WIDTH, MATRIX_HEIGHT) / 2 - 1;
+
         g()->Clear();
-        g()->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius, GREEN16);
-        g()->drawCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, GREEN16);
+        g()->DrawSafeCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, 1, GREEN16);
 
         // Draw the hour ticks around the outside of the clock every 30 degrees
 
@@ -111,6 +109,9 @@ class PatternClock : public LEDStripEffect
         x3 = (MATRIX_CENTER_X + (sin(angle) * (radius / 2 )));
         y3 = (MATRIX_CENTER_Y - (cos(angle) * (radius / 2 )));
         g()->drawLine(MATRIX_CENTER_X, MATRIX_CENTER_Y, x3, y3, CRGB::Yellow);
+
+        g()->DrawSafeCircle(MATRIX_WIDTH/2, MATRIX_HEIGHT/2, radius+1, GREEN16);
+
     }
 };
 

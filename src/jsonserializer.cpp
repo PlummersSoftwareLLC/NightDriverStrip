@@ -29,17 +29,15 @@
 
 #include "globals.h"
 #include "SPIFFS.h"
-#include "jsonserializer.h"
+#include "systemcontainer.h"
 #include "taskmgr.h"
-
-DRAM_ATTR std::unique_ptr<JSONWriter> g_ptrJSONWriter = nullptr;
 
 bool BoolFromText(const String& text)
 {
     return text == "true" || strtol(text.c_str(), NULL, 10);
 }
 
-bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     bool jsonReadSuccessful = false;
 
@@ -49,7 +47,7 @@ bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<A
     {
         if (file.size() > 0)
         {
-            debugI("Attempting to read JSON file %s", fileName);
+            debugI("Attempting to read JSON file %s", fileName.c_str());
 
             if (bufferSize == 0)
                 bufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
@@ -67,7 +65,7 @@ bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<A
                     file.seek(0);
                     bufferSize += JSON_BUFFER_INCREMENT;
 
-                    debugW("Out of memory reading JSON from file %s - increasing buffer to %zu bytes", fileName, bufferSize);
+                    debugW("Out of memory reading JSON from file %s - increasing buffer to %zu bytes", fileName.c_str(), bufferSize);
                 }
                 else if (error == DeserializationError::Ok)
                 {
@@ -76,7 +74,7 @@ bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<A
                 }
                 else
                 {
-                    debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName);
+                    debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName.c_str());
                     break;
                 }
             }
@@ -121,19 +119,19 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
 
     if (!file)
     {
-        debugE("Unable to open file %s to write JSON!", fileName);
+        debugE("Unable to open file %s to write JSON!", fileName.c_str());
         return false;
     }
 
     size_t bytesWritten = serializeJson(*pJsonDoc, file);
-    debugI("Number of bytes written to JSON file %s: %d", fileName, bytesWritten);
+    debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), bytesWritten);
 
     file.flush();
     file.close();
 
     if (bytesWritten == 0)
     {
-        debugE("Unable to write JSON to file %s!", fileName);
+        debugE("Unable to write JSON to file %s!", fileName.c_str());
         SPIFFS.remove(fileName);
         return false;
     }
@@ -173,7 +171,7 @@ void JSONWriter::FlagWriter(size_t index)
     writers[index].flag.store(true);
     latestFlagMs.store(millis());
 
-    g_TaskManager.NotifyJSONWriterThread();
+    g_ptrSystem->TaskManager().NotifyJSONWriterThread();
 }
 
 void JSONWriter::FlushWrites(bool halt)
@@ -181,7 +179,7 @@ void JSONWriter::FlushWrites(bool halt)
     flushRequested.store(true);
     haltWrites.store(halt);
 
-    g_TaskManager.NotifyJSONWriterThread();
+    g_ptrSystem->TaskManager().NotifyJSONWriterThread();
 }
 
 // JSONWriterTaskEntry
@@ -198,21 +196,23 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             // Wait until we're woken up by a writer being flagged, or until we've reached the hold point
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
-            if (!g_ptrJSONWriter)
+            if (!g_ptrSystem->HasJSONWriter())
                 continue;
 
+            auto& jsonWriter = g_ptrSystem->JSONWriter();
+
             // If a flush was requested then we execute pending writes now
-            if (g_ptrJSONWriter->flushRequested.load())
+            if (jsonWriter.flushRequested.load())
             {
-                g_ptrJSONWriter->flushRequested.store(false);
+                jsonWriter.flushRequested.store(false);
                 break;
             }
 
             // If writes are halted, we don't do anything
-            if (g_ptrJSONWriter->haltWrites.load())
+            if (jsonWriter.haltWrites.load())
                 continue;
 
-            unsigned long holdUntil = g_ptrJSONWriter->latestFlagMs.load() + JSON_WRITER_DELAY;
+            unsigned long holdUntil = jsonWriter.latestFlagMs.load() + JSON_WRITER_DELAY;
             unsigned long now = millis();
             if (now >= holdUntil)
                 break;
@@ -220,7 +220,7 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             notifyWait = pdMS_TO_TICKS(holdUntil - now);
         }
 
-        for (auto &entry : g_ptrJSONWriter->writers)
+        for (auto &entry : g_ptrSystem->JSONWriter().writers)
         {
             // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing
             if (entry.flag.exchange(false))
