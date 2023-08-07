@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1242-pastel-flutter
 // Funky math, but a nice effect.
 
-#if ENABLE_AUDIO
-class PatternSMPastelFlutter : public BeatEffectBase,
-                               public LEDStripEffect
-#else
 class PatternSMPastelFlutter : public LEDStripEffect
-#endif
 {
  private:
   const uint8_t exp_gamma[256] = {
@@ -57,26 +51,17 @@ class PatternSMPastelFlutter : public LEDStripEffect
  public:
   PatternSMPastelFlutter()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMPASTEL_FLUTTER, "Pastel Flutter") {
   }
 
   PatternSMPastelFlutter(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
 
     uint16_t a = millis() / 4;
     uint16_t a3 = a / 3;
@@ -118,8 +103,4 @@ class PatternSMPastelFlutter : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

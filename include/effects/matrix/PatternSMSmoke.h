@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1116-smoke
 
-#if ENABLE_AUDIO
-class PatternSMSmoke : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSMSmoke : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Scale = 50;  // 1-100. SettingA
@@ -126,26 +120,17 @@ class PatternSMSmoke : public LEDStripEffect
  public:
   PatternSMSmoke()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSMOKE, "Smoke") {
   }
 
   PatternSMSmoke(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     deltaHue++;
     CRGB color;  //, color2;
 
@@ -192,8 +177,4 @@ class PatternSMSmoke : public LEDStripEffect
 
     g()->BlurFrame(20);  // без размытия как-то пиксельно, наверное...
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

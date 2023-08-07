@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2238-something
 //
 // Infinite depth eyeball tunnel.
 
-#if ENABLE_AUDIO
-class PatternSMEyeTunnel : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMEyeTunnel : public LEDStripEffect
-#endif
 {
  private:
 #undef WU_WEIGHT
@@ -94,26 +88,17 @@ class PatternSMEyeTunnel : public LEDStripEffect
  public:
   PatternSMEyeTunnel()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMEYE_TUNNEL, "Eye Tunnel") {
   }
 
   PatternSMEyeTunnel(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     g()->Clear();
     float ms = millis() / 750.f;
     const float kHalfWidth = MATRIX_WIDTH / 2;
@@ -140,8 +125,4 @@ class PatternSMEyeTunnel : public LEDStripEffect
                    &col);
       }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

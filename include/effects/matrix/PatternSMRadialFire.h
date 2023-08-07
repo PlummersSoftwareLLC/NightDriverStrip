@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1570-radialfire
 
-#if ENABLE_AUDIO
-class PatternSMRadialFire : public BeatEffectBase,
-                            public LEDStripEffect
-#else
 class PatternSMRadialFire : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int LED_COLS = MATRIX_WIDTH;
@@ -24,17 +18,11 @@ class PatternSMRadialFire : public LEDStripEffect
  public:
   PatternSMRadialFire()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMRADIAL_FIRE, "Radial Fire") {
   }
 
   PatternSMRadialFire(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -49,9 +37,6 @@ class PatternSMRadialFire : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     static byte scaleX = 16;
     static byte scaleY = 1;
 
@@ -72,8 +57,4 @@ class PatternSMRadialFire : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

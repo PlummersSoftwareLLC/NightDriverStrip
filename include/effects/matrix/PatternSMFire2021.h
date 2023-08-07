@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/388-fire2021
 
-#if ENABLE_AUDIO
-class PatternSMFire2021 : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMFire2021 : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Speed = 150;  // 1-252 ...why is not 255?! // Setting
@@ -26,17 +20,11 @@ class PatternSMFire2021 : public LEDStripEffect
  public:
   PatternSMFire2021()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMFIRE2021, "Fire 2021") {
   }
 
   PatternSMFire2021(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -69,10 +57,6 @@ class PatternSMFire2021 : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     ff_x += step;  // static uint32_t t += speed;
     for (byte x = 0; x < MATRIX_WIDTH; x++) {
       for (byte y = 0; y < MATRIX_HEIGHT; y++) {
@@ -90,8 +74,4 @@ class PatternSMFire2021 : public LEDStripEffect
 
     if (!random8()) ff_z++;
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

@@ -3,16 +3,10 @@
 #include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2128-bluringcolors
 
-#if ENABLE_AUDIO
-class PatternSMBlurringColors : public BeatEffectBase,
-                                public LEDStripEffect
-#else
 class PatternSMBlurringColors : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Scale = 10;  // 1-100 Setting
@@ -176,17 +170,11 @@ class PatternSMBlurringColors : public LEDStripEffect
  public:
   PatternSMBlurringColors()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMBLURRING_COLORS, "Blurring Colors") {
   }
 
   PatternSMBlurringColors(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -224,9 +212,6 @@ class PatternSMBlurringColors : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     step = deltaValue;  //счётчик количества частиц в очереди на зарождение в
                         //этом цикле
     // dimAll(10);
@@ -252,8 +237,4 @@ class PatternSMBlurringColors : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

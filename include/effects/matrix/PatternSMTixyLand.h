@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/916-tixyland
 // 37 (!) mathematically easy effects in one. Pick your favorites and extract
 // them. It's the kitchen sink. Some are quite cool.
 
-#if ENABLE_AUDIO
-class PatternSMTixyLand : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMTixyLand : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int LED_COLS = MATRIX_WIDTH;
@@ -191,17 +185,11 @@ class PatternSMTixyLand : public LEDStripEffect
  public:
   PatternSMTixyLand()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMTIXY_LAND, "TixyLand") {
   }
 
   PatternSMTixyLand(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -223,10 +211,6 @@ class PatternSMTixyLand : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     double t =
         millis() /
         1000.0;  // some formulas is hardcoded and fps get down. this speedup it
@@ -242,8 +226,4 @@ class PatternSMTixyLand : public LEDStripEffect
           effect);  // This will only last one frame. This is already too slow.
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

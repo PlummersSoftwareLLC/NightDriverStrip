@@ -1,17 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1166-stars-beta-ver
 // The original has a bunch of Palette management stuff we just didn't
 // implement.
 
 class PatternSMStarDeep : public LEDStripEffect
-#if ENABLE_AUDIO
-    ,
-                          public BeatEffectBase
-#endif
 {
  private:
 // Why are these named "bballs"? Probably reused effect innards.
@@ -61,17 +56,11 @@ class PatternSMStarDeep : public LEDStripEffect
  public:
   PatternSMStarDeep()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSTARDEEP, "Star Deep") {
   }
 
   PatternSMStarDeep(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -209,9 +198,6 @@ class PatternSMStarDeep : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     g()->DimAll(89U);
 
     // hue++;//increment the color basis был общий оттенок на весь эффект.
@@ -268,8 +254,4 @@ class PatternSMStarDeep : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

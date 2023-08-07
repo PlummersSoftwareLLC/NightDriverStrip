@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1923-supernova
 
-#if ENABLE_AUDIO
-class PatternSMSupernova : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMSupernova : public LEDStripEffect
-#endif
 {
  private:
   // matrix size constants are calculated only here and do not change in effects
@@ -157,17 +151,11 @@ class PatternSMSupernova : public LEDStripEffect
  public:
   PatternSMSupernova()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSUPERNOVA, "Supernova") {
   }
 
   PatternSMSupernova(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -186,9 +174,6 @@ class PatternSMSupernova : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
 
     step = -1;  // deltaValue; //счётчик количества частиц в очереди на
                 // зарождение в этом цикле
@@ -212,8 +197,4 @@ class PatternSMSupernova : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

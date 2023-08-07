@@ -1,18 +1,13 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Derived from
 // https://editor.soulmatelights.com/gallery/2269-aaron-gotwalts-unknown-pleasure
 //
 // Colored, accelerated, gravity popcorn balls.
 
-#if ENABLE_AUDIO
-class PatternSMColorPopcorn : public BeatEffectBase,
-                              public LEDStripEffect
-#else
 class PatternSMColorPopcorn : public LEDStripEffect
-#endif
 {
  private:
   CRGBPalette16 currentPalette = RainbowColors_p;
@@ -116,17 +111,11 @@ class PatternSMColorPopcorn : public LEDStripEffect
  public:
   PatternSMColorPopcorn()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMCOLOR_POPCORN, "Color Popcorn") {
   }
 
   PatternSMColorPopcorn(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -141,9 +130,6 @@ class PatternSMColorPopcorn : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     fadeToBlackBy(g()->leds, NUM_LEDS, 60);
 
     EVERY_N_MILLISECONDS(16) {
@@ -151,8 +137,4 @@ class PatternSMColorPopcorn : public LEDStripEffect
       paint();
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

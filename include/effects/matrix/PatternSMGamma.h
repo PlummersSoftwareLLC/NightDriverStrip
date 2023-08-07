@@ -6,38 +6,23 @@
 // Derived from https://editor.soulmatelights.com/gallery/2091-q24
 // Simple, but interesting rolling depth with a blue lens flare.
 
-#if ENABLE_AUDIO
-class PatternSMGamma : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSMGamma : public LEDStripEffect
-#endif
 {
  private:
  public:
   PatternSMGamma()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMGAMMA, "Gamma") {
   }
 
   PatternSMGamma(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     static const uint8_t exp_gamma[256] = {
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,
         1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
@@ -72,8 +57,4 @@ class PatternSMGamma : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

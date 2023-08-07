@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/2272-hypnosis
 // Spiraling swirls of rotating colors.
 
-#if ENABLE_AUDIO
-class PatternSMHypnosis : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMHypnosis : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int LED_COLS = MATRIX_WIDTH;
@@ -27,17 +21,11 @@ class PatternSMHypnosis : public LEDStripEffect
  public:
   PatternSMHypnosis()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMHYPNOSIS, "Hypnosis") {
   }
 
   PatternSMHypnosis(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -53,9 +41,6 @@ class PatternSMHypnosis : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     static uint16_t t;
     t += 4;
     for (uint8_t x = 0; x < LED_COLS; x++) {
@@ -68,8 +53,4 @@ class PatternSMHypnosis : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

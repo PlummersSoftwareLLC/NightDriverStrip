@@ -3,17 +3,11 @@
 #include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2132-F
 // This makes a very cool green vine that grows up the display.
 
-#if ENABLE_AUDIO
-class PatternSMFlocking : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMFlocking : public LEDStripEffect
-#endif
 {
  private:
   const int WIDTH = MATRIX_WIDTH;
@@ -75,17 +69,11 @@ class PatternSMFlocking : public LEDStripEffect
  public:
   PatternSMFlocking()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMFLOCKING, "Flocking") {
   }
 
   PatternSMFlocking(const JsonObjectConst &jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -102,9 +90,6 @@ class PatternSMFlocking : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     for (auto &boid : boids) {
       boid.avoidBorders();
       boid.update(boids, NUM_PARTICLES);
@@ -118,8 +103,4 @@ class PatternSMFlocking : public LEDStripEffect
     y += speed;
     z += speed;
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

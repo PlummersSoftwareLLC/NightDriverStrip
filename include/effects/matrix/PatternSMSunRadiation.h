@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/2107-sun-radiation
 // or https://editor.soulmatelights.com/gallery/599-sun-radiation
 // They're the same code, so probably the lower number.
 
-#if ENABLE_AUDIO
-class PatternSMSunRadiation : public BeatEffectBase,
-                              public LEDStripEffect
-#else
 class PatternSMSunRadiation : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int LED_ROWS = MATRIX_HEIGHT;
@@ -73,17 +67,11 @@ class PatternSMSunRadiation : public LEDStripEffect
  public:
   PatternSMSunRadiation()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSUN_RADIATION, "Sun Radiation") {
   }
 
   PatternSMSunRadiation(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -93,14 +81,7 @@ class PatternSMSunRadiation : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     generatebump();
     Bumpmap();
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

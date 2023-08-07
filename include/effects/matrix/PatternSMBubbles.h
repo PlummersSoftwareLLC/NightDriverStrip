@@ -3,18 +3,12 @@
 #include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by
 // https://editor.soulmatelights.com/gallery/2252-overcomplicatedbubbles The
 // flocking code gives the bubbles a bit of a swarming effect
 
-#if ENABLE_AUDIO
-class PatternSMBubbles : public BeatEffectBase,
-                         public LEDStripEffect
-#else
 class PatternSMBubbles : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int NUM_PARTICLES = 80;
@@ -79,17 +73,11 @@ class PatternSMBubbles : public LEDStripEffect
  public:
   PatternSMBubbles()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMBUBBLES, "Bubbles") {
   }
 
   PatternSMBubbles(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -108,10 +96,6 @@ class PatternSMBubbles : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     EVERY_N_MILLISECONDS(2000) {
       if (count <= 5 || count >= 79) {
         speed = -speed;
@@ -155,8 +139,4 @@ class PatternSMBubbles : public LEDStripEffect
     y += speed;
     z += speed;
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

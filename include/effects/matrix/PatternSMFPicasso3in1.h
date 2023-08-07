@@ -1,15 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Inspired by https://editor.soulmatelights.com/gallery/1177-picasso-3in1
 
-#if ENABLE_AUDIO
-class PatternSMPicasso3in1 : public BeatEffectBase,
-                             public LEDStripEffect
-#else
 class PatternSMPicasso3in1 : public LEDStripEffect
-#endif
 {
  private:
   // Suggested values for Mesmerizer w/ 1/2 HUB75 panel: 10, 36, 70
@@ -247,17 +242,11 @@ class PatternSMPicasso3in1 : public LEDStripEffect
  public:
   PatternSMPicasso3in1()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso 3in1") {
   }
 
   PatternSMPicasso3in1(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -284,9 +273,6 @@ class PatternSMPicasso3in1 : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
 
     // Mesmerizer/NightDriver demo: just pick some preset and skip through them.
     // Good way to demo off this module, but it's a bit much visually!
@@ -319,8 +305,4 @@ class PatternSMPicasso3in1 : public LEDStripEffect
         PicassoRoutine2();
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

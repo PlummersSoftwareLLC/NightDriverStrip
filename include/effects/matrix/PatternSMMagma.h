@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1129-magma
 
-#if ENABLE_AUDIO
-class PatternSMMagma : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSMMagma : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Scale = 20;  // 1-100 is palette and count  // THIS is a setting 0-33,
@@ -54,17 +48,11 @@ class PatternSMMagma : public LEDStripEffect
  public:
   PatternSMMagma()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMMAGMA, "Magma") {
   }
 
   PatternSMMagma(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -233,9 +221,6 @@ class PatternSMMagma : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
 
     g()->DimAll(181);
 
@@ -268,8 +253,4 @@ class PatternSMMagma : public LEDStripEffect
     ff_y++;
     if (ff_y & 0x01) ff_z++;
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

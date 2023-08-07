@@ -1,7 +1,6 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from
 // https://editor.soulmatelights.com/gallery/2358-particles
@@ -27,12 +26,7 @@
 // Good freakin' grief.
 #define now_weekMs 0 * 1000ul + millis()  // - tmr
 
-#if ENABLE_AUDIO
-class PatternSMParticles : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMParticles : public LEDStripEffect
-#endif
 {
  private:
   const int thisScale = 254;  // 254 - максимальный, наверное, масштаб
@@ -48,17 +42,11 @@ class PatternSMParticles : public LEDStripEffect
  public:
   PatternSMParticles()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMPARTICLES, "Particles") {
   }
 
   PatternSMParticles(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -72,9 +60,6 @@ class PatternSMParticles : public LEDStripEffect
   }  // служебные функции
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     fadeAllChannelsToBlackBy(80);
 
     // This relies on 'now_weekMs' changing on every loop iteration.
@@ -99,7 +84,4 @@ class PatternSMParticles : public LEDStripEffect
       drawPixelXY(thisX, thisY, CRGB(CHSV(CUR_PRES_color, 255, 255)));
     }
   }
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

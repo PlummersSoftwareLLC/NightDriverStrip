@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/839-starship-troopers
 // Fighters fly in circular formation, chasing a common goal but
 // never reaching it.
 
-#if ENABLE_AUDIO
-class PatternSMStarshipTroopers : public BeatEffectBase,
-                                  public LEDStripEffect
-#else
 class PatternSMStarshipTroopers : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int WIDTH = MATRIX_WIDTH;
@@ -99,26 +93,17 @@ class PatternSMStarshipTroopers : public LEDStripEffect
  public:
   PatternSMStarshipTroopers()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSTARSHIP_TROOPERS, "Starship Troopers") {
   }
 
   PatternSMStarshipTroopers(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     randomSeed(millis());
     //   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 5, 10));
     switch (dir) {
@@ -245,8 +230,4 @@ class PatternSMStarshipTroopers : public LEDStripEffect
 
     //  delay(16); // ~60FPS
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

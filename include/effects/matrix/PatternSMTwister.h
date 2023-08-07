@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://wokwi.com/projects/297732081748804105
 // High color barber-pole with varying Y-height stripes.
 // Quite hypnotic.
 
-#if ENABLE_AUDIO
-class PatternSMTwister : public BeatEffectBase,
-                         public LEDStripEffect
-#else
 class PatternSMTwister : public LEDStripEffect
-#endif
 {
  private:
   void mydrawLine(byte x, byte x1, byte y, CHSV color, bool dot, bool grad,
@@ -39,26 +33,17 @@ class PatternSMTwister : public LEDStripEffect
  public:
   PatternSMTwister()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMTWISTER, "Twister") {
   }
 
   PatternSMTwister(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     uint16_t a = millis() / 10;
     LEDS.clear();
 
@@ -90,8 +75,4 @@ class PatternSMTwister : public LEDStripEffect
 
     fadeAllChannelsToBlackBy(60);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

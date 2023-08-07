@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1090-radialwave
 // A three-veined swirl rotates and changes direction, looking like an exhaust.
 
-#if ENABLE_AUDIO
-class PatternSMRadialWave : public BeatEffectBase,
-                            public LEDStripEffect
-#else
 class PatternSMRadialWave : public LEDStripEffect
-#endif
 {
  private:
   // RadialWave
@@ -32,17 +26,11 @@ class PatternSMRadialWave : public LEDStripEffect
  public:
   PatternSMRadialWave()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMRADIAL_WAVE, "Radial Wave") {
   }
 
   PatternSMRadialWave(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -58,9 +46,6 @@ class PatternSMRadialWave : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     static byte speed = 1;
     static uint32_t t;
     t += speed;
@@ -74,8 +59,4 @@ class PatternSMRadialWave : public LEDStripEffect
     }
     //  delay(16);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };
