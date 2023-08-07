@@ -67,7 +67,7 @@ class PatternSMParticles : public LEDStripEffect
   void drawPixelXY(int8_t x, int8_t y, CRGB color) {
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
       return;
-    uint32_t thisPixel = g()->xy(x, MATRIX_HEIGHT - y);
+    uint32_t thisPixel = g()->xy(x, MATRIX_HEIGHT -1 - y);
     g()->leds[thisPixel] = color;
   }  // служебные функции
 
