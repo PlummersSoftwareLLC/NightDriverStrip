@@ -34,8 +34,8 @@ class PatternSMGoogleNexus : public LEDStripEffect
   }
 
   void drawPixelXYF_X(float x, uint16_t y, const CRGB &color) {
-    if (x < 0 || y < 0 || x > ((float)MATRIX_WIDTH) ||
-        y > ((float)MATRIX_HEIGHT))
+    if (x < 0 || y < 0 || x > ((float)MATRIX_WIDTH - 1) ||
+        y > ((float)MATRIX_HEIGHT - 1))
       return;
 
     // extract the fractional parts and derive their inverses
@@ -46,6 +46,7 @@ class PatternSMGoogleNexus : public LEDStripEffect
     // pixels
     for (int8_t i = 1; i >= 0; i--) {
       int16_t xn = x + (i & 1);
+      if (xn < 0 || xn > MATRIX_WIDTH - 1) continue; // WHY?
       CRGB clr = g()->leds[g()->xy(xn, y)];
       if (xn > 0 && xn < (int)MATRIX_WIDTH - 1) {
         clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
@@ -61,8 +62,8 @@ class PatternSMGoogleNexus : public LEDStripEffect
   }
 
   void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color) {
-    if (x < 0 || y < 0 || x > ((float)MATRIX_WIDTH) ||
-        y > ((float)MATRIX_HEIGHT))
+    if (x < 0 || y < 0 || x > ((float)MATRIX_WIDTH -1) ||
+        y > ((float)MATRIX_HEIGHT - 1))
       return;
 
     // extract the fractional parts and derive their inverses
@@ -73,6 +74,7 @@ class PatternSMGoogleNexus : public LEDStripEffect
     // pixels
     for (int8_t i = 1; i >= 0; i--) {
       int16_t yn = y + (i & 1);
+      if (yn < 0 || yn >= MATRIX_HEIGHT - 1) continue; // WHY?
       CRGB clr = g()->leds[g()->xy(x, yn)];
       if (yn > 0 && yn < (int)MATRIX_HEIGHT - 1) {
         clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
