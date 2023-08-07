@@ -234,7 +234,7 @@ pio run --target uploadfs --environment <project name>
 
 ## Tools
 
-This repository includes a number of scrips to perform various tasks during or after building projects. They are included in the [`tools`](tools) directory. Please note that`` the scripts expect to be started from the project's main directory. So, using:
+This repository includes a number of scrips to perform various tasks during or after building projects. They are included in the [`tools`](tools) directory. Please note that the scripts expect to be started from the project's main directory. So, using:
 
 ```shell
 tools/buddybuild.sh
