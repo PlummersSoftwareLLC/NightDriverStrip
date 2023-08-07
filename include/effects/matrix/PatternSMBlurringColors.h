@@ -40,20 +40,20 @@ class PatternSMBlurringColors : public LEDStripEffect
       (MATRIX_HEIGHT %
        2);  // center of the YGREK matrix, shifted up if the height is even
 
-#define trackingOBJECT_MAX_COUNT \
-  (100U)  // максимальное количество отслеживаемых объектов (очень влияет на
-          // расход памяти)
+  static constexpr int trackingOBJECT_MAX_COUNT = (100U);
+  // максимальное количество отслеживаемых объектов (очень влияет на
+  // расход памяти)
   float trackingObjectPosX[trackingOBJECT_MAX_COUNT];
   float trackingObjectPosY[trackingOBJECT_MAX_COUNT];
   float trackingObjectSpeedX[trackingOBJECT_MAX_COUNT];
   float trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
   uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
   uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT];
-  bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT];  // BugBug: cold be a
-                                                         // Std::Biefield<T>
-#define enlargedOBJECT_MAX_COUNT \
-  (MATRIX_WIDTH * 2)  // максимальное количество сложных отслеживаемых объектов
-                      // (меньше, чем trackingOBJECT_MAX_COUNT)
+  bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT];  // BugBug: could be a
+                                                         // Std::Bitfield<T>
+  static constexpr int enlargedOBJECT_MAX_COUNT = (MATRIX_WIDTH * 2);
+  // максимальное количество сложных отслеживаемых объектов
+  // (меньше, чем trackingOBJECT_MAX_COUNT)
   uint8_t enlargedObjectNUM;  // используемое в эффекте количество объектов
 
   float accel;

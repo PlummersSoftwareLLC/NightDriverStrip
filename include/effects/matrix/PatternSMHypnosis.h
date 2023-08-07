@@ -3,6 +3,9 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 
+// Inspired by https://editor.soulmatelights.com/gallery/2272-hypnosis
+// Spiraling swirls of rotating colors.
+
 #if ENABLE_AUDIO
 class PatternSMHypnosis : public BeatEffectBase,
                           public LEDStripEffect

@@ -3,6 +3,10 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 
+// Inspired by https://editor.soulmatelights.com/gallery/2107-sun-radiation
+// or https://editor.soulmatelights.com/gallery/599-sun-radiation
+// They're the same code, so probably the lower number.
+
 #if ENABLE_AUDIO
 class PatternSMSunRadiation : public BeatEffectBase,
                               public LEDStripEffect

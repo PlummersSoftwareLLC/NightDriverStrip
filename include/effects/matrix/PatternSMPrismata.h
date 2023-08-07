@@ -4,6 +4,7 @@
 #include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1110-prismata
+// Sine waves oscillate against each other over a swirling rainbow background.
 
 #if ENABLE_AUDIO
 class PatternSMPrismata : public BeatEffectBase,

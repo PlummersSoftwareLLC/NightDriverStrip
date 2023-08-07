@@ -2,6 +2,7 @@
 
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
+
 // Derived from https://wokwi.com/projects/288857088376963592
 
 #if ENABLE_AUDIO

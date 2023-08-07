@@ -3,6 +3,10 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 
+// Yo Dawg! Circles inside your circles, but XORing the patterns.
+// Needs more clever color.
+// Inspired by https://editor.soulmatelights.com/gallery/1521-xor-circles
+
 #if ENABLE_AUDIO
 class PatternSMXorCircles : public BeatEffectBase,
                             public LEDStripEffect

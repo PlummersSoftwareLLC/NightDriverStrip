@@ -3,6 +3,7 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 // Inspired by https://editor.soulmatelights.com/gallery/2105-pattern-trick
+// Blocky math looking like a QR code oscillating above a rainbow background.
 
 #if ENABLE_AUDIO
 class PatternSMPatternTrick : public BeatEffectBase,

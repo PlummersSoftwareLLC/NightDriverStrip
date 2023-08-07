@@ -3,6 +3,9 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 
+// Inspired by https://editor.soulmatelights.com/gallery/1620-rainbow-tunel
+// Like Hypnosis, a swirling radial rainbow, but entering a black hole.
+
 #if ENABLE_AUDIO
 class PatternSMRainbowTunnel : public BeatEffectBase,
                                public LEDStripEffect

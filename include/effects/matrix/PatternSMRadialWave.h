@@ -2,7 +2,9 @@
 
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
+
 // Derived from https://editor.soulmatelights.com/gallery/1090-radialwave
+// A three-veined swirl rotates and changes direction, looking like an exhaust.
 
 #if ENABLE_AUDIO
 class PatternSMRadialWave : public BeatEffectBase,

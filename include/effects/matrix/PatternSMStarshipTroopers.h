@@ -4,6 +4,8 @@
 #include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/839-starship-troopers
+// Fighters fly in circular formation, chasing a common goal but
+// never reaching it.
 
 #if ENABLE_AUDIO
 class PatternSMStarshipTroopers : public BeatEffectBase,

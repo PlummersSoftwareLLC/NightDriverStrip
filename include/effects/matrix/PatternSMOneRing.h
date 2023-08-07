@@ -4,6 +4,7 @@
 #include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1455-one-ring
+// Two locked golden waves cycle.
 
 #if USE_AUDIO
 // class PatternSMOneRing : public BeatEffectBase, public LEDStripEffect

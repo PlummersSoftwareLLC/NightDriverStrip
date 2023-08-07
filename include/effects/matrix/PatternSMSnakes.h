@@ -1,13 +1,10 @@
 #pragma once
 
-// BUGBUG: go fix Picasso to not pollute.
-#undef trackingOBJECT_MAX_COUNT
-#undef enlargedOBJECT_MAX_COUNT
-
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1118-snakes
+// Not quite the Nokia classic - no collision detection, but bright colors.
 
 #if ENABLE_AUDIO
 class PatternSMSnakes : public BeatEffectBase,

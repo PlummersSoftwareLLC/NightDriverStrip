@@ -16,9 +16,9 @@ class PatternSMMagma : public LEDStripEffect
   uint8_t Scale = 20;  // 1-100 is palette and count  // THIS is a setting 0-33,
                        // 34-66, 67-99
 
-#define trackingOBJECT_MAX_COUNT \
-  (100U)  // максимальное количество отслеживаемых объектов (очень влияет на
-          // расход памяти)
+  static constexpr int trackingOBJECT_MAX_COUNT = 100U;
+        // максимальное количество отслеживаемых объектов (очень влияет на
+        // расход памяти)
   float trackingObjectPosX[trackingOBJECT_MAX_COUNT];
   float trackingObjectPosY[trackingOBJECT_MAX_COUNT];
   float trackingObjectSpeedX[trackingOBJECT_MAX_COUNT];
@@ -27,9 +27,9 @@ class PatternSMMagma : public LEDStripEffect
   uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
   uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT];
   bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
-#define enlargedOBJECT_MAX_COUNT \
-  (MATRIX_WIDTH * 2)  // максимальное количество сложных отслеживаемых объектов
-                      // (меньше, чем trackingOBJECT_MAX_COUNT)
+  static constexpr int enlargedOBJECT_MAX_COUNT = (MATRIX_WIDTH * 2);
+  // максимальное количество сложных отслеживаемых объектов
+  // (меньше, чем trackingOBJECT_MAX_COUNT)
   uint8_t enlargedObjectNUM;  // используемое в эффекте количество объектов
   long enlargedObjectTime[enlargedOBJECT_MAX_COUNT];
 

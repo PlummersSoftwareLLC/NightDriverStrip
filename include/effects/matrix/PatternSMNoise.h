@@ -4,6 +4,7 @@
 #include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1509-noise-palettes
+// Cycles through 17 effects if pallette noise, looking like a surreal topo.
 
 // Leave these as globals so they're kept in Flash.
 DEFINE_GRADIENT_PALETTE(temperature_gp){

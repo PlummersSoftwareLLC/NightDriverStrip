@@ -3,16 +3,15 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 
+// Derived from
+// https://editor.soulmatelights.com/gallery/1895-agressivebouncingballs
+
 #if ENABLE_AUDIO
 class PatternSMGravityBalls : public BeatEffectBase,
                               public LEDStripEffect
 #else
 class PatternSMGravityBalls : public LEDStripEffect
 #endif
-
-// Derived from
-// https://editor.soulmatelights.com/gallery/1895-agressivebouncingballs
-
 {
  private:
   static const uint8_t COUNT = 7;

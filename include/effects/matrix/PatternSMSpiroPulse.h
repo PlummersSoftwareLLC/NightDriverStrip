@@ -2,6 +2,7 @@
 
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
+
 // Derived from https://editor.soulmatelights.com/gallery/2164-spiro
 // A spirograph that evolves the number of spines, becomign a yen-yang.
 //

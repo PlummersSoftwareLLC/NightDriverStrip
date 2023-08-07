@@ -3,6 +3,7 @@
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
 // Derived from https://editor.soulmatelights.com/gallery/1516-mirage
+// Three orbs of rotatign color bounce about.
 
 #if ENABLE_AUDIO
 class PatternSMMirage : public BeatEffectBase,
