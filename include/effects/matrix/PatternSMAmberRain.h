@@ -56,10 +56,12 @@ class PatternSMAmberRain : public LEDStripEffect
     int16_t startY = centerY - ceil(radius);
     int16_t endY = centerY + ceil(radius);
 
-    for (int16_t x = startX; x < endX; x++) {
-      for (int16_t y = startY; y < endY; y++) {
+    for (u_int16_t x = startX; x < endX; x++) {
+      for (u_int16_t y = startY; y < endY; y++) {
+        // The above assumes we have a square display. Mesmerizer doesn't.
+        // Precheck to keep Y on screen.
+	if ((x > MATRIX_WIDTH - 1) || (y > MATRIX_HEIGHT - 1)) continue;
         int16_t index = g()->xy(x, y);
-        if (index < 0 || index > NUM_LEDS) continue;
         double distance = sqrt(sq(x - centerX) + sq(y - centerY));
         if (distance > radius) continue;
 
