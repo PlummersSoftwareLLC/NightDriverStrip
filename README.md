@@ -225,7 +225,7 @@ pio run
 
 ## File system
 
-To build and upload the file system that can be used by effects (although currently none do), you will need to build and upload the SPIFFS image to your board's flash using platformio. You can do this using the platformio user interface, or using the pio command line tool:
+To build and upload the file system that can be used by effects (although currently none do), you will need to build and upload the SPIFFS image to your board's flash using PlatformIO. You can do this using the platformio user interface, or using the `pio` command line tool:
 
 ```ShellConsole
 pio run --target buildfs --environment <project name>
