@@ -162,12 +162,12 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
       }
 
       // Shift layers ------------------
-      for (uint8_t x = 0U; x < MATRIX_WIDTH; x++) {
+      for (uint8_t x = 1U; x < MATRIX_WIDTH; x++) {
         if (dir) {  // <==
-          g()->drawPixel(x - 1, y * 3 + DELTA, getPixColorXY(x, y * 3 + DELTA));
+          g()->drawPixel(x, y * 3 + DELTA, getPixColorXY(x, y * 3 + DELTA));
         } else {  // ==>
           g()->drawPixel(MATRIX_WIDTH - x, y * 3 + DELTA,
-                         getPixColorXY(MATRIX_WIDTH - x - 1, y * 3 + DELTA));
+                         getPixColorXY(MATRIX_WIDTH - x, y * 3 + DELTA));
         }
       }
       dir = !dir;
