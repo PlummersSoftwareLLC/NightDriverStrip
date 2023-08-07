@@ -770,7 +770,7 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
 
 void EffectManager::LoadDefaultEffects()
 {
-    for (auto &numberedFactory : l_ptrEffectFactories->GetDefaultFactories())
+    for (const auto &numberedFactory : l_ptrEffectFactories->GetDefaultFactories())
         ProduceAndLoadDefaultEffect(numberedFactory);
 
     for (int i = 0; i < _vEffects.size(); i++)
