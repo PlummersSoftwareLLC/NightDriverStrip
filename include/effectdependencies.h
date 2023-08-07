@@ -150,6 +150,6 @@
 #endif  // USE_MATRIX
 
 
-#ifdef USESTRIP
+#ifdef USE_STRIP
     #include "ledstripgfx.h"
 #endif
