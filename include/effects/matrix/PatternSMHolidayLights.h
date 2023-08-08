@@ -38,7 +38,7 @@ class PatternSMHolidayLights : public LEDStripEffect
     void confetti()
     {
         uint16_t idx = random16(NUM_LEDS);
-        for (byte i = 0; i < scaleToNumLeds; i++)
+        for (unsigned i = 0; i < scaleToNumLeds; i++)
             if (random8() < density)
                 if (RGBweight(idx) < 10)
                     g()->leds[idx] = random(48, 16777216);
@@ -46,7 +46,8 @@ class PatternSMHolidayLights : public LEDStripEffect
 
     void drawPixelXYF_X(float x, uint16_t y, const CRGB &color)
     {
-        // if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+	if (!g()->isValidPixel((int)x, y))
+            return;
 
         // extract the fractional parts and derive their inverses
         uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
@@ -54,7 +55,7 @@ class PatternSMHolidayLights : public LEDStripEffect
         uint8_t wu[2] = {ix, xx};
         // multiply the intensities by the colour, and saturating-add them to the
         // pixels
-        for (uint8_t i = 1; i >= 0; i--)
+        for (int8_t i = 1; i >= 0; i--)
         {
             int16_t xn = x + (i & 1);
             CRGB clr = g()->leds[XY(xn, HEIGHT - 1 - y)];
