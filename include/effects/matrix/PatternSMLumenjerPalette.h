@@ -1,7 +1,6 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1441-lumenjer-palette
 
@@ -67,12 +66,7 @@ extern const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
     0x363B3A, 0x313634, 0x505552, 0x6B6C70, 0x98A4A1, 0xC1C2C1,
     0xCACECF, 0xCDDEDD, 0xDEDFE0, 0xB2BAB9};
 
-#if USE_AUDIO
-class PatternSMLumenjerPalette : public BeatEffectBase,
-                                 public LEDStripEffect
-#else
 class PatternSMLumenjerPalette : public LEDStripEffect
-#endif
 {
  private:
   const int DIMSPEED = (254U - 500U / MATRIX_WIDTH / MATRIX_HEIGHT);
@@ -96,23 +90,16 @@ class PatternSMLumenjerPalette : public LEDStripEffect
  public:
   PatternSMLumenjerPalette()
       :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMLUMENJER_PALETTE, "Lumenjer Palette") {
   }
 
   PatternSMLumenjerPalette(const JsonObjectConst &jsonObject)
       :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override {
     g()->Clear();
-#if 1
     if (Scale > 50)
       curPalette = firePalettes[(uint8_t)(
           (Scale - 50) / 50.0F *
@@ -121,7 +108,6 @@ class PatternSMLumenjerPalette : public LEDStripEffect
       curPalette = palette_arr[(uint8_t)(
           Scale / 50.0F *
           ((sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *)) - 0.01F))];
-#endif
   }
 
   void Draw() override {
@@ -142,7 +128,4 @@ class PatternSMLumenjerPalette : public LEDStripEffect
     else
       g()->leds[XY(x, y)] += ColorFromPalette(*curPalette, hue++);
   }
-#if USE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

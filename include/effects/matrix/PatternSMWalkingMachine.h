@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1990-walking-machine
 
-#if ENABLE_AUDIO
-class PatternSMWalkingMachine : public BeatEffectBase,
-                                public LEDStripEffect
-#else
 class PatternSMWalkingMachine : public LEDStripEffect
-#endif
 {
  private:
   // Walking machine
@@ -94,28 +88,16 @@ class PatternSMWalkingMachine : public LEDStripEffect
 
  public:
   PatternSMWalkingMachine()
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(EFFECT_MATRIX_SMWALKING_MACHINE, "Machine") {
+      : LEDStripEffect(EFFECT_MATRIX_SMWALKING_MACHINE, "Machine") {
   }
 
   PatternSMWalkingMachine(const JsonObjectConst& jsonObject)
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     g()->Clear();
 
     for (byte i = 0; i < 7; i++) {
@@ -135,8 +117,4 @@ class PatternSMWalkingMachine : public LEDStripEffect
                 CHSV(((i + 1) % 7) * 32, 255, 255));
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

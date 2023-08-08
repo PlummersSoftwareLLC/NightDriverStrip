@@ -1,40 +1,26 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Derived from https://www.soulmatelights.com/gallery/434-f-lying
 
-#if ENABLE_AUDIO
-class PatternSMFlying : public BeatEffectBase,
-                        public LEDStripEffect
-#else
 class PatternSMFlying : public LEDStripEffect
-#endif
 {
  private:
  public:
   PatternSMFlying()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMFLYING, "Flying") {
   }
 
   PatternSMFlying(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     static byte hue = 0;
     EVERY_N_MILLISECONDS(30) { hue++; }  // 30 - speed of hue change
     static constexpr int speed = -5;     // global speed of dots move
@@ -64,8 +50,4 @@ class PatternSMFlying : public LEDStripEffect
 
     g()->blur2d(g()->leds, MATRIX_WIDTH - 1, 0, MATRIX_HEIGHT - 1, 0, 8);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

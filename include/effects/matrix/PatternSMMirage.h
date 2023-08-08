@@ -1,16 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Derived from https://editor.soulmatelights.com/gallery/1516-mirage
 // Three orbs of rotatign color bounce about.
 
-#if ENABLE_AUDIO
-class PatternSMMirage : public BeatEffectBase,
-                        public LEDStripEffect
-#else
 class PatternSMMirage : public LEDStripEffect
-#endif
 {
  private:
   uint8_t speed = 128, hue = 70;
@@ -59,26 +54,17 @@ class PatternSMMirage : public LEDStripEffect
  public:
   PatternSMMirage()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMMIRAGE, "Mirage") {
   }
 
   PatternSMMirage(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     blur();
     float x1 = (float)beatsin88(15 * speed, div, (LED_COLS - 1) * div) / div;
     float y1 = (float)beatsin88(20 * speed, div, (LED_ROWS)*div) / div;
@@ -99,8 +85,4 @@ class PatternSMMirage : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

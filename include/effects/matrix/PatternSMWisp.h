@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1151-comet
 
-#if ENABLE_AUDIO
-class PatternSMWisp : public BeatEffectBase,
-                      public LEDStripEffect
-#else
 class PatternSMWisp : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Scale = 28;  // 1-100 - Should be a setting
@@ -56,17 +50,11 @@ class PatternSMWisp : public LEDStripEffect
  public:
   PatternSMWisp()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMWISP, "Wisp") {
   }
 
   PatternSMWisp(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -150,10 +138,6 @@ class PatternSMWisp : public LEDStripEffect
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     g()->DimAll(254U);  // < -- затухание эффекта для последующего кадра
     CRGB _eNs_color = CHSV(millis() / Scale * 2, 255, 255);
     g()->leds[XY(CENTER_X_MINOR, CENTER_Y_MINOR)] += _eNs_color;
@@ -171,8 +155,4 @@ class PatternSMWisp : public LEDStripEffect
     MoveFractionalNoiseX(MATRIX_WIDTH / 2U - 1U);
     MoveFractionalNoiseY(MATRIX_HEIGHT / 2U - 1U);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

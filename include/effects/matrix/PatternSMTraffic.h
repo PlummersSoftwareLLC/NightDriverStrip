@@ -1,18 +1,13 @@
 #pragma once
 
+#include "effectmanager.h"
+
 #include <cinttypes>
 
-#include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1404-traffic
 
-#if USE_AUDIO
-class PatternSMTraffic : public BeatEffectBase,
-                         public LEDStripEffect
-#else
 class PatternSMTraffic : public LEDStripEffect
-#endif
 {
  private:
   uint8_t center;
@@ -48,17 +43,11 @@ class PatternSMTraffic : public LEDStripEffect
  public:
   PatternSMTraffic()
       :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMTRAFFIC, "Traffic") {
   }
 
   PatternSMTraffic(const JsonObjectConst& jsonObject)
       :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -252,7 +241,4 @@ class PatternSMTraffic : public LEDStripEffect
     // -------------------------------------
     step++;
   }
-#if USE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

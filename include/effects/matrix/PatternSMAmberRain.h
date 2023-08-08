@@ -1,7 +1,6 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2007-amber-rain
 
@@ -35,12 +34,7 @@ class Circle {
 };
 const int NUMBER_OF_CIRCLES = 20;
 
-#if ENABLE_AUDIO
-class PatternSMAmberRain : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMAmberRain : public LEDStripEffect
-#endif
 {
  private:
   Circle circles[NUMBER_OF_CIRCLES] = {};
@@ -81,17 +75,11 @@ class PatternSMAmberRain : public LEDStripEffect
  public:
   PatternSMAmberRain()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMAMBERRAIN, "Color Rain") {
   }
 
   PatternSMAmberRain(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -103,9 +91,6 @@ class PatternSMAmberRain : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     fadeAllChannelsToBlackBy(32);
 
     for (int i = 0; i < NUMBER_OF_CIRCLES; i++) {
@@ -115,8 +100,4 @@ class PatternSMAmberRain : public LEDStripEffect
       drawCircle(circles[i]);
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/729-google-nexus
 // Clearly, this is not a Google product; it's rendition of the boot and life
 // screen effect used on the first Google Nexus device, the Nexus S.
 
-#if ENABLE_AUDIO
-class PatternSMGoogleNexus : public BeatEffectBase,
-                             public LEDStripEffect
-#else
 class PatternSMGoogleNexus : public LEDStripEffect
-#endif
 {
  private:
 #define GOOGLE_NEXUS (MATRIX_WIDTH)
@@ -123,17 +117,11 @@ class PatternSMGoogleNexus : public LEDStripEffect
  public:
   PatternSMGoogleNexus()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMGOOGLE_NEXUS, "Google Nexus") {
   }
 
   PatternSMGoogleNexus(const JsonObjectConst &jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -151,9 +139,6 @@ class PatternSMGoogleNexus : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     float speedfactor = fmap(speed, 1, 255, 0.1, .33);
     fadeAllChannelsToBlackBy(map(speed, 1, 255, 11, 33));
 
@@ -211,8 +196,4 @@ class PatternSMGoogleNexus : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

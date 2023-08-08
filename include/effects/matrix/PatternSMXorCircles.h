@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Yo Dawg! Circles inside your circles, but XORing the patterns.
 // Needs more clever color.
 // Inspired by https://editor.soulmatelights.com/gallery/1521-xor-circles
 
-#if ENABLE_AUDIO
-class PatternSMXorCircles : public BeatEffectBase,
-                            public LEDStripEffect
-#else
 class PatternSMXorCircles : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int LED_COLS = MATRIX_WIDTH;
@@ -30,27 +24,17 @@ class PatternSMXorCircles : public LEDStripEffect
  public:
   PatternSMXorCircles()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMXOR_CIRCLES, "Xor Circles") {
   }
 
   PatternSMXorCircles(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     uint8_t x1sh = beatsin8(5, 0, LED_COLS);
     uint8_t y1sh = beatsin8(6, 0, LED_ROWS);
     uint8_t x2sh = beatsin8(7, 0, LED_COLS);
@@ -67,10 +51,6 @@ class PatternSMXorCircles : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };
 
 #undef log2

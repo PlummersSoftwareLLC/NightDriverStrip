@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1479-2dd-pr-centering
 // Looks best on a square display, but OK on rectangles.
 // I'll admit this math may as well be magic, but it's pretty.
 
-#if USE_AUDIO
-class PatternSM2DDPR : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSM2DDPR : public LEDStripEffect
-#endif
 {
  private:
   uint8_t ZVoffset = 0;
@@ -28,19 +22,11 @@ class PatternSM2DDPR : public LEDStripEffect
 
  public:
   PatternSM2DDPR()
-      :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(EFFECT_MATRIX_SM2DDPR, "Crystallize") {
+      : LEDStripEffect(EFFECT_MATRIX_SM2DDPR, "Crystallize") {
   }
 
   PatternSM2DDPR(const JsonObjectConst& jsonObject)
-      :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override {}
@@ -84,7 +70,4 @@ class PatternSM2DDPR : public LEDStripEffect
       }
     }
   }
-#if USE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

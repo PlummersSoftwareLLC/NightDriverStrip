@@ -1,19 +1,14 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Derived from https://editor.soulmatelights.com/gallery/2110-twist
 // Honestly, it looks better on their emulator...probably something
 // to improve here.
 //
 // A fine color-waving matrix of oscillating grids.
 
-#if ENABLE_AUDIO
-class PatternSMTwist : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSMTwist : public LEDStripEffect
-#endif
 {
  private:
   const int BRIGHTNESS = 255;
@@ -36,26 +31,17 @@ class PatternSMTwist : public LEDStripEffect
  public:
   PatternSMTwist()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMTWIST, "Twist") {
   }
 
   PatternSMTwist(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     EVERY_N_MILLISECONDS(50) { hue++; }
 
     for (byte i = 0; i < MATRIX_WIDTH; i += 4) {
@@ -69,8 +55,4 @@ class PatternSMTwist : public LEDStripEffect
     // Without an aggressive fade, they all run together into squares.
     fadeAllChannelsToBlackBy(200);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

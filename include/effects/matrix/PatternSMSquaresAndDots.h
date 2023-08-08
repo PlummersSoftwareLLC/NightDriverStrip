@@ -1,19 +1,14 @@
 #pragma once
 
+#include "effectmanager.h"
+
 #include <algorithm>
 
-#include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired from https://editor.soulmatelights.com/gallery/843-squares-and-dots
 // This looks better on 2812's than on HUB75.
 
-#if USE_AUDIO
-class PatternSMSquaresAndDots : public BeatEffectBase,
-                                public LEDStripEffect
-#else
 class PatternSMSquaresAndDots : public LEDStripEffect
-#endif
 {
  private:
   const byte sprites[2][3][3] = {
@@ -23,17 +18,11 @@ class PatternSMSquaresAndDots : public LEDStripEffect
  public:
   PatternSMSquaresAndDots()
       :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSQUARES_AND_DOTS, "Squares and Dots") {
   }
 
   PatternSMSquaresAndDots(const JsonObjectConst& jsonObject)
       :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -73,7 +62,4 @@ class PatternSMSquaresAndDots : public LEDStripEffect
                random8(2));
     }
   }
-#if USE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

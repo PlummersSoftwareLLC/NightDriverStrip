@@ -1,16 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1455-one-ring
 // Two locked golden waves cycle.
 
-#if USE_AUDIO
-// class PatternSMOneRing : public BeatEffectBase, public LEDStripEffect
-#else
 class PatternSMOneRing : public LEDStripEffect
-#endif
 {
  private:
   const int RINGSIZE = (MATRIX_HEIGHT / 2);
@@ -19,17 +14,11 @@ class PatternSMOneRing : public LEDStripEffect
  public:
   PatternSMOneRing()
       :
-#if SOUND
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMONE_RING, "One Ring") {
   }
 
   PatternSMOneRing(const JsonObjectConst& jsonObject)
       :
-#if USE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -62,8 +51,4 @@ class PatternSMOneRing : public LEDStripEffect
       }
     }
   }
-
-#if USE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

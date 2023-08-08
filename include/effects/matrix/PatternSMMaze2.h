@@ -1,16 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Derived from https://editor.soulmatelights.com/gallery/1956-maze
 // We have another maze generator, but this is self-solving.
 
-#if ENABLE_AUDIO
-class PatternSMMaze2 : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSMMaze2 : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int LED_COLS = MATRIX_WIDTH;
@@ -115,26 +110,17 @@ class PatternSMMaze2 : public LEDStripEffect
  public:
   PatternSMMaze2()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMMAZE2, "Maze 2") {
   }
 
   PatternSMMaze2(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     // Because we can restart, we don't move the start into Start() on this one.
     if (start) {
       start = 0;
@@ -256,8 +242,4 @@ class PatternSMMaze2 : public LEDStripEffect
     }
     if ((posX == M_WIDTH - 2) & (posY == M_HEIGHT - 1)) start = 1;
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

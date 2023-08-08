@@ -3,18 +3,12 @@
 #include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2140-boidexplosion
 // These are awesome explosion effects, but they're largely lost on
 // the 64x32 displays. Included to show more Boid use.
 
-#if ENABLE_AUDIO
-class PatternSMBoidExplosion : public BeatEffectBase,
-                               public LEDStripEffect
-#else
 class PatternSMBoidExplosion : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int LED_COLS = MATRIX_WIDTH;
@@ -160,17 +154,11 @@ class PatternSMBoidExplosion : public LEDStripEffect
  public:
   PatternSMBoidExplosion()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMBOID_EXPLOSION, "Boid Explosion") {
   }
 
   PatternSMBoidExplosion(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -196,9 +184,6 @@ class PatternSMBoidExplosion : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     ChangePalettePeriodically();
     for (int i = 0; i < NUM_PARTICLES; i++) {
       Boid boid = boids[i];
@@ -214,8 +199,4 @@ class PatternSMBoidExplosion : public LEDStripEffect
       fadeToBlackBy(g()->leds, NUM_LEDS, 1);
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

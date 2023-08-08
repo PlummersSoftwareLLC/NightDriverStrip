@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from
 // https://editor.soulmatelights.com/gallery/1895-agressivebouncingballs
 
-#if ENABLE_AUDIO
-class PatternSMGravityBalls : public BeatEffectBase,
-                              public LEDStripEffect
-#else
 class PatternSMGravityBalls : public LEDStripEffect
-#endif
 {
  private:
   static const uint8_t COUNT = 7;
@@ -56,17 +50,11 @@ class PatternSMGravityBalls : public LEDStripEffect
  public:
   PatternSMGravityBalls()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMGRAVITY_BALLS, "Gravity Balls") {
   }
 
   PatternSMGravityBalls(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -87,10 +75,6 @@ class PatternSMGravityBalls : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     for (int i = 0; i < COUNT; i++) {
       if (posx[i] < 1 || posx[i] > MATRIX_WIDTH - 2) {
         velx[i] = -velx[i];
@@ -125,8 +109,4 @@ class PatternSMGravityBalls : public LEDStripEffect
     //  fadeToBlackBy(g()->leds,NUM_LEDS,20);
     fadeAllChannelsToBlackBy(20);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

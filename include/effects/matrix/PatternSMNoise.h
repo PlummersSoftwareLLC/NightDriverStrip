@@ -1,7 +1,6 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1509-noise-palettes
 // Cycles through 17 effects if pallette noise, looking like a surreal topo.
@@ -411,12 +410,7 @@ DEFINE_GRADIENT_PALETTE(shikon_23_gp){
     2,   217, 217, 47,  0,   228, 217, 47,  0,   228, 2,   2,   2,   242, 2,
     2,   2,   243, 26,  0,   219, 250, 26,  0,   219, 255, 2,   2,   2};
 
-#if ENABLE_AUDIO
-class PatternSMNoise : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSMNoise : public LEDStripEffect
-#endif
 {
  private:
   uint8_t mode{0};  // Which of the 17 effects(!) are we showing?
@@ -744,17 +738,11 @@ class PatternSMNoise : public LEDStripEffect
  public:
   PatternSMNoise()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp") {
   }
 
   PatternSMNoise(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -766,9 +754,6 @@ class PatternSMNoise : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     // For Mesmerizer/Nightdriver, I'm not sure this is the best
     // final presentation. It just zips through 17 effects without
     // announcing them in any way. Should it interact with audio or
@@ -791,8 +776,4 @@ class PatternSMNoise : public LEDStripEffect
         break;
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

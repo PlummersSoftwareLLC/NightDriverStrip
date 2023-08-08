@@ -3,17 +3,11 @@
 #include <cinttypes>
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired from
 // https://editor.soulmatelights.com/gallery/1165-fireworks-by-shaitan
 
-#if ENABLE_AUDIO
-class PatternSMFireworks : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMFireworks : public LEDStripEffect
-#endif
 {
  private:
   //    uint8_t Scale = 50;  // 1-100 is size // Suggested setting.
@@ -38,17 +32,11 @@ class PatternSMFireworks : public LEDStripEffect
  public:
   PatternSMFireworks()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMFIREWORKS, "Fireworks") {
   }
 
   PatternSMFireworks(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -190,9 +178,6 @@ class PatternSMFireworks : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     switch (step) {
       case 0:
         SaluteStart();
@@ -213,8 +198,4 @@ class PatternSMFireworks : public LEDStripEffect
     }
     SaluteFadeAll(32);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

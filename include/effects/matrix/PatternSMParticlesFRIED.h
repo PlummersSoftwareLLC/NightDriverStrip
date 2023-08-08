@@ -1,15 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
+
 // Inspired by https://editor.soulmatelights.com/gallery/2358-particles
 
-#if ENABLE_AUDIO
-class PatternSMParticles : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMParticles : public LEDStripEffect
-#endif
 {
  private:
   const int thisScale = 254;  // 254 - максимальный, наверное, масштаб
@@ -25,26 +20,17 @@ class PatternSMParticles : public LEDStripEffect
  public:
   PatternSMParticles()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMPARTICLES, "Particles") {
   }
 
   PatternSMParticles(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     ///    for (int i = 0; i < cfg_length * cfg_width; i++) {
     //      g()->leds[i].fadeToBlackBy(70);
     //    }
@@ -85,8 +71,4 @@ class PatternSMParticles : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1244-aurora-borealis
 // Could use some fine-tuning on timings. speed doesn't work like the original.
 
-#if ENABLE_AUDIO
-class PatternSMAurora : public BeatEffectBase,
-                        public LEDStripEffect
-#else
 class PatternSMAurora : public LEDStripEffect
-#endif
 {
  private:
   const int LED_COLS = MATRIX_WIDTH;
@@ -36,27 +30,17 @@ class PatternSMAurora : public LEDStripEffect
  public:
   PatternSMAurora()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMAURORA, "Aurora Borealis") {
   }
 
   PatternSMAurora(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     uint16_t _scale = map(scale, 1, 255, 30, adjScale);
     byte _speed = map(speed, 1, 255, 128, 16);
 
@@ -72,8 +56,4 @@ class PatternSMAurora : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

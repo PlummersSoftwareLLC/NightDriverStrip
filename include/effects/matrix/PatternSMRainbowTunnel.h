@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1620-rainbow-tunel
 // Like Hypnosis, a swirling radial rainbow, but entering a black hole.
 
-#if ENABLE_AUDIO
-class PatternSMRainbowTunnel : public BeatEffectBase,
-                               public LEDStripEffect
-#else
 class PatternSMRainbowTunnel : public LEDStripEffect
-#endif
 {
  private:
   // RadialRainbow
@@ -31,19 +25,11 @@ class PatternSMRainbowTunnel : public LEDStripEffect
 
  public:
   PatternSMRainbowTunnel()
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Colorspin") {
+      : LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Colorspin") {
   }
 
   PatternSMRainbowTunnel(const JsonObjectConst& jsonObject)
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override {
@@ -58,14 +44,11 @@ class PatternSMRainbowTunnel : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     static byte scaleX = 4;
     static byte scaleY = 4;
-
     static byte speed = 2;
     static uint16_t t;
+
     t += speed;
     for (uint8_t x = 0; x < LED_COLS; x++) {
       for (uint8_t y = 0; y < LED_ROWS; y++) {
@@ -76,11 +59,5 @@ class PatternSMRainbowTunnel : public LEDStripEffect
                  constrain(radius * 2, 0, 255));
       }
     }
-
-    // delay(20);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

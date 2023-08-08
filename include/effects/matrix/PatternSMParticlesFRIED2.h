@@ -1,7 +1,6 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 //#define cfg_deviceType 2   // 1 - это лента, 2 - это матрица
 //#define thisScale 254      // 254 - максимальный, наверное, масштаб
@@ -19,12 +18,7 @@
 #define FOR_i(x, y) for (int i = (x); i < (y); i++)
 #define CUR_PRES preset[cfg_curPreset
 
-#if ENABLE_AUDIO
-class PatternSMParticles : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMParticles : public LEDStripEffect
-#endif
 {
  private:
   const int thisScale = 254;  // 254 - максимальный, наверное, масштаб
@@ -40,17 +34,11 @@ class PatternSMParticles : public LEDStripEffect
  public:
   PatternSMParticles()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMPARTICLES, "Particles") {
   }
 
   PatternSMParticles(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -67,10 +55,6 @@ class PatternSMParticles : public LEDStripEffect
   }  // служебные функции
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
     //   FOR_i(0, cfg_length * cfg_width) leds[i].fadeToBlackBy(70);
     fadeAllChannelsToBlackBy(70);
 
@@ -103,8 +87,4 @@ class PatternSMParticles : public LEDStripEffect
       }
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

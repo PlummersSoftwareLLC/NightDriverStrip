@@ -1,16 +1,10 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1138-fire2012
 
-#if ENABLE_AUDIO
-class PatternSMFire2012 : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMFire2012 : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Scale = 63;  // 0-100. < 50= FirePalette + scale > 50, choose scale //
@@ -40,17 +34,11 @@ class PatternSMFire2012 : public LEDStripEffect
  public:
   PatternSMFire2012()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMFIRE2012, "Fire 2012") {
   }
 
   PatternSMFire2012(const JsonObjectConst &jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -70,9 +58,6 @@ class PatternSMFire2012 : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
 #if MATRIX_HEIGHT / 6 > 6
 #define FIRE_BASE 6
 #else
@@ -123,8 +108,4 @@ class PatternSMFire2012 : public LEDStripEffect
                fireSmoothing);
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };
