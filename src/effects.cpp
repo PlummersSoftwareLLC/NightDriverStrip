@@ -373,8 +373,6 @@ void LoadEffectFactories()
 	// Audiograph isn't even compiled, but it's shown for 'Balls' !
 
 #else
-        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND, PatternSMTixyLand);                       // 8 If it were faster!
-
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "GhostWave", 0, 30, false, 10);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
@@ -424,6 +422,8 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);        
         ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);           
         ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);              
+        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand);                       // 8 If it were faster!
+
         ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS,  PatternSMHolidayLights);        
         
         ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
