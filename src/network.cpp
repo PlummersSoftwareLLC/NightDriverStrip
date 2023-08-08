@@ -106,7 +106,7 @@ void SetupOTA(const String & strHostname)
         ArduinoOTA.setHostname(strHostname.c_str());
 
     ArduinoOTA
-        .onStart([]() {
+        .onStart([] {
             g_Values.UpdateStarted = true;
 
             String type;
@@ -123,7 +123,7 @@ void SetupOTA(const String & strHostname)
             debugI("Start updating from OTA ");
             debugI("%s", type.c_str());
         })
-        .onEnd([]() {
+        .onEnd([] {
             debugI("\nEnd OTA");
             g_Values.UpdateStarted = false;
         })

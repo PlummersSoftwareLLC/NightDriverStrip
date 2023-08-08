@@ -609,7 +609,7 @@ void InitEffectsManager()
     LoadEffectFactories();
 
     l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        []() { SaveToJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()); }
+        [] { SaveToJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()); }
     );
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
