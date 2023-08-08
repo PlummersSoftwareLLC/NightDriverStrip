@@ -68,13 +68,13 @@ class PatternSMSand : public LEDStripEffect
 
   [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
     // Just don't think about what this does to prefetch and prediction...
-    return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
+    return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
   }
 
   void drawPixelXY(int8_t x, int8_t y, CRGB color) const {
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
       return;
-    uint32_t thisPixel = g()->xy(x, MATRIX_HEIGHT - top_reserve - y);
+    uint32_t thisPixel = XY(x, MATRIX_HEIGHT - top_reserve - y);
     g()->leds[thisPixel] = color;
   }  // служебные функции
 
@@ -94,7 +94,7 @@ class PatternSMSand : public LEDStripEffect
           temp = 3U;
       for (uint8_t y = 1; y < pcnt; y++)
         for (uint8_t x = 0; x < WIDTH; x++)
-          if (!random8(temp)) g()->leds[g()->xy(x, y)] = CRGB::Black;
+          if (!random8(temp)) g()->leds[XY(x, y)] = CRGB::Black;
     }
 
     pcnt = 0U;
@@ -142,7 +142,7 @@ class PatternSMSand : public LEDStripEffect
         !getPixColorXY(CENTER_X_MAJOR, HEIGHT - 1 - top_reserve) &&
         !random8(3)) {
       temp = random8(2) ? CENTER_X_MINOR : CENTER_X_MAJOR;
-      // g()->leds[g()->xy(temp,HEIGHT-1)] = CHSV(random8(), 255U, 255U);
+      // g()->leds[XY(temp,HEIGHT-1)] = CHSV(random8(), 255U, 255U);
       // HEIGHT -1 is VU bar for ambient audio.
       drawPixelXY(temp, HEIGHT - 2, CHSV(random8(), 255U, 255U));
     }

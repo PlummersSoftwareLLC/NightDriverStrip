@@ -24,7 +24,7 @@ class PatternSMPrismata : public LEDStripEffect
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
       return;
     // Mesmerizer flips the Y axis here.
-    uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
+    uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
 

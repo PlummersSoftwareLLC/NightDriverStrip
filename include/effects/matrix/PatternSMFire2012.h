@@ -116,7 +116,7 @@ class PatternSMFire2012 : public LEDStripEffect
       // Blend new data with previous frame. Average data between neighbouring
       // pixels Nightdriver/Mesmerizer change: invert Y axis.
       for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
-        nblend(g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)],
+        nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)],
                ColorFromPalette(*curPalette,
                                 ((noise3d[0][x][y] * 0.7) +
                                  (noise3d[0][wrapX(x + 1)][y] * 0.3))),

@@ -58,7 +58,7 @@ class PatternSMHolidayLights : public LEDStripEffect
     // pixels
     for (int8_t i = 1; i >= 0; i--) {
       int16_t xn = x + (i & 1);
-      CRGB clr = g()->leds[g()->xy(xn, HEIGHT - 1 - y)];
+      CRGB clr = g()->leds[XY(xn, HEIGHT - 1 - y)];
       if (xn > 0 && xn < (int)WIDTH - 1) {
         clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
         clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);

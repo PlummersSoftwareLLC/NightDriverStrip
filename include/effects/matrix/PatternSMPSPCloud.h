@@ -50,15 +50,15 @@ class PatternSMPSPCloud : public LEDStripEffect
       uint8_t bh1 = uint8_t(h1 >> 8);
       uint8_t bh2 = uint8_t(h2 >> 8);
       for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
-        g()->leds[g()->xy(x, y)] =
+        g()->leds[XY(x, y)] =
             CHSV(col, map(y + x, 0, MATRIX_HEIGHT + MATRIX_WIDTH - 1, 255, 32),
                  map(x - (MATRIX_HEIGHT - 1 - y), 0, MATRIX_WIDTH - 1, 196,
                      255)) +
             CHSV(0, 0, (y < bh1) ? map(y, 0, bh1, 64, 256) : 0) +
             CHSV(0, 0, (y < bh2) ? map(y, 0, bh2, 64, 256) : 0);
       }
-      g()->leds[g()->xy(x, bh1)] += CHSV(0, 0, (h1 % 256));
-      g()->leds[g()->xy(x, bh2)] += CHSV(0, 0, (h2 % 256));
+      g()->leds[XY(x, bh1)] += CHSV(0, 0, (h1 % 256));
+      g()->leds[XY(x, bh2)] += CHSV(0, 0, (h2 % 256));
     }
   }
 

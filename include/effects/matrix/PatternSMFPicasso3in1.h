@@ -44,10 +44,10 @@ class PatternSMPicasso3in1 : public LEDStripEffect
       return;
     if (x < 1 || x > (MATRIX_WIDTH - 2) || y < 1 || y > (MATRIX_HEIGHT - 2))
       return;
-    // uint32_t thisPixel = g()->xy((uint8_t)x, (uint8_t)y);
+    // uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
     // NightDriver's coordinate system is dfferent. Invert height and this all
     // works!
-    uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
+    uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
   // функция отрисовки точки по координатам X Y

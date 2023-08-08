@@ -64,7 +64,7 @@ class PatternSMSunRadiation : public LEDStripEffect
         int col = 255 - temp / 8;  // 8 its a size of effect
 
         if (col < 0) col = 0;
-        g()->leds[g()->xy(x, y)] = chsvLut[col];  // thx satubarosu ))
+        g()->leds[XY(x, y)] = chsvLut[col];  // thx satubarosu ))
       }
       yindex += (LED_COLS + 2);
     }

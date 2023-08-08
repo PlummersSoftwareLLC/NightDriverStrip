@@ -86,11 +86,11 @@ class PatternSMWisp : public LEDStripEffect
         }
         CRGB PixelA = CRGB::Black;
         if ((zD >= 0) && (zD < MATRIX_WIDTH))
-          PixelA = g()->leds[g()->xy(zD, y)];
+          PixelA = g()->leds[XY(zD, y)];
         CRGB PixelB = CRGB::Black;
         if ((zF >= 0) && (zF < MATRIX_WIDTH))
-          PixelB = g()->leds[g()->xy(zF, y)];
-        ledsbuff[g()->xy(x, y)] =
+          PixelB = g()->leds[XY(zF, y)];
+        ledsbuff[XY(x, y)] =
             (PixelA.nscale8(ease8InOutApprox(255 - fraction))) +
             (PixelB.nscale8(ease8InOutApprox(
                 fraction)));  // lerp8by8(PixelA, PixelB, fraction );
@@ -118,11 +118,11 @@ class PatternSMWisp : public LEDStripEffect
         // NightDriver change: Keep it out of the AUDIO line or you'll get green
         // ghost wisps (which are kinda cool)
         if ((zD >= 1) && (zD < MATRIX_HEIGHT))
-          PixelA = g()->leds[g()->xy(x, zD)];
+          PixelA = g()->leds[XY(x, zD)];
         CRGB PixelB = CRGB::Black;
         if ((zF >= 0) && (zF < MATRIX_HEIGHT))
-          PixelB = g()->leds[g()->xy(x, zF)];
-        ledsbuff[g()->xy(x, y)] =
+          PixelB = g()->leds[XY(x, zF)];
+        ledsbuff[XY(x, y)] =
             (PixelA.nscale8(ease8InOutApprox(255 - fraction))) +
             (PixelB.nscale8(ease8InOutApprox(fraction)));
       }
@@ -156,10 +156,10 @@ class PatternSMWisp : public LEDStripEffect
 
     g()->DimAll(254U);  // < -- затухание эффекта для последующего кадра
     CRGB _eNs_color = CHSV(millis() / Scale * 2, 255, 255);
-    g()->leds[g()->xy(CENTER_X_MINOR, CENTER_Y_MINOR)] += _eNs_color;
-    g()->leds[g()->xy(CENTER_X_MINOR + 1, CENTER_Y_MINOR)] += _eNs_color;
-    g()->leds[g()->xy(CENTER_X_MINOR, CENTER_Y_MINOR + 1)] += _eNs_color;
-    g()->leds[g()->xy(CENTER_X_MINOR + 1, CENTER_Y_MINOR + 1)] += _eNs_color;
+    g()->leds[XY(CENTER_X_MINOR, CENTER_Y_MINOR)] += _eNs_color;
+    g()->leds[XY(CENTER_X_MINOR + 1, CENTER_Y_MINOR)] += _eNs_color;
+    g()->leds[XY(CENTER_X_MINOR, CENTER_Y_MINOR + 1)] += _eNs_color;
+    g()->leds[XY(CENTER_X_MINOR + 1, CENTER_Y_MINOR + 1)] += _eNs_color;
 
     // Noise
     noise32_x[0] += 1500;

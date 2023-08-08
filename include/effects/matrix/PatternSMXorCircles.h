@@ -63,7 +63,7 @@ class PatternSMXorCircles : public LEDStripEffect
         cx = x - x2sh;
         cy = y - y2sh;
         uint8_t v = sqrt16(((cx * cx) + (cy * cy))) << scale_y;
-        g()->leds[g()->xy(x, y)] = (((a ^ v) >> 4) & 1) * 255;
+        g()->leds[XY(x, y)] = (((a ^ v) >> 4) & 1) * 255;
       }
     }
   }

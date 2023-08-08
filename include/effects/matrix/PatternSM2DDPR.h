@@ -78,7 +78,7 @@ class PatternSM2DDPR : public LEDStripEffect
           brightness = sin8(brightness);
         }
 
-        int index = g()->xy(x, y);
+        int index = XY(x, y);
         int hue = map(dist, radius, -3, 125, 255);
         g()->leds[index] = CHSV(hue, 255, brightness);
       }

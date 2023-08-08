@@ -61,7 +61,7 @@ class PatternSMAmberRain : public LEDStripEffect
         // The above assumes we have a square display. Mesmerizer doesn't.
         // Precheck to keep Y on screen.
 	if ((x > MATRIX_WIDTH - 1) || (y > MATRIX_HEIGHT - 1)) continue;
-        int16_t index = g()->xy(x, y);
+        int16_t index = XY(x, y);
         double distance = sqrt(sq(x - centerX) + sq(y - centerY));
         if (distance > radius) continue;
 

@@ -33,7 +33,7 @@ class PatternSMEyeTunnel : public LEDStripEffect
     for (uint8_t i = 0; i < 4; i++) {
       int16_t local_x = (x >> 8) + (i & 1);
       int16_t local_y = (y >> 8) + ((i >> 1) & 1);
-      int16_t xy = g()->xy(local_x, local_y);
+      int16_t xy = XY(local_x, local_y);
       if (xy < 0 || xy > NUM_LEDS) continue;
       g()->leds[xy].r = qadd8(g()->leds[xy].r, col->r * wu[i] >> 8);
       g()->leds[xy].g = qadd8(g()->leds[xy].g, col->g * wu[i] >> 8);

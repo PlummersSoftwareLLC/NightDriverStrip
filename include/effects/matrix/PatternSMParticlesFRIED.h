@@ -54,10 +54,10 @@ class PatternSMParticles : public LEDStripEffect
 #if 0
     for (int x = 0; x < MATRIX_WIDTH; x++)
     for (int y = 0; y < MATRIX_HEIGHT; y++)
-        g()->leds[g()->xy(x, y)] = RGB(255,255,255);
+        g()->leds[XY(x, y)] = RGB(255,255,255);
 #endif
     for (int y = 0; y < MATRIX_HEIGHT; y++)
-      g()->leds[g()->xy(y, y)] = CRGB(0, 0, 255);
+      g()->leds[XY(y, y)] = CRGB(0, 0, 255);
 
     for (int i = 0; i < amount; i++) {
       rndVal = rndVal * 2053 + 13849;  // random2053 алгоритм
@@ -79,9 +79,9 @@ class PatternSMParticles : public LEDStripEffect
       int thisY = homeY + offsY;
       // debugI(" %d: %d %d %d %d", i, thisX, thisY, homeX, homeY);
       if ((thisX > 0) && (thisY > 0)) {
-        // g()->leds[g()->xy(thisX, MATRIX_HEIGHT-thisY)] =
+        // g()->leds[XY(thisX, MATRIX_HEIGHT-thisY)] =
         // CRGB(CHSV(CUR_PRES_color, 255, 255));
-        g()->leds[g()->xy(thisX, MATRIX_HEIGHT - thisY)] = CRGB(20, 255, 0);
+        g()->leds[XY(thisX, MATRIX_HEIGHT - thisY)] = CRGB(20, 255, 0);
       }
     }
   }

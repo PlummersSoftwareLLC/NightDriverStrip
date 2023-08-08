@@ -47,7 +47,7 @@ class PatternSMGoogleNexus : public LEDStripEffect
     for (int8_t i = 1; i >= 0; i--) {
       int16_t xn = x + (i & 1);
       if (xn < 0 || xn > MATRIX_WIDTH - 1) continue; // WHY?
-      CRGB clr = g()->leds[g()->xy(xn, y)];
+      CRGB clr = g()->leds[XY(xn, y)];
       if (xn > 0 && xn < (int)MATRIX_WIDTH - 1) {
         clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
         clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
@@ -57,7 +57,7 @@ class PatternSMGoogleNexus : public LEDStripEffect
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      g()->leds[g()->xy(xn, y)] = clr;
+      g()->leds[XY(xn, y)] = clr;
     }
   }
 
@@ -75,7 +75,7 @@ class PatternSMGoogleNexus : public LEDStripEffect
     for (int8_t i = 1; i >= 0; i--) {
       int16_t yn = y + (i & 1);
       if (yn < 0 || yn >= MATRIX_HEIGHT - 1) continue; // WHY?
-      CRGB clr = g()->leds[g()->xy(x, yn)];
+      CRGB clr = g()->leds[XY(x, yn)];
       if (yn > 0 && yn < (int)MATRIX_HEIGHT - 1) {
         clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
         clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
@@ -85,7 +85,7 @@ class PatternSMGoogleNexus : public LEDStripEffect
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      g()->leds[g()->xy(x, yn)] = clr;
+      g()->leds[XY(x, yn)] = clr;
     }
   }
 

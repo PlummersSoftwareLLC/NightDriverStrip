@@ -95,7 +95,7 @@ class PatternSMMirage : public LEDStripEffect
     hue++;
     for (byte x = 1; x < LED_COLS + 1; x++) {
       for (byte y = 1; y < LED_ROWS + 1; y++) {
-        g()->leds[g()->xy(x - 1, y - 1)] = CHSV(hue, buff[x][y], 255);
+        g()->leds[XY(x - 1, y - 1)] = CHSV(hue, buff[x][y], 255);
       }
     }
   }

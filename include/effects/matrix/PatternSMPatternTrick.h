@@ -43,10 +43,10 @@ class PatternSMPatternTrick : public LEDStripEffect
         if (!(((x + sin8(a / 2) / 24) % MATRIX_WIDTH * 6 ^
                (y + cos8(a / 3) / 8) % MATRIX_HEIGHT * 6) %
               5))
-          g()->leds[g()->xy(x, y)].setHue(
+          g()->leds[XY(x, y)].setHue(
               sin8(x * 4 + cos8(y * 2 + a / 4) + a / 3));
         else
-          g()->leds[g()->xy(x, y)] = 0;
+          g()->leds[XY(x, y)] = 0;
       }
     }
   }

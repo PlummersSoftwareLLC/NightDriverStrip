@@ -35,15 +35,15 @@ class PatternSMBubbles : public LEDStripEffect
   [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 1 || y > (MATRIX_HEIGHT - 1))
       return 0;
-    return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
-    // return g()->leds[g()->xy(x, y)];
+    return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
+    // return g()->leds[XY(x, y)];
   }
 
   void drawPixelXY(int8_t x, int8_t y, CRGB color) {
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
       return;
     // Mesmerizer flips the Y axis here.
-    uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
+    uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
 #undef WU_WEIGHT

@@ -121,7 +121,7 @@ class PatternSMSpiro : public LEDStripEffect
       // leds[XY(x2, y2)] += color;
       if (x2 < WIDTH && y2 < HEIGHT)  // добавил проверки. не знаю, почему
                                       // эффект подвисает без них
-        g()->leds[g()->xy(x2, y2)] +=
+        g()->leds[XY(x2, y2)] +=
             (CRGB)ColorFromPalette(*curPalette, hue + i * spirooffset);
 
       if ((x2 == spirocenterX && y2 == spirocenterY) ||
