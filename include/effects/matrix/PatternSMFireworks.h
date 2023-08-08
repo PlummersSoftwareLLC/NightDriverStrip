@@ -46,19 +46,18 @@ class PatternSMFireworks : public LEDStripEffect
     // функция отрисовки точки по координатам X Y
     void drawPixelXY(int8_t x, int8_t y, CRGB color)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+        if (!g()->isValidPixel(x, MATRIX_HEIGHT - y))
             return;
-        // uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
         // NightDriver's coordinate system is dfferent. Invert height and this all
         // works!
-        uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
+        uint32_t thisPixel = XY(x, MATRIX_HEIGHT - y);
         g()->leds[thisPixel] = color;
     }
 
     // We use our own drawCircle() and drawPixel() because we KNOW we're going to
     // draw near edges and the system versions scribble on memory when we do. Ours
     // clamp.
-    void drawCircle(int x0, int y0, int radius, const CRGB &color)
+    void DrawCircle(int x0, int y0, int radius, const CRGB &color)
     {
         int a = radius, b = 0;
         int radiusError = 1 - a;
@@ -174,10 +173,10 @@ class PatternSMFireworks : public LEDStripEffect
         {
             // X and Y are swapped. No idea why...
             if (hue2 == 0)
-                drawCircle(SaluteX, SaluteY, deltaValue,
+                DrawCircle(SaluteX, SaluteY, deltaValue,
                            SaluteColor - CHSV(0, 0, deltaValue * 64) + CHSV(0, deltaValue * 32, 0));
             else
-                drawCircle(SaluteY, SaluteX, deltaValue,
+                DrawCircle(SaluteY, SaluteX, deltaValue,
                            SaluteColor - CHSV(0, 0, deltaValue * 64) + CHSV(0, deltaValue * 32, 0));
             deltaValue++;
         }

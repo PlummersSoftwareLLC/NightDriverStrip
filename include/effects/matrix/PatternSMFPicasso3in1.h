@@ -35,10 +35,8 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     // функция отрисовки точки по координатам X Y
     void drawPixelXYF(float x, float y, CRGB color)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
-            return;
-        if (x < 1 || x > (MATRIX_WIDTH - 2) || y < 1 || y > (MATRIX_HEIGHT - 2))
-            return;
+		if (!g()->isValidPixel(x,y))
+			return;
         // uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
         // NightDriver's coordinate system is dfferent. Invert height and this all
         // works!

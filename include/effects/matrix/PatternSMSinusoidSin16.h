@@ -39,9 +39,9 @@ class PatternSMSinusoidSin16 : public LEDStripEffect
     // функция отрисовки точки по координатам X Y
     void drawPixelXY(int8_t x, int8_t y, CRGB color)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+		if (!g()->isValidPixel(x, y))
             return;
-        uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
+        uint32_t thisPixel = XY(x, y);
         g()->leds[thisPixel] = color;
     }
 

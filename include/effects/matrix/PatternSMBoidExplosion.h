@@ -29,19 +29,20 @@ class PatternSMBoidExplosion : public LEDStripEffect
 
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
-        return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
+        if (g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y))
+	    return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
+        return 0;
     }
 
     void drawPixelXY(int8_t x, int8_t y, CRGB color)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+        if (!g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y))
             return;
         // Mesmerizer flips the Y axis here.
-        uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
+        uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);
         g()->leds[thisPixel] = color;
     }
 
-#undef WU_WEIGHT
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);

@@ -46,9 +46,9 @@ class PatternSMAurora : public LEDStripEffect
         byte _speed = map(speed, 1, 255, 128, 16);
 
         EVERY_N_MILLIS(80)
-        for (byte x = 0; x < LED_COLS; x++)
+        for (int x = 0; x < LED_COLS; x++)
         {
-            for (byte y = 0; y < LED_ROWS; y++)
+            for (int y = 0; y < LED_ROWS; y++)
             {
                 timer++;
                 g()->leds[XY(x, y)] = ColorFromPalette(

@@ -100,17 +100,17 @@ class PatternSMMaze2 : public LEDStripEffect
 
     void generateMaze()
     {
-        for (byte y = 0; y < M_HEIGHT; y++)
+        for (unsigned int y = 0; y < M_HEIGHT; y++)
         {
-            for (byte x = 0; x < M_WIDTH; x++)
+            for (unsigned int x = 0; x < M_WIDTH; x++)
             {
                 maze[x][y] = 1;
             }
         }
         maze[1][1] = 0;
-        for (byte y = 1; y < M_HEIGHT; y += 2)
+        for (unsigned int y = 1; y < M_HEIGHT; y += 2)
         {
-            for (byte x = 1; x < M_WIDTH; x += 2)
+            for (unsigned int x = 1; x < M_WIDTH; x += 2)
             {
                 digMaze(x, y);
             }

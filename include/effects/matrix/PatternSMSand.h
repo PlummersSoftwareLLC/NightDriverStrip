@@ -66,12 +66,14 @@ class PatternSMSand : public LEDStripEffect
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
         // Just don't think about what this does to prefetch and prediction...
-        return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
+		if (g()->isValidPixel(x, MATRIX_HEIGHT - 1 -y))
+	        return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
+		return 0;
     }
 
     void drawPixelXY(int8_t x, int8_t y, CRGB color) const
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+		if (!g()->isValidPixel(x, MATRIX_HEIGHT - top_reserve -y))
             return;
         uint32_t thisPixel = XY(x, MATRIX_HEIGHT - top_reserve - y);
         g()->leds[thisPixel] = color;

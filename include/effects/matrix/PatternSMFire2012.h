@@ -17,9 +17,8 @@ class PatternSMFire2012 : public LEDStripEffect
                                                   &HeatColors_p,   &WaterfallColors_p, &CloudColors_p,
                                                   &ForestColors_p, &RainbowColors_p,   &RainbowStripeColors_p};
     const TProgmemRGBPalette16 *curPalette = palette_arr[0];
-
-    static constexpr int NUM_LAYERSMAX = 2;
-    uint8_t noise3d[NUM_LAYERSMAX][MATRIX_WIDTH][MATRIX_HEIGHT]; // двухслойная маска или хранилище свойств в
+	// BUGBUG: should probably be dynamically allocated.
+    uint8_t noise3d[MATRIX_WIDTH][MATRIX_HEIGHT]; // двухслойная маска или хранилище свойств в
                                                                  // размер всей матрицы
 
     static inline uint8_t wrapX(int8_t x)
@@ -80,21 +79,20 @@ class PatternSMFire2012 : public LEDStripEffect
             // Step 1.  Cool down every cell a little
             for (uint8_t i = 0; i < MATRIX_HEIGHT; i++)
             {
-                noise3d[0][x][i] = qsub8(noise3d[0][x][i], random(0, ((cooling * 10) / MATRIX_HEIGHT) + 2));
+                noise3d[x][i] = qsub8(noise3d[x][i], random(0, ((cooling * 10) / MATRIX_HEIGHT) + 2));
             }
 
             // Step 2.  Heat from each cell drifts 'up' and diffuses a little
             for (uint8_t k = MATRIX_HEIGHT - 1; k > 0; k--)
             { // fixed by SottNick
-                noise3d[0][x][k] = (noise3d[0][x][k - 1] + noise3d[0][x][k - 1] + noise3d[0][x][wrapY(k - 2)]) /
-                                   3; // fixed by SottNick
+                noise3d[x][k] = (noise3d[x][k - 1] + noise3d[x][k - 1] + noise3d[x][wrapY(k - 2)]) / 3; // fixed by SottNick
             }
 
             // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
             if (random8() < sparking)
             {
                 uint8_t j = random8(FIRE_BASE);
-                noise3d[0][x][j] = qadd8(noise3d[0][x][j], random(160, 255));
+                noise3d[x][j] = qadd8(noise3d[x][j], random(160, 255));
             }
 
             // Step 4.  Map from heat cells to LED colors
@@ -102,7 +100,7 @@ class PatternSMFire2012 : public LEDStripEffect
             // pixels Nightdriver/Mesmerizer change: invert Y axis.
             for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
                 nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)],
-                       ColorFromPalette(*curPalette, ((noise3d[0][x][y] * 0.7) + (noise3d[0][wrapX(x + 1)][y] * 0.3))),
+                       ColorFromPalette(*curPalette, ((noise3d[x][y] * 0.7) + (noise3d[wrapX(x + 1)][y] * 0.3))),
                        fireSmoothing);
         }
     }

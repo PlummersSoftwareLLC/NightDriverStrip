@@ -49,9 +49,9 @@ class PatternSMOneRing : public LEDStripEffect
     void Draw() override
     {
         double t = millis() / 1000.0; // some formulas is hardcoded and fps get down. this speedup it
-        for (byte x = 0; x < MATRIX_WIDTH; x++)
+        for (unsigned int x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (byte y = 0; y < MATRIX_HEIGHT; y++)
+            for (unsigned int y = 0; y < MATRIX_HEIGHT; y++)
             {
                 processFrame(t, x, y);
             }

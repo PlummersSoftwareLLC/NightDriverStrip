@@ -53,10 +53,10 @@ class PatternSMStarshipTroopers : public LEDStripEffect
 
     void drawPixel(int8_t x, int8_t y, CRGB color)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+		if (!g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y))
             return;
         // Mesmerizer flips the Y axis here.
-        uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
+        uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);
         g()->leds[thisPixel] = color;
     }
 

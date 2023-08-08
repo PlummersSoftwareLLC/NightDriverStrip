@@ -24,7 +24,7 @@ class PatternSMGravityBalls : public LEDStripEffect
 
     void drawPixelXYF(float x, float y, CRGB color)
     {
-        if (x < 0 || y < 0 || x > ((float)MATRIX_WIDTH - 1) || y > ((float)MATRIX_HEIGHT - 1))
+        if (!g()->isValidPixel(x, y))
             return;
         uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
         // calculate the intensities for each affected pixel

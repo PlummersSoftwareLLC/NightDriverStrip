@@ -62,7 +62,7 @@ class PatternSMGoogleNexus : public LEDStripEffect
 
     void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color)
     {
-        if (x < 0 || y < 0 || x > ((float)MATRIX_WIDTH - 1) || y > ((float)MATRIX_HEIGHT - 1))
+        if (!g()->isValidPixel(x, y))
             return;
 
         // extract the fractional parts and derive their inverses

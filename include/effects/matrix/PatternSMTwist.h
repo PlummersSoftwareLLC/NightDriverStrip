@@ -51,9 +51,9 @@ class PatternSMTwist : public LEDStripEffect
             hue++;
         }
 
-        for (byte i = 0; i < MATRIX_WIDTH; i += 4)
+        for (uint32_t i = 0; i < MATRIX_WIDTH; i += 4)
         {
-            for (byte j = 0; j < MATRIX_HEIGHT; j += 4)
+            for (uint32_t j = 0; j < MATRIX_HEIGHT; j += 4)
             {
                 patt1(i, j, 64 + j + hue, i + hue);
                 patt1(i + 2, j + 2, 64 + j + hue, i + hue);

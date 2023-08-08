@@ -29,8 +29,8 @@ class PatternSMBubbles : public LEDStripEffect
 
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 1 || y > (MATRIX_HEIGHT - 1))
-            return 0;
+        if (g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y) == false)
+		    return 0;
         return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
         // return g()->leds[XY(x, y)];
     }

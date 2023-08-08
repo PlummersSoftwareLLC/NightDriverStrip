@@ -117,14 +117,13 @@ class PatternSMSupernova : public LEDStripEffect
 
     void drawPixelXYF(float x, float y, CRGB color) //, uint8_t darklevel = 0U)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+		if (!g()->isValidPixel(x, y))
             return;
         //  if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
         //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
         // extract the fractional parts and derive their inverses
         uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
         // calculate the intensities for each affected pixel
-        // #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
         uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
         // multiply the intensities by the colour, and saturating-add them to the
         // pixels

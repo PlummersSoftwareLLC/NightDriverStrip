@@ -54,9 +54,9 @@ class PatternSMFire2021 : public LEDStripEffect
     void Draw() override
     {
         ff_x += step; // static uint32_t t += speed;
-        for (byte x = 0; x < MATRIX_WIDTH; x++)
+        for (unsigned x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (byte y = 0; y < MATRIX_HEIGHT; y++)
+            for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 int16_t Bri = inoise8(x * deltaValue, (y * deltaValue) - ff_x, ff_z) - (y * (255 / MATRIX_HEIGHT));
                 byte Col = Bri; // inoise8(x * deltaValue, (y * deltaValue) - ff_x,

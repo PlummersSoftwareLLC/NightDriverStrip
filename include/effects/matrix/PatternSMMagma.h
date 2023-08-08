@@ -33,15 +33,8 @@ class PatternSMMagma : public LEDStripEffect
     uint16_t ff_x, ff_y, ff_z; // большие счётчики
     const TProgmemRGBPalette16 *curPalette = &PartyColors_p;
 
-    static constexpr int NUM_LAYERSMAX = 2;
-    uint8_t noise3d[NUM_LAYERSMAX][MATRIX_WIDTH][MATRIX_HEIGHT]; // двухслойная маска или хранилище свойств в
-                                                                 // размер всей матрицы
-    uint8_t line[MATRIX_WIDTH];      // свойство пикселей в размер строки матрицы
     uint8_t shiftHue[MATRIX_HEIGHT]; // свойство пикселей в размер столбца матрицы
     uint8_t shiftValue[MATRIX_HEIGHT];
-
-    // const int WIDTH = MATRIX_WIDTH;
-    // const int HEIGHT = MATRIX_HEIGHT;
 
   public:
     PatternSMMagma() : LEDStripEffect(EFFECT_MATRIX_SMMAGMA, "Magma")
@@ -59,9 +52,6 @@ class PatternSMMagma : public LEDStripEffect
         deltaValue = Scale * 0.0899; // /100.0F * ((sizeof(palette_arr)
                                      // /sizeof(TProgmemRGBPalette16 *))-0.01F));
                                      //    if (deltaValue == 3U ||deltaValue == 4U)
-        //      curPalette =  palette_arr[deltaValue]; // (uint8_t)(Scale/100.0F *
-        //      ((sizeof(palette_arr) /sizeof(TProgmemRGBPalette16 *))-0.01F))];
-        //    else
         curPalette = firePalettes[deltaValue]; // (uint8_t)(Scale/100.0F *
                                                // ((sizeof(firePalettes)/sizeof(TProgmemRGBPalette16
                                                // *))-0.01F))];
@@ -162,7 +152,7 @@ class PatternSMMagma : public LEDStripEffect
         trackingObjectSpeedY[l] *= WIND;
     }
 
-#if 1
+#if 0
     // функция получения цвета пикселя по его номеру
     uint32_t getPixColor(uint32_t thisSegm) const
     {
@@ -177,22 +167,21 @@ class PatternSMMagma : public LEDStripEffect
     // функция получения цвета пикселя в матрице по его координатам
     CRGB getPixColorXY(uint8_t x, uint8_t y)
     {
-        //  return getPixColor(XY(x, y));
-        return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
-        // return g()->leds[XY(x, y)];
+	if (g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y))
+            return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
+	return 0;
     }
 
     // функция отрисовки точки по координатам X Y
     void drawPixelXY(int8_t x, int8_t y, CRGB color)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+	if (!g()->isValidPixel(x, y))
             return;
         // Mesmerizer flips the Y axis here.
-        uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
+        uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);
         g()->leds[thisPixel] = color;
     }
 
-#undef WU_WEIGHT
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);

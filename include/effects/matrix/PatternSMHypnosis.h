@@ -46,9 +46,9 @@ class PatternSMHypnosis : public LEDStripEffect
     {
         static uint16_t t;
         t += 4;
-        for (uint8_t x = 0; x < LED_COLS; x++)
+        for (uint x = 0; x < LED_COLS; x++)
         {
-            for (uint8_t y = 0; y < LED_ROWS; y++)
+            for (uint y = 0; y < LED_ROWS; y++)
             {
                 byte angle = rMap[x][y].angle;
                 byte radius = rMap[x][y].radius;
