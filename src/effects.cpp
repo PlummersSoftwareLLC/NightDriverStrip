@@ -756,10 +756,8 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
         //   list all instances of this effect.
         std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
             {
-                if (numberedFactory.EffectNumber() != effectNumber)
-                    return;
-
-                ProduceAndLoadDefaultEffect(numberedFactory);
+                if (numberedFactory.EffectNumber() == effectNumber)
+                    ProduceAndLoadDefaultEffect(numberedFactory);
             }
         );
 
