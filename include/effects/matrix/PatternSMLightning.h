@@ -35,8 +35,8 @@ class PatternSMLightning : public LEDStripEffect
 
     void Draw() override
     {
-        uint8_t matrixWidth = MATRIX_WIDTH;
-        uint8_t matrixHeight = MATRIX_HEIGHT;
+        const uint8_t matrixWidth = MATRIX_WIDTH;
+        const uint8_t matrixHeight = MATRIX_HEIGHT;
 
         g()->Clear();
 

@@ -44,9 +44,9 @@ class PatternSMMetaBalls : public LEDStripEffect
             bx[a] = beatsin8(15 + a * 2, 0, MATRIX_WIDTH - 1, 0, a * 32);
             by[a] = beatsin8(18 + a * 2, 0, MATRIX_HEIGHT - 1, 0, a * 32);
         }
-        for (int i = 0; i < MATRIX_WIDTH - 1; i++)
+        for (unsigned i = 0; i < MATRIX_WIDTH - 1; i++)
         {
-            for (int j = 0; j < MATRIX_HEIGHT - 1; j++)
+            for (unsigned j = 0; j < MATRIX_HEIGHT - 1; j++)
             {
                 byte sum = dist(i, j, bx[0], by[0]);
                 for (uint8_t a = 1; a < 5; a++)

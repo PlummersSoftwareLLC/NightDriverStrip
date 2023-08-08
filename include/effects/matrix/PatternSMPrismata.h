@@ -14,9 +14,9 @@ class PatternSMPrismata : public LEDStripEffect
 
     const TProgmemRGBPalette16 *curPalette = &PartyColors_p;
 
-    void drawPixelXY(int8_t x, int8_t y, CRGB color)
+    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
-	if(!g()->isValidPixel(x, y))
+	if(!g()->isValidPixel(x, MATRIX_HEIGHT - 1 -y))
             return;
         // Mesmerizer flips the Y axis here.
         uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);

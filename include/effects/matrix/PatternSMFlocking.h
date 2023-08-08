@@ -21,7 +21,7 @@ class PatternSMFlocking : public LEDStripEffect
         // return g()->leds[XY(x, y)];
     }
 
-    void drawPixelXY(int8_t x, int8_t y, CRGB color)
+    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
 	if (!g()->isValidPixel(x, y))
             return;

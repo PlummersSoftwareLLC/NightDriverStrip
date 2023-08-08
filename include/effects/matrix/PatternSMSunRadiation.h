@@ -45,11 +45,11 @@ class PatternSMSunRadiation : public LEDStripEffect
     {
         int yindex = LED_COLS + 3;
         int8_t vly = -(LED_ROWS / 2 + 1);
-        for (byte y = 0; y < LED_ROWS; y++)
+        for (unsigned y = 0; y < LED_ROWS; y++)
         {
             ++vly;
             int8_t vlx = -(LED_COLS / 2 + 1);
-            for (byte x = 0; x < LED_COLS; x++)
+            for (unsigned x = 0; x < LED_COLS; x++)
             {
                 ++vlx;
                 int8_t nx = bump[x + yindex + 1] - bump[x + yindex - 1];

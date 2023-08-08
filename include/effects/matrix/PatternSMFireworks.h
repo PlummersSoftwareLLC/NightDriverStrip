@@ -44,7 +44,7 @@ class PatternSMFireworks : public LEDStripEffect
     }
 
     // функция отрисовки точки по координатам X Y
-    void drawPixelXY(int8_t x, int8_t y, CRGB color)
+    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
         if (!g()->isValidPixel(x, MATRIX_HEIGHT - y))
             return;
@@ -57,7 +57,7 @@ class PatternSMFireworks : public LEDStripEffect
     // We use our own drawCircle() and drawPixel() because we KNOW we're going to
     // draw near edges and the system versions scribble on memory when we do. Ours
     // clamp.
-    void DrawCircle(int x0, int y0, int radius, const CRGB &color)
+    void DrawCircle(uint x0, uint y0, uint radius, const CRGB &color)
     {
         int a = radius, b = 0;
         int radiusError = 1 - a;

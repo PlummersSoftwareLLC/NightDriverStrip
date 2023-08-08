@@ -27,7 +27,7 @@ class PatternSMFlowFields : public LEDStripEffect
         return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
     }
 
-    void drawPixelXY(int8_t x, int8_t y, CRGB color)
+    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
         y = MATRIX_HEIGHT - y;
         if (!g()->isValidPixel(x, y))
@@ -36,7 +36,7 @@ class PatternSMFlowFields : public LEDStripEffect
         uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
         g()->leds[thisPixel] = color;
     }
-#undef WU_WEIGHT
+
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);

@@ -27,10 +27,10 @@ class PatternSMSquaresAndDots : public LEDStripEffect
     {
         int hue = random8();
         int y1 = y;
-        for (int j = 0; j < 3; j++)
+        for (unsigned j = 0; j < 3; j++)
         {
             int x1 = x;
-            for (int i = 0; i < 3; i++)
+            for (unsigned i = 0; i < 3; i++)
             {
                 x1 = std::clamp(x1, 3, MATRIX_WIDTH - 3);
                 y1 = std::clamp(y1, 3, MATRIX_HEIGHT - 3);
@@ -52,9 +52,9 @@ class PatternSMSquaresAndDots : public LEDStripEffect
     void Start() override
     {
         g()->Clear();
-        for (byte x = 0; x < MATRIX_WIDTH / 3 + 1; x++)
+        for (unsigned x = 0; x < MATRIX_WIDTH / 3 + 1; x++)
         {
-            for (byte y = 0; y < MATRIX_HEIGHT / 3 + 1; y++)
+            for (unsigned y = 0; y < MATRIX_HEIGHT / 3 + 1; y++)
             {
                 printSpr(x * 3, y * 3, random8(2));
             }

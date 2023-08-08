@@ -51,16 +51,15 @@ class PatternSMStarshipTroopers : public LEDStripEffect
         // return g()->leds[XY(x, y)];
     }
 
-    void drawPixel(int8_t x, int8_t y, CRGB color)
+    void drawPixel(uint8_t x, uint8_t y, CRGB color)
     {
-		if (!g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y))
+        if (!g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y))
             return;
         // Mesmerizer flips the Y axis here.
         uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);
         g()->leds[thisPixel] = color;
     }
 
-#undef WU_WEIGHT
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);

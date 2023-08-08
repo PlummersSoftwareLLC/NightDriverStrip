@@ -18,6 +18,7 @@ class PatternSMRadialWave : public LEDStripEffect
     const uint8_t C_X = LED_COLS / 2;
     const uint8_t C_Y = LED_ROWS / 2;
     const uint8_t mapp = 255 / LED_COLS;
+    // BUGBUG: should probably be allocated into slow RAM.
     struct
     {
         uint8_t angle;

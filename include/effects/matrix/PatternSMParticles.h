@@ -51,9 +51,9 @@ class PatternSMParticles : public LEDStripEffect
         g()->Clear();
     }
 
-    void drawPixelXY(int8_t x, int8_t y, CRGB color)
+    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
-        if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+        if (!g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y))
             return;
         uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);
         g()->leds[thisPixel] = color;
@@ -77,7 +77,7 @@ class PatternSMParticles : public LEDStripEffect
             homeY = map(homeY, 15000, 50000, 0, cfg_length);
             int offsY = inoise8(i * 2500 + 30000 + (now_weekMs >> 1) * CUR_PRES_speed / 255) - 128;
             offsY = cfg_length / 2 * offsY / 128;
-            int thisY = homeY + offsY;
+            unsigned int thisY = homeY + offsY;
             drawPixelXY(thisX, thisY, CRGB(CHSV(CUR_PRES_color, 255, 255)));
         }
     }

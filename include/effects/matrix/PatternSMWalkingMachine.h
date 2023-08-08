@@ -14,7 +14,7 @@ class PatternSMWalkingMachine : public LEDStripEffect
     // Second name is "dreams in night"
     static constexpr int LED_COLS = MATRIX_WIDTH;
     static constexpr int LED_ROWS = MATRIX_HEIGHT;
-#undef WU_WEIGHT
+
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
@@ -37,7 +37,6 @@ class PatternSMWalkingMachine : public LEDStripEffect
             clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
             g()->leds[XY(xn, yn)] = clr;
         }
-#undef WU_WEIGHT
     }
 
     void drawCircleF(float cx, float cy, float radius, CRGB col)
@@ -112,7 +111,7 @@ class PatternSMWalkingMachine : public LEDStripEffect
     {
         g()->Clear();
 
-        for (byte i = 0; i < 7; i++)
+        for (uint8_t i = 0; i < 7; i++)
         {
             dot[i].posX =
                 (beatsin16(4, (LED_COLS >> 3) << 8, (LED_COLS - (LED_COLS >> 3) - 1) << 8, i * 8192, i * 8192)) / 255.f;

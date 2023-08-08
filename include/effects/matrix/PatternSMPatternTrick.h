@@ -26,9 +26,9 @@ class PatternSMPatternTrick : public LEDStripEffect
     {
         int a = millis() / 10;
 
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (unsigned x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (int y = 0; y < MATRIX_HEIGHT; y++)
+            for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 if (!(((x + sin8(a / 2) / 24) % MATRIX_WIDTH * 6 ^ (y + cos8(a / 3) / 8) % MATRIX_HEIGHT * 6) % 5))
                     g()->leds[XY(x, y)].setHue(sin8(x * 4 + cos8(y * 2 + a / 4) + a / 3));

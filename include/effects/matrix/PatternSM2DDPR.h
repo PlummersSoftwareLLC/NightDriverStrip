@@ -60,9 +60,9 @@ class PatternSM2DDPR : public LEDStripEffect
             ZVoffset += 4;
         }
 
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (unsigned x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (int y = 0; y < MATRIX_HEIGHT; y++)
+            for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 int dist = ZVcalcDist(x, y, HALF_WIDTH, HALF_HEIGHT);
 

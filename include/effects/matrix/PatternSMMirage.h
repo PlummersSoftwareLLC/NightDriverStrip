@@ -82,9 +82,9 @@ class PatternSMMirage : public LEDStripEffect
         drawDot(x3, y3, val);
         drawDot(x3 + 1, y3, val);
         hue++;
-        for (byte x = 1; x < LED_COLS + 1; x++)
+        for (unsigned x = 1; x < LED_COLS + 1; x++)
         {
-            for (byte y = 1; y < LED_ROWS + 1; y++)
+            for (unsigned y = 1; y < LED_ROWS + 1; y++)
             {
                 g()->leds[XY(x - 1, y - 1)] = CHSV(hue, buff[x][y], 255);
             }

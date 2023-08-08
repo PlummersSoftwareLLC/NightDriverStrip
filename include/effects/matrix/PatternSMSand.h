@@ -71,9 +71,9 @@ class PatternSMSand : public LEDStripEffect
 		return 0;
     }
 
-    void drawPixelXY(int8_t x, int8_t y, CRGB color) const
+    void drawPixelXY(uint8_t x, uint8_t y, CRGB color) const
     {
-		if (!g()->isValidPixel(x, MATRIX_HEIGHT - top_reserve -y))
+        if (!g()->isValidPixel(x, MATRIX_HEIGHT - top_reserve -y))
             return;
         uint32_t thisPixel = XY(x, MATRIX_HEIGHT - top_reserve - y);
         g()->leds[thisPixel] = color;

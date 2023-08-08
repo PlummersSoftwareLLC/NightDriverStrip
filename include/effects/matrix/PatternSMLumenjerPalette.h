@@ -56,10 +56,6 @@ class PatternSMLumenjerPalette : public LEDStripEffect
     const int DIMSPEED = (254U - 500U / MATRIX_WIDTH / MATRIX_HEIGHT);
 
     uint8_t hue;
-    uint8_t x = MATRIX_WIDTH / 2;
-    uint8_t y = MATRIX_HEIGHT / 2;
-    int8_t dx = 1;
-    int8_t dy = 1;
     uint8_t Scale = 1; // 1-100 is palette. This would be good to control via web.
 
     // added changing the current palette (used in many effects below for the
@@ -91,16 +87,14 @@ class PatternSMLumenjerPalette : public LEDStripEffect
 
     void Draw() override
     {
-        nscale8(g()->leds, NUM_LEDS, DIMSPEED);
-
-        dx = random8(3) ? dx : -dx;
-        dy = random8(3) ? dy : -dy;
+        int8_t dx = random8(3) ? dx : -dx;
+        int8_t dy = random8(3) ? dy : -dy;
 #if (MATRIX_WIDTH % 2 == 0 && MATRIX_HEIGHT % 2 == 0)
-        x = (MATRIX_WIDTH + x + dx * (bool)random8(64)) % MATRIX_WIDTH;
+        uint8_t x = (MATRIX_WIDTH + x + dx * (bool)random8(64)) % MATRIX_WIDTH;
 #else
-        x = (MATRIX_WIDTH + x + dx) % MATRIX_WIDTH;
+        uint8_t x = (MATRIX_WIDTH + x + dx) % MATRIX_WIDTH;
 #endif
-        y = (MATRIX_HEIGHT + y + dy) % MATRIX_HEIGHT;
+        uint8_t y = (MATRIX_HEIGHT + y + dy) % MATRIX_HEIGHT;
 
         // leds[XY(x, y)] += ColorFromPalette(*curPalette, hue++);
         if (Scale == 100U)

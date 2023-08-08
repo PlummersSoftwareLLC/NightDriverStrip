@@ -33,7 +33,7 @@ class PatternSMRainbowFlow : public LEDStripEffect
             hue++;
         }
         int t = millis() / 40;
-        for (int i = 0; i < NUM_LEDS; i++)
+        for (unsigned i = 0; i < NUM_LEDS; i++)
         {
             int c = (abs(i - hl) / hl) * 127;
             c = sin8(c);

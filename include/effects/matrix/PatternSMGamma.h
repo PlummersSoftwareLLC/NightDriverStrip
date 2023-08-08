@@ -40,9 +40,9 @@ class PatternSMGamma : public LEDStripEffect
             222, 225, 227, 229, 232, 234, 236, 239, 241, 244, 246, 249, 251, 253, 254, 255};
 
         int a = millis() / 8;
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (uint x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (int y = 0; y < MATRIX_HEIGHT; y++)
+            for (uint y = 0; y < MATRIX_HEIGHT; y++)
             {
                 int index = XY(x, y);
                 g()->leds[index].b = exp_gamma[sin8((x - 8) * cos8((y + 20) * 4) / 4 + a)];

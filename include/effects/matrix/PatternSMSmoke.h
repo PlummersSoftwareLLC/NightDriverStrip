@@ -44,7 +44,7 @@ class PatternSMSmoke : public LEDStripEffect
     int8_t zD;
     int8_t zF;
 
-    void FillNoise(int8_t layer)
+    void FillNoise(uint8_t layer)
     {
         for (uint8_t i = 0; i < WIDTH; i++)
         {

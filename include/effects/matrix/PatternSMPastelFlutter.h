@@ -57,9 +57,9 @@ class PatternSMPastelFlutter : public LEDStripEffect
         uint16_t a3 = a / 3;
         uint16_t a4 = a / 4;
 
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (unsigned x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (int y = 0; y < MATRIX_HEIGHT; y++)
+            for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 int index = XY(x, y);
 

@@ -54,7 +54,7 @@ class PatternSMHolidayLights : public LEDStripEffect
         uint8_t wu[2] = {ix, xx};
         // multiply the intensities by the colour, and saturating-add them to the
         // pixels
-        for (int8_t i = 1; i >= 0; i--)
+        for (uint8_t i = 1; i >= 0; i--)
         {
             int16_t xn = x + (i & 1);
             CRGB clr = g()->leds[XY(xn, HEIGHT - 1 - y)];
@@ -74,9 +74,6 @@ class PatternSMHolidayLights : public LEDStripEffect
         }
     }
 
-    byte y[HEIGHT];
-    float x;
-
     void addGlitter(uint8_t chanceOfGlitter)
     {
         if (random8() < chanceOfGlitter)
@@ -95,7 +92,7 @@ class PatternSMHolidayLights : public LEDStripEffect
             z = beatsin8(1, 1, 255);
         for (uint8_t i = 0; i < minDim; i++)
         {
-            x = beatsin16(i * (map(speed, 1, 255, 3, 20) /*(NUM_LEDS/256)*/), i * 2, (minDim * 4 - 2) - (i * 2 + 2));
+            unsigned x = beatsin16(i * (map(speed, 1, 255, 3, 20) /*(NUM_LEDS/256)*/), i * 2, (minDim * 4 - 2) - (i * 2 + 2));
             if (effId == 2)
                 drawPixelXYF_X(x / 4 + height_adj, i,
                                random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255)

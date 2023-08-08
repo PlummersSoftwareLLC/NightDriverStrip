@@ -109,7 +109,6 @@ class PatternSMSupernova : public LEDStripEffect
         return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
     }
 
-#undef WU_WEIGHT
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
@@ -117,7 +116,7 @@ class PatternSMSupernova : public LEDStripEffect
 
     void drawPixelXYF(float x, float y, CRGB color) //, uint8_t darklevel = 0U)
     {
-		if (!g()->isValidPixel(x, y))
+        if (!g()->isValidPixel(x, y))
             return;
         //  if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
         //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
@@ -158,7 +157,7 @@ class PatternSMSupernova : public LEDStripEffect
             enlargedObjectNUM / (sqrt3(CENTER_X_MAJOR * CENTER_X_MAJOR + CENTER_Y_MAJOR * CENTER_Y_MAJOR) * 4U) +
             1U; // 4 - это потому что за 1 цикл частица пролетает ровно
                 // четверть расстояния между 2мя соседними пикселями
-        for (int i = 0; i < enlargedObjectNUM; i++)
+        for (unsigned i = 0; i < enlargedObjectNUM; i++)
             IsShift[i] = false; // particle->isAlive
     }
 
@@ -169,7 +168,7 @@ class PatternSMSupernova : public LEDStripEffect
                    // зарождение в этом цикле
         g()->DimAll(200);
         // go over particles and update matrix cells on the way
-        for (int i = 0; i < enlargedObjectNUM; i++)
+        for (unsigned i = 0; i < enlargedObjectNUM; i++)
         {
             if (!IsShift[i] && step)
             {

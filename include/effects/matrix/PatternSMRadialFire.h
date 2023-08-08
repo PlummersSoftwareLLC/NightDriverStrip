@@ -12,6 +12,7 @@ class PatternSMRadialFire : public LEDStripEffect
 
 #define C_X (LED_COLS / 2)
 #define C_Y (LED_ROWS / 2)
+    // BUGBUG: should probably be dynamically allocated into non-DMAable RAM.
     byte XY_angle[LED_COLS][LED_ROWS];
     byte XY_radius[LED_COLS][LED_ROWS];
 

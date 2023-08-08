@@ -107,7 +107,7 @@ class PatternSMAmberRain : public LEDStripEffect
     {
         fadeAllChannelsToBlackBy(32);
 
-        for (int i = 0; i < NUMBER_OF_CIRCLES; i++)
+        for (unsigned int i = 0; i < NUMBER_OF_CIRCLES; i++)
         {
             if (circles[i].radius() < 0.001)
             {

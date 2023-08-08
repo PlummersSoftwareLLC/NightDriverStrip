@@ -75,7 +75,7 @@ class PatternSMGravityBalls : public LEDStripEffect
     void Start() override
     {
         g()->Clear();
-        for (int i = 0; i < COUNT; i++)
+        for (uint i = 0; i < COUNT; i++)
         {
             velx[i] = (beatsin16(random(1, 2) + vely[i], 0, MATRIX_WIDTH, MATRIX_HEIGHT) / MATRIX_HEIGHT) + 0.1F;
             vely[i] = (beatsin16(5 + vely[i], 0, MATRIX_WIDTH, MATRIX_HEIGHT) / MATRIX_HEIGHT) + 0.5F;
@@ -87,7 +87,7 @@ class PatternSMGravityBalls : public LEDStripEffect
 
     void Draw() override
     {
-        for (int i = 0; i < COUNT; i++)
+        for (uint i = 0; i < COUNT; i++)
         {
             if (posx[i] < 1 || posx[i] > MATRIX_WIDTH - 2)
             {

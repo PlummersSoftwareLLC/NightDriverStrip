@@ -24,12 +24,12 @@ class PatternSMRainbowSwirl : public LEDStripEffect
 
     void Draw() override
     {
-        for (int x = 0; x < MATRIX_WIDTH; x++)
+        for (unsigned x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (int y = 0; y < MATRIX_HEIGHT; y++)
+            for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 // XY tells us the index of a given X/Y coordinate
-                int index = XY(x, y);
+                unsigned index = XY(x, y);
                 int hue = x * 10 + y * 10;
                 hue += sin8(millis() / 50 + y * 5 + x * 7);
                 g()->leds[index] = CHSV(hue, 255, 255);

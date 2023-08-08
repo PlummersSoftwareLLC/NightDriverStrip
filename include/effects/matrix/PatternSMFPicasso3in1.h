@@ -35,8 +35,8 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     // функция отрисовки точки по координатам X Y
     void drawPixelXYF(float x, float y, CRGB color)
     {
-		if (!g()->isValidPixel(x,y))
-			return;
+        if (!g()->isValidPixel(x,y))
+            return;
         // uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
         // NightDriver's coordinate system is dfferent. Invert height and this all
         // works!
@@ -52,8 +52,8 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     // ----------------------
     void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
     {
-        int deltaX = abs(x2 - x1);
-        int deltaY = abs(y2 - y1);
+        int deltaX = std::abs(x2 - x1);
+        int deltaY = std::abs(y2 - y1);
         int signX = x1 < x2 ? 1 : -1;
         int signY = y1 < y2 ? 1 : -1;
         int error = deltaX - deltaY;
@@ -111,7 +111,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     // We use our own drawCircle() and drawPixel() because we KNOW we're going to
     // draw near edges and the system versions scribble on memory when we do. Ours
     // clamp.
-    void drawCircle(int x0, int y0, int radius, const CRGB &color)
+    void drawCircle(uint x0, uint y0, int radius, const CRGB &color)
     {
         int a = radius, b = 0;
         int radiusError = 1 - a;

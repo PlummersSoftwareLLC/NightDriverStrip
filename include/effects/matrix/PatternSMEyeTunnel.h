@@ -15,7 +15,7 @@ class PatternSMEyeTunnel : public LEDStripEffect
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
     }
 
-    void wu_pixel(int16_t x, int16_t y, CRGB *col)
+    void wu_pixel(uint16_t x, uint16_t y, CRGB *col)
     {
         // extract the fractional parts and derive their inverses
         uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
