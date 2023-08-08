@@ -9,8 +9,6 @@
 class PatternSMTixyLand : public LEDStripEffect
 {
  private:
-  static constexpr int LED_COLS = MATRIX_WIDTH;
-  static constexpr int LED_ROWS = MATRIX_HEIGHT;
   // Sample code taken from:
   // https://editor.soulmatelights.com/gallery/671-tixyland
 
@@ -23,7 +21,7 @@ class PatternSMTixyLand : public LEDStripEffect
   byte effect = 0;
   uint8_t gHue = 0;
 
-  float code(double t, double i, double x, double y) {
+  float code(float t, float i, float x, float y) {
     // put  tixy.land formulas after return
     // use fmod() against C++ modulo %
     // float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -45,7 +43,7 @@ class PatternSMTixyLand : public LEDStripEffect
         break;  // https://twitter.com/aemkei/status/1340044770257870851?s=20 //
                 // shady sphere// by @blu3_enjoy
       case 1:
-        return .1 / (sin(y / 4 - t * 6) - sin(x * 2 - t));
+        return .1 / (sin8(y / 4 - t * 6) - sin(x * 2 - t));
         break;  ////https://twitter.com/ntsutae/status/1336729037549436931?s=20
       case 2:
         return sin(hypot(x -= 8, y -= 8) + t + atan2(y, x));
@@ -63,20 +61,20 @@ class PatternSMTixyLand : public LEDStripEffect
         return abs(7 - x) < 9 ? cos(t + (x + y) * PI / 8) : 0;
         break;  // https://twitter.com/HiraginoYuki/status/1327166558955663362
       case 7:
-        return !((int)(x + t * 50 / (fmod(y * y, 5.9) + 1)) & 15) /
-               (fmod(y * y, 5.9) + 1);
+        return !((int)(x + t * 50 / (fmod(y * y, 5.9f) + 1)) & 15) /
+               (fmod(y * y, 5.9f) + 1);
         break;
       case 8:
-        return sin(atan((y - 7.5) / (x - 7.5)) + t * 6);
+        return sin(atan((y - 7.5f) / (x - 7.5f)) + t * 6);
         break;
       case 9:
         return sin(atan((y) / (x)) + t);
         break;
       case 10:
-        return 1 - fmod(((t + x + sin(t + x) / 2) - y / 30), 1.0);
+        return 1 - fmod(((t + x + sin(t + x) / 2) - y / 30), 1.0f);
         break;
       case 11:
-        return (y - 8) / 3 - tan(x / 6 + 1.87) * sin(t * 2);
+        return (y - 8) / 3 - tan(x / 6 + 1.87f) * sin(t * 2);
         break;
       case 12:
         return (y - 8) / 3 - (sin(x / 4 + t * 4));
@@ -104,25 +102,25 @@ class PatternSMTixyLand : public LEDStripEffect
         return sin(x * x * 3 * i / 1e4 - y / 2 + t * 9);
         break;
       case 20:
-        return std::min(7 - y + sin(x + sin(y + t * 8)) * 6, 0.0);
+        return std::min(7 - y + sin(x + sin(y + t * 8)) * 6, 0.0f);
         break;  // fire https://twitter.com/davemakes/status/1324226447351803905
       case 21:
         return x * y / 64 * sin(t + x * 6 - y * 6);
         break;  // https://twitter.com/maettig/status/1326162655061696513
       case 22:
-        return 6 - hypot(x - 7.5, y - 7.5) - sin(i / 3 - t);
+        return 6 - hypot(x - 7.5f, y - 7.5f) - sin(i / 3 - t);
         break;  // https://twitter.com/maettig/status/1326162655061696513
       case 23:
         return 1 - abs((x - 6) * cos(t) + (y - 6) * sin(t));
         break;  // https://twitter.com/maettig/status/1326163017533419529
       case 24:
-        return atan((x - 7.5) * (y - 7.5)) - 2.5 * sin(t);
+        return atan((x - 7.5f) * (y - 7.5f)) - 2.5f * sin(t);
         break;  // https://twitter.com/maettig/status/1326163136559403015
       case 25:
-        return sin(3 * atan2(y - 7.5, x - 7.5) + t);
+        return sin(3 * atan2(y - 7.5f, x - 7.5f) + t);
         break;  // https://twitter.com/aemkei/status/1326637631409676291
       case 26:
-        return sin(3 * atan2(y - 7.5 + sin(t) * 5, x - 7.5 + sin(t / 2) * 5) +
+        return sin(3 * atan2(y - 7.5f + sin(t) * 5, x - 7.5 + sin(t / 2) * 5) +
                    t * 5);
         break;  // i add move for
                 // //https://twitter.com/aemkei/status/1326637631409676291
@@ -145,8 +143,8 @@ class PatternSMTixyLand : public LEDStripEffect
         return 1 - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
         break;
       case 33:
-        return 1 - fmod((x * x - y + t * (fmod(1 + x * x, 5.0)) * 3.0), 16.0) /
-                       16.0;
+        return 1 - fmod((x * x - y + t * (fmod(1 + x * x, 5.0f)) * 3.0f), 16.0f) /
+                       16.0f;
         break;
       case 34:
         return sin(sin(y) + x + t) * cos(t + y);
@@ -170,21 +168,19 @@ class PatternSMTixyLand : public LEDStripEffect
     //____________________________________
   }
 
-  void processFrame(double t, double x, double y) {
+  void processFrame(float t, int x, int y) {
     EVERY_N_MILLISECONDS(30) { gHue++; }
-    double i = (y * 16) + x;
-    double frame = constrain(code(t, i, x, y), -1, 1) * 255;
+    auto i = (y * 16) + x;
+    auto frame = constrain(code(t, i, x, y), -1, 1) * 255;
     if (frame >= 0) {
-      g()->leds[g()->xy(x, (LED_ROWS - 1 - y))] = CHSV(gHue, 255, frame);
-    }  // change to XY(x, y) for non rotate display
-    else {
-      g()->leds[g()->xy(x, (LED_ROWS - 1 - y))] = CHSV(gHue + 55, 255, -frame);
-    }  // change to XY(x, y) for non rotate display
+      g()->leds[XY(x, y)] = CHSV(gHue, 255, frame);
+    } else {
+      g()->leds[XY(x, y)] = CHSV(gHue + 55, 255, -frame);
+    }
   }
 
  public:
-  PatternSMTixyLand()
-      :
+  PatternSMTixyLand() :
         LEDStripEffect(EFFECT_MATRIX_SMTIXY_LAND, "TixyLand") {
   }
 
@@ -196,34 +192,29 @@ class PatternSMTixyLand : public LEDStripEffect
   void Start() override { g()->Clear(); }
 
   void Label(int n) {
+    static const int kLabelTimeoutMS = 500;
     String result = str_sprintf("Tixy %d", n);
-    const char* pszText = result.c_str();
 
-    LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
-    int x = 10;
-    int y = 10;
-    LEDMatrixGFX::backgroundLayer.drawString(x - 1, y, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x + 1, y, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x, y - 1, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x, y + 1, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x, y, rgb24(255, 255, 255),
-                                             pszText);
+    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
+    pMatrix->SetCaption(result, kLabelTimeoutMS); // Half a second.
   }
 
   void Draw() override {
-    double t =
-        millis() /
-        1000.0;  // some formulas is hardcoded and fps get down. this speedup it
-    for (byte x = 0; x < LED_COLS; x++) {
-      for (byte y = 0; y < LED_ROWS; y++) {
+    // some formulas is hardcoded and fps get down. this speedup it
+    float t = millis() / 1000.0;
+    for (int x = 0; x < MATRIX_WIDTH; x++) {
+      for (int y = 0; y < MATRIX_HEIGHT; y++) {
         processFrame(t, x, y);
       }
     }
-    EVERY_N_SECONDS(10) {  // 10 is too fast...
+    EVERY_N_SECONDS(4) {
       effect++;
       if (effect > 36) effect = 0;
-      Label(
-          effect);  // This will only last one frame. This is already too slow.
+      Label(effect);  // This will only last one frame. This is already too slow.
     }
+  }
+
+  virtual size_t DesiredFramesPerSecond() const override {
+    return 30;
   }
 };
