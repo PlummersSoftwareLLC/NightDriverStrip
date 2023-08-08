@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Copyright (c) 2017 José Luis Aracil Gómez del Campo
-# Copyright (c) 2023 Rutger van Bergen
+# Copyright (c) 2023 Plummer's Software LLC
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+#================================================================================
 #
 # Generate a JSON object with timezone information from Linux tzdata and write it
 # to a file.
