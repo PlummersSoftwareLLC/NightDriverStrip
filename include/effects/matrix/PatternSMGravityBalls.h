@@ -16,7 +16,6 @@ class PatternSMGravityBalls : public LEDStripEffect
     float accel[COUNT];
     byte init = 1;
 
-#undef WU_WEIGHT
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
@@ -24,6 +23,7 @@ class PatternSMGravityBalls : public LEDStripEffect
 
     void drawPixelXYF(float x, float y, CRGB color)
     {
+        y = MATRIX_HEIGHT - y; // Compensate for mesmerizer's different coordiante system.
         if (!g()->isValidPixel(x, y))
             return;
         uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
@@ -35,10 +35,20 @@ class PatternSMGravityBalls : public LEDStripEffect
         for (uint8_t i = 0; i < 4; i++)
         {
             int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
+            if (!g()->isValidPixel(xn, yn))
+	    {
+		// Log error, but for now, mostly just carry on
+                return;
+	    }
             CRGB clr = g()->leds[XY(xn, yn)];
             clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
             clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
             clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+            if (!g()->isValidPixel(xn, yn))
+	    {
+		// Log different error, but for now, mostly just carry on
+                return;
+	    }
             g()->leds[XY(xn, yn)] = clr;
         }
     }
