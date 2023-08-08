@@ -210,7 +210,7 @@ class PatternSMTixyLand : public LEDStripEffect
     EVERY_N_SECONDS(4) {
       effect++;
       if (effect > 36) effect = 0;
-      Label(effect);  // This will only last one frame. This is already too slow.
+      Label(effect);
     }
   }
 
