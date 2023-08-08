@@ -100,13 +100,11 @@ class  EffectManager : public IJSONSerializable
 
     void ProduceAndLoadDefaultEffect(const EffectFactories::NumberedFactory& numberedFactory)
     {
-        auto pEffect = numberedFactory.Factory();
+        auto pEffect = numberedFactory.CreateEffect();
         if (pEffect)
         {
             // Effects in the default list are core effects. These can be disabled but not deleted.
             pEffect->MarkAsCoreEffect();
-            if (numberedFactory.LoadDisabled)
-                pEffect->SetEnabled(false);
             _vEffects.push_back(pEffect);
         }
     }

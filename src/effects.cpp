@@ -745,7 +745,7 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
     // We iterate manually, so we can use where we are as the starting point for a later inner loop
     for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
     {
-        int effectNumber = iter->EffectNumber;
+        int effectNumber = iter->EffectNumber();
 
         // If we've already loaded this effect (number) from JSON, we can move on to check the next one
         if (loadedEffectNumbers.count(effectNumber))
@@ -756,7 +756,7 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
         //   list all instances of this effect.
         std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
             {
-                if (numberedFactory.EffectNumber != effectNumber)
+                if (numberedFactory.EffectNumber() != effectNumber)
                     return;
 
                 ProduceAndLoadDefaultEffect(numberedFactory);
