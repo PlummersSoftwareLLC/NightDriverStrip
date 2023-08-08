@@ -43,7 +43,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Strobe Diffusion") {
+        LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Diffusion") {
   }
 
   PatternSMStrobeDiffusion(const JsonObjectConst& jsonObject)
@@ -97,7 +97,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
   // функция получения цвета пикселя в матрице по его координатам
   [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
     // Just don't think about what this does to prefetch and prediction...
-    return g()->leds[g()->xy(x, y)];
+    return g()->leds[XY(x, y)];
   }
 
   void Draw() override {
@@ -138,7 +138,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
     }
 
     // Tuned by hand. Too slow and they just flash and show up in new locations.
-    EVERY_N_MILLIS(50) { VirtualSnow(); }
+    EVERY_N_MILLIS(30) { VirtualSnow(); }
 
     // Much of this could be calls to lineDraw() but maybe being able to do
     // both ends while iterating through the loop is a win.
@@ -184,7 +184,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 
 #if ENABLE_AUDIO
   void HandleBeat(bool bMajor, float elapsed, float span) override {
-    debugI("HandleBeat");
+    debugV("HandleBeat");
     // Just light eye candy to show we react.
     hue2 += 128;
   }

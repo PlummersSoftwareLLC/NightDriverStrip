@@ -69,7 +69,7 @@ class PatternSMPastelFlutter : public LEDStripEffect
 
     for (int x = 0; x < MATRIX_WIDTH; x++) {
       for (int y = 0; y < MATRIX_HEIGHT; y++) {
-        int index = g()->xy(x, y);
+        int index = XY(x, y);
 
         byte xt = cos_wave[a3 & 255] * (MATRIX_WIDTH - 1) >> 8;
         byte yt = cos_wave[a4 & 255] * (MATRIX_HEIGHT - 1) >> 8;

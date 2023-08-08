@@ -47,7 +47,7 @@ class PatternSMHypnosis : public LEDStripEffect
       for (uint8_t y = 0; y < LED_ROWS; y++) {
         byte angle = rMap[x][y].angle;
         byte radius = rMap[x][y].radius;
-        g()->leds[g()->xy(x, y)] =
+        g()->leds[XY(x, y)] =
             ColorFromPalette(RainbowStripeColors_p, t / 2 + radius + angle,
                              sin8(angle + (radius * 2) - t));
       }

@@ -14,7 +14,7 @@ class PatternSMSnakes : public LEDStripEffect
 #endif
 {
  private:
-  uint8_t Speed = 150;  // 1-255 Setting
+  uint8_t Speed = 250;  // 1-255 Setting
   uint8_t Scale = 20;   // 1-100 Setting
 
   const int HEIGHT = MATRIX_HEIGHT;
@@ -227,7 +227,7 @@ class PatternSMSnakes : public LEDStripEffect
       // drawPixelXYF(x, y, CHSV(trackingObjectHue[i], 255U,
       // trackingObjectSpeedY[i] * 255)); // тут рисуется голова // слишком
       // сложно для простого сложения цветов
-      g()->leds[g()->xy(x, y)] +=
+      g()->leds[XY(x, y)] +=
           CHSV(trackingObjectHue[i], 255U,
                trackingObjectSpeedY[i] * 255);  // тут рисуется голова
 
@@ -240,7 +240,7 @@ class PatternSMSnakes : public LEDStripEffect
         // тут рисуется тело // слишком сложно для простого сложения цветов
         // leds[XY(x,y)] += CHSV(trackingObjectHue[i] + m*4U, 255U, 255U); //
         // тут рисуется тело
-        g()->leds[g()->xy(x, y)] +=
+        g()->leds[XY(x, y)] +=
             CHSV(trackingObjectHue[i] + (m + trackingObjectSpeedY[i]) * 4U,
                  255U, 255U);  // тут рисуется тело
 
@@ -270,7 +270,7 @@ class PatternSMSnakes : public LEDStripEffect
       }
       x = (WIDTH + x + dx) % WIDTH;
       y = (HEIGHT + y + dy) % HEIGHT;
-      g()->leds[g()->xy(x, y)] += CHSV(
+      g()->leds[XY(x, y)] += CHSV(
           trackingObjectHue[i] + (SNAKES_LENGTH + trackingObjectSpeedY[i]) * 4U,
           255U, (1 - trackingObjectSpeedY[i]) * 255);  // хвостик
     }

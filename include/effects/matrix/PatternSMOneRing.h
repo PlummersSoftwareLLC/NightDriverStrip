@@ -38,7 +38,7 @@ class PatternSMOneRing : public LEDStripEffect
     frame = fabs(constrain(tempcode + RINGSIZE * 0.75, -1, 1) * 255);
     if (frame <= 254) bri = -frame;
     bri = 255 - bri;
-    g()->leds[g()->xy(x, y)].setRGB(bri, bri, 0);
+    g()->leds[XY((int)x, (int)y)].setRGB(bri, bri, 0);
   }
 
   void Draw() override {

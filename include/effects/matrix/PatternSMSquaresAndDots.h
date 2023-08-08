@@ -34,7 +34,7 @@ class PatternSMSquaresAndDots : public LEDStripEffect
       for (int i = 0; i < 3; i++) {
         x1 = std::clamp(x1, 3, MATRIX_WIDTH - 3);
         y1 = std::clamp(y1, 3, MATRIX_HEIGHT - 3);
-        uint16_t index = g()->xy(x1, y1);
+        uint16_t index = XY(x1, y1);
         if (sprites[numSpr][i][j]) {
           g()->leds[index].setHue(hue);
         } else {

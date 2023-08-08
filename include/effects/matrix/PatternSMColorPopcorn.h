@@ -96,7 +96,7 @@ class PatternSMColorPopcorn : public LEDStripEffect
         uint8_t x = (rockets[r].x >> 8) + (i & 1);
         uint8_t y = (rockets[r].y >> 8) + ((i >> 1) & 1);
         // Mesmerizer has swapped Y axis.
-        int32_t index = g()->xy(x, MATRIX_HEIGHT - 1 - y);
+        int32_t index = XY(x, MATRIX_HEIGHT - 1 - y);
         if (index < NUM_LEDS) {
           g()->leds[index].r = qadd8(g()->leds[index].r, rgb.r * wu[i] >> 8);
           g()->leds[index].g = qadd8(g()->leds[index].g, rgb.g * wu[i] >> 8);

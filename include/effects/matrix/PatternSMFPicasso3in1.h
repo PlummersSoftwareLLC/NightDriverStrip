@@ -39,10 +39,10 @@ class PatternSMPicasso3in1 : public LEDStripEffect
       return;
     if (x < 1 || x > (MATRIX_WIDTH - 2) || y < 1 || y > (MATRIX_HEIGHT - 2))
       return;
-    // uint32_t thisPixel = g()->xy((uint8_t)x, (uint8_t)y);
+    // uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
     // NightDriver's coordinate system is dfferent. Invert height and this all
     // works!
-    uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
+    uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
   // функция отрисовки точки по координатам X Y
@@ -241,13 +241,11 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
  public:
   PatternSMPicasso3in1()
-      :
-        LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso 3in1") {
+      : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso") {
   }
 
   PatternSMPicasso3in1(const JsonObjectConst& jsonObject)
-      :
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   // This has atomicity issues. It looks at a global (boooo) that may change the
@@ -284,7 +282,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     // BUGBUG(robertl): Just eyeballing this, I think the clock is running about
     // double time...
-    EVERY_N_MILLIS(2000) {
+    EVERY_N_MILLIS(10000) {
       if (demo_idx++ == sizeof(demo_values) / sizeof(demo_values[0]))
         demo_idx = 0;
       Scale = demo_values[demo_idx];
@@ -296,13 +294,11 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     // Don't just let the renderer freewheel.
     // Unfortunately, this is a terrible way to implement usage governors.
-    EVERY_N_MILLIS(16) {
-      if (Scale < 34U)  // если масштаб до 34
-        PicassoRoutine1();
-      else if (Scale > 67U)  // если масштаб больше 67
-        PicassoRoutine3();
-      else  // для масштабов посередине
-        PicassoRoutine2();
-    }
+    if (Scale < 34U)  // если масштаб до 34
+      PicassoRoutine1();
+    else if (Scale > 67U)  // если масштаб больше 67
+      PicassoRoutine3();
+    else  // для масштабов посередине
+      PicassoRoutine2();
   }
 };

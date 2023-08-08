@@ -25,13 +25,11 @@ class PatternSMRainbowTunnel : public LEDStripEffect
 
  public:
   PatternSMRainbowTunnel()
-      :
-        LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Rainbow Tunnel") {
+      : LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Colorspin") {
   }
 
   PatternSMRainbowTunnel(const JsonObjectConst& jsonObject)
-      :
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override {
@@ -56,7 +54,7 @@ class PatternSMRainbowTunnel : public LEDStripEffect
       for (uint8_t y = 0; y < LED_ROWS; y++) {
         byte angle = rMap[x][y].angle;
         byte radius = rMap[x][y].radius;
-        g()->leds[g()->xy(x, y)] =
+        g()->leds[XY(x, y)] =
             CHSV((angle * scaleX) - t + (radius * scaleY), 255,
                  constrain(radius * 2, 0, 255));
       }

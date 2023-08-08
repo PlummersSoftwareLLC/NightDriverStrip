@@ -52,7 +52,7 @@ class PatternSMHolidayLights : public LEDStripEffect
     // pixels
     for (int8_t i = 1; i >= 0; i--) {
       int16_t xn = x + (i & 1);
-      CRGB clr = g()->leds[g()->xy(xn, HEIGHT - 1 - y)];
+      CRGB clr = g()->leds[XY(xn, HEIGHT - 1 - y)];
       if (xn > 0 && xn < (int)WIDTH - 1) {
         clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
         clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
@@ -62,7 +62,7 @@ class PatternSMHolidayLights : public LEDStripEffect
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      g()->leds[g()->xy(xn, HEIGHT - 1 - y)] = clr;
+      g()->leds[XY(xn, HEIGHT - 1 - y)] = clr;
     }
   }
 
@@ -77,7 +77,7 @@ class PatternSMHolidayLights : public LEDStripEffect
   void spruce() {
     hue++;
     // fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 1, 10));
-    fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 10));
+    fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 100));
     uint8_t z;
     if (effId == 3)
       z = triwave8(hue);
@@ -95,11 +95,11 @@ class PatternSMHolidayLights : public LEDStripEffect
         drawPixelXYF_X(x / 4 + height_adj, i, CHSV(hue + i * z, 255, 255));
     }
     if (!(WIDTH & 0x01))
-      g()->leds[g()->xy(WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0),
+      g()->leds[XY(WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0),
                         minDim - 1 - ((millis() >> 8) & 0x01 ? 1 : 0))] =
           CHSV(0, 255, 255);
     else
-      g()->leds[g()->xy(WIDTH / 2, minDim - 1)] =
+      g()->leds[XY(WIDTH / 2, minDim - 1)] =
           CHSV(0, (millis() >> 9) & 0x01 ? 0 : 255, 255);
 
     if (glitch) confetti();
@@ -107,13 +107,11 @@ class PatternSMHolidayLights : public LEDStripEffect
 
  public:
   PatternSMHolidayLights()
-      :
-        LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Holiday Lights") {
+      : LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Tannenbaum") {
   }
 
   PatternSMHolidayLights(const JsonObjectConst& jsonObject)
-      :
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }

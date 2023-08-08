@@ -124,8 +124,8 @@ class PatternSMLumenjerPalette : public LEDStripEffect
 
     // leds[XY(x, y)] += ColorFromPalette(*curPalette, hue++);
     if (Scale == 100U)
-      g()->leds[g()->xy(x, y)] += CHSV(random8(), 255U, 255U);
+      g()->leds[XY(x, y)] += CHSV(random8(), 255U, 255U);
     else
-      g()->leds[g()->xy(x, y)] += ColorFromPalette(*curPalette, hue++);
+      g()->leds[XY(x, y)] += ColorFromPalette(*curPalette, hue++);
   }
 };

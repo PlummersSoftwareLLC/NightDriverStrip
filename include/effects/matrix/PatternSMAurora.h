@@ -48,7 +48,7 @@ class PatternSMAurora : public LEDStripEffect
     for (byte x = 0; x < LED_COLS; x++) {
       for (byte y = 0; y < LED_ROWS; y++) {
         timer++;
-        g()->leds[g()->xy(x, y)] = ColorFromPalette(
+        g()->leds[XY(x, y)] = ColorFromPalette(
             GreenAuroraColors_p,
             qsub8(inoise8(timer % 2 + x * _scale, y * 16 + timer % 16,
                           timer / _speed),

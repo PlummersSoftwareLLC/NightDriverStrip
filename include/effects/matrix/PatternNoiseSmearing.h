@@ -123,7 +123,7 @@ public:
     {
       for (uint16_t x = 1; x < MATRIX_WIDTH - 6; x = x + 6)
       {
-        g()->leds[g()->xy(x, y)] += g()->ColorFromCurrentPalette((x * y) / 2);
+        g()->leds[XY(x, y)] += g()->ColorFromCurrentPalette((x * y) / 2);
       }
     }
 
@@ -217,7 +217,7 @@ public:
       for (uint8_t j = 0; j < 5; j++) {
         for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
         {
-          g()->leds[g()->xy(x, y)] += rainbow[c];
+          g()->leds[XY(x, y)] += rainbow[c];
         }
 
         y++;

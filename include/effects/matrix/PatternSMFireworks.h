@@ -46,10 +46,10 @@ class PatternSMFireworks : public LEDStripEffect
   void drawPixelXY(int8_t x, int8_t y, CRGB color) {
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
       return;
-    // uint32_t thisPixel = g()->xy((uint8_t)x, (uint8_t)y);
+    // uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
     // NightDriver's coordinate system is dfferent. Invert height and this all
     // works!
-    uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
+    uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
 
@@ -132,7 +132,7 @@ class PatternSMFireworks : public LEDStripEffect
 #else
     for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
       for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
-        g()->leds[g()->xy(x, y)] -= CHSV(0, 0, val);
+        g()->leds[XY(x, y)] -= CHSV(0, 0, val);
 #endif
   }
   void SaluteDrawLine() {

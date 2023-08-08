@@ -46,114 +46,112 @@ class PatternSMTixyLand : public LEDStripEffect
         return .1 / (sin8(y / 4 - t * 6) - sin(x * 2 - t));
         break;  ////https://twitter.com/ntsutae/status/1336729037549436931?s=20
       case 2:
-        return sin(hypot(x -= 8, y -= 8) + t + atan2(y, x));
+        return sinf(hypotf(x -= 8, y -= 8) + t + atan2f(y, x));
         break;  // https://twitter.com/aemkei/status/1331340057727406081?s=20
       case 3:
-        return abs(cos(atan2(y + 2, x - 8) * 6 + t * 2));
+        return fabs(cosf(atan2f(y + 2, x - 8) * 6 + t * 2));
         break;  // https://twitter.com/mgmalheiros/status/1328456054049476611?s=20
       case 4:
-        return tan(cos(x) - t) * tan(sin(y) - t) / 16;
+        return tanf(cosf(x) - t) * tanf(sinf(y) - t) / 16;
         break;  // https://twitter.com/SonezakiRinji/status/1328149756133052416?s=20
       case 5:
-        return sin(y * sin(t / 2) * 2 + t + i * 6);
+        return sinf(y * sinf(t / 2) * 2 + t + i * 6);
         break;
       case 6:
-        return abs(7 - x) < 9 ? cos(t + (x + y) * PI / 8) : 0;
+        return fabs(7 - x) < 9 ? cosf(t + (x + y) * (float) PI / 8) : 0;
         break;  // https://twitter.com/HiraginoYuki/status/1327166558955663362
       case 7:
         return !((int)(x + t * 50 / (fmod(y * y, 5.9f) + 1)) & 15) /
                (fmod(y * y, 5.9f) + 1);
         break;
       case 8:
-        return sin(atan((y - 7.5f) / (x - 7.5f)) + t * 6);
+        return sinf(atanf((y - 7.5f) / (x - 7.5f)) + t * 6);
         break;
       case 9:
-        return sin(atan((y) / (x)) + t);
+        return sinf(atanf((y) / (x)) + t);
         break;
       case 10:
-        return 1 - fmod(((t + x + sin(t + x) / 2) - y / 30), 1.0f);
+        return 1 - fmod(((t + x + sinf(t + x) / 2) - y / 30), 1.0f);
         break;
       case 11:
-        return (y - 8) / 3 - tan(x / 6 + 1.87f) * sin(t * 2);
+        return (y - 8) / 3 - tanf(x / 6 + 1.87f) * sinf(t * 2);
         break;
       case 12:
-        return (y - 8) / 3 - (sin(x / 4 + t * 4));
+        return (y - 8) / 3 - (sinf(x / 4 + t * 4));
         break;
       case 13:
-        return fmod(i, 4) - fmod(y, 4) + sin(t);
+        return fmod(i, 4) - fmod(y, 4) + sinf(t);
         break;
       case 14:
-        return sin(x) - sin(x / 2 - 2 * t) - y / 1.2 + 6;
+        return sinf(x) - sinf(x / 2 - 2 * t) - y / 1.2f + 6;
         break;
       case 15:
-        return -.4 / (hypot(x - fmod(t, 10), y - fmod(t, 8)) - fmod(t, 2) * 9);
+        return -.4f / (hypotf(x - fmod(t, 10), y - fmod(t, 8)) - fmod(t, 2) * 9);
         break;
       case 16:
-        return sin(x / 3 * sin(t / 3) * 2) + cos(y / 4 * sin(t / 2) * 2);
+        return sinf(x / 3 * sinf(t / 3) * 2) + cos(y / 4 * sin(t / 2) * 2);
         break;
       case 17:
-        return cos(sin((x * t * .1)) * PI) +
-               cos(sin(y * t * .1 + (sqrt(abs(cos(x * t * .1))))) * PI);
+        return cosf(sinf((x * t * .1f)) * (float)PI) +
+               cosf(sinf(y * t * .1f + (sqrtf(fabs(cosf(x * t * .1))))) * (float)PI);
         break;
       case 18:
-        return x / t / sqrt(55 - (x -= 8) * x - (y -= 8) * y);
+        return x / t / sqrtf(55 - (x -= 8) * x - (y -= 8) * y);
         break;  // https://twitter.com/XorDev/status/1327059496951291905
       case 19:
-        return sin(x * x * 3 * i / 1e4 - y / 2 + t * 9);
+        return sinf(x * x * 3 * i / 1e4 - y / 2 + t * 9);
         break;
       case 20:
-        return std::min(7 - y + sin(x + sin(y + t * 8)) * 6, 0.0f);
+        return std::min(7 - y + sinf(x + sinf(y + t * 8)) * 6, 0.0f);
         break;  // fire https://twitter.com/davemakes/status/1324226447351803905
       case 21:
-        return x * y / 64 * sin(t + x * 6 - y * 6);
+        return x * y / 64 * sinf(t + x * 6 - y * 6);
         break;  // https://twitter.com/maettig/status/1326162655061696513
       case 22:
-        return 6 - hypot(x - 7.5f, y - 7.5f) - sin(i / 3 - t);
+        return 6 - hypotf(x - 7.5, y - 7.5) - sinf(i / 3 - t);
         break;  // https://twitter.com/maettig/status/1326162655061696513
       case 23:
-        return 1 - abs((x - 6) * cos(t) + (y - 6) * sin(t));
+        return 1 - fabs((x - 6) * cosf(t) + (y - 6) * sinf(t));
         break;  // https://twitter.com/maettig/status/1326163017533419529
       case 24:
-        return atan((x - 7.5f) * (y - 7.5f)) - 2.5f * sin(t);
+        return atanf((x - 7.5f) * (y - 7.5f)) - 2.5f * sinf(t);
         break;  // https://twitter.com/maettig/status/1326163136559403015
       case 25:
-        return sin(3 * atan2(y - 7.5f, x - 7.5f) + t);
+        return sinf(3 * atan2f(y - 7.5f, x - 7.5f) + t);
         break;  // https://twitter.com/aemkei/status/1326637631409676291
       case 26:
-        return sin(3 * atan2(y - 7.5f + sin(t) * 5, x - 7.5 + sin(t / 2) * 5) +
-                   t * 5);
+        return sinf(3 * atan2f(y - 7.5f + sinf(t) * 5, x - 7.5f + sinf(t / 2) * 5) + t * 5);
         break;  // i add move for
                 // //https://twitter.com/aemkei/status/1326637631409676291
       case 27:
-        return sin(PI * 2 * atan((y - 8) / (x - 8)) + 5 * t);
+        return sinf((float)PI * 2 * atanf((y - 8) / (x - 8)) + 5 * t);
         break;
       case 28:
-        return sin((t / 16) * i + x / y);
+        return sinf((t / 16) * i + x / y);
         break;
       case 29:
-        return sin(x / y - y / x + t);
+        return sinf(x / y - y / x + t);
         break;
       case 30:
-        return sin(t - sqrt(x * x + y * y));
+        return sinf(t - sqrtf(x * x + y * y));
         break;
       case 31:
-        return sin(x + t) + sin(y + t) + sin(x + y + t) / 3;
+        return sinf(x + t) + sinf(y + t) + sinf(x + y + t) / 3;
         break;
       case 32:
-        return 1 - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
+        return 1 - hypotf(sinf(t) * 9 - x, cosf(t) * 9 - y) / 9;
         break;
       case 33:
-        return 1 - fmod((x * x - y + t * (fmod(1 + x * x, 5.0f)) * 3.0f), 16.0f) /
-                       16.0f;
+        return 1 - fmod((x * x - y + t * (fmod(1 + x * x, 5.0f)) * 3.0f), 16.0f) / 16.0f;
         break;
       case 34:
-        return sin(sin(y) + x + t) * cos(t + y);
+        return sinf(sinf(y) + x + t) * cosf(t + y);
         break;
       case 35:
-        return sin(x + sin(y / 2 + t * 5)) + cos(y);
+        return sinf(x + sinf(y / 2 + t * 5)) + cosf(y);
         break;
       case 36:
-        return x > 7 - (sin(t * 5 + y * 3) * 6) ? 1 : .2;
+        return x > 7 - (sinf(t * 5 + y * 3) * 6) ? 1 : .2f;
         break;  // Ldir's DNA )))
                 // https://twitter.com/ldir_ko/status/1326099121170771968
                 // https://tixy.land/?code=x%3E7-%28sin%28t*5%2By*3%29*6%29%3F1%3A.2
@@ -168,15 +166,16 @@ class PatternSMTixyLand : public LEDStripEffect
     //____________________________________
   }
 
-  void processFrame(float t, int x, int y) {
+  void processFrame(float t, float x, float y) {
     EVERY_N_MILLISECONDS(30) { gHue++; }
-    auto i = (y * 16) + x;
-    auto frame = constrain(code(t, i, x, y), -1, 1) * 255;
+    float i = (y * 16) + x;
+    float frame = constrain(code(t, i, x, y), -1, 1) * 255;
     if (frame >= 0) {
-      g()->leds[XY(x, y)] = CHSV(gHue, 255, frame);
-    } else {
-      g()->leds[XY(x, y)] = CHSV(gHue + 55, 255, -frame);
-    }
+      g()->leds[XY((int)x, (MATRIX_HEIGHT - 1 - (int)y))] = CHSV(gHue, 255, frame);
+    }  // change to XY(x, y) for non rotate display
+    else {
+      g()->leds[XY((int)x, (MATRIX_HEIGHT - 1 - (int)y))] = CHSV(gHue + 55, 255, -frame);
+    }  // change to XY(x, y) for non rotate display
   }
 
  public:
@@ -212,6 +211,7 @@ class PatternSMTixyLand : public LEDStripEffect
       if (effect > 36) effect = 0;
       Label(effect);
     }
+    Label(effect);  // This will only last one frame. This is already too slow.
   }
 
   virtual size_t DesiredFramesPerSecond() const override {

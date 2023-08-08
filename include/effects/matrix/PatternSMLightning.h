@@ -54,7 +54,7 @@ class PatternSMLightning : public LEDStripEffect
       int16_t x0 = aux0 - RANDOM(0, y);
       for (; y >= 0; y--) {
         auto x = x0 + RANDOM(0, y);
-        g()->leds[g()->xy(x * matrixWidth / 255, y)] = CRGB::White;
+        g()->leds[XY(x * matrixWidth / 255, y)] = CRGB::White;
       }
 
     } else if (aux1 != 1) {  // draw only parts of 'searching' lines
@@ -65,7 +65,7 @@ class PatternSMLightning : public LEDStripEffect
                                   // lines come from the same place (aux0)
         y = map8(255 - call, 0, matrixHeight);
         auto x = x0 + RANDOM(i, y);
-        g()->leds[g()->xy(x * matrixWidth / 255, y)] = CRGB::Gray;
+        g()->leds[XY(x * matrixWidth / 255, y)] = CRGB::Gray;
       }
     }
 

@@ -71,14 +71,14 @@ class PatternSMTraffic : public LEDStripEffect
   // функция получения цвета пикселя в матрице по его координатам
   [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
     // Just don't think about what this does to prefetch and prediction...
-    return g()->leds[g()->xy(x, y)];
+    return g()->leds[XY(x, y)];
   }
 
   // функция отрисовки точки по координатам X Y
   void drawPixelXY(int8_t x, int8_t y, CRGB color) {
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
       return;
-    uint32_t thisPixel = g()->xy((uint8_t)x, (uint8_t)y);  // * SEGMENTS;
+    uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);  // * SEGMENTS;
     // for (uint8_t i = 0; i < SEGMENTS; i++)
     //{
     g()->leds[thisPixel] = color;

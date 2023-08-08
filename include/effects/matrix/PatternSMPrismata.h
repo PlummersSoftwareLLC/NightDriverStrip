@@ -18,7 +18,7 @@ class PatternSMPrismata : public LEDStripEffect
     if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
       return;
     // Mesmerizer flips the Y axis here.
-    uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
+    uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
     g()->leds[thisPixel] = color;
   }
 
@@ -41,12 +41,13 @@ class PatternSMPrismata : public LEDStripEffect
     g()->DimAll(255U - (Scale - 1U) % 11U * 3U);
 
     for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
-      // uint8_t y = beatsin8(x + 1, 0, HEIGHT-1); // это я попытался
-      // распотрошить данную функцию до исходного кода и вставить в неё регулятор
-      // скорости
-      // вместо 28 в оригинале было 280, умножения на .Speed не было, а вместо
-      // >>17 было (<<8)>>24. короче, оригинальная скорость достигается при
-      // бегунке .Speed=20
+      // uint8_t y = beatsin8(x + 1, 0, HEIGHT-1); 
+      // In English: I tried to disassemble this function to the source code and
+      // insert a speed controller into it instead of 28 in the original, there
+      // was 280, there was no multiplication by .Speed, and instead of >> 17
+      // there was (<< 8) >> 24. In short, the original speed is achieved with
+      // the .Speed = 20 slider
+
       uint8_t beat = (GET_MILLIS() * (accum88(x + 1)) * 28 * Speed) >> 17;
       uint8_t y = scale8(sin8(beat), MATRIX_HEIGHT - 1);
       //и получилось!!!

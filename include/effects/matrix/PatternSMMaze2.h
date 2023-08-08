@@ -41,10 +41,10 @@ class PatternSMMaze2 : public LEDStripEffect
     CRGB col3 = colorsmear(CRGB(0, 0, 0), colP1, ysh);
     CRGB col4 = colorsmear(CRGB(0, 0, 0), colP2, ysh);
 
-    g()->leds[g()->xy(ax, ay)] += col1;
-    g()->leds[g()->xy(ax + 1, ay)] += col2;
-    g()->leds[g()->xy(ax, ay + 1)] += col3;
-    g()->leds[g()->xy(ax + 1, ay + 1)] += col4;
+    g()->leds[XY(ax, ay)] += col1;
+    g()->leds[XY(ax + 1, ay)] += col2;
+    g()->leds[XY(ax, ay + 1)] += col3;
+    g()->leds[XY(ax + 1, ay + 1)] += col4;
   }
 
   void digMaze(int x, int y) {
@@ -131,7 +131,7 @@ class PatternSMMaze2 : public LEDStripEffect
       tale = random() % 2;
       for (byte x = 0; x < LED_COLS; x++) {
         for (byte y = 0; y < LED_ROWS; y++) {
-          g()->leds[g()->xy(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y])
+          g()->leds[XY(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y])
                                          ? CHSV(color, 200, 255)
                                          : CHSV(0, 0, 0);
         }
@@ -140,7 +140,7 @@ class PatternSMMaze2 : public LEDStripEffect
     if (!tale) {
       for (byte x = 0; x < LED_COLS; x++) {
         for (byte y = 0; y < LED_ROWS; y++) {
-          g()->leds[g()->xy(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y])
+          g()->leds[XY(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y])
                                          ? CHSV(color, 200, 255)
                                          : CHSV(0, 0, 0);
         }

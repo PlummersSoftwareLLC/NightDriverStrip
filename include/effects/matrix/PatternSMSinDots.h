@@ -29,7 +29,7 @@ class PatternSMSinDots : public LEDStripEffect
     // have floating (ha!) around elsewhere in this code. Maybe later.
     // The large final argument to blur2d helps a lot.
     for (i = size; i--;)
-      g()->leds[g()->xy((sin8(t + i * size) >> 3) + (size / 2),
+      g()->leds[XY((sin8(t + i * size) >> 3) + (size / 2),
                         sin8(u + i * size) >> 3)]
           .setHue(i * (size - 1));
     g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 0, 128);

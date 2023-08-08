@@ -16,16 +16,16 @@ class PatternSMTwist : public LEDStripEffect
 
   void patt1(uint8_t i, uint8_t j, uint8_t color1, uint8_t color2) {
     //  leds[XY(i, j)] = CHSV(0, 255, 0);
-    g()->leds[g()->xy(i + 1, j)] = CHSV(color1, 255, BRIGHTNESS);
-    g()->leds[g()->xy(i + 1, j + 1)] = CHSV(color1, 255, BRIGHTNESS);
-    g()->leds[g()->xy(i, j + 1)] = CHSV(color2, 255, BRIGHTNESS);
+    g()->leds[XY(i + 1, j)] = CHSV(color1, 255, BRIGHTNESS);
+    g()->leds[XY(i + 1, j + 1)] = CHSV(color1, 255, BRIGHTNESS);
+    g()->leds[XY(i, j + 1)] = CHSV(color2, 255, BRIGHTNESS);
   }
 
   void patt2(uint8_t i, uint8_t j, uint8_t color1, uint8_t color2) {
     //  leds[XY(i, j)] = CHSV(0, 255, 0);
-    g()->leds[g()->xy(i + 1, j)] = CHSV(color1, 255, BRIGHTNESS);
-    g()->leds[g()->xy(i + 1, j + 1)] = CHSV(color2, 255, BRIGHTNESS);
-    g()->leds[g()->xy(i, j + 1)] = CHSV(color2, 255, BRIGHTNESS);
+    g()->leds[XY(i + 1, j)] = CHSV(color1, 255, BRIGHTNESS);
+    g()->leds[XY(i + 1, j + 1)] = CHSV(color2, 255, BRIGHTNESS);
+    g()->leds[XY(i, j + 1)] = CHSV(color2, 255, BRIGHTNESS);
   }
 
  public:

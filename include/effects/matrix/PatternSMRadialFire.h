@@ -17,13 +17,11 @@ class PatternSMRadialFire : public LEDStripEffect
 
  public:
   PatternSMRadialFire()
-      :
-        LEDStripEffect(EFFECT_MATRIX_SMRADIAL_FIRE, "Radial Fire") {
+      : LEDStripEffect(EFFECT_MATRIX_SMRADIAL_FIRE, "RadialFire") {
   }
 
   PatternSMRadialFire(const JsonObjectConst& jsonObject)
-      :
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override {
@@ -52,7 +50,7 @@ class PatternSMRadialFire : public LEDStripEffect
         byte Col = Bri;
         if (Bri < 0) Bri = 0;
         if (Bri != 0) Bri = 256 - (Bri * 0.2);
-        nblend(g()->leds[g()->xy(x, y)],
+        nblend(g()->leds[XY(x, y)],
                ColorFromPalette(HeatColors_p, Col, Bri), speed);
       }
     }

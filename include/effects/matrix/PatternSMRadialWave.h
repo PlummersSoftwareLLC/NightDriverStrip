@@ -26,7 +26,7 @@ class PatternSMRadialWave : public LEDStripEffect
  public:
   PatternSMRadialWave()
       :
-        LEDStripEffect(EFFECT_MATRIX_SMRADIAL_WAVE, "Radial Wave") {
+        LEDStripEffect(EFFECT_MATRIX_SMRADIAL_WAVE, "RadialWave") {
   }
 
   PatternSMRadialWave(const JsonObjectConst& jsonObject)
@@ -53,7 +53,7 @@ class PatternSMRadialWave : public LEDStripEffect
       for (uint8_t y = 0; y < LED_ROWS; y++) {
         byte angle = rMap[x][y].angle;
         byte radius = rMap[x][y].radius;
-        g()->leds[g()->xy(x, y)] = CHSV(
+        g()->leds[XY(x, y)] = CHSV(
             t + radius, 255, sin8(t * 4 + sin8(t * 4 - radius) + angle * 3));
       }
     }
