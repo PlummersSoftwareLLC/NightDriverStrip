@@ -327,7 +327,6 @@ void LoadEffectFactories()
 
         #if 0
             ADD_EFFECT(EFFECT_MATRIX_SMPRISMATA, PatternSMPrismata);                        // 6 Be better if it stuck in the pretty part of the curves        ADD_EFFECT(EFFECT_MATRIX_SMAURORA, PatternSMAurora);
-            ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND, PatternSMTixyLand);                       // 8 If it were faster!
             ADD_EFFECT(EFFECT_MATRIX_SMCOLOR_POPCORN, PatternSMColorPopcorn);               // 5
             ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMFlying);                            // 5
             ADD_EFFECT(EFFECT_MATRIX_SMSIN_DOTS, PatternSMSinDots);                         // 5
@@ -369,10 +368,12 @@ void LoadEffectFactories()
             ADD_EFFECT(EFFECT_MATRIX_SMONE_RING, PatternSMOneRing);                         // 3
             ADD_EFFECT(EFFECT_MATRIX_BALLS, PatternBalls);                                  // 4
             ADD_EFFECT(EFFECT_MATRIX_SMGOOGLE_NEXUS,    PatternSMGoogleNexus);                 // 6
+            ADD_EFFECT(EFFECT_MATRIX_SMSNAKES,          PatternSMSnakes);                
 
 	// Audiograph isn't even compiled, but it's shown for 'Balls' !
 
 #else
+        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND, PatternSMTixyLand);                       // 8 If it were faster!
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "GhostWave", 0, 30, false, 10);
@@ -415,7 +416,6 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS,        PatternSMHypnosis);             
         ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP,        PatternSMStarDeep);              
            
-        ADD_EFFECT(EFFECT_MATRIX_SMSNAKES,          PatternSMSnakes);                
         ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise);                
         ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);                
         ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1);           
@@ -437,7 +437,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
         ADD_EFFECT(EFFECT_MATRIX_PULSAR,            PatternPulsar);
         ADD_EFFECT(EFFECT_MATRIX_BOUNCE,            PatternBounce);
-        ADD_EFFECT(EFFECT_MATRIX_SPIRO,             PatternSpiro);
+//        ADD_EFFECT(EFFECT_MATRIX_SPIRO,             PatternSpiro);                            // Replaced by SpiroPulse above
         ADD_EFFECT(EFFECT_MATRIX_WAVE,              PatternWave);
         ADD_EFFECT(EFFECT_MATRIX_SWIRL,             PatternSwirl);
         ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
