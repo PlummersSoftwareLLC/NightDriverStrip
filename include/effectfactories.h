@@ -101,7 +101,7 @@ class EffectFactories
 
         int EffectNumber() const
         {
-          return effectNumber;
+            return effectNumber;
         }
 
         std::shared_ptr<LEDStripEffect> CreateEffect() const
@@ -146,6 +146,6 @@ class EffectFactories
 
     void ClearDefaultFactories()
     {
-      defaultFactories.clear();
+        defaultFactories.clear();
     }
 };
