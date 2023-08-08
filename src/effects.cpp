@@ -340,7 +340,7 @@ void LoadEffectFactories()
 
             ADD_EFFECT(EFFECT_MATRIX_SMSUN_RADIATION, PatternSMSunRadiation);               // 3
             ADD_EFFECT(EFFECT_MATRIX_SMEYE_TUNNEL, PatternSMEyeTunnel);                     // 3
-            ADD_EFFECT(EFFECT_MATRIX_SMPSP_CLOUD, PatternSMPSPCloud);                       // 
+            ADD_EFFECT(EFFECT_MATRIX_SMPSP_CLOUD, PatternSMPSPCloud);                       //
 
             ADD_EFFECT(EFFECT_MATRIX_SMTWIST, PatternSMTwist);                              // 1
             ADD_EFFECT(EFFECT_MATRIX_SMFLOCKING, PatternSMFlocking);                        // 1   (Invalid draws, all pixels in one line at bottom)
@@ -350,15 +350,14 @@ void LoadEffectFactories()
             ADD_EFFECT(EFFECT_MATRIX_SMMIRAGE, PatternSMMirage);                            // 5
             ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);                              // 0 Draws a maze once, then nothing?
             ADD_EFFECT(EFFECT_MATRIX_SMSPIRO, PatternSMSpiro);                              //   Dupe of existing spiro effect?
-        
+
             ADD_EFFECT(EFFECT_MATRIX_SMSAND, PatternSMSand);                                // 3 Never stacked for me, just a stream of sand grains
             ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_FLOW, PatternSMRainbowFlow);                 // 3
 
-        
-            // ADD_EFFECT(EFFECT_MATRIX_SMWISP, PatternSMWisp);                 
+            // ADD_EFFECT(EFFECT_MATRIX_SMWISP, PatternSMWisp);
 
             ADD_EFFECT(EFFECT_MATRIX_SMLIGHTNING, PatternSMLightning);                          // 2
-        
+
             ADD_EFFECT(EFFECT_MATRIX_SMMAGMA, PatternSMMagma);                                  // FIXME
             ADD_EFFECT(EFFECT_MATRIX_SMFIREWORKS, PatternSMFireworks);                      // 4 Snoozer
             // ADD_EFFECT(EFFECT_MATRIX_SMSINUSOIDSIN16, PatternSMSinusoidSin16);
@@ -368,7 +367,7 @@ void LoadEffectFactories()
             ADD_EFFECT(EFFECT_MATRIX_SMONE_RING, PatternSMOneRing);                         // 3
             ADD_EFFECT(EFFECT_MATRIX_BALLS, PatternBalls);                                  // 4
             ADD_EFFECT(EFFECT_MATRIX_SMGOOGLE_NEXUS,    PatternSMGoogleNexus);                 // 6
-            ADD_EFFECT(EFFECT_MATRIX_SMSNAKES,          PatternSMSnakes);                
+            ADD_EFFECT(EFFECT_MATRIX_SMSNAKES,          PatternSMSnakes);
 
 	// Audiograph isn't even compiled, but it's shown for 'Balls' !
 
@@ -398,34 +397,34 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
 #endif
 
-        ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);                
+        ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);
 
-        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);           
-        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire); 
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire);
 
-        ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);                
-        ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021,        PatternSMFire2021);             
-        ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);            
+        ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
+        ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021,        PatternSMFire2021);
+        ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
 
-        ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS,     PatternSMFlowFields);            
-        ADD_EFFECT(EFFECT_MATRIX_SMBLURRING_COLORS, PatternSMBlurringColors);       
-        ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);            
-        ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);       
-        ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS,        PatternSMHypnosis);             
-        ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP,        PatternSMStarDeep);              
-           
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise);                
-        ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);                
-        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1);           
-        ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);            
-        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);      
-        ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);        
-        ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);           
-        ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);              
-        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand);                       // 8 If it were faster!
+        ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS,     PatternSMFlowFields);
+        ADD_EFFECT(EFFECT_MATRIX_SMBLURRING_COLORS, PatternSMBlurringColors);
+        ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
+        ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);
+        ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS,        PatternSMHypnosis);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP,        PatternSMStarDeep);
 
-        ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS,  PatternSMHolidayLights);        
-        
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise);
+        ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1);
+        ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
+        ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);
+        ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);
+        ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);
+        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand);
+
+        ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS,  PatternSMHolidayLights);
+
         ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
         ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
         ADD_EFFECT(EFFECT_MATRIX_ROSE,              PatternRose);
