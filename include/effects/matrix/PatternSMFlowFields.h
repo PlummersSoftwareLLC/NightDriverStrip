@@ -21,6 +21,7 @@ class PatternSMFlowFields : public LEDStripEffect
 
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
+        y = MATRIX_HEIGHT - y;
         if (!g()->isValidPixel(x, y))
             return 0;
         return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
@@ -28,6 +29,7 @@ class PatternSMFlowFields : public LEDStripEffect
 
     void drawPixelXY(int8_t x, int8_t y, CRGB color)
     {
+        y = MATRIX_HEIGHT - y;
         if (!g()->isValidPixel(x, y))
             return;
         // Mesmerizer flips the Y axis here.
