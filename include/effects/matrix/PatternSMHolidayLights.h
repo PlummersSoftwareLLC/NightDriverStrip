@@ -68,7 +68,7 @@ class PatternSMHolidayLights : public LEDStripEffect
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      g()->leds[g()->xy(xn, HEIGHT - 1 - y)] = clr;
+      g()->leds[XY(xn, HEIGHT - 1 - y)] = clr;
     }
   }
 
@@ -83,7 +83,7 @@ class PatternSMHolidayLights : public LEDStripEffect
   void spruce() {
     hue++;
     // fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 1, 10));
-    fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 10));
+    fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 100));
     uint8_t z;
     if (effId == 3)
       z = triwave8(hue);
@@ -101,11 +101,11 @@ class PatternSMHolidayLights : public LEDStripEffect
         drawPixelXYF_X(x / 4 + height_adj, i, CHSV(hue + i * z, 255, 255));
     }
     if (!(WIDTH & 0x01))
-      g()->leds[g()->xy(WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0),
+      g()->leds[XY(WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0),
                         minDim - 1 - ((millis() >> 8) & 0x01 ? 1 : 0))] =
           CHSV(0, 255, 255);
     else
-      g()->leds[g()->xy(WIDTH / 2, minDim - 1)] =
+      g()->leds[XY(WIDTH / 2, minDim - 1)] =
           CHSV(0, (millis() >> 9) & 0x01 ? 0 : 255, 255);
 
     if (glitch) confetti();
@@ -117,7 +117,7 @@ class PatternSMHolidayLights : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Holiday Lights") {
+        LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Tannenbaum") {
   }
 
   PatternSMHolidayLights(const JsonObjectConst& jsonObject)

@@ -29,7 +29,7 @@ class Circle {
   }
 
   float radius() {
-    float radius = beatsin16(10, 0, 500, offset) / 100.0;
+    float radius = beatsin16(30, 0, 500, offset) / 100.0;
     return radius;
   }
 };
@@ -84,7 +84,7 @@ class PatternSMAmberRain : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMAMBERRAIN, "Amber Rain") {
+        LEDStripEffect(EFFECT_MATRIX_SMAMBERRAIN, "Color Rain") {
   }
 
   PatternSMAmberRain(const JsonObjectConst& jsonObject)

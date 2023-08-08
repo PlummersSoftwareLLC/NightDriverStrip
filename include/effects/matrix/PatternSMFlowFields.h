@@ -84,7 +84,7 @@ class PatternSMFlowFields : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMFLOW_FIELDS, "Flow Fields") {
+        LEDStripEffect(EFFECT_MATRIX_SMFLOW_FIELDS, "Lavaflow") {
   }
 
   PatternSMFlowFields(const JsonObjectConst &jsonObject)
@@ -130,7 +130,7 @@ class PatternSMFlowFields : public LEDStripEffect
       }
       drawPixelXYF(
           boid.location.x, boid.location.y,
-          ColorFromPalette(ForestColors_p, boid.hue, 255, LINEARBLEND));
+          g()->ColorFromCurrentPalette(boid.hue, 255, LINEARBLEND));
     }
     fadeAllChannelsToBlackBy(15);
 

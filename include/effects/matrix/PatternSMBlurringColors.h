@@ -16,7 +16,7 @@ class PatternSMBlurringColors : public LEDStripEffect
 {
  private:
   uint8_t Scale = 10;  // 1-100 Setting
-  uint8_t Speed = 25;  // 1-100. Odd or even only. Setting
+  uint8_t Speed = 95;  // 1-100. Odd or even only. Setting
 
   const int WIDTH = MATRIX_WIDTH;
   const int HEIGHT = MATRIX_HEIGHT;
@@ -62,14 +62,17 @@ class PatternSMBlurringColors : public LEDStripEffect
   uint8_t deltaValue;  // просто повторно используемая переменная
   uint8_t step;  // какой-нибудь счётчик кадров или последовательностей операций
 
-  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const 
+  {
     return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
     // return g()->leds[g()->xy(x, y)];
   }
 
-  void drawPixelXY(int8_t x, int8_t y, CRGB color) {
-    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+  void drawPixelXY(int8_t x, int8_t y, CRGB color) 
+  {
+    if (g()->isValidPixel(x, y) == false)
       return;
+
     // Mesmerizer flips the Y axis here.
     uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
     g()->leds[thisPixel] = color;
@@ -94,6 +97,8 @@ class PatternSMBlurringColors : public LEDStripEffect
     // pixels
     for (uint8_t i = 0; i < 4; i++) {
       int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
+      if (g()->isValidPixel(xn, yn) == false)
+        continue;
       CRGB clr = getPixColorXY(xn, yn);
       clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
       clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
@@ -120,6 +125,7 @@ class PatternSMBlurringColors : public LEDStripEffect
   // ============= ЭФФЕКТ ИСТОЧНИКИ ===============
   // (c) SottNick
   // такое себе зрелище
+
   void fountainsDrift(uint8_t j) {
     // float shift = random8()
     boids[j].location.x += boids[j].velocity.x + accel;
@@ -160,7 +166,11 @@ class PatternSMBlurringColors : public LEDStripEffect
         0.0626 - trackingObjectSpeedX[i] *
                      trackingObjectSpeedX[i]);  // sqrt(pow(_constVel,2)-pow(trackingObjectSpeedX[i],2));
                                                 // // particle->vy зависит от
-                                                // particle->vx - не ошибка
+                           
+    const auto kScalingFactor = 1.25;
+    trackingObjectSpeedX[i] *= kScalingFactor;
+    trackingObjectSpeedY[i] *= kScalingFactor;
+
     if (random8(2U)) {
       trackingObjectSpeedY[i] = -trackingObjectSpeedY[i];
     }
@@ -179,7 +189,7 @@ class PatternSMBlurringColors : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMBLURRING_COLORS, "Blurring Colors") {
+        LEDStripEffect(EFFECT_MATRIX_SMBLURRING_COLORS, "Powder") {
   }
 
   PatternSMBlurringColors(const JsonObjectConst& jsonObject)
@@ -223,31 +233,34 @@ class PatternSMBlurringColors : public LEDStripEffect
     }
   }
 
-  void Draw() override {
+  void Draw() override
+  {
 #if ENABLE_AUDIO
     ProcessAudio();
 #endif
-    step = deltaValue;  //счётчик количества частиц в очереди на зарождение в
-                        //этом цикле
+    step = deltaValue; // счётчик количества частиц в очереди на зарождение в
+                       // этом цикле
     // dimAll(10);
     g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 0, 27);
     // go over particles and update matrix cells on the way
-    for (int i = 0; i < trackingOBJECT_MAX_COUNT; i++) {
-      if (!trackingObjectIsShift[i] && step) {
+    for (int i = 0; i < trackingOBJECT_MAX_COUNT; i++)
+    {
+      if (!trackingObjectIsShift[i] && step)
+      {
         // emitter->emit(&particles[i], this->g);
         fountainsEmit(i);
         step--;
       }
-      if (trackingObjectIsShift[i]) {  // particle->isAlive
+      if (trackingObjectIsShift[i])
+      { // particle->isAlive
         // particles[i].update(this->g);
         particlesUpdate2(i);
 
         // generate RGB values for particle
-        CRGB baseRGB =
-            CHSV(trackingObjectHue[i], 255, 255);  // particles[i].hue
+        CRGB baseRGB = CHSV(trackingObjectHue[i], 255, 255); // particles[i].hue
 
         // baseRGB.fadeToBlackBy(255-trackingObjectState[i]);
-        baseRGB.nscale8(trackingObjectState[i]);  //эквивалент
+        baseRGB.nscale8(trackingObjectState[i]); // эквивалент
         drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB);
       }
     }

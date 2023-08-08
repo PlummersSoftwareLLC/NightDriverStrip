@@ -36,11 +36,11 @@ class PatternSMWalkingMachine : public LEDStripEffect
     // pixels
     for (uint8_t i = 0; i < 4; i++) {
       int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-      CRGB clr = g()->leds[g()->xy(xn, yn)];
+      CRGB clr = g()->leds[XY(xn, yn)];
       clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
       clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
       clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-      g()->leds[g()->xy(xn, yn)] = clr;
+      g()->leds[XY(xn, yn)] = clr;
     }
 #undef WU_WEIGHT
   }
@@ -98,7 +98,7 @@ class PatternSMWalkingMachine : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMWALKING_MACHINE, "Walking Machine") {
+        LEDStripEffect(EFFECT_MATRIX_SMWALKING_MACHINE, "Machine") {
   }
 
   PatternSMWalkingMachine(const JsonObjectConst& jsonObject)

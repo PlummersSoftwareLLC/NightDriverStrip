@@ -12,6 +12,11 @@ class PatternSMSmoke : public BeatEffectBase,
 class PatternSMSmoke : public LEDStripEffect
 #endif
 {
+    virtual size_t DesiredFramesPerSecond() const override
+    {
+        return 20;
+    }
+
  private:
   uint8_t Scale = 50;  // 1-100. SettingA
 
@@ -36,7 +41,7 @@ class PatternSMSmoke : public LEDStripEffect
       (MATRIX_HEIGHT %
        2);  // center of the YGREK matrix, shifted up if the height is even
 
-  static constexpr int NUM_LAYERSMAX = 2;
+  static constexpr int NUM_LAYERSMAX = 3;
   uint8_t hue, hue2;  // постепенный сдвиг оттенка или какой-нибудь другой
                       // цикличный счётчик
   uint8_t deltaHue, deltaHue2;  // ещё пара таких же, когда нужно много
@@ -51,7 +56,6 @@ class PatternSMSmoke : public LEDStripEffect
   uint8_t noisesmooth;
   int8_t zD;
   int8_t zF;
-  CRGB ledsbuff[NUM_LEDS];  // копия массива leds[] целиком
 
   void FillNoise(int8_t layer) {
     for (uint8_t i = 0; i < WIDTH; i++) {
@@ -72,8 +76,7 @@ class PatternSMSmoke : public LEDStripEffect
 
   void MoveFractionalNoiseX(int8_t amplitude = 1, float shift = 0) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      int16_t amount =
-          ((int16_t)noise3d[0][0][y] - 128) * 2 * amplitude + shift * 256;
+      int16_t amount =((int16_t)noise3d[0][0][y] - 128) * 2 * amplitude + shift * 256;
       int8_t delta = abs(amount) >> 8;
       int8_t fraction = abs(amount) & 255;
       for (uint8_t x = 0; x < WIDTH; x++) {
@@ -85,16 +88,16 @@ class PatternSMSmoke : public LEDStripEffect
           zF = zD + 1;
         }
         CRGB PixelA = CRGB::Black;
-        if ((zD >= 0) && (zD < WIDTH)) PixelA = g()->leds[g()->xy(zD, y)];
+        if ((zD >= 0) && (zD < WIDTH)) PixelA = g()->leds[XY(zD, y)];
         CRGB PixelB = CRGB::Black;
-        if ((zF >= 0) && (zF < WIDTH)) PixelB = g()->leds[g()->xy(zF, y)];
-        ledsbuff[g()->xy(x, y)] =
+        if ((zF >= 0) && (zF < WIDTH)) PixelB = g()->leds[XY(zF, y)];
+        g()->leds[XY(x, y)] =
             (PixelA.nscale8(ease8InOutApprox(255 - fraction))) +
             (PixelB.nscale8(ease8InOutApprox(
                 fraction)));  // lerp8by8(PixelA, PixelB, fraction );
       }
     }
-    memcpy(g()->leds, ledsbuff, sizeof(CRGB) * NUM_LEDS);
+    //memcpy(g()->leds, ledsbuff, sizeof(CRGB) * NUM_LEDS);
   }
 
   void MoveFractionalNoiseY(int8_t amplitude = 1, float shift = 0) {
@@ -112,15 +115,15 @@ class PatternSMSmoke : public LEDStripEffect
           zF = zD + 1;
         }
         CRGB PixelA = CRGB::Black;
-        if ((zD >= 0) && (zD < HEIGHT)) PixelA = g()->leds[g()->xy(x, zD)];
+        if ((zD >= 0) && (zD < HEIGHT)) PixelA = g()->leds[XY(x, zD)];
         CRGB PixelB = CRGB::Black;
-        if ((zF >= 0) && (zF < HEIGHT)) PixelB = g()->leds[g()->xy(x, zF)];
-        ledsbuff[g()->xy(x, y)] =
+        if ((zF >= 0) && (zF < HEIGHT)) PixelB = g()->leds[XY(x, zF)];
+        g()->leds[XY(x, y)] =
             (PixelA.nscale8(ease8InOutApprox(255 - fraction))) +
             (PixelB.nscale8(ease8InOutApprox(fraction)));
       }
     }
-    memcpy(g()->leds, ledsbuff, sizeof(CRGB) * NUM_LEDS);
+    //memcpy(g()->leds, ledsbuff, sizeof(CRGB) * NUM_LEDS);
   }
 
  public:
@@ -153,43 +156,40 @@ class PatternSMSmoke : public LEDStripEffect
       hue2 = 0U;
       hue = random8();
     }
-    if (deltaHue &
-        0x01)  //((deltaHue >> 2U) == 0U) // какой-то умножитель охота
-               //подключить к задержке смены цвета, но хз какой...
+    if (deltaHue & 0x01)  //((deltaHue >> 2U) == 0U) // какой-то умножитель охота, подключить к задержке смены цвета, но хз какой...
       hue2++;
 
     hsv2rgb_spectrum(CHSV(hue, 255U, 127U), color);
 
     // deltaHue2--;
-    if (random8(WIDTH) !=
-        0U)  // встречная спираль движется не всегда синхронно основной
+    if (random8(WIDTH) != 0U)  // встречная спираль движется не всегда синхронно основной
       deltaHue2--;
 
-    for (uint8_t y = 0; y < HEIGHT; y++) {
-      g()->leds[g()->xy((deltaHue + y + 1U) % WIDTH, HEIGHT - 1U - y)] += color;
-      g()->leds[g()->xy((deltaHue + y) % WIDTH, HEIGHT - 1U - y)] +=
-          color;  // color2
-      g()->leds[g()->xy((deltaHue2 + y) % WIDTH, y)] += color;
-      g()->leds[g()->xy((deltaHue2 + y + 1U) % WIDTH, y)] += color;  // color2
+    for (uint8_t y = 0; y < HEIGHT; y++) 
+    {
+      g()->leds[XY((deltaHue + y + 1U) % WIDTH, HEIGHT - 1U - y)] += color;
+      g()->leds[XY((deltaHue + y) % WIDTH, HEIGHT - 1U - y)] += color;  // color2
+      g()->leds[XY((deltaHue2 + y) % WIDTH, y)] += color;
+      g()->leds[XY((deltaHue2 + y + 1U) % WIDTH, y)] += color;  // color2
     }
 
     // Noise
 
     // Movement speed in the noise array
     // uint32_t mult = 500U * ((Scale - 1U) % 10U);
-    noise32_x[0] += 1500;  // 1000;
-    noise32_y[0] += 1500;  // 1000;
-    noise32_z[0] += 1500;  // 1000;
+    noise32_x[0] += 1000;  // 1000;
+    noise32_y[0] += 1000;  // 1000;
+    noise32_z[0] += 1000;  // 1000;
 
+    // Scale determines the size of the noise elements.
     // хрен знает что
     // mult = 1000U * ((Speed - 1U) % 10U);
     scale32_x[0] = 4000;
     scale32_y[0] = 4000;
-    FillNoise(0);
 
+    FillNoise(0);
     MoveFractionalNoiseX(3);  // 4
     MoveFractionalNoiseY(3);  // 4
-
     g()->BlurFrame(20);  // без размытия как-то пиксельно, наверное...
   }
 

@@ -32,7 +32,7 @@ class PatternSM2DDPR : public LEDStripEffect
 #if USE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SM2DDPR, "2DD PR") {
+        LEDStripEffect(EFFECT_MATRIX_SM2DDPR, "Crystallize") {
   }
 
   PatternSM2DDPR(const JsonObjectConst& jsonObject)

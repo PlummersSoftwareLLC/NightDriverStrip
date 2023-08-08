@@ -250,7 +250,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso 3in1") {
+        LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso") {
   }
 
   PatternSMPicasso3in1(const JsonObjectConst& jsonObject)
@@ -298,7 +298,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     // BUGBUG(robertl): Just eyeballing this, I think the clock is running about
     // double time...
-    EVERY_N_MILLIS(2000) {
+    EVERY_N_MILLIS(10000) {
       if (demo_idx++ == sizeof(demo_values) / sizeof(demo_values[0]))
         demo_idx = 0;
       Scale = demo_values[demo_idx];
@@ -310,14 +310,12 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     // Don't just let the renderer freewheel.
     // Unfortunately, this is a terrible way to implement usage governors.
-    EVERY_N_MILLIS(16) {
-      if (Scale < 34U)  // если масштаб до 34
-        PicassoRoutine1();
-      else if (Scale > 67U)  // если масштаб больше 67
-        PicassoRoutine3();
-      else  // для масштабов посередине
-        PicassoRoutine2();
-    }
+    if (Scale < 34U)  // если масштаб до 34
+      PicassoRoutine1();
+    else if (Scale > 67U)  // если масштаб больше 67
+      PicassoRoutine3();
+    else  // для масштабов посередине
+      PicassoRoutine2();
   }
 
 #if ENABLE_AUDIO

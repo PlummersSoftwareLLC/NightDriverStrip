@@ -12,6 +12,11 @@ class PatternSMSupernova : public BeatEffectBase,
 class PatternSMSupernova : public LEDStripEffect
 #endif
 {
+    virtual size_t DesiredFramesPerSecond() const override
+    {
+        return 40;
+    }
+      
  private:
   // matrix size constants are calculated only here and do not change in effects
   const uint8_t CENTER_X_MINOR =
@@ -109,19 +114,11 @@ class PatternSMSupernova : public LEDStripEffect
     IsShift[i] = true;           // particle->isAlive
   }
 
-  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const {
-    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
+  [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const 
+  {
+    if (g()->isValidPixel(x, y) == false)
       return 0;
-    return g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)];
-    // return g()->leds[g()->xy(x, y)];
-  }
-
-  void drawPixelXY(int8_t x, int8_t y, CRGB color) {
-    if (x < 0 || x > (MATRIX_WIDTH - 1) || y < 0 || y > (MATRIX_HEIGHT - 1))
-      return;
-    // Mesmerizer flips the Y axis here.
-    uint32_t thisPixel = g()->xy((uint8_t)x, MATRIX_HEIGHT - 1 - (uint8_t)y);
-    g()->leds[thisPixel] = color;
+    return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
   }
 
 #undef WU_WEIGHT
@@ -150,7 +147,7 @@ class PatternSMSupernova : public LEDStripEffect
       clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
       clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
       clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-      drawPixelXY(xn, yn, clr);
+      g()->leds[XY(xn, yn)] = clr;
     }
   }
 

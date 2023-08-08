@@ -35,7 +35,7 @@ class PatternSMRainbowTunnel : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Rainbow Tunnel") {
+        LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Colorspin") {
   }
 
   PatternSMRainbowTunnel(const JsonObjectConst& jsonObject)

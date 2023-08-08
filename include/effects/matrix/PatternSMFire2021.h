@@ -29,7 +29,7 @@ class PatternSMFire2021 : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMFIRE2021, "Fire 2021") {
+        LEDStripEffect(EFFECT_MATRIX_SMFIRE2021, "Fireplace") {
   }
 
   PatternSMFire2021(const JsonObjectConst& jsonObject)
@@ -83,8 +83,7 @@ class PatternSMFire2021 : public LEDStripEffect
         if (Bri < 0) Bri = 0;
         if (Bri != 0) Bri = 256 - (Bri * 0.2);
         // NightDriver mod - invert Y argument.
-        nblend(g()->leds[g()->xy(x, MATRIX_HEIGHT - 1 - y)],
-               ColorFromPalette(*curPalette, Col, Bri), pcnt);
+        nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)], ColorFromPalette(*curPalette, Col, Bri), pcnt);
       }
     }
 

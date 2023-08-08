@@ -14,7 +14,7 @@ class PatternSMSnakes : public LEDStripEffect
 #endif
 {
  private:
-  uint8_t Speed = 150;  // 1-255 Setting
+  uint8_t Speed = 250;  // 1-255 Setting
   uint8_t Scale = 20;   // 1-100 Setting
 
   const int HEIGHT = MATRIX_HEIGHT;

@@ -747,7 +747,7 @@ class PatternSMNoise : public LEDStripEffect
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Noise Patterns") {
+        LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp") {
   }
 
   PatternSMNoise(const JsonObjectConst& jsonObject)
@@ -773,8 +773,8 @@ class PatternSMNoise : public LEDStripEffect
     // final presentation. It just zips through 17 effects without
     // announcing them in any way. Should it interact with audio or
     // the remote or splash labels on the display or ... ?
-    EVERY_N_SECONDS(5) {
-      if (mode++ > 17) mode = 0;
+    EVERY_N_SECONDS(15) {
+      if (mode++ > 3) mode = 0;
     }
     switch (mode) {
       case 0:
@@ -784,51 +784,9 @@ class PatternSMNoise : public LEDStripEffect
         LavaLampRainbowStripe();
         break;
       case 2:
-        Party();
+        Shikon();     
         break;
       case 3:
-        Forest();
-        break;
-      case 4:
-        Cloud();
-        break;
-      case 5:
-        Fire();
-        break;
-      case 6:
-        FireNoise();
-        break;
-      case 7:
-        Lava();
-        break;
-      case 8:
-        Ocean();
-        break;
-      case 9:
-        BlackAndWhite();
-        break;
-      case 10:
-        BlackAndBlue();
-        break;
-      case 11:
-        Temperature();
-        break;
-      case 12:
-        Spectrum();
-        break;
-      case 13:
-        OceanBreeze();
-        break;
-      case 14:
-        DeepSea();
-        break;
-      case 15:
-        Aurora();
-        break;
-      case 16:
-        Shikon();
-        break;
-      case 17:
         ColorCube();
         break;
     }
