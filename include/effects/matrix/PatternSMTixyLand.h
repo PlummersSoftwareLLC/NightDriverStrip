@@ -171,10 +171,10 @@ class PatternSMTixyLand : public LEDStripEffect
     float i = (y * 16) + x;
     float frame = constrain(code(t, i, x, y), -1, 1) * 255;
     if (frame >= 0) {
-      g()->leds[XY((int)x, (LED_ROWS - 1 - (int)y))] = CHSV(gHue, 255, frame);
+      g()->leds[XY((int)x, (MATRIX_HEIGHT - 1 - (int)y))] = CHSV(gHue, 255, frame);
     }  // change to XY(x, y) for non rotate display
     else {
-      g()->leds[XY((int)x, (LED_ROWS - 1 - (int)y))] = CHSV(gHue + 55, 255, -frame);
+      g()->leds[XY((int)x, (MATRIX_HEIGHT - 1 - (int)y))] = CHSV(gHue + 55, 255, -frame);
     }  // change to XY(x, y) for non rotate display
   }
 

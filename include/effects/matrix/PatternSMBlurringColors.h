@@ -180,9 +180,6 @@ class PatternSMBlurringColors : public LEDStripEffect
  public:
   PatternSMBlurringColors()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMBLURRING_COLORS, "Powder") {
   }
 
