@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2265-stepkos-psp
 //
 // Horizontally scrolling cloud.
 
-#if ENABLE_AUDIO
-class PatternSMPSPCloud : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMPSPCloud : public LEDStripEffect
-#endif
 {
  private:
   uint8_t col = 150;
@@ -21,26 +15,17 @@ class PatternSMPSPCloud : public LEDStripEffect
  public:
   PatternSMPSPCloud()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMPSP_CLOUD, "PSP Cloud") {
   }
 
   PatternSMPSPCloud(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     uint32_t t = millis() << 5;
     for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
       uint16_t h1 =
@@ -61,8 +46,4 @@ class PatternSMPSPCloud : public LEDStripEffect
       g()->leds[g()->xy(x, bh2)] += CHSV(0, 0, (h2 % 256));
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

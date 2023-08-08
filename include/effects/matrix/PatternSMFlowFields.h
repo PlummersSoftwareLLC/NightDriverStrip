@@ -3,17 +3,11 @@
 #include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2132-flowfields
 // This makes a very cool green vine that grows up the display.
 
-#if ENABLE_AUDIO
-class PatternSMFlowFields : public BeatEffectBase,
-                            public LEDStripEffect
-#else
 class PatternSMFlowFields : public LEDStripEffect
-#endif
 {
  private:
   const int WIDTH = MATRIX_WIDTH;
@@ -80,19 +74,11 @@ class PatternSMFlowFields : public LEDStripEffect
 
  public:
   PatternSMFlowFields()
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(EFFECT_MATRIX_SMFLOW_FIELDS, "Lavaflow") {
+      : LEDStripEffect(EFFECT_MATRIX_SMFLOW_FIELDS, "Lavaflow") {
   }
 
   PatternSMFlowFields(const JsonObjectConst &jsonObject)
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override {
@@ -108,9 +94,6 @@ class PatternSMFlowFields : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     for (auto &boid : boids) {
       int ioffset = scale * boid.location.x;
       int joffset = scale * boid.location.y;
@@ -138,8 +121,4 @@ class PatternSMFlowFields : public LEDStripEffect
     y += speed;
     z += speed;
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

@@ -3,17 +3,11 @@
 #include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
-#include "effects/strip/musiceffect.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/2254-flocking
 // Almost a textbook Boid demo: Separation, Cohesion, Alignment.
 
-#if ENABLE_AUDIO
-class PatternSMFlocking : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMFlocking : public LEDStripEffect
-#endif
 {
  private:
   // With 10 they have just about enough time to spread after a collision on a
@@ -65,17 +59,11 @@ class PatternSMFlocking : public LEDStripEffect
  public:
   PatternSMFlocking()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMFLOCKING, "Flocking") {
   }
 
   PatternSMFlocking(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
@@ -87,9 +75,6 @@ class PatternSMFlocking : public LEDStripEffect
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     for (auto& boid : boids) {
       boid.flock(boids, NUM_PARTICLES);
       //   	   	boid.avoidBorders();
@@ -102,8 +87,4 @@ class PatternSMFlocking : public LEDStripEffect
     // fadeToBlackBy(g()->leds, NUM_LEDS,75);
     fadeAllChannelsToBlackBy(75);
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

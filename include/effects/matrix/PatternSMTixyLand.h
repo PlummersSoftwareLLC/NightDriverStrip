@@ -1,22 +1,14 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/916-tixyland
 // 37 (!) mathematically easy effects in one. Pick your favorites and extract
 // them. It's the kitchen sink. Some are quite cool.
 
-#if ENABLE_AUDIO
-class PatternSMTixyLand : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMTixyLand : public LEDStripEffect
-#endif
 {
  private:
-  static constexpr int LED_COLS = MATRIX_WIDTH;
-  static constexpr int LED_ROWS = MATRIX_HEIGHT;
   // Sample code taken from:
   // https://editor.soulmatelights.com/gallery/671-tixyland
 
@@ -51,7 +43,7 @@ class PatternSMTixyLand : public LEDStripEffect
         break;  // https://twitter.com/aemkei/status/1340044770257870851?s=20 //
                 // shady sphere// by @blu3_enjoy
       case 1:
-        return .1 / (sin(y / 4 - t * 6) - sin(x * 2 - t));
+        return .1 / (sin8(y / 4 - t * 6) - sin(x * 2 - t));
         break;  ////https://twitter.com/ntsutae/status/1336729037549436931?s=20
       case 2:
         return sinf(hypotf(x -= 8, y -= 8) + t + atan2f(y, x));
@@ -187,61 +179,42 @@ class PatternSMTixyLand : public LEDStripEffect
   }
 
  public:
-  PatternSMTixyLand()
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
+  PatternSMTixyLand() :
         LEDStripEffect(EFFECT_MATRIX_SMTIXY_LAND, "TixyLand") {
   }
 
   PatternSMTixyLand(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Label(int n) {
+    static const int kLabelTimeoutMS = 500;
     String result = str_sprintf("Tixy %d", n);
-    const char* pszText = result.c_str();
 
-    LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
-    int x = 10;
-    int y = 10;
-    LEDMatrixGFX::backgroundLayer.drawString(x - 1, y, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x + 1, y, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x, y - 1, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x, y + 1, rgb24(0, 0, 0), pszText);
-    LEDMatrixGFX::backgroundLayer.drawString(x, y, rgb24(255, 255, 255),
-                                             pszText);
+    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
+    pMatrix->SetCaption(result, kLabelTimeoutMS); // Half a second.
   }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
-
-    float t =
-        millis() /
-        1000.0f;  // some formulas is hardcoded and fps get down. this speedup it
-    for (byte x = 0; x < LED_COLS; x++) {
-      for (byte y = 0; y < LED_ROWS; y++) {
+    // some formulas is hardcoded and fps get down. this speedup it
+    float t = millis() / 1000.0;
+    for (int x = 0; x < MATRIX_WIDTH; x++) {
+      for (int y = 0; y < MATRIX_HEIGHT; y++) {
         processFrame(t, x, y);
       }
     }
-    EVERY_N_SECONDS(10) {  // 10 is too fast...
+    EVERY_N_SECONDS(4) {
       effect++;
-      if (effect > 36) 
-        effect = 0;
+      if (effect > 36) effect = 0;
+      Label(effect);
     }
     Label(effect);  // This will only last one frame. This is already too slow.
   }
 
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
+  virtual size_t DesiredFramesPerSecond() const override {
+    return 30;
+  }
 };

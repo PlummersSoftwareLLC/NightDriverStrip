@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1133-spiro
 // Honestly, I wonder if I should have just used the Aurora base...
 
-#if ENABLE_AUDIO
-class PatternSMSpiro : public BeatEffectBase,
-                       public LEDStripEffect
-#else
 class PatternSMSpiro : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Speed = 46;  // 1-255 is length Setting
@@ -21,13 +15,9 @@ class PatternSMSpiro : public LEDStripEffect
 
   const int WIDTH = MATRIX_WIDTH;
 
-#if ENABLE_AUDIO
   // Just lie to the whole project about height to keep it out of the VU meter.
   // This is one of the rare effects where that top line actually matters.
   const int HEIGHT = MATRIX_HEIGHT - 1;
-#else
-  const int HEIGHT = MATRIX_HEIGHT;
-#endif
 
   // --------------------------- эффект спирали ----------------------
   /*
@@ -80,26 +70,17 @@ class PatternSMSpiro : public LEDStripEffect
  public:
   PatternSMSpiro()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSPIRO, "Spiro") {
   }
 
   PatternSMSpiro(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     g()->BlurFrame(20);  // @Palpalych советует делать размытие
     g()->DimAll(255U - Speed / 10);
 
@@ -164,8 +145,4 @@ class PatternSMSpiro : public LEDStripEffect
     hue += 1;
     //      }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

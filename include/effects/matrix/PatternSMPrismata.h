@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/1110-prismata
 // Sine waves oscillate against each other over a swirling rainbow background.
 
-#if ENABLE_AUDIO
-class PatternSMPrismata : public BeatEffectBase,
-                          public LEDStripEffect
-#else
 class PatternSMPrismata : public LEDStripEffect
-#endif
 {
  private:
   uint8_t Speed = 30U;  // 1-255
@@ -31,26 +25,17 @@ class PatternSMPrismata : public LEDStripEffect
  public:
   PatternSMPrismata()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMPRISMATA, "Prismata") {
   }
 
   PatternSMPrismata(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
 
     g()->BlurFrame(20);  // @Palpalych посоветовал делать размытие
     g()->DimAll(255U - (Scale - 1U) % 11U * 3U);
@@ -70,8 +55,4 @@ class PatternSMPrismata : public LEDStripEffect
       drawPixelXY(x, y, ColorFromPalette(*curPalette, x * 7 + hue));
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

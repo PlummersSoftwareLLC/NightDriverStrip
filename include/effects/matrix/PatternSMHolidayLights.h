@@ -1,17 +1,11 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from
 // https://editor.soulmatelights.com/gallery/552-festive-lighting-green-with-toys
 
-#if ENABLE_AUDIO
-class PatternSMHolidayLights : public BeatEffectBase,
-                               public LEDStripEffect
-#else
 class PatternSMHolidayLights : public LEDStripEffect
-#endif
 {
  private:
   // Holiday lights
@@ -113,31 +107,16 @@ class PatternSMHolidayLights : public LEDStripEffect
 
  public:
   PatternSMHolidayLights()
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Tannenbaum") {
+      : LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Tannenbaum") {
   }
 
   PatternSMHolidayLights(const JsonObjectConst& jsonObject)
-      :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
-        LEDStripEffect(jsonObject) {
+      : LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     spruce();
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

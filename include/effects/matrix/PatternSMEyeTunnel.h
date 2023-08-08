@@ -1,18 +1,12 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2238-something
 //
 // Infinite depth eyeball tunnel.
 
-#if ENABLE_AUDIO
-class PatternSMEyeTunnel : public BeatEffectBase,
-                           public LEDStripEffect
-#else
 class PatternSMEyeTunnel : public LEDStripEffect
-#endif
 {
  private:
 #undef WU_WEIGHT
@@ -33,8 +27,8 @@ class PatternSMEyeTunnel : public LEDStripEffect
     for (uint8_t i = 0; i < 4; i++) {
       int16_t local_x = (x >> 8) + (i & 1);
       int16_t local_y = (y >> 8) + ((i >> 1) & 1);
+      if ((local_x < 0) || (local_x > MATRIX_WIDTH - 1) || (local_y < 0) || (local_y > MATRIX_HEIGHT - 1)) continue;
       int16_t xy = g()->xy(local_x, local_y);
-      if (xy < 0 || xy > NUM_LEDS) continue;
       g()->leds[xy].r = qadd8(g()->leds[xy].r, col->r * wu[i] >> 8);
       g()->leds[xy].g = qadd8(g()->leds[xy].g, col->g * wu[i] >> 8);
       g()->leds[xy].b = qadd8(g()->leds[xy].b, col->b * wu[i] >> 8);
@@ -94,26 +88,17 @@ class PatternSMEyeTunnel : public LEDStripEffect
  public:
   PatternSMEyeTunnel()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMEYE_TUNNEL, "Eye Tunnel") {
   }
 
   PatternSMEyeTunnel(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     g()->Clear();
     float ms = millis() / 750.f;
     const float kHalfWidth = MATRIX_WIDTH / 2;
@@ -140,8 +125,4 @@ class PatternSMEyeTunnel : public LEDStripEffect
                    &col);
       }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };

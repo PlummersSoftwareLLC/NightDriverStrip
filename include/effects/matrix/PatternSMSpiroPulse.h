@@ -1,19 +1,13 @@
 #pragma once
 
 #include "effectmanager.h"
-#include "effects/strip/musiceffect.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2164-spiro
 // A spirograph that evolves the number of spines, becomign a yen-yang.
 //
 // This is one of relatively few that would look better at a higher refresh.
 
-#if ENABLE_AUDIO
-class PatternSMSpiroPulse : public BeatEffectBase,
-                            public LEDStripEffect
-#else
 class PatternSMSpiroPulse : public LEDStripEffect
-#endif
 {
  private:
   static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
@@ -68,26 +62,17 @@ class PatternSMSpiroPulse : public LEDStripEffect
  public:
   PatternSMSpiroPulse()
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(EFFECT_MATRIX_SMSPIRO_PULSE, "Spiro Pulse") {
   }
 
   PatternSMSpiroPulse(const JsonObjectConst& jsonObject)
       :
-#if ENABLE_AUDIO
-        BeatEffectBase(1.50, 0.05),
-#endif
         LEDStripEffect(jsonObject) {
   }
 
   void Start() override { g()->Clear(); }
 
   void Draw() override {
-#if ENABLE_AUDIO
-    ProcessAudio();
-#endif
     // fadeToBlackBy(leds, NUM_LEDS, 8);
     fadeAllChannelsToBlackBy(8);
 
@@ -114,8 +99,4 @@ class PatternSMSpiroPulse : public LEDStripEffect
                    ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
     }
   }
-
-#if ENABLE_AUDIO
-  void HandleBeat(bool bMajor, float elapsed, float span) override {}
-#endif
 };
