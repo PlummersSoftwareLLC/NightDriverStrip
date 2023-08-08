@@ -4,21 +4,23 @@
 
 class PatternSMStrobeDiffusion : public LEDStripEffect
 {
- private:
- public:
-  PatternSMStrobeDiffusion()
-      :
-        LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Strobe Diffusion") {
-  }
+  private:
+  public:
+    PatternSMStrobeDiffusion() : LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Strobe Diffusion")
+    {
+    }
 
-  PatternSMStrobeDiffusion(const JsonObjectConst& jsonObject)
-      :
-        LEDStripEffect(jsonObject) {
-  }
+    PatternSMStrobeDiffusion(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
 
-  void Start() override { g()->Clear(); }
+    void Start() override
+    {
+        g()->Clear();
+    }
 
-  void Draw() override {
+    void Draw() override
+    {
 #if 0
   uint16_t _scale = map(scale, 1, 255, 30, adjScale);
   byte _speed = map(speed, 1, 255, 128, 16);
@@ -37,5 +39,5 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
     }
   }
 #endif
-  }
+    }
 };
