@@ -152,18 +152,6 @@ class PatternSMMagma : public LEDStripEffect
         trackingObjectSpeedY[l] *= WIND;
     }
 
-#if 0
-    // функция получения цвета пикселя по его номеру
-    uint32_t getPixColor(uint32_t thisSegm) const
-    {
-        uint32_t thisPixel = thisSegm; // * SEGMENTS;
-        if (thisPixel > NUM_LEDS - 1)
-            return 0;
-        return (((uint32_t)g()->leds[thisPixel].r << 16) | ((uint32_t)g()->leds[thisPixel].g << 8) |
-                (uint32_t)g()->leds[thisPixel].b); // а почему не просто return (leds[thisPixel])?
-    }
-#endif
-
     // функция получения цвета пикселя в матрице по его координатам
     CRGB getPixColorXY(uint8_t x, uint8_t y)
     {
