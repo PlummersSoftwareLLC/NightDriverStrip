@@ -60,6 +60,68 @@
 #if USE_MATRIX
     #include "ledmatrixgfx.h"
     #include "effects/strip/misceffects.h"
+    #include "effects/matrix/PatternBalls.h"
+
+    #include "effects/matrix/PatternSMStrobeDiffusion.h"
+    #include "effects/matrix/PatternSMOneRing.h"
+    #include "effects/matrix/PatternSMLumenjerPalette.h"
+    #include "effects/matrix/PatternSMSquaresAndDots.h"
+    #include "effects/matrix/PatternSMTraffic.h"
+    #include "effects/matrix/PatternSM2DDPR.h"
+
+    #include "effects/matrix/PatternSMFireworks.h"
+    #include "effects/matrix/PatternSMStarDeep.h"
+    #include "effects/matrix/PatternSMMagma.h"
+    #include "effects/matrix/PatternSMAmberRain.h"
+    #include "effects/matrix/PatternSMFire2012.h"
+    #include "effects/matrix/PatternSMFire2021.h"
+//    #include "effects/matrix/PatternSMWisp.h"
+    #include "effects/matrix/PatternSMNoise.h"
+    #include "effects/matrix/PatternSMFPicasso3in1.h"
+    #include "effects/matrix/PatternSMSnakes.h"
+    #include "effects/matrix/PatternSMParticles.h"
+    #include "effects/matrix/PatternSMRainbowFlow.h"
+    #include "effects/matrix/PatternSMPastelFlutter.h"
+    #include "effects/matrix/PatternSMSand.h"
+    #include "effects/matrix/PatternSMSpiro.h"
+    #include "effects/matrix/PatternSMLightning.h"
+    #include "effects/matrix/PatternSMEyeTunnel.h"
+    #include "effects/matrix/PatternSMPSPCloud.h"
+    #include "effects/matrix/PatternSMColorPopcorn.h"
+    #include "effects/matrix/PatternSMSpiroPulse.h"
+    #include "effects/matrix/PatternSMTwist.h"
+    #include "effects/matrix/PatternSMTwister.h"
+    #include "effects/matrix/PatternSMMetaBalls.h"
+    #include "effects/matrix/PatternSMFlying.h"
+    #include "effects/matrix/PatternSMSinDots.h"
+    #include "effects/matrix/PatternSMSunRadiation.h"
+    #include "effects/matrix/PatternSMPatternTrick.h"
+    #include "effects/matrix/PatternSMGravityBalls.h"
+    #include "effects/matrix/PatternSMGoogleNexus.h"
+    #include "effects/matrix/PatternSMHolidayLights.h"
+    #include "effects/matrix/PatternSMStarshipTroopers.h"
+    #include "effects/matrix/PatternSMGamma.h"
+    // A Small block of 3D-ish effects using Particle systems or Boids.
+    #include "effects/matrix/PatternSMBubbles.h" // Boids
+    #include "effects/matrix/PatternSMFlocking.h" // Boids
+    #include "effects/matrix/PatternSMFlocking.h"
+    #include "effects/matrix/PatternSMFlowFields.h"
+    #include "effects/matrix/PatternSMBlurringColors.h"
+    #include "effects/matrix/PatternSMSupernova.h"
+    #include "effects/matrix/PatternSMBoidExplosion.h"
+    #include "effects/matrix/PatternSMTixyLand.h" // Dozens of simple effects
+    #include "effects/matrix/PatternSMXorCircles.h"
+    #include "effects/matrix/PatternSMWalkingMachine.h"
+    #include "effects/matrix/PatternSMHypnosis.h"
+    #include "effects/matrix/PatternSMRainbowTunnel.h"
+    #include "effects/matrix/PatternSMRadialWave.h"
+    #include "effects/matrix/PatternSMMirage.h"
+    #include "effects/matrix/PatternSMMaze2.h"
+    #include "effects/matrix/PatternSMRadialFire.h"
+    #include "effects/matrix/PatternSMPrismata.h"
+    #include "effects/matrix/PatternSMAurora.h"
+    #include "effects/matrix/PatternSMSmoke.h"
+    #include "effects/matrix/PatternSMRainbowSwirl.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -69,7 +131,9 @@
     #include "effects/matrix/PatternSpiro.h"
     #include "effects/matrix/PatternCube.h"
     #include "effects/matrix/PatternCircuit.h"
+#if ENABLE_WIFI
     #include "effects/matrix/PatternSubscribers.h"
+#endif
     #include "effects/matrix/PatternAlienText.h"
     #include "effects/matrix/PatternRadar.h"
     #include "effects/matrix/PatternPongClock.h"
@@ -80,8 +144,11 @@
     #include "effects/matrix/PatternMisc.h"
     #include "effects/matrix/PatternNoiseSmearing.h"
     #include "effects/matrix/PatternQR.h"
+#if ENABLE_WIFI
     #include "effects/matrix/PatternWeather.h"
 #endif
+#endif  // USE_MATRIX
+
 
 #ifdef USE_STRIP
     #include "ledstripgfx.h"
