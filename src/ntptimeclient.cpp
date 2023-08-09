@@ -150,3 +150,49 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 
     return true;
 }
+
+// This is underdesigned for general use. It's very specifically a
+// throwaway meant only for debugging. It's not really NTP related.
+//
+// It contains some ESP32-specific goo, but that's allowed elsewhere.
+
+void NTPTimeClient::ShowUptime()
+{
+    // I hate C99 time handling so much, but C17's <chrono> isn't likely
+    // worth the lift.
+
+    struct timeval timeval = { 0 };
+    // Microseconds since boot. File wrap bugreport in 292 million years.
+    auto uptime = esp_timer_get_time();
+
+    timeval.tv_sec = uptime / MICROS_PER_SECOND;
+    // timeval.tv_nsec = uptime % NANOS_PER_SECOND;
+
+    char buf[128];
+    struct tm *tm = gmtime(&timeval.tv_sec);
+    // No, I don't care about leap seconds.
+    strftime(buf, sizeof(buf), "%X", tm);
+    int ndays = timeval.tv_sec / (24 * 60 * 60);
+    debugI("Uptime: %d days - %s", ndays, buf);
+
+    const char* reason_text = "Unknown";
+    esp_reset_reason_t reason = esp_reset_reason();
+    switch (reason)
+    {
+        case ESP_RST_POWERON: reason_text = "Power On"; break;
+        case ESP_RST_EXT: reason_text = "External Pin"; break;
+        case ESP_RST_SW: reason_text = "Software Restart"; break;
+        case ESP_RST_PANIC: reason_text = "Panic"; break;
+        case ESP_RST_INT_WDT: reason_text = "Watchdog barked"; break;
+        case ESP_RST_TASK_WDT: reason_text = "Task Watchdog barked"; break;
+        case ESP_RST_WDT: reason_text = "Other Watchdog barked"; break;
+        case ESP_RST_DEEPSLEEP: reason_text = "Reset in deep sleep"; break;
+        case ESP_RST_BROWNOUT: reason_text = "Brownout"; break;
+        case ESP_RST_SDIO: reason_text = "Reset over SDIO"; break;
+	// Documented,  but seemingly not implemented yet.
+        // case ESP_RST_USB: reason_text = "Reset by USB peripheral"; break;
+	default: reason_text = "Unknown"; break;
+    }
+    debugI("Last boot reason: %s", reason_text);
+
+}

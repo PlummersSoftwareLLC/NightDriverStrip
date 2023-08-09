@@ -81,12 +81,17 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
             g_ptrSystem->DeviceConfig().RemovePersisted();
             RemoveEffectManagerConfig();
         }
+        else if (str.equalsIgnoreCase("uptime"))
+        {
+             NTPTimeClient::ShowUptime();
+        }
         else
         {
             debugA("Unknown Command.  Extended Commands:");
             debugA("clock               Refresh time from server");
             debugA("stats               Display buffers, memory, etc");
             debugA("clearsettings       Reset persisted user settings");
+            debugA("uptime              Show system uptime, reset reason");
         }
     }
 #endif
