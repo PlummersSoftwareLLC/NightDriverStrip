@@ -257,7 +257,9 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 #define STARRYNIGHT_PROBABILITY 1.0
 #define STARRYNIGHT_MUSICFACTOR 1.0
 
-static DRAM_ATTR std::unique_ptr<EffectFactories> l_ptrEffectFactories = nullptr;
+static DRAM_ATTR std::unique_ptr<EffectFactories> l_ptrEffectFactories = nullptr;   // Default and JSON factory functions + decoration for effects
+
+// Effect factories for the StarryNightEffect - one per star type
 static std::map<int, JSONEffectFactory> l_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
@@ -278,6 +280,8 @@ static std::map<int, JSONEffectFactory> l_JsonStarryNightEffectFactories =
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<QuietStar>>(jsonObject); } },
 };
 
+// Helper function to create a StarryNightEffect from JSON.
+//   It picks the actual effect factory from l_JsonStarryNightEffectFactories based on the star type number in the JSON blob.
 std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
 {
     auto entry = l_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
@@ -287,24 +291,36 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
         : nullptr;
 }
 
+// Adds a default and JSON effect factory for a specific effect number and type.
+//   All parameters beyond effectNumber and effectType will be passed on to the default effect constructor.
 #define ADD_EFFECT(effectNumber, effectType, ...) \
     l_ptrEffectFactories->AddEffect(effectNumber, \
         []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(__VA_ARGS__); }, \
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(jsonObject); }\
     )
 
+// Adds a default and JSON effect factory for a specific effect number/type.
+//   All parameters beyond effectNumber and effectType will be passed on to the default effect constructor.
+//   The default effect will be disabled upon creation, so will not show until enabled.
 #define ADD_EFFECT_DISABLED(effectNumber, effectType, ...) \
     ADD_EFFECT(effectNumber, effectType, __VA_ARGS__).LoadDisabled = true
 
+// Adds a default and JSON effect factory for a StarryNightEffect with a specific star type.
+//   All parameters beyond starType will be passed on to the default StarryNightEffect constructor for the indicated star type.
 #define ADD_STARRY_NIGHT_EFFECT(starType, ...) \
     l_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
         []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<starType>>(__VA_ARGS__); }, \
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); }\
     )
 
+// Adds a default and JSON effect factory for a StarryNightEffect with a specific star type.
+//   All parameters beyond starType will be passed on to the default StarryNightEffect constructor for the indicated star type.
+//   The default effect will be disabled upon creation, so will not show until enabled.
 #define ADD_STARRY_NIGHT_EFFECT_DISABLED(starType, ...) \
     ADD_STARRY_NIGHT_EFFECT(starType, __VA_ARGS__).LoadDisabled = true
 
+// This function sets up the effect factories for the effects for whatever project is being built. The ADD_EFFECT macro variations
+//   are provided and used for convenience.
 void LoadEffectFactories()
 {
     // Check if the factories have already been loaded
