@@ -8,12 +8,10 @@
 class PatternSMMaze2 : public LEDStripEffect
 {
   private:
-    static constexpr int LED_COLS = MATRIX_WIDTH;
-    static constexpr int LED_ROWS = MATRIX_HEIGHT;
-#define M_HEIGHT LED_ROWS + !(LED_ROWS % 2)
-#define M_WIDTH LED_COLS + !(LED_COLS % 2)
-#define M_SHIFT_X !(LED_COLS % 2)
-#define M_SHIFT_Y !(LED_ROWS % 2)
+#define M_HEIGHT MATRIX_HEIGHT + !(MATRIX_HEIGHT % 2)
+#define M_WIDTH MATRIX_WIDTH + !(MATRIX_WIDTH % 2)
+#define M_SHIFT_X !(MATRIX_WIDTH % 2)
+#define M_SHIFT_Y !(MATRIX_HEIGHT % 2)
     bool maze[M_WIDTH][M_HEIGHT];
     bool start = true;
     byte posX, posY;
@@ -144,9 +142,9 @@ class PatternSMMaze2 : public LEDStripEffect
             posX = 0, posY = 1;
             checkFlag = 1;
             tale = random() % 2;
-            for (byte x = 0; x < LED_COLS; x++)
+            for (byte x = 0; x < MATRIX_WIDTH; x++)
             {
-                for (byte y = 0; y < LED_ROWS; y++)
+                for (byte y = 0; y < MATRIX_HEIGHT; y++)
                 {
                     g()->leds[XY(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y]) ? CHSV(color, 200, 255) : CHSV(0, 0, 0);
                 }
@@ -154,9 +152,9 @@ class PatternSMMaze2 : public LEDStripEffect
         }
         if (!tale)
         {
-            for (byte x = 0; x < LED_COLS; x++)
+            for (byte x = 0; x < MATRIX_WIDTH; x++)
             {
-                for (byte y = 0; y < LED_ROWS; y++)
+                for (byte y = 0; y < MATRIX_HEIGHT; y++)
                 {
                     g()->leds[XY(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y]) ? CHSV(color, 200, 255) : CHSV(0, 0, 0);
                 }

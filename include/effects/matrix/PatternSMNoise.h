@@ -354,8 +354,71 @@ DEFINE_GRADIENT_PALETTE(shikon_23_gp){
 
 class PatternSMNoise : public LEDStripEffect
 {
+  public:
+    enum class EffectType {
+	    Unknown,
+	    LavaLampRainbow,
+	    LavaLampRainbowStripe,
+	    Shikon,
+	    ColorCube
+    };
+
+    PatternSMNoise(const char* name, EffectType effect) : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp") , _name(name), _effect(effect)
+    {
+    }
+
+    PatternSMNoise() : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp")
+    {
+	    _effect = EffectType::Unknown;
+    }
+
+    PatternSMNoise(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
+    {
+	    _effect = EffectType::Unknown;
+    }
+
+    void Start() override
+    {
+        g()->Clear();
+        noisex = random16();
+        noisey = random16();
+        noisez = random16();
+    }
+
+    void Draw() override
+    {
+        // For Mesmerizer/Nightdriver, I'm not sure this is the best
+        // final presentation. It just zips through 17 effects without
+        // announcing them in any way. Should it interact with audio or
+        // the remote or splash labels on the display or ... ?
+        EVERY_N_SECONDS(15)
+        {
+            if (_effect != EffectType::Unknown && mode++ > 3)
+                mode = 0;
+	    else
+		mode = static_cast<uint8_t>(_effect);
+        }
+        switch (mode)
+        {
+        case 0:
+            LavaLampRainbow();
+            break;
+        case 1:
+            LavaLampRainbowStripe();
+            break;
+        case 2:
+            Shikon();
+            break;
+        case 3:
+            ColorCube();
+            break;
+        }
+    }
+
   private:
     uint8_t mode{0}; // Which of the 17 effects(!) are we showing?
+    EffectType _effect;
+    const char* _name;
 
     static const int MAX_DIMENSION = ((MATRIX_WIDTH > MATRIX_HEIGHT) ? MATRIX_WIDTH : MATRIX_HEIGHT);
 
@@ -706,50 +769,5 @@ class PatternSMNoise : public LEDStripEffect
         noisescale = 15; // 20
         colorLoop = 0;
         return drawNoise(colorcube_gp);
-    }
-
-  public:
-    PatternSMNoise() : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp")
-    {
-    }
-
-    PatternSMNoise(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
-
-    void Start() override
-    {
-        g()->Clear();
-        noisex = random16();
-        noisey = random16();
-        noisez = random16();
-    }
-
-    void Draw() override
-    {
-        // For Mesmerizer/Nightdriver, I'm not sure this is the best
-        // final presentation. It just zips through 17 effects without
-        // announcing them in any way. Should it interact with audio or
-        // the remote or splash labels on the display or ... ?
-        EVERY_N_SECONDS(15)
-        {
-            if (mode++ > 3)
-                mode = 0;
-        }
-        switch (mode)
-        {
-        case 0:
-            LavaLampRainbow();
-            break;
-        case 1:
-            LavaLampRainbowStripe();
-            break;
-        case 2:
-            Shikon();
-            break;
-        case 3:
-            ColorCube();
-            break;
-        }
     }
 };
