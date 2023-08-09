@@ -11,7 +11,6 @@ class PatternSMStarshipTroopers : public LEDStripEffect
   private:
     static constexpr int WIDTH = MATRIX_WIDTH;
     static constexpr int HEIGHT = MATRIX_HEIGHT;
-    static constexpr int LED_COLS = MATRIX_WIDTH;
     static constexpr TProgmemRGBPalette16 HolyLightsColors_p FL_PROGMEM = {
         0xff0000, 0xff4000, 0xff8000, 0xd6c000, 0xffff00, 0xc0ff00, 0x80ff00, 0x40ff00,
         0x00ff00, 0x00c040, 0x008080, 0x0040c0, 0x0000ff, 0x4000c0, 0x800080, 0xc00040};
@@ -230,7 +229,7 @@ class PatternSMStarshipTroopers : public LEDStripEffect
                           ColorFromPalette(pal[palette], beatsin88(256 * 12. * speedFactor + i * 256, 0, 255), 255));
         }
 
-        // blur2d(leds, LED_COLS, LED_ROWS, 64);
+        // blur2d(leds, MATRIX_WIDTH, MATRIX_HEIGHT, 64);
         g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 0, 64);
 
         dir = count % 8;

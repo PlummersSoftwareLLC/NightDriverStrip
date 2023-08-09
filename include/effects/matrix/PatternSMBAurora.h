@@ -24,9 +24,9 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #if 0
   uint16_t _scale = map(scale, 1, 255, 30, adjScale);
   byte _speed = map(speed, 1, 255, 128, 16);
-  for (byte x = 0; x < LED_COLS; x++)
+  for (byte x = 0; x < MATRIX_WIDTH; x++)
   {
-    for (byte y = 0; y < LED_ROWS; y++)
+    for (byte y = 0; y < MATRIX_HEIGHT; y++)
     {
       timer++;
       leds[XY(x, y)] =
@@ -35,7 +35,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
           inoise8(timer % 2 + x * _scale,
           y * 16 + timer % 16,
           timer / _speed),
-          fabs((float)LED_ROWS / 2 - (float)y) * adjastHeight));
+          fabs((float)MATRIX_HEIGHT / 2 - (float)y) * adjastHeight));
     }
   }
 #endif
