@@ -33,24 +33,31 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     long enlargedObjectTime[enlargedOBJECT_MAX_COUNT];
 
     // функция отрисовки точки по координатам X Y
-    void drawPixelXYF(float x, float y, CRGB color)
+    void drawPixelXYF(float x, float y, CRGB color) const
     {
+        y = MATRIX_HEIGHT - 1 - y;
         if (!g()->isValidPixel(x,y))
             return;
         // uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
         // NightDriver's coordinate system is dfferent. Invert height and this all
         // works!
-        uint32_t thisPixel = XY((uint8_t)x, MATRIX_HEIGHT - (uint8_t)y);
+        uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y);
         g()->leds[thisPixel] = color;
     }
+
     // функция отрисовки точки по координатам X Y
-    void drawPixelXY(int x, int y, CRGB color)
+    void drawPixelXY(int x, int y, CRGB color) const
     {
-        drawPixelXYF(x, y, color);
+        y = MATRIX_HEIGHT - 1 - y;
+        if (!g()->isValidPixel(x,y))
+            return;
+        uint32_t thisPixel = XY(x, y);
+        g()->leds[thisPixel] = color;
     }
+
     // ------------------------------ Дополнительные функции рисования
     // ----------------------
-    void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
+    void DrawLine(int x1, int y1, int x2, int y2, CRGB color) const
     {
         int deltaX = std::abs(x2 - x1);
         int deltaY = std::abs(y2 - y1);
@@ -76,7 +83,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
         }
     }
 
-    void DrawLineF(float x1, float y1, float x2, float y2, CRGB color)
+    void DrawLineF(float x1, float y1, float x2, float y2, CRGB color) const
     {
         float deltaX = fabs(x2 - x1);
         float deltaY = fabs(y2 - y1);
@@ -111,7 +118,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     // We use our own drawCircle() and drawPixel() because we KNOW we're going to
     // draw near edges and the system versions scribble on memory when we do. Ours
     // clamp.
-    void drawCircle(uint x0, uint y0, int radius, const CRGB &color)
+    void drawCircle(uint x0, uint y0, int radius, const CRGB &color) const
     {
         int a = radius, b = 0;
         int radiusError = 1 - a;
@@ -154,7 +161,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
             if (enlargedObjectNUM < 2U)
                 enlargedObjectNUM = 2U;
 
-            double minSpeed = 0.2, maxSpeed = 0.8;
+            float minSpeed = 0.2, maxSpeed = 0.8;
 
             for (uint8_t i = 0; i < enlargedObjectNUM; i++)
             {
@@ -293,7 +300,6 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     void Draw() override
     {
-
         // Mesmerizer/NightDriver demo: just pick some preset and skip through them.
         // Good way to demo off this module, but it's a bit much visually!
         // robert
