@@ -4,26 +4,23 @@
 
 // Derived from
 // https://editor.soulmatelights.com/gallery/552-festive-lighting-green-with-toys
+// Holiday lights
+//@stepko
+// Merry Christmas and Happy New Year
 
 class PatternSMHolidayLights : public LEDStripEffect
 {
   private:
-    // Holiday lights
-    //@stepko
-    // Merry Christmas and Happy New Year
 
-    // updated by kostyamat (green with toys and any matrix size support)
-    static constexpr int WIDTH = MATRIX_WIDTH;
-    static constexpr int HEIGHT = MATRIX_HEIGHT;
-    static constexpr int speed = (200 / (HEIGHT - 4));
+    static constexpr int speed = (200 / (MATRIX_HEIGHT - 4));
     byte hue;
-    byte effId = 2; // 1-3
+    byte effId = 2; // 1 - 3
 
-    const byte maxDim = max(WIDTH, HEIGHT);
-    const byte minDim = min(WIDTH, HEIGHT);
-    const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) / 2 : 0);
-    const byte height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) / 2 : 0);
-    const bool glitch = abs(WIDTH - HEIGHT) >= minDim / 4;
+    const byte maxDim = max(MATRIX_WIDTH, MATRIX_HEIGHT);
+    const byte minDim = min(MATRIX_WIDTH, MATRIX_HEIGHT);
+    const byte width_adj = (MATRIX_WIDTH < MATRIX_HEIGHT ? (MATRIX_HEIGHT - MATRIX_WIDTH) / 2 : 0);
+    const byte height_adj = (MATRIX_HEIGHT < MATRIX_WIDTH ? (MATRIX_WIDTH - MATRIX_HEIGHT) / 2 : 0);
+    const bool glitch = abs(MATRIX_WIDTH - MATRIX_HEIGHT) >= minDim / 4;
 
     byte density = 50;     //
     byte fadingSpeed = 10; //
@@ -58,20 +55,20 @@ class PatternSMHolidayLights : public LEDStripEffect
         for (int8_t i = 1; i >= 0; i--)
         {
             int16_t xn = x + (i & 1);
-            CRGB clr = g()->leds[XY(xn, HEIGHT - 1 - y)];
-            if (xn > 0 && xn < (int)WIDTH - 1)
+            CRGB clr = g()->leds[XY(xn, MATRIX_HEIGHT - 1 - y)];
+            if (xn > 0 && xn < (int)MATRIX_WIDTH - 1)
             {
                 clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
                 clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
                 clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
             }
-            else if (xn == 0 || xn == (int)WIDTH - 1)
+            else if (xn == 0 || xn == (int)MATRIX_WIDTH - 1)
             {
                 clr.r = qadd8(clr.r, (color.r * 85) >> 8);
                 clr.g = qadd8(clr.g, (color.g * 85) >> 8);
                 clr.b = qadd8(clr.b, (color.b * 85) >> 8);
             }
-            g()->leds[XY(xn, HEIGHT - 1 - y)] = clr;
+            g()->leds[XY(xn, MATRIX_HEIGHT - 1 - y)] = clr;
         }
     }
 
@@ -84,13 +81,14 @@ class PatternSMHolidayLights : public LEDStripEffect
     void spruce()
     {
         hue++;
-        // fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 1, 10));
         fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 100));
+
         uint8_t z;
         if (effId == 3)
             z = triwave8(hue);
         else
             z = beatsin8(1, 1, 255);
+
         for (uint8_t i = 0; i < minDim; i++)
         {
             unsigned x = beatsin16(i * (map(speed, 1, 255, 3, 20) /*(NUM_LEDS/256)*/), i * 2, (minDim * 4 - 2) - (i * 2 + 2));
@@ -101,11 +99,12 @@ class PatternSMHolidayLights : public LEDStripEffect
             else
                 drawPixelXYF_X(x / 4 + height_adj, i, CHSV(hue + i * z, 255, 255));
         }
-        if (!(WIDTH & 0x01))
-            g()->leds[XY(WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0), minDim - 1 - ((millis() >> 8) & 0x01 ? 1 : 0))] =
+
+        if (!(MATRIX_WIDTH & 0x01))
+            g()->leds[XY(MATRIX_WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0), minDim - 1 - ((millis() >> 8) & 0x01 ? 1 : 0))] =
                 CHSV(0, 255, 255);
         else
-            g()->leds[XY(WIDTH / 2, minDim - 1)] = CHSV(0, (millis() >> 9) & 0x01 ? 0 : 255, 255);
+            g()->leds[XY(MATRIX_WIDTH / 2, minDim - 1)] = CHSV(0, (millis() >> 9) & 0x01 ? 0 : 255, 255);
 
         if (glitch)
             confetti();

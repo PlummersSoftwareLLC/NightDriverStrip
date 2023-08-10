@@ -12,8 +12,6 @@ class PatternSMWalkingMachine : public LEDStripEffect
     // 11.04.23
     // Not for small matrices
     // Second name is "dreams in night"
-    static constexpr int LED_COLS = MATRIX_WIDTH;
-    static constexpr int LED_ROWS = MATRIX_HEIGHT;
 
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
@@ -114,8 +112,8 @@ class PatternSMWalkingMachine : public LEDStripEffect
         for (uint8_t i = 0; i < 7; i++)
         {
             dot[i].posX =
-                (beatsin16(4, (LED_COLS >> 3) << 8, (LED_COLS - (LED_COLS >> 3) - 1) << 8, i * 8192, i * 8192)) / 255.f;
-            dot[i].posY = (beatsin16(4, (LED_ROWS >> 3) << 8, (LED_ROWS - (LED_ROWS >> 3) - 1) << 8, i * 4096,
+                (beatsin16(4, (MATRIX_WIDTH >> 3) << 8, (MATRIX_WIDTH - (MATRIX_WIDTH >> 3) - 1) << 8, i * 8192, i * 8192)) / 255.f;
+            dot[i].posY = (beatsin16(4, (MATRIX_HEIGHT >> 3) << 8, (MATRIX_HEIGHT - (MATRIX_HEIGHT >> 3) - 1) << 8, i * 4096,
                                      16384 + i * 8192)) /
                           255.f;
         }

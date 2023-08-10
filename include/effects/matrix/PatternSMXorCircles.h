@@ -9,8 +9,6 @@
 class PatternSMXorCircles : public LEDStripEffect
 {
   private:
-    static constexpr int LED_COLS = MATRIX_WIDTH;
-    static constexpr int LED_ROWS = MATRIX_HEIGHT;
     /*
         double log2(double num){
           double number=log(num)/log(2);
@@ -18,8 +16,8 @@ class PatternSMXorCircles : public LEDStripEffect
         }
     */
 #define log2(num) log(num) / log(2)
-    static constexpr uint8_t scale_x = log2(64 / LED_COLS);
-    static constexpr uint8_t scale_y = log2(64 / LED_ROWS);
+    static constexpr uint8_t scale_x = log2(64 / MATRIX_WIDTH);
+    static constexpr uint8_t scale_y = log2(64 / MATRIX_HEIGHT);
 
   public:
     PatternSMXorCircles() : LEDStripEffect(EFFECT_MATRIX_SMXOR_CIRCLES, "Xor Circles")
@@ -37,13 +35,13 @@ class PatternSMXorCircles : public LEDStripEffect
 
     void Draw() override
     {
-        uint8_t x1sh = beatsin8(5, 0, LED_COLS);
-        uint8_t y1sh = beatsin8(6, 0, LED_ROWS);
-        uint8_t x2sh = beatsin8(7, 0, LED_COLS);
-        uint8_t y2sh = beatsin8(4, 0, LED_ROWS);
-        for (uint8_t y = 0; y < LED_ROWS; y++)
+        uint8_t x1sh = beatsin8(5, 0, MATRIX_WIDTH);
+        uint8_t y1sh = beatsin8(6, 0, MATRIX_HEIGHT);
+        uint8_t x2sh = beatsin8(7, 0, MATRIX_WIDTH);
+        uint8_t y2sh = beatsin8(4, 0, MATRIX_HEIGHT);
+        for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
         {
-            for (uint8_t x = 0; x < LED_COLS; x++)
+            for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
             {
                 int8_t cx = x - x1sh;
                 int8_t cy = y - y1sh;

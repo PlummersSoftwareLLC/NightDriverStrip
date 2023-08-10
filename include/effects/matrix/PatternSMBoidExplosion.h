@@ -11,8 +11,6 @@
 class PatternSMBoidExplosion : public LEDStripEffect
 {
   private:
-    static constexpr int LED_COLS = MATRIX_WIDTH;
-    static constexpr int LED_ROWS = MATRIX_HEIGHT;
     static constexpr int COLS = MATRIX_WIDTH;
     static constexpr int ROWS = MATRIX_HEIGHT;
 

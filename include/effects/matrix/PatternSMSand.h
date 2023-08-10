@@ -65,19 +65,17 @@ class PatternSMSand : public LEDStripEffect
 
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
-        // Just don't think about what this does to prefetch and prediction...
-		if (g()->isValidPixel(x, MATRIX_HEIGHT - 1 -y))
-	        return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
-		return 0;
+        y = MATRIX_HEIGHT - 1 - y;
+        assert((g()->isValidPixel(x, y)));
+        return g()->leds[XY(x, y)];
     }
 
     void drawPixelXY(uint8_t x, uint8_t y, CRGB color) const
     {
-        if (!g()->isValidPixel(x, MATRIX_HEIGHT - top_reserve -y))
-            return;
-        uint32_t thisPixel = XY(x, MATRIX_HEIGHT - top_reserve - y);
-        g()->leds[thisPixel] = color;
-    } // служебные функции
+        y = MATRIX_HEIGHT - 1 - y;
+        assert((g()->isValidPixel(x, y)));
+        g()->leds[XY(x, y)] = color;
+    }
 
     void Draw() override
     {
@@ -102,56 +100,55 @@ class PatternSMSand : public LEDStripEffect
         }
 
         pcnt = 0U;
-        // In this effect, 0, 0 is our lower left corner.
-        // Scroll down everything on the screen.
-        // Note Mesmerizer/NightDriver hack here to dodge the audio line on the top
-        // of the screen as scrolling that down is visually interesting, but wrong.
-        for (uint8_t y = 0; y < HEIGHT - top_reserve; y++) // Skip audio line
+        // In this effect, 0, 0 is our lower left corner. getPX and drawPX handle
+        // our coordinate inversion.
+        //
+        // 1 skips the bottom line, so sand will accumulate.
+        // HEIGHT - top_reserve == our top drawable line, respecting VU meter.
+        for (uint8_t y = 1; y < HEIGHT - top_reserve; y++) // Skip audio line
             for (uint8_t x = 0; x < WIDTH; x++)
-                if (auto me = getPixColorXY(x, y)) // checking for every grain of sand
+                if (auto me = getPixColorXY(x, y))
+                { // checking for every grain of sand
                     if (!getPixColorXY(x, y - 1))
-                    { // if it's empty below us, we just fall
-                        drawPixelXY(x, y - 1, me);
-                        drawPixelXY(x, y, CRGB::Black);
+                    {                                   // if it's empty below us, we just fall
+                        drawPixelXY(x, y - 1, me);      // draw one pixel down
+                        drawPixelXY(x, y, CRGB::Black); //  blank our own
                     }
                     else if (x > 0U && !getPixColorXY(x - 1, y - 1) && x < WIDTH - 1 && !getPixColorXY(x + 1, y - 1))
-                    { // if we have a peak
-                        if (random8(2U))
-                            drawPixelXY(x - 1, y - 1, me);
+                    {
+                        // if we have a peak, scatter the fallen unit left or right.
+                        if (int r = random8(2U))
+                            drawPixelXY(x - r * 3, y - 1, me);
                         else
-                            drawPixelXY(x - 1, y - 1, me);
+                            drawPixelXY(x + r * 3, y - 1, me);
                         drawPixelXY(x, y, CRGB::Black);
                         pcnt = y - 1;
                     }
                     else if (x > 0U && !getPixColorXY(x - 1, y - 1))
-                    { // a a slope to the left
+                    { // a slope to the left
                         drawPixelXY(x - 1, y - 1, me);
                         drawPixelXY(x, y, CRGB::Black);
                         pcnt = y - 1;
                     }
                     else if (x < WIDTH - 1 && !getPixColorXY(x + 1, y - 1))
                     { // if below us slopes to the right
-                        // drawPixelXY(x+1,y-1, getPixColorXY(x,y));
                         drawPixelXY(x + 1, y - 1, me);
                         drawPixelXY(x, y, CRGB::Black);
                         pcnt = y - 1;
                     }
                     else // if there is a plateau below us
                         pcnt = y;
+                }
 
         // Emit randomly colored new grains of sand at top.
-        // It's odd that the grains are "clearly" random8() colored, but visually
-        // they're always drawn either green or blue and get their color while
-        // falling or while falling down the pyramid. At taller heights, the apex is
-        // most likely to be blue or green. It's an oddity, but it doesn't bother me
-        // enough to figure out why. (This code is kind of brain-hurting anyway.)
-        if (!getPixColorXY(CENTER_X_MINOR, HEIGHT - 1 - top_reserve) &&
-            !getPixColorXY(CENTER_X_MAJOR, HEIGHT - 1 - top_reserve) && !random8(3))
+        // HEIGHT - 1 == top row, occupied by VU.
+        // HEIGHT - top_reserve - 1 == our top drawable row
+        // If the center has space, randomly fill it. the loop above will fall it.
+        if (!getPixColorXY(CENTER_X_MINOR, HEIGHT - top_reserve - 1) &&
+            !getPixColorXY(CENTER_X_MAJOR, HEIGHT - top_reserve - 1) && !random8(3))
         {
             temp = random8(2) ? CENTER_X_MINOR : CENTER_X_MAJOR;
-            // g()->leds[XY(temp,HEIGHT-1)] = CHSV(random8(), 255U, 255U);
-            // HEIGHT -1 is VU bar for ambient audio.
-            drawPixelXY(temp, HEIGHT - 2, CHSV(random8(), 255U, 255U));
+            drawPixelXY(temp, HEIGHT - top_reserve - 1, CHSV(random8(), 255U, 255U));
         }
     }
 
