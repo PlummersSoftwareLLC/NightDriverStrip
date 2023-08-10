@@ -86,9 +86,6 @@ class PatternSMFlocking : public LEDStripEffect
 
     void Draw() override
     {
-	for (int i = 0; i < NUM_LEDS; i++)
-		g()->leds[i] = CRGB::Red;
-	return;
         // Run the entire queue. The kink is that update() may move adjacent boids as it'll
         // shuffle them in a flock. Attempting to contrain it onto screen inside this pass
         // is therefore futile. We make another run over the list to do the actual clamp and
