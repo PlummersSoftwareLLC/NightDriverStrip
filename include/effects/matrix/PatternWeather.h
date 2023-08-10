@@ -346,7 +346,7 @@ public:
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this]() { UpdateWeather(); });
+        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { UpdateWeather(); });
 
         return true;
     }
