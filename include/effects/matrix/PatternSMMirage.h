@@ -10,17 +10,15 @@ class PatternSMMirage : public LEDStripEffect
   private:
     uint8_t speed = 128, hue = 70;
     const uint8_t div = 4, val = 255;
-    static constexpr int LED_COLS = MATRIX_WIDTH;
-    static constexpr int LED_ROWS = MATRIX_HEIGHT;
 
-    byte buff[LED_COLS + 2][LED_ROWS + 2];
+    byte buff[MATRIX_WIDTH + 2][MATRIX_HEIGHT + 2];
 
     void blur()
     {
         uint16_t sum;
-        for (byte x = 1; x < LED_COLS + 1; x++)
+        for (byte x = 1; x < MATRIX_WIDTH + 1; x++)
         {
-            for (byte y = 1; y < LED_ROWS + 1; y++)
+            for (byte y = 1; y < MATRIX_HEIGHT + 1; y++)
             {
                 sum = buff[x][y];
                 sum += buff[x + 1][y];
@@ -69,12 +67,12 @@ class PatternSMMirage : public LEDStripEffect
     void Draw() override
     {
         blur();
-        float x1 = (float)beatsin88(15 * speed, div, (LED_COLS - 1) * div) / div;
-        float y1 = (float)beatsin88(20 * speed, div, (LED_ROWS)*div) / div;
-        float x2 = (float)beatsin88(16 * speed, div, (LED_COLS - 1) * div) / div;
-        float y2 = (float)beatsin88(14 * speed, div, (LED_ROWS)*div) / div;
-        float x3 = (float)beatsin88(12 * speed, div, (LED_COLS - 1) * div) / div;
-        float y3 = (float)beatsin88(16 * speed, div, (LED_ROWS)*div) / div;
+        float x1 = (float)beatsin88(15 * speed, div, (MATRIX_WIDTH - 1) * div) / div;
+        float y1 = (float)beatsin88(20 * speed, div, (MATRIX_HEIGHT)*div) / div;
+        float x2 = (float)beatsin88(16 * speed, div, (MATRIX_WIDTH - 1) * div) / div;
+        float y2 = (float)beatsin88(14 * speed, div, (MATRIX_HEIGHT)*div) / div;
+        float x3 = (float)beatsin88(12 * speed, div, (MATRIX_WIDTH - 1) * div) / div;
+        float y3 = (float)beatsin88(16 * speed, div, (MATRIX_HEIGHT)*div) / div;
         drawDot(x1, y1, val);
         drawDot(x1 + 1, y1, val);
         drawDot(x2, y2, val);
@@ -82,9 +80,9 @@ class PatternSMMirage : public LEDStripEffect
         drawDot(x3, y3, val);
         drawDot(x3 + 1, y3, val);
         hue++;
-        for (unsigned x = 1; x < LED_COLS + 1; x++)
+        for (unsigned x = 1; x < MATRIX_WIDTH + 1; x++)
         {
-            for (unsigned y = 1; y < LED_ROWS + 1; y++)
+            for (unsigned y = 1; y < MATRIX_HEIGHT + 1; y++)
             {
                 g()->leds[XY(x - 1, y - 1)] = CHSV(hue, buff[x][y], 255);
             }

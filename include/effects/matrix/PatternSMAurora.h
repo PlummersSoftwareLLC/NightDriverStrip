@@ -8,14 +8,12 @@
 class PatternSMAurora : public LEDStripEffect
 {
   private:
-    const int LED_COLS = MATRIX_WIDTH;
-    const int LED_ROWS = MATRIX_HEIGHT;
     unsigned long timer{0};
     byte speed = 7;  // Scale  0-255
     byte scale = 60; // Speed 0-255
 
-    float adjustHeight = fmap(LED_ROWS, 8, 32, 28, 12);
-    uint16_t adjScale = map(LED_COLS, 8, 64, 310, 63);
+    float adjustHeight = fmap(MATRIX_HEIGHT, 8, 32, 28, 12);
+    uint16_t adjScale = map(MATRIX_WIDTH, 8, 64, 310, 63);
 
     static constexpr TProgmemRGBPalette16 GreenAuroraColors_p FL_PROGMEM = {
         0x000000, 0x003300, 0x006600, 0x009900, 0x00cc00, 0x00ff00, 0x33ff00, 0x66ff00,
@@ -46,14 +44,14 @@ class PatternSMAurora : public LEDStripEffect
         byte _speed = map(speed, 1, 255, 128, 16);
 
         EVERY_N_MILLIS(80)
-        for (unsigned x = 0; x < LED_COLS; x++)
+        for (unsigned x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (unsigned y = 0; y < LED_ROWS; y++)
+            for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 timer++;
                 g()->leds[XY(x, y)] = ColorFromPalette(
                     GreenAuroraColors_p, qsub8(inoise8(timer % 2 + x * _scale, y * 16 + timer % 16, timer / _speed),
-                                               fabs((float)LED_ROWS / 2 - (float)y) * adjustHeight));
+                                               fabs((float)MATRIX_HEIGHT / 2 - (float)y) * adjustHeight));
             }
         }
     }

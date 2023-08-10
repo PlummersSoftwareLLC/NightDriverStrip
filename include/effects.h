@@ -131,7 +131,7 @@
 #define EFFECT_MATRIX_SMPASTEL_FLUTTER                 157
 #define EFFECT_MATRIX_SMSAND                           158
 #define EFFECT_MATRIX_SMSMOKE                          159
-#define EFFECT_MATRIX_SMSPIRO                          160
+/* 160 was used briefly by SMSpiro, a deleted dup of _Spiro. AVAILABLE */
 #define EFFECT_MATRIX_SMAURORA                         161
 #define EFFECT_MATRIX_SMPRISMATA                       162
 #define EFFECT_MATRIX_SMRADIAL_FIRE                    163

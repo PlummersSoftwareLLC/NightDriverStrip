@@ -349,7 +349,6 @@ void LoadEffectFactories()
             ADD_EFFECT(EFFECT_MATRIX_SMXOR_CIRCLES, PatternSMXorCircles);                   // 5
             ADD_EFFECT(EFFECT_MATRIX_SMMIRAGE, PatternSMMirage);                            // 5
             ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);                              // 0 Draws a maze once, then nothing?
-            ADD_EFFECT(EFFECT_MATRIX_SMSPIRO, PatternSMSpiro);                              //   Dupe of existing spiro effect?
 
             ADD_EFFECT(EFFECT_MATRIX_SMSAND, PatternSMSand);                                // 3 Never stacked for me, just a stream of sand grains
             ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_FLOW, PatternSMRainbowFlow);                 // 3

@@ -10,33 +10,39 @@
 class PatternSMFlocking : public LEDStripEffect
 {
   private:
-    // With 10 they have just about enough time to spread after a collision on a
-    // 64x32.
+    // Just about enough time to spread after a collision on a 64x32
+    // Too many and the flock is to large and you spend all the time off
+    // screen.
     static constexpr int NUM_PARTICLES = 10;
     Boid boids[NUM_PARTICLES];
 
-    [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
+    [[nodiscard]] CRGB inline getPixColorXY(uint8_t x, uint8_t y) const
     {
-        return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
-        // return g()->leds[XY(x, y)];
-    }
-
-    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
-    {
-	if (!g()->isValidPixel(x, y))
-            return;
         // Mesmerizer flips the Y axis here.
-        uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);
-        g()->leds[thisPixel] = color;
+        y = MATRIX_HEIGHT - 1 - y;
+
+        if (g()->isValidPixel(x, y))
+        {
+            return g()->leds[XY(x, y)];
+        }
+        return 0;
     }
 
-#undef WU_WEIGHT
+    void inline drawPixelXY(uint8_t x, uint8_t y, CRGB color) const
+    {
+        // Mesmerizer flips the Y axis here.
+        y = MATRIX_HEIGHT - 1 - y;
+
+        assert(g()->isValidPixel(x, y));
+        g()->leds[XY(x,y)] = color;
+    }
+
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     {
         return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
     }
 
-    void drawPixelXYF(float x, float y, CRGB color) //, uint8_t darklevel = 0U)
+    void drawPixelXYF(float x, float y, CRGB color) //, uint8_t darklevel = 0U) const
     {
         //  if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
         //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
@@ -72,22 +78,32 @@ class PatternSMFlocking : public LEDStripEffect
         g()->Clear();
         for (int i = 0; i < NUM_PARTICLES; i++)
         {
-            boids[i] = Boid(random(MATRIX_WIDTH), 0);
+            boids[i] = Boid(random(MATRIX_WIDTH-1), random(MATRIX_HEIGHT-1));
+            // The default is too fast; we spend all our time bouncing off the walls.
+            boids[i].maxspeed = 0.7;
         }
     }
 
     void Draw() override
     {
+        // Run the entire queue. The kink is that update() may move adjacent boids as it'll
+        // shuffle them in a flock. Attempting to contrain it onto screen inside this pass
+        // is therefore futile. We make another run over the list to do the actual clamp and
+        // draw. The update() on boid[N] might push boid[N-1] out of bounds.
         for (auto &boid : boids)
         {
-            boid.flock(boids, NUM_PARTICLES);
-            //   	   	boid.avoidBorders();
-            boid.bounceOffBorders(.7);
-            boid.update();
+            boid.update(boids, NUM_PARTICLES); // Let update() move the whole flock.
+            boid.avoidBorders(); // Keep them 8 pixels from edges.
+            boid.bounceOffBorders(.7); // Bounce anything that update() DOES put over the edge.
+        }
+        for (auto &boid : boids)
+        {
+            // This drawPixel draws a blended 2x2 block, so we have to constrain even more.
+            boid.location.x = std::clamp(boid.location.x, 1.0f, (float) MATRIX_WIDTH - 2);
+            boid.location.y = std::clamp(boid.location.y, 1.0f, (float) MATRIX_HEIGHT - 2);
             drawPixelXYF(boid.location.x, boid.location.y,
                          ColorFromPalette(PartyColors_p, boid.hue * 15, 255, LINEARBLEND));
         }
-        // fadeToBlackBy(g()->leds, NUM_LEDS,75);
-        fadeAllChannelsToBlackBy(75);
+        fadeAllChannelsToBlackBy(25);
     }
 };

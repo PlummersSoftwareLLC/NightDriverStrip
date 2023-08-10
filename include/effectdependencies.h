@@ -83,7 +83,6 @@
     #include "effects/matrix/PatternSMRainbowFlow.h"
     #include "effects/matrix/PatternSMPastelFlutter.h"
     #include "effects/matrix/PatternSMSand.h"
-    #include "effects/matrix/PatternSMSpiro.h"
     #include "effects/matrix/PatternSMLightning.h"
     #include "effects/matrix/PatternSMEyeTunnel.h"
     #include "effects/matrix/PatternSMPSPCloud.h"
