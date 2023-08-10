@@ -110,10 +110,7 @@ class EffectFactories
 
             // Disable the effect if we have one and we were asked to do so
             if (pEffect && LoadDisabled)
-            {
-                debugI("Creating effect %d in disabled state", effectNumber);
                 pEffect->SetEnabled(false);
-            }
 
             return pEffect;
         }

@@ -388,7 +388,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SPIRO,             PatternSpiro);
         ADD_EFFECT(EFFECT_MATRIX_WAVE,              PatternWave);
         ADD_EFFECT(EFFECT_MATRIX_SWIRL,             PatternSwirl);
-        ADD_EFFECT_DISABLED(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
+        ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
         ADD_EFFECT(EFFECT_MATRIX_MANDALA,           PatternMandala);
         ADD_EFFECT(EFFECT_MATRIX_PALETTE_SMEAR,     PatternPaletteSmear);
         ADD_EFFECT(EFFECT_MATRIX_CURTAIN,           PatternCurtain);
