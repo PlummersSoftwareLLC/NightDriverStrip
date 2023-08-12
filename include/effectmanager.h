@@ -98,6 +98,17 @@ class  EffectManager : public IJSONSerializable
         }
     }
 
+    void ProduceAndLoadDefaultEffect(const EffectFactories::NumberedFactory& numberedFactory)
+    {
+        auto pEffect = numberedFactory.CreateEffect();
+        if (pEffect)
+        {
+            // Effects in the default list are core effects. These can be disabled but not deleted.
+            pEffect->MarkAsCoreEffect();
+            _vEffects.push_back(pEffect);
+        }
+    }
+
     // Implementation is in effects.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
