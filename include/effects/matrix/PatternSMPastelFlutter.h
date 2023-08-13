@@ -2,7 +2,7 @@
 
 #include "effectmanager.h"
 
-// Derived from https://editor.soulmatelights.com/gallery/1242-pastel-flutter
+// Derived from https://editor.soulmatelights.com/gallery/1089-distorsion-waves [sic]
 // Funky math, but a nice effect.
 
 class PatternSMPastelFlutter : public LEDStripEffect
@@ -52,49 +52,58 @@ class PatternSMPastelFlutter : public LEDStripEffect
 
     void Draw() override
     {
+        byte speed = 5;
 
-        uint16_t a = millis() / 4;
+        uint8_t w = 2;
+        uint8_t scale = 4;
+
+        uint16_t a = millis() / 32;
+        uint16_t a2 = a / 2;
         uint16_t a3 = a / 3;
-        uint16_t a4 = a / 4;
 
-        for (unsigned x = 0; x < MATRIX_WIDTH; x++)
+        uint16_t cx = beatsin8(10 - speed, 0, MATRIX_WIDTH) * scale;
+        uint16_t cy = beatsin8(12 - speed, 0, MATRIX_HEIGHT) * scale;
+        uint16_t cx1 = beatsin8(13 - speed, 0, MATRIX_WIDTH) * scale;
+        uint16_t cy1 = beatsin8(15 - speed, 0, MATRIX_HEIGHT) * scale;
+        uint16_t cx2 = beatsin8(17 - speed, 0, MATRIX_WIDTH) * scale;
+        uint16_t cy2 = beatsin8(14 - speed, 0, MATRIX_HEIGHT) * scale;
+
+        uint16_t xoffs = 0;
+
+        for (int x = 0; x < MATRIX_WIDTH; x++)
         {
-            for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
+
+            xoffs += scale;
+            uint16_t yoffs = 0;
+
+            for (int y = 0; y < MATRIX_HEIGHT; y++)
             {
-                int index = XY(x, y);
 
-                byte xt = cos_wave[a3 & 255] * (MATRIX_WIDTH - 1) >> 8;
-                byte yt = cos_wave[a4 & 255] * (MATRIX_HEIGHT - 1) >> 8;
-                byte xoffs = abs8(x - xt);
-                byte yoffs = abs8(y - yt);
-                byte rad = sqrt16(xoffs * xoffs + yoffs * yoffs);
-                if (!rad)
-                    rad++;
-                byte r = 255 - cos_wave[((rad << 5) - a) & 255] / rad;
+                yoffs += scale;
 
-                xt = cos_wave[(a3 + 64) & 255] * (MATRIX_WIDTH - 1) >> 8;
-                yt = cos_wave[(a4 - 32) & 255] * (MATRIX_HEIGHT - 1) >> 8;
-                xoffs = abs8(x - xt);
-                yoffs = abs8(y - yt);
-                rad = sqrt16(xoffs * xoffs + yoffs * yoffs);
-                if (!rad)
-                    rad++;
-                byte grn = 255 - cos_wave[((rad << 5) - a + 64) & 255] / rad;
+                // byte rdistort = cos_wave [((x+y)*8+a2)&255]>>1;
+                // byte gdistort = cos_wave [((x+y)*8+a3+32)&255]>>1;
+                // byte bdistort = cos_wave [((x+y)*8+a+64)&255]>>1;
 
-                xt = cos_wave[(a3 - 128) & 255] * (MATRIX_WIDTH - 1) >> 8;
-                yt = cos_wave[(a4 + 32) & 255] * (MATRIX_HEIGHT - 1) >> 8;
-                xoffs = abs8(x - xt);
-                yoffs = abs8(y - yt);
-                rad = sqrt16(xoffs * xoffs + yoffs * yoffs);
-                if (!rad)
-                    rad++;
-                byte b = 255 - cos_wave[((rad << 5) - a + 128) & 255] / rad;
+                byte rdistort =
+                    cos_wave[(cos_wave[((x << 3) + a) & 255] + cos_wave[((y << 3) - a2) & 255] + a3) & 255] >> 1;
+                byte gdistort =
+                    cos_wave[(cos_wave[((x << 3) - a2) & 255] + cos_wave[((y << 3) + a3) & 255] + a + 32) & 255] >> 1;
+                byte bdistort =
+                    cos_wave[(cos_wave[((x << 3) + a3) & 255] + cos_wave[((y << 3) - a) & 255] + a2 + 64) & 255] >> 1;
 
-                r = exp_gamma[exp_gamma[exp_gamma[r]]]; // :)
-                grn = exp_gamma[exp_gamma[exp_gamma[grn]]];
-                b = exp_gamma[exp_gamma[exp_gamma[b]]];
+                byte valueR = rdistort + w * (a - (((xoffs - cx) * (xoffs - cx) + (yoffs - cy) * (yoffs - cy)) >> 7));
+                byte valueG =
+                    gdistort + w * (a2 - (((xoffs - cx1) * (xoffs - cx1) + (yoffs - cy1) * (yoffs - cy1)) >> 7));
+                byte valueB =
+                    bdistort + w * (a3 - (((xoffs - cx2) * (xoffs - cx2) + (yoffs - cy2) * (yoffs - cy2)) >> 7));
 
-                g()->leds[index].setRGB(r, grn, b);
+                valueR = cos_wave[(valueR)];
+                valueG = cos_wave[(valueG)];
+                valueB = cos_wave[(valueB)];
+
+                uint16_t index = XY(x, y);
+                g()->leds[index].setRGB(exp_gamma[valueR], exp_gamma[valueG], exp_gamma[valueB]);
             }
         }
     }
