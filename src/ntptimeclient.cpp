@@ -151,16 +151,11 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     return true;
 }
 
-// This is underdesigned for general use. It's very specifically a
-// throwaway meant only for debugging. It's not really NTP related.
-//
-// It contains some ESP32-specific goo, but that's allowed elsewhere.
+// Not NTP related. Convenience utility for debugging. Callable from gdb
+// serial shell, or network log debugger.
 
 void NTPTimeClient::ShowUptime()
 {
-    // I hate C99 time handling so much, but C17's <chrono> isn't likely
-    // worth the lift.
-
     struct timeval timeval = { 0 };
     // Microseconds since boot. File wrap bugreport in 292 million years.
     auto uptime = esp_timer_get_time();
@@ -189,10 +184,10 @@ void NTPTimeClient::ShowUptime()
         case ESP_RST_DEEPSLEEP: reason_text = "Reset in deep sleep"; break;
         case ESP_RST_BROWNOUT: reason_text = "Brownout"; break;
         case ESP_RST_SDIO: reason_text = "Reset over SDIO"; break;
-	// Documented,  but seemingly not implemented yet.
+	// Documented,  but not defined in ESP-IDF esp_system.h (v5.1.0) yet.
         // case ESP_RST_USB: reason_text = "Reset by USB peripheral"; break;
 	default: reason_text = "Unknown"; break;
     }
-    debugI("Last boot reason: %s", reason_text);
+    debugI("Last boot reason: (%d): %s", reason, reason_text);
 
 }
