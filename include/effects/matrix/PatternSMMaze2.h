@@ -8,43 +8,30 @@
 class PatternSMMaze2 : public LEDStripEffect
 {
   private:
-#define M_HEIGHT MATRIX_HEIGHT + !(MATRIX_HEIGHT % 2)
-#define M_WIDTH MATRIX_WIDTH + !(MATRIX_WIDTH % 2)
-#define M_SHIFT_X !(MATRIX_WIDTH % 2)
-#define M_SHIFT_Y !(MATRIX_HEIGHT % 2)
+    static constexpr uint M_HEIGHT = MATRIX_HEIGHT + !(MATRIX_HEIGHT % 2);
+    static constexpr uint M_WIDTH = MATRIX_WIDTH + !(MATRIX_WIDTH % 2);
+    static constexpr uint M_SHIFT_X = !(MATRIX_WIDTH % 2);
+    static constexpr uint M_SHIFT_Y = !(MATRIX_HEIGHT % 2);
     bool maze[M_WIDTH][M_HEIGHT];
     bool start = true;
-    byte posX, posY;
-    byte color;
-    byte Lookdir;
-    bool checkFlag;
-    bool tale = 0;
-    int SubPos;
+    unsigned int posX{1}, posY{1};
+    byte Lookdir{0};
+    bool checkFlag{true};
+    bool tale = {true};
+    int SubPos{0};
+    uint8_t speed = 255; // We move this fraction of 255 ths pixel per Draw().
 
-    CRGB colorsmear(const CRGB &col1, const CRGB &col2, byte l)
+    void drawPixelXY(int8_t x, int8_t y, CRGB color) const
     {
-        CRGB temp = col1;
-        nblend(temp, col2, l);
-        return temp;
+        y = MATRIX_HEIGHT - 1 - y; // Invert y for NightDriver
+        if (!g()->isValidPixel(x, y))
+            return;
+        g()->leds[XY(x, y)] = color;
     }
 
-    void drawPixelXYF(float x, float y, CRGB col)
+    void drawPixelXYF(float x, float y, CRGB col) const
     {
-        byte ax = byte(x);
-        byte xsh = (x - ax) * 255;
-        byte ay = byte(y);
-        byte ysh = (y - ay) * 255;
-        CRGB colP1 = colorsmear(col, CRGB(0, 0, 0), xsh);
-        CRGB colP2 = colorsmear(CRGB(0, 0, 0), col, xsh);
-        CRGB col1 = colorsmear(colP1, CRGB(0, 0, 0), ysh);
-        CRGB col2 = colorsmear(colP2, CRGB(0, 0, 0), ysh);
-        CRGB col3 = colorsmear(CRGB(0, 0, 0), colP1, ysh);
-        CRGB col4 = colorsmear(CRGB(0, 0, 0), colP2, ysh);
-
-        g()->leds[XY(ax, ay)] += col1;
-        g()->leds[XY(ax + 1, ay)] += col2;
-        g()->leds[XY(ax, ay + 1)] += col3;
-        g()->leds[XY(ax + 1, ay + 1)] += col4;
+        drawPixelXY(x, y, col);
     }
 
     void digMaze(int x, int y)
@@ -54,7 +41,7 @@ class PatternSMMaze2 : public LEDStripEffect
         int dx, dy;
         int dir, count;
 
-        dir = random(10) % 4;
+        dir = random8() % 4;
         count = 0;
         while (count < 4)
         {
@@ -85,7 +72,7 @@ class PatternSMMaze2 : public LEDStripEffect
                 maze[x2][y2] = 0;
                 x = x2;
                 y = y2;
-                dir = random(10) % 4;
+                dir = random8(10) % 4;
                 count = 0;
             }
             else
@@ -98,9 +85,11 @@ class PatternSMMaze2 : public LEDStripEffect
 
     void generateMaze()
     {
-        for (unsigned int y = 0; y < M_HEIGHT; y++)
+        randomSeed(millis());
+
+        for (unsigned int x = 0; x < M_WIDTH; x++)
         {
-            for (unsigned int x = 0; x < M_WIDTH; x++)
+            for (unsigned int y = 0; y < M_HEIGHT; y++)
             {
                 maze[x][y] = 1;
             }
@@ -134,32 +123,34 @@ class PatternSMMaze2 : public LEDStripEffect
     void Draw() override
     {
         // Because we can restart, we don't move the start into Start() on this one.
+        uint8_t color;
         if (start)
         {
             start = 0;
-            color = random();
+            color = random8();
             generateMaze();
             posX = 0, posY = 1;
             checkFlag = 1;
-            tale = random() % 2;
-            for (byte x = 0; x < MATRIX_WIDTH; x++)
+            tale = random8() % 2;
+            for (unsigned int x = 0; x < MATRIX_WIDTH; x++)
             {
-                for (byte y = 0; y < MATRIX_HEIGHT; y++)
+                for (unsigned int y = 0; y < MATRIX_HEIGHT; y++)
                 {
-                    g()->leds[XY(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y]) ? CHSV(color, 200, 255) : CHSV(0, 0, 0);
+                    drawPixelXY(x, y, maze[x + M_SHIFT_X][y + M_SHIFT_Y] ? CHSV(color, 200, 255) : CHSV(0, 0, 0));
                 }
             }
         }
         if (!tale)
         {
-            for (byte x = 0; x < MATRIX_WIDTH; x++)
+            for (unsigned int x = 0; x < MATRIX_WIDTH; x++)
             {
-                for (byte y = 0; y < MATRIX_HEIGHT; y++)
+                for (unsigned int y = 0; y < MATRIX_HEIGHT; y++)
                 {
-                    g()->leds[XY(x, y)] = (maze[x + M_SHIFT_X][y + M_SHIFT_Y]) ? CHSV(color, 200, 255) : CHSV(0, 0, 0);
+                    drawPixelXY(x, y, maze[x + M_SHIFT_X][y + M_SHIFT_Y] ? CHSV(color, 200, 255) : CHSV(0, 0, 0));
                 }
             }
         }
+
         if (checkFlag)
         {
             switch (Lookdir)
@@ -228,7 +219,7 @@ class PatternSMMaze2 : public LEDStripEffect
             }
             checkFlag = 0;
         }
-        SubPos += 64;
+        SubPos += speed;
         if (SubPos >= 255)
         {
             SubPos = 0;
@@ -264,7 +255,13 @@ class PatternSMMaze2 : public LEDStripEffect
             drawPixelXYF((posX - M_SHIFT_X), float(posY - M_SHIFT_Y) + (float(SubPos) / 255.), CHSV(0, 0, 255));
             break;
         }
-        if ((posX == M_WIDTH - 2) & (posY == M_HEIGHT - 1))
+        if ((posX == M_WIDTH - 2) & (posY == M_HEIGHT - 1)) // Exit position
             start = 1;
+    }
+
+    // Admit surrender keeping the VU meter out of the maze. Banish it.
+    bool CanDisplayVUMeter() const override
+    {
+        return false;
     }
 };
