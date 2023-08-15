@@ -208,7 +208,7 @@ That simplest configuration, called here simply 'DEMO', is provided by a board s
 - lilygo-tdisplay-s3-demo
 
 These [build types](#build-pointers) may be chosen by the '-e' argument
-to pio or in a menu option inside PlatformIO/Visual Studio.
+to pio or in a menu option inside the PlatformIO IDE/VS Code.
 
 Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the composition of the effect list configuration of individual effects can be changed using the device web application. The API endpoints to facilitate this are already available and ready for use (see [Device web UI and API](#device-web-ui-and-api), below.)
 
