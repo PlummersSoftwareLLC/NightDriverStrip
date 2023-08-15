@@ -197,7 +197,7 @@ Each channel of LEDs has an `LEDStripGfx` instance associated with it. `_GFX[0]`
 
 The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32. It boots up, finds a single `RainbowFillEffect` in the `LoadEffectFactories()` function, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs. If working correctly it should draw a scrolling rainbow palette on your LED strip.
 
-That simplest configuration, called here simply 'DEMO', is provided by a board specific buid environment. The list of environments can be seen by running 'python3 tools/show_envs.py', which would tell the reader that of this writing, hardware specific vriations of 'DEMO' include:
+That simplest configuration, called here simply 'DEMO', is provided by a board specific buid environment. The list of such environments can be seen by running 'python3 tools/show_envs.py', which would tell the reader that, as of this writing, hardware specific variations of 'DEMO' include:
 
 - demo
 - m5demo
