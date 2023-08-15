@@ -34,6 +34,19 @@ Each channel of LEDs has an `LEDStripGfx` instance associated with it. `_GFX[0]`
 
 The simplest configuration, `DEMO`, assumes you have a single meter strip of 144 LEDs and a power supply connected to your ESP32. It boots up, finds a single `RainbowFillEffect` in the `LoadEffectFactories()` function, and repeatedly calls its `Draw()` method to update the CRGB array before sending it out to the LEDs. If working correctly it should draw a scrolling rainbow palette on your LED strip.
 
+That simplest configuration, called here simply 'DEMO', is provided by a board specific buid environment. The list of environments can be seen by running 'python3 tools/show_envs.py', which would tell the reader that of this writing, hardware specific vriations of 'DEMO' include:
+
+- demo
+- m5demo
+- m5plusdemo
+- heltecdemo
+- heltecv2demo
+- heltecv3demo
+- lilygo-tdisplay-s3-demo
+
+These [build types](#build-pointers) may be chosen by the '-e' argument
+to pio or in a menu option inside Platformio/Visual Studio.
+
 Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the composition of the effect list configuration of individual effects can be changed using the device web application. The API endpoints to facilitate this are already available and ready for use (see [Device web UI and API](#device-web-ui-and-api), below.)
 
 This makes that an override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the friendly name and effect number. Those two properties are (de)serialized from/to JSON by `LEDStripEffect` by default.
