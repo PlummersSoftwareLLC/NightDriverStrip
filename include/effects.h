@@ -169,6 +169,12 @@
 
 #define EFFECT_MATRIX_SPECTRUMBAR                      195
 
+#define EFFECT_MATRIX_SMNOISE_LR                       196
+#define EFFECT_MATRIX_SMNOISE_LR_STRIPE                197
+#define EFFECT_MATRIX_SMNOISE_SHIKON                   198
+#define EFFECT_MATRIX_SMNOISE_COLORCUBE                199
+
+
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201
 

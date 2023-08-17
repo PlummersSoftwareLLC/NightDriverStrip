@@ -303,8 +303,12 @@ void LoadEffectFactories()
 
     l_ptrEffectFactories = make_unique_psram<EffectFactories>();
 
+    #if __has_include ("custom_effects.h")
+
+      #include "custom_effects.h"
+
     // Fill effect factories
-    #if DEMO
+    #elif DEMO
 
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 6, 2);
 
@@ -326,7 +330,8 @@ void LoadEffectFactories()
     #elif MESMERIZER
 
         #if 0
-            ADD_EFFECT(EFFECT_MATRIX_SMPRISMATA, PatternSMPrismata);                        // 6 Be better if it stuck in the pretty part of the curves        ADD_EFFECT(EFFECT_MATRIX_SMAURORA, PatternSMAurora);
+            ADD_EFFECT(EFFECT_MATRIX_SMPRISMATA, PatternSMPrismata);                        // 6 Be better if it stuck in the pretty part of the curves
+            ADD_EFFECT(EFFECT_MATRIX_SMAURORA, PatternSMAurora);
             ADD_EFFECT(EFFECT_MATRIX_SMCOLOR_POPCORN, PatternSMColorPopcorn);               // 5
             ADD_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMFlying);                            // 5
             ADD_EFFECT(EFFECT_MATRIX_SMSIN_DOTS, PatternSMSinDots);                         // 5
@@ -368,8 +373,6 @@ void LoadEffectFactories()
             ADD_EFFECT(EFFECT_MATRIX_SMGOOGLE_NEXUS,    PatternSMGoogleNexus);                 // 6
             ADD_EFFECT(EFFECT_MATRIX_SMSNAKES,          PatternSMSnakes);
 
-	// Audiograph isn't even compiled, but it's shown for 'Balls' !
-
 #else
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "GhostWave", 0, 30, false, 10);
@@ -399,6 +402,13 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);
 
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
+
+//      ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise); // Loops through all. Include?
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR,        PatternSMNoise, "Lava Rainbow", PatternSMNoise::EffectType::LavaLampRainbow);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR_STRIPE, PatternSMNoise, "Lava Rainbow Stripe", PatternSMNoise::EffectType::LavaLampRainbowStripe);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_SHIKON,    PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_COLORCUBE, PatternSMNoise, "ColorCube", PatternSMNoise::EffectType::ColorCube);
+
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire);
 
         ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
