@@ -32,7 +32,7 @@
 
 #pragma once
 
-#if USE_MATRIX
+#if USE_HUB75
 
 #include <SmartMatrix.h>
 
