@@ -174,9 +174,13 @@
 #define EFFECT_MATRIX_SMNOISE_SHIKON                   198
 #define EFFECT_MATRIX_SMNOISE_COLORCUBE                199
 
+#define EFFECT_MATRIX_SMPICASSO_1                      200
+#define EFFECT_MATRIX_SMPICASSO_2                      201
+#define EFFECT_MATRIX_SMPICASSO_3                      202
 
+//TODO: Talk to Rutger about impact of changing this.
 // Hexagon Effects
-#define EFFECT_HEXAGON_OUTER_RING                      201
+#define EFFECT_HEXAGON_OUTER_RING                      301
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1

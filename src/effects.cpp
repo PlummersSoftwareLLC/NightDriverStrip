@@ -450,7 +450,11 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise);
         ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);
-        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1);
+        // ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1);
+	ADD_EFFECT(EFFECT_MATRIX_SMPICASSO_1,       PatternSMPicasso3in1, "Picasso 1", 12);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO_2,       PatternSMPicasso3in1, "Picasso 2", 38);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO_3,       PatternSMPicasso3in1, "Picasso 3", 73);
+
         ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);
         ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
         ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);
