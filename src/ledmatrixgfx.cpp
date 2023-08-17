@@ -30,7 +30,7 @@
 
 #include "globals.h"
 
-#if USE_MATRIX
+#if USE_HUB75
 
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"

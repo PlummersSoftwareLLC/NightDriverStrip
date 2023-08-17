@@ -1,5 +1,35 @@
 #!/usr/bin/env python
 
+#--------------------------------------------------------------------------
+#
+# File:        bake_installer.py
+#
+# NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
+#
+# This file is part of the NightDriver software project.
+#
+#    NightDriver is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    NightDriver is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Nightdriver.  It is normally found in copying.txt
+#    If not, see <https://www.gnu.org/licenses/>.
+#
+# Description:
+#
+#    Script to bake the Web Installer, including firmware and manifests
+#
+# History:     Aug-08-2023         Rbergen      Added header
+#
+#---------------------------------------------------------------------------
+
 import os
 import glob
 import json
@@ -15,33 +45,43 @@ class Dirs:
     assets = 'assets'
 
 class Manifest:
-    prefix = 'manifest_'
+    base = 'manifest_'
     ext = '.json'
-    template = 'manifest_template.json'
+    unmerged_template = 'manifest_template.json'
+    merged_template = 'manifest_template_merged.json'
 
 webprojects_file = 'web_projects.json'
+merged_image = 'merged_image.bin'
 globals_h = 'globals.h'
 
+# Do some ground work to set up the web installer directory, starting with the project config...
 webprojects_path = os.path.join(Dirs.config, webprojects_file)
 shutil.copy(webprojects_path, Dirs.webinstaller)
 
+# ...then the installer image assets...
 assets_target_dir = os.path.join(Dirs.webinstaller, Dirs.assets)
 if not os.path.exists(assets_target_dir):
     os.makedirs(assets_target_dir)
 shutil.copy(os.path.join(Dirs.assets, 'favicon.ico'), assets_target_dir)
 shutil.copy(os.path.join(Dirs.assets, 'NightDriverLogo-small.png'), assets_target_dir)
 
-firmware_target_dir = os.path.join(Dirs.webinstaller, Dirs.firmware)
-if not os.path.exists(firmware_target_dir):
-    os.makedirs(firmware_target_dir)
+# ...then the firmware and manifest directories
+firmware_target_root = os.path.join(Dirs.webinstaller, Dirs.firmware)
+if not os.path.exists(firmware_target_root):
+    os.makedirs(firmware_target_root)
 
-with open(webprojects_path, "r", encoding='utf-8') as f:
-    json_data = json.load(f)
-    devices = json_data['devices']
+manifest_target_dir = os.path.join(Dirs.webinstaller, Dirs.manifests)
+if not os.path.exists(manifest_target_dir):
+    os.makedirs(manifest_target_dir)
 
-with open(os.path.join(Dirs.config, Manifest.template), "r", encoding='utf-8') as f:
-    manifest_text = f.read()
+# Load template for unmerged and merged firmware images
+with open(os.path.join(Dirs.config, Manifest.unmerged_template), "r", encoding='utf-8') as f:
+    unmerged_template = f.read()
 
+with open(os.path.join(Dirs.config, Manifest.merged_template), "r", encoding='utf-8') as f:
+    merged_template = f.read()
+
+# Extract the version from globals.h
 version = ''
 with open(os.path.join(Dirs.include, globals_h), "r", encoding='utf-8') as f:
     while (line := f.readline()):
@@ -49,38 +89,80 @@ with open(os.path.join(Dirs.include, globals_h), "r", encoding='utf-8') as f:
             version = line.split()[2]
             break
 
+# Create a neat 3-digit version number
 version = '0' * (3 - len(version)) + version
 
-manifest_target_dir = os.path.join(Dirs.webinstaller, Dirs.manifests)
-if not os.path.exists(manifest_target_dir):
-    os.makedirs(manifest_target_dir)
+# Now read the device and project config
+with open(webprojects_path, "r", encoding='utf-8') as f:
+    json_data = json.load(f)
+    devices = json_data['devices']
+
+# Find out how many projects we're going to build
+projectCount = 0
 
 for device in devices:
+    projectCount += len(device['projects'])
+
+currentProject = 0
+
+# Start building images!
+for device in devices:
     device_name = device['name']
+    chip_family = device['chipfamily']
+
+    # If the merge firmware flag was set at the device level then pick it up, otherwise default to true
+    device_merge_firmware = device['merge'] if 'merge' in device else True
 
     for project in device['projects']:
         tag = project['tag']
 
+        currentProject += 1
+
+        print('===')
+        print('=' * 79)
+        print('=== Building Web Installer project ' + tag + ' (' + str(currentProject) + ' of ' + str(projectCount) + ')')
+        print('=' * 79)
+        print('===', flush = True)
+
+        # Build the firmware and the merged image
         subprocess.run(['pio', 'run', '-e', tag])
-        subprocess.run(['pio', 'run', '-e', tag, '-t', 'buildfs'])
 
-        project_firmware_target_dir = os.path.join(firmware_target_dir, tag)
+        # If the merge firmware flag was set at the project level then pick it up, otherwise default to the device flag
+        merge_firmware = project['merge'] if 'merge' in project else device_merge_firmware
 
-        if not os.path.exists(project_firmware_target_dir):
-            os.makedirs(project_firmware_target_dir)
+        firmware_target_dir = os.path.join(firmware_target_root, tag)
 
-        project_build_dir = os.path.join('.pio', 'build', tag)
-        bin_files = glob.glob(os.path.join(project_build_dir, '*.bin'))
+        if not os.path.exists(firmware_target_dir):
+            os.makedirs(firmware_target_dir)
 
-        for bin_file in bin_files:
-            shutil.copy(bin_file, project_firmware_target_dir)
+        build_dir = os.path.join('.pio', 'build', tag)
 
-        project_manifest = manifest_text.replace('<name>', project['name'] + ' for ' + device_name)
-        project_manifest = project_manifest.replace('<version>', version)
-        project_manifest = project_manifest.replace('<chipfamily>', device['chipfamily'])
-        project_manifest = project_manifest.replace('<tag>', tag)
+        if merge_firmware:
+            # Copy only the merged image from the build directory
+            print('=== Copying merged firmware file ' + merged_image)
+            shutil.copy(os.path.join(build_dir, merged_image), firmware_target_dir)
 
-        with open(os.path.join(manifest_target_dir, Manifest.prefix + tag + Manifest.ext), 'w', encoding='utf-8') as f:
-            f.write(project_manifest)
+            template = merged_template
+        else:
+            # Copy all .bin files from the build directory, EXCEPT the merged one
+            bin_files = glob.glob(os.path.join(build_dir, '*.bin'))
 
-        shutil.rmtree(project_build_dir)
+            for bin_file in bin_files:
+                if not bin_file.endswith(merged_image):
+                    print('=== Copying binary file ' + bin_file)
+                    shutil.copy(bin_file, firmware_target_dir)
+
+            template = unmerged_template
+
+        manifest = template.replace('<name>', project['name'] + ' for ' + device_name)
+        manifest = manifest.replace('<version>', version)
+        manifest = manifest.replace('<chipfamily>', chip_family)
+        manifest = manifest.replace('<tag>', tag)
+
+        manifest_file = Manifest.base + tag + Manifest.ext
+        print('=== Writing manifest file ' + manifest_file)
+        with open(os.path.join(manifest_target_dir, manifest_file), 'w', encoding='utf-8') as f:
+            f.write(manifest)
+
+        print('=== Removing build directory ' + build_dir, flush = True)
+        shutil.rmtree(build_dir)
