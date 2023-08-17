@@ -430,10 +430,10 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
 
 //      ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise); // Loops through all. Include?
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR,        PatternSMNoise, "Lava Rainbow", PatternSMNoise::EffectType::LavaLampRainbow);
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR_STRIPE, PatternSMNoise, "Lava Rainbow Stripe", PatternSMNoise::EffectType::LavaLampRainbowStripe);
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_SHIKON,    PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon);
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_COLORCUBE, PatternSMNoise, "ColorCube", PatternSMNoise::EffectType::ColorCube);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR,        PatternSMNoise, "Lava Rainbow", PatternSMNoise::EffectType::LavaLampRainbow_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR_STRIPE, PatternSMNoise, "Lava Rainbow Stripe", PatternSMNoise::EffectType::LavaLampRainbowStripe_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_SHIKON,    PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_COLORCUBE, PatternSMNoise, "ColorCube", PatternSMNoise::EffectType::ColorCube_t);
 
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire);
 
