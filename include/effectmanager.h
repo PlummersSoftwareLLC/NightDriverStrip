@@ -653,7 +653,7 @@ public:
         do
         {
             if (_iCurrentEffect == 0)
-                _iCurrentEffect = EffectCount() - 1;
+                _iCurrentEffect = EffectCount();
 
             _iCurrentEffect--;
             _effectStartTime = millis();
