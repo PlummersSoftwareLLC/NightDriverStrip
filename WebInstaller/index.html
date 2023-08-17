@@ -8,7 +8,7 @@
 <style>
 html {
   height: 100%;
-  overflow: hidden;  
+  overflow: hidden;
 }
 body {
   background: black no-repeat center center fixed;
@@ -58,9 +58,9 @@ div#container {
       <h1>NightDriverLED ESP32 Installation Wizard</h1>
       <label for="devices-dropdown">Select your device type:</label>
       <select id="devices-dropdown"></select>
-  
+
       <br><br>
-  
+
       <label for="projects-dropdown">Then, select a project:</label>
       <select id="projects-dropdown" disabled></select>
 
@@ -83,7 +83,7 @@ div#container {
         <esp-web-install-button class="invisible"></esp-web-install-button>
       </p>
 
-      <b>Note:</b> if the web server is enabled in the image you're flashing, 
+      <b>Note:</b> if the web server is enabled in the image you're flashing,
       it can take some time for it to come up after the device connects to WiFi for the first time.
     </div>
 
@@ -109,6 +109,7 @@ div#container {
           populateDevicesDropdown(devices);
         });
 
+      // Show/hide connect message and connect button, dependent on if a manifest file name is passed
       function setManifest(manifest) {
         if (manifest !== undefined) {
           installButton.manifest = manifest;
@@ -124,19 +125,32 @@ div#container {
         }
       }
 
+      // Show connect message and hide connect button
       function clearManifest() {
         setManifest(undefined);
       }
 
+      // Set or clear manifest based on project dropdown selection
+      function updateManifest() {
+        let tag = projectsDropdown.value;
+
+        if (tag)
+          setManifest(`manifests/manifest_${tag}.json`);
+        else
+          clearManifest();
+      }
+
       // Populate devices dropdown
       function populateDevicesDropdown(devices) {
-        let option = document.createElement("option");
-        option.value = "";
-        option.text = "-- Select device --";
-        devicesDropdown.appendChild(option);
+        if (devices.length > 1) {
+          let option = document.createElement("option");
+          option.value = "";
+          option.text = "-- Select device --";
+          devicesDropdown.appendChild(option);
+        }
 
         for (let device of devices) {
-          option = document.createElement("option");
+          let option = document.createElement("option");
           option.value = device.tag;
           option.text = device.name;
           devicesDropdown.appendChild(option);
@@ -146,18 +160,20 @@ div#container {
       // Populate projects dropdown
       function populateProjectsDropdown(projects) {
         projectsDropdown.innerHTML = "";
- 
+
         if (projects === undefined) {
           projectsDropdown.disabled = true;
         }
         else {
-          let option = document.createElement("option");
-          option.value = "";
-          option.text = "-- Select project --";
-          projectsDropdown.appendChild(option);
+          if (projects.length > 1) {
+            let option = document.createElement("option");
+            option.value = "";
+            option.text = "-- Select project --";
+            projectsDropdown.appendChild(option);
+          }
 
           for (let project of projects) {
-            option = document.createElement("option");
+            let option = document.createElement("option");
             option.value = project.tag;
             option.text = project.name;
             projectsDropdown.appendChild(option);
@@ -166,24 +182,17 @@ div#container {
           projectsDropdown.disabled = false;
         }
 
-        clearManifest();
+        updateManifest();
       }
 
       devicesDropdown.addEventListener("change", function() {
         let tag = devicesDropdown.value;
         let selectedDevice = devices.find(device => device.tag === tag);
-        
+
         populateProjectsDropdown(selectedDevice?.projects);
       });
 
-      projectsDropdown.addEventListener("change", function() {
-        let tag = projectsDropdown.value;
-
-        if (tag)
-          setManifest(`manifests/manifest_${tag}.json`);
-        else 
-          clearManifest();
-      });
+      projectsDropdown.addEventListener("change", updateManifest);
 
       /*
       bitratesDropdown.addEventListener("change", function() {

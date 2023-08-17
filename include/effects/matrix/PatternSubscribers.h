@@ -193,7 +193,7 @@ class PatternSubscribers : public LEDStripEffect
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this]() { SubscriberReader(); }, SUB_READER_INTERVAL, true);
+        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { SubscriberReader(); }, SUB_READER_INTERVAL, true);
 
         return true;
     }

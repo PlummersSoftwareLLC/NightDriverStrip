@@ -1,7 +1,7 @@
 
 //+--------------------------------------------------------------------------
 //
-// File:        ledviewer.cpp
+// File:        ledviewer.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //

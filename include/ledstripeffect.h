@@ -210,7 +210,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
 
-    #if USE_MATRIX
+    #if USE_HUB75
       std::shared_ptr<LEDMatrixGFX> mg(size_t channel = 0)
       {
         return std::static_pointer_cast<LEDMatrixGFX>(_GFX[channel]);

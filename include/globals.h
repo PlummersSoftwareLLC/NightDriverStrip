@@ -125,9 +125,9 @@
 
 #define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
-#ifndef USE_MATRIX                   // We support strips by default unless specifically defined out
-    #ifndef USE_STRIP
-        #define USE_STRIP 1
+#ifndef USE_HUB75                   // We support strips by default unless specifically defined out
+    #ifndef USE_WS281X
+        #define USE_WS281X 1
     #endif
 #endif
 
@@ -239,7 +239,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #if DEMO
 
     // This is a simple demo configuration.  To build, simply connect the data lead from a WS2812B
-    // strip to pin 5.  This does not use the OLED, LCD, or anything fancy, it simply drives the
+    // strip to pin 5 or other pin marked PIN0 below.  This does not use the OLED, LCD, or anything fancy, it simply drives the
     // LEDs with a simple rainbow effect as specified in effects.cpp for DEMO.
     //
     // Please ensure you supply sufficent power to your strip, as even the DEMO of 144 LEDs, if set
@@ -249,11 +249,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
 
     #define MATRIX_WIDTH            144
-    #define MATRIX_HEIGHT           8
+    #define MATRIX_HEIGHT           1
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
-    #define NUM_RINGS               5
-    #define RING_SIZE_0             24
     #define ENABLE_AUDIO            0
 
     #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
@@ -1076,7 +1074,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define PROJECT_NAME        "NightDriver"
 #endif
 
-#if USE_MATRIX
+#if USE_HUB75
 #include "MatrixHardware_ESP32_Custom.h"
 #define SM_INTERNAL     // Silence build messages from their header
 #include <SmartMatrix.h>
@@ -1489,7 +1487,7 @@ inline static T random_range(T lower, T upper)
 {
     static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
 
-    static std::random_device rd; 
+    static std::random_device rd;
     static std::mt19937 gen(rd());
 
     if constexpr (std::is_integral<T>::value) {
@@ -1585,7 +1583,7 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 
 // Conditional includes depending on which project is being build
 
-#if USE_MATRIX
+#if USE_HUB75
     #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
 #endif
 

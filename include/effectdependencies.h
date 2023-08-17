@@ -57,7 +57,7 @@
 // Externals
 //
 
-#if USE_MATRIX
+#if USE_HUB75
     #include "ledmatrixgfx.h"
     #include "effects/strip/misceffects.h"
     #include "effects/matrix/PatternBalls.h"
@@ -146,7 +146,7 @@
 #if ENABLE_WIFI
     #include "effects/matrix/PatternWeather.h"
 #endif
-#endif  // USE_MATRIX
+#endif  // USE_HUB75
 
 
 #ifdef USE_STRIP
