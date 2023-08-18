@@ -364,7 +364,7 @@ void LoadEffectFactories()
             ADD_EFFECT(EFFECT_MATRIX_SMPATTERN_TRICK, PatternSMPatternTrick);               // 4
             ADD_EFFECT(EFFECT_MATRIX_SMBUBBLES, PatternSMBubbles);                          // 4
             ADD_EFFECT(EFFECT_MATRIX_SMSTARSHIP_TROOPERS, PatternSMStarshipTroopers);       // 4
-            ADD_EFFECT(EFFECT_MATRIX_SMPASTEL_FLUTTER, PatternSMPastelFlutter);             // 4 Cool, but kinda too bright?
+            ADD_EFFECT(EFFECT_MATRIX_SMPASTEL_FLUTTER, PatternSMPastelFlutter);             // 4 FIXED!(rjl) Cool, but kinda too bright?
             ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_SWIRL, PatternSMRainbowSwirl);               // 4
             ADD_EFFECT(EFFECT_MATRIX_SMPARTICLES, PatternSMParticles);                      // 4
             ADD_EFFECT(EFFECT_MATRIX_SMFIRE2012, PatternSMFire2012);                        // 4
@@ -374,14 +374,14 @@ void LoadEffectFactories()
             ADD_EFFECT(EFFECT_MATRIX_SMPSP_CLOUD, PatternSMPSPCloud);                       //
 
             ADD_EFFECT(EFFECT_MATRIX_SMTWIST, PatternSMTwist);                              // 1
-            ADD_EFFECT(EFFECT_MATRIX_SMFLOCKING, PatternSMFlocking);                        // 1   (Invalid draws, all pixels in one line at bottom)
+            ADD_EFFECT(EFFECT_MATRIX_SMFLOCKING, PatternSMFlocking);                        // 1 FIXED!(rjl)   (Invalid draws, all pixels in one line at bottom)
             ADD_EFFECT(EFFECT_MATRIX_SMGRAVITY_BALLS, PatternSMGravityBalls);               // 3
-            ADD_EFFECT(EFFECT_MATRIX_SMBOID_EXPLOSION, PatternSMBoidExplosion);             // FIXME
+            ADD_EFFECT(EFFECT_MATRIX_SMBOID_EXPLOSION, PatternSMBoidExplosion);             // FIXME FIXED!(rjl)
             ADD_EFFECT(EFFECT_MATRIX_SMXOR_CIRCLES, PatternSMXorCircles);                   // 5
             ADD_EFFECT(EFFECT_MATRIX_SMMIRAGE, PatternSMMirage);                            // 5
-            ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);                              // 0 Draws a maze once, then nothing?
+            ADD_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);                              // 0 FIXED!(rjl) Draws a maze once, then nothing?
 
-            ADD_EFFECT(EFFECT_MATRIX_SMSAND, PatternSMSand);                                // 3 Never stacked for me, just a stream of sand grains
+            ADD_EFFECT(EFFECT_MATRIX_SMSAND, PatternSMSand);                                // 3 FIXED!(rjl) Never stacked for me, just a stream of sand grains
             ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_FLOW, PatternSMRainbowFlow);                 // 3
 
             // ADD_EFFECT(EFFECT_MATRIX_SMWISP, PatternSMWisp);
@@ -461,6 +461,11 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);
         ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);
         ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand);
+	// Dave, it's up to you to pick the ones you like here.
+        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "PolyWhirl", 2);
+        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "FakeFire", 20);
+        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "Feathers", 21);
+        ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "Radial", 27);
 
         ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS,  PatternSMHolidayLights);
 

@@ -18,8 +18,10 @@ class PatternSMTixyLand : public LEDStripEffect
     // https://tixy.land/?code=sin%28sin%28x%2Bt%29%2By%2Bt*10%29-y%2F10
     // https://tixy.land/?code=sin%28sin%28y%2Bt%29%2Bx%2Bt*10%29-y%2F10
 
-    byte effect = 0;
+    int effect = 0;
     uint8_t gHue = 0;
+    const String _name;
+    int _effect{-1};
 
     float code(float t, float i, float x, float y)
     {
@@ -45,7 +47,7 @@ class PatternSMTixyLand : public LEDStripEffect
             break; // https://twitter.com/aemkei/status/1340044770257870851?s=20 //
                    // shady sphere// by @blu3_enjoy
         case 1:
-            return .1 / (sin8(y / 4 - t * 6) - sin(x * 2 - t));
+            return .1 / (sinf(y / 4 - t * 6) - sinf(x * 2 - t));
             break; ////https://twitter.com/ntsutae/status/1336729037549436931?s=20
         case 2:
             return sinf(hypotf(x -= 8, y -= 8) + t + atan2f(y, x));
@@ -66,7 +68,8 @@ class PatternSMTixyLand : public LEDStripEffect
             return !((int)(x + t * 50 / (fmod(y * y, 5.9f) + 1)) & 15) / (fmod(y * y, 5.9f) + 1);
             break;
         case 8:
-            return sinf(atanf((y - 7.5f) / (x - 7.5f)) + t * 6);
+            //return sinf(atanf((y - 7.5f) / (x - 7.5f)) + t * 6);
+            return sinf(atan2((y - 7.5f) , (x - 7.5f)) + t * 6);
             break;
         case 9:
             return sinf(atanf((y) / (x)) + t);
@@ -115,7 +118,8 @@ class PatternSMTixyLand : public LEDStripEffect
             return 1 - fabs((x - 6) * cosf(t) + (y - 6) * sinf(t));
             break; // https://twitter.com/maettig/status/1326163017533419529
         case 24:
-            return atanf((x - 7.5f) * (y - 7.5f)) - 2.5f * sinf(t);
+            //return atanf((x - 7.5f) * (y - 7.5f)) - 2.5f * sinf(t);
+            return atan2((x - 7.5f) , (y - 7.5f)) - 2.5f * sinf(t);
             break; // https://twitter.com/maettig/status/1326163136559403015
         case 25:
             return sinf(3 * atan2f(y - 7.5f, x - 7.5f) + t);
@@ -125,7 +129,8 @@ class PatternSMTixyLand : public LEDStripEffect
             break; // i add move for
                    // //https://twitter.com/aemkei/status/1326637631409676291
         case 27:
-            return sinf((float)PI * 2 * atanf((y - 8) / (x - 8)) + 5 * t);
+            //return sinf((float)PI * 2 * atanf((y - 8) / (x - 8)) + 5 * t);
+            return sinf((float)PI * 2 * atan2((y - 8) , (x - 8)) + 5 * t);
             break;
         case 28:
             return sinf((t / 16) * i + x / y);
@@ -173,25 +178,45 @@ class PatternSMTixyLand : public LEDStripEffect
         {
             gHue++;
         }
-        float i = (y * 16) + x;
+        float i = (y * 16.0f) + x;
         float frame = constrain(code(t, i, x, y), -1, 1) * 255;
         if (frame >= 0)
         {
-            g()->leds[XY((int)x, (MATRIX_HEIGHT - 1 - (int)y))] = CHSV(gHue, 255, frame);
+            g()->leds[XY((int)x, (int)y)] = CHSV(gHue, 255, frame);
         } // change to XY(x, y) for non rotate display
         else
         {
-            g()->leds[XY((int)x, (MATRIX_HEIGHT - 1 - (int)y))] = CHSV(gHue + 55, 255, -frame);
+            g()->leds[XY((int)x, (int)y)] = CHSV(gHue + 55, 255, -frame);
         } // change to XY(x, y) for non rotate display
     }
 
   public:
+    // This ctor happily runs ALL the effects, taking on the default _effect
+    // of -1 and thus rotating through all the effects
     PatternSMTixyLand() : LEDStripEffect(EFFECT_MATRIX_SMTIXY_LAND, "TixyLand")
     {
     }
 
-    PatternSMTixyLand(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
+    // Runs only the specific effect #effect.
+    PatternSMTixyLand(const String& name, int effect) : LEDStripEffect(EFFECT_MATRIX_SMTIXY_LAND, name), _name(name), _effect(effect)
     {
+    }
+
+
+    PatternSMTixyLand(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject), _effect(jsonObject["effect"])
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["effect"] = _effect;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     void Start() override
@@ -201,17 +226,22 @@ class PatternSMTixyLand : public LEDStripEffect
 
     void Label(int n)
     {
-        static const int kLabelTimeoutMS = 500;
-        String result = str_sprintf("Tixy %d", n);
+        static const int kLabelTimeoutMS = 500; // Half a second.
+        String result = _name.isEmpty() ? str_sprintf("Tixy %d", n) : _name;
 
         auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
-        pMatrix->SetCaption(result, kLabelTimeoutMS); // Half a second.
+        pMatrix->SetCaption(result, kLabelTimeoutMS);
     }
 
     void Draw() override
     {
-        // some formulas is hardcoded and fps get down. this speedup it
-        float t = millis() / 1000.0;
+	static int prev_effect = -2;
+	if (prev_effect != effect) {
+	    Label(effect);
+	    prev_effect = effect;
+	}
+        // some formulas are hardcoded and fps goes down. this speeds it.
+        float t = millis() / 1000.0f;
         for (int x = 0; x < MATRIX_WIDTH; x++)
         {
             for (int y = 0; y < MATRIX_HEIGHT; y++)
@@ -219,16 +249,22 @@ class PatternSMTixyLand : public LEDStripEffect
                 processFrame(t, x, y);
             }
         }
-        EVERY_N_SECONDS(4)
-        {
-            effect++;
-            if (effect > 36)
-                effect = 0;
-            Label(effect);
+        if (_effect < 0) {
+	    EVERY_N_SECONDS(4)
+	    {
+		effect++;
+		if (effect > 36)
+		    effect = 0;
+		Label(effect);
+	    }
+	}
+	else
+	{
+		effect = _effect;
         }
-        Label(effect); // This will only last one frame. This is already too slow.
     }
 
+    // Well, a man can dream...
     virtual size_t DesiredFramesPerSecond() const override
     {
         return 30;
