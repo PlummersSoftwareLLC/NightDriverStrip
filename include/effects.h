@@ -131,7 +131,7 @@
 #define EFFECT_MATRIX_SMPASTEL_FLUTTER                 157
 #define EFFECT_MATRIX_SMSAND                           158
 #define EFFECT_MATRIX_SMSMOKE                          159
-#define EFFECT_MATRIX_SMSPIRO                          160
+/* 160 was used briefly by SMSpiro, a deleted dup of _Spiro. AVAILABLE */
 #define EFFECT_MATRIX_SMAURORA                         161
 #define EFFECT_MATRIX_SMPRISMATA                       162
 #define EFFECT_MATRIX_SMRADIAL_FIRE                    163
@@ -169,8 +169,18 @@
 
 #define EFFECT_MATRIX_SPECTRUMBAR                      195
 
+#define EFFECT_MATRIX_SMNOISE_LR                       196
+#define EFFECT_MATRIX_SMNOISE_LR_STRIPE                197
+#define EFFECT_MATRIX_SMNOISE_SHIKON                   198
+#define EFFECT_MATRIX_SMNOISE_COLORCUBE                199
+
+#define EFFECT_MATRIX_SMPICASSO_1                      200
+#define EFFECT_MATRIX_SMPICASSO_2                      201
+#define EFFECT_MATRIX_SMPICASSO_3                      202
+
+//TODO: Talk to Rutger about impact of changing this.
 // Hexagon Effects
-#define EFFECT_HEXAGON_OUTER_RING                      201
+#define EFFECT_HEXAGON_OUTER_RING                      301
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1

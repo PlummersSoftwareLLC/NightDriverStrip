@@ -355,26 +355,37 @@ DEFINE_GRADIENT_PALETTE(shikon_23_gp){
 class PatternSMNoise : public LEDStripEffect
 {
   public:
-    enum class EffectType {
-	    Unknown,
-	    LavaLampRainbow,
-	    LavaLampRainbowStripe,
-	    Shikon,
-	    ColorCube
+    enum /* class */EffectType {
+        Unknown,
+        LavaLampRainbow_t,
+        LavaLampRainbowStripe_t,
+        Shikon_t,
+        ColorCube_t
     };
 
-    PatternSMNoise(const char* name, EffectType effect) : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp") , _name(name), _effect(effect)
+    PatternSMNoise(const String& name, EffectType effect) : LEDStripEffect(EFFECT_MATRIX_SMNOISE, name) , _name(name), _effect(effect)
     {
     }
 
     PatternSMNoise() : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp")
     {
-	    _effect = EffectType::Unknown;
+        _effect = EffectType::Unknown;
     }
 
-    PatternSMNoise(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
+    PatternSMNoise(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject), _effect(jsonObject["effect"])
     {
-	    _effect = EffectType::Unknown;
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<128> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc["effect"] = _effect;
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     void Start() override
@@ -387,38 +398,44 @@ class PatternSMNoise : public LEDStripEffect
 
     void Draw() override
     {
-        // For Mesmerizer/Nightdriver, I'm not sure this is the best
-        // final presentation. It just zips through 17 effects without
-        // announcing them in any way. Should it interact with audio or
-        // the remote or splash labels on the display or ... ?
+        static int prevmode = mode;
+        // For Mesmerizer/Nightdriver, if we are created by the default
+        // ctor, our EffectType is unknown. We just loop through all
+        // avaiable effects int his module. Otherwise, we're called with
+        // an authoritative effect to be and we stay locked onto that one.
         EVERY_N_SECONDS(15)
         {
-            if (_effect != EffectType::Unknown && mode++ > 3)
-                mode = 0;
-	    else
-		mode = static_cast<uint8_t>(_effect);
+            mode = _effect;
+            if (_effect == EffectType::Unknown && (int)mode++ > ColorCube_t)
+                mode = LavaLampRainbow_t;
         }
+
+        if (prevmode != mode) {
+            prevmode = mode;
+        }
+
         switch (mode)
         {
-        case 0:
+        case LavaLampRainbow_t:
+            default: // Play _something_
             LavaLampRainbow();
             break;
-        case 1:
+        case LavaLampRainbowStripe_t:
             LavaLampRainbowStripe();
             break;
-        case 2:
+        case Shikon_t:
             Shikon();
             break;
-        case 3:
+            case ColorCube_t:
             ColorCube();
             break;
         }
     }
 
   private:
-    uint8_t mode{0}; // Which of the 17 effects(!) are we showing?
+    int mode{EffectType::Unknown}; // Which of the 17 effects(!) are we showing?
     EffectType _effect;
-    const char* _name;
+    const String _name;
 
     static const int MAX_DIMENSION = ((MATRIX_WIDTH > MATRIX_HEIGHT) ? MATRIX_WIDTH : MATRIX_HEIGHT);
 
