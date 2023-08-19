@@ -103,7 +103,6 @@
     // A Small block of 3D-ish effects using Particle systems or Boids.
     #include "effects/matrix/PatternSMBubbles.h" // Boids
     #include "effects/matrix/PatternSMFlocking.h" // Boids
-    #include "effects/matrix/PatternSMFlocking.h"
     #include "effects/matrix/PatternSMFlowFields.h"
     #include "effects/matrix/PatternSMBlurringColors.h"
     #include "effects/matrix/PatternSMSupernova.h"
@@ -149,6 +148,6 @@
 #endif  // USE_HUB75
 
 
-#ifdef USE_STRIP
+#ifdef USE_WS281X
     #include "ledstripgfx.h"
 #endif

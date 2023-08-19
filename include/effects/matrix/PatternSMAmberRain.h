@@ -36,6 +36,7 @@ class Circle
         return radius;
     }
 };
+
 const int NUMBER_OF_CIRCLES = 20;
 
 class PatternSMAmberRain : public LEDStripEffect

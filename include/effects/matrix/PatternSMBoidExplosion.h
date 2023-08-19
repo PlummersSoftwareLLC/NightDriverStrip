@@ -14,10 +14,10 @@ class PatternSMBoidExplosion : public LEDStripEffect
     static constexpr int COLS = MATRIX_WIDTH;
     static constexpr int ROWS = MATRIX_HEIGHT;
 
-#define NUM_PARTICLES                                                                                                  \
-    35 // set this to the number of particles. the variable describes what it's
-       // supposed to be. it works with 50, but it's a little slow. on an esp32 it
-       // looks pretty nice at that number 15 is a safe number
+    // set this to the number of particles. the variable describes what it's
+    // supposed to be. it works with 50, but it's a little slow. on an esp32 it
+    // looks pretty nice at that number 15 is a safe number
+    #define NUM_PARTICLES 35
     static const int count = NUM_PARTICLES;
 
     Boid boids[NUM_PARTICLES]; // this makes the boids

@@ -28,6 +28,7 @@ class PatternSMBlurringColors : public LEDStripEffect
     const uint8_t CENTER_Y_MAJOR =
         MATRIX_HEIGHT / 2 + (MATRIX_HEIGHT % 2); // center of the YGREK matrix, shifted up if the height is even
 
+    // FIXME: this is large enough it should probably go into PSMEM.
     static constexpr int trackingOBJECT_MAX_COUNT = (100U);
     // максимальное количество отслеживаемых объектов (очень влияет на
     // расход памяти)
@@ -37,8 +38,8 @@ class PatternSMBlurringColors : public LEDStripEffect
     float trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
     uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
     uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT];
-    bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT]; // BugBug: could be a
-                                                          // Std::Bitfield<T>
+    bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
+    // BugBug: could be a std::Bitfield<T>
     static constexpr int enlargedOBJECT_MAX_COUNT = (MATRIX_WIDTH * 2);
     // максимальное количество сложных отслеживаемых объектов
     // (меньше, чем trackingOBJECT_MAX_COUNT)
@@ -53,17 +54,15 @@ class PatternSMBlurringColors : public LEDStripEffect
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
         return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
-        // return g()->leds[XY(x, y)];
     }
 
     void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
-        if (g()->isValidPixel(x, y) == false)
-            return;
-
-        // Mesmerizer flips the Y axis here.
-        uint32_t thisPixel = XY(x, MATRIX_HEIGHT - 1 - y);
-        g()->leds[thisPixel] = color;
+	y = MATRIX_HEIGHT - 1 - y;
+        if (g()->isValidPixel(x, y)) {
+            uint32_t thisPixel = XY(x, y);
+            g()->leds[thisPixel] = color;
+	}
     }
 
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)

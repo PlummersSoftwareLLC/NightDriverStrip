@@ -32,7 +32,6 @@ class PatternSMBubbles : public LEDStripEffect
         if (g()->isValidPixel(x, MATRIX_HEIGHT - 1 - y) == false)
             return 0;
         return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
-        // return g()->leds[XY(x, y)];
     }
 
     void drawPixelXY(int8_t x, int8_t y, CRGB color)

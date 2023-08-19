@@ -10,6 +10,7 @@ class PatternSMMagma : public LEDStripEffect
     uint8_t Scale = 20; // 1-100 is palette and count  // THIS is a setting 0-33,
                         // 34-66, 67-99
 
+    // FIXME: should probably allocate struct in PSRAM.
     static constexpr int trackingOBJECT_MAX_COUNT = 100U;
     // максимальное количество отслеживаемых объектов (очень влияет на
     // расход памяти)
