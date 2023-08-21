@@ -162,6 +162,10 @@
 #include "systemcontainer.h"
 #include "values.h"
 
+#if TOGGLE_BUTTON_1 || TOGGLE_BUTTON_2
+  #include "Bounce2.h"                            // For Bounce button class
+#endif
+
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 
 //
@@ -239,11 +243,11 @@ void TerminateHandler()
     Serial.flush();
 }
 
-#ifdef TOGGLE_BUTTON_1
+#if TOGGLE_BUTTON_1
 Bounce2::Button Button1;
 #endif
 
-#ifdef TOGGLE_BUTTON_2
+#if TOGGLE_BUTTON_2
 Bounce2::Button Button2;
 #endif
 
@@ -374,13 +378,13 @@ void setup()
         #endif
     #endif
 
-    #ifdef TOGGLE_BUTTON_1
+    #if TOGGLE_BUTTON_1
         Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
         Button1.interval(1);
         Button1.setPressedState(LOW);
     #endif
 
-    #ifdef TOGGLE_BUTTON_2
+    #if TOGGLE_BUTTON_2
         Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
         Button2.interval(1);
         Button2.setPressedState(LOW);
