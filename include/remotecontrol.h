@@ -29,12 +29,12 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#if ENABLE_REMOTE
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
 #include <limits>
 
-#if ENABLE_REMOTE
 
 #define key24  true
 #define key44  false
