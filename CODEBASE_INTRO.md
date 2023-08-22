@@ -1,6 +1,29 @@
-# Introduction to the NightDriverStrip codebase: The Mesmerizer Edition
+# Introduction to the NightDriverStrip codebase: The Mesmerizer Edition <!-- omit in toc -->
 
-Welcome to the NightDriverStrip codebase, a project dedicated to creating visually stunning LED displays. You can use this guide if you're diving into this codebase with the intent to enhance, modify, or simply understand the ffects encapsulated within the Mesmerizer project configuration.
+## Table of contents <!-- omit in toc -->
+
+- [Welcome!](#welcome)
+- [Key components to focus on](#key-components-to-focus-on)
+  - [The core: `GFXBase`](#the-core-gfxbase)
+  - [`LEDMatrixGfx`](#ledmatrixgfx)
+  - [`EffectManager`](#effectmanager)
+  - [`LEDStripEffect`](#ledstripeffect)
+  - [Device configuration](#device-configuration)
+  - [Networking](#networking)
+  - [Remote Control](#remote-control)
+- [Major threads within the application](#major-threads-within-the-application)
+- [Main process flow](#main-process-flow)
+  - [Code Startup](#code-startup)
+  - [Event loop](#event-loop)
+  - [Main drawing loop](#main-drawing-loop)
+- [Memory management and performance](#memory-management-and-performance)
+- [Testing and validation](#testing-and-validation)
+- [Collaboration and documentation](#collaboration-and-documentation)
+- [Further reading](#further-reading)
+
+## Welcome!
+
+Welcome to the NightDriverStrip codebase, a project dedicated to creating visually stunning LED displays. You can use this guide if you're diving into this codebase with the intent to enhance, modify, or simply understand the effects encapsulated within the Mesmerizer project configuration.
 
 This introduction aims to provide a comprehensive overview of the key components, design decisions, and architectural nuances that will help you get started and productive, quickly.
 
