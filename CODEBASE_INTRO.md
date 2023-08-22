@@ -149,8 +149,7 @@ Each effect has its own implementation of the `Draw()` method, which defines how
 
 ## Memory management and performance
 
-Given the real-time nature of LED displays, performance is paramount. The codebase makes
-extensive use of dynamic memory allocation, with a preference for PSRAM memory when available.
+Given the real-time nature of LED displays, performance is paramount. The codebase makes extensive use of dynamic memory allocation, with a preference for PSRAM memory when available.
 Be cautious when making changes that can impact memory usage - particularly when it concerns regular RAM. There just isn't that much of it available.
 
 ## Testing and validation
