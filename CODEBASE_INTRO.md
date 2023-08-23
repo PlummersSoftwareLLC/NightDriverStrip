@@ -165,6 +165,6 @@ You may also find that some existing documentation is somewhat incomplete or no 
 
 ## Further reading
 
-Now that you've been introduced to the NightDriverStrip codebase, the next best thing to spend some time on reading is the NightDriverStrip source code! Browse through the source files mentioned in this document, and don't be afraid to inspect others as well. If you come across things that are hard to follow or don't seem to make sense, then please open a Q&A post in the Discussions section in this repository. The questions asked there will help others when answered, and can also provide pointers to gaps in the documentation that's currently in place.
+Now that you've been introduced to the NightDriverStrip codebase, the next best thing to spend some time on reading is the NightDriverStrip source code! Browse through the source files mentioned in this document, and don't hold back on inspecting others as well. If you come across things that are hard to follow or don't seem to make sense, then please open a Q&A post in the [Discussions section](https://github.com/PlummersSoftwareLLC/NightDriverStrip/discussions) in this repository. The questions asked there will help others when answered, and can also provide pointers to gaps in the documentation that's currently in place.
 
 Once you feel sufficiently comfortable with the code you're looking at, you can continue your journey with the [Getting started with the source code](./README.md#getting-started-with-the-source-code) section in the main README.
