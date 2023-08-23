@@ -31,7 +31,7 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
-#if TOGGLE_BUTTON_1 || TOGGLE_BUTTON_2
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
@@ -415,11 +415,11 @@ void IRAM_ATTR UpdateScreen(bool bRedraw)
 // this or modify it to fit a screen you do have.  You could also try serial output, as it's on a low-pri thread it shouldn't
 // disturb the primary cores, but I haven't tried it myself.
 
-#if TOGGLE_BUTTON_1
+#ifdef TOGGLE_BUTTON_1
 extern Bounce2::Button Button1;
 #endif
 
-#if TOGGLE_BUTTON_2
+#ifdef TOGGLE_BUTTON_2
 extern Bounce2::Button Button2;
 #endif
 
@@ -433,7 +433,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
-#if TOGGLE_BUTTON_1
+#ifdef TOGGLE_BUTTON_1
         Button1.update();
         if (Button1.pressed())
         {
@@ -446,7 +446,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         }
 #endif
 
-#if TOGGLE_BUTTON_2
+#ifdef TOGGLE_BUTTON_2
         Button2.update();
         if (Button2.pressed())
         {

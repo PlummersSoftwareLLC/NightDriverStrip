@@ -162,7 +162,7 @@
 #include "systemcontainer.h"
 #include "values.h"
 
-#if TOGGLE_BUTTON_1 || TOGGLE_BUTTON_2
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
@@ -243,11 +243,11 @@ void TerminateHandler()
     Serial.flush();
 }
 
-#if TOGGLE_BUTTON_1
+#ifdef TOGGLE_BUTTON_1
 Bounce2::Button Button1;
 #endif
 
-#if TOGGLE_BUTTON_2
+#ifdef TOGGLE_BUTTON_2
 Bounce2::Button Button2;
 #endif
 
@@ -378,13 +378,13 @@ void setup()
         #endif
     #endif
 
-    #if TOGGLE_BUTTON_1
+    #ifdef TOGGLE_BUTTON_1
         Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
         Button1.interval(1);
         Button1.setPressedState(LOW);
     #endif
 
-    #if TOGGLE_BUTTON_2
+    #ifdef TOGGLE_BUTTON_2
         Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
         Button2.interval(1);
         Button2.setPressedState(LOW);
