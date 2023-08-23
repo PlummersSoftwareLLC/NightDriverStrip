@@ -21,15 +21,16 @@
 - [Collaboration and documentation](#collaboration-and-documentation)
 - [Further reading](#further-reading)
 
+<!-- markdownlint-disable-next-line MD026 no-trailing-punctuation -->
 ## Welcome!
 
-Welcome to the NightDriverStrip codebase, a project dedicated to creating visually stunning LED displays. You can use this guide if you're diving into this codebase with the intent to enhance, modify, or simply understand the effects encapsulated within the Mesmerizer project configuration.
+Welcome to the NightDriverStrip codebase, a project dedicated to creating visually stunning LED displays. You can read this introduction if you're diving into this codebase with the intent to enhance, modify, or simply understand the effects encapsulated within the Mesmerizer project configuration.
 
-This introduction aims to provide a comprehensive overview of the key components, design decisions, and architectural nuances that will help you get started and productive, quickly.
+This introduction aims to provide an overview of the key components, design decisions, and architectural characteristics of the project. This will help you quickly develop an understanding of the NightDriverStrip codebase.
 
-As mentioned, the guide takes the Mesmerizer project configuration as the starting point. The reason is that it's the configuration with most features enabled and the largest number of effects. Those effects further include the most complex and visually appealing ones. That said, it does not mean this guide can't be used if you're working on or with other project configurations. It does mean not all of the contents of this document may be relevant to you.
+As mentioned, the guide takes the Mesmerizer project configuration as the starting point. The reason is that it's the configuration with most features enabled and the largest number of effects. Those effects further include the most complex and visually appealing ones. That said, it does not mean this introduction can't be used if you're working on or with other project configurations. It does mean not all of the contents of this document may be relevant to you.
 
-The text in this document regularly mentions "LED display" as the visualization device. In the case of Mesmerizer that translates to a HUB75 matrix. In case of other devices/projects, the actual device will be a WS2912-variant LED strip.
+The text in this document regularly mentions "LED display" as the visualization device. In the case of Mesmerizer that translates to a HUB75 LED panel. In case of other devices/projects, the actual device will be a WS2912-variant LED strip or matrix.
 
 ## Key components to focus on
 
