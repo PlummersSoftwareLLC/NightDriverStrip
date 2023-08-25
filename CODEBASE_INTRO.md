@@ -140,7 +140,7 @@ Once all the initializations are complete, the application enters its main event
 The `EffectManager` and the drawing loop work together to render the effects that have been enabled within the application.
 
 - **`EffectManager`**: The `EffectManager` is a class that is present in the [effectmanager.h](./include/effectmanager.h) and, for a few methods and support functions, [effects.cpp](./src/effects.cpp) files. It  manages the LED effects by holding the list of effect objects that represent individual effects that can be shown on the LED display.
-  The `EffectManager` has a method named `Update()`, which is responsible for drawing the current effect on the LED strip. This method is called within the main draw loop to render the effect.
+  The `EffectManager` has a method named `Update()`, which is responsible for drawing the current effect on the LED display. This method is called within the main draw loop to render the effect.
 
 - **Drawing loop**: The drawing loop is present in the [drawing.cpp](./src/drawing.cpp) file. It's a continuous loop that updates the LED display with the current effect.
 Within this loop, the `EffectManager`'s `Update()` method is called, which in turn calls the `Draw()` method of the current effect (object). This ensures that the effect is rendered on the LED display.
