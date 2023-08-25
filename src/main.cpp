@@ -162,6 +162,10 @@
 #include "systemcontainer.h"
 #include "values.h"
 
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+  #include "Bounce2.h"                            // For Bounce button class
+#endif
+
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 
 //
