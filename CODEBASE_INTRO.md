@@ -155,13 +155,13 @@ Be cautious when making changes that can impact memory usage - particularly when
 
 ## Testing and validation
 
-Before introducing new effects or making changes, it's important to test your modifications thoroughly. Given the visual nature of the project, testing on actual LED hardware is recommended is almost always a crucial step.
+Before introducing new effects or making changes, it's important to test your modifications thoroughly. Given the visual nature of the project, testing on actual LED hardware is almost always a crucial step.
 
 ## Collaboration and documentation
 
 The codebase is a collaborative effort. As you navigate through it, you'll find comments and documentation that provide insights into design decisions, algorithm explanations, and usage guidelines. When making changes or additions, ensure you follow the existing coding conventions and document your work. This will make it easier for other developers to understand and build upon your contributions.
 
-You may also find that some existing documentation is somewhat incomplete or no longer entirely accurate. In that case, please feel free to extend or correct such documentation. In the end, all improvements to documentation is valuable to the project.
+You may also find that some existing documentation is somewhat incomplete or no longer entirely accurate. In that case, please feel free to extend or correct such documentation. In the end, all improvements to documentation are valuable to the project.
 
 ## Further reading
 
