@@ -31,6 +31,10 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+  #include "Bounce2.h"                            // For Bounce button class
+#endif
+
 #if USE_SCREEN
 
 #if USE_TFTSPI

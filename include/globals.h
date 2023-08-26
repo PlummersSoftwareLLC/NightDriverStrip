@@ -1570,7 +1570,9 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 #include "ledviewer.h"                          // For the LEDViewer task and object
 #include "network.h"                            // Networking
 #include "ledbuffer.h"                          // Buffer manager for strip
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
 #include "Bounce2.h"                            // For Bounce button class
+#endif
 #include "colordata.h"                          // color palettes
 #include "drawing.h"                            // drawing code
 #include "taskmgr.h"                            // for cpu usage, etc
