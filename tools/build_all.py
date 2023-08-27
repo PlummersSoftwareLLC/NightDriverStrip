@@ -43,5 +43,32 @@
 import show_envs
 import subprocess
 
-for env in show_envs.getenvs():
-    subprocess.run(['pio', 'run', '-e', env])
+def buildenvs():
+    errors = []
+
+    for env in show_envs.getenvs():
+        try:
+            subprocess.run(['pio', 'run', '-e', env], check=True)
+        except subprocess.CalledProcessError as cpe:
+            errors.append('Process \'' + ' '.join(cpe.cmd) + '\' completed with error code ' + str(cpe.returncode))
+
+    return errors
+
+if __name__ == '__main__':
+    errors = buildenvs()
+
+    print()
+    print('=' * 79)
+    print()
+
+    if len(errors) > 0:
+        print('Builds completed with errors:')
+        for error in errors:
+            print('* ' + error)
+
+        exit(1)
+
+    else:
+        print('Builds completed successfully.')
+
+        exit()
