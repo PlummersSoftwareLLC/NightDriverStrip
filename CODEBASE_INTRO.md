@@ -30,7 +30,7 @@ This introduction aims to provide an overview of the key components, design deci
 
 As mentioned, the guide takes the Mesmerizer project configuration as the starting point. The reason is that it's the configuration with most features enabled and the largest number of effects. Those effects further include the most complex and visually appealing ones. That said, it does not mean this introduction can't be used if you're working on or with other project configurations. It does mean not all of the contents of this document may be relevant to you.
 
-The text in this document regularly mentions "LED display" as the visualization device. In the case of Mesmerizer that translates to a HUB75 LED panel. In case of other devices/projects, the actual device will be a WS2912-variant LED strip or matrix.
+The text in this document regularly mentions "LED display" as the visualization device. In the case of Mesmerizer that translates to a HUB75 LED panel. In case of other devices/projects, the actual device will be a WS2812-variant LED strip or matrix.
 
 ## Key components to focus on
 
@@ -156,6 +156,12 @@ Be cautious when making changes that can impact memory usage - particularly when
 ## Testing and validation
 
 Before introducing new effects or making changes, it's important to test your modifications thoroughly. Given the visual nature of the project, testing on actual LED hardware is almost always a crucial step.
+
+A good way to "smoke test" any change is compiling your version of the code for all project configurations. This can be done by running the following command from the project root directory:
+
+```shell
+python tools/build_all.py
+```
 
 ## Collaboration and documentation
 
