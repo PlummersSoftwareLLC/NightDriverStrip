@@ -2,7 +2,7 @@
 
 #--------------------------------------------------------------------------
 #
-# File:        bake_installer.py
+# File:        show_envs.py
 #
 # NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
 #
@@ -39,19 +39,24 @@
 #    $ ./show_envs.py
 #
 # History:     Aug-08-2023         Rbergen      Added header
+#              Aug-27-2023         Rbergen      Make importable
 #
 #---------------------------------------------------------------------------
 
 import configparser
 import json
 
-config = configparser.ConfigParser()
-config.read('platformio.ini')
+def getenvs():
+    config = configparser.ConfigParser()
+    config.read('platformio.ini')
 
-envs = []
+    envs = []
 
-for section in config.sections():
-    if section.startswith('env:') and len(section) > 4:
-        envs.append(section[4::])
+    for section in config.sections():
+        if section.startswith('env:') and len(section) > 4:
+            envs.append(section[4::])
 
-print(json.dumps(envs))
+    return envs
+
+if __name__ == '__main__':
+    print(json.dumps(getenvs()))
