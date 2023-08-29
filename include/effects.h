@@ -84,9 +84,9 @@
 #define EFFECT_MATRIX_PINWHEEL                         111
 #define EFFECT_MATRIX_INFINITY                         112
 #define EFFECT_MATRIX_MUNCH                            113
-#define EFFECT_MATRIX_CURTAIN                          114
-#define EFFECT_MATRIX_GRID_LIGHTS                      115
-#define EFFECT_MATRIX_PALETTE_SMEAR                    116
+// WAS EFFECT_MATRIX_CURTAIN                          114  NOW AVAILABLE
+// WAS EFFECT_MATRIX_GRID_LIGHTS                      115  NOW AVAILABLE
+// Was EFFECT_MATRIX_PALETTE_SMEAR                    116  NOW AVAILABLE
 #define EFFECT_MATRIX_RAINBOW_FLAG                     117
 #define EFFECT_MATRIX_PONG_CLOCK                       118
 #define EFFECT_MATRIX_PULSE                            119
