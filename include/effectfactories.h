@@ -53,7 +53,13 @@ using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectCon
 //
 // Sub-Structure:
 //
-// NumberedFactory: This struct represents a default factory coupled with its unique effect number.
+// NumberedFactory: This class represents a default factory coupled with its unique
+//                  effect  number. It also includes a flag that indicates whether the
+//                  effect that is created using the factory function should be set to
+//                  "disabled" immediately after creation.
+//                  Besides these member variables, the class includes a function to
+//                  create the effect in accordance with an instance's member variables'
+//                  values.
 //
 // Member Variables:
 //
@@ -65,34 +71,49 @@ using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectCon
 //
 // GetDefaultFactories: Returns a const reference to the vector of default factories.
 // GetJSONFactories: Returns a const reference to the map of JSON factories.
-// AddEffect: Adds a new effect into the collection. It takes three parameters:
+// AddEffect: Adds a new effect factory into the collection. It takes three parameters:
 //            - An effect number which is an integer.
 //            - A DefaultEffectFactory reference.
 //            - A JSONEffectFactory reference.
+//            It returns a reference to the NumberedFactory that was created around the
+//            DefaultEffectFactory.
 // IsEmpty: Returns a boolean indicating whether both defaultFactories and jsonFactories are empty.
 // ClearDefaultFactories: Clears the vector of default factories.
 //
-// Note: The 'extern DRAM_ATTR EffectFactories g_EffectFactories;' line at the bottom of this code
-//       indicates that an EffectFactories object named 'g_EffectFactories' is declared elsewhere,
-//       and it is available for use throughout the program.
 // -----------------------------------------------------------------------------
 
 class EffectFactories
 {
   public:
 
-    struct NumberedFactory
+    class NumberedFactory
     {
-        int EffectNumber;
-        DefaultEffectFactory Factory;
+        int effectNumber;
+        DefaultEffectFactory factory;
+
+      public:
+        bool LoadDisabled = false;
 
         NumberedFactory(int effectNumber, const DefaultEffectFactory& factory)
-          : EffectNumber(effectNumber),
-            Factory(factory)
+          : effectNumber(effectNumber),
+            factory(factory)
         {}
 
-        NumberedFactory()
-        {}
+        int EffectNumber() const
+        {
+            return effectNumber;
+        }
+
+        std::shared_ptr<LEDStripEffect> CreateEffect() const
+        {
+            auto pEffect = factory();
+
+            // Disable the effect if we have one and we were asked to do so
+            if (pEffect && LoadDisabled)
+                pEffect->SetEnabled(false);
+
+            return pEffect;
+        }
     };
 
   private:
@@ -112,10 +133,12 @@ class EffectFactories
         return jsonFactories;
     }
 
-    void AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
+    NumberedFactory& AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
     {
-        defaultFactories.emplace_back(effectNumber, defaultFactory);
-        jsonFactories.try_emplace(effectNumber, jsonFactory);    
+        auto& numberedFactory = defaultFactories.emplace_back(effectNumber, defaultFactory);
+        jsonFactories.try_emplace(effectNumber, jsonFactory);
+
+        return numberedFactory;
     }
 
     bool IsEmpty()
@@ -125,6 +148,6 @@ class EffectFactories
 
     void ClearDefaultFactories()
     {
-      defaultFactories.clear();
+        defaultFactories.clear();
     }
 };

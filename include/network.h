@@ -37,7 +37,7 @@
 #if ENABLE_WIFI
     void processRemoteDebugCmd();
 
-    bool ConnectToWiFi(uint cRetries);
+    bool ConnectToWiFi(uint cRetries, bool waitForCredentials);
     void UpdateNTPTime();
     void SetupOTA(const String & strHostname);
     bool ReadWiFiConfig();

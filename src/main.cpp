@@ -162,6 +162,10 @@
 #include "systemcontainer.h"
 #include "values.h"
 
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+  #include "Bounce2.h"                            // For Bounce button class
+#endif
+
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 
 //
@@ -330,7 +334,7 @@ void setup()
             if (!WriteWiFiConfig())
                 debugW("Could not even write defaults to WiFi Credentials");
         }
-        else if (WiFi_ssid == "Unset" || WiFi_ssid.length() == 0)
+        else if (WiFi_ssid.length() == 0)
         {
             WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;
@@ -430,13 +434,13 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #if USE_MATRIX
+    #if USE_HUB75
         // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
         LEDMatrixGFX::InitializeHardware(devices);
     #elif HEXAGON
         // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
         HexagonGFX::InitializeHardware(devices);
-    #elif USE_STRIP
+    #elif USE_WS281X
         // LEDStripGFX is used for simple strips or for matrices woven from strips
         LEDStripGFX::InitializeHardware(devices);
     #endif
@@ -466,7 +470,7 @@ void setup()
     });
 
     // Show splash effect on matrix
-    #if USE_MATRIX
+    #if USE_HUB75
         debugI("Initializing splash effect manager...");
         InitSplashEffectManager();
     #endif
@@ -482,7 +486,7 @@ void setup()
 
     #if ENABLE_WIFI && WAIT_FOR_WIFI
         debugI("Calling ConnectToWifi()\n");
-        if (false == ConnectToWiFi(99))
+        if (false == ConnectToWiFi(99, true))
         {
             debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
             throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
@@ -539,11 +543,11 @@ void loop()
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
-            #if USE_STRIP
+            #if USE_WS281X
                 strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
             #endif
 
-            #if USE_MATRIX
+            #if USE_HUB75
                 strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
             #endif
 

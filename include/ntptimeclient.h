@@ -60,6 +60,8 @@ class NTPTimeClient
     }
 
     static bool UpdateClockFromWeb(WiFiUDP * pUDP);
+
+    static void ShowUptime();
 };
 
 
