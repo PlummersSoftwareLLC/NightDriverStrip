@@ -31,6 +31,10 @@
 #include "globals.h"
 #include "systemcontainer.h"
 
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+  #include "Bounce2.h"                            // For Bounce button class
+#endif
+
 #if USE_SCREEN
 
 #if USE_TFTSPI
@@ -175,7 +179,7 @@ void BasicInfoSummary(bool bRedraw)
         display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
 
-    /* Old PSRAM code 
+    /* Old PSRAM code
     display.setCursor(xMargin + 0, yMargin + lineHeight * 7);
     display.println(str_sprintf("PRAM:%dK/%dK\n",
                                 ESP.getFreePsram() / 1024,

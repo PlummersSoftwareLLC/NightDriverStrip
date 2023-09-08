@@ -58,7 +58,7 @@
 
 #ifndef PatternMandala_H
 #define PatternMandala_H
-#if     USE_MATRIX
+#if     USE_HUB75
 
 class PatternMandala : public LEDStripEffect
 {

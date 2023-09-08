@@ -1,15 +1,14 @@
 {
   "name": "<name>",
   "version": "v<version>",
+  "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "<chipfamily>",
-      "parts": 
-      [
+      "parts": [
         { "path": "../firmware/<tag>/bootloader.bin", "offset": 4096  },
         { "path": "../firmware/<tag>/partitions.bin", "offset": 32768 },
-        { "path": "../firmware/<tag>/firmware.bin", "offset": 65536 },
-        { "path": "../firmware/<tag>/spiffs.bin", "offset": 3342336 }
+        { "path": "../firmware/<tag>/firmware.bin", "offset": 65536 }
       ]
     }
   ]

@@ -253,7 +253,7 @@ protected:
     }
 };
 
-#if USE_MATRIX
+#if USE_HUB75
 
 // SplashLogoEffect
 //
@@ -301,7 +301,7 @@ class SplashLogoEffect : public LEDStripEffect
     }
 };
 
-#endif // USE_MATRIX
+#endif // USE_HUB75
 
 // StatusEffect
 //

@@ -98,6 +98,17 @@ class  EffectManager : public IJSONSerializable
         }
     }
 
+    void ProduceAndLoadDefaultEffect(const EffectFactories::NumberedFactory& numberedFactory)
+    {
+        auto pEffect = numberedFactory.CreateEffect();
+        if (pEffect)
+        {
+            // Effects in the default list are core effects. These can be disabled but not deleted.
+            pEffect->MarkAsCoreEffect();
+            _vEffects.push_back(pEffect);
+        }
+    }
+
     // Implementation is in effects.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
@@ -309,7 +320,7 @@ public:
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
 
-        #if (USE_MATRIX)
+        #if (USE_HUB75)
                 auto pMatrix = g();
                 pMatrix->setPalette(CRGBPalette16(oldColor, color));
                 pMatrix->PausePalette(true);
@@ -343,7 +354,7 @@ public:
         if (!retainRemoteEffect)
             _tempEffect = nullptr;
 
-        #if (USE_MATRIX)
+        #if (USE_HUB75)
             g()->PausePalette(false);
         #endif
     }
@@ -355,7 +366,7 @@ public:
 
         std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
-        #if USE_MATRIX
+        #if USE_HUB75
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
         #endif
@@ -642,7 +653,7 @@ public:
         do
         {
             if (_iCurrentEffect == 0)
-                _iCurrentEffect = EffectCount() - 1;
+                _iCurrentEffect = EffectCount();
 
             _iCurrentEffect--;
             _effectStartTime = millis();

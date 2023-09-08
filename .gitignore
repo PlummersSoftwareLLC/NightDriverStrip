@@ -16,3 +16,4 @@ WebInstaller/firmware/**
 WebInstaller/manifests/**
 WebInstaller/web_projects.json
 .idea/**
+tools/__pycache__
