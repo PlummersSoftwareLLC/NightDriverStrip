@@ -41,7 +41,10 @@
 #define SUPERSAMPLES 1                                    // How many supersamples to take
 #define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
 #define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
-#define MAX_VU (MAX_ANALOG_IN / 2)
+#ifndef MAX_VU
+  #define MAX_VU (MAX_ANALOG_IN / 2)
+#endif
+
 #define MS_PER_SECOND 1000
 
 // These are the audio variables that are referenced by many audio effects.  In order to allow non-audio code to reference them too without
@@ -85,8 +88,9 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
 // results are simplified down to this small class of band peaks.
 
+#ifndef MIN_VU
 #define MIN_VU 180              // Minimum VU value to use for the span when computing VURatio.  Contributes to
-                                // how dynamic the music is (smaller values == more dynamic)
+#endif                          // how dynamic the music is (smaller values == more dynamic)
 
 
 #ifndef GAINDAMPEN

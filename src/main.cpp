@@ -555,7 +555,7 @@ void loop()
                 strOutput += str_sprintf("Audio FPS: %d, MinVU: %6.1f, PeakVU: %6.1f, VURatio: %3.1f ", g_Analyzer._AudioFPS, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
             #endif
 
-            #if ENABLE_SERIAL
+            #if ENABLE_AUDIOSERIAL
                 strOutput += str_sprintf("Serial FPS: %d, ", g_Analyzer._serialFPS);
             #endif
 
