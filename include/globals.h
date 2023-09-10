@@ -816,7 +816,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Spectrum"
     #endif
 
-    #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -858,6 +858,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU 6
     #define POWER_LIMIT_MW  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
+
+    // The mic in the M5 is not quite as sensitive as the Mesermizer, so it gets a lower minimum VU than default
+    #define MIN_VU          180
+    #define NOISE_CUTOFF    1000
 
     #if ELECROW
     #else
@@ -1071,7 +1075,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef PROJECT_NAME
-#define PROJECT_NAME        "NightDriver"
+#define PROJECT_NAME        "Mesmerizer"
 #endif
 
 #if USE_HUB75
