@@ -198,12 +198,16 @@ class PatternSMTixyLand : public LEDStripEffect
     }
 
     // Runs only the specific effect #effect.
-    PatternSMTixyLand(const String& name, int effect) : LEDStripEffect(EFFECT_MATRIX_SMTIXY_LAND, name), _name(name), _effect(effect)
+    PatternSMTixyLand(const String& name, int effect)
+      : LEDStripEffect(EFFECT_MATRIX_SMTIXY_LAND, name),
+        _name(name),
+        _effect(effect)
     {
     }
 
-
-    PatternSMTixyLand(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject), _effect(jsonObject["effect"])
+    PatternSMTixyLand(const JsonObjectConst &jsonObject)
+      : LEDStripEffect(jsonObject),
+      _effect(jsonObject[PTY_EFFECT])
     {
     }
 
@@ -214,7 +218,7 @@ class PatternSMTixyLand : public LEDStripEffect
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc["effect"] = _effect;
+        jsonDoc[PTY_EFFECT] = _effect;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

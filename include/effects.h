@@ -106,81 +106,33 @@
 #define EFFECT_MATRIX_WAVEFORM                         133
 #define EFFECT_MATRIX_GHOST_WAVE                       134
 #define EFFECT_MATRIX_MAZE                             135
+#define EFFECT_MATRIX_SPECTRUMBAR                      136
 
-#define EFFECT_MATRIX_BALLS                            136
-#define EFFECT_MATRIX_SMSTROBE_DIFFUSION               137
-#define EFFECT_MATRIX_SMONE_RING                       138
-#define EFFECT_MATRIX_SMLUMENJER_PALETTE               139
-#define EFFECT_MATRIX_SMSQUARES_AND_DOTS               140
-#define EFFECT_MATRIX_SMTRAFFIC                        141
-#define EFFECT_MATRIX_SM2DDPR                          142
-#define EFFECT_MATRIX_SMSINUSOIDSIN16                  143
-#define EFFECT_MATRIX_SMFIREWORKS                      144
-#define EFFECT_MATRIX_SMSTARDEEP                       145
-#define EFFECT_MATRIX_SMMAGMA                          146
-#define EFFECT_MATRIX_SMAMBERRAIN                      147
-#define EFFECT_MATRIX_SMFIRE2012                       148
-#define EFFECT_MATRIX_SMFIRE2021                       149
-#define EFFECT_MATRIX_SMWISP                           150
-#define EFFECT_MATRIX_SMNOISE                          151
-#define EFFECT_MATRIX_SMPICASSO3IN1                    152
-#define EFFECT_MATRIX_SMSNAKES                         153
-#define EFFECT_MATRIX_SMPARTICLES                      154
-#define EFFECT_MATRIX_SMRAINBOW_SWIRL                  155
-#define EFFECT_MATRIX_SMRAINBOW_FLOW                   156
-#define EFFECT_MATRIX_SMPASTEL_FLUTTER                 157
-#define EFFECT_MATRIX_SMSAND                           158
-#define EFFECT_MATRIX_SMSMOKE                          159
-/* 160 was used briefly by SMSpiro, a deleted dup of _Spiro. AVAILABLE */
-#define EFFECT_MATRIX_SMAURORA                         161
-#define EFFECT_MATRIX_SMPRISMATA                       162
-#define EFFECT_MATRIX_SMRADIAL_FIRE                    163
-#define EFFECT_MATRIX_SMMAZE2                          164
-#define EFFECT_MATRIX_SMMIRAGE                         165
-#define EFFECT_MATRIX_SMRADIAL_WAVE                    166
-#define EFFECT_MATRIX_SMRAINBOW_TUNNEL                 167
-#define EFFECT_MATRIX_SMHYPNOSIS                       168
-#define EFFECT_MATRIX_SMWALKING_MACHINE                169
-#define EFFECT_MATRIX_SMXOR_CIRCLES                    170
-#define EFFECT_MATRIX_SMTIXY_LAND                      171
-#define EFFECT_MATRIX_SMBOID_EXPLOSION                 172
-#define EFFECT_MATRIX_SMSUPERNOVA                      173
-#define EFFECT_MATRIX_SMBLURRING_COLORS                174
-#define EFFECT_MATRIX_SMFLOW_FIELDS                    175
-#define EFFECT_MATRIX_SMGAMMA                          176
-#define EFFECT_MATRIX_SMSTARSHIP_TROOPERS              177
-#define EFFECT_MATRIX_SMHOLIDAY_LIGHTS                 178
-#define EFFECT_MATRIX_SMGOOGLE_NEXUS                   179
-#define EFFECT_MATRIX_SMGRAVITY_BALLS                  180
-#define EFFECT_MATRIX_SMFLOCKING                       181
-#define EFFECT_MATRIX_SMBUBBLES                        182
-#define EFFECT_MATRIX_SMPATTERN_TRICK                  183
-#define EFFECT_MATRIX_SMSUN_RADIATION                  184
-#define EFFECT_MATRIX_SMSIN_DOTS                       185
-#define EFFECT_MATRIX_SMFLYING                         186
-#define EFFECT_MATRIX_SMMETA_BALLS                     187
-#define EFFECT_MATRIX_SMTWISTER                        188
-#define EFFECT_MATRIX_SMTWIST                          189
-#define EFFECT_MATRIX_SMSPIRO_PULSE                    190
-#define EFFECT_MATRIX_SMCOLOR_POPCORN                  191
-#define EFFECT_MATRIX_SMPSP_CLOUD                      192
-#define EFFECT_MATRIX_SMEYE_TUNNEL                     193
-#define EFFECT_MATRIX_SMLIGHTNING                      194
+#define EFFECT_MATRIX_SM2DDPR                          137
+#define EFFECT_MATRIX_SMAMBERRAIN                      138
+#define EFFECT_MATRIX_SMBLURRING_COLORS                139
+#define EFFECT_MATRIX_SMFIRE2021                       140
+#define EFFECT_MATRIX_SMFLOW_FIELDS                    141
+#define EFFECT_MATRIX_SMGAMMA                          142
+#define EFFECT_MATRIX_SMHOLIDAY_LIGHTS                 143
+#define EFFECT_MATRIX_SMHYPNOSIS                       144
+#define EFFECT_MATRIX_SMMETA_BALLS                     145
+#define EFFECT_MATRIX_SMNOISE                          146
+#define EFFECT_MATRIX_SMPICASSO3IN1                    147
+#define EFFECT_MATRIX_SMRADIAL_FIRE                    148
+#define EFFECT_MATRIX_SMRADIAL_WAVE                    149
+#define EFFECT_MATRIX_SMRAINBOW_TUNNEL                 150
+#define EFFECT_MATRIX_SMSMOKE                          151
+#define EFFECT_MATRIX_SMSPIRO_PULSE                    152
+#define EFFECT_MATRIX_SMSTARDEEP                       153
+#define EFFECT_MATRIX_SMSTROBE_DIFFUSION               154
+#define EFFECT_MATRIX_SMSUPERNOVA                      155
+#define EFFECT_MATRIX_SMTIXY_LAND                      156
+#define EFFECT_MATRIX_SMTWISTER                        157
+#define EFFECT_MATRIX_SMWALKING_MACHINE                158
 
-#define EFFECT_MATRIX_SPECTRUMBAR                      195
-
-#define EFFECT_MATRIX_SMNOISE_LR                       196
-#define EFFECT_MATRIX_SMNOISE_LR_STRIPE                197
-#define EFFECT_MATRIX_SMNOISE_SHIKON                   198
-#define EFFECT_MATRIX_SMNOISE_COLORCUBE                199
-
-#define EFFECT_MATRIX_SMPICASSO_1                      200
-#define EFFECT_MATRIX_SMPICASSO_2                      201
-#define EFFECT_MATRIX_SMPICASSO_3                      202
-
-//TODO: Talk to Rutger about impact of changing this.
 // Hexagon Effects
-#define EFFECT_HEXAGON_OUTER_RING                      301
+#define EFFECT_HEXAGON_OUTER_RING                      201
 
 // Starry Night star variations
 #define EFFECT_STAR                                      1
@@ -225,5 +177,7 @@
 #define PTY_FADE            "fde"
 #define PTY_VERSION         "ver"
 #define PTY_HUESTEP         "hst"
+#define PTY_EFFECT          "eft"
+#define PTY_SCALE           "scl"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

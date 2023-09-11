@@ -32,7 +32,6 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     uint8_t enlargedObjectNUM; // используемое в эффекте количество объектов
     long enlargedObjectTime[enlargedOBJECT_MAX_COUNT] {0};
     int _scale{-1};
-    const String _name;
 
     void PicassoGenerate(bool reset)
     {
@@ -153,16 +152,22 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     }
 
   public:
-    PatternSMPicasso3in1() : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso"), _scale(-1)
+    PatternSMPicasso3in1()
+      : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso"),
+        _scale(-1)
     {
     }
 
-    PatternSMPicasso3in1(const String& name, int scale) : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, name), _name(name), _scale(scale)
+    PatternSMPicasso3in1(const String& name, int scale)
+      : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, name),
+        _scale(scale)
     {
     }
 
 
-    PatternSMPicasso3in1(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject), _scale(jsonObject["scale"])
+    PatternSMPicasso3in1(const JsonObjectConst &jsonObject)
+      : LEDStripEffect(jsonObject),
+      _scale(jsonObject[PTY_SCALE])
     {
     }
 
@@ -173,7 +178,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc["scale"] = _scale;
+        jsonDoc[PTY_SCALE] = _scale;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

@@ -319,14 +319,6 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 #define ADD_STARRY_NIGHT_EFFECT_DISABLED(starType, ...) \
     ADD_STARRY_NIGHT_EFFECT(starType, __VA_ARGS__).LoadDisabled = true
 
-
-#if USE_OPTIONAL_EFFECTS
-#define ADD_OPTIONAL_EFFECT ADD_EFFECT
-#else
-#define ADD_OPTIONAL_EFFECT ADD_EFFECT_DISABLED
-#endif
-
-
 // This function sets up the effect factories for the effects for whatever project is being built. The ADD_EFFECT macro variations
 //   are provided and used for convenience.
 void LoadEffectFactories()
@@ -363,51 +355,6 @@ void LoadEffectFactories()
 
     #elif MESMERIZER
 
-        #if 1
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMPRISMATA, PatternSMPrismata);                        // 6 Be better if it stuck in the pretty part of the curves
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMAURORA, PatternSMAurora);
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMCOLOR_POPCORN, PatternSMColorPopcorn);               // 5
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMFLYING, PatternSMFlying);                            // 5
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMSIN_DOTS, PatternSMSinDots);                         // 5
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMPATTERN_TRICK, PatternSMPatternTrick);               // 4
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMBUBBLES, PatternSMBubbles);                          // 4
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMSTARSHIP_TROOPERS, PatternSMStarshipTroopers);       // 4
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMPASTEL_FLUTTER, PatternSMPastelFlutter);             // 4 FIXED!(rjl) Cool, but kinda too bright?
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMRAINBOW_SWIRL, PatternSMRainbowSwirl);               // 4
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMPARTICLES, PatternSMParticles);                      // 4
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMFIRE2012, PatternSMFire2012);                        // 4
-
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMSUN_RADIATION, PatternSMSunRadiation);               // 3
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMEYE_TUNNEL, PatternSMEyeTunnel);                     // 3
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMPSP_CLOUD, PatternSMPSPCloud);                       //
-
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMTWIST, PatternSMTwist);                              // 1
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMFLOCKING, PatternSMFlocking);                        // 1 FIXED!(rjl)   (Invalid draws, all pixels in one line at bottom)
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMGRAVITY_BALLS, PatternSMGravityBalls);               // 3
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMBOID_EXPLOSION, PatternSMBoidExplosion);             // FIXME FIXED!(rjl)
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMXOR_CIRCLES, PatternSMXorCircles);                   // 5
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMMIRAGE, PatternSMMirage);                            // 5
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMMAZE2, PatternSMMaze2);                              // 0 FIXED!(rjl) Draws a maze once, then nothing?
-
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMSAND, PatternSMSand);                                // 3 FIXED!(rjl) Never stacked for me, just a stream of sand grains
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMRAINBOW_FLOW, PatternSMRainbowFlow);                 // 3
-
-            // ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMWISP, PatternSMWisp);
-
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMLIGHTNING, PatternSMLightning);                          // 2
-
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMMAGMA, PatternSMMagma);                                  // FIXME
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMFIREWORKS, PatternSMFireworks);                      // 4 Snoozer
-            // ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMSINUSOIDSIN16, PatternSMSinusoidSin16);
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMTRAFFIC, PatternSMTraffic);                          // 5 Cute idea, but kinda boring
-            // ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SQUARES_AND_DOTS, PatternSMSquaresAndDots);
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMLUMENJER_PALETTE, PatternSMLumenjerPalette);         // 4
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMONE_RING, PatternSMOneRing);                         // 3
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_BALLS, PatternBalls);                                  // 4
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMGOOGLE_NEXUS,    PatternSMGoogleNexus);                 // 6
-            ADD_OPTIONAL_EFFECT(EFFECT_MATRIX_SMSNAKES,          PatternSMSnakes);
-
-#else
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "GhostWave", 0, 30, false, 10);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
@@ -428,48 +375,40 @@ void LoadEffectFactories()
         ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
 
         ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,        PatternPongClock);
-#if ENABLE_WIFI
+    #if ENABLE_WIFI
         ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
         ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
-#endif
+    #endif
 
         ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);
-
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
-
-//      ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise); // Loops through all. Include?
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR,        PatternSMNoise, "Lava Rainbow", PatternSMNoise::EffectType::LavaLampRainbow_t);
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_LR_STRIPE, PatternSMNoise, "Lava Rainbow Stripe", PatternSMNoise::EffectType::LavaLampRainbowStripe_t);
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_SHIKON,    PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon_t);
-        ADD_EFFECT(EFFECT_MATRIX_SMNOISE_COLORCUBE, PatternSMNoise, "ColorCube", PatternSMNoise::EffectType::ColorCube_t);
-
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Lava Rainbow", PatternSMNoise::EffectType::LavaLampRainbow_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Lava Rainbow Stripe", PatternSMNoise::EffectType::LavaLampRainbowStripe_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "ColorCube", PatternSMNoise::EffectType::ColorCube_t);
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire);
-
         ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
         ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021,        PatternSMFire2021);
         ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
-
         ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS,     PatternSMFlowFields);
         ADD_EFFECT(EFFECT_MATRIX_SMBLURRING_COLORS, PatternSMBlurringColors);
         ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
         ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);
         ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS,        PatternSMHypnosis);
         ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP,        PatternSMStarDeep);
-
         ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise);
         ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);
-        // ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1);
-	ADD_EFFECT(EFFECT_MATRIX_SMPICASSO_1,       PatternSMPicasso3in1, "Picasso 1", 12);
-        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO_2,       PatternSMPicasso3in1, "Picasso 2", 38);
-        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO_3,       PatternSMPicasso3in1, "Picasso 3", 73);
-
+	    ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Picasso 1", 12);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Picasso 2", 38);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Picasso 3", 73);
         ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);
         ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
         ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);
         ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);
         ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);
         ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand);
-	// Dave, it's up to you to pick the ones you like here.
+
+	    // Dave, it's up to you to pick the ones you like here.
         ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "PolyWhirl", 2);
         ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "FakeFire", 20);
         ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "Feathers", 21);
@@ -495,7 +434,6 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_MANDALA,           PatternMandala);
         ADD_EFFECT(EFFECT_MATRIX_MUNCH,             PatternMunch);
         ADD_EFFECT(EFFECT_MATRIX_MAZE,              PatternMaze);
-#endif
         // make_shared_psram<PatternInfinity>(),
         // make_shared_psram<PatternQR>(),
 

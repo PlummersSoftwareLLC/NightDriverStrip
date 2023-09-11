@@ -363,16 +363,21 @@ class PatternSMNoise : public LEDStripEffect
         ColorCube_t
     };
 
-    PatternSMNoise(const String& name, EffectType effect) : LEDStripEffect(EFFECT_MATRIX_SMNOISE, name) , _name(name), _effect(effect)
+    PatternSMNoise(const String& name, EffectType effect)
+      : LEDStripEffect(EFFECT_MATRIX_SMNOISE, name),
+        _effect(effect)
     {
     }
 
-    PatternSMNoise() : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp")
+    PatternSMNoise()
+      : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp"),
+        _effect(EffectType::Unknown)
     {
-        _effect = EffectType::Unknown;
     }
 
-    PatternSMNoise(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject), _effect(jsonObject["effect"])
+    PatternSMNoise(const JsonObjectConst &jsonObject)
+      : LEDStripEffect(jsonObject),
+        _effect(static_cast<EffectType>(jsonObject[PTY_EFFECT]))
     {
     }
 
@@ -383,7 +388,7 @@ class PatternSMNoise : public LEDStripEffect
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc["effect"] = _effect;
+        jsonDoc[PTY_EFFECT] = to_value(_effect);
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -435,7 +440,6 @@ class PatternSMNoise : public LEDStripEffect
   private:
     int mode{EffectType::Unknown}; // Which of the 17 effects(!) are we showing?
     EffectType _effect;
-    const String _name;
 
     static const int MAX_DIMENSION = ((MATRIX_WIDTH > MATRIX_HEIGHT) ? MATRIX_WIDTH : MATRIX_HEIGHT);
 
