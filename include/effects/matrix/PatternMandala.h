@@ -135,7 +135,7 @@ public:
         g()->GetNoise().noise_x += dx * 4;
         g()->GetNoise().noise_z += dz * 4;
 
-        g()->FillGetNoise();
+        g()->FillGetNoise<NoiseApproach::One>();
 
         ShowNoiseLayer(0, 1, 0);
 

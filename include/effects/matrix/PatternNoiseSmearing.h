@@ -102,10 +102,10 @@ public:
     g()->FillGetNoise();
 
     g()->MoveX(8);
-    g()->MoveFractionalNoiseY(8);
+    //g()->MoveFractionalNoiseY<NoiseApproach::One>(8);
 
     g()->MoveY(3);
-    g()->MoveFractionalNoiseX(8);
+    g()->MoveFractionalNoiseX<NoiseApproach::One>(4);
 
 
   }

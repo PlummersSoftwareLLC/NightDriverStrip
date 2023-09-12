@@ -1,0 +1,213 @@
+#include "globals.h"
+#include "gfxbase.h"
+
+#if USE_NOISE
+    template<>
+    void GFXBase::FillGetNoise<NoiseApproach::One>()
+    {
+        for (uint16_t i = 0; i < _width; i++)
+        {
+            uint32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_height + 1) / 2));
+
+            for (uint16_t j = 0; j < _height; j++)
+            {
+                uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
+
+                uint16_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+
+                uint8_t olddata = _ptrNoise->noise[i][j];
+                uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
+                data = newdata;
+
+                _ptrNoise->noise[i][j] = data;
+            }
+        }
+    }
+
+    template<>
+    void GFXBase::FillGetNoise<NoiseApproach::Two>()
+    {
+        for (uint8_t i = 0; i < WIDTH; i++)
+        {
+            int32_t ioffset = _ptrNoise->noise_scale_x * (i - CENTER_X_MINOR);
+            for (uint8_t j = 0; j < HEIGHT; j++)
+            {
+                int32_t joffset = _ptrNoise->noise_scale_y * (j - CENTER_Y_MINOR);
+                int8_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+                int8_t olddata = _ptrNoise->noise[i][j];
+                int8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 255 - _ptrNoise->noisesmoothing);
+                data = newdata;
+                _ptrNoise->noise[i][j] = data;
+            }
+        }
+    }
+
+    template<>
+    void GFXBase::MoveFractionalNoiseX<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
+    {
+        for (uint8_t y = 0; y < HEIGHT; y++)
+        {
+            int16_t amount =((int16_t)_ptrNoise->noise[0][y] - 128) * 2 * amt + shift * 256;
+            int8_t delta = abs(amount) >> 8;
+            int8_t fraction = abs(amount) & 255;
+            for (uint8_t x = 0; x < WIDTH; x++)
+            {
+                int8_t zD;
+                int8_t zF;
+
+                if (amount < 0)
+                {
+                    zD = x - delta;
+                    zF = zD - 1;
+                }
+                else
+                {
+                    zD = x + delta;
+                    zF = zD + 1;
+                }
+                CRGB PixelA = CRGB::Black;
+                if ((zD >= 0) && (zD < WIDTH)) PixelA = leds[XY(zD, y)];
+                    CRGB PixelB = CRGB::Black;
+                if ((zF >= 0) && (zF < WIDTH)) PixelB = leds[XY(zF, y)];
+                    leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+            }
+        }
+    }
+
+    template<>
+    void GFXBase::MoveFractionalNoiseY<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
+    {
+        for (uint8_t x = 0; x < WIDTH; x++)
+        {
+            int16_t amount = ((int16_t)_ptrNoise->noise[x][0] - 128) * 2 * amt + shift * 256;
+            int8_t delta = abs(amount) >> 8;
+            int8_t fraction = abs(amount) & 255;
+            for (uint8_t y = 0; y < HEIGHT; y++)
+            {
+                int8_t zD;
+                int8_t zF;
+
+                if (amount < 0)
+                {
+                    zD = y - delta;
+                    zF = zD - 1;
+                }
+                else
+                {
+                    zD = y + delta;
+                    zF = zD + 1;
+                }
+                CRGB PixelA = CRGB::Black;
+                if ((zD >= 0) && (zD < HEIGHT))
+                    PixelA = leds[XY(x, zD)];
+                CRGB PixelB = CRGB::Black;
+                if ((zF >= 0) && (zF < HEIGHT))
+                    PixelB = leds[XY(x, zF)];
+                leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+            }
+        }
+    }
+
+    template<>
+    void GFXBase::MoveFractionalNoiseX<NoiseApproach::One>(uint8_t amt, uint8_t shift)
+    {
+        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram_array<CRGB>(NUM_LEDS);
+
+        // move delta pixelwise
+        for (int y = 0; y < _height; y++)
+        {
+            uint16_t amount = _ptrNoise->noise[0][y] * amt;
+            uint8_t delta = _width - 1 - (amount / 256);
+
+            // Process up to the end less the dekta
+            for (int x = 0; x < _width - delta; x++)
+                ledsTemp[XY(x, y)] = leds[XY(x + delta, y)];
+
+            // Do the tail portion while wrapping around
+            for (int x = _width - delta; x < _width; x++)
+                ledsTemp[XY(x, y)] = leds[XY(x + delta - _width, y)];
+        }
+
+        // move fractions
+        CRGB PixelA;
+        CRGB PixelB;
+
+        for (uint16_t y = 0; y < _height; y++)
+        {
+            uint16_t amount = _ptrNoise->noise[0][y] * amt;
+            uint8_t delta = _height - 1 - (amount / 256);
+            uint8_t fractions = amount - (delta * 256);
+
+            for (uint16_t x = 1; x < _width; x++)
+            {
+                PixelA = ledsTemp[XY(x, y)];
+                PixelB = ledsTemp[XY(x - 1, y)];
+
+                PixelA %= 255 - fractions;
+                PixelB %= fractions;
+
+                leds[XY(x, y)] = PixelA + PixelB;
+            }
+
+            PixelA = ledsTemp[XY(0, y)];
+            PixelB = ledsTemp[XY(_width - 1, y)];
+
+            PixelA %= 255 - fractions;
+            PixelB %= fractions;
+
+            leds[XY(0, y)] = PixelA + PixelB;
+        }
+    }
+
+    template<>
+    void GFXBase::MoveFractionalNoiseY<NoiseApproach::One>(uint8_t amt, uint8_t shift)
+    {
+        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram_array<CRGB>(NUM_LEDS);
+
+        // move delta pixelwise
+        for (int x = 0; x < _width; x++)
+        {
+            uint16_t amount = _ptrNoise->noise[x][0] * amt;
+            uint8_t delta = _height - 1 - (amount / 256);
+
+            for (int y = 0; y < _height - delta; y++)
+            {
+                ledsTemp[XY(x, y)] = leds[XY(x, y + delta)];
+            }
+            for (int y = _height - delta; y < _height; y++)
+            {
+                ledsTemp[XY(x, y)] = leds[XY(x, y + delta - _height)];
+            }
+        }
+
+        // move fractions
+        CRGB PixelA;
+        CRGB PixelB;
+
+        for (uint16_t x = 0; x < _width; x++)
+        {
+            uint16_t amount = _ptrNoise->noise[x][0] * amt;
+            uint8_t delta = _height - 1 - (amount / 256);
+            uint8_t fractions = amount - (delta * 256);
+
+            for (uint16_t y = 1; y < _height; y++)
+            {
+                PixelA = ledsTemp[XY(x, y)];
+                PixelB = ledsTemp[XY(x, y - 1)];
+
+                PixelA %= 255 - fractions;
+                PixelB %= fractions;
+
+                leds[XY(x, y)] = PixelA + PixelB;
+            }
+
+            PixelA = ledsTemp[XY(x, 0)];
+            PixelB = ledsTemp[XY(x, _height - 1)];
+
+            PixelA %= 255 - fractions;
+            PixelB %= fractions;
+
+            leds[XY(x, 0)] = PixelA + PixelB;
+        }
+    }
+#endif

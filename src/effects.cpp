@@ -427,7 +427,6 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
         ADD_EFFECT(EFFECT_MATRIX_PULSAR,            PatternPulsar);
         ADD_EFFECT(EFFECT_MATRIX_BOUNCE,            PatternBounce);
-//        ADD_EFFECT(EFFECT_MATRIX_SPIRO,             PatternSpiro);                            // Replaced by SpiroPulse above
         ADD_EFFECT(EFFECT_MATRIX_WAVE,              PatternWave);
         ADD_EFFECT(EFFECT_MATRIX_SWIRL,             PatternSwirl);
         ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
