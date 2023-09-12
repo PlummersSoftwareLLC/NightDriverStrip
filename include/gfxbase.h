@@ -127,25 +127,8 @@ public:
     CRGB *leds = nullptr;
     std::unique_ptr<Boid[]> _boids;
 
-    GFXBase(int w, int h) : Adafruit_GFX(w, h),
-                            _width(w),
-                            _height(h)
-    {
-        #if USE_NOISE
-            debugV("Allocating boids and noise");
-            _boids.reset(psram_allocator<Boid>().allocate(_width));
-            _ptrNoise = std::make_unique<Noise>();          // Avoid specific PSRAM allocation since highly random access
-            assert(_ptrNoise && _boids);
-            debugV("Setting up noise");
-            NoiseVariablesSetup();
-            debugV("Filling noise");
-            FillGetNoise();
-        #endif
-
-        debugV("Setting up palette");
-        loadPalette(0);
-        ResetOscillators();
-    }
+    // Definition moved to GFXBase.cpp because it uses the FillGetNoise() function template
+    GFXBase(int w, int h);
 
     ~GFXBase() override
     {

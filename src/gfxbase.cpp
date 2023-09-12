@@ -43,72 +43,6 @@
     }
 
     template<>
-    void GFXBase::MoveFractionalNoiseX<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
-    {
-        for (uint8_t y = 0; y < HEIGHT; y++)
-        {
-            int16_t amount =((int16_t)_ptrNoise->noise[0][y] - 128) * 2 * amt + shift * 256;
-            int8_t delta = abs(amount) >> 8;
-            int8_t fraction = abs(amount) & 255;
-            for (uint8_t x = 0; x < WIDTH; x++)
-            {
-                int8_t zD;
-                int8_t zF;
-
-                if (amount < 0)
-                {
-                    zD = x - delta;
-                    zF = zD - 1;
-                }
-                else
-                {
-                    zD = x + delta;
-                    zF = zD + 1;
-                }
-                CRGB PixelA = CRGB::Black;
-                if ((zD >= 0) && (zD < WIDTH)) PixelA = leds[XY(zD, y)];
-                    CRGB PixelB = CRGB::Black;
-                if ((zF >= 0) && (zF < WIDTH)) PixelB = leds[XY(zF, y)];
-                    leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
-            }
-        }
-    }
-
-    template<>
-    void GFXBase::MoveFractionalNoiseY<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
-    {
-        for (uint8_t x = 0; x < WIDTH; x++)
-        {
-            int16_t amount = ((int16_t)_ptrNoise->noise[x][0] - 128) * 2 * amt + shift * 256;
-            int8_t delta = abs(amount) >> 8;
-            int8_t fraction = abs(amount) & 255;
-            for (uint8_t y = 0; y < HEIGHT; y++)
-            {
-                int8_t zD;
-                int8_t zF;
-
-                if (amount < 0)
-                {
-                    zD = y - delta;
-                    zF = zD - 1;
-                }
-                else
-                {
-                    zD = y + delta;
-                    zF = zD + 1;
-                }
-                CRGB PixelA = CRGB::Black;
-                if ((zD >= 0) && (zD < HEIGHT))
-                    PixelA = leds[XY(x, zD)];
-                CRGB PixelB = CRGB::Black;
-                if ((zF >= 0) && (zF < HEIGHT))
-                    PixelB = leds[XY(x, zF)];
-                leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
-            }
-        }
-    }
-
-    template<>
     void GFXBase::MoveFractionalNoiseX<NoiseApproach::One>(uint8_t amt, uint8_t shift)
     {
         std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram_array<CRGB>(NUM_LEDS);
@@ -156,6 +90,38 @@
             PixelB %= fractions;
 
             leds[XY(0, y)] = PixelA + PixelB;
+        }
+    }
+
+    template<>
+    void GFXBase::MoveFractionalNoiseX<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
+    {
+        for (uint8_t y = 0; y < HEIGHT; y++)
+        {
+            int16_t amount =((int16_t)_ptrNoise->noise[0][y] - 128) * 2 * amt + shift * 256;
+            int8_t delta = abs(amount) >> 8;
+            int8_t fraction = abs(amount) & 255;
+            for (uint8_t x = 0; x < WIDTH; x++)
+            {
+                int8_t zD;
+                int8_t zF;
+
+                if (amount < 0)
+                {
+                    zD = x - delta;
+                    zF = zD - 1;
+                }
+                else
+                {
+                    zD = x + delta;
+                    zF = zD + 1;
+                }
+                CRGB PixelA = CRGB::Black;
+                if ((zD >= 0) && (zD < WIDTH)) PixelA = leds[XY(zD, y)];
+                    CRGB PixelB = CRGB::Black;
+                if ((zF >= 0) && (zF < WIDTH)) PixelB = leds[XY(zF, y)];
+                    leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+            }
         }
     }
 
@@ -210,4 +176,58 @@
             leds[XY(x, 0)] = PixelA + PixelB;
         }
     }
+
+    template<>
+    void GFXBase::MoveFractionalNoiseY<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
+    {
+        for (uint8_t x = 0; x < WIDTH; x++)
+        {
+            int16_t amount = ((int16_t)_ptrNoise->noise[x][0] - 128) * 2 * amt + shift * 256;
+            int8_t delta = abs(amount) >> 8;
+            int8_t fraction = abs(amount) & 255;
+            for (uint8_t y = 0; y < HEIGHT; y++)
+            {
+                int8_t zD;
+                int8_t zF;
+
+                if (amount < 0)
+                {
+                    zD = y - delta;
+                    zF = zD - 1;
+                }
+                else
+                {
+                    zD = y + delta;
+                    zF = zD + 1;
+                }
+                CRGB PixelA = CRGB::Black;
+                if ((zD >= 0) && (zD < HEIGHT))
+                    PixelA = leds[XY(x, zD)];
+                CRGB PixelB = CRGB::Black;
+                if ((zF >= 0) && (zF < HEIGHT))
+                    PixelB = leds[XY(x, zF)];
+                leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+            }
+        }
+    }
 #endif
+
+GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
+                        _width(w),
+                        _height(h)
+{
+    #if USE_NOISE
+        debugV("Allocating boids and noise");
+        _boids.reset(psram_allocator<Boid>().allocate(_width));
+        _ptrNoise = std::make_unique<Noise>();          // Avoid specific PSRAM allocation since highly random access
+        assert(_ptrNoise && _boids);
+        debugV("Setting up noise");
+        NoiseVariablesSetup();
+        debugV("Filling noise");
+        FillGetNoise();
+    #endif
+
+    debugV("Setting up palette");
+    loadPalette(0);
+    ResetOscillators();
+}
