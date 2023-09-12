@@ -1194,7 +1194,7 @@ public:
         static constexpr uint8_t CENTER_X_MAJOR = MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2);
         static constexpr uint8_t CENTER_Y_MAJOR = MATRIX_HEIGHT / 2 +(MATRIX_HEIGHT % 2);
 
-        template<NoiseApproach a = NoiseApproach::Two>
+        template<NoiseApproach = NoiseApproach::Two>
         void FillGetNoise();
     #endif
 
@@ -1261,10 +1261,10 @@ public:
     virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) {}
 
     #if USE_NOISE
-        template<NoiseApproach a = NoiseApproach::Two>
+        template<NoiseApproach = NoiseApproach::Two>
         void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
 
-        template<NoiseApproach a = NoiseApproach::Two>
+        template<NoiseApproach = NoiseApproach::Two>
         void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
     #endif
 };
