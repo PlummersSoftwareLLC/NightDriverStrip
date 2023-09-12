@@ -97,6 +97,11 @@
 
 class GFXBase : public Adafruit_GFX
 {
+#if USE_NOISE
+private:
+    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
+#endif
+
 protected:
     size_t _width;
     size_t _height;
@@ -1194,7 +1199,7 @@ public:
         static constexpr uint8_t CENTER_X_MAJOR = MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2);
         static constexpr uint8_t CENTER_Y_MAJOR = MATRIX_HEIGHT / 2 +(MATRIX_HEIGHT % 2);
 
-        template<NoiseApproach = NoiseApproach::Two>
+        template<NoiseApproach = _defaultNoiseApproach>
         void FillGetNoise();
     #endif
 
@@ -1261,10 +1266,10 @@ public:
     virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) {}
 
     #if USE_NOISE
-        template<NoiseApproach = NoiseApproach::Two>
+        template<NoiseApproach = _defaultNoiseApproach>
         void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
 
-        template<NoiseApproach = NoiseApproach::Two>
+        template<NoiseApproach = _defaultNoiseApproach>
         void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
     #endif
 };
