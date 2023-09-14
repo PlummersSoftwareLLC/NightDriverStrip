@@ -212,6 +212,7 @@
     }
 #endif
 
+// This can't be in gfxbase.h because it uses the FillGetNoise() function template.
 GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
                         _width(w),
                         _height(h)

@@ -88,6 +88,8 @@
         uint8_t  noisesmoothing;
     } Noise;
 
+    // Enum type for the different noise approaches that are available. If anybody
+    // has ideas for more descriptive names for these, don't hesitate to suggest them. :)
     enum class NoiseApproach
     {
         One,
@@ -99,6 +101,8 @@ class GFXBase : public Adafruit_GFX
 {
 #if USE_NOISE
 private:
+    // The standard noise approach used for noise function templates, if none is specified
+    // at the point of invocation.
     static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
 #endif
 
@@ -1199,8 +1203,27 @@ public:
         static constexpr uint8_t CENTER_X_MAJOR = MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2);
         static constexpr uint8_t CENTER_Y_MAJOR = MATRIX_HEIGHT / 2 +(MATRIX_HEIGHT % 2);
 
+        // The next three two-liners define function templates for the different noise approaches
+        // that are implemented in the project. The desired noise approach for a particular use case
+        // can be chosen by passing one of the NoiseApproach enum's values as a template parameter.
+        // For instance, using FillGetNoise() with the "One" noise approach can be achieved by calling
+        // gfxbase.FillGetNoise<NoiseApproach::One>()
+        //
+        // The actual implementations for the noise functions (in the shape of specializations of the
+        // function templates) are included in gfxbase.cpp, because of the way C++ demands things to be
+        // structured.
+        //
+        // The default approach for all functions is determined by the value of _defaultNoiseApproach,
+        // which is defined earlier in this class.
         template<NoiseApproach = _defaultNoiseApproach>
         void FillGetNoise();
+
+        template<NoiseApproach = _defaultNoiseApproach>
+        void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
+
+        template<NoiseApproach = _defaultNoiseApproach>
+        void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
+
     #endif
 
     virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
@@ -1264,12 +1287,4 @@ public:
     virtual void PrepareFrame() {}
 
     virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) {}
-
-    #if USE_NOISE
-        template<NoiseApproach = _defaultNoiseApproach>
-        void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
-
-        template<NoiseApproach = _defaultNoiseApproach>
-        void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
-    #endif
 };
