@@ -1,7 +1,41 @@
+//+--------------------------------------------------------------------------
+//
+// File:        gfxbase.cpp
+//
+// NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
+//
+// This file is part of the NightDriver software project.
+//
+//    NightDriver is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    NightDriver is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Nightdriver.  It is normally found in copying.txt
+//    If not, see <https://www.gnu.org/licenses/>.
+//
+//
+// Description:
+//
+//   Provides definitions for GFXBase member functions that can't be included
+//   in gfxbase.h because C++ won't allow us.
+//
+// History:     Sep-15-2023        Rbergen     Created
+//
+//---------------------------------------------------------------------------
 #include "globals.h"
 #include "gfxbase.h"
 
 #if USE_NOISE
+    // The following functions are specializations of noise-related member function
+    // templates declared in gfxbase.h.
+
     template<>
     void GFXBase::FillGetNoise<NoiseApproach::One>()
     {
@@ -213,6 +247,7 @@
 #endif
 
 // This can't be in gfxbase.h because it uses the FillGetNoise() function template.
+
 GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
                         _width(w),
                         _height(h)
