@@ -209,16 +209,17 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     void Draw() override
     {
-	static int last_scale = _scale;
+        static int last_scale = _scale;
 
-	// Force a recalibration on effect change.
-	if (last_scale != Scale) {
-		debugA("Recalibrating from %d to %d", last_scale, Scale);
-            PicassoGenerate(true);
-            last_scale = Scale;
-	}
+        // Force a recalibration on effect change.
+        if (last_scale != Scale) 
+        {
+            debugA("Recalibrating from %d to %d", last_scale, Scale);
+                PicassoGenerate(true);
+                last_scale = Scale;
+	    }
 
-	Scale = _scale;
+	    Scale = _scale;
 
         if (Scale < 34U) // если масштаб до 34
             PicassoRoutine1();
