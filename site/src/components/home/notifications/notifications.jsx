@@ -1,9 +1,16 @@
+import { withStyles } from "@mui/styles";
+import notificationsStyle from "./style";
+import { useState, createRef, useEffect } from "react";
+import { useTheme } from "@emotion/react";
+import { Box, IconButton, Badge, Icon, Popover, Card,CardHeader, Avatar } from "@mui/material";
+import { CardContent, Typography, CardActions } from "@mui/material";
+
 const NotificationPanel = withStyles(notificationsStyle)(props => {
     const { classes, notifications, clearNotifications } = props;
-    const [numErrors, setNumErrors] = React.useState(undefined);
-    const [errorTargets, setErrorTargets] = React.useState({});
-    const [open, setOpen] = React.useState(false);
-    const inputRef = React.createRef();
+    const [numErrors, setNumErrors] = useState(undefined);
+    const [errorTargets, setErrorTargets] = useState({});
+    const [open, setOpen] = useState(false);
+    const inputRef = createRef();
     const theme = useTheme();
 
     useEffect(()=>{
@@ -80,3 +87,5 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
             </Popover>
         </Box>);
 });
+
+export default NotificationPanel;

@@ -1,6 +1,18 @@
+import {useState, useMemo} from 'react';
+import {AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material'
+import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
+import { ThemeProvider } from '@mui/material/styles';
+import {withStyles} from '@mui/styles';
+import mainAppStyle from './style';
+import getTheme from '../../theme/theme';
+import NotificationPanel from './notifications/notifications';
+import ConfigPanel from './config/config';
+import StatsPanel from './statistics/stats';
+import DesignerPanel from './designer/designer';
+
 const MainApp = () => {
     const [mode, setMode] = useState('dark');
-    const theme = React.useMemo(
+    const theme = useMemo(
         () => getTheme(mode),[mode]);
     return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
 };
@@ -93,3 +105,5 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             </Box>
         </Box>
 });
+
+export default MainApp;

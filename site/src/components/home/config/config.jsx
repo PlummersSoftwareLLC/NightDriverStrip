@@ -1,5 +1,10 @@
+import { List } from "@mui/material";
+import ConfigItem from "./configItem";
+import configStyle from "./style"; 
+import {withStyles} from '@mui/styles';
+
 const ConfigPanel = withStyles(configStyle)(props => {
-  const { classes, siteConfig } = props;
+  const { siteConfig } = props;
   return (
             <List>
                 {Object.entries(siteConfig).map(entry => <ConfigItem 
@@ -12,3 +17,5 @@ const ConfigPanel = withStyles(configStyle)(props => {
             </List>
   );
 });
+
+export default ConfigPanel;

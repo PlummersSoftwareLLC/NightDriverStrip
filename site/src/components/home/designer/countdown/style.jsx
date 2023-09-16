@@ -1,4 +1,4 @@
-const countdownStyle = theme => ({
+const countdownStyle = () => ({
     root: {
         display: "flex",
         flexDirection: "row",
@@ -9,3 +9,4 @@ const countdownStyle = theme => ({
         width: "50px"
     }
 });
+export default countdownStyle;

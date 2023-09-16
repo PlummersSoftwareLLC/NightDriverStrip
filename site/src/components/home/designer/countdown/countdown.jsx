@@ -1,3 +1,8 @@
+import { useState, useEffect } from "react";
+import { Box, Typography } from "@mui/material";
+import countdownStyle from "./style";
+import {withStyles} from '@mui/styles';
+
 const Countdown = withStyles(countdownStyle)(props => {
     const { classes,  label, millisecondsRemaining, requestRefresh } = props;
     const [ timeRemaining, setTimeRemaining ] = useState(false);
@@ -19,7 +24,7 @@ const Countdown = withStyles(countdownStyle)(props => {
             },50);
             return ()=>clearInterval(interval);
         }
-    },[millisecondsRemaining]);
+    },[millisecondsRemaining, requestRefresh]);
 
     return (            
     <Box className={classes.root}>
@@ -28,3 +33,5 @@ const Countdown = withStyles(countdownStyle)(props => {
     </Box>)
 
 });
+
+export default Countdown;

@@ -1,3 +1,8 @@
+import { useState } from "react";
+import { ListItem, FormControlLabel, Checkbox, ClickAwayListener, ListItemText, TextField } from "@mui/material";
+import configStyle from "./style";
+import {withStyles} from '@mui/styles';
+
 const ConfigItem = withStyles(configStyle)(props => {
     const { name, value, configItemUpdated, datatype, classes } = props;
     const [ editing, setEditing] = useState(false);
@@ -14,7 +19,7 @@ const ConfigItem = withStyles(configStyle)(props => {
     };
 
     if (datatype === "boolean") {
-        return <ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
+        return <ListItem button onClick={()=>!editing && setEditing(!editing)}>
             <FormControlLabel
                 className={classes.cblabel}
                 label={name} 
@@ -28,7 +33,7 @@ const ConfigItem = withStyles(configStyle)(props => {
         </ListItem>;
     }
 
-    return <ClickAwayListener onClickAway={()=>{configItemUpdated(configValue);setEditing(false);}}><ListItem button onClick={_evt=>!editing && setEditing(!editing)}>
+    return <ClickAwayListener onClickAway={()=>{configItemUpdated(configValue);setEditing(false);}}><ListItem button onClick={()=>!editing && setEditing(!editing)}>
                 {!editing && <ListItemText className={ classes.configDisplay }
                     primary={name}
                     secondary={configValue}/>}
@@ -40,3 +45,5 @@ const ConfigItem = withStyles(configStyle)(props => {
                                        onChange={event => setConfigValue(getConfigValue(event.target.value,datatype)) } />}
             </ListItem></ClickAwayListener>;
 });
+
+export default ConfigItem;

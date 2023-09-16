@@ -1,4 +1,4 @@
-const notificationsStyle = theme => ({
+const notificationsStyle = () => ({
     root: {
     },
     popup: {
@@ -16,3 +16,5 @@ const notificationsStyle = theme => ({
         borderBottom: "solid aquamarine 2px",
     }
 });
+
+export default notificationsStyle;

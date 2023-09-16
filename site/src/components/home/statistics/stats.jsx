@@ -1,3 +1,12 @@
+import {useState, useEffect} from 'react';
+import {IconButton, Icon, Typography, Box} from '@mui/material'
+import { statsStyle } from './style';
+import httpPrefix from '../../../espaddr';
+import StaticStatsPanel from './static/static';
+import AreaStat from './areachart/areachart';
+import BarStat from './barchart/barchart';
+import {withStyles} from '@mui/styles';
+
 const StatsPanel = withStyles(statsStyle)(props => {
     const { classes, siteConfig, open, addNotification } = props;
     const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
@@ -194,3 +203,5 @@ const StatsPanel = withStyles(statsStyle)(props => {
     </Box>
 });
 
+
+export default StatsPanel;

@@ -1,1 +1,3 @@
-const httpPrefix="http://192.168.8.39";
+const httpPrefix="http://10.1.5.1";
+
+export default httpPrefix;

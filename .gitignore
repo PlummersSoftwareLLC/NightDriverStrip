@@ -17,3 +17,5 @@ WebInstaller/manifests/**
 WebInstaller/web_projects.json
 .idea/**
 tools/__pycache__
+site/yarn-error.log
+site/dist

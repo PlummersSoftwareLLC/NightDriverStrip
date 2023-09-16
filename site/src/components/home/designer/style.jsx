@@ -1,4 +1,4 @@
-const designStyle = theme => ({
+const designStyle = () => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
@@ -28,3 +28,5 @@ const designStyle = theme => ({
         paddingTop: "20px",
     }
 });
+
+export default designStyle;

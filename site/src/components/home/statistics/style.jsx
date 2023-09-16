@@ -1,4 +1,4 @@
-const statsStyle = theme => ({
+const statsStyle = () => ({
     root: {
         "display": "flex",
         "flex-direction": "row",
@@ -56,9 +56,11 @@ const statsStyle = theme => ({
     }
 });
 
-const statStyle = theme => ({
+const statStyle = () => ({
     root: {
       display: 'flex',
       "flex-direction": "column"
     }
 });
+
+export {statStyle, statsStyle}

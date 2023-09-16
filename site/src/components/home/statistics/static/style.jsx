@@ -1,4 +1,4 @@
-const staticStatStyle = theme => ({
+const staticStatStyle = () => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
@@ -10,3 +10,4 @@ const staticStatStyle = theme => ({
         "margin-right": "5px"
     }
 });
+export default staticStatStyle;

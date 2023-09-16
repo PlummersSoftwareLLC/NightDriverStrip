@@ -1,3 +1,9 @@
+import { withStyles } from "@mui/styles";
+import { useTheme } from "@emotion/react";
+import { Box, Typography } from "@mui/material";
+import barChartStyle from './style'
+import  { BarChart, Bar, XAxis, YAxis } from 'recharts'
+
 const BarStat = withStyles(barChartStyle)(props => {
     const { classes, name, rawvalue, ignored, statsAnimateChange , idleField, category, detail } = props;
     const theme = useTheme();
@@ -44,3 +50,4 @@ const BarStat = withStyles(barChartStyle)(props => {
     </Box>)
 });
     
+export default BarStat;

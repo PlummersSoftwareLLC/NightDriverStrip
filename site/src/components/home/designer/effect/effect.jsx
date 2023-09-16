@@ -1,7 +1,14 @@
+import {useState, useEffect} from 'react';
+import {IconButton, Icon, Card, CardHeader, CardContent, Avatar, CardActions } from '@mui/material'
+import {TextField, LinearProgress, Collapse, Button} from '@mui/material'
+import effectStyle from './style';
+import {withStyles} from '@mui/styles';
+
+
 const Effect = withStyles(effectStyle)(props => {
     const { classes, effect, effectInterval, effectIndex, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
     const [ progress, setProgress ] = useState(undefined);
-    const [expanded, setExpanded] = React.useState(false);
+    const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
         if (millisecondsRemaining && selected) {
@@ -19,7 +26,7 @@ const Effect = withStyles(effectStyle)(props => {
         if (!selected) {
             setProgress(0);
         }
-    },[millisecondsRemaining,selected]);
+    },[millisecondsRemaining,selected, effectInterval]);
 
     return <Card variant="outlined" className={classes.effect}>
                 <CardHeader
@@ -51,3 +58,5 @@ const Effect = withStyles(effectStyle)(props => {
                 </Collapse>
             </Card>
 });
+
+export default Effect;

@@ -1,4 +1,4 @@
-const barChartStyle = theme => ({
+const barChartStyle = () => ({
     summary: {
         "display": "flex",
         "flex-direction": "column",
@@ -94,3 +94,5 @@ const barChartStyle = theme => ({
         "color": "aqua"
     }
 });
+
+export default barChartStyle;

@@ -87,3 +87,4 @@ const mainAppStyle = theme => ({
     }
   });
   
+  export default mainAppStyle;

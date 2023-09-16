@@ -1,3 +1,7 @@
+import { List, ListItem, Typography, Box} from '@mui/material'
+import staticStatStyle from './style';
+import {withStyles} from '@mui/styles';
+
 const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     const { classes, stat, name, detail } = props;
 
@@ -18,3 +22,5 @@ const StaticStatsPanel = withStyles(staticStatStyle)(props => {
     </List>}
     </Box>
 });
+
+export default StaticStatsPanel;

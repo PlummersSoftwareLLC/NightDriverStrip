@@ -1,24 +1,27 @@
+import { createTheme } from '@mui/material/styles';
+
 const getPalette = (mode) => {
-  switch (mode) {
+switch (mode) {
     case "dark":
       return {
-        mode,
-        common: {
-            black: "#000",
-            white: "#fff"
-        },
-        primary: {
-            main: '#24292e',
-            light: '#4f5358',
-            dark: '#191c21',
-            contrastText: '#d6d6ff',
-        },
-        secondary: {
-            main: "#ce93d8",
-            light: "#f3e5f5",
-            dark: "#ab47bc",
-            contrastText: "rgba(0, 0, 0, 0.87)"
-        },
+        palette: {
+            mode,
+            common: {
+                black: "#000",
+                white: "#fff"
+            },
+            primary: {
+                main: '#24292e',
+                light: '#4f5358',
+                dark: '#191c21',
+                contrastText: '#d6d6ff',
+            },
+            secondary: {
+                main: "#ce93d8",
+                light: "#f3e5f5",
+                dark: "#ab47bc",
+                contrastText: "rgba(0, 0, 0, 0.87)"
+            },
         error: {
             main: "#f44336",
             light: "#e57373",
@@ -86,24 +89,27 @@ const getPalette = (mode) => {
             activatedOpacity: 0.24
         },
         taskManager: {
-          strokeColor: '#90ff91',
-          MemoryColor: '#0002ff',
-          idleColor: 'black',
-          color1: '#58be59db',
-          color2: '#58be59a1',
-          color3: '#58be596b',
-          color4: '#58be5921',
-          bcolor1: '#189cdbff',
-          bcolor2: '#189cdba1',
-          bcolor3: '#189cdb66',
-          bcolor4: '#189cdb38',
+            strokeColor: '#90ff91',
+            MemoryColor: '#0002ff',
+            idleColor: 'black',
+            color1: '#58be59db',
+            color2: '#58be59a1',
+            color3: '#58be596b',
+            color4: '#58be5921',
+            bcolor1: '#189cdbff',
+            bcolor2: '#189cdba1',
+            bcolor3: '#189cdb66',
+            bcolor4: '#189cdb38',
         }
-      };  
+    }
+    };  
     case "light": 
-      return {
-        mode: mode,
-        common: {
-            black: "#000",
+    return {
+        palette: {
+
+            mode: mode,
+            common: {
+                black: "#000",
             white: "#fff"
         },
         primary: {
@@ -184,24 +190,36 @@ const getPalette = (mode) => {
             activatedOpacity: 0.12
         },
         taskManager: {
-          strokeColor: '#90ff91',
-          MemoryColor: '#0002ff',
-          idleColor: 'black',
-          color1: '#58be59db',
-          color2: '#58be59a1',
-          color3: '#58be596b',
-          color4: '#58be5921',
-          bcolor1: '#189cdbff',
-          bcolor2: '#189cdba1',
-          bcolor3: '#189cdb66',
-          bcolor4: '#189cdb38',
+            strokeColor: '#90ff91',
+            MemoryColor: '#0002ff',
+            idleColor: 'black',
+            color1: '#58be59db',
+            color2: '#58be59a1',
+            color3: '#58be596b',
+            color4: '#58be5921',
+            bcolor1: '#189cdbff',
+            bcolor2: '#189cdba1',
+            bcolor3: '#189cdb66',
+            bcolor4: '#189cdb38',
         }
-      };
+    }
+    };
     default:
       break;
   }
 };
+const dark = createTheme(getPalette('dark'));
+const light = createTheme(getPalette('light'));
 
-const getTheme = (mode) => createTheme({
-  palette: getPalette(mode),
-});
+const getTheme = (mode) => {
+    switch(mode){
+        case 'dark':
+            return dark;
+        default:
+            return light;
+    }
+};
+    
+
+export default getTheme;
+export {dark, light}

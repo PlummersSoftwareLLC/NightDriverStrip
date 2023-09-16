@@ -1,4 +1,4 @@
-const areaChartStyle = theme => ({
+const areaChartStyle = () => ({
     root: {
         "display": "flex",
         "flex-direction": "column",
@@ -102,3 +102,5 @@ const areaChartStyle = theme => ({
         "color": "aqua"
     }
 });
+
+export default areaChartStyle;

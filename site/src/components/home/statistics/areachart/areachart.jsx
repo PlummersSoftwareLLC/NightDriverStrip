@@ -1,3 +1,10 @@
+import { withStyles } from "@mui/styles";
+import { useState, useMemo } from "react";
+import { useTheme } from "@emotion/react";
+import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
+import { Box, Typography, List, ListItem,  } from "@mui/material";
+import areaChartStyle from "./style";
+
 const AreaStat = withStyles(areaChartStyle)(props => {
     const { classes, name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
     const getChartValues = (value) => Object.entries(value)
@@ -103,3 +110,4 @@ const AreaStat = withStyles(areaChartStyle)(props => {
     </Box>
 });
     
+export default AreaStat;

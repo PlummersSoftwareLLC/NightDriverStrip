@@ -33,3 +33,5 @@ const effectStyle = theme => ({
         backgroundColor: theme.palette.background.paper,
     }
 });
+
+export default effectStyle;

@@ -1,4 +1,4 @@
-const configStyle = theme => ({
+const configStyle = () => ({
     configBar: {
         "padding-top": "65px"
     },
@@ -17,3 +17,5 @@ const configStyle = theme => ({
         display: "none"
     }
 });
+
+export default configStyle;
