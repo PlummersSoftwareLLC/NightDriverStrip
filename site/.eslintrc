@@ -27,6 +27,6 @@
   "rules": {
         "react/jsx-uses-react": "off",
         "react/react-in-jsx-scope": "off",
-        "indent": [2, 2]
+        "indent": [2, 4]
   }
 }
