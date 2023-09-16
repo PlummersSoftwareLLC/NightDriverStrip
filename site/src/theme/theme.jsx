@@ -101,8 +101,9 @@ const getPalette = (mode) => {
                     bcolor3: '#189cdb66',
                     bcolor4: '#189cdb38',
                 }
-            }
-        };  
+            
+            },
+        };
     case "light": 
         return {
             palette: {

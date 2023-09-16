@@ -28,5 +28,8 @@
         "react/jsx-uses-react": "off",
         "react/react-in-jsx-scope": "off",
         "indent": [2, 4]
+  },
+  "globals": {
+    "process": true
   }
 }
