@@ -56,8 +56,8 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             return [...prevNotifs.filter(notif => notif !== group), group];
         });
     };
-    return <Box className={classes.root}>
-        <AppBar className={[classes.appbar,drawerOpened && classes.appbarOpened].join(" ")}>
+    return <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static">
             <Toolbar>
                 <IconButton 
                     aria-label="Open drawer" 

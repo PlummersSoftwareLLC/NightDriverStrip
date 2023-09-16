@@ -1,12 +1,8 @@
 const drawerWidth = 240;
 
-const mainAppStyle = theme => ({
-    
+const mainAppStyle = theme => ({ 
     root: {
-        display: 'flex',
-        zIndex: 1,
-        overflow: 'hidden',
-        position: 'relative',
+        display: 'flex'
     },
     appbar: {
         zIndex: theme.zIndex.drawer + 1,
@@ -34,16 +30,9 @@ const mainAppStyle = theme => ({
     toolbarTitle: {
         "flex-grow": 1
     },
-    menuButton: {
-        marginLeft: 12,
-        marginRight: 36,
-    },
-    hide: {
-        display: 'none',
-    },
     drawer: {
-        position: 'relative',
         whiteSpace: 'nowrap',
+        "z-index": 0,
         width: drawerWidth,
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
@@ -61,7 +50,6 @@ const mainAppStyle = theme => ({
             width: theme.spacing.unit * 9,
         },
     },
-    
     drawerHeader: {
         display: "flex",
         "flex-wrap": "nowrap",

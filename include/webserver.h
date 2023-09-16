@@ -85,11 +85,12 @@ class CWebServer
     {
         // Added to hold the file's MIME type, but could be used for other type types, if desired
         const char *const type;
+        const char *const encoding;
 
-        EmbeddedWebFile(const uint8_t start[], const uint8_t end[], const char type[]) :
-            EmbeddedFile(start, end),
-            type(type)
-        {}
+        EmbeddedWebFile(const uint8_t start[], const uint8_t end[], const char type[], const char encoding[])
+            : EmbeddedFile(start, end), type(type), encoding(encoding)
+        {
+        }
     };
 
     static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
@@ -182,12 +183,15 @@ class CWebServer
     void GetStatistics(AsyncWebServerRequest * pRequest);
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
-    void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile & file)
+    void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
     {
-        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
-        {
+        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request) {
             Serial.printf("GET for: %s\n", strUri);
             AsyncWebServerResponse *response = request->beginResponse_P(200, file.type, file.contents, file.length);
+            if (strnlen(file.encoding, 25) > 0)
+            {
+                response->addHeader("Content-Encoding", file.encoding);
+            }
             request->send(response);
         });
     }
@@ -201,12 +205,12 @@ class CWebServer
     // begin - register page load handlers and start serving pages
     void begin()
     {
-        extern const uint8_t html_start[] asm("_binary_site_dist_index_html_start");
-        extern const uint8_t html_end[] asm("_binary_site_dist_index_html_end");
-        extern const uint8_t js_start[] asm("_binary_site_dist_index_js_start");
-        extern const uint8_t js_end[] asm("_binary_site_dist_index_js_end");
-        extern const uint8_t ico_start[] asm("_binary_site_dist_favicon_ico_start");
-        extern const uint8_t ico_end[] asm("_binary_site_dist_favicon_ico_end");
+        extern const uint8_t html_start[] asm("_binary_site_dist_index_html_gz_start");
+        extern const uint8_t html_end[] asm("_binary_site_dist_index_html_gz_end");
+        extern const uint8_t js_start[] asm("_binary_site_dist_index_js_gz_start");
+        extern const uint8_t js_end[] asm("_binary_site_dist_index_js_gz_end");
+        extern const uint8_t ico_start[] asm("_binary_site_dist_favicon_ico_gz_start");
+        extern const uint8_t ico_end[] asm("_binary_site_dist_favicon_ico_gz_end");
         extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
         extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
 
@@ -248,10 +252,10 @@ class CWebServer
 
         _server.on("/reset",                 HTTP_POST, [](AsyncWebServerRequest * pRequest)        { Reset(pRequest); });
 
-        EmbeddedWebFile html_file(html_start, html_end, "text/html");
-        EmbeddedWebFile js_file(js_start, js_end, "application/javascript");
-        EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon");
-        EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
+        EmbeddedWebFile html_file(html_start, html_end, "text/html", "gzip");
+        EmbeddedWebFile js_file(js_start, js_end, "application/javascript", "gzip");
+        EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon", "gzip");
+        EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json", ""); // end - 1 because of zero-termination
 
         debugI("Embedded html file size: %d", html_file.length);
         debugI("Embedded jsx file size: %d", js_file.length);

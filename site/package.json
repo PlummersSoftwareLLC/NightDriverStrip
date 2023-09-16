@@ -16,7 +16,6 @@
     "scripts": {
         "build": "webpack --mode production",
         "local": "webpack --mode development",
-        "offline": "webpack --mode offline",
         "start": "webpack serve --mode development"
     },
     "devDependencies": {

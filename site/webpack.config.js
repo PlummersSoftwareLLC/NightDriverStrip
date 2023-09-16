@@ -1,6 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CompressionPlugin = require("compression-webpack-plugin");
 
 module.exports = (env, argv) => {
     const optimization = argv.mode === 'development' ? {minimize: false} : {} 
@@ -17,7 +18,7 @@ module.exports = (env, argv) => {
         externals = {
             'react': 'React',
             "react-dom": 'ReactDOM',
-            "recharts": "Recharts",
+            "recharts": "Recharts"
             // TODO Work out how to use @mui/styles with a CDN. It causes the UI to fail.
         };
     }
@@ -39,6 +40,7 @@ module.exports = (env, argv) => {
             new HtmlWebpackPlugin({
                 template: `src/${index}`, // to import index.html file inside index.js
             }),
+            new CompressionPlugin(),
             new CopyWebpackPlugin({
                 patterns: [
                     { from: "../assets/favicon.ico" },

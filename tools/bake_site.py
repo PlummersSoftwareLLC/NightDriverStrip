@@ -46,8 +46,8 @@ else:
 destFolder = os.path.join('site', 'dist')
 
 
-htmlBytes = os.stat(os.path.join(destFolder, 'index.html')).st_size
-jsxBytes = os.stat(os.path.join(destFolder, 'index.js')).st_size
-icoBytes = os.stat(os.path.join(destFolder, 'favicon.ico')).st_size
+htmlBytes = os.stat(os.path.join(destFolder, 'index.html.gz')).st_size
+jsxBytes = os.stat(os.path.join(destFolder, 'index.js.gz')).st_size
+icoBytes = os.stat(os.path.join(destFolder, 'favicon.ico.gz')).st_size
 totalBytes = htmlBytes + jsxBytes + icoBytes
 print('Build completed, html: %d B, jsx: %d B, ico: %d B, total: %d KB' % (htmlBytes, jsxBytes, icoBytes, totalBytes / 1024))
