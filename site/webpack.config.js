@@ -4,7 +4,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CompressionPlugin = require("compression-webpack-plugin");
 
 module.exports = (env, argv) => {
-    const optimization = argv.mode === 'development' ? {minimize: false} : {} 
+    let optimization = {} 
+    let devtool = undefined
     let externals;
     let index;
     // For offline mode, or development offline run wepback with --env offline. 
@@ -12,7 +13,7 @@ module.exports = (env, argv) => {
     // requirement for internet needed.  
     if (env.offline) {
         externals = {}
-        index = 'index.html'
+        index = 'index.html.offline'
     } else {
         index = 'index.html'
         externals = {
@@ -21,13 +22,32 @@ module.exports = (env, argv) => {
             "recharts": "Recharts",
         };
     }
+    const plugins = [
+        new HtmlWebpackPlugin({
+            template: `src/${index}`,
+            filename: 'index.html'
+        }),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: "../assets/favicon.ico" },
+            ],
+        }),
+    ];
+    if (argv.mode === 'development') {
+        optimization = {minimize: false}
+        devtool = 'source-map'
+    } else {
+        plugins.push(new CompressionPlugin({
+            minRatio: 1,
+            deleteOriginalAssets: false
+        }))
+    }
     return {
         entry: './src/main.jsx', // main entry point for loading the site
         output: {
             path: path.join(__dirname, "/dist"), // the bundle output path
             filename: "index.js", // the name of the bundle
         },
-        externals,
         devServer: {
             static: {
                 directory: path.join(__dirname, 'dist'),
@@ -35,17 +55,9 @@ module.exports = (env, argv) => {
             compress: true,
             port: 9000,
         },
-        plugins: [
-            new HtmlWebpackPlugin({
-                template: `src/${index}`, // to import index.html file inside index.js
-            }),
-            new CompressionPlugin(),
-            new CopyWebpackPlugin({
-                patterns: [
-                    { from: "../assets/favicon.ico" },
-                ],
-            }),
-        ],
+        externals,
+        devtool,
+        plugins,
         module: {
             rules: [
                 {

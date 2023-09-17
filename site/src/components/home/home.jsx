@@ -11,15 +11,9 @@ import StatsPanel from './statistics/stats';
 import DesignerPanel from './designer/designer';
 
 const MainApp = () => {
-    const [mode, setMode] = useState('dark');
+    const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
     const theme = useMemo(
         () => getTheme(mode),[mode]);
-    useEffect(() => {
-        const theme = localStorage.getItem('theme');
-        if (theme) {
-            setMode(theme);
-        }
-    }, []);
 
     // save users state to storage so the page reloads where they left off. 
     useEffect(() => {
@@ -29,27 +23,16 @@ const MainApp = () => {
     return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
 };
 const AppPannel = withStyles(mainAppStyle)(props => {
+    const config = JSON.parse(localStorage.getItem('config'));
     const { classes, mode, setMode } = props;
-    const [drawerOpened, setDrawerOpened] = useState(false);
-    const [stats, setStats] = useState(true);
-    const [designer, setDesigner] = useState(true);
-    const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
-    const [maxSamples, setMaxSamples ] = useState(50);
-    const [animateChart, setAnimateChart ] = useState(false);
+    const [drawerOpened, setDrawerOpened] = useState(config && config.drawerOpened !== undefined ? config.drawerOpened : false);
+    const [stats, setStats] = useState(config && config.stats !== undefined ? config.stats : true);
+    const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
+    const [statsRefreshRate, setStatsRefreshRate ] = useState(config && config.statsRefreshRate !== undefined ? config.statsRefreshRate : 3);
+    const [maxSamples, setMaxSamples ] = useState(config && config.maxSamples !== undefined ? config.maxSamples : 50);
+    const [animateChart, setAnimateChart ] = useState(config && config.animateChart !== undefined ? config.animateChart : false);
     const [notifications, setNotifications] = useState([]);
     
-    // Load config from storage if it exists. else the default
-    useEffect(() => {
-        const config = JSON.parse(localStorage.getItem('config'));
-        if (config) {
-            setStats(s => config.stats != undefined ? config.stats : s);
-            setDesigner(d => config.designer != undefined ? config.designer : d);
-            setStatsRefreshRate(s => config.statsRefreshRate != undefined ? config.statsRefreshRate : s);
-            setMaxSamples(m => config.maxSamples != undefined ? config.maxSamples : m)
-            setAnimateChart(a => config.animateChart != undefined ? config.animateChart : a);
-        }
-    }, []);
-
     // save users state to storage so the page reloads where they left off. 
     useEffect(() => {
         localStorage.setItem('config', JSON.stringify({
@@ -124,19 +107,21 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             </Box> 
             <Divider/>
             <List>{
-                [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
+                [
+                    {caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                    {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item => 
+                    {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}
+                ].map(item => 
                     <ListItem key={item.icon}>
                         <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
-                            <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
+                            <Icon color={item.flag ? "primary": "action"} >{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                         <ListItemText primary={item.caption}/>
                         {drawerOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
                     </ListItem>)
             }</List>
         </Drawer>
-        <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}
+        <Box className={classes.content}
             sx={{p: 10,
                 pl: drawerOpened ? 30: 10}}>
             <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 

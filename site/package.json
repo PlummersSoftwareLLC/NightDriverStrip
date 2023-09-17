@@ -17,7 +17,8 @@
         "build": "webpack --mode production",
         "build-offline": "webpack --mode production --env offline",
         "local": "webpack --mode development",
-        "start": "webpack serve --mode development"
+        "start": "webpack serve --mode development",
+        "start-offline": "webpack serve --mode development --env offline"
     },
     "devDependencies": {
         "@babel/core": "^7.22.17",
@@ -36,5 +37,6 @@
         "webpack-cli": "^5.1.4",
         "webpack-dev-server": "^4.15.1",
         "webpack-node-externals": "^3.0.0"
-    }
+    },
+    "browserslist": "> 0.5% and not dead"
 }
