@@ -20,6 +20,8 @@ module.exports = (env, argv) => {
             'react': 'React',
             "react-dom": 'ReactDOM',
             "recharts": "Recharts",
+            "@emotion/react": "emotionReact",
+            "@emotion/styled": "emotionStyled"
         };
     }
     const plugins = [
