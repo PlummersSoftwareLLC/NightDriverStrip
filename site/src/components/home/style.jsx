@@ -18,7 +18,7 @@ const mainAppStyle = theme => ({
         width: `calc(100% - ${drawerWidth}px)`,
     },
     toolbarTitle: {
-        "flex-grow": 1
+        flexGrow: 1
     },
     drawer: {
         whiteSpace: 'nowrap',
@@ -41,17 +41,17 @@ const mainAppStyle = theme => ({
     },
     drawerHeader: {
         display: "flex",
-        "flex-wrap": "nowrap",
-        "min-height": "64px",
-        "flex-direction": "row",
-        "justify-content": "space-between"
+        flexWrap: "nowrap",
+        minHeight: "64px",
+        flexDirection: "row",
+        justifyContent: "space-between"
     },
     displayMode: {
         display: "flex",
-        "flex-wrap": "nowrap",
-        "flex-direction": "row",
-        "justify-content": "flex-start",
-        "align-items": "center"
+        flexWrap: "nowrap",
+        flexDirection: "row",
+        justifyContent: "flex-start",
+        alignItems: "center"
     },
     content: {
         transition: theme.transitions.create('padding-left', {

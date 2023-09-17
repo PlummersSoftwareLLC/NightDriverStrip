@@ -1,7 +1,7 @@
-const designStyle = () => ({
+const designStyle = {
     root: {
-        "display": "flex",
-        "flex-direction": "column",
+        display: "flex",
+        flexDirection: "column",
     },
     hidden: {
         display: "none"
@@ -27,6 +27,6 @@ const designStyle = () => ({
         rowGap: "15px",
         paddingTop: "20px",
     }
-});
+};
 
 export default designStyle;

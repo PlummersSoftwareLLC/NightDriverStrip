@@ -1,11 +1,11 @@
-const statsStyle = () => ({
+const statsStyle = {
     root: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "flex-start",
-        "align-items": "stretch",
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "flex-start",
+        alignItems: "stretch",
         columnGap: "10px",
         rowGap: "10px"
     },
@@ -16,29 +16,29 @@ const statsStyle = () => ({
         border: "solid 1px"
     },
     chartArea: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "flex-start",
-        "align-items": "flex-start"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "flex-start",
+        alignItems: "flex-start"
     },
     chartHeader: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "wrap",
-        "align-content": "center",
-        "justify-content": "flex-start",
-        "align-items": "flex-start"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "wrap",
+        alignContent: "center",
+        justifyContent: "flex-start",
+        alignItems: "flex-start"
     },
     categoryStats:{
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "space-between",
-        "align-items": "flex-start",
-        "column-gap": "5px",
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        columnGap: "5px",
     },
     category:{
     },
@@ -46,20 +46,20 @@ const statsStyle = () => ({
         display: "none"
     },
     statCatergoryHeader: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "space-between",
-        "align-items": "center",
-        "border-bottom": "solid 1px",
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottom: "solid 1px",
     }
-});
+};
 
 const statStyle = () => ({
     root: {
-      display: 'flex',
-      "flex-direction": "column"
+        display: 'flex',
+        flexDirection: "column"
     }
 });
 

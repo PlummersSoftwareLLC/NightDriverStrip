@@ -5,17 +5,17 @@ import Countdown from './countdown/countdown';
 import Effect from './effect/effect';
 import designStyle from './style';
 import httpPrefix from '../../../espaddr';
-import {withStyles} from '@mui/styles';
+import PropTypes from 'prop-types';
 
-const DesignerPanel = withStyles(designStyle)(props => {
-    const { classes, open, addNotification } = props;
+
+const DesignerPanel = props => {
+    const { open, addNotification } = props;
     const [ effects, setEffects ] = useState(undefined);
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(effects && effects.effectInterval);
-
     useEffect(() => {
         if (abortControler) {
             abortControler.abort();
@@ -98,7 +98,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
     };
 
     const displayHeader = ()=>{
-        return <Box className={classes.effectsHeaderValue}>
+        return <Box sx={designStyle.effectsHeaderValue}>
             <Typography variant="little" color="textPrimary">Interval</Typography>:
             <Link href="#" variant="little" color="textSecondary" onClick={() => setEditing(true)}>{effects.effectInterval}</Link>
         </Box>;
@@ -106,7 +106,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
 
     const editingHeader = ()=>{
         return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);}}>
-            <Box className={classes.effectsHeaderValue}>
+            <Box className={designStyle.effectsHeaderValue}>
                 <TextField label="Interval ms"
                     variant="outlined"
                     type="number"
@@ -118,9 +118,9 @@ const DesignerPanel = withStyles(designStyle)(props => {
     if (!effects && open){
         return <Box>Loading....</Box>;
     }
-
-    return effects && <Box className={`${classes.root} ${!open && classes.hidden}`}>
-        <Box className={classes.effectsHeader}>
+    const hiddenClasses = !open && designStyle.hidden;
+    return effects && <Box sx={{...designStyle.root, ...hiddenClasses}}>
+        <Box sx={designStyle.effectsHeader}>
             {editing ?
                 editingHeader():
                 displayHeader()}
@@ -134,7 +134,7 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 <IconButton disabled={requestRunning} onClick={()=>setNextRefreshDate(Date.now())}><Icon>refresh</Icon></IconButton>
             </Box>}
         </Box>
-        <Box className={classes.effects}>
+        <Box sx={designStyle.effects}>
             {effects.Effects.map((effect,idx) => <Effect
                 key={`effect-${idx}`}
                 effect={effect}
@@ -147,6 +147,11 @@ const DesignerPanel = withStyles(designStyle)(props => {
                 millisecondsRemaining={effects.millisecondsRemaining}/>)}
         </Box>
     </Box>
-});
+};
+
+DesignerPanel.propTypes = {
+    open: PropTypes.bool.isRequired, 
+    addNotification: PropTypes.func.isRequired
+}
 
 export default DesignerPanel;
