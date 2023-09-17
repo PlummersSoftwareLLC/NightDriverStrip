@@ -1,4 +1,4 @@
-import {useState, useMemo} from 'react';
+import {useState, useMemo, useEffect} from 'react';
 import {AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material'
 import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles';
@@ -14,17 +14,53 @@ const MainApp = () => {
     const [mode, setMode] = useState('dark');
     const theme = useMemo(
         () => getTheme(mode),[mode]);
+    useEffect(() => {
+        const theme = localStorage.getItem('theme');
+        if (theme) {
+            setMode(theme);
+        }
+    }, []);
+
+    // save users state to storage so the page reloads where they left off. 
+    useEffect(() => {
+        localStorage.setItem('theme', mode);
+    }, [mode])
+
     return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
 };
 const AppPannel = withStyles(mainAppStyle)(props => {
     const { classes, mode, setMode } = props;
     const [drawerOpened, setDrawerOpened] = useState(false);
-    const [stats, setStats] = useState(false);
+    const [stats, setStats] = useState(true);
     const [designer, setDesigner] = useState(true);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
     const [animateChart, setAnimateChart ] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    
+    // Load config from storage if it exists. else the default
+    useEffect(() => {
+        const config = JSON.parse(localStorage.getItem('config'));
+        if (config) {
+            setStats(s => config.stats != undefined ? config.stats : s);
+            setDesigner(d => config.designer != undefined ? config.designer : d);
+            setStatsRefreshRate(s => config.statsRefreshRate != undefined ? config.statsRefreshRate : s);
+            setMaxSamples(m => config.maxSamples != undefined ? config.maxSamples : m)
+            setAnimateChart(a => config.animateChart != undefined ? config.animateChart : a);
+        }
+    }, []);
+
+    // save users state to storage so the page reloads where they left off. 
+    useEffect(() => {
+        localStorage.setItem('config', JSON.stringify({
+            stats,
+            designer,
+            statsRefreshRate,
+            animateChart,
+            maxSamples 
+        }));
+    }, [stats, designer, statsRefreshRate, animateChart, maxSamples])
+
     
     const siteConfig = {
         statsRefreshRate: {

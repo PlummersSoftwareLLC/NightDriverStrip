@@ -18,8 +18,7 @@ module.exports = (env, argv) => {
         externals = {
             'react': 'React',
             "react-dom": 'ReactDOM',
-            "recharts": "Recharts"
-            // TODO Work out how to use @mui/styles with a CDN. It causes the UI to fail.
+            "recharts": "Recharts",
         };
     }
     return {

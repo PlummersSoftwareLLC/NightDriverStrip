@@ -87,13 +87,13 @@ const DesignerPanel = withStyles(designStyle)(props => {
         return new Promise((resolve,reject)=>{
             setRequestRunning(true);
             chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
-            {
-                method:"POST",
-                body: new URLSearchParams({effectInterval:interval})
-            },"updateEventInterval").then(resolve)
-              .then(requestRefresh)
-              .catch(reject)
-              .finally(()=>setRequestRunning(false));
+                {
+                    method:"POST",
+                    body: new URLSearchParams({effectInterval:interval})
+                },"updateEventInterval").then(resolve)
+                .then(requestRefresh)
+                .catch(reject)
+                .finally(()=>setRequestRunning(false));
         });
     };
 
@@ -107,12 +107,12 @@ const DesignerPanel = withStyles(designStyle)(props => {
     const editingHeader = ()=>{
         return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);}}>
             <Box className={classes.effectsHeaderValue}>
-            <TextField label="Interval ms"
-                variant="outlined"
-                type="number"
-                defaultValue={effects.effectInterval}
-                onChange={event => setPendingInterval(event.target.value)} />
-        </Box></ClickAwayListener>;
+                <TextField label="Interval ms"
+                    variant="outlined"
+                    type="number"
+                    defaultValue={effects.effectInterval}
+                    onChange={event => setPendingInterval(event.target.value)} />
+            </Box></ClickAwayListener>;
     };
 
     if (!effects && open){
@@ -122,8 +122,8 @@ const DesignerPanel = withStyles(designStyle)(props => {
     return effects && <Box className={`${classes.root} ${!open && classes.hidden}`}>
         <Box className={classes.effectsHeader}>
             {editing ?
-            editingHeader():
-            displayHeader()}
+                editingHeader():
+                displayHeader()}
             <Countdown
                 label="Time Remaining"
                 requestRefresh={requestRefresh}
@@ -136,15 +136,15 @@ const DesignerPanel = withStyles(designStyle)(props => {
         </Box>
         <Box className={classes.effects}>
             {effects.Effects.map((effect,idx) => <Effect
-                                                    key={`effect-${idx}`}
-                                                    effect={effect}
-                                                    effectIndex={idx}
-                                                    navigateTo={navigateTo}
-                                                    requestRunning={requestRunning}
-                                                    effectEnable={effectEnable}
-                                                    effectInterval={effects.effectInterval}
-                                                    selected={idx === effects.currentEffect}
-                                                    millisecondsRemaining={effects.millisecondsRemaining}/>)}
+                key={`effect-${idx}`}
+                effect={effect}
+                effectIndex={idx}
+                navigateTo={navigateTo}
+                requestRunning={requestRunning}
+                effectEnable={effectEnable}
+                effectInterval={effects.effectInterval}
+                selected={idx === effects.currentEffect}
+                millisecondsRemaining={effects.millisecondsRemaining}/>)}
         </Box>
     </Box>
 });
