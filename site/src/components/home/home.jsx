@@ -16,18 +16,16 @@ const MainApp = () => {
         () => getTheme(mode),[mode]);
     return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
 };
-
 const AppPannel = withStyles(mainAppStyle)(props => {
     const { classes, mode, setMode } = props;
     const [drawerOpened, setDrawerOpened] = useState(false);
-    const [settingsOpened, setSettingsOpened] = useState(false);
     const [stats, setStats] = useState(false);
     const [designer, setDesigner] = useState(true);
     const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
     const [maxSamples, setMaxSamples ] = useState(50);
     const [animateChart, setAnimateChart ] = useState(false);
     const [notifications, setNotifications] = useState([]);
-
+    
     const siteConfig = {
         statsRefreshRate: {
             name: "Refresh rate",
@@ -56,13 +54,13 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             return [...prevNotifs.filter(notif => notif !== group), group];
         });
     };
-    return <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
+    return <Box >
+        <AppBar className={[classes.appbar, drawerOpened ? classes.appbarOpened : classes.appbarClosed].join(" ")} >
             <Toolbar>
                 <IconButton 
                     aria-label="Open drawer" 
                     onClick={()=>setDrawerOpened(!drawerOpened)} 
-                    className={drawerOpened ? classes.drawerClosed : ""}>
+                >
                     <Icon>{drawerOpened ? "chevron" : "menu"}</Icon>
                 </IconButton>
                 <Typography
@@ -76,7 +74,9 @@ const AppPannel = withStyles(mainAppStyle)(props => {
         </AppBar>
         <Drawer
             open={drawerOpened}
-            classes={{paper: [classes.drawer, !drawerOpened && classes.drawerClosed].join(" ")}}>
+            variant="permanent"
+            classes={{paper: [classes.drawer, !drawerOpened && classes.drawerClosed].join(" ")}}
+        >
             <Box className={classes.drawerHeader}>
                 <Box className={classes.displayMode}>
                     <IconButton onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
@@ -90,17 +90,19 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             <List>{
                 [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                    {caption:"", flag: settingsOpened, icon: "settings", setter: setSettingsOpened}].map(item => 
+                    {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item => 
                     <ListItem key={item.icon}>
                         <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
-                            <Icon color="action" className={item.flag ? classes.optionSelected: ""}>{item.icon}</Icon>
+                            <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                         <ListItemText primary={item.caption}/>
-                        {settingsOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
+                        {drawerOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
                     </ListItem>)
             }</List>
         </Drawer>
-        <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
+        <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}
+            sx={{p: 10,
+                pl: drawerOpened ? 30: 10}}>
             <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
             <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
         </Box>

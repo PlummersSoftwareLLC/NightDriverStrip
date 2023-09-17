@@ -5,19 +5,17 @@ const mainAppStyle = theme => ({
         display: 'flex'
     },
     appbar: {
-        zIndex: theme.zIndex.drawer + 1,
         transition: theme.transitions.create(['width', 'margin'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
-        }),
+        })  
+    },
+    appbarClosed: {
+        zIndex: "1300 !important",
     },
     appbarOpened: {
         marginLeft: drawerWidth,
         width: `calc(100% - ${drawerWidth}px)`,
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
     },
     categoryStats: {
         "display": "flex",
@@ -32,7 +30,6 @@ const mainAppStyle = theme => ({
     },
     drawer: {
         whiteSpace: 'nowrap',
-        "z-index": 0,
         width: drawerWidth,
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
@@ -45,7 +42,7 @@ const mainAppStyle = theme => ({
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
         }),
-        width: theme.spacing.unit * 7,
+        width: `calc(${theme.spacing(7)} + 1px)`,
         [theme.breakpoints.up('sm')]: {
             width: theme.spacing.unit * 9,
         },
@@ -65,7 +62,6 @@ const mainAppStyle = theme => ({
         "align-items": "center"
     },
     content: {
-        padding: theme.spacing.unit * 10,
         transition: theme.transitions.create('padding-left', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
@@ -76,7 +72,6 @@ const mainAppStyle = theme => ({
         rowGap: "10px"
     },
     contentShrinked: {
-        "padding-left": drawerWidth + 10,
         transition: theme.transitions.create('padding-left', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
