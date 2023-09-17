@@ -2,13 +2,14 @@ import {useState, useMemo, useEffect} from 'react';
 import {AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material'
 import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles';
-import {withStyles} from '@mui/styles';
 import mainAppStyle from './style';
 import getTheme from '../../theme/theme';
 import NotificationPanel from './notifications/notifications';
 import ConfigPanel from './config/config';
 import StatsPanel from './statistics/stats';
 import DesignerPanel from './designer/designer';
+import { useTheme } from '@emotion/react';
+import PropTypes from 'prop-types';
 
 const MainApp = () => {
     const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
@@ -22,9 +23,11 @@ const MainApp = () => {
 
     return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
 };
-const AppPannel = withStyles(mainAppStyle)(props => {
+const AppPannel = (props) => {
     const config = JSON.parse(localStorage.getItem('config'));
-    const { classes, mode, setMode } = props;
+    const { mode, setMode } = props;
+    const theme = useTheme();
+    const classes = mainAppStyle(theme);
     const [drawerOpened, setDrawerOpened] = useState(config && config.drawerOpened !== undefined ? config.drawerOpened : false);
     const [stats, setStats] = useState(config && config.stats !== undefined ? config.stats : true);
     const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
@@ -73,8 +76,10 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             return [...prevNotifs.filter(notif => notif !== group), group];
         });
     };
+    const rootClasses = drawerOpened ? classes.appbarOpened : classes.appbarClosed;
+    const drawerClosedClasses = drawerOpened ? {} : classes.drawerClosed;
     return <Box >
-        <AppBar className={[classes.appbar, drawerOpened ? classes.appbarOpened : classes.appbarClosed].join(" ")} >
+        <AppBar sx={{...classes.appbar, ...rootClasses}} >
             <Toolbar>
                 <IconButton 
                     aria-label="Open drawer" 
@@ -83,7 +88,7 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                     <Icon>{drawerOpened ? "chevron" : "menu"}</Icon>
                 </IconButton>
                 <Typography
-                    className={classes.toolbarTitle}
+                    sx={classes.toolbarTitle}
                     component="h1"
                     variant="h6">
                         NightDriverStrip
@@ -94,10 +99,10 @@ const AppPannel = withStyles(mainAppStyle)(props => {
         <Drawer
             open={drawerOpened}
             variant="permanent"
-            classes={{paper: [classes.drawer, !drawerOpened && classes.drawerClosed].join(" ")}}
+            sx={{'& .MuiDrawer-paper': {...classes.drawer, ...drawerClosedClasses}}}
         >
-            <Box className={classes.drawerHeader}>
-                <Box className={classes.displayMode}>
+            <Box sx={{...classes.drawerHeader}}>
+                <Box sx={classes.displayMode}>
                     <IconButton onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
                     <ListItemText primary={(mode === "dark" ? "Dark" : "Light") + " mode"}/>
                 </Box>
@@ -121,13 +126,19 @@ const AppPannel = withStyles(mainAppStyle)(props => {
                     </ListItem>)
             }</List>
         </Drawer>
-        <Box className={classes.content}
-            sx={{p: 10,
+        <Box
+            sx={{...classes.content,
+                p: 10,
                 pl: drawerOpened ? 30: 10}}>
             <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
             <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
         </Box>
     </Box>
-});
+};
+
+AppPannel.propTypes = {
+    mode: PropTypes.string.isRequired, 
+    setMode: PropTypes.func.isRequired
+}
 
 export default MainApp;
