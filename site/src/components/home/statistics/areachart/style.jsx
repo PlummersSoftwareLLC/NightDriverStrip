@@ -1,98 +1,98 @@
-const areaChartStyle = () => ({
+const areaChartStyle = {
     root: {
         "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "flex-start",
-        "align-items": "stretch"
+        flexDirection: "column",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "flex-start",
+        alignItems: "stretch"
     },
     header: {
         "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "stretch"
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "stretch"
     },
     headerLine: {
         "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "space-between",
-        "align-items": "center",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "space-between",
+        alignItems: "center",
         "width": "100%"
     },
     headerField: {
         "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "center",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "center",
         "width": "inherit"
     },
     stats: {
         "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "center",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "center",
         "padding": "0px"
     },
     stat: {
         "display": "flex",
         "padding": "0px",
-        "flex-wrap": "nowrap",
-        "align-items": "center",
-        "flex-direction": "row",
-        "justify-content": "center"
+        flexWrap: "nowrap",
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center"
     },
     tooltipContent: {
         "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "stretch",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "stretch",
         "background-color": "black",
         "padding": "5px"
     },
     tooltipHeader: {
         "font-size": "medium",
         "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "align-items": "center",
-        "justify-content": "center",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        alignItems: "center",
+        justifyContent: "center",
         "border-bottom": "solid 1px"
     },
     threads: {
         "margin": "0px",
         "padding": "0px",
         "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "stretch",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "stretch",
         "font-size": "small",
     },
     thread: {
         "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "space-between",
-        "align-items": "center",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "space-between",
+        alignItems: "center",
         "column-gap": "5px",
     },
     threadValue: {
         "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "center",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "center",
         "font-size": "smaller",
         "color": "aquamarine",
         "column-gap": "3px"
@@ -101,6 +101,6 @@ const areaChartStyle = () => ({
         "font-size": "x-small",
         "color": "aqua"
     }
-});
+};
 
 export default areaChartStyle;

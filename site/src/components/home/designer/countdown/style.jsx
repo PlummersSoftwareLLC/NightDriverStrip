@@ -1,4 +1,4 @@
-const countdownStyle = () => ({
+const countdownStyle = {
     root: {
         display: "flex",
         flexDirection: "row",
@@ -8,5 +8,5 @@ const countdownStyle = () => ({
     timeremaining: {
         width: "50px"
     }
-});
+};
 export default countdownStyle;

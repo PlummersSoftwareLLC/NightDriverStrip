@@ -6,7 +6,6 @@
         "@emotion/react": "^11.11.1",
         "@emotion/styled": "^11.11.0",
         "@mui/material": "^5.14.9",
-        "@mui/styles": "^5.14.9",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "recharts": "2.3.2"

@@ -1,4 +1,4 @@
-const notificationsStyle = () => ({
+const notificationsStyle = {
     root: {
     },
     popup: {
@@ -15,6 +15,6 @@ const notificationsStyle = () => ({
         justifyContent: "space-between",
         borderBottom: "solid aquamarine 2px",
     }
-});
+};
 
 export default notificationsStyle;
