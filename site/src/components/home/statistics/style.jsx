@@ -12,9 +12,6 @@ const statsStyle = {
     summaryStats: {
         cursor: "pointer"
     },
-    detiailedStats: {
-        border: "solid 1px"
-    },
     chartArea: {
         display: "flex",
         flexDirection: "row",
@@ -39,8 +36,6 @@ const statsStyle = {
         justifyContent: "space-between",
         alignItems: "flex-start",
         columnGap: "5px",
-    },
-    category:{
     },
     hidden: {
         display: "none"

@@ -3,6 +3,7 @@ import { useTheme } from "@emotion/react";
 import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
 import { Box, Typography, List, ListItem,  } from "@mui/material";
 import areaChartStyle from "./style";
+import styled from '@emotion/styled'
 
 const AreaStat = props => {
     const {name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
@@ -31,23 +32,23 @@ const AreaStat = props => {
 
     const getStatTooltip = (data, classes) => {
         return (
-            <div className={classes.tooltipContent}>
-                <div className={classes.tooltipHeader}>{data.labelFormatter(data.label)}</div>
-                <ul className={classes.threads}>
+            <Box sx={classes.tooltipContent}>
+                <Box sx={classes.tooltipHeader}>{data.labelFormatter(data.label)}</Box>
+                <List sx={classes.threads}>
                     {data.payload
                         .sort((a,b) => sortStats(b,a))
                         .map(stat => 
-                            <div key={stat.name} className={classes.thread}>
-                                <div className={classes.threadName} style={{color:stat.color}}>{stat.name}</div>
-                                <div className={classes.threadValue}>{getValue(stat.value)}
-                                    <div className={classes.threadSummary}>
+                            <ListItem key={stat.name} sx={classes.thread}>
+                                <ListItem sx={classes.threadName} style={{color:stat.color}}>{stat.name}</ListItem>
+                                <ListItem sx={classes.threadValue}>{getValue(stat.value)}
+                                    <Box sx={classes.threadSummary}>
                                 ({(stat.value/data.payload.reduce((ret,stat) => ret + stat.value,0)*100).toFixed(2)}%)
-                                    </div>
-                                </div>
-                            </div>)
+                                    </Box>
+                                </ListItem>
+                            </ListItem>)
                     }
-                </ul>
-            </div>)
+                </List>
+            </Box>)
     };
 
     const sortStats = (a, b) => {

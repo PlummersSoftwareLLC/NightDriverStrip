@@ -146,9 +146,8 @@ const StatsPanel = props => {
         {Object.entries(statistics).map(category => {
             const cat0 = category[0];
             const isOpen = openedCategories[cat0];
-            const isOpenSx = isOpen ? {} : statsStyle.detiailedStats;
             const summarySx = isOpen ? {} : statsStyle.summaryStats; 
-            return <Box key={cat0} sx={{...statsStyle.category, ...isOpenSx}}>
+            return <Box key={cat0}>
                 {isOpen ?
                     <Box sx={statsStyle.statCatergoryHeader} key="header">
                         <Typography variant="h5">{cat0}</Typography>
@@ -164,20 +163,21 @@ const StatsPanel = props => {
                         {
                             return <Box
                                 key={`entry-${entry[0]}`}
-                                sx={summarySx}
+                                sx={{summarySx}}
                                 onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}>
                                 <StaticStatsPanel
                                     key={`static-${entry[0]}`}
                                     detail={openedCategories[category[0]]}
                                     name={entry[0]}
                                     stat={entry[1]}/>
-                            </Box>}
+                            </Box>
+                        }
                         )}
                     <Box sx={statsStyle.categoryStats} key="charts">
                         {Object.entries(category[1])
                             .filter(entry=> !entry[1].static)
-                            .map((entry)=>
-                                <Box key={`chart-${entry[0]}`}
+                            .map((entry)=> {
+                                return <Box key={`chart-${entry[0]}`}
                                     onClick={()=>!openedCategories[category[0]] && setOpenedCategories(prev => {return {...prev,[category[0]]:!openedCategories[category[0]]}})}
                                     sx={{cursor:"pointer", ...statsStyle.chartArea, ...summarySx}}>
                                     {category[1][entry[0]].idleField && <BarStat
@@ -202,7 +202,9 @@ const StatsPanel = props => {
                                         idleField={ category[1][entry[0]].idleField }
                                         headerFields={ category[1][entry[0]].headerFields }
                                         ignored={ category[1][entry[0]].ignored || [] } />
-                                </Box>)}
+                                </Box>
+                            }
+                            )}
                     </Box>
                 </Box>
             </Box>

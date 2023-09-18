@@ -54,7 +54,8 @@ const areaChartStyle = {
         justifyContent: "center",
         alignItems: "stretch",
         "background-color": "black",
-        "padding": "5px"
+        "padding": "5px",
+        border: "none"
     },
     tooltipHeader: {
         "font-size": "medium",
@@ -84,7 +85,13 @@ const areaChartStyle = {
         alignContent: "center",
         justifyContent: "space-between",
         alignItems: "center",
+        padding: "0px",
+        margin: "0px",
         "column-gap": "5px",
+    },
+    threadName: {
+        padding: "0px",
+        margin: "0px"
     },
     threadValue: {
         "display": "flex",
@@ -93,12 +100,16 @@ const areaChartStyle = {
         alignContent: "center",
         justifyContent: "center",
         alignItems: "center",
+        padding: "0px",
+        margin: "0px",
         "font-size": "smaller",
         "color": "aquamarine",
         "column-gap": "3px"
     },
     threadSummary: {
         "font-size": "x-small",
+        padding: "0px",
+        margin: "0px",
         "color": "aqua"
     }
 };

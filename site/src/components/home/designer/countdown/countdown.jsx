@@ -28,7 +28,7 @@ const Countdown = props => {
     return (            
         <Box sx={countdownStyle.root}>
             <Typography variant="little" color="textPrimary">{label}</Typography>:
-            <Typography color="textSecondary" sx={countdownStyle.timeremaining} width="100px" variant="little">{timeRemaining}</Typography>
+            <Typography color="textSecondary" sx={countdownStyle.timeremaining} variant="little">{timeRemaining}</Typography>
         </Box>)
 
 };

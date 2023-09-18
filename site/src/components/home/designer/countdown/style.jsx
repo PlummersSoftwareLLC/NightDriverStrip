@@ -6,7 +6,7 @@ const countdownStyle = {
         alignItems: "center",
     },
     timeremaining: {
-        width: "50px"
+        width: "100px"
     }
 };
 export default countdownStyle;

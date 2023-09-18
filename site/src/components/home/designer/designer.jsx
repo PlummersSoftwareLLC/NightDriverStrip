@@ -106,7 +106,7 @@ const DesignerPanel = props => {
 
     const editingHeader = ()=>{
         return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);}}>
-            <Box className={designStyle.effectsHeaderValue}>
+            <Box sx={designStyle.effectsHeaderValue}>
                 <TextField label="Interval ms"
                     variant="outlined"
                     type="number"
