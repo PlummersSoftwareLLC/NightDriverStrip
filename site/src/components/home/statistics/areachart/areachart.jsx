@@ -3,7 +3,6 @@ import { useTheme } from "@emotion/react";
 import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
 import { Box, Typography, List, ListItem,  } from "@mui/material";
 import areaChartStyle from "./style";
-import styled from '@emotion/styled'
 
 const AreaStat = props => {
     const {name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;

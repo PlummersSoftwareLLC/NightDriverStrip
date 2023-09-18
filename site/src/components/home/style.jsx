@@ -5,10 +5,7 @@ const mainAppStyle = theme => ({
         display: 'flex'
     },
     appbar: {
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        })  
+        transition: "width 0.2s linear"
     },
     appbarClosed: {
         zIndex: "1300 !important",
@@ -23,17 +20,11 @@ const mainAppStyle = theme => ({
     drawer: {
         whiteSpace: 'nowrap',
         width: drawerWidth,
-        transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
+        transition: "width 0.2s linear"
     },
     drawerClosed: {
         overflowX: 'hidden',
-        transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        }),
+        transition: "width 0.2s linear",
         width: `calc(${theme.spacing(7)} + 1px)`,
         [theme.breakpoints.up('sm')]: {
             width: theme.spacing.unit * 9,
@@ -54,10 +45,7 @@ const mainAppStyle = theme => ({
         alignItems: "center"
     },
     content: {
-        transition: theme.transitions.create('padding-left', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-        }),
+        transition: "padding-left 0.2s linear",
     },
 });
   

@@ -20,6 +20,8 @@ module.exports = (env, argv) => {
             'react': 'React',
             "react-dom": 'ReactDOM',
             "recharts": "Recharts",
+            //  FIX ME: Work out why theme.<variable> is undefined when using CDN.
+            // "@mui/material": "MaterialUI",
             "@emotion/react": "emotionReact",
             "@emotion/styled": "emotionStyled"
         };
