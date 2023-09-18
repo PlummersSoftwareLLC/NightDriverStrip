@@ -34,10 +34,15 @@ import os
 import sys
 import subprocess
 
-localBuild=False
+build="build"
+# Determine build command to run
 for i, arg in enumerate(sys.argv):
     if arg == 'local':
-        localBuild = True
+        print("Local build is not recommended. see site/readme.md for running a live server", file=sys.stderr)
+        build = "local"
+    if arg == 'offline':
+        build = build + "-offline"
+        
     
 # Check if NPM is installed. If its not let the user know. 
 try:
@@ -50,11 +55,7 @@ except subprocess.CalledProcessError:
 subprocess.check_call('cd site && npm install --legacy-peer-deps', shell=True, stdout=subprocess.DEVNULL)
 
 # Install dependencies with NPM
-if localBuild:
-    print("Local build is not recommended. see site/readme.md for running a live server", file=sys.stderr)
-    subprocess.check_call('cd site && npm run local', shell=True)
-else:
-    subprocess.check_call('cd site && npm run build', shell=True)
+subprocess.check_call(f'cd site && npm run {build}', shell=True)
 destFolder = os.path.join('site', 'dist')
 
 

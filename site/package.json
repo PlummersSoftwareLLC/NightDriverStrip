@@ -14,6 +14,7 @@
         "build": "webpack --mode production",
         "build-offline": "webpack --mode production --env offline",
         "local": "webpack --mode development",
+        "local-offline": "webpack --mode development --env offline",
         "start": "webpack serve --mode development",
         "start-offline": "webpack serve --mode development --env offline"
     },

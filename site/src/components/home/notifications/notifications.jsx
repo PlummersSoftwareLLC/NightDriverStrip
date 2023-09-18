@@ -1,9 +1,8 @@
 
 import notificationsStyle from "./style";
 import { useState, createRef, useEffect } from "react";
-import { useTheme } from "@emotion/react";
 import { Box, IconButton, Badge, Icon, Popover, Card,CardHeader, Avatar } from "@mui/material";
-import { CardContent, Typography, CardActions } from "@mui/material";
+import {useTheme, CardContent, Typography, CardActions } from "@mui/material";
 
 const NotificationPanel = props => {
     const { notifications, clearNotifications } = props;

@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
-import { useTheme } from "@emotion/react";
 import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
-import { Box, Typography, List, ListItem,  } from "@mui/material";
+import {useTheme, Box, Typography, List, ListItem,  } from "@mui/material";
 import areaChartStyle from "./style";
 
 const AreaStat = props => {

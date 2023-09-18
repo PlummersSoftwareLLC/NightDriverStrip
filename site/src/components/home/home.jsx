@@ -1,14 +1,12 @@
 import {useState, useMemo, useEffect} from 'react';
-import {AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material'
+import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material'
 import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
-import { ThemeProvider } from '@mui/material';
 import mainAppStyle from './style';
 import getTheme from '../../theme/theme';
 import NotificationPanel from './notifications/notifications';
 import ConfigPanel from './config/config';
 import StatsPanel from './statistics/stats';
 import DesignerPanel from './designer/designer';
-import { useTheme } from '@emotion/react';
 import PropTypes from 'prop-types';
 
 const MainApp = () => {

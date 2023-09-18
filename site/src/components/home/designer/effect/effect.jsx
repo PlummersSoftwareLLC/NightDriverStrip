@@ -1,8 +1,7 @@
 import {useState, useEffect} from 'react';
 import {IconButton, Icon, Card, CardHeader, CardContent, Avatar, CardActions } from '@mui/material'
-import {TextField, LinearProgress, Collapse, Button} from '@mui/material'
+import {TextField, LinearProgress, Collapse, Button, useTheme} from '@mui/material'
 import effectStyle from './style';
-import { useTheme } from '@emotion/react';
 
 const Effect = props => {
     const { effect, effectInterval, effectIndex, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;

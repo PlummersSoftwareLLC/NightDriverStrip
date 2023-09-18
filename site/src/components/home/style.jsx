@@ -25,10 +25,10 @@ const mainAppStyle = theme => ({
     drawerClosed: {
         overflowX: 'hidden',
         transition: "width 0.2s linear",
-        width: `calc(${theme.spacing(7)} + 1px)`,
-        [theme.breakpoints.up('sm')]: {
-            width: theme.spacing.unit * 9,
-        },
+        width: "57px",
+        // [theme.breakpoints.up('sm')]: {
+        //     width: theme.spacing.unit * 9,
+        // },
     },
     drawerHeader: {
         display: "flex",
