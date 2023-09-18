@@ -30,6 +30,19 @@
 //---------------------------------------------------------------------------
 #pragma once
 
+// Each effect class needs to have exactly one associated effect number defined in
+// the below list. The effect numbers and their respective classes are linked in the
+// effect factory definitions that are created in the LoadEffectFactories()
+// function in effects.cpp. The link is used when the effect list is deserialized
+// from the effects list JSON file on file storage, to determine which effect
+// class to construct for a particular effect JSON object - which has the effect
+// number persisted as one of the core properties.
+//
+// Amongst others, this means that an effect number that made it to the main
+// codebase should not be renumbered or reused for another effect, as it will lead
+// to a mismatch between effect JSON blobs for the "old" effect and the "new" effect
+// class.
+
 // Strip effects
 #define EFFECT_STRIP_BOUNCING_BALL                       1
 #define EFFECT_STRIP_DOUBLE_PALETTE                      2
@@ -84,9 +97,9 @@
 #define EFFECT_MATRIX_PINWHEEL                         111
 #define EFFECT_MATRIX_INFINITY                         112
 #define EFFECT_MATRIX_MUNCH                            113
-// WAS EFFECT_MATRIX_CURTAIN                          114  NOW AVAILABLE
-// WAS EFFECT_MATRIX_GRID_LIGHTS                      115  NOW AVAILABLE
-// Was EFFECT_MATRIX_PALETTE_SMEAR                    116  NOW AVAILABLE
+// Was EFFECT_MATRIX_CURTAIN                           114
+// Was EFFECT_MATRIX_GRID_LIGHTS                       115
+// Was EFFECT_MATRIX_PALETTE_SMEAR                     116
 #define EFFECT_MATRIX_RAINBOW_FLAG                     117
 #define EFFECT_MATRIX_PONG_CLOCK                       118
 #define EFFECT_MATRIX_PULSE                            119
@@ -149,7 +162,15 @@
 #define EFFECT_STAR_CHRISTMAS                           12
 #define EFFECT_STAR_HOT_WHITE                           13
 
-// Some common JSON properties to prevent typos
+// Some common JSON properties to prevent typos. By project convention JSON properties
+// at the LEDStripEffect level have a length of 2 characters, and JSON properties
+// of actual effects (i.e. LEDStripEffect subclasses) a length of 3. The purpose of this
+// is keeping the effect list JSON as compact as possible. As the effect list JSON is not
+// intended for "human consumption", legibility of the overall list is not much of a concern.
+// As each effect instantiation has its own JSON object, clashes between
+// JSON property names only have to be prevented within the scope of an individua effect
+// (class).
+
 #define PTY_EFFECTNR        "en"
 #define PTY_COREEFFECT      "ce"
 #define PTY_REVERSED        "rvr"

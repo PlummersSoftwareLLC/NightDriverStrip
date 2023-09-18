@@ -78,7 +78,6 @@
     // A Small block of 3D-ish effects using Particle systems or Boids.
     #include "effects/matrix/PatternSMFlowFields.h"
     #include "effects/matrix/PatternSMSupernova.h"
-    #include "effects/matrix/PatternSMTixyLand.h" // Dozens of simple effects
     #include "effects/matrix/PatternSMWalkingMachine.h"
     #include "effects/matrix/PatternSMHypnosis.h"
     #include "effects/matrix/PatternSMRainbowTunnel.h"
@@ -103,7 +102,6 @@
     #include "effects/matrix/PatternBounce.h"
     #include "effects/matrix/PatternMandala.h"
     #include "effects/matrix/PatternSpin.h"
-    #include "effects/matrix/PatternFlowField.h"
     #include "effects/matrix/PatternMisc.h"
     #include "effects/matrix/PatternNoiseSmearing.h"
     #include "effects/matrix/PatternQR.h"

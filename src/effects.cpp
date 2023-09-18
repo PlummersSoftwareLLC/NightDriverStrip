@@ -418,18 +418,6 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_MUNCH,             PatternMunch);
         ADD_EFFECT(EFFECT_MATRIX_MAZE,              PatternMaze);
 
-//      ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Lava Rainbow", PatternSMNoise::EffectType::LavaLampRainbow_t);
-//      ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Lava Rainbow Stripe", PatternSMNoise::EffectType::LavaLampRainbowStripe_t);
-//      ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "ColorCube", PatternSMNoise::EffectType::ColorCube_t);
-//      ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise);
-//	    ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Picasso 1", 12);
-//      ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand);
-//      ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "PolyWhirl", 2);
-//      ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "FakeFire", 20);
-//      ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "Feathers", 21);
-//      ADD_EFFECT(EFFECT_MATRIX_SMTIXY_LAND,       PatternSMTixyLand, "Radial", 27);
-//      ADD_EFFECT(EFFECT_MATRIX_FLOW_FIELD,        PatternFlowField);
-
     #elif UMBRELLA
 
         ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false);
