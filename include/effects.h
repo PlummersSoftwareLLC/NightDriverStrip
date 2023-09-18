@@ -168,7 +168,7 @@
 // is keeping the effect list JSON as compact as possible. As the effect list JSON is not
 // intended for "human consumption", legibility of the overall list is not much of a concern.
 // As each effect instantiation has its own JSON object, clashes between
-// JSON property names only have to be prevented within the scope of an individua effect
+// JSON property names only have to be prevented within the scope of an individual effect
 // (class).
 
 #define PTY_EFFECTNR        "en"
