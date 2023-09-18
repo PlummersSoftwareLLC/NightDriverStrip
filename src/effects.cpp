@@ -748,20 +748,6 @@ bool ReadCurrentEffectIndex(size_t& index)
     return readIndex;
 }
 
-#if 1
-#undef XY
-// Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
-// any indication of which array or who's asking, so we assume the first matrix.  If you have trouble with
-// more than one matrix and some FastLED functions like blur2d, this would be why.
-
-uint16_t XY(uint8_t x, uint8_t y)
-{
-    // Have a drink on me!
-    //return g_ptrSystem->EffectManager()[0]->xy(x, y);
-    return ((y) * MATRIX_WIDTH + (x));
-}
-#endif
-
 void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
 {
     std::set<int> loadedEffectNumbers;

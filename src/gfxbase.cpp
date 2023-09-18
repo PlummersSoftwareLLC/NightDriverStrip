@@ -31,6 +31,20 @@
 //---------------------------------------------------------------------------
 #include "globals.h"
 #include "gfxbase.h"
+#include "systemcontainer.h"
+
+// For HUB75 matrixes we defined a straightforward macro in gfxbase.h
+#if !(USE_HUB75)
+
+// Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
+// any indication of which array or who's asking, so we assume the first matrix. If you have trouble with
+// more than one matrix and some FastLED functions like blur2d, this would be why.
+uint16_t XY(uint8_t x, uint8_t y)
+{
+    return g_ptrSystem->EffectManager().g()->xy(x, y);
+}
+
+#endif
 
 #if USE_NOISE
     // The following functions are specializations of noise-related member function
