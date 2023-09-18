@@ -38,8 +38,20 @@ localBuild=False
 for i, arg in enumerate(sys.argv):
     if arg == 'local':
         localBuild = True
+    
+# Check if NPM is installed. If its not let the user know. 
+try:
+    subprocess.check_call('cd site && npm --version', shell=True, stdout=subprocess.DEVNULL)
+except subprocess.CalledProcessError:
+    print('Error could not find NPM executable. Please install NPM to continue. see README.md/#build-tools', file=sys.stderr)
+    exit(1)
 
+# Install dependencies with NPM
+subprocess.check_call('cd site && npm install --legacy-peer-deps', shell=True, stdout=subprocess.DEVNULL)
+
+# Install dependencies with NPM
 if localBuild:
+    print("Local build is not recommended. see site/readme.md for running a live server", file=sys.stderr)
     subprocess.check_call('cd site && npm run local', shell=True)
 else:
     subprocess.check_call('cd site && npm run build', shell=True)
