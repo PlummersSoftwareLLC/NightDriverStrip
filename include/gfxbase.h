@@ -83,7 +83,7 @@
 #else
 
     // For non-HUB75 devices we declare the conversion function here and define it in
-    //   gfxbase.cpp, because that's where FastLED demands it to be.
+    //   gfxbase.cpp, because that's how FastLED demands things to be.
     uint16_t XY(uint8_t x, uint8_t y);
 
 #endif
