@@ -52,7 +52,7 @@ except subprocess.CalledProcessError:
     exit(1)
 
 # Install dependencies with NPM
-subprocess.check_call('cd site && npm install --legacy-peer-deps', shell=True, stdout=subprocess.DEVNULL)
+subprocess.check_call('cd site && npm ci', shell=True, stdout=subprocess.DEVNULL)
 
 # Install dependencies with NPM
 subprocess.check_call(f'cd site && npm run {build}', shell=True)
