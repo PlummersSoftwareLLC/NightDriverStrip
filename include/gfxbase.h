@@ -73,19 +73,7 @@
 #include <memory>
 
 #if USE_HUB75
-
     #define USE_NOISE 1
-
-    // For HUB75 matrixes, which don't use FastLED, we can use a straightforward
-    //   define to convert coordinates to an LED number.
-    #define XY(x, y)    ((y) * MATRIX_WIDTH + (x))
-
-#else
-
-    // For non-HUB75 devices we declare the conversion function here and define it in
-    //   gfxbase.cpp, because that's how FastLED demands things to be.
-    uint16_t XY(uint8_t x, uint8_t y);
-
 #endif
 
 #if USE_NOISE
@@ -271,6 +259,16 @@ public:
             return (x * _height) + y;
         }
     }
+
+    // This is an optimization that allows us to use direct math for the XY lookup when using the matrix, where
+    // it's a very simple layout.  Others may need to override this function.  Using a #define here allows
+    // us to avoid an extra virtual function call in the inner loop of the effects.
+
+    #if USE_HUB75
+        #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
+    #else
+        #define XY(x, y) xy(x, y)
+    #endif
 
     virtual CRGB getPixel(int16_t x, int16_t y) const
     {
