@@ -47,5 +47,6 @@ const BarStat = props => {
                                            .reduce((ret,stat)=>ret+stat[1],0.0)*100).toFixed(0)}%</Typography>
         </Box>)
 };
-    
+
+
 export default BarStat;

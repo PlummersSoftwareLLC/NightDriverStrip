@@ -109,7 +109,7 @@ const AppPannel = (props) => {
                 </IconButton>
             </Box> 
             <Divider/>
-            <List>{
+            <List >{
                 [
                     {caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},

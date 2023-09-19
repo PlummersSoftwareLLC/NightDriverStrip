@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
-import {useTheme, Box, Typography, List, ListItem,  } from "@mui/material";
+import {useTheme, Box, Typography, List, ListItem } from "@mui/material";
 import areaChartStyle from "./style";
 
 const AreaStat = props => {
@@ -37,12 +37,12 @@ const AreaStat = props => {
                         .sort((a,b) => sortStats(b,a))
                         .map(stat => 
                             <ListItem key={stat.name} sx={classes.thread}>
-                                <ListItem sx={classes.threadName} style={{color:stat.color}}>{stat.name}</ListItem>
-                                <ListItem sx={classes.threadValue}>{getValue(stat.value)}
+                                <Box sx={classes.threadName} style={{color:stat.color}}>{stat.name}</Box>
+                                <Box sx={classes.threadValue}>{getValue(stat.value)}
                                     <Box sx={classes.threadSummary}>
                                 ({(stat.value/data.payload.reduce((ret,stat) => ret + stat.value,0)*100).toFixed(2)}%)
                                     </Box>
-                                </ListItem>
+                                </Box>
                             </ListItem>)
                     }
                 </List>

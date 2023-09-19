@@ -1,6 +1,6 @@
 const areaChartStyle = {
     root: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "wrap",
         alignContent: "flex-start",
@@ -8,78 +8,79 @@ const areaChartStyle = {
         alignItems: "stretch"
     },
     header: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         justifyContent: "center",
         alignItems: "stretch"
     },
     headerLine: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         justifyContent: "space-between",
         alignItems: "center",
-        "width": "100%"
+        width: "100%"
     },
     headerField: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         justifyContent: "center",
         alignItems: "center",
-        "width": "inherit"
+        width: "inherit"
     },
     stats: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         justifyContent: "center",
         alignItems: "center",
-        "padding": "0px"
+        padding: "0px"
     },
     stat: {
-        "display": "flex",
-        "padding": "0px",
+        display: "flex",
+        padding: "0px",
         flexWrap: "nowrap",
         alignItems: "center",
         flexDirection: "row",
         justifyContent: "center"
     },
     tooltipContent: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         alignContent: "center",
         justifyContent: "center",
         alignItems: "stretch",
-        "background-color": "black",
-        "padding": "5px",
+        backgroundColor: "black",
+        padding: "5px",
         border: "none"
     },
     tooltipHeader: {
-        "font-size": "medium",
-        "display": "flex",
+        fontSize: "medium",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         alignContent: "center",
         alignItems: "center",
         justifyContent: "center",
-        "border-bottom": "solid 1px"
+        borderBottom: "solid 1px"
     },
     threads: {
-        "margin": "0px",
-        "padding": "0px",
-        "display": "flex",
+        margin: "0px",
+        padding: "0px",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         alignContent: "center",
         justifyContent: "center",
         alignItems: "stretch",
-        "font-size": "small",
+        border: "none",
+        fontSize: "small",
     },
     thread: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         alignContent: "center",
@@ -87,14 +88,15 @@ const areaChartStyle = {
         alignItems: "center",
         padding: "0px",
         margin: "0px",
-        "column-gap": "5px",
+        columnGap: "5px",
     },
     threadName: {
         padding: "0px",
-        margin: "0px"
+        margin: "0px",
+        border: "none"
     },
     threadValue: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         alignContent: "center",
@@ -102,15 +104,16 @@ const areaChartStyle = {
         alignItems: "center",
         padding: "0px",
         margin: "0px",
-        "font-size": "smaller",
-        "color": "aquamarine",
-        "column-gap": "3px"
+        fontSize: "smaller",
+        color: "aquamarine",
+        border: "none",
+        columnGap: "3px"
     },
     threadSummary: {
-        "font-size": "x-small",
+        fontSize: "x-small",
         padding: "0px",
         margin: "0px",
-        "color": "aqua"
+        color: "aqua"
     }
 };
 

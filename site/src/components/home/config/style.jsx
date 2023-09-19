@@ -1,9 +1,9 @@
 const configStyle = {
     configBar: {
-        "padding-top": "65px"
+        paddingTop: "65px"
     },
     configDisplay: {
-        "display": "flex",
+        display: "flex",
         columnGap: "10px",
         flexDirection: "column",
         flexWrap: "nowrap",

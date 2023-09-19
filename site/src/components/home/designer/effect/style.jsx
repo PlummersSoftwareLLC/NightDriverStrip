@@ -1,7 +1,7 @@
 const effectStyle = (theme) => {
     return {
         root: {
-            "display": "flex",
+            display: "flex",
             flexDirection: "column",
             padding: "10px",
         },

@@ -1,6 +1,6 @@
 const staticStatStyle = {
     root: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "wrap",
         alignContent: "flex-start",

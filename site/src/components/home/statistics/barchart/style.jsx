@@ -1,6 +1,6 @@
 const barChartStyle = {
     summary: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "wrap",
         alignContent: "flex-start",
@@ -8,90 +8,90 @@ const barChartStyle = {
         alignItems: "center"
     },
     header: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         justifyContent: "center",
         alignItems: "stretch"
     },
     headerLine: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         justifyContent: "space-between",
         alignItems: "center",
-        "width": "100%"
+        width: "100%"
     },
     stats: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         justifyContent: "center",
         alignItems: "center",
-        "padding": "0px"
+        padding: "0px"
     },
     stat: {
-        "display": "flex",
-        "padding": "0px",
+        display: "flex",
+        padding: "0px",
         flexWrap: "nowrap",
         alignItems: "center",
         flexDirection: "row",
         justifyContent: "center"
     },
     tooltipContent: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         alignContent: "center",
         justifyContent: "center",
         alignItems: "stretch",
-        "background-color": "black",
-        "padding": "5px"
+        backgroundColor: "black",
+        padding: "5px"
     },
     tooltipHeader: {
-        "font-size": "medium",
-        "display": "flex",
+        fontSize: "medium",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         alignContent: "center",
         alignItems: "center",
         justifyContent: "center",
-        "border-bottom": "solid 1px"
+        borderBottom: "solid 1px"
     },
     threads: {
-        "margin": "0px",
-        "padding": "0px",
-        "display": "flex",
+        margin: "0px",
+        padding: "0px",
+        display: "flex",
         flexDirection: "column",
         flexWrap: "nowrap",
         alignContent: "center",
         justifyContent: "center",
         alignItems: "stretch",
-        "font-size": "small",
+        fontSize: "small",
     },
     thread: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         alignContent: "center",
         justifyContent: "space-between",
         alignItems: "center",
-        "column-gap": "5px",
+        columnGap: "5px",
     },
     threadValue: {
-        "display": "flex",
+        display: "flex",
         flexDirection: "row",
         flexWrap: "nowrap",
         alignContent: "center",
         justifyContent: "center",
         alignItems: "center",
-        "font-size": "smaller",
-        "color": "aquamarine",
-        "column-gap": "3px"
+        fontSize: "smaller",
+        color: "aquamarine",
+        columnGap: "3px"
     },
     threadSummary: {
-        "font-size": "x-small",
-        "color": "aqua"
+        fontSize: "x-small",
+        color: "aqua"
     }
 };
 

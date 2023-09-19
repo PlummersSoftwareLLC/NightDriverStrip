@@ -213,8 +213,6 @@ const StatsPanel = props => {
     </Box>
 };
 
-//     const { siteConfig, open, addNotification } = props;
-// const { statsRefreshRate, statsAnimateChange, maxSamples } = siteConfig;
 StatsPanel.propTypes = {
     siteConfig: PropTypes.shape({
         statsRefreshRate: PropTypes.shape({

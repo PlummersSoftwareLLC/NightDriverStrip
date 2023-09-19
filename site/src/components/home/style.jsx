@@ -1,6 +1,6 @@
 const drawerWidth = 240;
 
-const mainAppStyle = theme => ({ 
+const mainAppStyle = (theme) => ({ 
     root: {
         display: 'flex'
     },
@@ -20,15 +20,16 @@ const mainAppStyle = theme => ({
     drawer: {
         whiteSpace: 'nowrap',
         width: drawerWidth,
-        transition: "width 0.2s linear"
+        transition: "width 0.2s linear",
     },
     drawerClosed: {
         overflowX: 'hidden',
         transition: "width 0.2s linear",
-        width: "57px",
-        // [theme.breakpoints.up('sm')]: {
-        //     width: theme.spacing.unit * 9,
-        // },
+        width: theme.spacing.unit * 7,
+        maxWidth: "65px",
+        [theme.breakpoints.up('sm')]: {
+            width: theme.spacing.unit * 9,
+        },
     },
     drawerHeader: {
         display: "flex",

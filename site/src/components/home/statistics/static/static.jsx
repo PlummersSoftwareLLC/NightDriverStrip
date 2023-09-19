@@ -22,4 +22,5 @@ const StaticStatsPanel = props => {
     </Box>
 };
 
+
 export default StaticStatsPanel;
