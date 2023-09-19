@@ -277,5 +277,7 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
 // more than one matrix and some FastLED functions like blur2d, this would be why.
 uint16_t XY(uint8_t x, uint8_t y)
 {
-    return g_ptrSystem->EffectManager().g()->xy(x, y);
+    static auto& g = *(g_ptrSystem->EffectManager().g());
+
+    return g.xy(x, y);
 }
