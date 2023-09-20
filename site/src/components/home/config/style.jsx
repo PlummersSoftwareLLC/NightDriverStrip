@@ -1,19 +1,21 @@
-const configStyle = theme => ({
+const configStyle = {
     configBar: {
-        "padding-top": "65px"
+        paddingTop: "65px"
     },
     configDisplay: {
-        "display": "flex",
-        "column-gap": "10px",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "justify-content": "flex-start",
-        "align-items": "center",
+        display: "flex",
+        columnGap: "10px",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        justifyContent: "flex-start",
+        alignItems: "center",
     },
     cblabel: {
-        "margin-left": "initial"
+        marginLeft: "initial"
     },
     hidden: {
         display: "none"
     }
-});
+};
+
+export default configStyle;

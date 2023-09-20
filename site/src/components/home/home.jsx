@@ -1,20 +1,51 @@
+import {useState, useMemo, useEffect} from 'react';
+import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material'
+import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
+import mainAppStyle from './style';
+import getTheme from '../../theme/theme';
+import NotificationPanel from './notifications/notifications';
+import ConfigPanel from './config/config';
+import StatsPanel from './statistics/stats';
+import DesignerPanel from './designer/designer';
+import PropTypes from 'prop-types';
+
 const MainApp = () => {
-    const [mode, setMode] = useState('dark');
-    const theme = React.useMemo(
+    const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
+    const theme = useMemo(
         () => getTheme(mode),[mode]);
+
+    // save users state to storage so the page reloads where they left off. 
+    useEffect(() => {
+        localStorage.setItem('theme', mode);
+    }, [mode])
+
     return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>
 };
-
-const AppPannel = withStyles(mainAppStyle)(props => {
-    const { classes, mode, setMode } = props;
-    const [drawerOpened, setDrawerOpened] = useState(false);
-    const [stats, setStats] = useState(false);
-    const [designer, setDesigner] = useState(false);
-    const [statsRefreshRate, setStatsRefreshRate ] = useState(3);
-    const [maxSamples, setMaxSamples ] = useState(50);
-    const [animateChart, setAnimateChart ] = useState(false);
+const AppPannel = (props) => {
+    const config = JSON.parse(localStorage.getItem('config'));
+    const { mode, setMode } = props;
+    const theme = useTheme();
+    const classes = mainAppStyle(theme);
+    const [drawerOpened, setDrawerOpened] = useState(config && config.drawerOpened !== undefined ? config.drawerOpened : false);
+    const [stats, setStats] = useState(config && config.stats !== undefined ? config.stats : true);
+    const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
+    const [statsRefreshRate, setStatsRefreshRate ] = useState(config && config.statsRefreshRate !== undefined ? config.statsRefreshRate : 3);
+    const [maxSamples, setMaxSamples ] = useState(config && config.maxSamples !== undefined ? config.maxSamples : 50);
+    const [animateChart, setAnimateChart ] = useState(config && config.animateChart !== undefined ? config.animateChart : false);
     const [notifications, setNotifications] = useState([]);
+    
+    // save users state to storage so the page reloads where they left off. 
+    useEffect(() => {
+        localStorage.setItem('config', JSON.stringify({
+            stats,
+            designer,
+            statsRefreshRate,
+            animateChart,
+            maxSamples 
+        }));
+    }, [stats, designer, statsRefreshRate, animateChart, maxSamples])
 
+    
     const siteConfig = {
         statsRefreshRate: {
             name: "Refresh rate",
@@ -43,53 +74,69 @@ const AppPannel = withStyles(mainAppStyle)(props => {
             return [...prevNotifs.filter(notif => notif !== group), group];
         });
     };
-
-    return <Box className={classes.root}>
-            <AppBar className={[classes.appbar,drawerOpened && classes.appbarOpened].join(" ")}>
-                <Toolbar>
-                    <IconButton 
-                        aria-label="Open drawer" 
-                        onClick={()=>setDrawerOpened(!drawerOpened)} 
-                        className={drawerOpened && classes.drawerClosed}>
-                        <Icon>{drawerOpened ? "chevron" : "menu"}</Icon>
-                    </IconButton>
-                    <Typography
-                        className={classes.toolbarTitle}
-                        component="h1"
-                        variant="h6">
+    const rootClasses = drawerOpened ? classes.appbarOpened : classes.appbarClosed;
+    const drawerClosedClasses = drawerOpened ? {} : classes.drawerClosed;
+    return <Box >
+        <AppBar sx={{...classes.appbar, ...rootClasses}} >
+            <Toolbar>
+                <IconButton 
+                    aria-label="Open drawer" 
+                    onClick={()=>setDrawerOpened(!drawerOpened)} 
+                >
+                    <Icon>{drawerOpened ? "chevron" : "menu"}</Icon>
+                </IconButton>
+                <Typography
+                    sx={classes.toolbarTitle}
+                    component="h1"
+                    variant="h6">
                         NightDriverStrip
-                    </Typography>
-                    {(notifications.length > 0) && <NotificationPanel notifications={notifications} clearNotifications={()=>setNotifications([])}/>}
-                </Toolbar>
-            </AppBar>
-            <Drawer variant="permanent" 
-                    classes={{paper: [classes.drawer, !drawerOpened && classes.drawerClosed].join(" ")}}>
-                <Box className={classes.drawerHeader}>
-                    <Box className={classes.displayMode}>
-                        <IconButton onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
-                        <ListItemText primary={(mode === "dark" ? "Dark" : "Light") + " mode"}/>
-                    </Box>
-                    <IconButton onClick={()=>setDrawerOpened(!drawerOpened)}>
-                        <Icon>chevron_left</Icon>
-                    </IconButton>
+                </Typography>
+                {(notifications.length > 0) && <NotificationPanel notifications={notifications} clearNotifications={()=>setNotifications([])}/>}
+            </Toolbar>
+        </AppBar>
+        <Drawer
+            open={drawerOpened}
+            variant="permanent"
+            sx={{'& .MuiDrawer-paper': {...classes.drawer, ...drawerClosedClasses}}}
+        >
+            <Box sx={{...classes.drawerHeader}}>
+                <Box sx={classes.displayMode}>
+                    <IconButton onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
+                    <ListItemText primary={(mode === "dark" ? "Dark" : "Light") + " mode"}/>
                 </Box>
-                <Divider/>
-                <List>{
-                    [{caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
-                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                     {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}].map(item => 
+                <IconButton onClick={()=>setDrawerOpened(!drawerOpened)}>
+                    <Icon>chevron_left</Icon>
+                </IconButton>
+            </Box> 
+            <Divider/>
+            <List >{
+                [
+                    {caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
+                    {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
+                    {caption:"", flag: drawerOpened, icon: "settings", setter: setDrawerOpened}
+                ].map(item => 
                     <ListItem key={item.icon}>
                         <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
-                            <Icon color="action" className={item.flag && classes.optionSelected}>{item.icon}</Icon>
+                            <Icon color={item.flag ? "primary": "action"} >{item.icon}</Icon>
                         </IconButton></ListItemIcon>
                         <ListItemText primary={item.caption}/>
                         {drawerOpened && (item.icon === "settings") && <ConfigPanel siteConfig={siteConfig} />}
                     </ListItem>)
-                }</List>
-            </Drawer>
-            <Box className={[classes.content, drawerOpened && classes.contentShrinked].join(" ")}>
-                <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
-                <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
-            </Box>
+            }</List>
+        </Drawer>
+        <Box
+            sx={{...classes.content,
+                p: 10,
+                pl: drawerOpened ? 30: 10}}>
+            <StatsPanel siteConfig={siteConfig} open={stats} addNotification={addNotification}/> 
+            <DesignerPanel siteConfig={siteConfig} open={designer} addNotification={addNotification}/>
         </Box>
-});
+    </Box>
+};
+
+AppPannel.propTypes = {
+    mode: PropTypes.string.isRequired, 
+    setMode: PropTypes.func.isRequired
+}
+
+export default MainApp;
