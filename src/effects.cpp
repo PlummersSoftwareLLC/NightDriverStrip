@@ -657,7 +657,7 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>
 
 #endif
 
-// Declare these here just so InitEffectsManager can refer to them. We define it a little further down
+// Declare these here just so InitEffectsManager can refer to them. We define them a little further down
 
 std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
 void WriteCurrentEffectIndexFile();
@@ -678,9 +678,7 @@ void InitEffectsManager()
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
-    std::optional<JsonObjectConst> jsonObject;
-
-    jsonObject = LoadEffectsJSONFile(pJsonDoc);
+    auto jsonObject = LoadEffectsJSONFile(pJsonDoc);
 
     if (jsonObject)
     {
