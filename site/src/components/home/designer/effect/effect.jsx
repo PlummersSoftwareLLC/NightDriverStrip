@@ -2,6 +2,8 @@ import {useState, useEffect} from 'react';
 import {IconButton, Icon, Card, CardHeader, CardContent, Avatar, CardActions } from '@mui/material'
 import {TextField, LinearProgress, Collapse, Button, useTheme} from '@mui/material'
 import effectStyle from './style';
+import PropTypes from 'prop-types'
+
 
 const Effect = props => {
     const { effect, effectInterval, effectIndex, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
@@ -39,10 +41,11 @@ const Effect = props => {
             sx={classes.cardheader}
         /> 
         <CardContent>
-            {selected && <LinearProgress disabled={requestRunning} variant="determinate" sx={{transition: 'none'}} value={progress}/>}
+            {selected && <LinearProgress disabled={requestRunning} variant="determinate" sx={{transition: 'none'}} value={progress} />}
             {!selected && <Button disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)} variant="outlined" startIcon={<Icon >{effect.enabled?"stop":"circle"}</Icon>}>{effect.enabled?"Disable":"Enable"}</Button>}
             {!selected && effect.enabled && <Button disabled={requestRunning} onClick={()=>navigateTo(effectIndex)} variant="outlined" startIcon={<Icon >start</Icon>}>Trigger</Button>}
         </CardContent>
+        {/* TODO Replace the below with new options controller. */}
         <CardActions disableSpacing>
             <IconButton
                 onClick={()=>setExpanded(!expanded)}
@@ -57,5 +60,19 @@ const Effect = props => {
         </Collapse>
     </Card>
 };
+
+Effect.propTypes = {
+    effect: PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        enabled: PropTypes.bool.isRequired
+    }).isRequired,
+    effectInterval: PropTypes.number.isRequired,
+    effectIndex: PropTypes.number.isRequired,
+    millisecondsRemaining: PropTypes.number,
+    selected: PropTypes.bool,
+    effectEnable: PropTypes.func.isRequired,
+    navigateTo: PropTypes.func.isRequired,
+    requestRunning: PropTypes.bool.isRequired,    
+}
 
 export default Effect;
