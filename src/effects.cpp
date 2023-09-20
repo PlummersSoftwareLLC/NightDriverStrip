@@ -631,7 +631,7 @@ void LoadEffectFactories()
 
     #endif
 
-    // Set a default if none was set yet else failed
+    // Set the effect set version to the default value of 1 if none was set yet
     #ifndef EFFECT_SET_VERSION
         #define EFFECT_SET_VERSION  1
     #endif
