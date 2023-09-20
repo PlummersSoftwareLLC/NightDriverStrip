@@ -329,6 +329,25 @@ void LoadEffectFactories()
 
     l_ptrEffectFactories = make_unique_psram<EffectFactories>();
 
+    // The EFFECT_SET_VERSION macro defines the "effect set version" for a project. This version
+    // is persisted to JSON with the effect objects, and compared to it when the effects JSON file
+    // is deserialized.
+    //
+    // If the persisted version and the one defined below don't match, the effects JSON is ignored
+    // and the default set is loaded. This means that a "reset" of a project's effect set on the
+    // boards running the project can be forced by bumping up the effect set version for that project.
+    // As the user may have customized their effect set config or order, this should be done with
+    // some hesitation - and increasingly so when the web UI starts offering more facilities for
+    // customizing one's effect setup.
+    //
+    // The effect set version defaults to 1, so a project only needs to define it if it's different
+    // than that; refer to MESMERIZER as an example. If the effect set version is defined to 0, the
+    // default set will be loaded at every startup.
+    //
+    // The following line can be uncommented to override the per-project effect set version.
+
+    // #define EFFECT_SET_VERSION   0
+
     #if __has_include ("custom_effects.h")
 
       #include "custom_effects.h"
@@ -354,6 +373,10 @@ void LoadEffectFactories()
         // ADD_EFFECT(EFFECT_STRIP_LANTERN, LanternEffect);
 
     #elif MESMERIZER
+
+        #ifndef EFFECT_SET_VERSION
+            #define EFFECT_SET_VERSION  2   // Bump version if default set changes in a meaningful way
+        #endif
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25);
@@ -608,6 +631,11 @@ void LoadEffectFactories()
 
     #endif
 
+    // Set a default if none was set yet else failed
+    #ifndef EFFECT_SET_VERSION
+        #define EFFECT_SET_VERSION  1
+    #endif
+
     // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
     // add the list of effects in this table as shown for the various other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
@@ -629,8 +657,9 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>
 
 #endif
 
-// Declare it here just so InitEffectsManager can refer to it. We define it a little further down
+// Declare these here just so InitEffectsManager can refer to them. We define it a little further down
 
+std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
 void WriteCurrentEffectIndexFile();
 
 // InitEffectsManager
@@ -649,15 +678,18 @@ void InitEffectsManager()
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
+    std::optional<JsonObjectConst> jsonObject;
 
-    if (LoadJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, pJsonDoc))
+    jsonObject = LoadEffectsJSONFile(pJsonDoc);
+
+    if (jsonObject)
     {
         debugI("Creating EffectManager from JSON config");
 
         if (g_ptrSystem->HasEffectManager())
-            g_ptrSystem->EffectManager().DeserializeFromJSON((pJsonDoc->as<JsonObjectConst>()));
+            g_ptrSystem->EffectManager().DeserializeFromJSON(jsonObject.value());
         else
-            g_ptrSystem->SetupEffectManager(pJsonDoc->as<JsonObjectConst>(), g_ptrSystem->Devices());
+            g_ptrSystem->SetupEffectManager(jsonObject.value(), g_ptrSystem->Devices());
     }
     else
     {
@@ -695,6 +727,27 @@ void SaveCurrentEffectIndex()
     if (g_ptrSystem->DeviceConfig().RememberCurrentEffect())
         // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
         g_ptrSystem->JSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
+}
+
+std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+{
+    // If the effect set version is defined to 0, we ignore whatever is persisted
+    if (EFFECT_SET_VERSION == 0)
+        return {};
+
+    if (!LoadJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, pJsonDoc))
+        return {};
+
+    auto jsonObject = pJsonDoc->as<JsonObjectConst>();
+
+    // Default to 1 if no effect set version was persisted.
+    int jsonVersion = jsonObject.containsKey(PTY_EFFECTSETVER) ? jsonObject[PTY_EFFECTSETVER] : 1;
+
+    // Only return the JSON object if the persistent version matches the current one.
+    if (jsonVersion == EFFECT_SET_VERSION)
+        return jsonObject;
+
+    return {};
 }
 
 void WriteCurrentEffectIndexFile()
@@ -803,6 +856,8 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
 
 void EffectManager::LoadDefaultEffects()
 {
+    _effectSetVersion = EFFECT_SET_VERSION;
+
     for (const auto &numberedFactory : l_ptrEffectFactories->GetDefaultFactories())
         ProduceAndLoadDefaultEffect(numberedFactory);
 

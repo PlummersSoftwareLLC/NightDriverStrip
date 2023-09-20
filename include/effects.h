@@ -200,5 +200,6 @@
 #define PTY_HUESTEP         "hst"
 #define PTY_EFFECT          "eft"
 #define PTY_SCALE           "scl"
+#define PTY_EFFECTSETVER    "esv"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"
