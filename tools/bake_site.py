@@ -42,9 +42,9 @@ for i, arg in enumerate(sys.argv):
         build = "local"
     if arg == 'offline':
         build = build + "-offline"
-        
-    
-# Check if NPM is installed. If its not let the user know. 
+
+
+# Check if NPM is installed. If its not let the user know.
 try:
     subprocess.check_call('cd site && npm --version', shell=True, stdout=subprocess.DEVNULL)
 except subprocess.CalledProcessError:
@@ -54,7 +54,7 @@ except subprocess.CalledProcessError:
 # Install dependencies with NPM
 subprocess.check_call('cd site && npm ci', shell=True, stdout=subprocess.DEVNULL)
 
-# Install dependencies with NPM
+# Build site with NPM
 subprocess.check_call(f'cd site && npm run {build}', shell=True)
 destFolder = os.path.join('site', 'dist')
 
