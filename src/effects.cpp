@@ -740,10 +740,10 @@ std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJson
 
     auto jsonObject = pJsonDoc->as<JsonObjectConst>();
 
-    // Default to 1 if no effect set version was persisted.
+    // Default to 1 if no effect set version was persisted
     int jsonVersion = jsonObject.containsKey(PTY_EFFECTSETVER) ? jsonObject[PTY_EFFECTSETVER] : 1;
 
-    // Only return the JSON object if the persistent version matches the current one.
+    // Only return the JSON object if the persistent version matches the current one
     if (jsonVersion == EFFECT_SET_VERSION)
         return jsonObject;
 
