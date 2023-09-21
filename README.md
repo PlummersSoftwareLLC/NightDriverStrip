@@ -28,7 +28,7 @@ _Davepl, 9/19/2021_
 - [Adding new effects](#adding-new-effects)
 - [Fetching things from the Internet](#fetching-things-from-the-internet)
 - [Build pointers](#build-pointers)
-  - [Build Tools](#build-tools)
+  - [Build tools](#build-tools)
   - [Build Commands](#build-commands)
 - [File system](#file-system)
 - [Tools](#tools)
@@ -226,11 +226,15 @@ If you develop an effect that requires data that needs to be pulled in from the 
 
 ## Build pointers
 
-### Build tools 
+### Build tools
+
 The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
-To compile the front-end application NPM is required [NPM Installation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm). The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2. For details on working with the frontend application see site/readme.md
+
+To compile the front-end application (which is part of every PlatformIO build) NPM is required. Documentation is available online concerning [NPM installation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2. For details on working with the frontend application see [site/README.md](./site/README.md).
 
 ### Build Commands
+
 When either the IDE or Core are installed, NightDriverStrip can be built from a command shell by entering the project/repository directory and issuing the following command:
 
 ```ShellConsole
