@@ -26,6 +26,7 @@ _Davepl, 9/19/2021_
 - [Wifi setup](#wifi-setup)
 - [Feature defines](#feature-defines)
 - [Adding new effects](#adding-new-effects)
+- [Resetting the effect list](#resetting-the-effect-list)
 - [Fetching things from the Internet](#fetching-things-from-the-internet)
 - [Build pointers](#build-pointers)
   - [Build tools](#build-tools)
@@ -220,9 +221,23 @@ This makes that an override of `SerializeToJSON()` and a corresponding deseriali
 
 **Note**: in line with the convention in ArduinoJson, which is the library used by the JSON serialization logic, `SerializeToJSON()` _must_ return `true` _except_ when an ArduinoJson function (like `JsonObject::set()`) returns `false` to indicate it ran out of buffer memory. Any `SerializeToJSON()` function returning `false` will trigger an increase in the serialization buffer and a restart of the serialization process.
 
+## Resetting the effect list
+
+For instance during development, the (JSON-persisted) effect list on your board can get out of sync with the effects you add in effects.cpp (in the function `LoadEffectFactories()` specifically) to a point it becomes messy or annoying. If this happens, you can reset the effect list on the board to the default from the network. For this to work, the board has to be connected to WiFi and the webserver has to be running.
+
+The reset can be done by performing an HTTP form POST to http://&lt;device_IP&gt;/reset with the following fields set: effectsConfig=1 and board=1. On systems with "regular" curl available, the following command should do the trick:
+
+```shell
+curl -d "effectsConfig=1&board=1" -X POST http://<device_IP>/reset
+```
+
+It's not possible that the ability to perform this reset is added in a future update to the web UI.
+
+Furthermore, it's also possible to "ignore" the persisted effect list altogether and always load the standard effects list at startup. Documentation on how to do this is available towards the top of the aforementioned `LoadEffectFactories()` function.
+
 ## Fetching things from the Internet
 
-If you develop an effect that requires data that needs to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrNetworkReader` global variable. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
+If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
 
 ## Build pointers
 
