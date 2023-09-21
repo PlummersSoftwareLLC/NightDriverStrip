@@ -75,7 +75,6 @@
     #include "effects/matrix/PatternSMMetaBalls.h"
     #include "effects/matrix/PatternSMHolidayLights.h"
     #include "effects/matrix/PatternSMGamma.h"
-    // A Small block of 3D-ish effects using Particle systems or Boids.
     #include "effects/matrix/PatternSMFlowFields.h"
     #include "effects/matrix/PatternSMSupernova.h"
     #include "effects/matrix/PatternSMWalkingMachine.h"

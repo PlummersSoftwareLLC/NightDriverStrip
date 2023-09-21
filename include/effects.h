@@ -140,9 +140,8 @@
 #define EFFECT_MATRIX_SMSTARDEEP                       153
 #define EFFECT_MATRIX_SMSTROBE_DIFFUSION               154
 #define EFFECT_MATRIX_SMSUPERNOVA                      155
-#define EFFECT_MATRIX_SMTIXY_LAND                      156
-#define EFFECT_MATRIX_SMTWISTER                        157
-#define EFFECT_MATRIX_SMWALKING_MACHINE                158
+#define EFFECT_MATRIX_SMTWISTER                        156
+#define EFFECT_MATRIX_SMWALKING_MACHINE                157
 
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201

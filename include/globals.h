@@ -278,7 +278,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
     // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
-    // watching the serial output or checking your router for the DHCP given to 'LEDWifi'.
+    // watching the serial output or checking your router for the DHCP given to a new device; often they're
+    // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
 
     #ifndef ENABLE_WEBSERVER
         #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
@@ -326,7 +327,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
     // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
-    // watching the serial output or checking your router for the DHCP given to 'LEDWifi'.
+    // watching the serial output or checking your router for the DHCP given to a new device; often they're
+    // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
+
 
     #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
     #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
@@ -394,7 +397,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
     // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
-    // watching the serial output or checking your router for the DHCP given to 'LEDWifi'.
+    // watching the serial output or checking your router for the DHCP given to a new device; often they're
+    // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
 
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
