@@ -30,7 +30,7 @@ _Davepl, 9/19/2021_
 - [Fetching things from the Internet](#fetching-things-from-the-internet)
 - [Build pointers](#build-pointers)
   - [Build tools](#build-tools)
-  - [Build Commands](#build-commands)
+  - [Build commands](#build-commands)
 - [File system](#file-system)
 - [Tools](#tools)
 - [Bonus exercise](#bonus-exercise)
@@ -223,7 +223,7 @@ This makes that an override of `SerializeToJSON()` and a corresponding deseriali
 
 ## Resetting the effect list
 
-For instance during development, the (JSON-persisted) effect list on your board can get out of sync with the effects you add in effects.cpp (in the function `LoadEffectFactories()` specifically) to a point it becomes messy or annoying. If this happens, you can reset the effect list on the board to the default from the network. For this to work, the board has to be connected to WiFi and the webserver has to be running.
+For instance during development, the (JSON-persisted) effect list on your board can get out of sync with the effects you add in effects.cpp (in the function `LoadEffectFactories()` specifically) to a point it becomes messy or annoying. If this happens, you can reset the effect list on the board to the default, via the network. For this to work, the board has to be connected to WiFi and the webserver has to be running.
 
 The reset can be done by performing an HTTP form POST to http://&lt;device_IP&gt;/reset with the following fields set: effectsConfig=1 and board=1. On systems with "regular" curl available, the following command should do the trick:
 
@@ -231,7 +231,7 @@ The reset can be done by performing an HTTP form POST to http://&lt;device_IP&gt
 curl -d "effectsConfig=1&board=1" -X POST http://<device_IP>/reset
 ```
 
-It's not possible that the ability to perform this reset is added in a future update to the web UI.
+It's possible that the ability to perform this reset is added in a future update to the web UI.
 
 Furthermore, it's also possible to "ignore" the persisted effect list altogether and always load the standard effects list at startup. Documentation on how to do this is available towards the top of the aforementioned `LoadEffectFactories()` function.
 
@@ -248,7 +248,7 @@ The project can be built using [PlatformIO](https://platformio.org/). There's a 
 To compile the front-end application (which is part of every PlatformIO build) NPM is required. Documentation is available online concerning [NPM installation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
 The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2. For details on working with the frontend application see [site/README.md](./site/README.md).
 
-### Build Commands
+### Build commands
 
 When either the IDE or Core are installed, NightDriverStrip can be built from a command shell by entering the project/repository directory and issuing the following command:
 
