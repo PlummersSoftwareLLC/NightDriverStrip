@@ -77,6 +77,7 @@ class  EffectManager : public IJSONSerializable
     CRGB lastManualColor = CRGB::Red;
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
+    int _effectSetVersion = 1;
 
     std::vector<std::shared_ptr<GFXBase>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
@@ -208,6 +209,10 @@ public:
             return true;
         }
 
+        // Check if there's a persisted effect set version, and remember it if so
+        if (jsonObject.containsKey(PTY_EFFECTSETVER))
+            _effectSetVersion = jsonObject[PTY_EFFECTSETVER];
+
         LoadJSONAndMissingEffects(effectsArray);
 
         // "eef" was the array of effect enabled flags. They have now been integrated in the effects themselves;
@@ -267,8 +272,8 @@ public:
     {
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
-
         jsonObject["ivl"] = _effectInterval;
+        jsonObject[PTY_EFFECTSETVER] = _effectSetVersion;
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
 

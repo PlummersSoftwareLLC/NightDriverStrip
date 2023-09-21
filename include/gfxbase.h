@@ -73,7 +73,7 @@
 #include <memory>
 
 #if USE_HUB75
-#define USE_NOISE 1
+    #define USE_NOISE 1
 #endif
 
 #if USE_NOISE
@@ -87,10 +87,25 @@
         uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
         uint8_t  noisesmoothing;
     } Noise;
+
+    // Enum type for the different noise approaches that are available. If anybody
+    // has ideas for more descriptive names for these, don't hesitate to suggest them. :)
+    enum class NoiseApproach
+    {
+        One,
+        Two
+    };
 #endif
 
 class GFXBase : public Adafruit_GFX
 {
+#if USE_NOISE
+private:
+    // The standard noise approach used for noise function templates, if none is specified
+    // at the point of invocation.
+    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
+#endif
+
 protected:
     size_t _width;
     size_t _height;
@@ -121,25 +136,8 @@ public:
     CRGB *leds = nullptr;
     std::unique_ptr<Boid[]> _boids;
 
-    GFXBase(int w, int h) : Adafruit_GFX(w, h),
-                            _width(w),
-                            _height(h)
-    {
-        #if USE_NOISE
-            debugV("Allocating boids and noise");
-            _boids.reset(psram_allocator<Boid>().allocate(_width));
-            _ptrNoise = std::make_unique<Noise>();          // Avoid specific PSRAM allocation since highly random access
-            assert(_ptrNoise && _boids);
-            debugV("Setting up noise");
-            NoiseVariablesSetup();
-            debugV("Filling noise");
-            FillGetNoise();
-        #endif
-
-        debugV("Setting up palette");
-        loadPalette(0);
-        ResetOscillators();
-    }
+    // Definition moved to GFXBase.cpp because it uses the FillGetNoise() function template
+    GFXBase(int w, int h);
 
     ~GFXBase() override
     {
@@ -1200,26 +1198,32 @@ public:
             _ptrNoise->noise_scale_y = sy;
         }
 
-        void FillGetNoise()
-        {
-            for (uint16_t i = 0; i < _width; i++)
-            {
-                uint32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_height + 1) / 2));
+        static constexpr uint8_t CENTER_X_MINOR = (MATRIX_WIDTH / 2) - ((MATRIX_WIDTH - 1) & 0x01);
+        static constexpr uint8_t CENTER_Y_MINOR = (MATRIX_HEIGHT / 2) - ((MATRIX_HEIGHT - 1) & 0x01);
+        static constexpr uint8_t CENTER_X_MAJOR = MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2);
+        static constexpr uint8_t CENTER_Y_MAJOR = MATRIX_HEIGHT / 2 +(MATRIX_HEIGHT % 2);
 
-                for (uint16_t j = 0; j < _height; j++)
-                {
-                    uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
+        // The next three two-liners define function templates for the different noise approaches
+        // that are implemented in the project. The desired noise approach for a particular use case
+        // can be chosen by passing one of the NoiseApproach enum's values as a template parameter.
+        // For instance, using FillGetNoise() with the "One" noise approach can be achieved by calling
+        // gfxbase.FillGetNoise<NoiseApproach::One>()
+        //
+        // The actual implementations for the noise functions (in the shape of specializations of the
+        // function templates) are included in gfxbase.cpp, because of the way C++ demands things to be
+        // structured.
+        //
+        // The default approach for all functions is determined by the value of _defaultNoiseApproach,
+        // which is defined earlier in this class.
+        template<NoiseApproach = _defaultNoiseApproach>
+        void FillGetNoise();
 
-                    uint16_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+        template<NoiseApproach = _defaultNoiseApproach>
+        void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
 
-                    uint8_t olddata = _ptrNoise->noise[i][j];
-                    uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
-                    data = newdata;
+        template<NoiseApproach = _defaultNoiseApproach>
+        void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
 
-                    _ptrNoise->noise[i][j] = data;
-                }
-            }
-        }
     #endif
 
     virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
@@ -1283,107 +1287,4 @@ public:
     virtual void PrepareFrame() {}
 
     virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) {}
-
-    #if USE_NOISE
-        void MoveFractionalNoiseX(uint8_t amt = 16)
-        {
-            std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram_array<CRGB>(NUM_LEDS);
-
-            // move delta pixelwise
-            for (int y = 0; y < _height; y++)
-            {
-                uint16_t amount = _ptrNoise->noise[0][y] * amt;
-                uint8_t delta = _width - 1 - (amount / 256);
-
-                // Process up to the end less the dekta
-                for (int x = 0; x < _width - delta; x++)
-                    ledsTemp[XY(x, y)] = leds[XY(x + delta, y)];
-
-                // Do the tail portion while wrapping around
-                for (int x = _width - delta; x < _width; x++)
-                    ledsTemp[XY(x, y)] = leds[XY(x + delta - _width, y)];
-            }
-
-            // move fractions
-            CRGB PixelA;
-            CRGB PixelB;
-
-            for (uint16_t y = 0; y < _height; y++)
-            {
-                uint16_t amount = _ptrNoise->noise[0][y] * amt;
-                uint8_t delta = _height - 1 - (amount / 256);
-                uint8_t fractions = amount - (delta * 256);
-
-                for (uint16_t x = 1; x < _width; x++)
-                {
-                    PixelA = ledsTemp[XY(x, y)];
-                    PixelB = ledsTemp[XY(x - 1, y)];
-
-                    PixelA %= 255 - fractions;
-                    PixelB %= fractions;
-
-                    leds[XY(x, y)] = PixelA + PixelB;
-                }
-
-                PixelA = ledsTemp[XY(0, y)];
-                PixelB = ledsTemp[XY(_width - 1, y)];
-
-                PixelA %= 255 - fractions;
-                PixelB %= fractions;
-
-                leds[XY(0, y)] = PixelA + PixelB;
-            }
-        }
-
-        void MoveFractionalNoiseY(uint8_t amt = 16)
-        {
-            std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram_array<CRGB>(NUM_LEDS);
-
-            // move delta pixelwise
-            for (int x = 0; x < _width; x++)
-            {
-                uint16_t amount = _ptrNoise->noise[x][0] * amt;
-                uint8_t delta = _height - 1 - (amount / 256);
-
-                for (int y = 0; y < _height - delta; y++)
-                {
-                    ledsTemp[XY(x, y)] = leds[XY(x, y + delta)];
-                }
-                for (int y = _height - delta; y < _height; y++)
-                {
-                    ledsTemp[XY(x, y)] = leds[XY(x, y + delta - _height)];
-                }
-            }
-
-            // move fractions
-            CRGB PixelA;
-            CRGB PixelB;
-
-            for (uint16_t x = 0; x < _width; x++)
-            {
-                uint16_t amount = _ptrNoise->noise[x][0] * amt;
-                uint8_t delta = _height - 1 - (amount / 256);
-                uint8_t fractions = amount - (delta * 256);
-
-                for (uint16_t y = 1; y < _height; y++)
-                {
-                    PixelA = ledsTemp[XY(x, y)];
-                    PixelB = ledsTemp[XY(x, y - 1)];
-
-                    PixelA %= 255 - fractions;
-                    PixelB %= fractions;
-
-                    leds[XY(x, y)] = PixelA + PixelB;
-                }
-
-                PixelA = ledsTemp[XY(x, 0)];
-                PixelB = ledsTemp[XY(x, _height - 1)];
-
-                PixelA %= 255 - fractions;
-                PixelB %= fractions;
-
-                leds[XY(x, 0)] = PixelA + PixelB;
-            }
-        }
-    #endif
 };

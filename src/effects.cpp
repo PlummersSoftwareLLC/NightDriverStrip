@@ -329,8 +329,31 @@ void LoadEffectFactories()
 
     l_ptrEffectFactories = make_unique_psram<EffectFactories>();
 
+    // The EFFECT_SET_VERSION macro defines the "effect set version" for a project. This version
+    // is persisted to JSON with the effect objects, and compared to it when the effects JSON file
+    // is deserialized.
+    //
+    // If the persisted version and the one defined below don't match, the effects JSON is ignored
+    // and the default set is loaded. This means that a "reset" of a project's effect set on the
+    // boards running the project can be forced by bumping up the effect set version for that project.
+    // As the user may have customized their effect set config or order, this should be done with
+    // some hesitation - and increasingly so when the web UI starts offering more facilities for
+    // customizing one's effect setup.
+    //
+    // The effect set version defaults to 1, so a project only needs to define it if it's different
+    // than that; refer to MESMERIZER as an example. If the effect set version is defined to 0, the
+    // default set will be loaded at every startup.
+    //
+    // The following line can be uncommented to override the per-project effect set version.
+
+    // #define EFFECT_SET_VERSION   0
+
+    #if __has_include ("custom_effects.h")
+
+      #include "custom_effects.h"
+
     // Fill effect factories
-    #if DEMO
+    #elif DEMO
 
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 6, 2);
 
@@ -351,19 +374,24 @@ void LoadEffectFactories()
 
     #elif MESMERIZER
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "GhostWave", 0, 30, false, 10);
-        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25);
+        #ifndef EFFECT_SET_VERSION
+            #define EFFECT_SET_VERSION  2   // Bump version if default set changes in a meaningful way
+        #endif
 
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),        0, 0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, 100, 0, 0.75, 0.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,           0, 0, 0.75, 0.75);
-
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2", 32,            spectrumBasicColors, 100, 0, 0.75, 0.75);
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 3", 32,            spectrumBasicColors, 100, 0, 0.75, 0.75);
-
-
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum++", NUM_BANDS,     spectrumBasicColors, 0, 40, -1.0, 2.0);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "GhostWave", 0, 30, false, 10);
+        ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
+        ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021,        PatternSMFire2021);
+        ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
+        ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
+        ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
+        ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
+        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
 
         ADD_EFFECT(EFFECT_MATRIX_WAVEFORM,          WaveformEffect, "WaveIn", 8);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "WaveOut", 0, 0, true, 0);
@@ -371,33 +399,47 @@ void LoadEffectFactories()
         ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
 
         ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,        PatternPongClock);
+
+      #if ENABLE_WIFI
         ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
         ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
+      #endif
 
-        ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
-        ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
+        ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire);
+        ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS,     PatternSMFlowFields);
+        ADD_EFFECT(EFFECT_MATRIX_SMBLURRING_COLORS, PatternSMBlurringColors);
+        ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);
+        ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS,        PatternSMHypnosis);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP,        PatternSMStarDeep);
+        ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Lines", 38);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Circles", 73);
+        ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
+        ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);
+        ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);
+        ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);
+
+        ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS,  PatternSMHolidayLights);
+
         ADD_EFFECT(EFFECT_MATRIX_ROSE,              PatternRose);
         ADD_EFFECT(EFFECT_MATRIX_PINWHEEL,          PatternPinwheel);
         ADD_EFFECT(EFFECT_MATRIX_SUNBURST,          PatternSunburst);
-        ADD_EFFECT(EFFECT_MATRIX_FLOW_FIELD,        PatternFlowField);
         ADD_EFFECT(EFFECT_MATRIX_CLOCK,             PatternClock);
         ADD_EFFECT(EFFECT_MATRIX_ALIEN_TEXT,        PatternAlienText);
-        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
+
         ADD_EFFECT(EFFECT_MATRIX_PULSAR,            PatternPulsar);
         ADD_EFFECT(EFFECT_MATRIX_BOUNCE,            PatternBounce);
-        ADD_EFFECT(EFFECT_MATRIX_SPIRO,             PatternSpiro);
         ADD_EFFECT(EFFECT_MATRIX_WAVE,              PatternWave);
         ADD_EFFECT(EFFECT_MATRIX_SWIRL,             PatternSwirl);
         ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
         ADD_EFFECT(EFFECT_MATRIX_MANDALA,           PatternMandala);
-        ADD_EFFECT(EFFECT_MATRIX_PALETTE_SMEAR,     PatternPaletteSmear);
-        ADD_EFFECT(EFFECT_MATRIX_CURTAIN,           PatternCurtain);
-        ADD_EFFECT(EFFECT_MATRIX_GRID_LIGHTS,       PatternGridLights);
         ADD_EFFECT(EFFECT_MATRIX_MUNCH,             PatternMunch);
         ADD_EFFECT(EFFECT_MATRIX_MAZE,              PatternMaze);
-
-        // make_shared_psram<PatternInfinity>(),
-        // make_shared_psram<PatternQR>(),
 
     #elif UMBRELLA
 
@@ -589,6 +631,11 @@ void LoadEffectFactories()
 
     #endif
 
+    // Set the effect set version to the default value of 1 if none was set yet
+    #ifndef EFFECT_SET_VERSION
+        #define EFFECT_SET_VERSION  1
+    #endif
+
     // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
     // add the list of effects in this table as shown for the various other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
@@ -610,8 +657,9 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>
 
 #endif
 
-// Declare it here just so InitEffectsManager can refer to it. We define it a little further down
+// Declare these here just so InitEffectsManager can refer to them. We define them a little further down
 
+std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
 void WriteCurrentEffectIndexFile();
 
 // InitEffectsManager
@@ -630,15 +678,16 @@ void InitEffectsManager()
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
+    auto jsonObject = LoadEffectsJSONFile(pJsonDoc);
 
-    if (LoadJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, pJsonDoc))
+    if (jsonObject)
     {
         debugI("Creating EffectManager from JSON config");
 
         if (g_ptrSystem->HasEffectManager())
-            g_ptrSystem->EffectManager().DeserializeFromJSON((pJsonDoc->as<JsonObjectConst>()));
+            g_ptrSystem->EffectManager().DeserializeFromJSON(jsonObject.value());
         else
-            g_ptrSystem->SetupEffectManager(pJsonDoc->as<JsonObjectConst>(), g_ptrSystem->Devices());
+            g_ptrSystem->SetupEffectManager(jsonObject.value(), g_ptrSystem->Devices());
     }
     else
     {
@@ -676,6 +725,27 @@ void SaveCurrentEffectIndex()
     if (g_ptrSystem->DeviceConfig().RememberCurrentEffect())
         // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
         g_ptrSystem->JSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
+}
+
+std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+{
+    // If the effect set version is defined to 0, we ignore whatever is persisted
+    if (EFFECT_SET_VERSION == 0)
+        return {};
+
+    if (!LoadJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, pJsonDoc))
+        return {};
+
+    auto jsonObject = pJsonDoc->as<JsonObjectConst>();
+
+    // Default to 1 if no effect set version was persisted
+    int jsonVersion = jsonObject.containsKey(PTY_EFFECTSETVER) ? jsonObject[PTY_EFFECTSETVER] : 1;
+
+    // Only return the JSON object if the persistent version matches the current one
+    if (jsonVersion == EFFECT_SET_VERSION)
+        return jsonObject;
+
+    return {};
 }
 
 void WriteCurrentEffectIndexFile()
@@ -784,6 +854,8 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
 
 void EffectManager::LoadDefaultEffects()
 {
+    _effectSetVersion = EFFECT_SET_VERSION;
+
     for (const auto &numberedFactory : l_ptrEffectFactories->GetDefaultFactories())
         ProduceAndLoadDefaultEffect(numberedFactory);
 

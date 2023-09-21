@@ -60,6 +60,29 @@
 #if USE_HUB75
     #include "ledmatrixgfx.h"
     #include "effects/strip/misceffects.h"
+
+    #include "effects/matrix/PatternSMStrobeDiffusion.h"
+    #include "effects/matrix/PatternSM2DDPR.h"
+
+    #include "effects/matrix/PatternSMStarDeep.h"
+    #include "effects/matrix/PatternSMAmberRain.h"
+    #include "effects/matrix/PatternSMBlurringColors.h"
+    #include "effects/matrix/PatternSMFire2021.h"
+    #include "effects/matrix/PatternSMNoise.h"
+    #include "effects/matrix/PatternSMPicasso3in1.h"
+    #include "effects/matrix/PatternSMSpiroPulse.h"
+    #include "effects/matrix/PatternSMTwister.h"
+    #include "effects/matrix/PatternSMMetaBalls.h"
+    #include "effects/matrix/PatternSMHolidayLights.h"
+    #include "effects/matrix/PatternSMGamma.h"
+    #include "effects/matrix/PatternSMFlowFields.h"
+    #include "effects/matrix/PatternSMSupernova.h"
+    #include "effects/matrix/PatternSMWalkingMachine.h"
+    #include "effects/matrix/PatternSMHypnosis.h"
+    #include "effects/matrix/PatternSMRainbowTunnel.h"
+    #include "effects/matrix/PatternSMRadialWave.h"
+    #include "effects/matrix/PatternSMRadialFire.h"
+    #include "effects/matrix/PatternSMSmoke.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -69,19 +92,23 @@
     #include "effects/matrix/PatternSpiro.h"
     #include "effects/matrix/PatternCube.h"
     #include "effects/matrix/PatternCircuit.h"
+#if ENABLE_WIFI
     #include "effects/matrix/PatternSubscribers.h"
+#endif
     #include "effects/matrix/PatternAlienText.h"
     #include "effects/matrix/PatternRadar.h"
     #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternBounce.h"
     #include "effects/matrix/PatternMandala.h"
     #include "effects/matrix/PatternSpin.h"
-    #include "effects/matrix/PatternFlowField.h"
     #include "effects/matrix/PatternMisc.h"
     #include "effects/matrix/PatternNoiseSmearing.h"
     #include "effects/matrix/PatternQR.h"
+#if ENABLE_WIFI
     #include "effects/matrix/PatternWeather.h"
 #endif
+#endif  // USE_HUB75
+
 
 #ifdef USE_WS281X
     #include "ledstripgfx.h"
