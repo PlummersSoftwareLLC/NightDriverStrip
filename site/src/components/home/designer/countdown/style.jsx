@@ -1,4 +1,4 @@
-const countdownStyle = theme => ({
+const countdownStyle = {
     root: {
         display: "flex",
         flexDirection: "row",
@@ -6,6 +6,7 @@ const countdownStyle = theme => ({
         alignItems: "center",
     },
     timeremaining: {
-        width: "50px"
+        width: "100px"
     }
-});
+};
+export default countdownStyle;

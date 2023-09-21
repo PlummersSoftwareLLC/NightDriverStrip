@@ -1,12 +1,13 @@
-const staticStatStyle = theme => ({
+const staticStatStyle = {
     root: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "space-between",
-        "align-items": "flex-start",
-        "margin-left": "5px",
-        "margin-right": "5px"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginLeft: "5px",
+        marginRight: "5px"
     }
-});
+};
+export default staticStatStyle;

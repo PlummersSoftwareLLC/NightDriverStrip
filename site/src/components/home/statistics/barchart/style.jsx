@@ -1,96 +1,98 @@
-const barChartStyle = theme => ({
+const barChartStyle = {
     summary: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "flex-start",
-        "align-items": "center"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "flex-start",
+        alignItems: "center"
     },
     header: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "stretch"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "stretch"
     },
     headerLine: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "space-between",
-        "align-items": "center",
-        "width": "100%"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%"
     },
     stats: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "center",
-        "padding": "0px"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "0px"
     },
     stat: {
-        "display": "flex",
-        "padding": "0px",
-        "flex-wrap": "nowrap",
-        "align-items": "center",
-        "flex-direction": "row",
-        "justify-content": "center"
+        display: "flex",
+        padding: "0px",
+        flexWrap: "nowrap",
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center"
     },
     tooltipContent: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "stretch",
-        "background-color": "black",
-        "padding": "5px"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "stretch",
+        backgroundColor: "black",
+        padding: "5px"
     },
     tooltipHeader: {
-        "font-size": "medium",
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "align-items": "center",
-        "justify-content": "center",
-        "border-bottom": "solid 1px"
+        fontSize: "medium",
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        alignItems: "center",
+        justifyContent: "center",
+        borderBottom: "solid 1px"
     },
     threads: {
-        "margin": "0px",
-        "padding": "0px",
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "stretch",
-        "font-size": "small",
+        margin: "0px",
+        padding: "0px",
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "stretch",
+        fontSize: "small",
     },
     thread: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "space-between",
-        "align-items": "center",
-        "column-gap": "5px",
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "space-between",
+        alignItems: "center",
+        columnGap: "5px",
     },
     threadValue: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "center",
-        "font-size": "smaller",
-        "color": "aquamarine",
-        "column-gap": "3px"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "center",
+        fontSize: "smaller",
+        color: "aquamarine",
+        columnGap: "3px"
     },
     threadSummary: {
-        "font-size": "x-small",
-        "color": "aqua"
+        fontSize: "x-small",
+        color: "aqua"
     }
-});
+};
+
+export default barChartStyle;

@@ -1,104 +1,120 @@
-const areaChartStyle = theme => ({
+const areaChartStyle = {
     root: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "flex-start",
-        "align-items": "stretch"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        justifyContent: "flex-start",
+        alignItems: "stretch"
     },
     header: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "stretch"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "stretch"
     },
     headerLine: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "space-between",
-        "align-items": "center",
-        "width": "100%"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%"
     },
     headerField: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "center",
-        "width": "inherit"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "inherit"
     },
     stats: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "justify-content": "center",
-        "align-items": "center",
-        "padding": "0px"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "0px"
     },
     stat: {
-        "display": "flex",
-        "padding": "0px",
-        "flex-wrap": "nowrap",
-        "align-items": "center",
-        "flex-direction": "row",
-        "justify-content": "center"
+        display: "flex",
+        padding: "0px",
+        flexWrap: "nowrap",
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center"
     },
     tooltipContent: {
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "stretch",
-        "background-color": "black",
-        "padding": "5px"
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "stretch",
+        backgroundColor: "black",
+        padding: "5px",
+        border: "none"
     },
     tooltipHeader: {
-        "font-size": "medium",
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "align-items": "center",
-        "justify-content": "center",
-        "border-bottom": "solid 1px"
+        fontSize: "medium",
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        alignItems: "center",
+        justifyContent: "center",
+        borderBottom: "solid 1px"
     },
     threads: {
-        "margin": "0px",
-        "padding": "0px",
-        "display": "flex",
-        "flex-direction": "column",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "stretch",
-        "font-size": "small",
+        margin: "0px",
+        padding: "0px",
+        display: "flex",
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "stretch",
+        border: "none",
+        fontSize: "small",
     },
     thread: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "space-between",
-        "align-items": "center",
-        "column-gap": "5px",
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "0px",
+        margin: "0px",
+        columnGap: "5px",
+    },
+    threadName: {
+        padding: "0px",
+        margin: "0px",
+        border: "none"
     },
     threadValue: {
-        "display": "flex",
-        "flex-direction": "row",
-        "flex-wrap": "nowrap",
-        "align-content": "center",
-        "justify-content": "center",
-        "align-items": "center",
-        "font-size": "smaller",
-        "color": "aquamarine",
-        "column-gap": "3px"
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "0px",
+        margin: "0px",
+        fontSize: "smaller",
+        color: "aquamarine",
+        border: "none",
+        columnGap: "3px"
     },
     threadSummary: {
-        "font-size": "x-small",
-        "color": "aqua"
+        fontSize: "x-small",
+        padding: "0px",
+        margin: "0px",
+        color: "aqua"
     }
-});
+};
+
+export default areaChartStyle;

@@ -1,23 +1,29 @@
-const NotificationPanel = withStyles(notificationsStyle)(props => {
-    const { classes, notifications, clearNotifications } = props;
-    const [numErrors, setNumErrors] = React.useState(undefined);
-    const [errorTargets, setErrorTargets] = React.useState({});
-    const [open, setOpen] = React.useState(false);
-    const inputRef = React.createRef();
+
+import notificationsStyle from "./style";
+import { useState, createRef, useEffect } from "react";
+import { Box, IconButton, Badge, Icon, Popover, Card,CardHeader, Avatar } from "@mui/material";
+import {useTheme, CardContent, Typography, CardActions } from "@mui/material";
+
+const NotificationPanel = props => {
+    const { notifications, clearNotifications } = props;
+    const [numErrors, setNumErrors] = useState(undefined);
+    const [errorTargets, setErrorTargets] = useState({});
+    const [open, setOpen] = useState(false);
+    const inputRef = createRef();
     const theme = useTheme();
 
     useEffect(()=>{
         setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
         setErrorTargets(notifications.reduce((ret,notif) => 
-            {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
+        {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
     },[notifications]);
 
     return (
-        <Box className={classes.root}>
+        <Box sx={notificationsStyle.root}>
             <IconButton
-                    id="notifications"
-                    ref={inputRef}
-                    onClick={() => setOpen(wasOpen=>!wasOpen)}>
+                id="notifications"
+                ref={inputRef}
+                onClick={() => setOpen(wasOpen=>!wasOpen)}>
                 <Badge 
                     aria-label="Alerts" 
                     badgeContent={numErrors} 
@@ -33,43 +39,43 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                     vertical: 'top',
                     horizontal: 'right',
                 }}>
-                <Card className={classes.popup} elevation={9}>
+                <Card sx={notificationsStyle.popup} elevation={9}>
                     <CardHeader
                         avatar={
-                        <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
+                            <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
                             !
-                        </Avatar>
+                            </Avatar>
                         }
                         action={
-                        <IconButton onClick={()=>setOpen(false)} aria-label="settings">
-                            <Icon>close</Icon>
-                        </IconButton>
+                            <IconButton onClick={()=>setOpen(false)} aria-label="settings">
+                                <Icon>close</Icon>
+                            </IconButton>
                         }
                         title={`${numErrors} Errors`}
                     />
                     <CardContent>
                         {Object.entries(errorTargets)
-                               .sort((a,b)=>a[0].localeCompare(b[0]))
-                               .map(target => 
-                            <CardContent key={target[0]} className={classes.errors}>
-                                {Object.entries(notifications)
-                                       .filter(notif => notif[1].target === target[0])
-                                       .map(error =>
-                                <Box key={error[0]}>
-                                    <Box className={classes.errorHeader} key="header">
-                                        <Typography>{target[0]}</Typography>
-                                        <Typography color="textSecondary">{error[1].type}</Typography>
-                                        <Typography>{error[1].level}</Typography>
-                                    </Box>
-                                    <Box className={classes.errors} key="errors">
-                                        {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
-                                                .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
-                                        }
-                                    </Box>
-                                </Box>
-                                       )}
-                            </CardContent>
-                        )}
+                            .sort((a,b)=>a[0].localeCompare(b[0]))
+                            .map(target => 
+                                <CardContent key={target[0]} sx={notificationsStyle.errors}>
+                                    {Object.entries(notifications)
+                                        .filter(notif => notif[1].target === target[0])
+                                        .map(error =>
+                                            <Box key={error[0]}>
+                                                <Box sx={notificationsStyle.errorHeader} key="header">
+                                                    <Typography>{target[0]}</Typography>
+                                                    <Typography color="textSecondary">{error[1].type}</Typography>
+                                                    <Typography>{error[1].level}</Typography>
+                                                </Box>
+                                                <Box sx={notificationsStyle.errors} key="errors">
+                                                    {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
+                                                        .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
+                                                    }
+                                                </Box>
+                                            </Box>
+                                        )}
+                                </CardContent>
+                            )}
                     </CardContent>
                     <CardActions disableSpacing>
                         <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
@@ -79,4 +85,6 @@ const NotificationPanel = withStyles(notificationsStyle)(props => {
                 </Card>
             </Popover>
         </Box>);
-});
+};
+
+export default NotificationPanel;
