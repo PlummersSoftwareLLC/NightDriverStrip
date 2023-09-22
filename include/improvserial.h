@@ -247,6 +247,7 @@ protected:
         }
 
         // If we got here then the command coming is improv, but not an RPC command
+        log_write("Improv command not RPC, so not handled.");
 
         return false;
     }
