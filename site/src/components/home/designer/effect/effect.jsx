@@ -1,14 +1,14 @@
 import {useState, useEffect} from 'react';
 import {IconButton, Icon, Card, CardHeader, CardContent, Avatar, CardActions } from '@mui/material'
-import {TextField, LinearProgress, Collapse, Button, useTheme} from '@mui/material'
+import {LinearProgress, Button, useTheme} from '@mui/material'
 import effectStyle from './style';
 import PropTypes from 'prop-types'
-
+import Config from './config'
 
 const Effect = props => {
     const { effect, effectInterval, effectIndex, millisecondsRemaining, selected, effectEnable, navigateTo, requestRunning } = props;
     const [ progress, setProgress ] = useState(0);
-    const [expanded, setExpanded] = useState(false);
+    const [open, setOpen] = useState(false);
     const theme = useTheme();
     const classes = effectStyle(theme)
     useEffect(() => {
@@ -45,19 +45,14 @@ const Effect = props => {
             {!selected && <Button disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)} variant="outlined" startIcon={<Icon >{effect.enabled?"stop":"circle"}</Icon>}>{effect.enabled?"Disable":"Enable"}</Button>}
             {!selected && effect.enabled && <Button disabled={requestRunning} onClick={()=>navigateTo(effectIndex)} variant="outlined" startIcon={<Icon >start</Icon>}>Trigger</Button>}
         </CardContent>
-        {/* TODO Replace the below with new options controller. */}
         <CardActions disableSpacing>
             <IconButton
-                onClick={()=>setExpanded(!expanded)}
+                onClick={()=>setOpen(true)}
                 aria-label="show more">
                 <Icon>settings</Icon>
             </IconButton>
         </CardActions>
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <CardContent>
-                <TextField label="Option"/>
-            </CardContent>
-        </Collapse>
+        <Config effectName={effect.name} effectIndex={effectIndex} open={open} setOpen={setOpen}></Config>
     </Card>
 };
 
