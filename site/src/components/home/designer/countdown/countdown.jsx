@@ -1,5 +1,9 @@
-const Countdown = withStyles(countdownStyle)(props => {
-    const { classes,  label, millisecondsRemaining, requestRefresh } = props;
+import { useState, useEffect } from "react";
+import { Box, Typography } from "@mui/material";
+import countdownStyle from "./style";
+
+const Countdown = props => {
+    const {  label, millisecondsRemaining, requestRefresh } = props;
     const [ timeRemaining, setTimeRemaining ] = useState(false);
 
     useEffect(() => {
@@ -19,12 +23,14 @@ const Countdown = withStyles(countdownStyle)(props => {
             },50);
             return ()=>clearInterval(interval);
         }
-    },[millisecondsRemaining]);
+    },[millisecondsRemaining, requestRefresh]);
 
     return (            
-    <Box className={classes.root}>
-        <Typography variant="little" color="textPrimary">{label}</Typography>:
-        <Typography color="textSecondary" className={classes.timeremaining} width="100px" variant="little">{timeRemaining}</Typography>
-    </Box>)
+        <Box sx={countdownStyle.root}>
+            <Typography variant="little" color="textPrimary">{label}</Typography>:
+            <Typography color="textSecondary" sx={countdownStyle.timeremaining} variant="little">{timeRemaining}</Typography>
+        </Box>)
 
-});
+};
+
+export default Countdown;

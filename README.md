@@ -26,8 +26,11 @@ _Davepl, 9/19/2021_
 - [Wifi setup](#wifi-setup)
 - [Feature defines](#feature-defines)
 - [Adding new effects](#adding-new-effects)
+- [Resetting the effect list](#resetting-the-effect-list)
 - [Fetching things from the Internet](#fetching-things-from-the-internet)
 - [Build pointers](#build-pointers)
+  - [Build tools](#build-tools)
+  - [Build commands](#build-commands)
 - [File system](#file-system)
 - [Tools](#tools)
 - [Bonus exercise](#bonus-exercise)
@@ -190,7 +193,7 @@ To add new effects, you:
 
 1. Derive from `LEDStripEffect` (or an existing effect class) and the good stuff happens in the only important function, `Draw()`.
 Check out what the built in effects do, but in short you're basically drawing into an array of CRGB objects that each represent a 24-bit color triplet. Once you're done, the CRGB array is sent to the LEDs and you are asked for the next frame immediately. Your draw method should take somewhere around 30ms, ideally, and should `delay()` to sleep for the balance if it's quicker. You **can** draw repeatedly basically in a busy loop, but its not needed.
-2. Add an effect number `#define` for your effect to `effects.h`. Make sure it's not already used by another effect!
+2. Add an effect number `#define` for your effect class to `effects.h`. Each effect class needs only one effect number, and please make sure the number you choose is not already used by another effect class! More information about the link between an effect class and its associated effect number can be found in `effects.h`.
 3. Add your class to the effect list created in the `LoadEffectFactories()` function in `effects.cpp` (under your build configuration section, like `DEMO`). The `ADD_EFFECT()` macro expects the effect number and type name of your new effect as parameters. Any additional parameters are passed to the effect's constructor when it's created.
 
 There is a global `EffectManager` instance that first creates the effect table from a JSON file on SPIFFS, if present. Then it adds any other effects that are registered in `LoadEffectFactories()` but not included in the JSON file. It then rotates amongst those effects at a rate controlled by `DEFAULT_EFFECT_INTERVAL`. Effects are not notified when they go active or not, they're just asked to draw when needed.
@@ -218,13 +221,34 @@ This makes that an override of `SerializeToJSON()` and a corresponding deseriali
 
 **Note**: in line with the convention in ArduinoJson, which is the library used by the JSON serialization logic, `SerializeToJSON()` _must_ return `true` _except_ when an ArduinoJson function (like `JsonObject::set()`) returns `false` to indicate it ran out of buffer memory. Any `SerializeToJSON()` function returning `false` will trigger an increase in the serialization buffer and a restart of the serialization process.
 
+## Resetting the effect list
+
+For instance during development, the (JSON-persisted) effect list on your board can get out of sync with the effects you add in effects.cpp (in the function `LoadEffectFactories()` specifically) to a point it becomes messy or annoying. If this happens, you can reset the effect list on the board to the default, via the network. For this to work, the board has to be connected to WiFi and the webserver has to be running.
+
+The reset can be done by performing an HTTP form POST to http://&lt;device_IP&gt;/reset with the following fields set: effectsConfig=1 and board=1. On systems with "regular" curl available, the following command should do the trick:
+
+```shell
+curl -d "effectsConfig=1&board=1" -X POST http://<device_IP>/reset
+```
+
+It's possible that the ability to perform this reset is added in a future update to the web UI.
+
+Furthermore, it's also possible to "ignore" the persisted effect list altogether and always load the standard effects list at startup. Documentation on how to do this is available towards the top of the aforementioned `LoadEffectFactories()` function.
+
 ## Fetching things from the Internet
 
-If you develop an effect that requires data that needs to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrNetworkReader` global variable. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
+If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
 
 ## Build pointers
 
+### Build tools
+
 The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
+
+To compile the front-end application (which is part of every PlatformIO build) NPM is required. Documentation is available online concerning [NPM installation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2. For details on working with the frontend application see [site/README.md](./site/README.md).
+
+### Build commands
 
 When either the IDE or Core are installed, NightDriverStrip can be built from a command shell by entering the project/repository directory and issuing the following command:
 

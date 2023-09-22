@@ -218,9 +218,9 @@ public:
         for (int i = 0; i < MATRIX_WIDTH; i++) {
             for (int j = 0; j < MATRIX_HEIGHT; j++) {
                 if (world[i][j].brightness > 0)
-                    g()->leds[g()->xy(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
+                    g()->leds[XY(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
                 else
-                    g()->leds[g()->xy(i, j)] = CRGB::Black;
+                    g()->leds[XY(i, j)] = CRGB::Black;
             }
         }
 
