@@ -35,14 +35,16 @@
 #include <improv.h>
 #include "hexdump.h"
 
-#define IMPROV_LOG_FILE         "/improv.log"
+#define IMPROV_LOG_FILE             "/improv.log"
 
 // Define as 1 to enable Improv logging to SPIFFS, and add a URI to the on-board
 // webserver to be able to retrieve it. The URL to retrieve the log will be
 // http://<device_IP><IMPROV_LOG_FILE>, the latter being as defined just above.
 // Note that any log file that has been written to SPIFFS will be deleted as soon
 // as the board is booted with ENABLE_IMPROV_LOGGING set to 0!
-#define ENABLE_IMPROV_LOGGING   0
+#ifndef ENABLE_IMPROV_LOGGING
+    #define ENABLE_IMPROV_LOGGING   0
+#endif
 
 enum ImprovSerialType : uint8_t
 {
