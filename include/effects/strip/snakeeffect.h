@@ -163,7 +163,7 @@ class SnakeEffect : public LEDStripEffect
             }
             else
             {
-                // TODO: Optional Pallete scheme.
+                // BUGBUG: Optional Palette scheme.
                 if (i == apple)
                 {
                     setPixelOnAllChannels(i, CRGB::Yellow);

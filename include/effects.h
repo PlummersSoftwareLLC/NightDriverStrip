@@ -30,6 +30,19 @@
 //---------------------------------------------------------------------------
 #pragma once
 
+// Each effect class needs to have exactly one associated effect number defined in
+// the below list. The effect numbers and their respective classes are linked in the
+// effect factory definitions that are created in the LoadEffectFactories()
+// function in effects.cpp. The link is used when the effect list is deserialized
+// from the effects list JSON file on file storage, to determine which effect
+// class to construct for a particular effect JSON object - which has the effect
+// number persisted as one of the core properties.
+//
+// Amongst others, this means that an effect number that made it to the main
+// codebase should not be renumbered or reused for another effect, as it will lead
+// to a mismatch between effect JSON blobs for the "old" effect and the "new" effect
+// class.
+
 // Strip effects
 #define EFFECT_STRIP_BOUNCING_BALL                       1
 #define EFFECT_STRIP_DOUBLE_PALETTE                      2
@@ -84,9 +97,9 @@
 #define EFFECT_MATRIX_PINWHEEL                         111
 #define EFFECT_MATRIX_INFINITY                         112
 #define EFFECT_MATRIX_MUNCH                            113
-#define EFFECT_MATRIX_CURTAIN                          114
-#define EFFECT_MATRIX_GRID_LIGHTS                      115
-#define EFFECT_MATRIX_PALETTE_SMEAR                    116
+// Was EFFECT_MATRIX_CURTAIN                           114
+// Was EFFECT_MATRIX_GRID_LIGHTS                       115
+// Was EFFECT_MATRIX_PALETTE_SMEAR                     116
 #define EFFECT_MATRIX_RAINBOW_FLAG                     117
 #define EFFECT_MATRIX_PONG_CLOCK                       118
 #define EFFECT_MATRIX_PULSE                            119
@@ -108,6 +121,28 @@
 #define EFFECT_MATRIX_MAZE                             135
 #define EFFECT_MATRIX_SPECTRUMBAR                      136
 
+#define EFFECT_MATRIX_SM2DDPR                          137
+#define EFFECT_MATRIX_SMAMBERRAIN                      138
+#define EFFECT_MATRIX_SMBLURRING_COLORS                139
+#define EFFECT_MATRIX_SMFIRE2021                       140
+#define EFFECT_MATRIX_SMFLOW_FIELDS                    141
+#define EFFECT_MATRIX_SMGAMMA                          142
+#define EFFECT_MATRIX_SMHOLIDAY_LIGHTS                 143
+#define EFFECT_MATRIX_SMHYPNOSIS                       144
+#define EFFECT_MATRIX_SMMETA_BALLS                     145
+#define EFFECT_MATRIX_SMNOISE                          146
+#define EFFECT_MATRIX_SMPICASSO3IN1                    147
+#define EFFECT_MATRIX_SMRADIAL_FIRE                    148
+#define EFFECT_MATRIX_SMRADIAL_WAVE                    149
+#define EFFECT_MATRIX_SMRAINBOW_TUNNEL                 150
+#define EFFECT_MATRIX_SMSMOKE                          151
+#define EFFECT_MATRIX_SMSPIRO_PULSE                    152
+#define EFFECT_MATRIX_SMSTARDEEP                       153
+#define EFFECT_MATRIX_SMSTROBE_DIFFUSION               154
+#define EFFECT_MATRIX_SMSUPERNOVA                      155
+#define EFFECT_MATRIX_SMTWISTER                        156
+#define EFFECT_MATRIX_SMWALKING_MACHINE                157
+
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201
 
@@ -126,7 +161,15 @@
 #define EFFECT_STAR_CHRISTMAS                           12
 #define EFFECT_STAR_HOT_WHITE                           13
 
-// Some common JSON properties to prevent typos
+// Some common JSON properties to prevent typos. By project convention JSON properties
+// at the LEDStripEffect level have a length of 2 characters, and JSON properties
+// of actual effects (i.e. LEDStripEffect subclasses) a length of 3. The purpose of this
+// is keeping the effect list JSON as compact as possible. As the effect list JSON is not
+// intended for "human consumption", legibility of the overall list is not much of a concern.
+// As each effect instantiation has its own JSON object, clashes between
+// JSON property names only have to be prevented within the scope of an individual effect
+// (class).
+
 #define PTY_EFFECTNR        "en"
 #define PTY_COREEFFECT      "ce"
 #define PTY_REVERSED        "rvr"
@@ -155,5 +198,8 @@
 #define PTY_VERSION         "ver"
 #define PTY_HUESTEP         "hst"
 #define PTY_MULTICOLOR      "mcl"
+#define PTY_EFFECT          "eft"
+#define PTY_SCALE           "scl"
+#define PTY_EFFECTSETVER    "esv"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

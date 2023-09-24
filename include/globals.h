@@ -233,7 +233,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 //
 // I've used this code to build a dozen different projects, most of which can be created by defining
 // the right built environment (like INSULATORS=1).  The config here defines everything about the
-// LEDs, how many, on how many channels, laid out into how many fang/rings, and so on.  You can also
+// LEDs, how many, on how many channels, laid out into how many fans/rings, and so on.  You can also
 // specify the audio system config like how many band channels.
 
 #if DEMO
@@ -276,10 +276,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define LED_PIN0 5
     #endif
 
-    // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
-    // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
-    // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
-    // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
+    // The webserver serves files that are baked into the device firmware. When running you should be able to
+    // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
+    // watching the serial output or checking your router for the DHCP given to a new device; often they're
+    // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
 
     #ifndef ENABLE_WEBSERVER
         #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
@@ -309,7 +309,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
 
     // Once you have a working project, selectively enable various additional features by setting
-    // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
+    // them to 1 in the list below.  This config assumes no audio (mic), or screen, etc.
 
     #define ENABLE_WIFI             0   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
@@ -325,10 +325,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define LED_PIN0 5
     #endif
 
-    // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
-    // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
-    // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
-    // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
+    // The webserver serves files that are baked into the device firmware. When running you should be able to
+    // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
+    // watching the serial output or checking your router for the DHCP given to a new device; often they're
+    // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
+
 
     #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
     #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
@@ -385,9 +386,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
     #define USE_LCD                 1
 
-    // Once you have a working project, selectively enable various additional features by setting
-    // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
-
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Doesn't work smoothly with the screen on for some reason!
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
@@ -397,19 +395,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define LED_PIN0 5
 
-    // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
-    // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
-    // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
-    // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
+    // The webserver serves files that are baked into the device firmware. When running you should be able to
+    // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
+    // watching the serial output or checking your router for the DHCP given to a new device; often they're
+    // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
 
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
 
 #elif LASERLINE
-
-    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
-    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
-    // It displays a spectrum analyzer and music visualizer
 
     #ifndef PROJECT_NAME
     #define PROJECT_NAME            "Laser Line"
@@ -450,9 +444,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #elif MESMERIZER
 
-    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
-    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
-    // It displays a spectrum analyzer and music visualizer
+    // This project uses a HUB75 matrix (standard 64 pixels wide and 32 high), to show a wide range of
+    // effects. Its primary target device is the Mesmerizer board designed by Dave Plummer, but has been
+    // known to work with at least one other type of device as well.
 
     #ifndef PROJECT_NAME
     #define PROJECT_NAME            "Mesmerizer"
@@ -496,20 +490,19 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // Variant of Spectrum set up for a TTGO using a MAX4466 microphone on pin27
 
     // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
-    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
     // It displays a spectrum analyzer and music visualizer
 
     #ifndef PROJECT_NAME
     #define PROJECT_NAME            "TTGO"
     #endif
 
-    #define ENABLE_WIFI             1  // Connect to WiFi
+    #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0  // Accept over the air flash updates
+    #define ENABLE_OTA              0   // Accept over the air flash updates
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
@@ -517,7 +510,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define MAX_BUFFERS     20
 
-    #define LED_PIN0        21          // Note that TFT board on TFTGO uses ping 19, 18, 5, 16, 23, and 4
+    #define LED_PIN0        21          // Note that TFT board on TFTGO uses pins 19, 18, 5, 16, 23, and 4
     #define NUM_CHANNELS    1
     #define RING_SIZE_0     24
     #define BONUS_PIXELS    0
@@ -863,14 +856,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MIN_VU          180
     #define NOISE_CUTOFF    1000
 
-    #if ELECROW
-    #else
+    #if !(ELECROW)
         #define TOGGLE_BUTTON_1 37
         #define TOGGLE_BUTTON_2 39
     #endif
 
-    #if SPECTRUM_WROVER_KIT
-    #else
+    #if !(SPECTRUM_WROVER_KIT)
         #define NUM_INFO_PAGES          2
         #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
     #endif
@@ -922,8 +913,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1         37
     #define TOGGLE_BUTTON_2         39
 
-    #ifdef SPECTRUM_WROVER_KIT
-    #else
+    #if !(SPECTRUM_WROVER_KIT)
         #define NUM_INFO_PAGES          2
         #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
     #endif
