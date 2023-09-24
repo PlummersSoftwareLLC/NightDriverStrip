@@ -154,5 +154,6 @@
 #define PTY_FADE            "fde"
 #define PTY_VERSION         "ver"
 #define PTY_HUESTEP         "hst"
+#define PTY_MULTICOLOR      "mcl"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

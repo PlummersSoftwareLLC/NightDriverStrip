@@ -584,17 +584,17 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Atom Light"
     #endif
 
-    #define ENABLE_WIFI             0               // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   0               // Accepting incoming color data and commands
+    #define ENABLE_WIFI             1               // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1               // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0               // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       0               // How many seconds before the lamp times out and shows local content
+    #define TIME_BEFORE_LOCAL       3               // How many seconds before the lamp times out and shows local content
 
     #define NUM_LEDS               (MATRIX_WIDTH * MATRIX_HEIGHT)
-
+    #define MAX_BUFFERS     30                      // Times 4 channels, but they're only NUM_LEDS big
     #define NUM_CHANNELS    4                       // One per spoke
     #define MATRIX_WIDTH    53                      // Number of pixels wide (how many LEDs per channel)
     #define MATRIX_HEIGHT   1                       // Number of pixels tall
-    #define ENABLE_REMOTE   0                       // IR Remote Control
+    #define ENABLE_REMOTE   1                       // IR Remote Control
     #define ENABLE_AUDIO    1                       // Listen for audio from the microphone and process it
     #define USE_SCREEN      0                       // Normally we use a tiny board inside the lamp with no screen
     #define FAN_SIZE        NUM_LEDS                // Allows us to use fan effects on the spokes

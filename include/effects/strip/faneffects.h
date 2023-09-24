@@ -951,7 +951,7 @@ protected:
   int Sparking;    // Probability of a spark each attempt
   bool bReversed;  // If reversed we draw from 0 outwards
   bool bMirrored;  // If mirrored we split and duplicate the drawing
-
+  bool bMulticolor; // If true each channel spoke will be a different color
   PixelOrder Order;
 
   std::unique_ptr<uint8_t[]> abHeat; // Heat table to map temp to color
@@ -978,7 +978,8 @@ public:
                 int sparkHeight = 4,
                 PixelOrder order = Sequential,
                 bool breversed = false,
-                bool bmirrored = false)
+                bool bmirrored = false,
+                bool bmulticolor = false)
       : LEDStripEffect(EFFECT_STRIP_FIRE_FAN, "FireFanEffect"),
         Palette(palette),
         LEDCount(ledCount),
@@ -989,7 +990,8 @@ public:
         Sparking(sparking),
         bReversed(breversed),
         bMirrored(bmirrored),
-        Order(order)
+        Order(order),
+        bMulticolor(bmulticolor)
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
@@ -1007,7 +1009,8 @@ public:
         Sparking(jsonObject[PTY_SPARKING]),
         bReversed(jsonObject[PTY_REVERSED]),
         bMirrored(jsonObject[PTY_MIRORRED]),
-        Order((PixelOrder)jsonObject[PTY_ORDER])
+        Order((PixelOrder)jsonObject[PTY_ORDER]),
+        bMulticolor(jsonObject[PTY_MULTICOLOR])
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
@@ -1060,7 +1063,7 @@ public:
       for (int i = 0; i < CellCount(); i++)
       {
         int coolingAmount = random(0, Cooling);
-        abHeat[i] = ::max(0, abHeat[i] - coolingAmount);
+        abHeat[i] = ::max(0.0, abHeat[i] - coolingAmount * (2.0 - g_Analyzer._VURatio));
       }
     }
 
@@ -1082,10 +1085,8 @@ public:
       for (int i = 0; i < Sparks; i++)
       {
         if (random(255) < Sparking / 4 + Sparking * (g_Analyzer._VURatio / 2.0) * 0.5)
-        // if (random(255) < Sparking / 4)
         {
           int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
-          // abHeat[y] = random(200, 255);
           abHeat[y] = abHeat[y] + random(50, 255); // Can roll over which actually looks good!
         }
       }
@@ -1102,11 +1103,19 @@ public:
       for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
       {
         CRGB color = GetBlackBodyHeatColorByte(abHeat[i * CellsPerLED]);
+        
+        // If multicolor, we shift the hue based on the channel
+        if (bMulticolor)
+        {
+            CHSV hsv = rgb2hsv_approximate(color);
+                 hsv.hue += iChannel * (255/NUM_CHANNELS);
+            color = hsv;
+        }
 
         // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
         int j = (!bReversed || i > FAN_SIZE) ? i : LEDCount - 1 - i;
-        int x = GetFanPixelOrder(j, order);
+        uint x = GetFanPixelOrder(j, order);
         if (x < NUM_LEDS)
         {
           FastLED[iChannel][x] = color;
