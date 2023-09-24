@@ -1034,6 +1034,7 @@ public:
     jsonDoc[PTY_REVERSED] = bReversed;
     jsonDoc[PTY_MIRORRED] = bMirrored;
     jsonDoc[PTY_ORDER] = to_value(Order);
+    jsonDoc[PTY_MULTICOLOR] = bMulticolor;
 
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
