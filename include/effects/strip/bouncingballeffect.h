@@ -56,15 +56,14 @@ private:
     size_t  _cBallSize;
     bool    _bMirrored;
 
-    static const int BallCount = 3;
     const bool _bErase;
 
     float Gravity = -9.81;
     float StartHeight = 1;
     float ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
 
-    std::vector<float> ClockTimeSinceLastBounce;
-    std::vector<float> TimeSinceLastBounce;
+    std::vector<double> ClockTimeSinceLastBounce;
+    std::vector<double> TimeSinceLastBounce;
     std::vector<float> Height;
     std::vector<float> ImpactVelocity;
     std::vector<float> Dampening;
@@ -129,7 +128,7 @@ private:
             Height[i]                   = StartHeight;
             ImpactVelocity[i]           = ImpactVelocityStart;
             ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();
-            Dampening[i]                = 1.0 - i / pow(_cBalls, 2);               // Was 0.9
+            Dampening[i]                = 1.0f - i / powf(_cBalls, 2);               // Was 0.9
             TimeSinceLastBounce[i]      = 0;
             Colors[i]                   = ballColors[i % ARRAYSIZE(ballColors)];
         }
@@ -161,18 +160,18 @@ private:
         }
 
         // Draw each of the the balls
-        for (size_t i = 0; i < BallCount; i++)
+        for (size_t i = 0; i < _cBalls; i++)
         {
-            TimeSinceLastBounce[i] = (g_Values.AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 3;        // BUGBUG hardcoded was 3 for NightDriverStrip
-            Height[i] = 0.5 * Gravity * pow(TimeSinceLastBounce[i], 2.0) + ImpactVelocity[i] * TimeSinceLastBounce[i];
+            TimeSinceLastBounce[i] = (g_Values.AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 3.0;        // BUGBUG hardcoded was 3 for NightDriverStrip
+            Height[i] = 0.5f * Gravity * powf(TimeSinceLastBounce[i], 2.0f) + ImpactVelocity[i] * TimeSinceLastBounce[i];
 
             if (Height[i] < 0)
             {
                 Height[i] = 0;
                 ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
-                ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();;
+                ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();
 
-                if (ImpactVelocity[i] < 0.5 * ImpactVelocityStart)                                    // Was .01 and not multiplied by anything
+                if (ImpactVelocity[i] < 0.5f * ImpactVelocityStart)                                    // Was .01 and not multiplied by anything
                     ImpactVelocity[i] = ImpactVelocityStart;
             }
 

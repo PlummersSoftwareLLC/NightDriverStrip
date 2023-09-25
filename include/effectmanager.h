@@ -273,6 +273,7 @@ public:
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
         jsonObject["ivl"] = _effectInterval;
+        jsonObject[PTY_PROJECT] = PROJECT_NAME;
         jsonObject[PTY_EFFECTSETVER] = _effectSetVersion;
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
