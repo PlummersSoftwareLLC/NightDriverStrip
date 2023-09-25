@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel } from "@mui/material";
-import httpPrefix from "../../../../espaddr";
+import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
 
-
-const settingsEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/settings/effect`;    
+// Base styling for inputs.     
 const textFieldProps = {
     margin: "dense",
     fullWidth: true,
@@ -22,6 +21,14 @@ const settingType = {
     Color: 6
 };
 
+/**
+ * Creates an Input field based on the settingType provided.
+ * @param {Props} props React Props
+ * @param {Object} props.setting Object defining the setting to load see. types.h/SettingSpec.
+ * @param {Function} props.updateData The callback to provide the change value to the parent dialog.
+ * @param {Function} props.updateError The callback to provide the error state to the parent dialog.
+ * @returns {React.Component} The input field to load into the dialog
+ */
 const ConfigInput = ({setting, updateData, updateError}) => {
     const [value, setValue] = useState(setting.value);
     const [error, setError] = useState(false);
@@ -44,7 +51,6 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             }
         }
     }, [value, updateData, setting]);
-    // TODO Add support for checking HasValidation and actual min max
     const readOnly = setting.description.includes("(read only)");
     switch(setting.type) {
     case settingType.Integer:     
@@ -79,6 +85,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         return <FormControlLabel {...baseProps} control={
             <Checkbox 
                 disabled={readOnly}
+                defaultChecked={!!setting.value}               
                 onChange={(e) => setValue(e.target.checked)}
             />
         }/>;
@@ -89,14 +96,14 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             helperText={setting.description}
         />;
     case settingType.Palette:
-        // TODO Implement a Palette Config
+        // FIXME Implement a Palette Config
         return <TextField
             {...baseProps}
             {...textFieldProps}
             helperText={setting.description}
         />;
     case settingType.Color:
-        // TODO Implement a Color Config
+        //  FIXME Implement a Color Config
         return <TextField
             {...baseProps}
             {...textFieldProps}
@@ -111,7 +118,19 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     }
 };
 
-const Config = ({effectName, effectIndex, open, setOpen}) => {
+/**
+ * Queries the device and loads the device settings, or effect settings for configuration.
+ * @param {Props} props React Props.
+ * @param {String} props.heading The heading to display of the dialog.
+ * @param {Integer | undefined} props.effectIndex The index of the effect to load.
+ *      if undefined load the device settings.
+ * @param {boolean} props.open If the dialog should be open.
+ * @param {Function} props.setOpen callback to close the dialog.
+ * @returns 
+ */
+const ConfigDialog = ({heading, effectIndex, open, setOpen}) => {
+
+    const settingsEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/settings${effectIndex !== undefined ? '/effect': ''}`;
     const [content, setContent] = useState(<h2>Configuration Loading...</h2>);
     const [saveData, setSaveData] = useState({});
     const [errorFields, setErrorFields] = useState(new Set());
@@ -132,8 +151,8 @@ const Config = ({effectName, effectIndex, open, setOpen}) => {
 
     
     useMemo(() => {
-        const spec = `${settingsEndpoint}/specs?effectIndex=${effectIndex}`;
-        const current = `${settingsEndpoint}?effectIndex=${effectIndex}`;
+        const spec = `${settingsEndpoint}/specs${effectIndex !== undefined ? `?effectIndex=${effectIndex}` : ''}`;
+        const current = `${settingsEndpoint}${effectIndex !== undefined ? `?effectIndex=${effectIndex}` : ''}`;
         const updateData = (name, value) => {
             setSaveData(d => {
                 if(value !== undefined) {
@@ -159,7 +178,6 @@ const Config = ({effectName, effectIndex, open, setOpen}) => {
             const [specData, curConfData] = await Promise.all([
                 fetch(spec).then(r => r.json()),
                 fetch(current).then(r => r.json())]); 
-            
             setContent(<Box>
                 {specData.map((setting) => {
                     if(setting.name in curConfData) {
@@ -175,7 +193,7 @@ const Config = ({effectName, effectIndex, open, setOpen}) => {
     }, [effectIndex]);
 
     return <Dialog open={open} onClose={handleCancel}>
-        <DialogTitle>{effectName} Configuration</DialogTitle>
+        <DialogTitle>{heading} Configuration</DialogTitle>
         <DialogContent>
             {content}
         </DialogContent>
@@ -187,9 +205,13 @@ const Config = ({effectName, effectIndex, open, setOpen}) => {
     </Dialog>;
 };
 
-Config.propTypes = {
-    effectName: PropTypes.string.isRequired,
-    effectIndex: PropTypes.number.isRequired,
+ConfigDialog.defaultProps = {
+    effectIndex: undefined
+};
+
+ConfigDialog.propTypes = {
+    heading: PropTypes.string.isRequired,
+    effectIndex: PropTypes.number,
     open: PropTypes.bool.isRequired,
     setOpen: PropTypes.func.isRequired
 };
@@ -209,4 +231,4 @@ ConfigInput.propTypes = {
     updateError: PropTypes.func
 };
 
-export default Config;
+export default ConfigDialog;
