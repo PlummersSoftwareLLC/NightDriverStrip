@@ -141,11 +141,20 @@ struct SettingSpec
         Color
     };
 
+    enum class SettingAccess : char
+    {
+        ReadOnly,
+        WriteOnly,
+        ReadWrite
+    };
+
     const char* Name;
     const char* FriendlyName;
     const char* Description;
     SettingType Type;
     bool HasValidation = false;
+    SettingAccess Access = SettingAccess::ReadWrite;
+
     std::optional<double> MinimumValue = {};
     std::optional<double> MaximumValue = {};
 

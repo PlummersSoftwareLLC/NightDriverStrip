@@ -148,15 +148,15 @@ class LEDStripEffect : public IJSONSerializable
             _baseSettingSpecs.emplace_back(
                 "hasMaximumEffectTime",
                 "Has maximum effect time set",
-                "Indicates if the effect has a maximum effect time set (read only).",
+                "Indicates if the effect has a maximum effect time set.",
                 SettingSpec::SettingType::Boolean
-            );
+            ).Access = SettingSpec::SettingAccess::ReadOnly;
             _baseSettingSpecs.emplace_back(
                 "clearMaximumEffectTime",
                 "Clear maximum effect time",
-                "Clear maximum effect time (write only). Set to true to reset the maximum effect time to the default value.",
+                "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
                 SettingSpec::SettingType::Boolean
-            );
+            ).Access = SettingSpec::SettingAccess::WriteOnly;
         }
 
         _settingSpecs.insert(_settingSpecs.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
