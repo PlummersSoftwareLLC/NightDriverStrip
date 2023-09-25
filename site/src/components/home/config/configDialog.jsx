@@ -200,7 +200,9 @@ const ConfigDialog = ({heading, effectIndex, open, setOpen}) => {
         <DialogActions>
             <Button onClick={handleCancel}>Cancel</Button>
             <Button disabled={disableSubmit} onClick={handleSubmit}>Apply</Button>
-            <Button disabled={disableSubmit} onClick={handleSubmitAndReboot}>Apply and Reboot Device</Button>
+            {/* FIXME: If support for rebooting the device via an API endpoint is available.
+                    Add to handleSubmitAndReboot and enable this button */}
+            {/* <Button disabled={disableSubmit} onClick={handleSubmitAndReboot}>Apply and Reboot Device</Button> */}
         </DialogActions>
     </Dialog>;
 };
