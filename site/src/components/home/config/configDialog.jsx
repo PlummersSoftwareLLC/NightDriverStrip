@@ -51,7 +51,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             }
         }
     }, [value, updateData, setting]);
-    const readOnly = setting.description.includes("(read only)");
+    const readOnly = !!setting.readOnly;
     switch(setting.type) {
     case settingType.Integer:     
     case settingType.PositiveBigInteger:
@@ -223,8 +223,11 @@ const settingProps = PropTypes.shape({
     description: PropTypes.string.isRequired, 
     type: PropTypes.number.isRequired, 
     typeName: PropTypes.string.isRequired, 
-    value: PropTypes.any
+    value: PropTypes.any,
+    readOnly: PropTypes.bool,
+    writeOnly: PropTypes.bool
 });
+
 
 ConfigInput.propTypes = {
     setting: settingProps,
