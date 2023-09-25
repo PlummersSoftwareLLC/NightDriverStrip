@@ -52,7 +52,7 @@ const Effect = props => {
                 <Icon>settings</Icon>
             </IconButton>
         </CardActions>
-        <Config effectName={effect.name} effectIndex={effectIndex} open={open} setOpen={setOpen}></Config>
+        {open && <Config effectName={effect.name} effectIndex={effectIndex} open={open} setOpen={setOpen}></Config>}
     </Card>
 };
 
