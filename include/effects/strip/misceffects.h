@@ -270,7 +270,7 @@ class SplashLogoEffect : public LEDStripEffect
   public:
 
     SplashLogoEffect()
-      : LEDStripEffect(EFFECT_STRIP_SPLASH_LOGO, "NightDriver"),
+      : LEDStripEffect(EFFECT_STRIP_SPLASH_LOGO, "Mesmerizer"),
         logo(logo_start, logo_end)
     {
         debugV("Splash logo constructor");

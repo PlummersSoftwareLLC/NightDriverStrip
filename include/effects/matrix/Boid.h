@@ -68,7 +68,7 @@
 
 #include "Vector.h"
 
-class Boid
+class Boid 
 {
   public:
 
@@ -77,10 +77,12 @@ class Boid
     PVector acceleration;
     float maxforce;    // Maximum steering force
     float maxspeed;    // Maximum speed
+    int hue;
 
     float desiredseparation = 4;
     float neighbordist = 8;
     uint8_t colorIndex = 0;
+    float mass;
 
     boolean enabled = true;
 
@@ -92,6 +94,8 @@ class Boid
       location = PVector(x, y);
       maxspeed = 1.5;
       maxforce = 0.05;
+      mass = random(1.0,1.4);
+      hue = random(40,255);
     }
 
     static float randomf() {
@@ -111,6 +115,19 @@ class Boid
       velocity += acceleration;
       // Limit speed
       velocity.limit(maxspeed);
+      location += velocity;
+      // Reset acceleration to 0 each cycle
+      acceleration *= 0;
+    }
+
+    // Method to update location
+    void update(Boid boids [], uint8_t boidCount) {
+      // Update velocity
+      flock(boids, boidCount);
+      velocity += acceleration;
+      // Limit speed
+      velocity.limit(maxspeed);
+
       location += velocity;
       // Reset acceleration to 0 each cycle
       acceleration *= 0;
@@ -160,7 +177,7 @@ class Boid
 
     // Separation
     // Method checks for nearby boids and steers away
-    PVector separate(const Boid boids [], uint8_t boidCount) {
+    PVector separate(Boid boids [], uint8_t boidCount) {
       PVector steer = PVector(0, 0);
       int count = 0;
       // For every boid in the system, check if it's too close
@@ -225,7 +242,7 @@ class Boid
 
     // Cohesion
     // For the average location (i.e. center) of all nearby boids, calculate steering vector towards that location
-    PVector cohesion(const Boid boids [], uint8_t boidCount) {
+    PVector cohesion(Boid boids [], uint8_t boidCount) {
       PVector sum = PVector(0, 0);   // Start with empty vector to accumulate all locations
       int count = 0;
       for (int i = 0; i < boidCount; i++) {

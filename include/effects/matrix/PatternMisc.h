@@ -290,7 +290,7 @@ public:
         {
             for (uint16_t y = 0; y < MATRIX_HEIGHT; y++)
             {
-                g()->leds[g()->xy(x, y)] = (x ^ y ^ flip) < count
+                g()->leds[XY(x, y)] = (x ^ y ^ flip) < count
                     ? g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)
                     : CRGB::Black;
             }
