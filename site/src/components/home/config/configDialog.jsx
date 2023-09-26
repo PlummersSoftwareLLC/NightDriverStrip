@@ -53,7 +53,12 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     }, [value, updateData, setting]);
     const readOnly = !!setting.readOnly;
     switch(setting.type) {
-    case settingType.Integer:     
+    case settingType.Integer:
+        return <TextField
+            {...baseProps}
+            {...textFieldProps}
+            helperText={setting.description}
+        />;  
     case settingType.PositiveBigInteger:
 
         return <TextField
@@ -80,7 +85,12 @@ const ConfigInput = ({setting, updateData, updateError}) => {
                 }
             }}
         />;
-    case settingType.Float: 
+    case settingType.Float:
+        return <TextField
+            {...baseProps}
+            {...textFieldProps}
+            helperText={setting.description}
+        />;
     case settingType.Boolean:
         return <FormControlLabel {...baseProps} control={
             <Checkbox 
