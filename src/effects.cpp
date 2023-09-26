@@ -483,6 +483,13 @@ std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJson
 
     auto jsonObject = pJsonDoc->as<JsonObjectConst>();
 
+    // Ignore JSON if it was persisted for a different project
+    if (jsonObject.containsKey(PTY_PROJECT)
+        && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
+    {
+        return {};
+    }
+
     // Default to 1 if no effect set version was persisted
     int jsonVersion = jsonObject.containsKey(PTY_EFFECTSETVER) ? jsonObject[PTY_EFFECTSETVER] : 1;
 
