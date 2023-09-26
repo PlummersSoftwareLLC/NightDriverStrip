@@ -1318,10 +1318,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ONBOARD_PIXEL_DATA      33
 #endif
 
-#ifndef CHIP_FAMILY
-#define CHIP_FAMILY "ESP32"
-#endif
-
 #ifndef USE_OLED
 #define USE_OLED 0
 #endif

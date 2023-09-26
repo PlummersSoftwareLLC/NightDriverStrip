@@ -320,9 +320,17 @@ void setup()
 
     #if ENABLE_WIFI
 
-        debugW("Starting ImprovSerial");
+        // This chip alone is special-cased by Improv, so we pull it
+        // from build flags. CONFIG_IDF_TARGET will be "esp32s3".
+        #if CONFIG_IDF_TARGET_ESP32S3
+            String family = "ESP32-S3";
+        #else
+	         String family = "ESP32";
+        #endif
+
+        debugW("Starting ImprovSerial for %s", family.c_str());
         String name = "NDESP32" + get_mac_address().substring(6);
-        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, CHIP_FAMILY, name.c_str(), &Serial);
+        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
 
         // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 

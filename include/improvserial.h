@@ -91,7 +91,7 @@ public:
         else
             this->state_ = improv::STATE_AUTHORIZED;
 
-        log_write("Settings ssid=%s, password=******", WiFi_ssid.c_str());
+        log_write("Settings ssid=\"%s\", password=******", WiFi_ssid.c_str());
     }
 
     // Main ImprovSerial loop.  Pulls available characters from the serial port, and tries to have them parsed
@@ -233,7 +233,7 @@ protected:
 
             if (checksum != byte)
             {
-                log_write("Checksum mismatch in Improv payload.");
+                log_write("Checksum mismatch in Improv payload. Expected 0x%x. Got 0x%x", checksum, byte);
                 this->set_error_(improv::ERROR_INVALID_RPC);
                 return false;
             }
@@ -270,7 +270,7 @@ protected:
                 if (!WriteWiFiConfig())
                     debugI("Failed writing WiFi config to NVS");
 
-                log_write("Received Improv wifi settings ssid=%s, password=******", command.ssid.c_str());
+                log_write("Received Improv wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
                 WiFi.disconnect();
                 WiFi.mode(WIFI_STA);
@@ -328,7 +328,7 @@ protected:
             }
             default:
             {
-                log_write("Unknown Improv payload.");
+                log_write("Unknown Improv payload. 0x%x", command.command);
                 this->set_error_(improv::ERROR_UNKNOWN_RPC);
                 return false;
             }
