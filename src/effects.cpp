@@ -114,7 +114,7 @@
 
 // Static initializers for effects that need them
 
-#if USE_HUB75
+#if USE_HUB75 && ENABLE_WIFI
     std::vector<SettingSpec, psram_allocator<SettingSpec>> PatternSubscribers::mySettingSpecs = {};
 #endif
 
