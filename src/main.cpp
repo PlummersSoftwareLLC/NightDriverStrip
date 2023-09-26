@@ -325,7 +325,7 @@ void setup()
         #if CONFIG_IDF_TARGET_ESP32S3
             String family = "ESP32-S3";
         #else
-	         String family = "ESP32";
+	        String family = "ESP32";
         #endif
 
         debugW("Starting ImprovSerial for %s", family.c_str());
