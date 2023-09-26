@@ -171,7 +171,7 @@ public:
         _newFrameAvailable = available;
     }
 
-    // Implementation is in effectsinitializers.cpp
+    // Implementation is in effects.cpp
     void LoadDefaultEffects();
 
     // DeserializeFromJSON
@@ -186,13 +186,16 @@ public:
     //
     // If no effects are successfully loaded from JSON, it loads the default effects.
     //
-    // If the JSON object includes an "eef" array, the function attempts to load each effect's enabled state from it.
+    // If the JSON object includes an "eef" array, the function attempts to load each effect's enabled
+    // state from it.
     // If the index exceeds the "eef" array's size, the effect is enabled by default.
     //
-    // The function also sets the effect interval from the "ivl" field in the JSON object, defaulting to a pre-defined value if the field isn't present.
+    // The function also sets the effect interval from the "ivl" field in the JSON object, defaulting
+    // to a pre-defined value if the field isn't present.
     //
-    // If the JSON object includes a "cei" field, the function sets the current effect index to this value.
-    // If the value is greater than or equal to the number of effects, it defaults to the last effect in the vector.
+    // If the JSON object includes a "cei" field, the function sets the current effect index to this
+    // value. If the value is greater than or equal to the number of effects, it defaults to the last
+    // effect in the vector.
     //
     // Lastly, the function calls the construct() method, indicating successful deserialization.
 
