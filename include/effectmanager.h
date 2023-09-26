@@ -49,14 +49,12 @@
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
-// References to functions in other C files
+// Forward references to functions in our accompanying CPP file
 
 void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
-void SaveCurrentEffectIndex();
-bool ReadCurrentEffectIndex(size_t& index);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
@@ -110,8 +108,11 @@ class  EffectManager : public IJSONSerializable
         }
     }
 
-    // Implementation is in effects.cpp
+    // Implementation is in effectinitializers.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
+
+    void SaveCurrentEffectIndex();
+    bool ReadCurrentEffectIndex(size_t& index);
 
     void ClearEffects()
     {
@@ -170,7 +171,7 @@ public:
         _newFrameAvailable = available;
     }
 
-    // Implementation is in effects.cpp
+    // Implementation is in effectsinitializers.cpp
     void LoadDefaultEffects();
 
     // DeserializeFromJSON
@@ -471,7 +472,7 @@ public:
     }
 
     // Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
-    //   use the AppendEffect() function for that. Implementation is in effects.cpp.
+    //   use the AppendEffect() function for that.
     std::shared_ptr<LEDStripEffect> CopyEffect(size_t index);
 
     // Adds an effect to the effect list and enables it. If an effect is added that is already in the effect list then the result

@@ -50,7 +50,7 @@ The text in this document regularly mentions "LED display" as the visualization 
 
 ### `EffectManager`
 
-- Located in: [effectmanager.h](./include/effectmanager.h) and [effects.cpp](./src/effects.cpp)
+- Located in: [effectmanager.h](./include/effectmanager.h) and [effectmanager.cpp](./src/effectmanager.cpp)
 - Role: Handles the creation and management of visual effects on the LED display.
 - Key functionalities: Creating effects, managing effect transitions.
 
@@ -129,7 +129,7 @@ Configuration files and settings are read where available to determine the initi
 
 - **Initial effect setup**: The first visual effect is set up and started. This ensures that as soon as the system is ready, there's immediate visual feedback on the LED display.
 
-- **Loading the full effect set**: The complete effects list is loaded, either from a JSON file stored on the device's SPIFFS partition or the default set. The default set is determined by the effect factories that are added in the `LoadEffectFactories()` function in [effects.cpp](./src/effects.cpp).
+- **Loading the full effect set**: The complete effects list is loaded, either from a JSON file stored on the device's SPIFFS partition or the default set. The default set is determined by the effect factories that are added in the `LoadEffectFactories()` function in [effectinitializers.cpp](./src/effectinitializers.cpp).
 
 ### Event loop
 
@@ -139,7 +139,7 @@ Once all the initializations are complete, the application enters its main event
 
 The `EffectManager` and the drawing loop work together to render the effects that have been enabled within the application.
 
-- **`EffectManager`**: The `EffectManager` is a class that is present in the [effectmanager.h](./include/effectmanager.h) and, for a few methods and support functions, [effects.cpp](./src/effects.cpp) files. It  manages the LED effects by holding the list of effect objects that represent individual effects that can be shown on the LED display.
+- **`EffectManager`**: The `EffectManager` is a class that is present in the [effectmanager.h](./include/effectmanager.h), [effectmanager.cpp](./src/effectmanager.cpp) and, for a few methods and support functions, [effectsinitializers.cpp](./src/effectinitializers.cpp) files. It  manages the LED effects by holding the list of effect objects that represent individual effects that can be shown on the LED display.
   The `EffectManager` has a method named `Update()`, which is responsible for drawing the current effect on the LED display. This method is called within the main draw loop to render the effect.
 
 - **Drawing loop**: The drawing loop is present in the [drawing.cpp](./src/drawing.cpp) file. It's a continuous loop that updates the LED display with the current effect.

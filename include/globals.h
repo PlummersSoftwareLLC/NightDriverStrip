@@ -240,7 +240,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // This is a simple demo configuration.  To build, simply connect the data lead from a WS2812B
     // strip to pin 5 or other pin marked PIN0 below.  This does not use the OLED, LCD, or anything fancy, it simply drives the
-    // LEDs with a simple rainbow effect as specified in effects.cpp for DEMO.
+    // LEDs with a simple rainbow effect as specified in effectinitializers.cpp for DEMO.
     //
     // Please ensure you supply sufficent power to your strip, as even the DEMO of 144 LEDs, if set
     // to white, would overload a USB port.

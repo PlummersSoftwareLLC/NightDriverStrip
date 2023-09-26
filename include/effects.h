@@ -33,9 +33,9 @@
 // Each effect class needs to have exactly one associated effect number defined in
 // the below list. The effect numbers and their respective classes are linked in the
 // effect factory definitions that are created in the LoadEffectFactories()
-// function in effects.cpp. The link is used when the effect list is deserialized
-// from the effects list JSON file on file storage, to determine which effect
-// class to construct for a particular effect JSON object - which has the effect
+// function in effectinitializers.cpp. The link is used when the effect list is
+// deserialized from the effects list JSON file on file storage, to determine which
+// effect class to construct for a particular effect JSON object - which has the effect
 // number persisted as one of the core properties.
 //
 // Amongst others, this means that an effect number that made it to the main
