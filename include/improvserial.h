@@ -33,6 +33,18 @@
 #pragma once
 
 #include <improv.h>
+#include "hexdump.h"
+
+#define IMPROV_LOG_FILE             "/improv.log"
+
+// Define as 1 to enable Improv logging to SPIFFS, and add a URI to the on-board
+// webserver to be able to retrieve it. The URL to retrieve the log will be
+// http://<device_IP><IMPROV_LOG_FILE>, the latter being as defined just above.
+// Note that any log file that has been written to SPIFFS will be deleted as soon
+// as the board is booted with ENABLE_IMPROV_LOGGING set to 0!
+#ifndef ENABLE_IMPROV_LOGGING
+    #define ENABLE_IMPROV_LOGGING   0
+#endif
 
 enum ImprovSerialType : uint8_t
 {
@@ -52,6 +64,10 @@ bool WriteWiFiConfig();
 template <typename SERIALTYPE>
 class ImprovSerial
 {
+    #if !(ENABLE_IMPROV_LOGGING)
+        #define log_write(...) do {} while(0)
+    #endif
+
 public:
 
     void setup(const String &firmware,
@@ -66,12 +82,16 @@ public:
         this->hardware_variant_ = variant;
         this->device_name_ = name;
 
+        #if !(ENABLE_IMPROV_LOGGING)
+            SPIFFS.remove(IMPROV_LOG_FILE);
+        #endif
+
         if (WiFi.getMode() == WIFI_STA && WiFi.isConnected())
             this->state_ = improv::STATE_PROVISIONED;
         else
             this->state_ = improv::STATE_AUTHORIZED;
 
-        ESP_LOGI(TAG, "Settings ssid=%s, password=%s", WiFi_ssid.c_str(), WiFi_password.c_str());
+        log_write("Settings ssid=\"%s\", password=******", WiFi_ssid.c_str());
     }
 
     // Main ImprovSerial loop.  Pulls available characters from the serial port, and tries to have them parsed
@@ -93,7 +113,11 @@ public:
             if (this->parse_improv_serial_byte_(byte))
                 this->last_read_byte_ = now;
             else
+            {
+                log_write("Abandoning Improv buffer after %d received bytes:", this->rx_buffer_.size());
+                log_write(this->rx_buffer_);
                 this->rx_buffer_.clear();
+            }
         }
 
         if (this->state_ == improv::STATE_PROVISIONING)
@@ -124,11 +148,44 @@ public:
 
 protected:
 
+    #if ENABLE_IMPROV_LOGGING
+
+        // Tell the compiler the arguments to this overload should be checked like printf's
+        __attribute__((format(printf, 2, 3)))
+        void log_write(const char* format, ...)
+        {
+            auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
+            va_list args;
+
+            va_start(args, format);
+
+            // We shifted the printf parameter check to ourselves, so we can suppress the warning here
+            #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+            file.printf(format, args);
+            #pragma GCC diagnostic warning "-Wformat-nonliteral"
+
+            va_end(args);
+
+            file.println();
+
+            file.close();
+        }
+
+        void log_write(std::vector<uint8_t>& data)
+        {
+            auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
+
+            HexDump(file, data.data(), data.size());
+
+            file.close();
+        }
+
+    #endif // ENABLE_IMPROV_LOGGING
+
     bool parse_improv_serial_byte_(uint8_t byte)
     {
         size_t at = this->rx_buffer_.size();
         this->rx_buffer_.push_back(byte);
-        ESP_LOGD(TAG, "Improv Serial byte: 0x%02X", byte);
 
         // Checks the bytestream to see if we're still seeing what looks like the IMPROV header
         // There are many more elegant and less readable ways to do this, but... let's keep it simple.
@@ -176,7 +233,7 @@ protected:
 
             if (checksum != byte)
             {
-                ESP_LOGW(TAG, "Error decoding Improv payload");
+                log_write("Checksum mismatch in Improv payload. Expected 0x%x. Got 0x%x", checksum, byte);
                 this->set_error_(improv::ERROR_INVALID_RPC);
                 return false;
             }
@@ -190,6 +247,7 @@ protected:
         }
 
         // If we got here then the command coming is improv, but not an RPC command
+        log_write("Improv command not RPC, so not handled.");
 
         return false;
     }
@@ -210,9 +268,9 @@ protected:
                 WiFi_password = command.password.c_str();
 
                 if (!WriteWiFiConfig())
-                    Serial.print("Failed writing WiFi config to NVS");
+                    debugI("Failed writing WiFi config to NVS");
 
-                ESP_LOGD(TAG, "Received Improv wifi settings ssid=%s, password=%s", command.ssid.c_str(), "******");
+                log_write("Received Improv wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
                 WiFi.disconnect();
                 WiFi.mode(WIFI_STA);
@@ -270,7 +328,7 @@ protected:
             }
             default:
             {
-                ESP_LOGW(TAG, "Unknown Improv payload");
+                log_write("Unknown Improv payload. 0x%x", command.command);
                 this->set_error_(improv::ERROR_UNKNOWN_RPC);
                 return false;
             }
@@ -308,7 +366,7 @@ protected:
         data[8] = 1;
         data[9] = error;
 
-        Serial.printf("Improv Serial received an error condition from the caller: %d", error);
+        log_write("Improv Serial received an error condition from the caller: %d", error);
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -338,7 +396,7 @@ protected:
     {
         this->set_error_(improv::ERROR_UNABLE_TO_CONNECT);
         this->set_state_(improv::STATE_AUTHORIZED);
-        ESP_LOGW(TAG, "Timed out trying to connect to given WiFi network");
+        log_write("Timed out trying to connect to given WiFi network.");
         WiFi.disconnect();
     }
 
@@ -375,6 +433,10 @@ protected:
     void write_data_(std::vector<uint8_t> &data)
     {
         data.push_back('\n');
+
+        log_write("Sending Improv response:");
+        log_write(data);
+
         this->hw_serial_->write(data.data(), data.size());
     }
 
@@ -389,6 +451,10 @@ protected:
     String firmware_version_;
     String hardware_variant_;
     String device_name_;
+
+    #if !(ENABLE_IMPROV_LOGGING)
+        #undef log_write
+    #endif
 };
 
 extern ImprovSerial<typeof(Serial)> g_ImprovSerial;
