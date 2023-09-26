@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        effectinitializers.cpp
+// File:        effects.cpp
 //
 // NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -24,10 +24,11 @@
 //
 //    Initializer/loader and support functions/macros for effects
 //
-// History:     Sep-26-2023         Rbergen     Extracted from effects.cpp
+// History:     Jul-14-2021         Davepl      Split off from main.cpp
+//              Sep-26-2023         Rbergen     Extracted EffectManager stuff
 //---------------------------------------------------------------------------
 
-#include "effectinitializers.h"
+#include "effectsupport.h"
 
 // Include the effect classes we'll need later
 

@@ -108,7 +108,7 @@ class  EffectManager : public IJSONSerializable
         }
     }
 
-    // Implementation is in effectinitializers.cpp
+    // Implementation is in effects.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
     void SaveCurrentEffectIndex();

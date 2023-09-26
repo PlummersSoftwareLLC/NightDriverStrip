@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        effectinitializers.h
+// File:        effectsupport.h
 //
 // NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -24,9 +24,9 @@
 // Description:
 //
 //    Declarations of different types for the effect initializers included
-//    in effectinitializers.cpp.
+//    in effects.cpp.
 //
-// History:     Apr-13-2019         Davepl      Created for NightDriverStrip
+// History:     Sep-26-2023         Rbergen     Created for NightDriverStrip
 //
 //---------------------------------------------------------------------------
 
@@ -225,6 +225,8 @@ const CRGBPalette16 USAColors_p =
 };
 
 const CRGBPalette16 rainbowPalette(RainbowColors_p);
+
+extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
 // Adds a default and JSON effect factory for a specific effect number and type.
 //   All parameters beyond effectNumber and effectType will be passed on to the default effect constructor.
