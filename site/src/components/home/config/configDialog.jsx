@@ -152,7 +152,7 @@ const ConfigDialog = ({heading, effectIndex, open, setOpen}) => {
     };
     const handleSubmitAndReboot = async () => {
         await handleSubmit();
-        await fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/reset`, {method:"POST", body:new URLSearchParams({board: 1})}).then(r => r.json());
+        await fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/reset`, {method:"POST", body:new URLSearchParams({board: 1})});
         
     };
     
