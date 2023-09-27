@@ -27,8 +27,10 @@
 // History:     Jul-14-2021         Davepl      Split off from main.cpp
 //---------------------------------------------------------------------------
 
+#include <FS.h>
+#include <SPIFFS.h>
+
 #include "globals.h"
-#include "SPIFFS.h"
 #include "effectdependencies.h"
 #include "systemcontainer.h"
 

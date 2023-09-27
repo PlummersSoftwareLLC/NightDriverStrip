@@ -42,6 +42,7 @@
 #include <map>
 #include <WiFi.h>
 #include <FS.h>
+#include <SPIFFS.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <Arduino.h>

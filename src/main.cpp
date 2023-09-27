@@ -157,10 +157,16 @@
 #define FASTLED_ALL_PINS_HARDWARE_SPI
 #define FASTLED_ESP32_SPI_BUS HSPI
 
+#include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
+#include <nvs_flash.h>                   // Non-volatile storage access
+#include <nvs.h>
+
 #include "globals.h"
 #include "deviceconfig.h"
 #include "systemcontainer.h"
 #include "values.h"
+#include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
+#include <TJpg_Decoder.h>
 
 #if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
   #include "Bounce2.h"                            // For Bounce button class

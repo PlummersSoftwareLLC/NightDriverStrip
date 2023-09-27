@@ -31,8 +31,13 @@
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+#include <ESPmDNS.h>
+#include <nvs_flash.h>                   // Non-volatile storage access
+#include <nvs.h>
 
 #include "globals.h"
+#include "ledviewer.h"                          // For the LEDViewer task and object
+#include "network.h"
 #include "systemcontainer.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
