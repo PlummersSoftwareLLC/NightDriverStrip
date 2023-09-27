@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel } from "@mui/material";
 import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
-
+import parse from 'html-react-parser';
 // Base styling for inputs.     
 const textFieldProps = {
     margin: "dense",
     fullWidth: true,
-    variant:"standard"
+    variant:"standard",
+    FormHelperTextProps: { component: 'div' }
 };
 
 // enum definition: see types.h/SettingSpec.SettingType
@@ -32,7 +33,8 @@ const settingType = {
 const ConfigInput = ({setting, updateData, updateError}) => {
     const [value, setValue] = useState(setting.value);
     const [error, setError] = useState(false);
-    const [helper, setHelper] = useState(setting.description);
+    const jsxDescription = parse(setting.description);
+    const [helper, setHelper] = useState(jsxDescription);
     const baseProps = {
         label: setting.friendlyName,
         id: setting.name,
@@ -57,7 +59,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         return <TextField
             {...baseProps}
             {...textFieldProps}
-            helperText={setting.description}
+            helperText={helper}
         />;  
     case settingType.PositiveBigInteger:
 
@@ -76,7 +78,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
                     }
                 } else if(error){
                     setError(false);
-                    setHelper(setting.description);
+                    setHelper(jsxDescription);
                 }
                 if(!v || isNaN(v)) {
                     setValue('');
@@ -89,7 +91,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         return <TextField
             {...baseProps}
             {...textFieldProps}
-            helperText={setting.description}
+            helperText={helper}
         />;
     case settingType.Boolean:
         return <FormControlLabel {...baseProps} control={
@@ -103,27 +105,27 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         return <TextField
             {...baseProps}
             {...textFieldProps}
-            helperText={setting.description}
+            helperText={helper}
         />;
     case settingType.Palette:
         // FIXME Implement a Palette Config
         return <TextField
             {...baseProps}
             {...textFieldProps}
-            helperText={setting.description}
+            helperText={helper}
         />;
     case settingType.Color:
         //  FIXME Implement a Color Config
         return <TextField
             {...baseProps}
             {...textFieldProps}
-            helperText={setting.description}
+            helperText={helper}
         />;
     default:
         return <TextField
             {...baseProps}
             {...textFieldProps}
-            helperText={setting.description}
+            helperText={helper}
         />;
     }
 };
