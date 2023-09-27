@@ -101,17 +101,9 @@
 #include <numeric>
 
 #include <Arduino.h>
-// #include <ArduinoOTA.h>                         // For updating the flash over WiFi
-// #include <ESPmDNS.h>
-// #include <SPI.h>
-
-// #include <nvs_flash.h>                   // Non-volatile storage access
-// #include <nvs.h>
 
 #define FASTLED_INTERNAL 1               // Suppresses build banners
 #include <FastLED.h>
-
-// #include <WiFi.h>
 
 #include <RemoteDebug.h>
 
@@ -1550,43 +1542,17 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 
 // Main includes
 
-// #include <TJpg_Decoder.h>
 #include "gfxbase.h"                            // GFXBase drawing interface
-// #include "screen.h"                             // LCD/TFT/OLED handling
 #include "socketserver.h"                       // Incoming WiFi data connections
-//#include "soundanalyzer.h"                      // for audio sound processing
 #include "ledstripgfx.h"                        // Essential drawing code for strips
-// #include "ledmatrixgfx.h"                       // For drawing to HUB75 matrices
 #include "ledstripeffect.h"                     // Defines base led effect classes
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "effectmanager.h"                      // For g_EffectManager
-// #include "ledviewer.h"                          // For the LEDViewer task and object
-// #include "network.h"                            // Networking
 #include "ledbuffer.h"                          // Buffer manager for strip
-//#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
-//#include "Bounce2.h"                            // For Bounce button class
-//#endif
 #include "colordata.h"                          // color palettes
-//#include "drawing.h"                            // drawing code
-//#include "taskmgr.h"                            // for cpu usage, etc
 
 #if USE_TFTSPI
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
     #include <TFT_eSPI.h>
     #include <SPI.h>
-#endif
-
-// Conditional includes depending on which project is being build
-#if 0
-#if USE_HUB75
-    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
-#endif
-
-#if ENABLE_WIFI && ENABLE_WEBSERVER
-    #include "webserver.h"
-#endif
-
-#if ENABLE_REMOTE
-    #include "remotecontrol.h"
-#endif
 #endif
