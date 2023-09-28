@@ -44,6 +44,7 @@
 #include <FontGfx_apple5x7.h>
 #include <thread>
 #include <map>
+#include "TJpg_Decoder.h"
 #include "effects.h"
 #include "types.h"
 
