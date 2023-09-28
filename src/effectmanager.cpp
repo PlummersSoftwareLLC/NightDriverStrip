@@ -27,8 +27,10 @@
 // History:     Sep-26-2023         Rbergen     Extracted from effects.cpp
 //---------------------------------------------------------------------------
 
+#include <FS.h>
+#include <SPIFFS.h>
+
 #include "globals.h"
-#include "SPIFFS.h"
 #include "systemcontainer.h"
 
 // Variables we need further down
