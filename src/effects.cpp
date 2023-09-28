@@ -2,7 +2,7 @@
 //
 // File:        effects.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -22,245 +22,104 @@
 //
 // Description:
 //
-//    Main table of built-in effects and related constants and data
+//    Initializer/loader and support functions/macros for effects
 //
 // History:     Jul-14-2021         Davepl      Split off from main.cpp
+//              Sep-26-2023         Rbergen     Extracted EffectManager stuff
 //---------------------------------------------------------------------------
 
-#include "globals.h"
-#include "SPIFFS.h"
-#include "effectdependencies.h"
-#include "systemcontainer.h"
+#include "effectsupport.h"
 
-// Palettes
-//
-// Palettes that are referenced by effects need to be instantiated first
+// Include the effect classes we'll need later
 
-const CRGBPalette16 BlueColors_p =
-{
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue,
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue,
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue,
-    CRGB::DarkBlue,
-    CRGB::MediumBlue,
-    CRGB::Blue,
-    CRGB::MediumBlue
-};
-
-const CRGBPalette16 RedColors_p =
-{
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-
-    CRGB::Red,
-    CRGB::DarkRed,
-    CRGB::DarkRed,
-    CRGB::OrangeRed
-};
-
-const CRGBPalette16 GreenColors_p =
-{
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-
-    CRGB::Green,
-    CRGB::DarkGreen,
-    CRGB::DarkGreen,
-    CRGB::LimeGreen
-};
-
-const CRGBPalette16 PurpleColors_p =
-{
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-
-    CRGB::Pink,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-};
-
-const CRGBPalette16 RGBColors_p =
-{
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::Green,
-    CRGB::Blue,
-    CRGB::Blue
-};
-
-const CRGBPalette16 MagentaColors_p =
-{
-    CRGB::Pink,
-    CRGB::DeepPink,
-    CRGB::HotPink,
-    CRGB::LightPink,
-    CRGB::LightCoral,
-    CRGB::Purple,
-    CRGB::MediumPurple,
-    CRGB::Magenta,
-    CRGB::DarkMagenta,
-    CRGB::DarkSalmon,
-    CRGB::MediumVioletRed,
-    CRGB::Pink,
-    CRGB::DeepPink,
-    CRGB::HotPink,
-    CRGB::LightPink,
-    CRGB::Magenta};
-
-const CRGBPalette16 spectrumBasicColors =
-{
-    CRGB(0xFD0E35), // Red
-    CRGB(0xFF8833), // Orange
-    CRGB(0xFFEB00), // Middle Yellow
-    CRGB(0xAFE313), // Inchworm
-    CRGB(0x3AA655), // Green
-    CRGB(0x8DD9CC), // Middle Blue Green
-    CRGB(0x0066FF), // Blue III
-    CRGB(0xDB91EF), // Lilac
-    CRGB(0xFD0E35), // Red
-    CRGB(0xFF8833), // Orange
-    CRGB(0xFFEB00), // Middle Yellow
-    CRGB(0xAFE313), // Inchworm
-    CRGB(0x3AA655), // Green
-    CRGB(0x8DD9CC), // Middle Blue Green
-    CRGB(0x0066FF), // Blue III
-    CRGB(0xDB91EF)  // Lilac
-};
-
-
-const CRGBPalette16 spectrumAltColors =
-{
-    CRGB::Red,
-    CRGB::OrangeRed,
-    CRGB::Orange,
-    CRGB::Green,
-    CRGB::ForestGreen,
-    CRGB::Cyan,
-    CRGB::Blue,
-    CRGB::Indigo,
-    CRGB::Red,
-    CRGB::OrangeRed,
-    CRGB::Orange,
-    CRGB::Green,
-    CRGB::ForestGreen,
-    CRGB::Cyan,
-    CRGB::Blue,
-    CRGB::Indigo,
-};
-
-const CRGBPalette16 USAColors_p =
-{
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Blue,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-    CRGB::White,
-    CRGB::Red,
-};
-
-const CRGBPalette16 rainbowPalette(RainbowColors_p);
+#include "effects/strip/fireeffect.h"          // fire effects
+#include "effects/strip/paletteeffect.h"       // palette effects
+#include "effects/strip/doublepaletteeffect.h" // double palette effect
+#include "effects/strip/meteoreffect.h"        // meteor blend effect
+#include "effects/strip/stareffect.h"          // star effects
+#include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
+#include "effects/strip/tempeffect.h"
+#include "effects/strip/stareffect.h"
+#include "effects/strip/laserline.h"
+#include "effects/matrix/PatternClock.h"       // No matrix dependencies
 
 #if ENABLE_AUDIO
-
-// GetSpectrumAnalyzer
-//
-// A little factory that makes colored spectrum analyzers to be used by the remote control
-// colored buttons
-
-std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
-{
-    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
-    if (object->Init(g_ptrSystem->Devices()))
-        return object;
-    throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
-}
-
-std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
-{
-    CHSV hueColor = rgb2hsv_approximate(color);
-    CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
-    if (object->Init(g_ptrSystem->Devices()))
-        return object;
-    throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
-}
-
+    #include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
+    #include "effects/strip/musiceffect.h"         // Music based effects
 #endif
 
-#define STARRYNIGHT_PROBABILITY 1.0
-#define STARRYNIGHT_MUSICFACTOR 1.0
+#if FAN_SIZE
+    #include "effects/strip/faneffects.h" // Fan-based effects
+#endif
 
-static DRAM_ATTR std::unique_ptr<EffectFactories> l_ptrEffectFactories = nullptr;   // Default and JSON factory functions + decoration for effects
+//
+// Externals
+//
+
+#if USE_HUB75
+    #include "ledmatrixgfx.h"
+    #include "effects/strip/misceffects.h"
+
+    #include "effects/matrix/PatternSMStrobeDiffusion.h"
+    #include "effects/matrix/PatternSM2DDPR.h"
+
+    #include "effects/matrix/PatternSMStarDeep.h"
+    #include "effects/matrix/PatternSMAmberRain.h"
+    #include "effects/matrix/PatternSMBlurringColors.h"
+    #include "effects/matrix/PatternSMFire2021.h"
+    #include "effects/matrix/PatternSMNoise.h"
+    #include "effects/matrix/PatternSMPicasso3in1.h"
+    #include "effects/matrix/PatternSMSpiroPulse.h"
+    #include "effects/matrix/PatternSMTwister.h"
+    #include "effects/matrix/PatternSMMetaBalls.h"
+    #include "effects/matrix/PatternSMHolidayLights.h"
+    #include "effects/matrix/PatternSMGamma.h"
+    #include "effects/matrix/PatternSMFlowFields.h"
+    #include "effects/matrix/PatternSMSupernova.h"
+    #include "effects/matrix/PatternSMWalkingMachine.h"
+    #include "effects/matrix/PatternSMHypnosis.h"
+    #include "effects/matrix/PatternSMRainbowTunnel.h"
+    #include "effects/matrix/PatternSMRadialWave.h"
+    #include "effects/matrix/PatternSMRadialFire.h"
+    #include "effects/matrix/PatternSMSmoke.h"
+    #include "effects/matrix/PatternSerendipity.h"
+    #include "effects/matrix/PatternSwirl.h"
+    #include "effects/matrix/PatternPulse.h"
+    #include "effects/matrix/PatternWave.h"
+    #include "effects/matrix/PatternMaze.h"
+    #include "effects/matrix/PatternLife.h"
+    #include "effects/matrix/PatternSpiro.h"
+    #include "effects/matrix/PatternCube.h"
+    #include "effects/matrix/PatternCircuit.h"
+#if ENABLE_WIFI
+    #include "effects/matrix/PatternSubscribers.h"
+#endif
+    #include "effects/matrix/PatternAlienText.h"
+    #include "effects/matrix/PatternRadar.h"
+    #include "effects/matrix/PatternPongClock.h"
+    #include "effects/matrix/PatternBounce.h"
+    #include "effects/matrix/PatternMandala.h"
+    #include "effects/matrix/PatternSpin.h"
+    #include "effects/matrix/PatternMisc.h"
+    #include "effects/matrix/PatternNoiseSmearing.h"
+    #include "effects/matrix/PatternQR.h"
+#if ENABLE_WIFI
+    #include "effects/matrix/PatternWeather.h"
+#endif
+#endif  // USE_HUB75
+
+#ifdef USE_WS281X
+    #include "ledstripgfx.h"
+#endif
+
+// Static initializers for effects that need them
+
+#if USE_HUB75 && ENABLE_WIFI
+    std::vector<SettingSpec, psram_allocator<SettingSpec>> PatternSubscribers::mySettingSpecs = {};
+#endif
 
 // Effect factories for the StarryNightEffect - one per star type
-static std::map<int, JSONEffectFactory> l_JsonStarryNightEffectFactories =
+std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
 {
     { EFFECT_STAR,
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<Star>>(jsonObject); } },
@@ -280,54 +139,18 @@ static std::map<int, JSONEffectFactory> l_JsonStarryNightEffectFactories =
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<QuietStar>>(jsonObject); } },
 };
 
-// Helper function to create a StarryNightEffect from JSON.
-//   It picks the actual effect factory from l_JsonStarryNightEffectFactories based on the star type number in the JSON blob.
-std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
-{
-    auto entry = l_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
-
-    return entry != l_JsonStarryNightEffectFactories.end()
-        ? entry->second(jsonObject)
-        : nullptr;
-}
-
-// Adds a default and JSON effect factory for a specific effect number and type.
-//   All parameters beyond effectNumber and effectType will be passed on to the default effect constructor.
-#define ADD_EFFECT(effectNumber, effectType, ...) \
-    l_ptrEffectFactories->AddEffect(effectNumber, \
-        []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(__VA_ARGS__); }, \
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<effectType>(jsonObject); }\
-    )
-
-// Adds a default and JSON effect factory for a specific effect number/type.
-//   All parameters beyond effectNumber and effectType will be passed on to the default effect constructor.
-//   The default effect will be disabled upon creation, so will not show until enabled.
-#define ADD_EFFECT_DISABLED(effectNumber, effectType, ...) \
-    ADD_EFFECT(effectNumber, effectType, __VA_ARGS__).LoadDisabled = true
-
-// Adds a default and JSON effect factory for a StarryNightEffect with a specific star type.
-//   All parameters beyond starType will be passed on to the default StarryNightEffect constructor for the indicated star type.
-#define ADD_STARRY_NIGHT_EFFECT(starType, ...) \
-    l_ptrEffectFactories->AddEffect(EFFECT_STRIP_STARRY_NIGHT, \
-        []()                                 ->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<starType>>(__VA_ARGS__); }, \
-        [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); }\
-    )
-
-// Adds a default and JSON effect factory for a StarryNightEffect with a specific star type.
-//   All parameters beyond starType will be passed on to the default StarryNightEffect constructor for the indicated star type.
-//   The default effect will be disabled upon creation, so will not show until enabled.
-#define ADD_STARRY_NIGHT_EFFECT_DISABLED(starType, ...) \
-    ADD_STARRY_NIGHT_EFFECT(starType, __VA_ARGS__).LoadDisabled = true
+// Default and JSON factory functions + decoration for effects
+DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 
 // This function sets up the effect factories for the effects for whatever project is being built. The ADD_EFFECT macro variations
 //   are provided and used for convenience.
 void LoadEffectFactories()
 {
     // Check if the factories have already been loaded
-    if (l_ptrEffectFactories)
+    if (g_ptrEffectFactories)
         return;
 
-    l_ptrEffectFactories = make_unique_psram<EffectFactories>();
+    g_ptrEffectFactories = make_unique_psram<EffectFactories>();
 
     // The EFFECT_SET_VERSION macro defines the "effect set version" for a project. This version
     // is persisted to JSON with the effect objects, and compared to it when the effects JSON file
@@ -643,101 +466,19 @@ void LoadEffectFactories()
     // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
     // add the list of effects in this table as shown for the various other existing configs.  You MUST have at least
     // one effect even if it's the Status effect.
-    assert(!l_ptrEffectFactories->IsEmpty());
+    assert(!g_ptrEffectFactories->IsEmpty());
 }
 
-static DRAM_ATTR size_t l_EffectsManagerJSONBufferSize = 0;
-static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
-static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
+extern DRAM_ATTR size_t g_EffectsManagerJSONBufferSize;
 
-#if USE_HUB75
-
-    void InitSplashEffectManager()
-    {
-        debugW("InitSplashEffectManager");
-
-        g_ptrSystem->SetupEffectManager(make_shared_psram<SplashLogoEffect>(), g_ptrSystem->Devices());
-    }
-
-#endif
-
-// Declare these here just so InitEffectsManager can refer to them. We define them a little further down
-
-std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
-void WriteCurrentEffectIndexFile();
-
-// InitEffectsManager
-//
-// Initializes the effect manager.  Reboots on failure, since it's not optional
-
-void InitEffectsManager()
-{
-    debugW("InitEffectsManager...");
-
-    LoadEffectFactories();
-
-    l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        [] { SaveToJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()); }
-    );
-    l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
-
-    std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
-    auto jsonObject = LoadEffectsJSONFile(pJsonDoc);
-
-    if (jsonObject)
-    {
-        debugI("Creating EffectManager from JSON config");
-
-        if (g_ptrSystem->HasEffectManager())
-            g_ptrSystem->EffectManager().DeserializeFromJSON(jsonObject.value());
-        else
-            g_ptrSystem->SetupEffectManager(jsonObject.value(), g_ptrSystem->Devices());
-    }
-    else
-    {
-        debugI("Creating EffectManager using default effects");
-
-        if (g_ptrSystem->HasEffectManager())
-            g_ptrSystem->EffectManager().LoadDefaultEffects();
-        else
-            g_ptrSystem->SetupEffectManager(g_ptrSystem->Devices());
-    }
-
-    if (false == g_ptrSystem->EffectManager().Init())
-        throw std::runtime_error("Could not initialize effect manager");
-
-    // We won't need the default factories anymore, so swipe them from memory
-    l_ptrEffectFactories->ClearDefaultFactories();
-}
-
-void SaveEffectManagerConfig()
-{
-    debugV("Saving effect manager config...");
-    // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-    g_ptrSystem->JSONWriter().FlagWriter(l_EffectsManagerJSONWriterIndex);
-}
-
-void RemoveEffectManagerConfig()
-{
-    RemoveJSONFile(EFFECTS_CONFIG_FILE);
-    // We take the liberty of also removing the file with the current effect config index
-    SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
-}
-
-void SaveCurrentEffectIndex()
-{
-    if (g_ptrSystem->DeviceConfig().RememberCurrentEffect())
-        // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-        g_ptrSystem->JSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
-}
-
+// Load the effects JSON file and check if it's appropriate to use
 std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
 {
     // If the effect set version is defined to 0, we ignore whatever is persisted
     if (EFFECT_SET_VERSION == 0)
         return {};
 
-    if (!LoadJSONFile(EFFECTS_CONFIG_FILE, l_EffectsManagerJSONBufferSize, pJsonDoc))
+    if (!LoadJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, pJsonDoc))
         return {};
 
     auto jsonObject = pJsonDoc->as<JsonObjectConst>();
@@ -759,151 +500,15 @@ std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJson
     return {};
 }
 
-void WriteCurrentEffectIndexFile()
-{
-    SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
-
-    File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE, FILE_WRITE);
-
-    if (!file)
-    {
-        debugE("Unable to open file %s for writing!", CURRENT_EFFECT_CONFIG_FILE);
-        return;
-    }
-
-    auto bytesWritten = file.print(g_ptrSystem->EffectManager().GetCurrentEffectIndex());
-    debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, bytesWritten);
-
-    file.flush();
-    file.close();
-
-    if (bytesWritten == 0)
-    {
-        debugE("Unable to write to file %s!", CURRENT_EFFECT_CONFIG_FILE);
-        SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
-    }
-}
-
-bool ReadCurrentEffectIndex(size_t& index)
-{
-    File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE);
-    bool readIndex = false;
-
-    if (file)
-    {
-        if (file.size() > 0)
-        {
-            debugI("Attempting to read file %s", CURRENT_EFFECT_CONFIG_FILE);
-
-            auto valueString = file.readString();
-
-            if (!valueString.isEmpty())
-            {
-                index = strtoul(valueString.c_str(), NULL, 10);
-                readIndex = true;
-            }
-        }
-
-        file.close();
-    }
-
-    return readIndex;
-}
-
-void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
-{
-    std::set<int> loadedEffectNumbers;
-
-    // Create effects from JSON objects, using the respective factories in g_EffectFactories
-    auto& jsonFactories = l_ptrEffectFactories->GetJSONFactories();
-
-    for (auto effectObject : effectsArray)
-    {
-        int effectNumber = effectObject[PTY_EFFECTNR];
-        auto factoryEntry = jsonFactories.find(effectNumber);
-
-        if (factoryEntry == jsonFactories.end())
-            continue;
-
-        auto pEffect = factoryEntry->second(effectObject);
-        if (pEffect)
-        {
-            if (effectObject[PTY_COREEFFECT].as<int>())
-                pEffect->MarkAsCoreEffect();
-
-            _vEffects.push_back(pEffect);
-            loadedEffectNumbers.insert(effectNumber);
-        }
-    }
-
-    // Now add missing effects from the default factory list
-    auto &defaultFactories = l_ptrEffectFactories->GetDefaultFactories();
-
-    // We iterate manually, so we can use where we are as the starting point for a later inner loop
-    for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
-    {
-        int effectNumber = iter->EffectNumber();
-
-        // If we've already loaded this effect (number) from JSON, we can move on to check the next one
-        if (loadedEffectNumbers.count(effectNumber))
-            continue;
-
-        // We found an effect (number) in the default list that we have not yet loaded from JSON.
-        //   So, we go through the rest of the default factory list to create and add to our effects
-        //   list all instances of this effect.
-        std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
-            {
-                if (numberedFactory.EffectNumber() == effectNumber)
-                    ProduceAndLoadDefaultEffect(numberedFactory);
-            }
-        );
-
-        // Register that we added this effect number, so we don't add the respective effects more than once
-        loadedEffectNumbers.insert(effectNumber);
-    }
-}
-
+// Load the default effect set. It's defined here because it uses EFFECT_SET_VERSION.
 void EffectManager::LoadDefaultEffects()
 {
     _effectSetVersion = EFFECT_SET_VERSION;
 
-    for (const auto &numberedFactory : l_ptrEffectFactories->GetDefaultFactories())
+    for (const auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
         ProduceAndLoadDefaultEffect(numberedFactory);
 
     SetInterval(DEFAULT_EFFECT_INTERVAL, true);
 
     construct(true);
-}
-
-std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
-{
-    if (index >= _vEffects.size())
-    {
-        debugW("Invalid index for CopyEffect");
-        return nullptr;
-    }
-
-    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-
-    auto& sourceEffect = _vEffects[index];
-
-    std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
-
-    SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
-        [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
-
-    auto jsonEffectFactories = l_ptrEffectFactories->GetJSONFactories();
-    auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
-
-    if (factoryEntry == jsonEffectFactories.end())
-        return nullptr;
-
-    auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
-
-    if (!copiedEffect)
-        return nullptr;
-
-    copiedEffect->SetEnabled(false);
-
-    return copiedEffect;
 }
