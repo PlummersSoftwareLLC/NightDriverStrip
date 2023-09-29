@@ -49,14 +49,12 @@
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
-// References to functions in other C files
+// Forward references to functions in our accompanying CPP file
 
 void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
-void SaveCurrentEffectIndex();
-bool ReadCurrentEffectIndex(size_t& index);
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
@@ -112,6 +110,9 @@ class  EffectManager : public IJSONSerializable
 
     // Implementation is in effects.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
+
+    void SaveCurrentEffectIndex();
+    bool ReadCurrentEffectIndex(size_t& index);
 
     void ClearEffects()
     {
@@ -185,13 +186,16 @@ public:
     //
     // If no effects are successfully loaded from JSON, it loads the default effects.
     //
-    // If the JSON object includes an "eef" array, the function attempts to load each effect's enabled state from it.
+    // If the JSON object includes an "eef" array, the function attempts to load each effect's enabled
+    // state from it.
     // If the index exceeds the "eef" array's size, the effect is enabled by default.
     //
-    // The function also sets the effect interval from the "ivl" field in the JSON object, defaulting to a pre-defined value if the field isn't present.
+    // The function also sets the effect interval from the "ivl" field in the JSON object, defaulting
+    // to a pre-defined value if the field isn't present.
     //
-    // If the JSON object includes a "cei" field, the function sets the current effect index to this value.
-    // If the value is greater than or equal to the number of effects, it defaults to the last effect in the vector.
+    // If the JSON object includes a "cei" field, the function sets the current effect index to this
+    // value. If the value is greater than or equal to the number of effects, it defaults to the last
+    // effect in the vector.
     //
     // Lastly, the function calls the construct() method, indicating successful deserialization.
 
@@ -273,6 +277,7 @@ public:
         // Set JSON format version to be able to detect and manage future incompatible structural updates
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
         jsonObject["ivl"] = _effectInterval;
+        jsonObject[PTY_PROJECT] = PROJECT_NAME;
         jsonObject[PTY_EFFECTSETVER] = _effectSetVersion;
 
         JsonArray effectsArray = jsonObject.createNestedArray("efs");
@@ -470,7 +475,7 @@ public:
     }
 
     // Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
-    //   use the AppendEffect() function for that. Implementation is in effects.cpp.
+    //   use the AppendEffect() function for that.
     std::shared_ptr<LEDStripEffect> CopyEffect(size_t index);
 
     // Adds an effect to the effect list and enables it. If an effect is added that is already in the effect list then the result

@@ -31,8 +31,13 @@
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+#include <ESPmDNS.h>
+#include <nvs_flash.h>                   // Non-volatile storage access
+#include <nvs.h>
 
 #include "globals.h"
+#include "ledviewer.h"                          // For the LEDViewer task and object
+#include "network.h"
 #include "systemcontainer.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
@@ -241,7 +246,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
                 if (waitForCredentials)
                 {
-                    debugW("Waiting for WiFi credentials to be set...");
+                    debugW("Waiting for WiFi credentials to be set. Pass %u of %u...", iPass + 1, cRetries);
                     iPass = 0;
                 }
                 else
@@ -438,6 +443,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
         default:
         {
+            debugV("ProcessIncomingData -- Unknown command: 0x%x", command16);
             return false;
         }
     }
@@ -483,14 +489,14 @@ bool ReadWiFiConfig()
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_password), szBuffer, &len);
         if (ESP_OK != err)
         {
-            debugE("Could not read WiFi_password from NVS");
+            debugE("Could not read WiFi_password for \"%s\" from NVS", WiFi_ssid.c_str());
             nvs_close(nvsROHandle);
             return false;
         }
         WiFi_password = szBuffer;
 
         // Don't check in changes that would display the password in logs, etc.
-        debugW("Retrieved SSID and Password from NVS: %s, %s", WiFi_ssid.c_str(), "********");
+        debugW("Retrieved SSID and Password from NVS: \"%s\", \"********\"", WiFi_ssid.c_str());
 
         nvs_close(nvsROHandle);
         return true;

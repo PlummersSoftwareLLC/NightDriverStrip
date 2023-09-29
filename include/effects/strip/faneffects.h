@@ -1010,7 +1010,7 @@ public:
         bReversed(jsonObject[PTY_REVERSED]),
         bMirrored(jsonObject[PTY_MIRORRED]),
         Order((PixelOrder)jsonObject[PTY_ORDER]),
-        bMulticolor(jsonObject[PTY_MULTICOLOR])
+        bMulticolor(jsonObject[PTY_MULTICOLOR] == 1)
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
@@ -1034,7 +1034,7 @@ public:
     jsonDoc[PTY_REVERSED] = bReversed;
     jsonDoc[PTY_MIRORRED] = bMirrored;
     jsonDoc[PTY_ORDER] = to_value(Order);
-    jsonDoc[PTY_MULTICOLOR] = bMulticolor;
+    jsonDoc[PTY_MULTICOLOR] = bMulticolor ? 1 : 0;
 
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
@@ -1104,7 +1104,7 @@ public:
       for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
       {
         CRGB color = GetBlackBodyHeatColorByte(abHeat[i * CellsPerLED]);
-        
+
         // If multicolor, we shift the hue based on the channel
         if (bMulticolor)
         {
