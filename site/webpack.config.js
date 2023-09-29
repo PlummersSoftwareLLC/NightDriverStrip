@@ -2,7 +2,6 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CompressionPlugin = require("compression-webpack-plugin");
-const { default: JsxParser } = require("react-jsx-parser");
 
 module.exports = (env, argv) => {
     let optimization = {} 
