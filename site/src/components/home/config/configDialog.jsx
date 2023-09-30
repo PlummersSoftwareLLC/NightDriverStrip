@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, GlobalStyles } from "@mui/material";
+import {useTheme} from "@mui/material";
 import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
 import parse from 'html-react-parser';
@@ -33,7 +34,16 @@ const settingType = {
 const ConfigInput = ({setting, updateData, updateError}) => {
     const [value, setValue] = useState(setting.value);
     const [error, setError] = useState(false);
-    const jsxDescription = parse(setting.description);
+    const theme = useTheme();
+    const jsxDescription = <>
+        <GlobalStyles styles={
+            { 
+                "a:link": { color: theme.a.link },         
+                "a:visited": { color: theme.a.visited }
+            }
+        } />
+        {parse(setting.description)}
+    </>;
     const [helper, setHelper] = useState(jsxDescription);
     const baseProps = {
         label: setting.friendlyName,
