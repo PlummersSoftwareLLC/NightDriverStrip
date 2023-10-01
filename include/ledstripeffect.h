@@ -71,7 +71,7 @@ class LEDStripEffect : public IJSONSerializable
     int    _effectNumber;
     String _friendlyName;
     bool   _enabled = true;
-    size_t _maximumEffectTime = SIZE_MAX;
+    size_t _maximumEffectTime = 0;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
