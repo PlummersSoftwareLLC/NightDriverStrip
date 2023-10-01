@@ -595,17 +595,22 @@ public:
     {
         // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
         uint timeUsedByCurrentEffect = GetTimeUsedByCurrentEffect();
-        uint interval = GetInterval();
+        uint interval = GetEffectiveInterval();
 
         return timeUsedByCurrentEffect > interval ? 0 : (interval - timeUsedByCurrentEffect);
     }
 
-    uint GetInterval() const
+    uint GetEffectiveInterval() const
     {
         auto& currentEffect = GetCurrentEffect();
         // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
         return min((IsIntervalEternal() ? std::numeric_limits<uint>::max() : _effectInterval),
                    (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
+    }
+
+    uint GetInterval() const
+    {
+        return _effectInterval;
     }
 
     bool IsIntervalEternal() const
@@ -620,7 +625,7 @@ public:
         if (IsIntervalEternal() && !GetCurrentEffect().HasMaximumEffectTime())
             return;
 
-        if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
+        if (GetTimeUsedByCurrentEffect() >= GetEffectiveInterval()) // See if it's time for a new effect yet
         {
             if (_clearTempEffectWhenExpired)
             {
