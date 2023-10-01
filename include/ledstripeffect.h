@@ -156,7 +156,7 @@ class LEDStripEffect : public IJSONSerializable
                 ACTUAL_NAME_OF(_maximumEffectTime),
                 "Maximum effect time",
                 "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-                "shorter than the default effect interval.",
+                "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
                 SettingSpec::SettingType::PositiveBigInteger
             );
             _baseSettingSpecs.emplace_back(
@@ -266,7 +266,7 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual bool HasMaximumEffectTime() const
     {
-        return MaximumEffectTime() != SIZE_MAX;
+        return MaximumEffectTime() != 0;
     }
 
     virtual bool ShouldShowTitle() const                    // True if the effect should show the title overlay
