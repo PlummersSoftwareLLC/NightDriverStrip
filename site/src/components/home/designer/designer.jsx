@@ -5,12 +5,12 @@ import Effect from './effect/effect';
 import designStyle from './style';
 import httpPrefix from '../../../espaddr';
 import PropTypes from 'prop-types';
-import { TimingContext } from '../../../context/effectContext';
+import { EffectsContext} from '../../../context/effectsContext';
 import { useMemo } from 'react';
 
 
 const DesignerPanel = ({ open, addNotification }) => {
-    const {activeEffect, remainingInterval, activeInterval, sync, effects} = useContext(TimingContext);
+    const {activeEffect, remainingInterval, activeInterval, sync, effects} = useContext(EffectsContext);
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(activeInterval);

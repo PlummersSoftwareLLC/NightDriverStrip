@@ -1,4 +1,4 @@
-import {useState, useMemo, useEffect} from 'react';
+import {useState, useMemo, useEffect, useContext} from 'react';
 import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material';
 import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import mainAppStyle from './style';
@@ -8,6 +8,7 @@ import StatsPanel from './statistics/stats';
 import DesignerPanel from './designer/designer';
 import PropTypes from 'prop-types';
 import ConfigDialog from './config/configDialog';
+import {EffectContext} from '../../context/effectsContext';
 
 const MainApp = () => {
     const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
@@ -31,6 +32,7 @@ const AppPannel = (props) => {
     const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
     const [settings, setSettings] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const {sync} = useContext(EffectContext);
     
     // save users state to storage so the page reloads where they left off. 
     useEffect(() => {
@@ -111,7 +113,7 @@ const AppPannel = (props) => {
             <StatsPanel open={stats} addNotification={addNotification}/> 
             <DesignerPanel open={designer} addNotification={addNotification}/>
         </Box>
-        {settings && <ConfigDialog heading={"Device Settings"} open={settings} setOpen={setSettings}></ConfigDialog>}
+        {settings && <ConfigDialog heading={"Device Settings"} open={settings} setOpen={setSettings} saveCallback={sync}></ConfigDialog>}
     </Box>;
 };
 

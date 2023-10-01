@@ -150,7 +150,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
  * @param {Function} props.setOpen callback to close the dialog.
  * @returns 
  */
-const ConfigDialog = ({heading, effectIndex, open, setOpen}) => {
+const ConfigDialog = ({heading, effectIndex, open, setOpen, saveCallback}) => {
 
     const settingsEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/settings${effectIndex !== undefined ? '/effect': ''}`;
     const [content, setContent] = useState(<h2>Configuration Loading...</h2>);
@@ -160,6 +160,9 @@ const ConfigDialog = ({heading, effectIndex, open, setOpen}) => {
 
     const handleSubmit = async () => {
         await fetch(settingsEndpoint, {method:"POST", body:new URLSearchParams({effectIndex, ...saveData})}).then(r => r.json());
+        if(saveCallback !== undefined) {
+            saveCallback();
+        }
         setOpen(false);
     };
     const handleSubmitAndReboot = async () => {
@@ -229,14 +232,16 @@ const ConfigDialog = ({heading, effectIndex, open, setOpen}) => {
 };
 
 ConfigDialog.defaultProps = {
-    effectIndex: undefined
+    effectIndex: undefined,
+    saveCallback: undefined
 };
 
 ConfigDialog.propTypes = {
     heading: PropTypes.string.isRequired,
     effectIndex: PropTypes.number,
     open: PropTypes.bool.isRequired,
-    setOpen: PropTypes.func.isRequired
+    setOpen: PropTypes.func.isRequired,
+    saveCallback: PropTypes.func
 };
 
 const settingProps = PropTypes.shape({

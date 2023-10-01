@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import httpPrefix from "../espaddr";
+import PropTypes from 'prop-types';
 
 const EffectsContext = createContext(undefined);
 const effectsEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/effects`;
@@ -39,4 +40,11 @@ const EffectsProvider = ({ children }) => {
     );
 };
 
-export {EffectsContext as TimingContext, EffectsProvider as TimingProvider};
+EffectsProvider.propTypes = {
+    children: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node
+    ]).isRequired
+};
+
+export {EffectsContext, EffectsProvider as TimingProvider};
