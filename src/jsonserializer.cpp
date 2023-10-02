@@ -27,8 +27,10 @@
 // History:     Apr-18-2023         Rbergen     Created
 //---------------------------------------------------------------------------
 
+#include <FS.h>
+#include <SPIFFS.h>
+
 #include "globals.h"
-#include "SPIFFS.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
 

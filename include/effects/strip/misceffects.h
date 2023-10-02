@@ -31,6 +31,9 @@
 
 #pragma once
 
+#if USE_HUB75
+#include "TJpg_Decoder.h"
+#endif
 #include "effects.h"
 
 // SimpleRainbowTestEffect

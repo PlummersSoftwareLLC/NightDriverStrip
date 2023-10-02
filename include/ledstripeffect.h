@@ -39,6 +39,9 @@
 #include <list>
 #include <stdlib.h>
 
+// This macro returns from the invoking function (which would usually be SetSetting())
+// if the settingName and propertyName passed to it match, and the "value" was thus
+// assigned to the "property".
 #define RETURN_IF_SET(settingName, propertyName, property, value) \
     if (SetIfSelected(settingName, propertyName, property, value)) \
         return true
@@ -65,6 +68,7 @@ class LEDStripEffect : public IJSONSerializable
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
 
+    // Macro that assigns a value to a property if two names match
     #define SET_IF_NAMES_MATCH(firstName, secondName, property, value)  if (firstName == secondName) \
     { \
         property = (value); \
@@ -125,11 +129,21 @@ class LEDStripEffect : public IJSONSerializable
         SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
     }
 
+    // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
+    // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecs
+    // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
+    // memory.
+    //
+    // Overrides of this virtual function in effects that publish additional settings should first
+    // call this implementation (i.e. LEDStripEffect::FillSettingSpecs()) and only continue if it returns
+    // true.
     virtual bool FillSettingSpecs()
     {
+        // Bail out if the SettingSpecs reference_wrapper vector is already filled
         if (_settingSpecs.size() > 0)
             return false;
 
+        // Lazily load the SettingSpec instances if they're not already there
         if (_baseSettingSpecs.size() == 0)
         {
             _baseSettingSpecs.emplace_back(
@@ -148,17 +162,18 @@ class LEDStripEffect : public IJSONSerializable
             _baseSettingSpecs.emplace_back(
                 "hasMaximumEffectTime",
                 "Has maximum effect time set",
-                "Indicates if the effect has a maximum effect time set (read only).",
+                "Indicates if the effect has a maximum effect time set.",
                 SettingSpec::SettingType::Boolean
-            );
+            ).Access = SettingSpec::SettingAccess::ReadOnly;
             _baseSettingSpecs.emplace_back(
                 "clearMaximumEffectTime",
                 "Clear maximum effect time",
-                "Clear maximum effect time (write only). Set to true to reset the maximum effect time to the default value.",
+                "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
                 SettingSpec::SettingType::Boolean
-            );
+            ).Access = SettingSpec::SettingAccess::WriteOnly;
         }
 
+        // Add reference_wrappers for the actual SettingSpecs instances to our effect instance's vector
         _settingSpecs.insert(_settingSpecs.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
 
         return true;
@@ -484,6 +499,8 @@ class LEDStripEffect : public IJSONSerializable
         return _coreEffect;
     }
 
+    // Lazily loads the SettingsSpecs for this effect if they haven't been loaded yet, and
+    // returns a vector with reference_wrappers to them.
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
         FillSettingSpecs();
@@ -491,6 +508,9 @@ class LEDStripEffect : public IJSONSerializable
         return _settingSpecs;
     }
 
+    // Serialize the "known effect settings" for this effect to JSON. In principle, there
+    // should be a SettingSpec instance returned by GetSettingSpecs() for every setting value
+    // that's serialized by this function.
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
     {
         StaticJsonDocument<128> jsonDoc;
@@ -502,6 +522,10 @@ class LEDStripEffect : public IJSONSerializable
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
+    // Changes the value for one "known" effect setting. All setting values are passed to this
+    // function are Strings; the conversion to the target type of a member variable that
+    // corresponds with a setting can be taken care of by using one of the SetIfSelected()
+    // overloads (either via RETURN_IF_SET or directly).
     virtual bool SetSetting(const String& name, const String& value)
     {
         RETURN_IF_SET(name, ACTUAL_NAME_OF(_friendlyName), _friendlyName, value);

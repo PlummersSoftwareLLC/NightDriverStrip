@@ -34,6 +34,8 @@
     #include "socketserver.h"
 #endif
 
+    extern DRAM_ATTR String WiFi_password;
+    extern DRAM_ATTR String WiFi_ssid;
 #if ENABLE_WIFI
     void processRemoteDebugCmd();
 
