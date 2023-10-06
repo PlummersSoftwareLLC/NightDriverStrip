@@ -70,7 +70,7 @@ class DeviceConfig : public IJSONSerializable
     bool    use24HourClock = false;
     bool    useCelsius = false;
     String  ntpServer = NTP_SERVER_DEFAULT;
-    bool    rememberCurrentEffect = false;
+    bool    rememberCurrentEffect = true;
     int     powerLimit = POWER_LIMIT_DEFAULT;
     uint8_t brightness = BRIGHTNESS_MAX;
 
