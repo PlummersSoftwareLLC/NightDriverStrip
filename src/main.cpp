@@ -166,7 +166,6 @@
 #include "systemcontainer.h"
 #include "values.h"
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
-#include "secrets.h"
 #include <TJpg_Decoder.h>
 
 #if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
