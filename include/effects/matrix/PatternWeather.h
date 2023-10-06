@@ -38,7 +38,6 @@
 #include <UrlEncode.h>
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
-#include <secrets.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>

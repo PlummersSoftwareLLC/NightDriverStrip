@@ -34,9 +34,12 @@
 #include <vector>
 #include <tuple>
 #include "jsonserializer.h"
+#include "secrets.h"
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
 #define NTP_SERVER_DEFAULT "0.pool.ntp.org"
+#define BRIGHTNESS_MIN uint8_t(10)
+#define BRIGHTNESS_MAX uint8_t(255)
 #define POWER_LIMIT_MIN 2000
 #define POWER_LIMIT_DEFAULT 4500
 
@@ -59,16 +62,17 @@
 class DeviceConfig : public IJSONSerializable
 {
     // Add variables for additional settings to this list
-    String location;
-    bool   locationIsZip = false;
-    String countryCode;
-    String timeZone;
-    String openWeatherApiKey;
-    bool   use24HourClock = false;
-    bool   useCelsius = false;
-    String ntpServer;
-    bool   rememberCurrentEffect = false;
-    int    powerLimit = POWER_LIMIT_DEFAULT;
+    String  location = cszLocation;
+    bool    locationIsZip = false;
+    String  countryCode = cszCountryCode;
+    String  timeZone = cszTimeZone;
+    String  openWeatherApiKey = cszOpenWeatherAPIKey;
+    bool    use24HourClock = false;
+    bool    useCelsius = false;
+    String  ntpServer = NTP_SERVER_DEFAULT;
+    bool    rememberCurrentEffect = false;
+    int     powerLimit = POWER_LIMIT_DEFAULT;
+    uint8_t brightness = BRIGHTNESS_MAX;
 
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
@@ -109,6 +113,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
+    static constexpr const char * BrightnessTag = NAME_OF(brightness);
 
     DeviceConfig();
 
@@ -131,6 +136,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[NTPServerTag] = ntpServer;
         jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
         jsonDoc[PowerLimitTag] = powerLimit;
+        jsonDoc[BrightnessTag] = brightness;
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
@@ -155,6 +161,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
         SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
         SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
+        SetIfPresentIn(jsonObject, brightness, BrightnessTag);
 
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
@@ -236,12 +243,23 @@ class DeviceConfig : public IJSONSerializable
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
+                NAME_OF(brightness),
+                "Brightness",
+                "Overall brightness the connected LEDs or matrix should be run at.",
+                SettingSpec::SettingType::Integer,
+                BRIGHTNESS_MIN,
+                BRIGHTNESS_MAX
+            ).HasValidation = true;
+
+            auto& powerLimitSpec = settingSpecs.emplace_back(
                 NAME_OF(powerLimit),
                 "Power limit",
                 "The maximum power in mW that the matrix attached to the board is allowed to use. As the previous sentence implies, this "
                 "setting only applies if a matrix is used.",
                 SettingSpec::SettingType::Integer
-            ).MinimumValue = POWER_LIMIT_MIN;
+            );
+            powerLimitSpec.MinimumValue = POWER_LIMIT_MIN;
+            powerLimitSpec.HasValidation = true;
 
             settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
         }
@@ -336,6 +354,34 @@ class DeviceConfig : public IJSONSerializable
     void SetRememberCurrentEffect(bool newRememberCurrentEffect)
     {
         SetAndSave(rememberCurrentEffect, newRememberCurrentEffect);
+    }
+
+    uint8_t GetBrightness() const
+    {
+        return brightness;
+    }
+
+    ValidateResponse ValidateBrightness(const String& newBrightness)
+    {
+        auto newNumericBrightness = newBrightness.toInt();
+
+        if (newNumericBrightness < BRIGHTNESS_MIN)
+            return { false, String("brightness is below minimum value of ") + BRIGHTNESS_MIN };
+
+        if (newNumericBrightness > BRIGHTNESS_MAX)
+            return { false, String("brightness is above maximum value of ") + BRIGHTNESS_MAX };
+
+        return { true, "" };
+    }
+
+    void SetBrightness(int newBrightness)
+    {
+        if (newBrightness < BRIGHTNESS_MIN)
+            SetAndSave(brightness, BRIGHTNESS_MIN);
+        else if (newBrightness > BRIGHTNESS_MAX)
+            SetAndSave(brightness, BRIGHTNESS_MAX);
+        else
+            SetAndSave(brightness, uint8_t(newBrightness));
     }
 
     int GetPowerLimit() const

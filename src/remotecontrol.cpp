@@ -34,6 +34,8 @@
 
 #include "systemcontainer.h"
 
+#define BRIGHTNESS_STEP     20
+
 void RemoteControl::handle()
 {
     decode_results results;
@@ -42,7 +44,7 @@ void RemoteControl::handle()
     if (!_IR_Receive.decode(&results))
         return;
 
-    uint result = results.value;    
+    uint result = results.value;
     _IR_Receive.resume();
 
     debugV("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
@@ -77,12 +79,13 @@ void RemoteControl::handle()
         effectManager.ClearRemoteColor();
         effectManager.SetInterval(0);
         effectManager.StartEffect();
-        g_Values.Brightness = 255;
+        g_ptrSystem->DeviceConfig().SetBrightness(BRIGHTNESS_MAX);
         return;
     }
     else if (IR_OFF == result)
     {
-        g_Values.Brightness = std::max(MIN_BRIGHTNESS, (int) g_Values.Brightness - BRIGHTNESS_STEP);
+        auto& deviceConfig = g_ptrSystem->DeviceConfig();
+        deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
         return;
     }
     else if (IR_BPLUS == result)

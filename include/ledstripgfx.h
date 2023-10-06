@@ -89,8 +89,6 @@ protected:
         #ifdef POWER_LIMIT_MW
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
         #endif
-
-        g_Values.Brightness = 255;
     }
 
 public:
