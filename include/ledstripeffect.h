@@ -54,6 +54,14 @@ class LEDStripEffect : public IJSONSerializable
 {
   private:
 
+    // This enum is a set of bit flags of known JSON data migrations that either have or have not (yet) been
+    // performed for a particular effect. "All" should always be a bitwise OR of all other flags in the enum.
+    enum class JSONMigrations : uint
+    {
+        MaximumEffectTime = 1,                  // next one = 2, one after that = 4, etc.
+        All               = MaximumEffectTime   // | next one | one after that | etc.
+    };
+
     bool   _coreEffect = false;
     static std::vector<SettingSpec, psram_allocator<SettingSpec>> _baseSettingSpecs;
 
@@ -63,7 +71,7 @@ class LEDStripEffect : public IJSONSerializable
     int    _effectNumber;
     String _friendlyName;
     bool   _enabled = true;
-    size_t _maximumEffectTime = SIZE_MAX;
+    size_t _maximumEffectTime = 0;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
@@ -156,7 +164,7 @@ class LEDStripEffect : public IJSONSerializable
                 ACTUAL_NAME_OF(_maximumEffectTime),
                 "Maximum effect time",
                 "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-                "shorter than the default effect interval.",
+                "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
                 SettingSpec::SettingType::PositiveBigInteger
             );
             _baseSettingSpecs.emplace_back(
@@ -196,6 +204,15 @@ class LEDStripEffect : public IJSONSerializable
             _enabled = jsonObject["es"].as<int>() == 1;
         if (jsonObject.containsKey("mt"))
             _maximumEffectTime = jsonObject["mt"];
+
+        // Pull the migrations bitmap from the JSON object if it has one, otherwise default to "nothing set"
+        uint performedMigrations = 0;
+        if (jsonObject.containsKey("mi"))
+            performedMigrations = jsonObject["mi"];
+
+        // If we haven't migrated the "has no maximum effect time" yet, do so now
+        if (!(performedMigrations & to_value(JSONMigrations::MaximumEffectTime)) && _maximumEffectTime == UINT_MAX)
+            _maximumEffectTime = 0;
     }
 
     virtual ~LEDStripEffect()
@@ -266,7 +283,7 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual bool HasMaximumEffectTime() const
     {
-        return MaximumEffectTime() != SIZE_MAX;
+        return MaximumEffectTime() != 0;
     }
 
     virtual bool ShouldShowTitle() const                    // True if the effect should show the title overlay
@@ -470,6 +487,11 @@ class LEDStripEffect : public IJSONSerializable
         jsonDoc[PTY_EFFECTNR]       = _effectNumber;
         jsonDoc["fn"]               = _friendlyName;
         jsonDoc["es"]               = _enabled ? 1 : 0;
+
+        // Migrations are done when the effect is constructed from JSON, so by definition all known
+        // migrations have been performed by the time we get here.
+        jsonDoc["mi"]               = to_value(JSONMigrations::All);
+
         // Only add the max effect time and core effect flag if they're not the default, to save space
         if (HasMaximumEffectTime())
             jsonDoc["mt"]           = _maximumEffectTime;
@@ -535,7 +557,7 @@ class LEDStripEffect : public IJSONSerializable
         if (SetIfSelected(name, "clearMaximumEffectTime", clearMaximumEffectTime, value))
         {
             if (clearMaximumEffectTime)
-                _maximumEffectTime = SIZE_MAX;
+                _maximumEffectTime = 0;
 
             return true;
         }
