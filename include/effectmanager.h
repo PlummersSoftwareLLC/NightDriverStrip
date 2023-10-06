@@ -345,10 +345,11 @@ public:
                     #if SPECTRUM
                         effect = GetSpectrumAnalyzer(color, oldColor);
                     #else
-                        effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                        effect = make_shared_psram<ColorFillEffect>(color, 1);
                     #endif
                 #else
-                    effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = make_shared_psram<ColorFillEffect>(color, 1);
+                
                 #endif
 
             if (effect->Init(_gfx))
