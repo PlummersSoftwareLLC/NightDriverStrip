@@ -237,27 +237,28 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // Please ensure you supply sufficent power to your strip, as even the DEMO of 144 LEDs, if set
     // to white, would overload a USB port.
     #ifndef PROJECT_NAME
-    #define PROJECT_NAME            "Demo"
+    #define PROJECT_NAME            "Joe Devkit"
     #endif
 
-    #define MATRIX_WIDTH            144
+    #define MATRIX_WIDTH            100
     #define MATRIX_HEIGHT           1
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
     #define ENABLE_AUDIO            0
 
-    #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
+    //#define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
+    #define POWER_LIMIT_MW       12 * 3 * 1000   // 3 amp supply at 5 volts assumed
 
     // Once you have a working project, selectively enable various additional features by setting
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
     #ifndef ENABLE_WIFI
-        #define ENABLE_WIFI             0   // Connect to WiFi
+        #define ENABLE_WIFI             1   // Connect to WiFi
     #endif
 
-    #define INCOMING_WIFI_ENABLED   0   // Accepting incoming color data and commands
-    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_NTP              0   // Set the clock from the web
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
     #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
@@ -274,8 +275,109 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
 
     #ifndef ENABLE_WEBSERVER
-        #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
+        #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #endif
+
+    #define ENABLE_REMOTE           1   // IR Remote 
+    #define IR_REMOTE_PIN   48
+
+#elif CROSS
+
+    // Wall Mounted Cross. 3 sets of 8 leds and one set of 15
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Cross"
+    #endif
+
+    #define NUM_RINGS               4
+    #define RING_SIZE_0             15
+    #define RING_SIZE_1             8
+    #define RING_SIZE_2             8
+    #define RING_SIZE_3             8
+    #define MATRIX_WIDTH            39
+    #define MATRIX_HEIGHT           1
+    #define NUM_LEDS                (RING_SIZE_0 + RING_SIZE_1 + RING_SIZE_2 + RING_SIZE_3)
+    #define NUM_CHANNELS            1
+    #define ENABLE_AUDIO            0
+
+    #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
+
+    // Once you have a working project, selectively enable various additional features by setting
+    // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
+
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              1   // Accept over the air flash updates
+
+    #if M5STICKC
+        #define LED_PIN0 33
+    #elif M5STICKCPLUS || M5STACKCORE2
+        #define LED_PIN0 32
+    #else
+        #define LED_PIN0 5
+    #endif
+
+    // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
+    // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
+    // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
+    // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
+
+    #ifndef ENABLE_WEBSERVER
+        #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #endif
+
+    #define ENABLE_REMOTE           1   // IR Remote 
+    #define IR_REMOTE_PIN   48
+
+#elif CROSS
+
+    // Wall Mounted Cross. 3 sets of 8 leds and one set of 15
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Cross"
+    #endif
+
+    #define NUM_RINGS               4
+    #define RING_SIZE_0             15
+    #define RING_SIZE_1             8
+    #define RING_SIZE_2             8
+    #define RING_SIZE_3             8
+    #define MATRIX_WIDTH            39
+    #define MATRIX_HEIGHT           1
+    #define NUM_LEDS                (RING_SIZE_0 + RING_SIZE_1 + RING_SIZE_2 + RING_SIZE_3)
+    #define NUM_CHANNELS            1
+    #define ENABLE_AUDIO            0
+
+    #define POWER_LIMIT_MW       5000   // 1 amp supply at 5 volts assumed
+
+    // Once you have a working project, selectively enable various additional features by setting
+    // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
+
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define TIME_BEFORE_LOCAL       0   // How many seconds before the lamp times out and shows local contexnt
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              1   // Accept over the air flash updates
+
+    #if M5STICKC
+        #define LED_PIN0 33
+    #elif M5STICKCPLUS || M5STACKCORE2
+        #define LED_PIN0 32
+    #else
+        #define LED_PIN0 5
+    #endif
+
+    // The webserver serves files from its SPIFFS filesystem, such as index.html, and those files must be
+    // uploaded to SPIFFS with the "Upload Filesystem Image" command before it can work.  When running
+    // you should be able to see/select the list of effects by visiting the chip's IP in a browser.  You can
+    // get the chip's IP by watching the serial output or checking your router for the DHCP given to 'LEDWifi'
+
+    #define ENABLE_WEBSERVER        1                                       // Turn on the internal webserver
+    #define ENABLE_REMOTE           1   // IR Remote 
+    #define IR_REMOTE_PIN           48
+
 
 #elif LANTERN
 
@@ -1556,3 +1658,22 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
     #include <TFT_eSPI.h>
     #include <SPI.h>
 #endif
+
+// Conditional includes depending on which project is being build
+
+#if USE_HUB75
+    #include "effects/matrix/PatternSubscribers.h"  // For subscriber count effect
+#endif
+
+#if ENABLE_WIFI && ENABLE_WEBSERVER
+    #include "webserver.h"
+#endif
+
+#if ENABLE_REMOTE
+    
+    //This is disabled to debug nullptr failure
+    #include "userremote.h" //Load the user remote information before we laod the IR system
+    
+    #include "remotecontrol.h"
+#endif
+
