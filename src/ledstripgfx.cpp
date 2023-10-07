@@ -35,7 +35,7 @@
 void LEDStripGFX::PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixelsDrawn)
 {
     auto pixelsDrawn = wifiPixelsDrawn > 0 ? wifiPixelsDrawn : localPixelsDrawn;
-
+    
     // If we drew no pixels, there's nothing to post process
     if (pixelsDrawn == 0)
     {
@@ -53,9 +53,13 @@ void LEDStripGFX::PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixel
 
     auto& effectManager = g_ptrSystem->EffectManager();
 
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < NUM_CHANNELS; i++) {
         FastLED[i].setLeds(effectManager.g(i)->leds, pixelsDrawn);
-    FastLED.show(g_Values.Fader);
+        for (int j = 0; j < FastLED[i].size(); j++){
+            FastLED[i][j].fadeLightBy(255-g_ptrSystem->DeviceConfig().GetBrightness());
+        }
+    }
+    FastLED.show(g_Values.Fader); //Shows the pixels
 
     g_Values.FPS = FastLED.getFPS();
     g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(g_Values.Brightness, POWER_LIMIT_MW) / 255;
