@@ -151,35 +151,17 @@ void LoadEffectFactories()
         return;
 
     g_ptrEffectFactories = make_unique_psram<EffectFactories>();
-
-    // The EFFECT_SET_VERSION macro defines the "effect set version" for a project. This version
-    // is persisted to JSON with the effect objects, and compared to it when the effects JSON file
-    // is deserialized.
-    //
-    // If the persisted version and the one defined below don't match, the effects JSON is ignored
-    // and the default set is loaded. This means that a "reset" of a project's effect set on the
-    // boards running the project can be forced by bumping up the effect set version for that project.
-    // As the user may have customized their effect set config or order, this should be done with
-    // some hesitation - and increasingly so when the web UI starts offering more facilities for
-    // customizing one's effect setup.
-    //
-    // The effect set version defaults to 1, so a project only needs to define it if it's different
-    // than that; refer to MESMERIZER as an example. If the effect set version is defined to 0, the
-    // default set will be loaded at every startup.
-    //
-    // The following line can be uncommented to override the per-project effect set version.
-
-    // #define EFFECT_SET_VERSION   0
-
-    #if __has_include ("custom_effects.h")
-
-      #include "custom_effects.h"
-
+    
+    //ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 6, 2);
     // Fill effect factories
-    #elif DEMO
-
+    #if DEMO
+        ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, false);
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 6, 2);
-
+        ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Medium Fire", NUM_LEDS, 1, 5, 100, 3, 4, true, false);
+    # elif CROSS
+        ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, false);
+        ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 6, 2);
+        
     #elif LASERLINE
 
         ADD_EFFECT(EFFECT_STRIP_LASER_LINE, LaserLineEffect, 500, 20);
@@ -342,17 +324,14 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_STRIP_TAPE_REEL, TapeReelEffect, "TapeReelEffect");
 
     #elif CUBE
-
         // Simple rainbow pallette
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, rainbowPalette, 256 / 16, .2, 0);
-
         ADD_EFFECT(EFFECT_STRIP_SPARKLY_SPINNING_MUSIC, SparklySpinningMusicEffect, "SparklySpinningMusical", RainbowColors_p);
         ADD_EFFECT(EFFECT_STRIP_COLOR_BEAT_OVER_RED, ColorBeatOverRed, "ColorBeatOnRedBkgnd");
         ADD_EFFECT(EFFECT_STRIP_SIMPLE_INSULATOR_BEAT2, SimpleInsulatorBeatEffect2, "SimpleInsulatorColorBeat");
         ADD_STARRY_NIGHT_EFFECT(MusicStar, "Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0); // Rainbow Music Star
 
     #elif BELT
-
         // Yes, I made a sparkly LED belt and wore it to a party.  Batteries toO!
         ADD_EFFECT(EFFECT_TWINKLE, TwinkleEffect, NUM_LEDS / 4, 10);
 
@@ -361,7 +340,6 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_STRIP_MOLTEN_GLASS_ON_VIOLET_BKGND, MoltenGlassOnVioletBkgnd, "MoltenGlass", RainbowColors_p);
 
     #elif SPECTRUM
-
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", NUM_BANDS, spectrumAltColors, 0, 0, 0.5,  1.5);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24, spectrumAltColors, 0, 0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24, spectrumAltColors, 0, 0, 0.25,  1.25);
