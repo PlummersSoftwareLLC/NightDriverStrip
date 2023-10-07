@@ -203,7 +203,8 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
         j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
         j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
-        j["effectInterval"]        = effectManager.GetInterval();
+        j["eternalInterval"]       = effectManager.IsIntervalEternal();
+        j["effectInterval"]        = effectManager.GetEffectiveInterval();
 
         auto effectsList = effectManager.EffectsList();
 

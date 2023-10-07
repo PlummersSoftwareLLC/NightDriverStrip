@@ -596,25 +596,37 @@ public:
     {
         // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
         uint timeUsedByCurrentEffect = GetTimeUsedByCurrentEffect();
-        uint interval = GetInterval();
+        uint interval = GetEffectiveInterval();
 
         return timeUsedByCurrentEffect > interval ? 0 : (interval - timeUsedByCurrentEffect);
     }
 
+    uint GetEffectiveInterval() const
+    {
+        auto& currentEffect = GetCurrentEffect();
+        // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
+        return min((IsIntervalEternal() ? std::numeric_limits<uint>::max() : _effectInterval),
+                   (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
+    }
+
     uint GetInterval() const
     {
-        // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
-        return min((_effectInterval == 0 ? std::numeric_limits<uint>::max() : _effectInterval), GetCurrentEffect().MaximumEffectTime());
+        return _effectInterval;
+    }
+
+    bool IsIntervalEternal() const
+    {
+        return _effectInterval == 0;
     }
 
     void CheckEffectTimerExpired()
     {
         // If interval is zero, the current effect never expires unless it thas a max effect time set
 
-        if (_effectInterval == 0 && !GetCurrentEffect().HasMaximumEffectTime())
+        if (IsIntervalEternal() && !GetCurrentEffect().HasMaximumEffectTime())
             return;
 
-        if (GetTimeUsedByCurrentEffect() >= GetInterval()) // See if it's time for a new effect yet
+        if (GetTimeUsedByCurrentEffect() >= GetEffectiveInterval()) // See if it's time for a new effect yet
         {
             if (_clearTempEffectWhenExpired)
             {
@@ -720,7 +732,7 @@ public:
             return;
         }
 
-        if (_effectInterval == 0)
+        if (IsIntervalEternal())
         {
             g_Values.Fader = 255;
             return;
