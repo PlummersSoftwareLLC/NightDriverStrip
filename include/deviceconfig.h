@@ -33,6 +33,7 @@
 #include <memory>
 #include <vector>
 #include <tuple>
+#include <algorithm>
 #include "jsonserializer.h"
 #include "secrets.h"
 
@@ -376,12 +377,7 @@ class DeviceConfig : public IJSONSerializable
 
     void SetBrightness(int newBrightness)
     {
-        if (newBrightness < BRIGHTNESS_MIN)
-            SetAndSave(brightness, BRIGHTNESS_MIN);
-        else if (newBrightness > BRIGHTNESS_MAX)
-            SetAndSave(brightness, BRIGHTNESS_MAX);
-        else
-            SetAndSave(brightness, uint8_t(newBrightness));
+        SetAndSave(brightness, std::clamp(uint8_t(newBrightness), BRIGHTNESS_MIN, BRIGHTNESS_MAX));
     }
 
     int GetPowerLimit() const
