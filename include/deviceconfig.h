@@ -377,7 +377,7 @@ class DeviceConfig : public IJSONSerializable
 
     void SetBrightness(int newBrightness)
     {
-        SetAndSave(brightness, std::clamp(uint8_t(newBrightness), BRIGHTNESS_MIN, BRIGHTNESS_MAX));
+        SetAndSave(brightness, uint8_t(std::clamp(newBrightness, int(BRIGHTNESS_MIN), int(BRIGHTNESS_MAX))));
     }
 
     int GetPowerLimit() const
