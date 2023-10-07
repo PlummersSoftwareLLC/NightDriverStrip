@@ -110,27 +110,27 @@ void RemoteControl::handle()
         auto &myEffect = effectManager.GetCurrentEffect();
 
         switch (thisButton.buttonAction){
-            case ButtonActions::BRIGHTNESSUP:
+            case ButtonActions::BRIGHTNESS_UP:
                deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() + BRIGHTNESS_STEP);
 
             break;
-            case ButtonActions::BRIGHTNESSDOWN:
+            case ButtonActions::BRIGHTNESS_DOWN:
                 deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
                 debugI("After brightness down global brightness is  %i\n",g_Values.Brightness);
 
             break;
-            case ButtonActions::POWERON:
+            case ButtonActions::POWER_ON:
                 effectManager.ClearRemoteColor();
                 effectManager.SetInterval(0);
                 effectManager.SetGlobalColor(lastManualColor);
                 effectManager.StartEffect();
             break;
-            case ButtonActions::POWEROFF:
+            case ButtonActions::POWER_OFF:
                 //effectManager.SetGlobalColor(CRGB(0,0,0));
                 //g_Values.Brightness = std::max(0, (int) g_Values.Brightness - BRIGHTNESS_STEP);
                 effectManager.ClearRemoteColor();
             break;
-            case ButtonActions::FILLCOLOR:
+            case ButtonActions::FILL_COLOR:
                 lastManualColor = hexToCrgb(thisButton.actionArgs);
                 lastManualColor.maximizeBrightness(myRemoteController.currentBrightness);
                 effectManager.SetGlobalColor(lastManualColor); 
