@@ -27,7 +27,6 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "secrets.h"                          // copy include/secrets.example.h to include/secrets.h
 #include "types.h"
 
 #if INCOMING_WIFI_ENABLED
