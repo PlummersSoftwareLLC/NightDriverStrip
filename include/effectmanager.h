@@ -329,6 +329,18 @@ public:
 
         CRGB oldColor = lastManualColor;
         lastManualColor = color;
+        
+        //This block shifts the hue of the received color to be used in the audio reactive monochromatic fire effect.
+        //Becaue of scope errors by the compiler, the color conversion happens here.
+        CHSV colorVarientHSV = rgb2hsv_approximate(color);
+        if (colorVarientHSV.hue > 244 ) {
+            colorVarientHSV.hue -= 10;
+        } else {
+            colorVarientHSV.hue += 10;
+        }
+        CRGB colorVarientRGB = color;
+        hsv2rgb_spectrum(colorVarientHSV,colorVarientRGB);
+        //End of color shift block
 
         #if (USE_HUB75)
                 auto pMatrix = g();
@@ -342,10 +354,11 @@ public:
             else
 
                 #if ENABLE_AUDIO
+                    
                     #if SPECTRUM
                         effect = GetSpectrumAnalyzer(color, oldColor);
                     #else
-                        effect = make_shared_psram<ColorFillEffect>(color, 1);
+                        effect = make_shared_psram<MusicalPaletteFire>("Custom Color Fire", CRGBPalette16(CRGB::Black, color, colorVarientRGB, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                     #endif
                 #else
                     effect = make_shared_psram<ColorFillEffect>(color, 1);
