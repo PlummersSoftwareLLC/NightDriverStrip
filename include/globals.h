@@ -1075,9 +1075,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
 #define TIME_CHECK_INTERVAL_MS (1000 * 60 * 5)   // How often in ms we resync the clock from NTP
-#define MIN_BRIGHTNESS  10
-#define MAX_BRIGHTNESS  255
-#define BRIGHTNESS_STEP 20          // Amount to step brightness on each remote control repeat
 #define MAX_RINGS       5
 
 

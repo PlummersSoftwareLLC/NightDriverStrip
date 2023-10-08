@@ -34,6 +34,7 @@
 #include "globals.h"
 #include "types.h"
 
+// Struct with global values that are not persisted as settings - those reside in DeviceConfig
 struct Values
 {
     CAppTime AppTime;                                                       // Keeps track of frame times
@@ -42,7 +43,6 @@ struct Values
     uint32_t Watts;
     uint32_t FPS = 0;                                                       // Our global framerate
     bool UpdateStarted = false;                                             // Has an OTA update started?
-    uint8_t Brightness = 255;
     uint8_t Fader = 255;
 #if USE_HUB75
     int MatrixPowerMilliwatts = 0;                                         // Matrix power draw in mw
