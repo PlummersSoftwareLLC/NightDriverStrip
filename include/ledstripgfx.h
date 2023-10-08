@@ -89,8 +89,6 @@ protected:
         #ifdef POWER_LIMIT_MW
             set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
         #endif
-
-        g_Values.Brightness = 255;
     }
 
 public:
@@ -124,13 +122,6 @@ public:
 
         AddLEDsToFastLED(devices);
 
-        #if ATOMLIGHT                                                   // BUGBUG Why input?  Shouldn't they be output?
-            pinMode(4, INPUT);
-            pinMode(12, INPUT);
-            pinMode(13, INPUT);
-            pinMode(14, INPUT);
-            pinMode(15, INPUT);
-        #endif
     }
 
     // PostProcessFrame
