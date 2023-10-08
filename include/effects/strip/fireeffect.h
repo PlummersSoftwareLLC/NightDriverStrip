@@ -297,7 +297,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        bool mirrored = false)
         : PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           BeatEffectBase(1.00, 0.01)
-            
+
 
     {
         construct();
@@ -306,7 +306,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
         : PaletteFlameEffect(jsonObject),
           BeatEffectBase(1.00, 0.01)
-          
+
     {
         construct();
     }
@@ -521,7 +521,7 @@ public:
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<192> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
