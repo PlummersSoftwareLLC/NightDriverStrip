@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {IconButton, Icon, Typography, Box, Link, ClickAwayListener, TextField} from '@mui/material'
+import {IconButton, Icon, Typography, Box, Link, ClickAwayListener, TextField} from '@mui/material';
 import Countdown from './countdown/countdown';
 import Effect from './effect/effect';
 import designStyle from './style';
@@ -7,8 +7,7 @@ import httpPrefix from '../../../espaddr';
 import PropTypes from 'prop-types';
 
 
-const DesignerPanel = props => {
-    const { open, addNotification } = props;
+const DesignerPanel = ({ open, addNotification }) => {
     const [ effects, setEffects ] = useState(undefined);
     const [ abortControler, setAbortControler ] = useState(undefined);
     const [ nextRefreshDate, setNextRefreshDate] = useState(undefined);
@@ -37,7 +36,7 @@ const DesignerPanel = props => {
             return () => {
                 abortControler && abortControler.abort();
                 clearTimeout(timer);
-            }
+            };
         }
     },[open,nextRefreshDate]);
 
@@ -47,7 +46,7 @@ const DesignerPanel = props => {
         new Promise((resolve,reject) =>
             fetch(url,options)
                 .then(resolve)
-                .catch(err => {addNotification("Error",operation,err);reject(err)}));
+                .catch(err => {addNotification("Error",operation,err);reject(err);}));
 
     const navigateTo = (idx)=>{
         return new Promise((resolve,reject)=>{
@@ -145,12 +144,12 @@ const DesignerPanel = props => {
                 selected={idx === effects.currentEffect}
                 millisecondsRemaining={effects.millisecondsRemaining}/>)}
         </Box>
-    </Box>
+    </Box>;
 };
 
 DesignerPanel.propTypes = {
     open: PropTypes.bool.isRequired, 
     addNotification: PropTypes.func.isRequired
-}
+};
 
 export default DesignerPanel;

@@ -401,6 +401,20 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 jsonDoc["minimumValue"] = spec.MinimumValue.value();
             if (spec.MaximumValue.has_value())
                 jsonDoc["maximumValue"] = spec.MaximumValue.value();
+            switch (spec.Access)
+            {
+                case SettingSpec::SettingAccess::ReadOnly:
+                    jsonDoc["readOnly"] = true;
+                    break;
+
+                case SettingSpec::SettingAccess::WriteOnly:
+                    jsonDoc["writeOnly"] = true;
+                    break;
+
+                default:
+                    // Default is read/write, so we don't need to specify that
+                    break;
+            }
 
             if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
             {

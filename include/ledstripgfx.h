@@ -122,13 +122,6 @@ public:
 
         AddLEDsToFastLED(devices);
 
-        #if ATOMLIGHT                                                   // BUGBUG Why input?  Shouldn't they be output?
-            pinMode(4, INPUT);
-            pinMode(12, INPUT);
-            pinMode(13, INPUT);
-            pinMode(14, INPUT);
-            pinMode(15, INPUT);
-        #endif
     }
 
     // PostProcessFrame

@@ -205,12 +205,16 @@ class DeviceConfig : public IJSONSerializable
                 "code for the country that the device is located in.",
                 SettingSpec::SettingType::String
             );
-            settingSpecs.emplace_back(
+
+            auto weatherKeySpec = settingSpecs.emplace_back(
                 NAME_OF(openWeatherApiKey),
                 "Open Weather API key",
-                "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a> (write only).",
+                "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
                 SettingSpec::SettingType::String
-            ).HasValidation = true;
+            );
+            weatherKeySpec.HasValidation = true;
+            weatherKeySpec.Access = SettingSpec::SettingAccess::WriteOnly;
+
             settingSpecs.emplace_back(
                 NAME_OF(timeZone),
                 "Time zone",
