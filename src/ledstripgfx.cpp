@@ -53,9 +53,12 @@ void LEDStripGFX::PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixel
 
     auto& effectManager = g_ptrSystem->EffectManager();
 
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for (int i = 0; i < NUM_CHANNELS; i++) 
+    {
         FastLED[i].setLeds(effectManager.g(i)->leds, pixelsDrawn);
-    FastLED.show(g_Values.Fader);
+        fadeLightBy(FastLED[i].leds(), FastLED[i].size(), 255 - g_ptrSystem->DeviceConfig().GetBrightness());
+    }
+    FastLED.show(g_Values.Fader); //Shows the pixels
 
     g_Values.FPS = FastLED.getFPS();
     g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(g_ptrSystem->DeviceConfig().GetBrightness(), POWER_LIMIT_MW) / 255;
