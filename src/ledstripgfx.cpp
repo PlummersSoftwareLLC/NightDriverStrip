@@ -53,11 +53,10 @@ void LEDStripGFX::PostProcessFrame(uint16_t wifiPixelsDrawn, uint16_t localPixel
 
     auto& effectManager = g_ptrSystem->EffectManager();
 
-    for (int i = 0; i < NUM_CHANNELS; i++) {
+    for (int i = 0; i < NUM_CHANNELS; i++) 
+    {
         FastLED[i].setLeds(effectManager.g(i)->leds, pixelsDrawn);
-        for (int j = 0; j < FastLED[i].size(); j++){
-            FastLED[i][j].fadeLightBy(255-g_ptrSystem->DeviceConfig().GetBrightness());
-        }
+        fadeLightBy(FastLED[i].leds(), FastLED[i].size(),255-g_ptrSystem->DeviceConfig().GetBrightness());
     }
     FastLED.show(g_Values.Fader); //Shows the pixels
 
