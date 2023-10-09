@@ -160,7 +160,7 @@ protected:
   public:
 
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect(EFFECT_STRIP_RAINBOW_FILL, "RainobwFill Rainbow"),
+      : LEDStripEffect(EFFECT_STRIP_RAINBOW_FILL, "RainbowFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
