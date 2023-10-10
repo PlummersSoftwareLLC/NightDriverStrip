@@ -482,7 +482,7 @@ class LEDStripEffect : public IJSONSerializable
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<192> jsonDoc;
 
         jsonDoc[PTY_EFFECTNR]       = _effectNumber;
         jsonDoc["fn"]               = _friendlyName;
@@ -535,7 +535,7 @@ class LEDStripEffect : public IJSONSerializable
     // that's serialized by this function.
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<192> jsonDoc;
 
         jsonDoc[ACTUAL_NAME_OF(_friendlyName)] = _friendlyName;
         jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;
