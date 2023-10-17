@@ -207,13 +207,10 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         j["eternalInterval"]       = effectManager.IsIntervalEternal();
         j["effectInterval"]        = effectManager.GetEffectiveInterval();
 
-        auto effectsList = effectManager.EffectsList();
-
-        for (int i = 0; i < effectManager.EffectCount(); i++)
+        for (auto effect : effectManager.EffectsList())
         {
             StaticJsonDocument<256> effectDoc;
 
-            auto effect = effectsList[i];
             effectDoc["name"]    = effect->FriendlyName();
             effectDoc["enabled"] = effect->IsEnabled();
             effectDoc["core"]    = effect->IsCoreEffect();
