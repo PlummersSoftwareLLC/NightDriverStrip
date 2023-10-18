@@ -73,6 +73,9 @@ class LEDStripEffect : public IJSONSerializable
     bool   _enabled = true;
     size_t _maximumEffectTime = 0;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
+
+    // JSON document size used for serializations of this class. Should probably be made bigger for effects (i.e. subclasses)
+    //   that serialize additional properties.
     static constexpr int _jsonSize = 192;
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
