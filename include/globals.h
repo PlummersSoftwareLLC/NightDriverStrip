@@ -330,7 +330,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_2 39
 
     #define NUM_INFO_PAGES          2
-    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spctrum analyzer on one of the info pages (slower)
 
 #elif TREESET
 
@@ -432,7 +431,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_PIN0 32
 
     #define NUM_INFO_PAGES          2
-    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
 
 #elif MESMERIZER
 
@@ -516,8 +514,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define POWER_LIMIT_MW  (1 * 5 * 1000)         // Expects at least a 5V, 1A supply
 
     #define TOGGLE_BUTTON_1         35
-    #define NUM_INFO_PAGES          4
-    #define ONSCREEN_SPECTRUM_PAGE  2   // Show a little spectrum analyzer on one of the info pages (slower)
+    #define NUM_INFO_PAGES          2
 
 #elif XMASTREES
 
@@ -855,7 +852,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if !(SPECTRUM_WROVER_KIT)
         #define NUM_INFO_PAGES          2
-        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
     #endif
 
 #elif FANSET
@@ -907,7 +903,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if !(SPECTRUM_WROVER_KIT)
         #define NUM_INFO_PAGES          2
-        #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
     #endif
 
 
@@ -981,9 +976,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_2 39
 
     #define NUM_INFO_PAGES          2
-    #define ONSCREEN_SPECTRUM_PAGE  1   // Show a little spectrum analyzer on one of the info pages (slower)
-
-
 
 #elif CUBE
 
