@@ -127,7 +127,7 @@ class DeviceConfig : public IJSONSerializable
 
     bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
     {
-        AllocatedJsonDocument jsonDoc(_jsonSize));
+        AllocatedJsonDocument jsonDoc(_jsonSize);
 
         // Add serialization logic for additionl settings to this code
         jsonDoc[LocationTag] = location;
