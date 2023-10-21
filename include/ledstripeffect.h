@@ -379,8 +379,7 @@ class LEDStripEffect : public IJSONSerializable
 
     static CRGB ColorFraction(const CRGB colorIn, float fraction)
     {
-        fraction = min(1.0f, fraction);
-        fraction = max(0.0f, fraction);
+        fraction = std::clamp(fraction, 0.0f, 1.0f);
         return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
     }
 
