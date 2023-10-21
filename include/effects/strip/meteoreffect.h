@@ -191,6 +191,8 @@ class MeteorEffect : public LEDStripEffect
         jsonDoc[PTY_MINSPEED] = _meteorSpeedMin;
         jsonDoc[PTY_MAXSPEED] = _meteorSpeedMax;
 
+        assert(!jsonDoc.overflowed());
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
