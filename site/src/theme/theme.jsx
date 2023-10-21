@@ -8,6 +8,10 @@ const getPalette = (mode) => {
                 black: "#000",
                 white: "#fff"
             },
+            a: {
+                link: "#29b6f6",
+                visited: "#ce93d8"
+            },
             primary: {
                 main: '#24292e',
                 light: '#4f5358',
@@ -109,6 +113,10 @@ const getPalette = (mode) => {
             common: {
                 black: "#000",
                 white: "#fff"
+            },
+            a: {
+                link: "#0288d1",
+                visited: "#9c27b0"
             },
             primary: {
                 main: "#1976d2",
@@ -224,4 +232,4 @@ const getTheme = (mode) => {
     
 
 export default getTheme;
-export {dark, light}
+export {dark, light};
