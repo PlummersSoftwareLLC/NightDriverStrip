@@ -126,6 +126,8 @@ class PatternSubscribers : public LEDStripEffect
 
   protected:
 
+    static constexpr int _jsonSize = LEDStripEffect::_jsonSize + 192;
+
     // Add our own SettingSpec instances to the standard set
     bool FillSettingSpecs() override
     {
@@ -179,7 +181,7 @@ class PatternSubscribers : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<256> jsonDoc;
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -243,7 +245,7 @@ class PatternSubscribers : public LEDStripEffect
     // Extension override to serialize our settings on top of those from LEDStripEffect
     bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<384> jsonDoc;
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
         LEDStripEffect::SerializeSettingsToJSON(jsonObject);
 

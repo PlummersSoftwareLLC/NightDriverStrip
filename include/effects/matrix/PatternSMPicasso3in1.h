@@ -173,7 +173,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<192> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -212,7 +212,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
         static int last_scale = _scale;
 
         // Force a recalibration on effect change.
-        if (last_scale != Scale) 
+        if (last_scale != Scale)
         {
             debugA("Recalibrating from %d to %d", last_scale, Scale);
                 PicassoGenerate(true);

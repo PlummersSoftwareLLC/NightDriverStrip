@@ -446,7 +446,7 @@ class WaveformEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<192> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -539,7 +539,7 @@ class GhostWave : public WaveformEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<192> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -625,7 +625,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<192> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -690,10 +690,10 @@ class SpectrumBarEffect : public LEDStripEffect
         constexpr auto kPeakDecaySpectrumBar = 2.5;
 
         // Set the peak decay rates to something that looks good for this effect
-        
+
         g_Analyzer._peak1DecayRate = kPeakDecaySpectrumBar;
         g_Analyzer._peak2DecayRate = kPeakDecaySpectrumBar;
-        
+
         // This effect doesn't clear during drawing, so we need to clear to start the frame
 
         g()->Clear();

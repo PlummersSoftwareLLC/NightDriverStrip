@@ -38,7 +38,8 @@
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
     { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } },
-    { DeviceConfig::PowerLimitTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } }
+    { DeviceConfig::PowerLimitTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } },
+    { DeviceConfig::BrightnessTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateBrightness(value); } }
 };
 
 std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
@@ -203,15 +204,13 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
         j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
         j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
-        j["effectInterval"]        = effectManager.GetInterval();
+        j["eternalInterval"]       = effectManager.IsIntervalEternal();
+        j["effectInterval"]        = effectManager.GetEffectiveInterval();
 
-        auto effectsList = effectManager.EffectsList();
-
-        for (int i = 0; i < effectManager.EffectCount(); i++)
+        for (auto effect : effectManager.EffectsList())
         {
             StaticJsonDocument<256> effectDoc;
 
-            auto effect = effectsList[i];
             effectDoc["name"]    = effect->FriendlyName();
             effectDoc["enabled"] = effect->IsEnabled();
             effectDoc["core"]    = effect->IsCoreEffect();
@@ -399,6 +398,20 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 jsonDoc["minimumValue"] = spec.MinimumValue.value();
             if (spec.MaximumValue.has_value())
                 jsonDoc["maximumValue"] = spec.MaximumValue.value();
+            switch (spec.Access)
+            {
+                case SettingSpec::SettingAccess::ReadOnly:
+                    jsonDoc["readOnly"] = true;
+                    break;
+
+                case SettingSpec::SettingAccess::WriteOnly:
+                    jsonDoc["writeOnly"] = true;
+                    break;
+
+                default:
+                    // Default is read/write, so we don't need to specify that
+                    break;
+            }
 
             if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
             {
@@ -429,7 +442,6 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 
         auto deviceConfigSpecs = g_ptrSystem->DeviceConfig().GetSettingSpecs();
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
-
     }
 
     return deviceSettingSpecs;
@@ -474,6 +486,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(deviceConfig.SetNTPServer(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(deviceConfig.SetRememberCurrentEffect(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
+    PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
 }
 
 // Set settings and return resulting config
