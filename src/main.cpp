@@ -319,25 +319,10 @@ void setup()
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
+
     ESP_ERROR_CHECK(err);
 
-    // Setup config objects
-    g_ptrSystem->SetupConfig();
-
     #if ENABLE_WIFI
-
-        // This chip alone is special-cased by Improv, so we pull it
-        // from build flags. CONFIG_IDF_TARGET will be "esp32s3".
-        #if CONFIG_IDF_TARGET_ESP32S3
-            String family = "ESP32-S3";
-        #else
-	        String family = "ESP32";
-        #endif
-
-        debugW("Starting ImprovSerial for %s", family.c_str());
-        String name = "NDESP32" + get_mac_address().substring(6);
-        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
-
         // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
         if (!ReadWiFiConfig())
@@ -354,6 +339,24 @@ void setup()
             WiFi_ssid     = cszSSID;
         }
 
+        // This chip alone is special-cased by Improv, so we pull it
+        // from build flags. CONFIG_IDF_TARGET will be "esp32s3".
+        #if CONFIG_IDF_TARGET_ESP32S3
+            String family = "ESP32-S3";
+        #else
+	        String family = "ESP32";
+        #endif
+
+        debugW("Starting ImprovSerial for %s", family.c_str());
+        String name = "NDESP32" + get_mac_address().substring(6);
+        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
+
+    #endif
+
+    // Setup config objects
+    g_ptrSystem->SetupConfig();
+
+    #if ENABLE_WIFI
         // We create the network reader here, so classes can register their readers from this point onwards.
         //   Note that the thread that executes the readers is started further down, along with other networking
         //   threads.

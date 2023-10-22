@@ -340,7 +340,7 @@ protected:
                 this->send_response_(data);
                 return true;
             }
-            
+
             default:
             {
                 log_write(".Received unknown RPC command 0x%02hhx, responding we're OK ignoring it", command.command);
