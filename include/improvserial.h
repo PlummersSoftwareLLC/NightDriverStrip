@@ -113,11 +113,7 @@ public:
             if (this->parse_improv_serial_byte_(byte))
                 this->last_read_byte_ = now;
             else
-            {
-                log_write("Abandoning Improv buffer after %zu received bytes:", this->rx_buffer_.size());
-                log_write(this->rx_buffer_);
                 this->rx_buffer_.clear();
-            }
         }
 
         if (this->state_ == improv::STATE_PROVISIONING)
@@ -155,6 +151,9 @@ protected:
         __attribute__((format(printf, 2, 3)))
         void log_write(const char* format, ...)
         {
+            constexpr int bufferSize = 256;
+            char lineBuffer[bufferSize];
+
             auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
             va_list args;
 
@@ -162,12 +161,13 @@ protected:
 
             // We shifted the printf parameter check to ourselves, so we can suppress the warning here
             #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-            file.printf(format, args);
+            vsnprintf(lineBuffer, bufferSize, format, args);
             #pragma GCC diagnostic warning "-Wformat-nonliteral"
 
             va_end(args);
 
-            file.println();
+            lineBuffer[bufferSize - 1] = 0;
+            file.println(lineBuffer);
 
             file.close();
         }
@@ -218,10 +218,7 @@ protected:
 
         uint8_t data_len = raw[8];
 
-        if (at < 8 + data_len)
-            return true;
-
-        if (at == 8 + data_len)
+        if (at <= 8 + data_len)
             return true;
 
         // THe last byte of the packet needs to be a checksum, so compute it and stuff it in
@@ -234,12 +231,12 @@ protected:
 
             if (checksum != byte)
             {
-                log_write("Checksum mismatch in Improv payload. Expected 0x%hhx. Got 0x%hhx", checksum, byte);
+                log_write("Checksum mismatch in Improv payload. Expected 0x%02hhx. Got 0x%02hhx", checksum, byte);
                 this->set_error_(improv::ERROR_INVALID_RPC);
                 return false;
             }
 
-            log_write("Received valid Improv message of type 0x%hhx with data length %hhu", type, data_len);
+            log_write("Received valid Improv packet of type 0x%02hhx with data length %hhu", type, data_len);
 
             if (type == TYPE_RPC)
             {
@@ -248,11 +245,12 @@ protected:
                 auto command = improv::parse_improv_data(&raw[9], data_len, false);
                 return this->parse_improv_payload_(command);
             }
+            else
+            {
+                log_write("Improv command not RPC, so not handled");
+                this->set_error_(improv::ERROR_NONE);
+            }
         }
-
-        // If we got here then the command coming is improv, but not an RPC command
-        log_write("Improv command not RPC, so not handled");
-        this->set_error_(improv::ERROR_UNKNOWN);
 
         return false;
     }
@@ -275,7 +273,7 @@ protected:
                 if (!WriteWiFiConfig())
                     debugI("Failed writing WiFi config to NVS");
 
-                log_write("Received Improv wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
+                log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
                 WiFi.disconnect();
                 WiFi.mode(WIFI_STA);
@@ -293,16 +291,16 @@ protected:
 
             case improv::GET_CURRENT_STATE:
             {
-                log_write("Received request for current state");
-                this->set_state_(this->state_);
+                log_write(".Received request for current state");
+                this->set_state_(WiFi.isConnected() ? improv::STATE_PROVISIONED : this->state_);
                 if (this->state_ == improv::STATE_PROVISIONED)
                 {
-                    log_write("Sending response with device IP address");
+                    log_write(".Sending response with device IP address");
                     std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::GET_CURRENT_STATE);
                     this->send_response_(url);
                 }
                 else
-                    log_write("Not connected, so not sending response");
+                    log_write(".Not connected, so not sending response");
 
                 return true;
             }
@@ -311,7 +309,7 @@ protected:
 
             case improv::GET_DEVICE_INFO:
             {
-                log_write("Received request for device info, sending response");
+                log_write(".Received request for device info, sending response");
                 std::vector<uint8_t> info = this->build_version_info_();
                 this->send_response_(info);
                 return true;
@@ -319,13 +317,13 @@ protected:
 
             case improv::GET_WIFI_NETWORKS:
             {
-                log_write("Received request for WiFi networks");
+                log_write(".Received request for WiFi networks");
                 auto numSsid = WiFi.scanNetworks();
                 if (numSsid > 0)
                 {
                     for (int i = 0; i < numSsid; i++)
                     {
-                        log_write("Sending details for SSID %s", WiFi.SSID(i).c_str());
+                        log_write(".Sending details for SSID %s", WiFi.SSID(i).c_str());
                         // Send each ssid separately to avoid overflowing the buffer
                         std::vector<uint8_t> data = improv::build_rpc_response(
                             improv::GET_WIFI_NETWORKS, {WiFi.SSID(i), str_sprintf("%d", WiFi.RSSI(i)), WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "YES" : "NO"}, false);
@@ -333,23 +331,26 @@ protected:
                     }
                 }
                 else
-                    log_write("No WiFi networks found");
+                    log_write(".No WiFi networks found");
 
                 // Send empty response to signify the end of the list.
 
-                log_write("Sending empty response to signal end of list");
+                log_write(".Sending empty response to signal end of list");
                 std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<String>{}, false);
                 this->send_response_(data);
                 return true;
             }
+            
             default:
             {
-                log_write("Received unknown Improv command 0x%hhx", command.command);
+                log_write(".Received unknown RPC command 0x%02hhx, responding we're OK ignoring it", command.command);
                 this->set_error_(improv::ERROR_UNKNOWN_RPC);
-                return false;
+                return true;
             }
         }
     }
+
+
     // Allows the remote caller to set the provisioning state
 
     void set_state_(improv::State state)
@@ -363,7 +364,7 @@ protected:
         data[8] = 1;
         data[9] = state;
 
-        log_write("Sending current state response for state: 0x%hhx", state);
+        log_write("..Sending current state response for state: 0x%02hhx", state);
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -384,7 +385,7 @@ protected:
         data[8] = 1;
         data[9] = error;
 
-        log_write("Sending error response for error: 0x%hhx", error);
+        log_write("..Sending error response for error: 0x%02hhx", error);
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -402,7 +403,7 @@ protected:
         data[8] = response.size();
         data.insert(data.end(), response.begin(), response.end());
 
-        log_write("Sending RPC response with %zu bytes of data", response.size());
+        log_write("..Sending RPC response with %zu bytes of data", response.size());
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -454,7 +455,7 @@ protected:
     {
         data.push_back('\n');
 
-        log_write("Sending Improv response:");
+        log_write("...Sending response packet:");
         log_write(data);
 
         this->hw_serial_->write(data.data(), data.size());
