@@ -79,6 +79,8 @@ class DeviceConfig : public IJSONSerializable
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
     size_t writerIndex;
 
+    static constexpr int _jsonSize = 1024;
+
     void SaveToJSON();
 
     template <typename T>
@@ -125,7 +127,7 @@ class DeviceConfig : public IJSONSerializable
 
     bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
     {
-        AllocatedJsonDocument jsonDoc(1024);
+        AllocatedJsonDocument jsonDoc(_jsonSize);
 
         // Add serialization logic for additionl settings to this code
         jsonDoc[LocationTag] = location;
@@ -141,6 +143,8 @@ class DeviceConfig : public IJSONSerializable
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

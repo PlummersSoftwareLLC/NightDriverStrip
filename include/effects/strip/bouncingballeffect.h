@@ -101,6 +101,8 @@ private:
         jsonDoc[PTY_MIRORRED] = _bMirrored;
         jsonDoc[PTY_ERASE] = _bErase;
 
+        assert(!jsonDoc.overflowed());
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 

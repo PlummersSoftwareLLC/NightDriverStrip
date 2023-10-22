@@ -115,6 +115,8 @@ class FireEffect : public LEDStripEffect
         jsonDoc[PTY_REVERSED] = bReversed;
         jsonDoc[PTY_MIRORRED] = bMirrored;
 
+        assert(!jsonDoc.overflowed());
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
@@ -368,6 +370,8 @@ public:
         jsonDoc[PTY_REVERSED] = _Reversed;
         jsonDoc[PTY_COOLING] = _Cooling;
 
+        assert(!jsonDoc.overflowed());
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
@@ -521,7 +525,7 @@ public:
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<192> jsonDoc;
+        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -534,6 +538,8 @@ public:
         jsonDoc[PTY_SPARKHEIGHT] = _SparkHeight;
         jsonDoc["trb"] = _Turbo;
         jsonDoc[PTY_MIRORRED] = _Mirrored;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -702,6 +708,8 @@ class BaseFireEffect : public LEDStripEffect
         jsonDoc[PTY_MIRORRED] = bMirrored;
         jsonDoc[PTY_LEDCOUNT] = LEDCount;
         jsonDoc["clc"] = CellCount;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
