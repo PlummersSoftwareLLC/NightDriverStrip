@@ -56,10 +56,8 @@ enum ImprovSerialType : uint8_t
 
 static const uint8_t IMPROV_SERIAL_VERSION = 1;
 
-extern DRAM_ATTR String WiFi_ssid;
-extern DRAM_ATTR String WiFi_password;
-bool ReadWiFiConfig();
-bool WriteWiFiConfig();
+bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password);
+bool ConnectToWiFi(const char *ssid, const char *password);
 
 template <typename SERIALTYPE>
 class ImprovSerial
@@ -91,7 +89,7 @@ public:
         else
             this->state_ = improv::STATE_AUTHORIZED;
 
-        log_write("Settings ssid=\"%s\", password=******", WiFi_ssid.c_str());
+        log_write("Finished Improv setup");
     }
 
     // Main ImprovSerial loop.  Pulls available characters from the serial port, and tries to have them parsed
@@ -267,17 +265,15 @@ protected:
 
             case improv::WIFI_SETTINGS:
             {
-                WiFi_ssid = command.ssid.c_str();
-                WiFi_password = command.password.c_str();
+                String WiFi_ssid = command.ssid.c_str();
+                String WiFi_password = command.password.c_str();
 
-                if (!WriteWiFiConfig())
+                if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
                     debugI("Failed writing WiFi config to NVS");
 
                 log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
-                WiFi.disconnect();
-                WiFi.mode(WIFI_STA);
-                WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
+                ConnectToWiFi(WiFi_ssid.c_str(), WiFi_password.c_str());
                 this->set_state_(improv::STATE_PROVISIONING);
 
                 this->command_.command  = command.command;

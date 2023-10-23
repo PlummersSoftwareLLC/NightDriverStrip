@@ -182,8 +182,6 @@ DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
 DRAM_ATTR Values g_Values;
 DRAM_ATTR SoundAnalyzer g_Analyzer;
 DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
-DRAM_ATTR String WiFi_ssid;
-DRAM_ATTR String WiFi_password;
 DRAM_ATTR std::mutex g_buffer_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
@@ -323,14 +321,17 @@ void setup()
     ESP_ERROR_CHECK(err);
 
     #if ENABLE_WIFI
+        String WiFi_password;
+        String WiFi_ssid;
+
         // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
-        if (!ReadWiFiConfig())
+        if (!ReadWiFiConfig(WiFi_ssid, WiFi_password))
         {
             debugW("Could not read WiFI Credentials");
             WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;
-            if (!WriteWiFiConfig())
+            if (!WriteWiFiConfig(WiFi_password, WiFi_ssid))
                 debugW("Could not even write defaults to WiFi Credentials");
         }
         else if (WiFi_ssid.length() == 0)
@@ -501,13 +502,9 @@ void setup()
     taskManager.StartAudioThread();
     taskManager.StartRemoteThread();
 
-    #if ENABLE_WIFI && WAIT_FOR_WIFI
-        debugI("Calling ConnectToWifi()\n");
-        if (false == ConnectToWiFi(99, true))
-        {
-            debugI("Unable to connect to WiFi, but must have it, so rebooting...\n");
-            throw std::runtime_error("Unable to connect to WiFi, but must have it, so rebooting");
-        }
+    #if ENABLE_WIFI
+        debugI("Making first attempt to connect to WiFi.");
+        ConnectToWiFi(WiFi_ssid.c_str(), WiFi_password.c_str());
         Debug.setSerialEnabled(true);
     #endif
 
