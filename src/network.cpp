@@ -232,7 +232,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         static String WiFi_ssid;
         static String WiFi_password;
 
-        bool haveNewCredentials = ssid != nullptr && password != nullptr;
+        bool haveNewCredentials = (ssid != nullptr && password != nullptr);
 
         // If we have new credentials, then always reconnect using them
         if (haveNewCredentials)
@@ -240,6 +240,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             WiFi_ssid = ssid;
             WiFi_password = password;
             retryDelay = WIFI_WAIT_INIT;
+            debugI("New WiFi credentials received for SSID %s", WiFi_ssid.c_str());
         }
         else
         {
@@ -278,7 +279,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugW("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
         }
         else
-        // Additional services onwwards reliant on network so close if not up.
+        // Additional services onwards reliant on network so close if not up.
         {
             debugW("Not yet connected to WiFi, waiting...\n");
             return false;
