@@ -248,21 +248,19 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 return true;
         }
 
-        debugI("Setting host name to %s... %s", cszHostname, WLtoString(WiFi.status()));
-        WiFi.setHostname(cszHostname);
-
-        if (haveNewCredentials || millisAtLastAttempt == 0 || millisAtLastAttempt - millis() >= retryDelay)
+        if (haveNewCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
         {
-            debugV("Wifi.disconnect");
-            WiFi.disconnect();
-            debugV("Wifi.mode");
-            WiFi.mode(WIFI_STA);
-            debugV("Wifi.begin");
-
             if (WiFi_ssid.length() == 0)
                 debugW("WiFi credentials not set, cannot connect.");
             else
             {
+//                debugI("Setting host name to %s... %s", cszHostname, WLtoString(WiFi.status()));
+//                WiFi.setHostname(cszHostname);
+
+                debugV("Wifi.disconnect");
+                WiFi.disconnect();
+                debugV("Wifi.mode");
+                WiFi.mode(WIFI_STA);
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
                        WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
@@ -271,6 +269,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 debugV("Done Wifi.begin, waiting for connection...");
             }
 
+            millisAtLastAttempt = millis();
             retryDelay = std::min<unsigned long>(retryDelay + WIFI_WAIT_INCREASE, WIFI_WAIT_MAX);
         }
 
