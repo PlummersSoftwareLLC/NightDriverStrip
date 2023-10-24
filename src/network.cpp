@@ -212,10 +212,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 }
 #endif
 
-// ConnectToWiFi
-//
-// Connect to the pre-configured WiFi network.
-
 #if ENABLE_WIFI
 
     #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
@@ -224,7 +220,19 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
     #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
 
-    WiFiConnectResult ConnectToWiFi(const char *ssid = nullptr, const char *password = nullptr)
+    // ConnectToWiFi
+    //
+    // Try to connect to WiFi using the SSID and password passed as arguments
+    WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password)
+    {
+        return ConnectToWiFi(&ssid, &password);
+    }
+
+    // ConnectToWiFi
+    //
+    // Try to connect to WiFi using either the SSID and password pointed to by arguments, or the credentials
+    // that were saved from an earlier call if no/nullptr arguments are passed.
+    WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
     {
         static bool bPreviousConnection = false;
         static unsigned long millisAtLastAttempt = 0;
@@ -232,22 +240,23 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         static String WiFi_ssid;
         static String WiFi_password;
 
-        bool haveNewCredentials = (ssid != nullptr && password != nullptr);
+        bool haveNewCredentials = (ssid != nullptr && password != nullptr && (WiFi_ssid != *ssid || WiFi_password != *password));
 
         // If we have new credentials then always reconnect using them
         if (haveNewCredentials)
         {
-            WiFi_ssid = ssid;
-            WiFi_password = password;
+            WiFi_ssid = *ssid;
+            WiFi_password = *password;
             retryDelay = WIFI_WAIT_INIT;
-            debugI("New WiFi credentials received for SSID %s", WiFi_ssid.c_str());
+            debugI("WiFi credentials passed for SSID \"%s\"", WiFi_ssid.c_str());
         }
-        // If we're already connected and services are running then go no further.
+        // If we're already connected and services are running then go no further
         else if (bPreviousConnection && WiFi.isConnected())
         {
             return WiFiConnectResult::Connected;
         }
 
+        // (Re)connect if credentials have changed, or our last attempt was long enough ago
         if (haveNewCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
         {
             millisAtLastAttempt = millis();
@@ -260,7 +269,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
             else
             {
-                debugI("Setting host name to %s... %s", cszHostname, WLtoString(WiFi.status()));
+                debugI("Setting host name to %s...", cszHostname);
                 WiFi.setHostname(cszHostname);
 
                 debugV("Wifi.disconnect");
@@ -278,10 +287,10 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         if (WiFi.isConnected())
         {
-            debugW("Connected to AP with BSSID: %s, received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
+            debugW("Connected to AP with BSSID: \"%s\", received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
         }
         else
-        // Additional services onwards reliant on network so close if not up.
+        // Additional services onwards are reliant on network so return if WiFi is not up (yet)
         {
             debugW("Not yet connected to WiFi, waiting...");
             return WiFiConnectResult::Disconnected;

@@ -503,8 +503,8 @@ void setup()
     taskManager.StartRemoteThread();
 
     #if ENABLE_WIFI
-        debugI("Making first attempt to connect to WiFi.");
-        ConnectToWiFi(WiFi_ssid.c_str(), WiFi_password.c_str());
+        debugI("Making initial attempt to connect to WiFi.");
+        ConnectToWiFi(WiFi_ssid, WiFi_password);
         Debug.setSerialEnabled(true);
     #endif
 

@@ -273,7 +273,7 @@ protected:
 
                     log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
-                    ConnectToWiFi(WiFi_ssid.c_str(), WiFi_password.c_str());
+                    ConnectToWiFi(WiFi_ssid, WiFi_password);
                 #endif
 
                 this->set_state_(improv::STATE_PROVISIONING);
