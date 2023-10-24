@@ -34,9 +34,16 @@
 #endif
 
 #if ENABLE_WIFI
+    enum class WiFiConnectResult
+    {
+      Connected,
+      Disconnected,
+      NoCredentials
+    };
+
     void processRemoteDebugCmd();
 
-    bool ConnectToWiFi(const char *ssid, const char *password);
+    WiFiConnectResult ConnectToWiFi(const char *ssid, const char *password);
     void UpdateNTPTime();
     void SetupOTA(const String & strHostname);
     bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password);

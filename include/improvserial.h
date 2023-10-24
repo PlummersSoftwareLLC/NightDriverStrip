@@ -33,6 +33,7 @@
 #pragma once
 
 #include <improv.h>
+#include "network.h"
 #include "hexdump.h"
 
 #define IMPROV_LOG_FILE             "/improv.log"
@@ -55,9 +56,6 @@ enum ImprovSerialType : uint8_t
 };
 
 static const uint8_t IMPROV_SERIAL_VERSION = 1;
-
-bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password);
-bool ConnectToWiFi(const char *ssid, const char *password);
 
 template <typename SERIALTYPE>
 class ImprovSerial
@@ -114,7 +112,7 @@ public:
                 this->rx_buffer_.clear();
         }
 
-        if (this->state_ == improv::STATE_PROVISIONING)
+        if (this->state_ != improv::STATE_PROVISIONED)
         {
             if (WiFi.getMode() == WIFI_AP || (WiFi.getMode() == WIFI_STA && WiFi.isConnected()))
             {
@@ -283,12 +281,13 @@ protected:
                 return true;
             }
 
-                // Return the current state of the WiFi setup:  authorized, provisioning, or provisioned
+            // Return the current state of the WiFi setup:  authorized, provisioning, or provisioned
 
             case improv::GET_CURRENT_STATE:
             {
                 log_write(".Received request for current state");
                 this->set_state_(WiFi.isConnected() ? improv::STATE_PROVISIONED : this->state_);
+
                 if (this->state_ == improv::STATE_PROVISIONED)
                 {
                     log_write(".Sending response with device IP address");
@@ -300,8 +299,7 @@ protected:
 
                 return true;
             }
-
-                // Return info about the ESP32 itself
+            // Return info about the ESP32 itself
 
             case improv::GET_DEVICE_INFO:
             {
@@ -455,6 +453,7 @@ protected:
         log_write(data);
 
         this->hw_serial_->write(data.data(), data.size());
+        this->hw_serial_->flush();
     }
 
     SERIALTYPE *hw_serial_ = nullptr;
