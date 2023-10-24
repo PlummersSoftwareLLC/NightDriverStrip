@@ -266,12 +266,16 @@ protected:
                 String WiFi_ssid = command.ssid.c_str();
                 String WiFi_password = command.password.c_str();
 
-                if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
-                    debugI("Failed writing WiFi config to NVS");
+                // These lines actually require WiFi to be enabled in the project
+                #if ENABLE_WIFI
+                    if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
+                        debugI("Failed writing WiFi config to NVS");
 
-                log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
+                    log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
-                ConnectToWiFi(WiFi_ssid.c_str(), WiFi_password.c_str());
+                    ConnectToWiFi(WiFi_ssid.c_str(), WiFi_password.c_str());
+                #endif
+
                 this->set_state_(improv::STATE_PROVISIONING);
 
                 this->command_.command  = command.command;
