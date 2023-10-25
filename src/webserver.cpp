@@ -414,6 +414,9 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                     break;
             }
 
+            if (jsonDoc.overflowed())
+                debugE("JSON buffer overflow while serializing SettingSpec - object incomplete!");
+
             if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
             {
                 bufferOverflow = true;
