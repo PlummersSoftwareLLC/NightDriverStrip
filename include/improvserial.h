@@ -154,12 +154,7 @@ protected:
             va_list args;
 
             va_start(args, format);
-
-            // We shifted the printf parameter check to ourselves, so we can suppress the warning here
-            #pragma GCC diagnostic ignored "-Wformat-nonliteral"
             vsnprintf(lineBuffer, bufferSize, format, args);
-            #pragma GCC diagnostic warning "-Wformat-nonliteral"
-
             va_end(args);
 
             lineBuffer[bufferSize - 1] = 0;
@@ -227,12 +222,12 @@ protected:
 
             if (checksum != byte)
             {
-                log_write("Checksum mismatch in Improv payload. Expected 0x%02hhx. Got 0x%02hhx", checksum, byte);
+                log_write("Checksum mismatch in Improv payload. Expected 0x%02hhX. Got 0x%02hhX", checksum, byte);
                 this->set_error_(improv::ERROR_INVALID_RPC);
                 return false;
             }
 
-            log_write("Received valid Improv packet of type 0x%02hhx with data length %hhu", type, data_len);
+            log_write("Received valid Improv packet of type 0x%02hhX with data length %hhu", type, data_len);
 
             if (type == TYPE_RPC)
             {
@@ -341,7 +336,7 @@ protected:
 
             default:
             {
-                log_write(".Received unknown RPC command 0x%02hhx, responding we're OK ignoring it", command.command);
+                log_write(".Received unknown RPC command 0x%02hhX, responding we're OK ignoring it", command.command);
                 this->set_error_(improv::ERROR_UNKNOWN_RPC);
                 return true;
             }
@@ -362,7 +357,7 @@ protected:
         data[8] = 1;
         data[9] = state;
 
-        log_write("..Sending current state response for state: 0x%02hhx", state);
+        log_write("..Sending current state response for state: 0x%02hhX", state);
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -383,7 +378,7 @@ protected:
         data[8] = 1;
         data[9] = error;
 
-        log_write("..Sending error response for error: 0x%02hhx", error);
+        log_write("..Sending error response for error: 0x%02hhX", error);
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)

@@ -154,6 +154,7 @@ struct SettingSpec
     SettingType Type;
     bool HasValidation = false;
     SettingAccess Access = SettingAccess::ReadWrite;
+    bool Optional = false;
 
     std::optional<double> MinimumValue = {};
     std::optional<double> MaximumValue = {};

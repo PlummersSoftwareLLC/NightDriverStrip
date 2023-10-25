@@ -399,6 +399,8 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 jsonDoc["minimumValue"] = spec.MinimumValue.value();
             if (spec.MaximumValue.has_value())
                 jsonDoc["maximumValue"] = spec.MaximumValue.value();
+            if (spec.Optional)
+                jsonDoc["optional"] = true;
             switch (spec.Access)
             {
                 case SettingSpec::SettingAccess::ReadOnly:
@@ -480,6 +482,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
 
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrSystem->EffectManager().SetInterval(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::HostnameTag, SET_VALUE(deviceConfig.SetHostname(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(deviceConfig.SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(deviceConfig.SetLocationIsZip(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(deviceConfig.SetCountryCode(value)));

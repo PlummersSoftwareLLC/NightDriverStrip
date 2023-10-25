@@ -269,8 +269,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
             else
             {
-                debugI("Setting host name to %s...", cszHostname);
-                WiFi.setHostname(cszHostname);
+                auto hostname = g_ptrSystem->DeviceConfig().GetHostname().c_str();
+
+                if (hostname[0] == '\0')
+                {
+                    debugI("No hostname configured, so skipping setting it.");
+                }
+                else
+                {
+                    debugI("Setting host name to %s...", hostname);
+                    WiFi.setHostname(hostname);
+                }
 
                 debugV("Wifi.disconnect");
                 WiFi.disconnect();
@@ -316,7 +325,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_OTA
             debugI("Publishing OTA...");
-            SetupOTA(String(cszHostname));
+            SetupOTA(String(WiFi.getHostname()));
         #endif
 
         #if ENABLE_NTP
@@ -586,7 +595,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
         while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
             delay(100);
 
-        Debug.begin(cszHostname, RemoteDebug::INFO);            // Initialize the WiFi debug server
+        Debug.begin(WiFi.getHostname(), RemoteDebug::INFO);     // Initialize the WiFi debug server
 
         for (;;)                                                // Call Debug.handle() 20 times a second
         {
