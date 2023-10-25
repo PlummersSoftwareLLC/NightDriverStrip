@@ -117,6 +117,7 @@ public:
             if (WiFi.getMode() == WIFI_AP || (WiFi.getMode() == WIFI_STA && WiFi.isConnected()))
             {
                 log_write("Responding that wiFi is connected.");
+                debugI("Sending Improv packets to indicate WiFi is connected. Ignore any IMPROV lines that follow this one.")
                 this->set_state_(improv::STATE_PROVISIONED);
                 std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
                 this->send_response_(url);
