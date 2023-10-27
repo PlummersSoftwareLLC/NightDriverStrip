@@ -154,6 +154,7 @@ void CWebServer::begin()
     ServeEmbeddedFile("/", html_file);
     ServeEmbeddedFile("/index.html", html_file);
     ServeEmbeddedFile("/index.js", js_file);
+    ServeEmbeddedFile("/index.js.gz", js_file);
     ServeEmbeddedFile("/favicon.ico", ico_file);
     ServeEmbeddedFile("/timezones.json", timezones_file);
 
