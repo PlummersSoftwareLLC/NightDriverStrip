@@ -45,6 +45,8 @@ extern DRAM_ATTR std::mutex g_buffer_mutex;
 
 extern const CRGBPalette16 vuPaletteGreen;
 
+std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);    // Defined in effectmanager.cpp
+
 // WiFiDraw
 //
 // Draws from WiFi color data if available, returns pixels drawn this frame
@@ -256,7 +258,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
     // Run the draw loop
 
     debugW("Entering main draw loop!");
-  
+
     for (;;)
     {
         g_Values.AppTime.NewFrame();
