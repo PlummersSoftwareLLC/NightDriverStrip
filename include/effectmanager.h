@@ -43,8 +43,6 @@
 #include <math.h>
 
 #include "effectfactories.h"
-#include "effects/strip/misceffects.h"
-#include "effects/strip/fireeffect.h"
 
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
@@ -55,9 +53,6 @@ void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
-
-std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);
-std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color, CRGB color2);
 
 // EffectManager
 //
@@ -323,41 +318,7 @@ public:
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
     // which takes drawing precedence
 
-    void SetGlobalColor(CRGB color)
-    {
-        debugI("Setting Global Color");
-
-        CRGB oldColor = lastManualColor;
-        lastManualColor = color;
-
-        #if (USE_HUB75)
-                auto pMatrix = g();
-                pMatrix->setPalette(CRGBPalette16(oldColor, color));
-                pMatrix->PausePalette(true);
-        #else
-            std::shared_ptr<LEDStripEffect> effect;
-
-            if (color == CRGB(CRGB::White))
-                effect = make_shared_psram<ColorFillEffect>(CRGB::White, 1);
-            else
-
-                #if ENABLE_AUDIO
-                    #if SPECTRUM
-                        effect = GetSpectrumAnalyzer(color, oldColor);
-                    #else
-                        effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-                    #endif
-                #else
-                    effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-                #endif
-
-            if (effect->Init(_gfx))
-            {
-                _tempEffect = effect;
-                StartEffect();
-            }
-        #endif
-    }
+    void SetGlobalColor(CRGB color);
 
     void ClearRemoteColor(bool retainRemoteEffect = false)
     {

@@ -31,6 +31,7 @@
 #include "globals.h"
 #include "webserver.h"
 #include "systemcontainer.h"
+#include "soundanalyzer.h"
 
 // Static member initializers
 

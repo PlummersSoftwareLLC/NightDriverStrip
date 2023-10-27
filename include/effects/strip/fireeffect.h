@@ -64,6 +64,8 @@ class FireEffect : public LEDStripEffect
 
     static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
+    static constexpr int _jsonSize = LEDStripEffect::_jsonSize + 128;
+
     int CellCount() const { return LEDCount * CellsPerLED; }
 
   public:
@@ -101,7 +103,7 @@ class FireEffect : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize + 128> jsonDoc;
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -257,11 +259,14 @@ public:
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(FireEffect::_jsonSize + 512);
 
-        FireEffect::SerializeToJSON(jsonObject);
+        JsonObject root = jsonDoc.to<JsonObject>();
+        FireEffect::SerializeToJSON(root);
 
-        jsonObject[PTY_PALETTE] = _palette;
+        jsonDoc[PTY_PALETTE] = _palette;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
