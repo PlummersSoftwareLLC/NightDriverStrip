@@ -57,7 +57,7 @@ class DoublePaletteEffect : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(896);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 768);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -66,6 +66,8 @@ class DoublePaletteEffect : public LEDStripEffect
         _PaletteEffect1.SerializeToJSON(paletteObj);
         paletteObj = jsonDoc.createNestedObject("pt2");
         _PaletteEffect2.SerializeToJSON(paletteObj);
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
