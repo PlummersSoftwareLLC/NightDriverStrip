@@ -56,7 +56,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     }, [setting, updateError, error]);
     useEffect(() => {
         if(value !== setting.value) {
-            if(value === '') {
+            if(value === '' && !setting.optional) {
                 updateData(setting.name, undefined);
             } else {
                 updateData(setting.name, value);
@@ -247,7 +247,8 @@ const settingProps = PropTypes.shape({
     typeName: PropTypes.string.isRequired, 
     value: PropTypes.any,
     readOnly: PropTypes.bool,
-    writeOnly: PropTypes.bool
+    writeOnly: PropTypes.bool,
+    optional: PropTypes.bool
 });
 
 
