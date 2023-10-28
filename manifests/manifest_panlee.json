@@ -1,5 +1,5 @@
 {
-  "name": "Panlee for ESP32ESP32-S3-DevKitC-1",
+  "name": "Panlee for ESP32-S3-DevKitC-1",
   "version": "v040",
   "new_install_prompt_erase": true,
   "builds": [
