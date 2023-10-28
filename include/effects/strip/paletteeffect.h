@@ -91,7 +91,7 @@ class PaletteEffect : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -105,6 +105,8 @@ class PaletteEffect : public LEDStripEffect
         jsonDoc[PTY_BLEND] = to_value(_blend);
         jsonDoc[PTY_ERASE] = _bErase;
         jsonDoc["bns"] = _brightness;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

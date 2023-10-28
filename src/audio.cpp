@@ -34,6 +34,7 @@
 #if ENABLE_AUDIO
 
 #include <esp_task_wdt.h>
+#include "soundanalyzer.h"
 
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.

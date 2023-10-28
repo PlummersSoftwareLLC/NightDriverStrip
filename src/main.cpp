@@ -164,6 +164,7 @@
 #include "globals.h"
 #include "deviceconfig.h"
 #include "systemcontainer.h"
+#include "soundanalyzer.h"
 #include "values.h"
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include <TJpg_Decoder.h>
