@@ -399,8 +399,8 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 jsonDoc["minimumValue"] = spec.MinimumValue.value();
             if (spec.MaximumValue.has_value())
                 jsonDoc["maximumValue"] = spec.MaximumValue.value();
-            if (spec.Optional)
-                jsonDoc["optional"] = true;
+            if (spec.EmptyAllowed)
+                jsonDoc["emptyAllowed"] = true;
             switch (spec.Access)
             {
                 case SettingSpec::SettingAccess::ReadOnly:

@@ -148,15 +148,31 @@ struct SettingSpec
         ReadWrite
     };
 
+    // "Technical" name of the setting, as in the (JSON) property it is stored in.
     const char* Name;
-    const char* FriendlyName;
-    const char* Description;
-    SettingType Type;
-    bool HasValidation = false;
-    SettingAccess Access = SettingAccess::ReadWrite;
-    bool Optional = false;
 
+    // "Friendly" name of the setting, as in the one to be presented to the user in a user interface.
+    const char* FriendlyName;
+
+    // Description of the purpose and/or value of the setting
+    const char* Description;
+
+    // Value type of the setting
+    SettingType Type;
+
+    // Indication if validation for the setting's value is available
+    bool HasValidation = false;
+
+    // Indication if a setting is read-only, write-only or read/write
+    SettingAccess Access = SettingAccess::ReadWrite;
+
+    // Indication if an empty value is allowed for the setting. This only applies to String settings.
+    bool EmptyAllowed = false;
+
+    // Minimum valid value for the setting. This only applies to numeric settings.
     std::optional<double> MinimumValue = {};
+
+    // Maximum valid value for the setting. This only applies to numeric settings.
     std::optional<double> MaximumValue = {};
 
 
