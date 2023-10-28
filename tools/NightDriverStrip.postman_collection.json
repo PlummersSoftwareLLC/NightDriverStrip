@@ -71,6 +71,18 @@
 					"mode": "formdata",
 					"formdata": [
 						{
+							"key": "effectInterval",
+							"value": "60000",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "hostname",
+							"value": "NightDriverStrip",
+							"type": "text",
+							"disabled": true
+						},
+						{
 							"key": "location",
 							"value": "Utrecht",
 							"type": "text",
@@ -113,12 +125,6 @@
 							"disabled": true
 						},
 						{
-							"key": "effectInterval",
-							"value": "60000",
-							"type": "text",
-							"disabled": true
-						},
-						{
 							"key": "youtubeChannelGuid",
 							"value": "9558daa1-eae8-482f-8066-17fa787bc0e4",
 							"type": "text",
@@ -146,6 +152,12 @@
 						{
 							"key": "rememberCurrentEffect",
 							"value": "true",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "brightness",
+							"value": "255",
 							"type": "text",
 							"disabled": true
 						},

@@ -88,7 +88,7 @@ class CWebServer
         const char *const type;
         const char *const encoding;
 
-        EmbeddedWebFile(const uint8_t start[], const uint8_t end[], const char type[], const char encoding[])
+        EmbeddedWebFile(const uint8_t* start, const uint8_t* end, const char* type, const char* encoding = nullptr)
             : EmbeddedFile(start, end), type(type), encoding(encoding)
         {
         }
@@ -186,14 +186,16 @@ class CWebServer
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
     void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
     {
-        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request) {
+        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
+        {
             Serial.printf("GET for: %s\n", strUri);
             AsyncWebServerResponse *response = request->beginResponse_P(200, file.type, file.contents, file.length);
-            if (file.encoding[0])
+            if (file.encoding)
             {
                 response->addHeader("Content-Encoding", file.encoding);
             }
-            request->send(response);
+
+            AddCORSHeaderAndSendResponse(request, response);
         });
     }
 

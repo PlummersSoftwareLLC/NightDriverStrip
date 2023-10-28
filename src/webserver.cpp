@@ -32,6 +32,7 @@
 #include "webserver.h"
 #include "systemcontainer.h"
 #include "soundanalyzer.h"
+#include "improvserial.h"
 
 // Static member initializers
 
@@ -100,6 +101,16 @@ void CWebServer::begin()
     extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
     extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
 
+    EmbeddedWebFile html_file(html_start, html_end, "text/html", "gzip");
+    EmbeddedWebFile js_file(js_start, js_end, "application/javascript", "gzip");
+    EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon", "gzip");
+    EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
+
+    debugI("Embedded html file size: %d", html_file.length);
+    debugI("Embedded jsx file size: %d", js_file.length);
+    debugI("Embedded ico file size: %d", ico_file.length);
+    debugI("Embedded timezones file size: %d", timezones_file.length);
+
     _staticStats.HeapSize = ESP.getHeapSize();
     _staticStats.DmaHeapSize = heap_caps_get_total_size(MALLOC_CAP_DMA);
     _staticStats.PsramSize = ESP.getPsramSize();
@@ -112,51 +123,52 @@ void CWebServer::begin()
 
     debugI("Connecting Web Endpoints");
 
-    _server.on("/effects",               HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectListText(pRequest); });
-    _server.on("/getEffectList",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectListText(pRequest); });
-    _server.on("/statistics",            HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
-    _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
-    _server.on("/nextEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { NextEffect(pRequest); });
-    _server.on("/previousEffect",        HTTP_POST, [](AsyncWebServerRequest * pRequest)        { PreviousEffect(pRequest); });
+    // SPIFFS file requests
 
-    _server.on("/currentEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
-    _server.on("/setCurrentEffectIndex", HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
-    _server.on("/enableEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { EnableEffect(pRequest); });
-    _server.on("/disableEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DisableEffect(pRequest); });
-    _server.on("/moveEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { MoveEffect(pRequest); });
-    _server.on("/copyEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { CopyEffect(pRequest); });
-    _server.on("/deleteEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DeleteEffect(pRequest); });
-
-    _server.on("/settings/effect/specs", HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettingSpecs(pRequest); });
-    _server.on("/settings/effect",       HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettings(pRequest); });
-    _server.on("/settings/effect",       HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetEffectSettings(pRequest); });
-    _server.on("/settings/validated",    HTTP_POST, [](AsyncWebServerRequest * pRequest)        { ValidateAndSetSetting(pRequest); });
-    _server.on("/settings/specs",        HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettingSpecs(pRequest); });
-    _server.on("/settings",              HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettings(pRequest); });
-    _server.on("/settings",              HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetSettings(pRequest); });
-    _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE, "text/json"); });
-
-    _server.on("/reset",                 HTTP_POST, [](AsyncWebServerRequest * pRequest)        { Reset(pRequest); });
-
+    _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE,   "text/json"); });
     #if ENABLE_IMPROV_LOGGING
-        _server.on(IMPROV_LOG_FILE,      HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { pRequest->send(SPIFFS, IMPROV_LOG_FILE, "text/plain"); });
+        _server.on(IMPROV_LOG_FILE,      HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, IMPROV_LOG_FILE,       "text/plain"); });
     #endif
 
-    EmbeddedWebFile html_file(html_start, html_end, "text/html", "gzip");
-    EmbeddedWebFile js_file(js_start, js_end, "application/javascript", "gzip");
-    EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon", "gzip");
-    EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json", ""); // end - 1 because of zero-termination
+    // Instance handler requests
 
-    debugI("Embedded html file size: %d", html_file.length);
-    debugI("Embedded jsx file size: %d", js_file.length);
-    debugI("Embedded ico file size: %d", ico_file.length);
-    debugI("Embedded timezones file size: %d", timezones_file.length);
+    _server.on("/statistics",            HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetStatistics(pRequest); });
+    _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetStatistics(pRequest); });
+
+    // Static handler requests
+
+    _server.on("/effects",               HTTP_GET,  GetEffectListText);
+    _server.on("/getEffectList",         HTTP_GET,  GetEffectListText);
+    _server.on("/nextEffect",            HTTP_POST, NextEffect);
+    _server.on("/previousEffect",        HTTP_POST, PreviousEffect);
+
+    _server.on("/currentEffect",         HTTP_POST, SetCurrentEffectIndex);
+    _server.on("/setCurrentEffectIndex", HTTP_POST, SetCurrentEffectIndex);
+    _server.on("/enableEffect",          HTTP_POST, EnableEffect);
+    _server.on("/disableEffect",         HTTP_POST, DisableEffect);
+    _server.on("/moveEffect",            HTTP_POST, MoveEffect);
+    _server.on("/copyEffect",            HTTP_POST, CopyEffect);
+    _server.on("/deleteEffect",          HTTP_POST, DeleteEffect);
+
+    _server.on("/settings/effect/specs", HTTP_GET,  GetEffectSettingSpecs);
+    _server.on("/settings/effect",       HTTP_GET,  GetEffectSettings);
+    _server.on("/settings/effect",       HTTP_POST, SetEffectSettings);
+    _server.on("/settings/validated",    HTTP_POST, ValidateAndSetSetting);
+    _server.on("/settings/specs",        HTTP_GET,  GetSettingSpecs);
+    _server.on("/settings",              HTTP_GET,  GetSettings);
+    _server.on("/settings",              HTTP_POST, SetSettings);
+
+    _server.on("/reset",                 HTTP_POST, Reset);
+
+    // Embedded file requests
 
     ServeEmbeddedFile("/", html_file);
     ServeEmbeddedFile("/index.html", html_file);
     ServeEmbeddedFile("/index.js", js_file);
     ServeEmbeddedFile("/favicon.ico", ico_file);
     ServeEmbeddedFile("/timezones.json", timezones_file);
+
+    // Not found handler
 
     _server.onNotFound([](AsyncWebServerRequest *request)
     {
@@ -399,6 +411,8 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 jsonDoc["minimumValue"] = spec.MinimumValue.value();
             if (spec.MaximumValue.has_value())
                 jsonDoc["maximumValue"] = spec.MaximumValue.value();
+            if (spec.EmptyAllowed)
+                jsonDoc["emptyAllowed"] = true;
             switch (spec.Access)
             {
                 case SettingSpec::SettingAccess::ReadOnly:
@@ -480,6 +494,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
 
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrSystem->EffectManager().SetInterval(value)));
+    PushPostParamIfPresent<String>(pRequest, DeviceConfig::HostnameTag, SET_VALUE(deviceConfig.SetHostname(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(deviceConfig.SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(deviceConfig.SetLocationIsZip(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::CountryCodeTag, SET_VALUE(deviceConfig.SetCountryCode(value)));

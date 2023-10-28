@@ -63,6 +63,7 @@
 class DeviceConfig : public IJSONSerializable
 {
     // Add variables for additional settings to this list
+    String  hostname = cszHostname;
     String  location = cszLocation;
     bool    locationIsZip = false;
     String  countryCode = cszCountryCode;
@@ -106,6 +107,7 @@ class DeviceConfig : public IJSONSerializable
     using ValidateResponse = std::pair<bool, String>;
 
     // Add additional setting Tags to this list
+    static constexpr const char * HostnameTag = NAME_OF(hostname);
     static constexpr const char * LocationTag = NAME_OF(location);
     static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
     static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
@@ -130,6 +132,7 @@ class DeviceConfig : public IJSONSerializable
         AllocatedJsonDocument jsonDoc(_jsonSize);
 
         // Add serialization logic for additionl settings to this code
+        jsonDoc[HostnameTag] = hostname;
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;
         jsonDoc[CountryCodeTag] = countryCode;
@@ -157,6 +160,7 @@ class DeviceConfig : public IJSONSerializable
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
         // Add deserialization logic for additional settings to this code
+        SetIfPresentIn(jsonObject, hostname, HostnameTag);
         SetIfPresentIn(jsonObject, location, LocationTag);
         SetIfPresentIn(jsonObject, locationIsZip, LocationIsZipTag);
         SetIfPresentIn(jsonObject, countryCode, CountryCodeTag);
@@ -191,19 +195,25 @@ class DeviceConfig : public IJSONSerializable
         {
             // Add SettingSpec for additional settings to this list
             settingSpecs.emplace_back(
-                NAME_OF(location),
+                HostnameTag,
+                "Hostname",
+                "The hostname of the device. A reboot is required after changing this.",
+                SettingSpec::SettingType::String
+            ).EmptyAllowed = true;
+            settingSpecs.emplace_back(
+                LocationTag,
                 "Location",
                 "The location (city or postal code) where the device is located.",
                 SettingSpec::SettingType::String
             );
             settingSpecs.emplace_back(
-                NAME_OF(locationIsZip),
+                LocationIsZipTag,
                 "Location is postal code",
                 "A boolean indicating if the value in the 'location' setting is a postal code ('true'/1) or not ('false'/0).",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(countryCode),
+                CountryCodeTag,
                 "Country code",
                 "The <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">ISO 3166-1 alpha-2</a> country "
                 "code for the country that the device is located in.",
@@ -211,7 +221,7 @@ class DeviceConfig : public IJSONSerializable
             );
 
             auto weatherKeySpec = settingSpecs.emplace_back(
-                NAME_OF(openWeatherApiKey),
+                OpenWeatherApiKeyTag,
                 "Open Weather API key",
                 "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
                 SettingSpec::SettingType::String
@@ -220,39 +230,39 @@ class DeviceConfig : public IJSONSerializable
             weatherKeySpec.Access = SettingSpec::SettingAccess::WriteOnly;
 
             settingSpecs.emplace_back(
-                NAME_OF(timeZone),
+                TimeZoneTag,
                 "Time zone",
                 "The timezone the device resides in, in <a href=\"https://en.wikipedia.org/wiki/Tz_database\">tz database</a> format. "
                 "The list of available timezone identifiers can be found in the <a href=\"/timezones.json\">timezones.json</a> file.",
                 SettingSpec::SettingType::String
             );
             settingSpecs.emplace_back(
-                NAME_OF(use24HourClock),
+                Use24HourClockTag,
                 "Use 24 hour clock",
                 "A boolean that indicates if time should be shown in 24-hour format ('true'/1) or 12-hour AM/PM format ('false'/0).",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(useCelsius),
+                UseCelsiusTag,
                 "Use degrees Celsius",
                 "A boolean that indicates if temperatures should be shown in degrees Celsius ('true'/1) or degrees Fahrenheit ('false'/0).",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(ntpServer),
+                NTPServerTag,
                 "NTP server address",
                 "The hostname or IP address of the NTP server to be used for time synchronization.",
                 SettingSpec::SettingType::String
             );
             settingSpecs.emplace_back(
-                NAME_OF(rememberCurrentEffect),
+                RememberCurrentEffectTag,
                 "Remember current effect",
                 "A boolean that indicates if the current effect index should be saved after an effect transition, so the device resumes "
                 "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(brightness),
+                BrightnessTag,
                 "Brightness",
                 "Overall brightness the connected LEDs or matrix should be run at.",
                 SettingSpec::SettingType::Integer,
@@ -261,7 +271,7 @@ class DeviceConfig : public IJSONSerializable
             ).HasValidation = true;
 
             auto& powerLimitSpec = settingSpecs.emplace_back(
-                NAME_OF(powerLimit),
+                PowerLimitTag,
                 "Power limit",
                 "The maximum power in mW that the matrix attached to the board is allowed to use. As the previous sentence implies, this "
                 "setting only applies if a matrix is used.",
@@ -292,6 +302,17 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(use24HourClock, new24HourClock);
     }
+
+    const String &GetHostname() const
+    {
+        return hostname;
+    }
+
+    void SetHostname(const String &newHostname)
+    {
+        SetAndSave(hostname, newHostname);
+    }
+
 
     const String &GetLocation() const
     {

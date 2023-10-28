@@ -213,80 +213,102 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 }
 #endif
 
-// ConnectToWiFi
-//
-// Connect to the pre-configured WiFi network.
-
 #if ENABLE_WIFI
 
     #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
     #define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
+    #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
 
+    #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
 
-    bool ConnectToWiFi(uint cRetries, bool waitForCredentials = false)
+    // ConnectToWiFi
+    //
+    // Try to connect to WiFi using the SSID and password passed as arguments
+    WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password)
+    {
+        return ConnectToWiFi(&ssid, &password);
+    }
+
+    // ConnectToWiFi
+    //
+    // Try to connect to WiFi using either the SSID and password pointed to by arguments, or the credentials
+    // that were saved from an earlier call if no/nullptr arguments are passed.
+    WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
     {
         static bool bPreviousConnection = false;
+        static unsigned long millisAtLastAttempt = 0;
+        static unsigned long retryDelay = WIFI_WAIT_INIT;
+        static String WiFi_ssid;
+        static String WiFi_password;
 
-        // Already connected, Go no further.
-        if (WiFi.isConnected())
-            return true;
+        bool haveNewCredentials = (ssid != nullptr && password != nullptr && (WiFi_ssid != *ssid || WiFi_password != *password));
 
-        debugI("Setting host name to %s...%s", cszHostname,WLtoString(WiFi.status()));
-
-        debugV("Wifi.disconnect");
-        WiFi.disconnect();
-        debugV("Wifi.mode");
-        WiFi.mode(WIFI_STA);
-        debugV("Wifi.begin");
-
-        for (uint iPass = 0; iPass < cRetries; iPass++)
+        // If we have new credentials then always reconnect using them
+        if (haveNewCredentials)
         {
+            WiFi_ssid = *ssid;
+            WiFi_password = *password;
+            retryDelay = WIFI_WAIT_INIT;
+            debugI("WiFi credentials passed for SSID \"%s\"", WiFi_ssid.c_str());
+        }
+        // If we're already connected and services are running then go no further
+        else if (bPreviousConnection && WiFi.isConnected())
+        {
+            return WiFiConnectResult::Connected;
+        }
+
+        // (Re)connect if credentials have changed, or our last attempt was long enough ago
+        if (haveNewCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
+        {
+            millisAtLastAttempt = millis();
+            retryDelay = std::min<unsigned long>(retryDelay + WIFI_WAIT_INCREASE, WIFI_WAIT_MAX);
+
             if (WiFi_ssid.length() == 0)
             {
                 debugW("WiFi credentials not set, cannot connect.");
-
-                if (waitForCredentials)
-                {
-                    debugW("Waiting for WiFi credentials to be set. Pass %u of %u...", iPass + 1, cRetries);
-                    iPass = 0;
-                }
-                else
-                {
-                    break;
-                }
+                return WiFiConnectResult::NoCredentials;
             }
             else
             {
-                debugW("Pass %u of %u: Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                        iPass + 1, cRetries, WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+                auto hostname = g_ptrSystem->DeviceConfig().GetHostname().c_str();
+
+                if (hostname[0] == '\0')
+                {
+                    debugI("No hostname configured, so skipping setting it.");
+                }
+                else
+                {
+                    debugI("Setting host name to %s...", hostname);
+                    WiFi.setHostname(hostname);
+                }
+
+                debugV("Wifi.disconnect");
+                WiFi.disconnect();
+                debugV("Wifi.mode");
+                WiFi.mode(WIFI_STA);
+                debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
+                       WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
                 WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
                 debugV("Done Wifi.begin, waiting for connection...");
             }
-
-            // Give the module a few seconds to connect
-            delay(WIFI_WAIT_BASE + iPass * WIFI_WAIT_INCREASE);
-
-            if (WiFi.isConnected())
-            {
-                debugW("Connected to AP with BSSID: %s\n", WiFi.BSSIDstr().c_str());
-                break;
-            }
         }
 
-        // Additional Services onwwards reliant on network so close if not up.
-        if (!WiFi.isConnected())
+        if (WiFi.isConnected())
         {
-            debugW("Giving up on WiFi\n");
-            return false;
+            debugW("Connected to AP with BSSID: \"%s\", received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
         }
-
-        debugW("Received IP: %s", WiFi.localIP().toString().c_str());
+        else
+        // Additional services onwards are reliant on network so return if WiFi is not up (yet)
+        {
+            debugW("Not yet connected to WiFi, waiting...");
+            return WiFiConnectResult::Disconnected;
+        }
 
         // If we were connected before, network-dependent services will have been started already
         if (bPreviousConnection)
-            return true;
+            return WiFiConnectResult::Connected;
 
         bPreviousConnection = true;
 
@@ -304,7 +326,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_OTA
             debugI("Publishing OTA...");
-            SetupOTA(String(cszHostname));
+            SetupOTA(String(WiFi.getHostname()));
         #endif
 
         #if ENABLE_NTP
@@ -318,7 +340,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             debugI("Web Server begin called!");
         #endif
 
-        return true;
+        return WiFiConnectResult::Connected;
     }
 
     #if ENABLE_NTP
@@ -461,7 +483,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
 #define MAX_PASSWORD_LEN 63
 
-bool ReadWiFiConfig()
+bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password)
 {
     char szBuffer[MAX_PASSWORD_LEN+1];
 
@@ -513,7 +535,7 @@ bool ReadWiFiConfig()
 // enforce length limits on values given, so conceivable you could write longer
 // pairs than you could read, but they wouldn't work on WiFi anyway.
 
-bool WriteWiFiConfig()
+bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
 {
     nvs_handle_t nvsRWHandle;
 
@@ -574,7 +596,7 @@ bool WriteWiFiConfig()
         while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
             delay(100);
 
-        Debug.begin(cszHostname, RemoteDebug::INFO);            // Initialize the WiFi debug server
+        Debug.begin(WiFi.getHostname(), RemoteDebug::INFO);     // Initialize the WiFi debug server
 
         for (;;)                                                // Call Debug.handle() 20 times a second
         {
@@ -689,6 +711,8 @@ bool WriteWiFiConfig()
 
     void IRAM_ATTR NetworkHandlingLoopEntry(void *)
     {
+        static unsigned long millisAtLastConnected = millis();
+
         //debugI(">> NetworkHandlingLoopEntry\n");
         if(!MDNS.begin("esp32")) {
             Serial.println("Error starting mDNS");
@@ -701,18 +725,29 @@ bool WriteWiFiConfig()
             // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
-            /* Every few seconds we check WiFi, and reconnect if we've lost the connection.  If we are unable to restart
-                it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI */
+            // Every second we check WiFi, and reconnect if we've lost the connection. If we are unable to restart
+            // it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI.
 
             EVERY_N_SECONDS(1)
             {
-                if (WiFi.isConnected() == false && ConnectToWiFi(5) == false)
+                auto connectResult = ConnectToWiFi();
+
+                if (connectResult == WiFiConnectResult::Connected)
                 {
-                    debugE("Cannot Connect to Wifi!");
+                    millisAtLastConnected = millis();
+                }
+                else
+                {
+                    debugV("Still waiting for WiFi to connect.");
                     #if WAIT_FOR_WIFI
-                        debugE("Rebooting in 5 seconds due to no Wifi available.");
-                        delay(5000);
-                        throw new std::runtime_error("Rebooting due to no Wifi available.");
+                        // Reboot if we've been waiting for a connection for more than the maximum delay between
+                        // connection retries and we _do_ have credentials
+                        if (connectResult != WiFiConnectResult::NoCredentials && millis() - millisAtLastConnected > WIFI_WAIT_MAX)
+                        {
+                            debugE("Rebooting in 5 seconds due to no Wifi available.");
+                            delay(5000);
+                            throw new std::runtime_error("Rebooting due to no Wifi available.");
+                        }
                     #endif
                 }
             }
