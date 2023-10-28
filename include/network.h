@@ -33,18 +33,22 @@
     #include "socketserver.h"
 #endif
 
-    extern DRAM_ATTR String WiFi_password;
-    extern DRAM_ATTR String WiFi_ssid;
 #if ENABLE_WIFI
+    enum class WiFiConnectResult
+    {
+      Connected,
+      Disconnected,
+      NoCredentials
+    };
+
     void processRemoteDebugCmd();
 
-    bool ConnectToWiFi(uint cRetries, bool waitForCredentials);
+    WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password);
+    WiFiConnectResult ConnectToWiFi(const String* ssid, const String* password);
     void UpdateNTPTime();
     void SetupOTA(const String & strHostname);
-    bool ReadWiFiConfig();
-    bool WriteWiFiConfig();
-    extern DRAM_ATTR String WiFi_password;
-    extern DRAM_ATTR String WiFi_ssid;
+    bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password);
+    bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password);
 
     // Static Helpers
     //
