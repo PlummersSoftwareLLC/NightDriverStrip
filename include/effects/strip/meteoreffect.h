@@ -180,7 +180,7 @@ class MeteorEffect : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<256> jsonDoc;
+        StaticJsonDocument<LEDStripEffect::_jsonSize + 128> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -190,6 +190,8 @@ class MeteorEffect : public LEDStripEffect
         jsonDoc["dcy"] = _meteorTrailDecay;
         jsonDoc[PTY_MINSPEED] = _meteorSpeedMin;
         jsonDoc[PTY_MAXSPEED] = _meteorSpeedMax;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

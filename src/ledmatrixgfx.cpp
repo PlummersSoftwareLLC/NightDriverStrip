@@ -180,10 +180,10 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
     // whichever is lowest, so that we can fade between effects without having to change the brightness setting.
 
-    auto targetBrightness = min({ g_Values.Brightness, g_Values.Fader, g_Values.MatrixScaledBrightness });
+    auto targetBrightness = min({ g_ptrSystem->DeviceConfig().GetBrightness(), g_Values.Fader, g_Values.MatrixScaledBrightness });
 
     debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
-    pMatrix->SetBrightness(targetBrightness );
+    pMatrix->SetBrightness(targetBrightness);
 
     MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0, false);
 

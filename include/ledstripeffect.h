@@ -39,6 +39,9 @@
 #include <list>
 #include <stdlib.h>
 
+// This macro returns from the invoking function (which would usually be SetSetting())
+// if the settingName and propertyName passed to it match, and the "value" was thus
+// assigned to the "property".
 #define RETURN_IF_SET(settingName, propertyName, property, value) \
     if (SetIfSelected(settingName, propertyName, property, value)) \
         return true
@@ -51,6 +54,14 @@ class LEDStripEffect : public IJSONSerializable
 {
   private:
 
+    // This enum is a set of bit flags of known JSON data migrations that either have or have not (yet) been
+    // performed for a particular effect. "All" should always be a bitwise OR of all other flags in the enum.
+    enum class JSONMigrations : uint
+    {
+        MaximumEffectTime = 1,                  // next one = 2, one after that = 4, etc.
+        All               = MaximumEffectTime   // | next one | one after that | etc.
+    };
+
     bool   _coreEffect = false;
     static std::vector<SettingSpec, psram_allocator<SettingSpec>> _baseSettingSpecs;
 
@@ -60,11 +71,16 @@ class LEDStripEffect : public IJSONSerializable
     int    _effectNumber;
     String _friendlyName;
     bool   _enabled = true;
-    size_t _maximumEffectTime = SIZE_MAX;
+    size_t _maximumEffectTime = 0;
     std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
+
+    // JSON document size used for serializations of this class. Should probably be made bigger for effects (i.e. subclasses)
+    //   that serialize additional properties.
+    static constexpr int _jsonSize = 192;
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
 
+    // Macro that assigns a value to a property if two names match
     #define SET_IF_NAMES_MATCH(firstName, secondName, property, value)  if (firstName == secondName) \
     { \
         property = (value); \
@@ -125,11 +141,21 @@ class LEDStripEffect : public IJSONSerializable
         SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
     }
 
+    // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
+    // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecs
+    // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
+    // memory.
+    //
+    // Overrides of this virtual function in effects that publish additional settings should first
+    // call this implementation (i.e. LEDStripEffect::FillSettingSpecs()) and only continue if it returns
+    // true.
     virtual bool FillSettingSpecs()
     {
+        // Bail out if the SettingSpecs reference_wrapper vector is already filled
         if (_settingSpecs.size() > 0)
             return false;
 
+        // Lazily load the SettingSpec instances if they're not already there
         if (_baseSettingSpecs.size() == 0)
         {
             _baseSettingSpecs.emplace_back(
@@ -142,7 +168,7 @@ class LEDStripEffect : public IJSONSerializable
                 ACTUAL_NAME_OF(_maximumEffectTime),
                 "Maximum effect time",
                 "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-                "shorter than the default effect interval.",
+                "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
                 SettingSpec::SettingType::PositiveBigInteger
             );
             _baseSettingSpecs.emplace_back(
@@ -159,6 +185,7 @@ class LEDStripEffect : public IJSONSerializable
             ).Access = SettingSpec::SettingAccess::WriteOnly;
         }
 
+        // Add reference_wrappers for the actual SettingSpecs instances to our effect instance's vector
         _settingSpecs.insert(_settingSpecs.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
 
         return true;
@@ -181,6 +208,15 @@ class LEDStripEffect : public IJSONSerializable
             _enabled = jsonObject["es"].as<int>() == 1;
         if (jsonObject.containsKey("mt"))
             _maximumEffectTime = jsonObject["mt"];
+
+        // Pull the migrations bitmap from the JSON object if it has one, otherwise default to "nothing set"
+        uint performedMigrations = 0;
+        if (jsonObject.containsKey("mi"))
+            performedMigrations = jsonObject["mi"];
+
+        // If we haven't migrated the "has no maximum effect time" yet, do so now
+        if (!(performedMigrations & to_value(JSONMigrations::MaximumEffectTime)) && _maximumEffectTime == UINT_MAX)
+            _maximumEffectTime = 0;
     }
 
     virtual ~LEDStripEffect()
@@ -251,7 +287,7 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual bool HasMaximumEffectTime() const
     {
-        return MaximumEffectTime() != SIZE_MAX;
+        return MaximumEffectTime() != 0;
     }
 
     virtual bool ShouldShowTitle() const                    // True if the effect should show the title overlay
@@ -450,16 +486,23 @@ class LEDStripEffect : public IJSONSerializable
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
         jsonDoc[PTY_EFFECTNR]       = _effectNumber;
         jsonDoc["fn"]               = _friendlyName;
         jsonDoc["es"]               = _enabled ? 1 : 0;
+
+        // Migrations are done when the effect is constructed from JSON, so by definition all known
+        // migrations have been performed by the time we get here.
+        jsonDoc["mi"]               = to_value(JSONMigrations::All);
+
         // Only add the max effect time and core effect flag if they're not the default, to save space
         if (HasMaximumEffectTime())
             jsonDoc["mt"]           = _maximumEffectTime;
         if (_coreEffect)
             jsonDoc[PTY_COREEFFECT] = 1;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -484,6 +527,8 @@ class LEDStripEffect : public IJSONSerializable
         return _coreEffect;
     }
 
+    // Lazily loads the SettingsSpecs for this effect if they haven't been loaded yet, and
+    // returns a vector with reference_wrappers to them.
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
         FillSettingSpecs();
@@ -491,17 +536,27 @@ class LEDStripEffect : public IJSONSerializable
         return _settingSpecs;
     }
 
+    // Serialize the "known effect settings" for this effect to JSON. In principle, there
+    // should be a SettingSpec instance returned by GetSettingSpecs() for every setting value
+    // that's serialized by this function.
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<128> jsonDoc;
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
         jsonDoc[ACTUAL_NAME_OF(_friendlyName)] = _friendlyName;
         jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;
         jsonDoc["hasMaximumEffectTime"] = HasMaximumEffectTime();
 
+        if (jsonDoc.overflowed())
+            debugE("JSON buffer overflow while serializing settings for LEDStripEffect - object incomplete!");
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
+    // Changes the value for one "known" effect setting. All setting values are passed to this
+    // function are Strings; the conversion to the target type of a member variable that
+    // corresponds with a setting can be taken care of by using one of the SetIfSelected()
+    // overloads (either via RETURN_IF_SET or directly).
     virtual bool SetSetting(const String& name, const String& value)
     {
         RETURN_IF_SET(name, ACTUAL_NAME_OF(_friendlyName), _friendlyName, value);
@@ -511,7 +566,7 @@ class LEDStripEffect : public IJSONSerializable
         if (SetIfSelected(name, "clearMaximumEffectTime", clearMaximumEffectTime, value))
         {
             if (clearMaximumEffectTime)
-                _maximumEffectTime = SIZE_MAX;
+                _maximumEffectTime = 0;
 
             return true;
         }

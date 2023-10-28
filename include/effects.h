@@ -197,8 +197,10 @@
 #define PTY_FADE            "fde"
 #define PTY_VERSION         "ver"
 #define PTY_HUESTEP         "hst"
+#define PTY_MULTICOLOR      "mcl"
 #define PTY_EFFECT          "eft"
 #define PTY_SCALE           "scl"
 #define PTY_EFFECTSETVER    "esv"
+#define PTY_PROJECT         "prj"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

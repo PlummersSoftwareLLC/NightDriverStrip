@@ -33,10 +33,14 @@
 #include <memory>
 #include <vector>
 #include <tuple>
+#include <algorithm>
 #include "jsonserializer.h"
+#include "secrets.h"
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
 #define NTP_SERVER_DEFAULT "0.pool.ntp.org"
+#define BRIGHTNESS_MIN uint8_t(10)
+#define BRIGHTNESS_MAX uint8_t(255)
 #define POWER_LIMIT_MIN 2000
 #define POWER_LIMIT_DEFAULT 4500
 
@@ -59,20 +63,24 @@
 class DeviceConfig : public IJSONSerializable
 {
     // Add variables for additional settings to this list
-    String location;
-    bool   locationIsZip = false;
-    String countryCode;
-    String timeZone;
-    String openWeatherApiKey;
-    bool   use24HourClock = false;
-    bool   useCelsius = false;
-    String ntpServer;
-    bool   rememberCurrentEffect = false;
-    int    powerLimit = POWER_LIMIT_DEFAULT;
+    String  hostname = cszHostname;
+    String  location = cszLocation;
+    bool    locationIsZip = false;
+    String  countryCode = cszCountryCode;
+    String  timeZone = cszTimeZone;
+    String  openWeatherApiKey = cszOpenWeatherAPIKey;
+    bool    use24HourClock = false;
+    bool    useCelsius = false;
+    String  ntpServer = NTP_SERVER_DEFAULT;
+    bool    rememberCurrentEffect = true;
+    int     powerLimit = POWER_LIMIT_DEFAULT;
+    uint8_t brightness = BRIGHTNESS_MAX;
 
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
     size_t writerIndex;
+
+    static constexpr int _jsonSize = 1024;
 
     void SaveToJSON();
 
@@ -99,6 +107,7 @@ class DeviceConfig : public IJSONSerializable
     using ValidateResponse = std::pair<bool, String>;
 
     // Add additional setting Tags to this list
+    static constexpr const char * HostnameTag = NAME_OF(hostname);
     static constexpr const char * LocationTag = NAME_OF(location);
     static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
     static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
@@ -109,6 +118,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
+    static constexpr const char * BrightnessTag = NAME_OF(brightness);
 
     DeviceConfig();
 
@@ -119,9 +129,10 @@ class DeviceConfig : public IJSONSerializable
 
     bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
     {
-        AllocatedJsonDocument jsonDoc(1024);
+        AllocatedJsonDocument jsonDoc(_jsonSize);
 
         // Add serialization logic for additionl settings to this code
+        jsonDoc[HostnameTag] = hostname;
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;
         jsonDoc[CountryCodeTag] = countryCode;
@@ -131,9 +142,12 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[NTPServerTag] = ntpServer;
         jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
         jsonDoc[PowerLimitTag] = powerLimit;
+        jsonDoc[BrightnessTag] = brightness;
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -146,6 +160,7 @@ class DeviceConfig : public IJSONSerializable
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
         // Add deserialization logic for additional settings to this code
+        SetIfPresentIn(jsonObject, hostname, HostnameTag);
         SetIfPresentIn(jsonObject, location, LocationTag);
         SetIfPresentIn(jsonObject, locationIsZip, LocationIsZipTag);
         SetIfPresentIn(jsonObject, countryCode, CountryCodeTag);
@@ -155,6 +170,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
         SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
         SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
+        SetIfPresentIn(jsonObject, brightness, BrightnessTag);
 
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
@@ -179,19 +195,25 @@ class DeviceConfig : public IJSONSerializable
         {
             // Add SettingSpec for additional settings to this list
             settingSpecs.emplace_back(
-                NAME_OF(location),
+                HostnameTag,
+                "Hostname",
+                "The hostname of the device. A reboot is required after changing this.",
+                SettingSpec::SettingType::String
+            ).EmptyAllowed = true;
+            settingSpecs.emplace_back(
+                LocationTag,
                 "Location",
                 "The location (city or postal code) where the device is located.",
                 SettingSpec::SettingType::String
             );
             settingSpecs.emplace_back(
-                NAME_OF(locationIsZip),
+                LocationIsZipTag,
                 "Location is postal code",
                 "A boolean indicating if the value in the 'location' setting is a postal code ('true'/1) or not ('false'/0).",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(countryCode),
+                CountryCodeTag,
                 "Country code",
                 "The <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">ISO 3166-1 alpha-2</a> country "
                 "code for the country that the device is located in.",
@@ -199,7 +221,7 @@ class DeviceConfig : public IJSONSerializable
             );
 
             auto weatherKeySpec = settingSpecs.emplace_back(
-                NAME_OF(openWeatherApiKey),
+                OpenWeatherApiKeyTag,
                 "Open Weather API key",
                 "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
                 SettingSpec::SettingType::String
@@ -208,44 +230,55 @@ class DeviceConfig : public IJSONSerializable
             weatherKeySpec.Access = SettingSpec::SettingAccess::WriteOnly;
 
             settingSpecs.emplace_back(
-                NAME_OF(timeZone),
+                TimeZoneTag,
                 "Time zone",
                 "The timezone the device resides in, in <a href=\"https://en.wikipedia.org/wiki/Tz_database\">tz database</a> format. "
                 "The list of available timezone identifiers can be found in the <a href=\"/timezones.json\">timezones.json</a> file.",
                 SettingSpec::SettingType::String
             );
             settingSpecs.emplace_back(
-                NAME_OF(use24HourClock),
+                Use24HourClockTag,
                 "Use 24 hour clock",
                 "A boolean that indicates if time should be shown in 24-hour format ('true'/1) or 12-hour AM/PM format ('false'/0).",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(useCelsius),
+                UseCelsiusTag,
                 "Use degrees Celsius",
                 "A boolean that indicates if temperatures should be shown in degrees Celsius ('true'/1) or degrees Fahrenheit ('false'/0).",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(ntpServer),
+                NTPServerTag,
                 "NTP server address",
                 "The hostname or IP address of the NTP server to be used for time synchronization.",
                 SettingSpec::SettingType::String
             );
             settingSpecs.emplace_back(
-                NAME_OF(rememberCurrentEffect),
+                RememberCurrentEffectTag,
                 "Remember current effect",
                 "A boolean that indicates if the current effect index should be saved after an effect transition, so the device resumes "
                 "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
-                NAME_OF(powerLimit),
+                BrightnessTag,
+                "Brightness",
+                "Overall brightness the connected LEDs or matrix should be run at.",
+                SettingSpec::SettingType::Integer,
+                BRIGHTNESS_MIN,
+                BRIGHTNESS_MAX
+            ).HasValidation = true;
+
+            auto& powerLimitSpec = settingSpecs.emplace_back(
+                PowerLimitTag,
                 "Power limit",
                 "The maximum power in mW that the matrix attached to the board is allowed to use. As the previous sentence implies, this "
                 "setting only applies if a matrix is used.",
                 SettingSpec::SettingType::Integer
-            ).MinimumValue = POWER_LIMIT_MIN;
+            );
+            powerLimitSpec.MinimumValue = POWER_LIMIT_MIN;
+            powerLimitSpec.HasValidation = true;
 
             settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
         }
@@ -269,6 +302,17 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(use24HourClock, new24HourClock);
     }
+
+    const String &GetHostname() const
+    {
+        return hostname;
+    }
+
+    void SetHostname(const String &newHostname)
+    {
+        SetAndSave(hostname, newHostname);
+    }
+
 
     const String &GetLocation() const
     {
@@ -340,6 +384,29 @@ class DeviceConfig : public IJSONSerializable
     void SetRememberCurrentEffect(bool newRememberCurrentEffect)
     {
         SetAndSave(rememberCurrentEffect, newRememberCurrentEffect);
+    }
+
+    uint8_t GetBrightness() const
+    {
+        return brightness;
+    }
+
+    ValidateResponse ValidateBrightness(const String& newBrightness)
+    {
+        auto newNumericBrightness = newBrightness.toInt();
+
+        if (newNumericBrightness < BRIGHTNESS_MIN)
+            return { false, String("brightness is below minimum value of ") + BRIGHTNESS_MIN };
+
+        if (newNumericBrightness > BRIGHTNESS_MAX)
+            return { false, String("brightness is above maximum value of ") + BRIGHTNESS_MAX };
+
+        return { true, "" };
+    }
+
+    void SetBrightness(int newBrightness)
+    {
+        SetAndSave(brightness, uint8_t(std::clamp<int>(newBrightness, BRIGHTNESS_MIN, BRIGHTNESS_MAX)));
     }
 
     int GetPowerLimit() const

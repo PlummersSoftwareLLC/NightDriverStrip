@@ -38,12 +38,12 @@
 #include <UrlEncode.h>
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
-#include <secrets.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
 #include <thread>
 #include <map>
+#include "TJpg_Decoder.h"
 #include "effects.h"
 #include "types.h"
 

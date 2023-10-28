@@ -42,6 +42,7 @@
 #include <map>
 #include <WiFi.h>
 #include <FS.h>
+#include <SPIFFS.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <Arduino.h>
@@ -87,7 +88,7 @@ class CWebServer
         const char *const type;
         const char *const encoding;
 
-        EmbeddedWebFile(const uint8_t start[], const uint8_t end[], const char type[], const char encoding[])
+        EmbeddedWebFile(const uint8_t* start, const uint8_t* end, const char* type, const char* encoding = nullptr)
             : EmbeddedFile(start, end), type(type), encoding(encoding)
         {
         }
@@ -185,14 +186,16 @@ class CWebServer
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
     void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
     {
-        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request) {
+        _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
+        {
             Serial.printf("GET for: %s\n", strUri);
             AsyncWebServerResponse *response = request->beginResponse_P(200, file.type, file.contents, file.length);
-            if (file.encoding[0])
+            if (file.encoding)
             {
                 response->addHeader("Content-Encoding", file.encoding);
             }
-            request->send(response);
+
+            AddCORSHeaderAndSendResponse(request, response);
         });
     }
 
@@ -203,85 +206,7 @@ class CWebServer
     {}
 
     // begin - register page load handlers and start serving pages
-    void begin()
-    {
-        extern const uint8_t html_start[] asm("_binary_site_dist_index_html_gz_start");
-        extern const uint8_t html_end[] asm("_binary_site_dist_index_html_gz_end");
-        extern const uint8_t js_start[] asm("_binary_site_dist_index_js_gz_start");
-        extern const uint8_t js_end[] asm("_binary_site_dist_index_js_gz_end");
-        extern const uint8_t ico_start[] asm("_binary_site_dist_favicon_ico_gz_start");
-        extern const uint8_t ico_end[] asm("_binary_site_dist_favicon_ico_gz_end");
-        extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
-        extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
-
-        _staticStats.HeapSize = ESP.getHeapSize();
-        _staticStats.DmaHeapSize = heap_caps_get_total_size(MALLOC_CAP_DMA);
-        _staticStats.PsramSize = ESP.getPsramSize();
-        _staticStats.ChipModel = ESP.getChipModel();
-        _staticStats.ChipCores = ESP.getChipCores();
-        _staticStats.CpuFreqMHz = ESP.getCpuFreqMHz();
-        _staticStats.SketchSize = ESP.getSketchSize();
-        _staticStats.FreeSketchSpace = ESP.getFreeSketchSpace();
-        _staticStats.FlashChipSize = ESP.getFlashChipSize();
-
-        debugI("Connecting Web Endpoints");
-
-        _server.on("/effects",               HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectListText(pRequest); });
-        _server.on("/getEffectList",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectListText(pRequest); });
-        _server.on("/statistics",            HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
-        _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest * pRequest)    { this->GetStatistics(pRequest); });
-        _server.on("/nextEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { NextEffect(pRequest); });
-        _server.on("/previousEffect",        HTTP_POST, [](AsyncWebServerRequest * pRequest)        { PreviousEffect(pRequest); });
-
-        _server.on("/currentEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
-        _server.on("/setCurrentEffectIndex", HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetCurrentEffectIndex(pRequest); });
-        _server.on("/enableEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { EnableEffect(pRequest); });
-        _server.on("/disableEffect",         HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DisableEffect(pRequest); });
-        _server.on("/moveEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { MoveEffect(pRequest); });
-        _server.on("/copyEffect",            HTTP_POST, [](AsyncWebServerRequest * pRequest)        { CopyEffect(pRequest); });
-        _server.on("/deleteEffect",          HTTP_POST, [](AsyncWebServerRequest * pRequest)        { DeleteEffect(pRequest); });
-
-        _server.on("/settings/effect/specs", HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettingSpecs(pRequest); });
-        _server.on("/settings/effect",       HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetEffectSettings(pRequest); });
-        _server.on("/settings/effect",       HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetEffectSettings(pRequest); });
-        _server.on("/settings/validated",    HTTP_POST, [](AsyncWebServerRequest * pRequest)        { ValidateAndSetSetting(pRequest); });
-        _server.on("/settings/specs",        HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettingSpecs(pRequest); });
-        _server.on("/settings",              HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { GetSettings(pRequest); });
-        _server.on("/settings",              HTTP_POST, [](AsyncWebServerRequest * pRequest)        { SetSettings(pRequest); });
-        _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest * pRequest)        { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE, "text/json"); });
-
-        _server.on("/reset",                 HTTP_POST, [](AsyncWebServerRequest * pRequest)        { Reset(pRequest); });
-
-        EmbeddedWebFile html_file(html_start, html_end, "text/html", "gzip");
-        EmbeddedWebFile js_file(js_start, js_end, "application/javascript", "gzip");
-        EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon", "gzip");
-        EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json", ""); // end - 1 because of zero-termination
-
-        debugI("Embedded html file size: %d", html_file.length);
-        debugI("Embedded jsx file size: %d", js_file.length);
-        debugI("Embedded ico file size: %d", ico_file.length);
-        debugI("Embedded timezones file size: %d", timezones_file.length);
-
-        ServeEmbeddedFile("/", html_file);
-        ServeEmbeddedFile("/index.html", html_file);
-        ServeEmbeddedFile("/index.js", js_file);
-        ServeEmbeddedFile("/favicon.ico", ico_file);
-        ServeEmbeddedFile("/timezones.json", timezones_file);
-
-        _server.onNotFound([](AsyncWebServerRequest *request)
-        {
-            if (request->method() == HTTP_OPTIONS) {
-                request->send(HTTP_CODE_OK);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
-            } else {
-                   debugW("Failed GET for %s\n", request->url().c_str() );
-                request->send(HTTP_CODE_NOT_FOUND);
-            }
-        });
-
-        _server.begin();
-
-        debugI("HTTP server started");
-    }
+    void begin();
 };
 
 // Set value in lambda using a forwarding function. Always returns true

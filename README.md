@@ -26,6 +26,7 @@ _Davepl, 9/19/2021_
 - [Wifi setup](#wifi-setup)
 - [Feature defines](#feature-defines)
 - [Adding new effects](#adding-new-effects)
+- [Notes on JSON persistence](#notes-on-json-persistence)
 - [Resetting the effect list](#resetting-the-effect-list)
 - [Fetching things from the Internet](#fetching-things-from-the-internet)
 - [Build pointers](#build-pointers)
@@ -215,11 +216,23 @@ That simplest configuration, called here simply 'DEMO', is provided by a board s
 These [build types](#build-pointers) may be chosen by the '-e' argument
 to pio or in a menu option inside the PlatformIO IDE/VS Code.
 
-Concerning JSON peristence: the effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the composition of the effect list configuration of individual effects can be changed using the device web application. The API endpoints to facilitate this are already available and ready for use (see [Device web UI and API](#device-web-ui-and-api), below.)
+## Notes on JSON persistence
 
-This makes that an override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the friendly name and effect number. Those two properties are (de)serialized from/to JSON by `LEDStripEffect` by default.
+The effects table is persisted to a JSON file on SPIFFS at regular intervals, to retain the state of effects (and in fact the whole effect list) across reboots. This is largely in preparation for future updates to NightDriverStrip, where the composition of the effect list configuration of individual effects can be changed using the device web application. The API endpoints to facilitate this are already available and ready for use (see [Device web UI and API](#device-web-ui-and-api), below.)
 
-**Note**: in line with the convention in ArduinoJson, which is the library used by the JSON serialization logic, `SerializeToJSON()` _must_ return `true` _except_ when an ArduinoJson function (like `JsonObject::set()`) returns `false` to indicate it ran out of buffer memory. Any `SerializeToJSON()` function returning `false` will trigger an increase in the serialization buffer and a restart of the serialization process.
+This makes that an override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the properties that are (de)serialized from/to JSON by `LEDStripEffect` by default.
+
+Throughout the project, the library used for JSON handling and (de)serialization is [ArduinoJson](https://arduinojson.org/). Among others, this means that:
+
+- in line with the convention in ArduinoJson, `SerializeToJSON()` functions _must_ return `true` _except_ when an ArduinoJson function (like `JsonObject::set()`) returns `false` to indicate it ran out of buffer memory. Any `SerializeToJSON()` function returning `false` will trigger an increase in the overall serialization buffer and a restart of the serialization process.
+- the memory required for an individual class instance's (de)serialization operation needs to be reserved _beforehand_, by creating either:
+
+  - a `StaticJsonDocument<`_buffer size_`>()` that reserves memory on the stack. This can be used for small buffer sizes (smaller than 1024 bytes) only.
+  - an `AllocatedJsonDocument(`_buffer size_`)` that reserves memory on the heap.
+
+  How much memory is actually required depends on the number, type and contents of the (de)serialized properties, and is effectively a bit of a guessing game - which means the values you'll see throughout the codebase are educated guesses as well. When properties that are serialized last fail to show up in the JSON that is generated, it is reasonable to assume the serialization process ran out of buffer memory and that buffer memory thus needs to be increased.
+
+To get a better understanding of the specifics related to JSON (de)serialization, you could consider taking a look at the respective tutorials in the ["First contact" section](https://arduinojson.org/v6/doc/#first-contact) of the ArduinoJson documentation.
 
 ## Resetting the effect list
 

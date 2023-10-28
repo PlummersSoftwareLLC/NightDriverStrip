@@ -35,9 +35,9 @@
             ]
         },
         {
-            "tag": "esp32esp32-s3",
+            "tag": "esp32-s3",
             "chipfamily": "ESP32-S3",
-            "name": "ESP32ESP32-S3-DevKitC-1",
+            "name": "ESP32-S3-DevKitC-1",
             "projects": [
                 {
                     "tag": "panlee",

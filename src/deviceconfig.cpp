@@ -60,18 +60,7 @@ DeviceConfig::DeviceConfig()
     {
         debugW("DeviceConfig could not be loaded from JSON, using defaults");
 
-        // Set default for additional settings in this code
-        location = cszLocation;
-        locationIsZip = bLocationIsZip;
-        countryCode = cszCountryCode;
-        openWeatherApiKey = cszOpenWeatherAPIKey;
-        use24HourClock = false;
-        useCelsius = false;
-        ntpServer = NTP_SERVER_DEFAULT;
-        rememberCurrentEffect = true;
-        powerLimit = POWER_LIMIT_DEFAULT;
-
-        SetTimeZone(cszTimeZone, true);
+        SetTimeZone(timeZone, true);
 
         SaveToJSON();
     }
@@ -136,7 +125,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
 
         case HTTP_CODE_UNAUTHORIZED:
         {
-            AllocatedJsonDocument jsonDoc(1024);
+            AllocatedJsonDocument jsonDoc(_jsonSize);
             deserializeJson(jsonDoc, http.getString());
 
             String message = "";

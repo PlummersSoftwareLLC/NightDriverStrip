@@ -82,7 +82,7 @@ public:
     MovingObject(float maxSpeed = 0.25) : _maxSpeed(maxSpeed)
     {
         // Return a random value between -maxSpeed and +maxSpeed
-        
+
         _velocity = random_range(0.0f, _maxSpeed * 2) - _maxSpeed;
     }
 
@@ -716,12 +716,14 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _Palette;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -806,12 +808,14 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _Palette;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -892,12 +896,14 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _Palette;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

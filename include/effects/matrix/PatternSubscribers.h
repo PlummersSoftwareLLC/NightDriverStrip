@@ -50,7 +50,7 @@ class PatternSubscribers : public LEDStripEffect
     String youtubeChannelGuid               = DEFAULT_CHANNEL_GUID;
     String youtubeChannelName               = DEFAULT_CHANNEL_NAME;
     bool guidUpdated                        = true;
-    std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
     size_t readerIndex                      = std::numeric_limits<size_t>::max();
 
     unsigned long msLastCheck;
@@ -126,25 +126,34 @@ class PatternSubscribers : public LEDStripEffect
 
   protected:
 
+    static constexpr int _jsonSize = LEDStripEffect::_jsonSize + 192;
+
+    // Add our own SettingSpec instances to the standard set
     bool FillSettingSpecs() override
     {
+        // Don't continue if this instance's SettingSpec reference_wrapper vector is already filled
         if (!LEDStripEffect::FillSettingSpecs())
             return false;
 
-        mySettingSpecs.emplace_back(
-            NAME_OF(youtubeChannelGuid),
-            "YouTube channel GUID",
-            "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
-            "the effect should show subscriber information.",
-            SettingSpec::SettingType::String
-        );
-        mySettingSpecs.emplace_back(
-            NAME_OF(youtubeChannelName),
-            "YouTube channel name",
-            "The name of the channel for which the effect should show subscriber information.",
-            SettingSpec::SettingType::String
-        );
+        // Lazily load this class' SettingSpec instances if they haven't been already
+        if (mySettingSpecs.size() == 0)
+        {
+            mySettingSpecs.emplace_back(
+                NAME_OF(youtubeChannelGuid),
+                "YouTube channel GUID",
+                "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
+                "the effect should show subscriber information.",
+                SettingSpec::SettingType::String
+            );
+            mySettingSpecs.emplace_back(
+                NAME_OF(youtubeChannelName),
+                "YouTube channel name",
+                "The name of the channel for which the effect should show subscriber information.",
+                SettingSpec::SettingType::String
+            );
+        }
 
+        // Add our SettingSpecs reference_wrappers to the base set provided by LEDStripEffect
         _settingSpecs.insert(_settingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
 
         return true;
@@ -172,13 +181,15 @@ class PatternSubscribers : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<256> jsonDoc;
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc["ycg"] = youtubeChannelGuid;
         jsonDoc["ycn"] = youtubeChannelName;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -233,18 +244,23 @@ class PatternSubscribers : public LEDStripEffect
         LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
     }
 
+    // Extension override to serialize our settings on top of those from LEDStripEffect
     bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<384> jsonDoc;
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
         LEDStripEffect::SerializeSettingsToJSON(jsonObject);
 
         jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
         jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;
 
+        if (jsonDoc.overflowed())
+            debugE("JSON buffer overflow while serializing settings for PatternSubscribers - object incomplete!");
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
+    // Extension override to accept our settings on top of those known by LEDStripEffect
     bool SetSetting(const String& name, const String& value) override
     {
         RETURN_IF_SET(name, NAME_OF(youtubeChannelGuid), youtubeChannelGuid, value);
