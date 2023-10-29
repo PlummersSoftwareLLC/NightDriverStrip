@@ -124,7 +124,7 @@ const DesignerPanel = ({ open, addNotification }) => {
             onDrop={(event) => {
                 event.preventDefault();
                 if(dragging !== undefined && dropTarget !== undefined && dragging !== dropTarget) {
-                    return fetch(moveEffectEndpoint, {method:"POST", body:new URLSearchParams({dragging, dropTarget})}).then(() => {
+                    return fetch(moveEffectEndpoint, {method:"POST", body:new URLSearchParams({effectIndex: dragging, newIndex: dropTarget})}).then(() => {
                         setDragging(undefined);
                         setDropTarget(undefined);
                         sync();
