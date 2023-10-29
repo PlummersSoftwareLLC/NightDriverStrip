@@ -8,7 +8,7 @@ import StatsPanel from './statistics/stats';
 import DesignerPanel from './designer/designer';
 import PropTypes from 'prop-types';
 import ConfigDialog from './config/configDialog';
-import {EffectContext} from '../../context/effectsContext';
+import {EffectsContext} from '../../context/effectsContext';
 
 const MainApp = () => {
     const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
@@ -32,7 +32,7 @@ const AppPannel = (props) => {
     const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
     const [settings, setSettings] = useState(false);
     const [notifications, setNotifications] = useState([]);
-    const {sync} = useContext(EffectContext);
+    const {sync} = useContext(EffectsContext);
     
     // save users state to storage so the page reloads where they left off. 
     useEffect(() => {

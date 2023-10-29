@@ -7,6 +7,10 @@ const countdownStyle = {
     },
     timeremaining: {
         width: "100px"
+    },
+    pinned: {
+        width: "unset",
+        height: "20px"
     }
 };
 export default countdownStyle;

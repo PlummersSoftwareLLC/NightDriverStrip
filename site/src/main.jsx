@@ -1,10 +1,10 @@
 import MainApp from './components/home/home';
 import { createRoot } from 'react-dom/client';
-import { TimingProvider } from './context/effectContext';
+import { EffectsProvider } from './context/effectsContext';
 
 const root = createRoot(document.getElementById('root'));
 root.render(
-    <TimingProvider>
+    <EffectsProvider>
         <MainApp/>
-    </TimingProvider>
+    </EffectsProvider>
 );

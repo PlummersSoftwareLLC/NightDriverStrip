@@ -1,4 +1,4 @@
-import {useState, useEffect, useContext} from 'react';
+import {useState, useContext} from 'react';
 import {IconButton, Icon, Typography, Box, Link, ClickAwayListener, TextField} from '@mui/material';
 import Countdown from './countdown/countdown';
 import Effect from './effect/effect';
@@ -6,35 +6,12 @@ import designStyle from './style';
 import httpPrefix from '../../../espaddr';
 import PropTypes from 'prop-types';
 import { EffectsContext} from '../../../context/effectsContext';
-import { useMemo } from 'react';
-
 
 const DesignerPanel = ({ open, addNotification }) => {
-    const {activeEffect, remainingInterval, activeInterval, sync, effects} = useContext(EffectsContext);
+    const {pinnedEffect, activeInterval, sync, effects} = useContext(EffectsContext);
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(activeInterval);
-    const [currentEffect, setCurrentEffect] = useState(Number(activeEffect !== undefined ? activeEffect : 0));
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setCurrentEffect((c) => {
-                if(effects === undefined || c === undefined) {
-                    return activeEffect === undefined ? 0 : Number(activeEffect);
-                }
-                if(c >= effects.length -1) {
-                    return 0;
-                } 
-                return ++c;
-                
-            });
-        }, remainingInterval+10);
-        return () => {
-            clearTimeout(timer);
-        };
-    }, [currentEffect]);
-    useMemo(() => {
-        setCurrentEffect(activeEffect);
-    }, [activeEffect]);
 
     const chipRequest = (url,options,operation) =>
         new Promise((resolve,reject) =>
@@ -76,9 +53,10 @@ const DesignerPanel = ({ open, addNotification }) => {
     };
 
     const updateEventInterval = (interval)=>{
+        setEditing(false);
         return new Promise((resolve,reject)=>{
             setRequestRunning(true);
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+            return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
                 {
                     method:"POST",
                     body: new URLSearchParams({effectInterval:interval})
@@ -92,12 +70,12 @@ const DesignerPanel = ({ open, addNotification }) => {
     const displayHeader = ()=>{
         return <Box sx={designStyle.effectsHeaderValue}>
             <Typography variant="little" color="textPrimary">Interval</Typography>:
-            <Link href="#" variant="little" color="textSecondary" onClick={() => setEditing(true)}>{activeInterval}</Link>
+            <Link href="#" variant="little" color="textSecondary" sx={pinnedEffect ? {height: "25px"}: {}} onClick={() => setEditing(true)}>{pinnedEffect ?<Icon>all_inclusive</Icon> : activeInterval}</Link>
         </Box>;
     };
 
     const editingHeader = ()=>{
-        return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval);setEditing(false);  sync();}}>
+        return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval); sync();}}>
             <Box sx={designStyle.effectsHeaderValue}>
                 <TextField label="Interval ms"
                     variant="outlined"
@@ -117,9 +95,7 @@ const DesignerPanel = ({ open, addNotification }) => {
                 editingHeader():
                 displayHeader()}
             <Countdown
-                label="Time Remaining"
-                requestRefresh={sync}
-                millisecondsRemaining={remainingInterval}/>
+                label="Time Remaining"/>
             {(effects.length > 1) && <Box>
                 <IconButton disabled={requestRunning} onClick={()=>navigate(false)}><Icon>skip_previous</Icon></IconButton>
                 <IconButton disabled={requestRunning} onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
@@ -134,10 +110,7 @@ const DesignerPanel = ({ open, addNotification }) => {
                 effectIndex={idx}
                 navigateTo={navigateTo}
                 requestRunning={requestRunning}
-                effectEnable={effectEnable}
-                effectInterval={activeInterval}
-                selected={Number(idx) === currentEffect}
-                millisecondsRemaining={remainingInterval}/>
+                effectEnable={effectEnable}/>
             )}
         </Box>
     </Box>;

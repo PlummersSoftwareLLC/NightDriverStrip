@@ -9,17 +9,20 @@ const refreshInterval = 30000; //30 Seconds
 const EffectsProvider = ({ children }) => {
     const [effects, setEffects] = useState([]);
     const [activeInterval, setActiveInterval] = useState(2**32);
+    const [pinnedEffect, setPinnedEffect] = useState(false);
     const [remainingInterval, setRemainingInterval] = useState(0);
     const [activeEffect, setActiveEffect] = useState(0);
     const [effectTrigger, setEffectTrigger] = useState(false);
+    const [currentEffect, setCurrentEffect] = useState(Number(0));
     useEffect(() => {
         const getDataFromDevice = async (params) => {
             try {
-                const {currentEffect, millisecondsRemaining, effectInterval, Effects} = await fetch(effectsEndpoint, params).then(r => r.json());
+                const {currentEffect, millisecondsRemaining, eternalInterval, effectInterval, Effects} = await fetch(effectsEndpoint, params).then(r => r.json());
                 setActiveEffect(currentEffect);
                 setRemainingInterval(millisecondsRemaining);
                 setActiveInterval(effectInterval);  
                 setEffects(Effects);
+                setPinnedEffect(eternalInterval);
             } catch(err) {
                 console.debug("Aborted update");
             }
@@ -33,8 +36,29 @@ const EffectsProvider = ({ children }) => {
             clearInterval(timer);
         };
     },[effectTrigger]);
+    
+    useEffect(() => {
+        setCurrentEffect(activeEffect);
+        if (!pinnedEffect) {
+            const timer = setTimeout(() => {
+                setCurrentEffect((c) => {
+                    if(effects === undefined || c === undefined) {
+                        return activeEffect === undefined ? 0 : Number(activeEffect);
+                    }
+                    if(c >= effects.length -1) {
+                        return 0;
+                    } 
+                    return ++c;
+                    
+                });
+            }, remainingInterval+10);
+            return () => {
+                clearTimeout(timer);
+            };
+        }
+    }, [activeEffect])
     return (
-        <EffectsContext.Provider value={{activeInterval, remainingInterval, activeEffect, effects, sync: () => setEffectTrigger(s => !s)}}>
+        <EffectsContext.Provider value={{activeInterval, remainingInterval, activeEffect, pinnedEffect,currentEffect, effects, sync: () => setEffectTrigger(s => !s)}}>
             {children}
         </EffectsContext.Provider>
     );
@@ -47,4 +71,4 @@ EffectsProvider.propTypes = {
     ]).isRequired
 };
 
-export {EffectsContext, EffectsProvider as TimingProvider};
+export {EffectsContext, EffectsProvider};
