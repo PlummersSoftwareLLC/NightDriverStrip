@@ -121,7 +121,15 @@ const DesignerPanel = ({ open, addNotification }) => {
         </Box>
         <Box sx={gridLayout? designStyle.gridEffects : designStyle.listEffects}
             onDragOver={(event) => handleDragOver(event, undefined, setDropTarget)} 
-            onDrop={(event, index) => {handleDrop(event, index, setDragging, setDropTarget, dragging, dropTarget, sync)}}>            
+            onDrop={(event) => {
+                event.preventDefault();
+                if(dragging !== undefined && dropTarget !== undefined && dragging !== dropTarget) {
+                    return fetch(moveEffectEndpoint, {method:"POST", body:new URLSearchParams({dragging, dropTarget})}).then(() => {
+                        setDragging(undefined);
+                        setDropTarget(undefined);
+                        sync();
+                    });
+                }}}>            
             {effects.map((effect,idx) => (effect.enabled || showDisabled) && <Effect
                 onDragStart={(event, index) => {
                     handleDragStart(event, index, setDragging)
@@ -148,17 +156,6 @@ function handleDragOver(event, index, setDropTarget) {
     event.preventDefault();
     if (index !== undefined) {
         setDropTarget(index)
-    }
-}
-
-function handleDrop(event, index, setDragging, setDropTarget, effectIndex, newIndex, sync) {
-    event.preventDefault();
-    if(effectIndex !== undefined && newIndex !== undefined && effectIndex !== newIndex) {
-        return fetch(moveEffectEndpoint, {method:"POST", body:new URLSearchParams({effectIndex, newIndex})}).then(() => {
-            setDragging(undefined);
-            setDropTarget(undefined);
-            sync();
-        });
     }
 }
 
