@@ -1,4 +1,4 @@
-import {useState, useContext} from 'react';
+import {useState, useContext, useEffect} from 'react';
 import {IconButton, Icon, Typography, Box, Link, ClickAwayListener, TextField} from '@mui/material';
 import Countdown from './countdown/countdown';
 import Effect from './effect/effect';
@@ -8,10 +8,19 @@ import PropTypes from 'prop-types';
 import { EffectsContext} from '../../../context/effectsContext';
 
 const DesignerPanel = ({ open, addNotification }) => {
+    const config = JSON.parse(localStorage.getItem('designerConfig'));
     const {pinnedEffect, activeInterval, sync, effects} = useContext(EffectsContext);
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(activeInterval);
+    const [gridLayout, setGridlayout] = useState(config && config.gridLayout !== undefined ? config.gridLayout : true)
+
+    // save users state to storage so the page reloads where they left off. 
+    useEffect(() => {
+        localStorage.setItem('designerConfig', JSON.stringify({
+            gridLayout
+        }));
+    }, [gridLayout]);
 
     const chipRequest = (url,options,operation) =>
         new Promise((resolve,reject) =>
@@ -101,8 +110,10 @@ const DesignerPanel = ({ open, addNotification }) => {
                 <IconButton disabled={requestRunning} onClick={()=>navigate(true)}><Icon>skip_next</Icon></IconButton>
                 <IconButton disabled={requestRunning} onClick={()=>sync()}><Icon>refresh</Icon></IconButton>
             </Box>}
+            <Box sx={{flexGrow: '1'}}></Box>
+            <Box sx={{justifySelf: 'flex-end'}}><Icon onClick={() => setGridlayout(prev => !prev)}>{gridLayout ? 'list_icon' : 'grid_view'}</Icon></Box>
         </Box>
-        <Box sx={designStyle.effects}>
+        <Box sx={gridLayout? designStyle.gridEffects : designStyle.listEffects}>
             
             {effects.map((effect,idx) => <Effect
                 key={`effect-${idx}`}
@@ -110,7 +121,8 @@ const DesignerPanel = ({ open, addNotification }) => {
                 effectIndex={idx}
                 navigateTo={navigateTo}
                 requestRunning={requestRunning}
-                effectEnable={effectEnable}/>
+                effectEnable={effectEnable}
+                gridLayout={gridLayout}/>
             )}
         </Box>
     </Box>;
