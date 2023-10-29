@@ -69,8 +69,8 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     let max;
     switch(setting.type) {
     case settingType.Integer:
-        min = setting.minimumValue ? setting.minimumValue : (-2)**31;
-        max = setting.maximumValue ? setting.maximumValue : 2**31 -1;
+        min = setting.minimumValue !== undefined ? setting.minimumValue : (-2)**31;
+        max = setting.maximumValue !== undefined ? setting.maximumValue : 2**31 -1;
         return <TextField
             {...baseProps}
             {...textFieldProps}
@@ -81,8 +81,8 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             }}
         />;  
     case settingType.PositiveBigInteger:
-        min = setting.minimumValue ? setting.minimumValue : 0;
-        max = setting.maximumValue ? setting.maximumValue : 2**32;
+        min = setting.minimumValue !== undefined ? setting.minimumValue : 0;
+        max = setting.maximumValue !== undefined ? setting.maximumValue : 2**32;
         return <TextField
             {...baseProps}
             {...textFieldProps}
@@ -94,8 +94,8 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             }}
         />;
     case settingType.Float:
-        min = setting.minimumValue ? setting.minimumValue :  -3.4028235E+38;
-        max = setting.maximumValue ? setting.maximumValue : 3.4028235E+38;
+        min = setting.minimumValue !== undefined ? setting.minimumValue :  -3.4028235E+38;
+        max = setting.maximumValue !== undefined ? setting.maximumValue : 3.4028235E+38;
         return <TextField
             {...baseProps}
             {...textFieldProps}
