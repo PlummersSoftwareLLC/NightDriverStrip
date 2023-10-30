@@ -322,23 +322,23 @@ void setup()
     ESP_ERROR_CHECK(err);
 
     #if ENABLE_WIFI
-        String WiFi_password;
         String WiFi_ssid;
+        String WiFi_password;
 
         // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
         if (!ReadWiFiConfig(WiFi_ssid, WiFi_password))
         {
             debugW("Could not read WiFI Credentials");
-            WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;
-            if (!WriteWiFiConfig(WiFi_password, WiFi_ssid))
+            WiFi_password = cszPassword;
+            if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
                 debugW("Could not even write defaults to WiFi Credentials");
         }
         else if (WiFi_ssid.length() == 0)
         {
-            WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;
+            WiFi_password = cszPassword;
         }
 
         // This chip alone is special-cased by Improv, so we pull it
