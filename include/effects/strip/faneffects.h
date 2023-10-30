@@ -695,7 +695,7 @@ public:
 
   bool SerializeToJSON(JsonObject& jsonObject) override
   {
-    AllocatedJsonDocument jsonDoc(512);
+    AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
@@ -703,6 +703,8 @@ public:
     jsonDoc[PTY_PALETTE] = _Palette;
     jsonDoc["rpm"] = _bReplaceMagenta;
     jsonDoc["sch"] = _sparkleChance;
+
+    assert(!jsonDoc.overflowed());
 
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
@@ -1021,7 +1023,7 @@ public:
 
   bool SerializeToJSON(JsonObject& jsonObject) override
   {
-    AllocatedJsonDocument jsonDoc(512);
+    AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
@@ -1037,6 +1039,8 @@ public:
     jsonDoc[PTY_MIRORRED] = bMirrored;
     jsonDoc[PTY_ORDER] = to_value(Order);
     jsonDoc[PTY_MULTICOLOR] = bMulticolor ? 1 : 0;
+
+    assert(!jsonDoc.overflowed());
 
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }

@@ -31,6 +31,7 @@
 #include <algorithm>
 #include "globals.h"
 #include "systemcontainer.h"
+#include "soundanalyzer.h"
 
 #if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
   #include "Bounce2.h"                            // For Bounce button class

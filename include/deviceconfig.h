@@ -199,7 +199,7 @@ class DeviceConfig : public IJSONSerializable
                 "Hostname",
                 "The hostname of the device. A reboot is required after changing this.",
                 SettingSpec::SettingType::String
-            ).Optional = true;
+            ).EmptyAllowed = true;
             settingSpecs.emplace_back(
                 LocationTag,
                 "Location",

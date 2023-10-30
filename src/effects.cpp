@@ -41,6 +41,7 @@
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
+#include "effects/strip/misceffects.h"
 #include "effects/matrix/PatternClock.h"       // No matrix dependencies
 
 #if ENABLE_AUDIO
@@ -58,7 +59,6 @@
 
 #if USE_HUB75
     #include "ledmatrixgfx.h"
-    #include "effects/strip/misceffects.h"
 
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSM2DDPR.h"
