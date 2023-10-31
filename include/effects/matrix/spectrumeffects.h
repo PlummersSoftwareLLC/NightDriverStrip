@@ -65,12 +65,14 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 384);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _Palette;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -354,7 +356,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -365,6 +367,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         jsonDoc["frt"]       = _fadeRate;
         jsonDoc["pd1"]       = _peak1DecayRate;
         jsonDoc["pd2"]       = _peak2DecayRate;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -446,12 +450,14 @@ class WaveformEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<192> jsonDoc;
+        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc["inc"] = _increment;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -539,7 +545,7 @@ class GhostWave : public WaveformEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<192> jsonDoc;
+        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -547,6 +553,8 @@ class GhostWave : public WaveformEffect
         jsonDoc[PTY_BLUR] = _blur;
         jsonDoc[PTY_ERASE] = _erase;
         jsonDoc[PTY_FADE] = _fade;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
@@ -625,7 +633,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<192> jsonDoc;
+        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -633,6 +641,8 @@ class SpectrumBarEffect : public LEDStripEffect
         jsonDoc[PTY_SPEED]    = _scrollIncrement;
         jsonDoc[PTY_DELTAHUE] = _hueIncrement;
         jsonDoc[PTY_HUESTEP]  = _hueStep;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

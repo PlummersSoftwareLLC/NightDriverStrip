@@ -33,6 +33,7 @@
 #pragma once
 
 #include <improv.h>
+#include "network.h"
 #include "hexdump.h"
 
 #define IMPROV_LOG_FILE             "/improv.log"
@@ -55,11 +56,6 @@ enum ImprovSerialType : uint8_t
 };
 
 static const uint8_t IMPROV_SERIAL_VERSION = 1;
-
-extern DRAM_ATTR String WiFi_ssid;
-extern DRAM_ATTR String WiFi_password;
-bool ReadWiFiConfig();
-bool WriteWiFiConfig();
 
 template <typename SERIALTYPE>
 class ImprovSerial
@@ -91,7 +87,7 @@ public:
         else
             this->state_ = improv::STATE_AUTHORIZED;
 
-        log_write("Settings ssid=\"%s\", password=******", WiFi_ssid.c_str());
+        log_write("Finished Improv setup");
     }
 
     // Main ImprovSerial loop.  Pulls available characters from the serial port, and tries to have them parsed
@@ -113,17 +109,15 @@ public:
             if (this->parse_improv_serial_byte_(byte))
                 this->last_read_byte_ = now;
             else
-            {
-                log_write("Abandoning Improv buffer after %d received bytes:", this->rx_buffer_.size());
-                log_write(this->rx_buffer_);
                 this->rx_buffer_.clear();
-            }
         }
 
-        if (this->state_ == improv::STATE_PROVISIONING)
+        if (this->state_ != improv::STATE_PROVISIONED)
         {
             if (WiFi.getMode() == WIFI_AP || (WiFi.getMode() == WIFI_STA && WiFi.isConnected()))
             {
+                log_write("Responding that wiFi is connected.");
+                debugI("Sending Improv packets to indicate WiFi is connected. Ignore any IMPROV lines that follow this one.");
                 this->set_state_(improv::STATE_PROVISIONED);
                 std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
                 this->send_response_(url);
@@ -154,19 +148,18 @@ protected:
         __attribute__((format(printf, 2, 3)))
         void log_write(const char* format, ...)
         {
+            constexpr int bufferSize = 256;
+            char lineBuffer[bufferSize];
+
             auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
             va_list args;
 
             va_start(args, format);
-
-            // We shifted the printf parameter check to ourselves, so we can suppress the warning here
-            #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-            file.printf(format, args);
-            #pragma GCC diagnostic warning "-Wformat-nonliteral"
-
+            vsnprintf(lineBuffer, bufferSize, format, args);
             va_end(args);
 
-            file.println();
+            lineBuffer[bufferSize - 1] = 0;
+            file.println(lineBuffer);
 
             file.close();
         }
@@ -217,10 +210,7 @@ protected:
 
         uint8_t data_len = raw[8];
 
-        if (at < 8 + data_len)
-            return true;
-
-        if (at == 8 + data_len)
+        if (at <= 8 + data_len)
             return true;
 
         // THe last byte of the packet needs to be a checksum, so compute it and stuff it in
@@ -233,21 +223,26 @@ protected:
 
             if (checksum != byte)
             {
-                log_write("Checksum mismatch in Improv payload. Expected 0x%x. Got 0x%x", checksum, byte);
+                log_write("Checksum mismatch in Improv payload. Expected 0x%02hhX. Got 0x%02hhX", checksum, byte);
                 this->set_error_(improv::ERROR_INVALID_RPC);
                 return false;
             }
 
+            log_write("Received valid Improv packet of type 0x%02hhX with data length %hhu", type, data_len);
+
             if (type == TYPE_RPC)
             {
+                log_write("Received RPC command, trying to parse and process...");
                 this->set_error_(improv::ERROR_NONE);
                 auto command = improv::parse_improv_data(&raw[9], data_len, false);
                 return this->parse_improv_payload_(command);
             }
+            else
+            {
+                log_write("Improv command not RPC, so not handled");
+                this->set_error_(improv::ERROR_NONE);
+            }
         }
-
-        // If we got here then the command coming is improv, but not an RPC command
-        log_write("Improv command not RPC, so not handled.");
 
         return false;
     }
@@ -264,17 +259,19 @@ protected:
 
             case improv::WIFI_SETTINGS:
             {
-                WiFi_ssid = command.ssid.c_str();
-                WiFi_password = command.password.c_str();
+                String WiFi_ssid = command.ssid.c_str();
+                String WiFi_password = command.password.c_str();
 
-                if (!WriteWiFiConfig())
-                    debugI("Failed writing WiFi config to NVS");
+                // These lines actually require WiFi to be enabled in the project
+                #if ENABLE_WIFI
+                    if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
+                        debugI("Failed writing WiFi config to NVS");
 
-                log_write("Received Improv wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
+                    log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
-                WiFi.disconnect();
-                WiFi.mode(WIFI_STA);
-                WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
+                    ConnectToWiFi(WiFi_ssid, WiFi_password);
+                #endif
+
                 this->set_state_(improv::STATE_PROVISIONING);
 
                 this->command_.command  = command.command;
@@ -284,23 +281,29 @@ protected:
                 return true;
             }
 
-                // Return the current state of the WiFi setup:  authorized, provisioning, or provisioned
+            // Return the current state of the WiFi setup:  authorized, provisioning, or provisioned
 
             case improv::GET_CURRENT_STATE:
             {
-                this->set_state_(this->state_);
+                log_write(".Received request for current state");
+                this->set_state_(WiFi.isConnected() ? improv::STATE_PROVISIONED : this->state_);
+
                 if (this->state_ == improv::STATE_PROVISIONED)
                 {
+                    log_write(".Sending response with device IP address");
                     std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::GET_CURRENT_STATE);
                     this->send_response_(url);
                 }
+                else
+                    log_write(".Not connected, so not sending response");
+
                 return true;
             }
-
-                // Return info about the ESP32 itself
+            // Return info about the ESP32 itself
 
             case improv::GET_DEVICE_INFO:
             {
+                log_write(".Received request for device info, sending response");
                 std::vector<uint8_t> info = this->build_version_info_();
                 this->send_response_(info);
                 return true;
@@ -308,32 +311,40 @@ protected:
 
             case improv::GET_WIFI_NETWORKS:
             {
+                log_write(".Received request for WiFi networks");
                 auto numSsid = WiFi.scanNetworks();
                 if (numSsid > 0)
                 {
                     for (int i = 0; i < numSsid; i++)
                     {
+                        log_write(".Sending details for SSID %s", WiFi.SSID(i).c_str());
                         // Send each ssid separately to avoid overflowing the buffer
                         std::vector<uint8_t> data = improv::build_rpc_response(
                             improv::GET_WIFI_NETWORKS, {WiFi.SSID(i), str_sprintf("%d", WiFi.RSSI(i)), WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "YES" : "NO"}, false);
                         this->send_response_(data);
                     }
                 }
+                else
+                    log_write(".No WiFi networks found");
 
                 // Send empty response to signify the end of the list.
 
+                log_write(".Sending empty response to signal end of list");
                 std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<String>{}, false);
                 this->send_response_(data);
                 return true;
             }
+
             default:
             {
-                log_write("Unknown Improv payload. 0x%x", command.command);
+                log_write(".Received unknown RPC command 0x%02hhX, responding we're OK ignoring it", command.command);
                 this->set_error_(improv::ERROR_UNKNOWN_RPC);
-                return false;
+                return true;
             }
         }
     }
+
+
     // Allows the remote caller to set the provisioning state
 
     void set_state_(improv::State state)
@@ -346,6 +357,8 @@ protected:
         data[7] = TYPE_CURRENT_STATE;
         data[8] = 1;
         data[9] = state;
+
+        log_write("..Sending current state response for state: 0x%02hhX", state);
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -366,7 +379,7 @@ protected:
         data[8] = 1;
         data[9] = error;
 
-        log_write("Improv Serial received an error condition from the caller: %d", error);
+        log_write("..Sending error response for error: 0x%02hhX", error);
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -383,6 +396,8 @@ protected:
         data[7] = TYPE_RPC_RESPONSE;
         data[8] = response.size();
         data.insert(data.end(), response.begin(), response.end());
+
+        log_write("..Sending RPC response with %zu bytes of data", response.size());
 
         uint8_t checksum = 0x00;
         for (uint8_t d : data)
@@ -434,10 +449,11 @@ protected:
     {
         data.push_back('\n');
 
-        log_write("Sending Improv response:");
+        log_write("...Sending response packet:");
         log_write(data);
 
         this->hw_serial_->write(data.data(), data.size());
+        this->hw_serial_->flush();
     }
 
     SERIALTYPE *hw_serial_ = nullptr;

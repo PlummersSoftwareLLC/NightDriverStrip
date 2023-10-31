@@ -501,6 +501,8 @@ class LEDStripEffect : public IJSONSerializable
         if (_coreEffect)
             jsonDoc[PTY_COREEFFECT] = 1;
 
+        assert(!jsonDoc.overflowed());
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
@@ -543,6 +545,9 @@ class LEDStripEffect : public IJSONSerializable
         jsonDoc[ACTUAL_NAME_OF(_friendlyName)] = _friendlyName;
         jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;
         jsonDoc["hasMaximumEffectTime"] = HasMaximumEffectTime();
+
+        if (jsonDoc.overflowed())
+            debugE("JSON buffer overflow while serializing settings for LEDStripEffect - object incomplete!");
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

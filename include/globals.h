@@ -710,9 +710,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Ledstrip"
     #endif
 
+    #ifndef ENABLE_WEBSERVER
     #define ENABLE_WEBSERVER            0   // Turn on the internal webserver
+    #endif
+
     #define ENABLE_WIFI                 1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+    
     #define WAIT_FOR_WIFI               1   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL           5   // How many seconds before the lamp times out and shows local content
     #define COLORDATA_SERVER_ENABLED    0   // Also provides a response packet

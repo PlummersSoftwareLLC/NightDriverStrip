@@ -467,7 +467,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(512);
+        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -481,6 +481,8 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         jsonDoc[PTY_BLUR] = _blurFactor;
         jsonDoc["msf"] = _musicFactor;
         jsonDoc[PTY_COLOR] = _skyColor;
+
+        assert(!jsonDoc.overflowed());
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

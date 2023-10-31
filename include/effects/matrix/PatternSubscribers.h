@@ -189,6 +189,8 @@ class PatternSubscribers : public LEDStripEffect
         jsonDoc["ycg"] = youtubeChannelGuid;
         jsonDoc["ycn"] = youtubeChannelName;
 
+        assert(!jsonDoc.overflowed());
+
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
@@ -251,6 +253,9 @@ class PatternSubscribers : public LEDStripEffect
 
         jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
         jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;
+
+        if (jsonDoc.overflowed())
+            debugE("JSON buffer overflow while serializing settings for PatternSubscribers - object incomplete!");
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }

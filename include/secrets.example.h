@@ -32,7 +32,8 @@
 
 #define cszSSID              "Your SSID"
 #define cszPassword          "Your PASS"
-#define cszHostname          "NightDriverStrip"
+#define cszHostname          ""                     // An empty hostname will make it default to esp32-XXXXXX,
+                                                    //   with the Xs being 3 bytes of the device's MAC address
 #define cszOpenWeatherAPIKey ""                     // Your OpenWeatherMap API key goes Here
 #define cszLocation          "98074"
 #define bLocationIsZip       true
