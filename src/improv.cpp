@@ -88,56 +88,6 @@ namespace improv
         return improv_command;
     }
 
-    bool parse_improv_serial_byte(size_t position, uint8_t byte, const uint8_t *buffer,
-                                  std::function<bool(ImprovCommand)> &&callback, std::function<void(Error)> &&on_error)
-    {
-        if (position == 0)
-            return byte == 'I';
-        if (position == 1)
-            return byte == 'M';
-        if (position == 2)
-            return byte == 'P';
-        if (position == 3)
-            return byte == 'R';
-        if (position == 4)
-            return byte == 'O';
-        if (position == 5)
-            return byte == 'V';
-
-        if (position == 6)
-            return byte == IMPROV_SERIAL_VERSION;
-
-        if (position <= 8)
-            return true;
-
-        uint8_t type = buffer[7];
-        uint8_t data_len = buffer[8];
-
-        if (position <= 8 + data_len)
-            return true;
-
-        if (position == 8 + data_len + 1)
-        {
-            uint8_t checksum = 0x00;
-            for (size_t i = 0; i < position; i++)
-                checksum += buffer[i];
-
-            if (checksum != byte)
-            {
-                on_error(ERROR_INVALID_RPC);
-                return false;
-            }
-
-            if (type == TYPE_RPC)
-            {
-                auto command = parse_improv_data(&buffer[9], data_len, false);
-                return callback(command);
-            }
-        }
-
-        return false;
-    }
-
     // Combines the command, a list of strings, and an optional checksum into a vector of bytes (uses String)
 
     std::vector<uint8_t> build_rpc_response(Command command, const std::vector<String> &datum, bool add_checksum)
