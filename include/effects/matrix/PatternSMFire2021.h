@@ -73,9 +73,9 @@ class PatternSMFire2021 : public LEDStripEffect
             Scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
         deltaValue = Scale * 0.0899; // /100.0F * ((sizeof(palette_arr)
                                      // /sizeof(TProgmemRGBPalette16 *))-0.01F));
-#if LATER
+#if 1 || LATER
         if (deltaValue == 3U || deltaValue == 4U)
-            curPalette = palette_arr[deltaValue]; // (uint8_t)(Scale/100.0F * ((sizeof(palette_arr)
+            curPalette = firePalettes[deltaValue]; // (uint8_t)(Scale/100.0F * ((sizeof(palette_arr)
                                                   // /sizeof(TProgmemRGBPalette16 *))-0.01F))];
         else
 #endif
@@ -99,14 +99,22 @@ class PatternSMFire2021 : public LEDStripEffect
             for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 int16_t Bri = inoise8(x * deltaValue, (y * deltaValue) - ff_x, ff_z) - (y * (255 / MATRIX_HEIGHT));
-                byte Col = Bri; // inoise8(x * deltaValue, (y * deltaValue) - ff_x,
-                                // ff_z) - (y * (255 / MATRIX_HEIGHT));
+                byte Col = Bri; // inoise8(x * deltaValue, (y * deltaValue) - ff_x, ff_z) - (y * (255 / MATRIX_HEIGHT));
                 if (Bri < 0)
                     Bri = 0;
                 if (Bri != 0)
                     Bri = 256 - (Bri * 0.2);
+
+                // Get the flame color using the black body radiation approximation, but when the palette is paused
+                // we make flame in that base color instead of the normal red
+
+                CRGB color = GetBlackBodyHeatColor(Col/255.0f, g()->IsPalettePaused() ? 
+                                  g()->ColorFromCurrentPalette(0, Bri) 
+                                : CRGB::Red).fadeToBlackBy(255-Bri);
+
                 // NightDriver mod - invert Y argument.
-                nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)], ColorFromPalette(*curPalette, Col, Bri), pcnt);
+
+                nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)], color, pcnt);
             }
         }
 

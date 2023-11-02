@@ -341,23 +341,58 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Given a temp in the 0-1 range, returns a fire-appropriate black body radiator color for it
 
-    virtual CRGB GetBlackBodyHeatColor(float temp) const
+    virtual CRGB GetBlackBodyHeatColor(float temp) const 
     {
-        temp = std::clamp(temp, 0.0f, 1.0f);
-        uint8_t temperature = (uint8_t)(255 * temp);
-        uint8_t t192 = (uint8_t)((temperature / 255.0f) * 191);
+        temp *= 255;
+        uint8_t t192 = round((temp/255.0f)*191);
 
-        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
-        heatramp <<= 2;
+        // calculate ramp up from
+        uint8_t heatramp = t192 & 0x3F;         // 0..63
+        heatramp <<= 2;                         // scale up to 0..252
 
-        if (t192 > 0x80)
+        // figure out which third of the spectrum we're in:
+        if( t192 > 0x80)                        // hottest
             return CRGB(255, 255, heatramp);
-        else if (t192 > 0x40)
-            return CRGB(255, heatramp, 0);
-        else
-            return CRGB(heatramp, 0, 0);
+        else if( t192 > 0x40 )                  // middle
+            return CRGB( 255, heatramp, 0);
+        else                                    // coolest
+            return CRGB( heatramp, 0, 0);
     }
 
+    static CRGB lerp(const CRGB &color1, const CRGB &color2, float amount) 
+    {
+        return CRGB(
+            (uint8_t)(color1.r + amount * (color2.r - color1.r)),
+            (uint8_t)(color1.g + amount * (color2.g - color1.g)),
+            (uint8_t)(color1.b + amount * (color2.b - color1.b))
+        );
+    }
+
+    virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const 
+    {
+        temp = std::clamp(temp, 0.0f, 1.0f);
+ 
+        if (baseColor== CRGB::Red)
+            return GetBlackBodyHeatColor(temp);
+            
+        static CRGB black(0, 0, 0);
+        static CRGB yellow(255, 255, 0);
+        static CRGB white(255, 255, 255);
+
+        if (temp < 0.33f) 
+        {
+            // Interpolate from black to baseColor
+            return lerp(black, baseColor, temp * 3.0f);  // Multiply by 3 to map [0, 0.33] to [0, 1]
+        } else if (temp < 0.66f) 
+        {
+            // Interpolate from baseColor to yellow
+            return lerp(baseColor, yellow, (temp - 0.33f) * 3.0f);  // Adjust and map [0.33, 0.66] to [0, 1]
+        } else 
+        {
+            // Interpolate from yellow to white
+            return lerp(yellow, white, (temp - 0.66f) * 3.0f);  // Adjust and map [0.66, 1] to [0, 1]
+        }
+    }
     // fillSolidOnAllChannels
     //
     // Fill all of the LEDs specified with the color indicated.  Can have arbitrary start, length, and step
