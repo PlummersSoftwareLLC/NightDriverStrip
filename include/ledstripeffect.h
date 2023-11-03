@@ -341,7 +341,7 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Given a temp in the 0-1 range, returns a fire-appropriate black body radiator color for it
 
-    virtual CRGB GetBlackBodyHeatColor(float temp) const 
+    virtual CRGB GetBlackBodyHeatColor(float temp) const
     {
         temp *= 255;
         uint8_t t192 = round((temp/255.0f)*191);
@@ -359,7 +359,7 @@ class LEDStripEffect : public IJSONSerializable
             return CRGB( heatramp, 0, 0);
     }
 
-    static CRGB lerp(const CRGB &color1, const CRGB &color2, float amount) 
+    static CRGB lerp(const CRGB &color1, const CRGB &color2, float amount)
     {
         return CRGB(
             (uint8_t)(color1.r + amount * (color2.r - color1.r)),
@@ -368,29 +368,25 @@ class LEDStripEffect : public IJSONSerializable
         );
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const 
+    virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
     {
         temp = std::clamp(temp, 0.0f, 1.0f);
- 
+
         if (baseColor== CRGB::Red)
             return GetBlackBodyHeatColor(temp);
-            
-        static CRGB black(0, 0, 0);
-        static CRGB yellow(255, 255, 0);
-        static CRGB white(255, 255, 255);
 
-        if (temp < 0.33f) 
+        if (temp < 0.33f)
         {
             // Interpolate from black to baseColor
-            return lerp(black, baseColor, temp * 3.0f);  // Multiply by 3 to map [0, 0.33] to [0, 1]
-        } else if (temp < 0.66f) 
+            return lerp(CRGB::Black, baseColor, temp * 3.0f);  // Multiply by 3 to map [0, 0.33] to [0, 1]
+        } else if (temp < 0.66f)
         {
             // Interpolate from baseColor to yellow
-            return lerp(baseColor, yellow, (temp - 0.33f) * 3.0f);  // Adjust and map [0.33, 0.66] to [0, 1]
-        } else 
+            return lerp(baseColor, CRGB::Yellow, (temp - 0.33f) * 3.0f);  // Adjust and map [0.33, 0.66] to [0, 1]
+        } else
         {
             // Interpolate from yellow to white
-            return lerp(yellow, white, (temp - 0.66f) * 3.0f);  // Adjust and map [0.66, 1] to [0, 1]
+            return lerp(CRGB::Yellow, CRGB::White`, (temp - 0.66f) * 3.0f);  // Adjust and map [0.66, 1] to [0, 1]
         }
     }
     // fillSolidOnAllChannels
