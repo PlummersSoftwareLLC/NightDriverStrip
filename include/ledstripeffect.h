@@ -370,10 +370,10 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
     {
-        temp = std::clamp(temp, 0.0f, 1.0f);
-
         if (baseColor == CRGB::Red)
             return GetBlackBodyHeatColor(temp);
+
+        temp = std::clamp(temp, 0.0f, 1.0f);
 
         if (temp < 0.33f)
         {
