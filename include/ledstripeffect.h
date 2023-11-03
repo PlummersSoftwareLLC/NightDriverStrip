@@ -386,7 +386,7 @@ class LEDStripEffect : public IJSONSerializable
         } else
         {
             // Interpolate from yellow to white
-            return lerp(CRGB::Yellow, CRGB::White`, (temp - 0.66f) * 3.0f);  // Adjust and map [0.66, 1] to [0, 1]
+            return lerp(CRGB::Yellow, CRGB::White, (temp - 0.66f) * 3.0f);  // Adjust and map [0.66, 1] to [0, 1]
         }
     }
     // fillSolidOnAllChannels

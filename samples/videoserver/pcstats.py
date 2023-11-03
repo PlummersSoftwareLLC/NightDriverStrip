@@ -118,10 +118,10 @@ def DrawFrame():
         d.text((0,10), "Pass: " + str(DrawFrame.frame), font=font, fill=(255,255,255))
         return img
 DrawFrame.frame = 0
+
 # main
 #
-# Entry point.  Downloads a YouTube video and sends it to the socket server on a NightDriverStrip
-# mesmerizer project to be displayed on the matrix
+# Entry point. 
 
 if __name__ == "__main__":
 
