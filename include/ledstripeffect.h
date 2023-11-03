@@ -343,31 +343,12 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual CRGB GetBlackBodyHeatColor(float temp) const
     {
-        temp *= 255;
-        uint8_t t192 = round((temp / 255.0f) * 191);
-
-        // calculate ramp up from
-        uint8_t heatramp = t192 & 0x3F;         // 0..63
-        heatramp <<= 2;                         // scale up to 0..252
-
-        // figure out which third of the spectrum we're in:
-        if( t192 > 0x80)                        // hottest
-            return CRGB(255, 255, heatramp);
-        else if( t192 > 0x40 )                  // middle
-            return CRGB( 255, heatramp, 0);
-        else                                    // coolest
-            return CRGB( heatramp, 0, 0);
+        return ColorFromPalette(HeatColors_p, 255 * temp);
     }
 
-    static CRGB lerp(const CRGB &color1, const CRGB &color2, float amount)
-    {
-        return CRGB(
-            (uint8_t)(color1.r + amount * (color2.r - color1.r)),
-            (uint8_t)(color1.g + amount * (color2.g - color1.g)),
-            (uint8_t)(color1.b + amount * (color2.b - color1.b))
-        );
-    }
-
+    // The variant allows you to specify a base flame color other than red, and the result
+    // is interpolated from black to your color and on through yellow and white
+    
     virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
     {
         if (baseColor == CRGB::Red)
@@ -376,19 +357,14 @@ class LEDStripEffect : public IJSONSerializable
         temp = std::clamp(temp, 0.0f, 1.0f);
 
         if (temp < 0.33f)
-        {
-            // Interpolate from black to baseColor
-            return lerp(CRGB::Black, baseColor, temp * 3.0f);  // Multiply by 3 to map [0, 0.33] to [0, 1]
-        } else if (temp < 0.66f)
-        {
-            // Interpolate from baseColor to yellow
-            return lerp(baseColor, CRGB::Yellow, (temp - 0.33f) * 3.0f);  // Adjust and map [0.33, 0.66] to [0, 1]
-        } else
-        {
-            // Interpolate from yellow to white
-            return lerp(CRGB::Yellow, CRGB::White, (temp - 0.66f) * 3.0f);  // Adjust and map [0.66, 1] to [0, 1]
-        }
+            return ColorFraction(baseColor, temp * 3.0f);                                                   // Interpolate from black to baseColor
+        
+        if (temp < 0.66f)
+            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interoplate from baseColor to Yellow
+
+        return CRGB::Yellow + ColorFraction(CRGB::Blue,  (temp - 0.66f) * 3.0f);                            // Interpolate from Yellow to White
     }
+
     // fillSolidOnAllChannels
     //
     // Fill all of the LEDs specified with the color indicated.  Can have arbitrary start, length, and step
