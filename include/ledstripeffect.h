@@ -372,7 +372,7 @@ class LEDStripEffect : public IJSONSerializable
     {
         temp = std::clamp(temp, 0.0f, 1.0f);
 
-        if (baseColor== CRGB::Red)
+        if (baseColor == CRGB::Red)
             return GetBlackBodyHeatColor(temp);
 
         if (temp < 0.33f)
