@@ -344,7 +344,7 @@ class LEDStripEffect : public IJSONSerializable
     virtual CRGB GetBlackBodyHeatColor(float temp) const
     {
         temp *= 255;
-        uint8_t t192 = round((temp/255.0f)*191);
+        uint8_t t192 = round((temp / 255.0f) * 191);
 
         // calculate ramp up from
         uint8_t heatramp = t192 & 0x3F;         // 0..63
