@@ -18,7 +18,9 @@ const effectStyle = (theme) => {
             justifyContent: "space-between",
         },
         listCard: {
-            ":after": {content: '""', display: "table", clear: "both"}, width: "100%"
+            ":after": {content: '""', display: "table", clear: "both"}, 
+            width: "100%",
+            height: "50px" 
         },
         listColumn: {
             float: "left",

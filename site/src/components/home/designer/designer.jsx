@@ -133,7 +133,7 @@ const DesignerPanel = ({ open, addNotification }) => {
             {effects.map((effect,idx) => (effect.enabled || showDisabled) && <Effect
                 onDragStart={(event, index) => {
                     handleDragStart(event, index, setDragging)
-                }}
+                }} 
                 onDragOver={(event, index) => {handleDragOver(event, index, setDropTarget)}}
                 key={`effect-${idx}`}
                 effect={effect}

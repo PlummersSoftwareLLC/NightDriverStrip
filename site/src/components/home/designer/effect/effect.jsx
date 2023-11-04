@@ -5,6 +5,7 @@ import effectStyle from './style';
 import PropTypes from 'prop-types';
 import ConfigDialog from '../../config/configDialog';
 import { EffectsContext } from '../../../../context/effectsContext';
+import { height } from '@mui/system';
 
 const Effect = props => {
     const {activeInterval,remainingInterval, pinnedEffect, currentEffect} = useContext(EffectsContext);
@@ -24,7 +25,7 @@ const Effect = props => {
                     const remaining = timeReference-Date.now();
                     if (remaining >= 0) {
                         timeRemaining = remaining;
-                        setProgress((timeRemaining/remainingInterval)*100.0);
+                        setProgress((timeRemaining/activeInterval)*100.0);
                     }
                 },300);
                 return ()=>clearInterval(interval);
@@ -62,25 +63,29 @@ const Effect = props => {
                 </IconButton>
             </CardActions>
         </>
-            : <Box onClick={()=>{setOpen(true);}} sx={{display: "flex"}}>
+            : <Box onClick={()=>{setOpen(true);}} sx={{display: "flex", height: "100%"}}>
                 <Box sx={{...classes.listColumn, textAlign: "left"}} flexDirection={"row"} display={"flex"}>
-                    <Icon>drag_handle</Icon>
+                    <Icon sx={{marginTop: '2%'}}>drag_handle</Icon>
                     <Checkbox checked={effect.enabled} disabled={selected} onClick={(e)=>{e.stopPropagation(); effectEnable(effectIndex,!effect.enabled);}} sx={classes.short}/>
                     <CardHeader sx={classes.short}
                         avatar={
-                            <Avatar aria-label={effect.name} sx={{width: "25px", height: "25px"}}>
+                            <Avatar aria-label={effect.name} sx={{width: "30px", height: "30px"}}>
                                 {effect.name[0]}
                             </Avatar>
                         }
                     /> 
                 </Box>
-                <Box sx={{...classes.listColumn, textAlign: "center"}}>{effect.name}</Box>
+                <Box sx={{...classes.listColumn, textAlign: "center"}}>
+                    <Box>
+                        {effect.name}
+                    </Box>
+                </Box>
                 <Box sx={{...classes.listColumn, textAlign: "-moz-right"}}>
-                    {selected && <Box width="64px" paddingLeft={"8px"} paddingRight={"8px"} textAlign={"center"}>
-                        {pinnedEffect ? <Icon sx={{marginRight: "8px", marginLeft: "-4px"}}>all_inclusive</Icon>
-                            : <CircularProgress style={{width: "20px", height: "20px", marginTop: "0px"}} variant="determinate" sx={{marginRight: "8px", marginLeft: "-4px", scale: "-1 1"}} value={progress} />}</Box>}
+                    {selected && <Box width="64px" paddingLeft={"8px"} paddingRight={"8px"} textAlign={"center"} height={"100%"}>
+                        {pinnedEffect ? <Icon sx={{marginTop: '25%'}}>all_inclusive</Icon>
+                            : <CircularProgress variant="determinate" sx={{marginTop: "5px", scale: "-0.65 0.65"}} value={progress} />}</Box>}
                     {!effect.enabled && <Box/>}
-                    {!selected && effect.enabled && <Button sx={classes.short} width="50px" textalign={"center"} disabled={requestRunning} onClick={(e)=>{e.stopPropagation(); navigateTo(effectIndex);}} startIcon={<Icon>play_circle_outline_arrow</Icon>}></Button>}
+                    {!selected && effect.enabled && <Button sx={{...classes.short, height: "100%"}} textalign={"center"} disabled={requestRunning} onClick={(e)=>{e.stopPropagation(); navigateTo(effectIndex);}}><Icon>play_circle_outline_arrow</Icon></Button>}
                 </Box>
                 
             </Box>
