@@ -24,7 +24,7 @@ const Effect = props => {
                     const remaining = timeReference-Date.now();
                     if (remaining >= 0) {
                         timeRemaining = remaining;
-                        setProgress((timeRemaining/remainingInterval)*100.0);
+                        setProgress((timeRemaining/activeInterval)*100.0);
                     }
                 },300);
                 return ()=>clearInterval(interval);
