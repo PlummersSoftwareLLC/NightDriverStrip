@@ -16,10 +16,8 @@
 # Dependencies
 
 from PIL import Image, ImageDraw, ImageFont     # python3 -m pip install pillow
-import sys
 import socket
 import time
-import struct
 import zlib
 import datetime
 
@@ -44,7 +42,7 @@ def connect_to_socket():
     return sock
 
 # send_video_data
-# 
+#
 # Take the supplied video stream and breaks each frame into a new colordata object to be sent to
 # the NightDriverStrip module over WiFi
 
@@ -97,7 +95,7 @@ def build_header(seconds, microseconds, length32):
 
 # compress_packet
 #
-# Use zlib to lzcompress the packet and return it wrapped in the little header that indicates its 
+# Use zlib to lzcompress the packet and return it wrapped in the little header that indicates its
 # going to be a compressed packet
 
 def compress_packet(complete_packet):
@@ -121,7 +119,7 @@ DrawFrame.frame = 0
 
 # main
 #
-# Entry point. 
+# Entry point.
 
 if __name__ == "__main__":
 
