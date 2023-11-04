@@ -16,11 +16,6 @@ export default defineConfig({
                 '@mui/material': "MaterialUI",
                 'html-react-parser': "HTMLReactParser",
             },
-            development: {
-                externals: {
-                    react: '$linkdesign.React'
-                }
-            }
         }), 
         viteStaticCopy({
             targets: [

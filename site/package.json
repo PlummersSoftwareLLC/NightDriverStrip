@@ -13,7 +13,7 @@
     },
     "scripts": {
         "build": "vite build --emptyOutDir",
-        "start": "vite",
+        "start": "vite --force",
         "local": "vite preview"
     },
     "devDependencies": {
