@@ -131,25 +131,6 @@ class FireEffect : public LEDStripEffect
         return 45;
     }
 
-    virtual CRGB GetBlackBodyHeatColor(float temp) const override
-    {
-        temp *= 255;
-        uint8_t t192 = round((temp/255.0f)*191);
-
-        // calculate ramp up from
-        uint8_t heatramp = t192 & 0x3F; // 0..63
-        heatramp <<= 2; // scale up to 0..252
-
-        // figure out which third of the spectrum we're in:
-        if( t192 > 0x80) {                     // hottest
-            return CRGB(255, 255, heatramp);
-        } else if( t192 > 0x40 ) {             // middle
-            return CRGB( 255, heatramp, 0);
-        } else {                               // coolest
-            return CRGB( heatramp, 0, 0);
-        }
-    }
-
     void Draw() override
     {
         FastLED.clear(false);

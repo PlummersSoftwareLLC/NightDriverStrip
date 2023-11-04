@@ -127,3 +127,16 @@ extern const TProgmemRGBPalette16 GreenHeatColors_p FL_PROGMEM =
     0x33FF00, 0x66FF00, 0x99FF00, 0xCCFF00, 0xFFFF00,
     0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF
 };
+
+// HeatColors2_p
+//
+// A variant of HeatColors_p (built into FastLED) that has
+// bright blue at the top of the color heat ramp.
+
+extern const TProgmemRGBPalette16 HeatColors2_p FL_PROGMEM =
+{
+    0x000000,
+    0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
+    0xFF3300, 0xFF6600, 0xFF9900, 0xFFCC00, 0xFFFF00,
+    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0x0000FF
+};
