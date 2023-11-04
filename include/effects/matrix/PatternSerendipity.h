@@ -94,7 +94,7 @@ private:
     }
 
 public:
-    PatternSerendipity() : LEDStripEffect(EFFECT_MATRIX_SERENDIPITY, "Serendipity")
+    PatternSerendipity() : LEDStripEffect(EFFECT_MATRIX_SERENDIPITY, "Serendipiti")
     {
     }
 
