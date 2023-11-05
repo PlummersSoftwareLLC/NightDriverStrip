@@ -158,7 +158,7 @@ const Effect = props => {
             setProgress(0);
         }
     },[remainingInterval,selected, activeInterval]);
-    
+
     return <Card variant="outlined" sx={gridLayout ? classes.gridCard : classes.listCard} draggable 
         onDragStart={(event) => onDragStart(event, effectIndex)} 
         onDragOver={(event) => onDragOver(event, effectIndex)}
@@ -194,7 +194,6 @@ Effect.propTypes = {
 
 const layoutProps = {
     classes: PropTypes.shape({
-        listColumn: PropTypes.shape({}).isRequired,
         short: PropTypes.shape({}).isRequired, 
         cardheader: PropTypes.shape({}).isRequired
     }).isRequired,
@@ -204,7 +203,7 @@ const layoutProps = {
         enabled: PropTypes.bool.isRequired
     }).isRequired,
     selected: PropTypes.bool.isRequired,
-    effectEnable: PropTypes.bool.isRequired, 
+    effectEnable: PropTypes.func.isRequired, 
     effectIndex: PropTypes.number.isRequired, 
     progress: PropTypes.number.isRequired, 
     timeDisplay: PropTypes.string,
