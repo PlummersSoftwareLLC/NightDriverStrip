@@ -1,12 +1,71 @@
 import {useState, useEffect, useContext} from 'react';
 import {IconButton, Icon, Card, CardHeader, CardContent, Avatar, CardActions, Box, Checkbox} from '@mui/material';
-import {LinearProgress, CircularProgress, Button, useTheme} from '@mui/material';
+import {LinearProgress, CircularProgress, Button, useTheme, Typography} from '@mui/material';
 import effectStyle from './style';
 import PropTypes from 'prop-types';
 import ConfigDialog from '../../config/configDialog';
 import { EffectsContext } from '../../../../context/effectsContext';
 
-const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, requestRunning, navigateTo, pinnedEffect}) => {
+const formatTime = (milliseconds) => {
+    const secondsRaw = milliseconds / 1000;
+    const minutesRaw = secondsRaw /60;
+    const hoursRaw = minutesRaw / 60;
+
+    const seconds = Math.floor( secondsRaw % 60);
+    const minutes = Math.floor(minutesRaw % 60);
+    const hours = Math.floor(hoursRaw % 24);
+    
+    if (hours > 0) {
+        return `${hours}.${Math.floor((minutes/60)*10)}h`
+    } 
+    if (minutes > 0) {
+        return `${minutes}.${Math.floor((seconds/60) *10)}m`
+    } 
+    
+    return `${seconds}s`    
+}
+
+const CircularProgressWithLabel = ({progress, timeDisplay}) => {
+    let color = 'primary'
+    if (progress <= 25) {
+        color = 'error'
+    } else if (progress <= 50) {
+        color = 'warning'
+    }
+    let size = "small"
+    if (timeDisplay.length >4) { 
+        size = 'xx-small'
+    } else if (timeDisplay.length >3) { 
+        size = 'x-small'
+    }
+    return (
+        <Box sx={{ position: 'relative', display: 'inline-flex', height: '100%'}}>
+            <CircularProgress  variant="determinate" color={color} sx={{marginTop: '9%', scale: "-0.8 0.8"}} value={progress} />
+            <Box
+                sx={{
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    right: 0,
+                    position: 'absolute',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <Typography
+                    variant="caption"
+                    component="div"
+                    color="text.secondary"
+                    fontSize={size}
+                >{timeDisplay}</Typography>
+            </Box>
+        </Box>
+    );
+}
+
+
+const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, timeDisplay, requestRunning, navigateTo, pinnedEffect}) => {
     return <Box sx={{display: "flex", height: "100%"}} flexDirection={"row"} display={"flex"}>
         <Box sx={{float: 'left', textAlign: "left"}} flexDirection={"row"} display={"flex"}>
             <Checkbox checked={effect.enabled} disabled={selected} onClick={(e)=>{e.stopPropagation(); effectEnable(effectIndex,!effect.enabled);}} sx={classes.short}/>
@@ -26,8 +85,8 @@ const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectInd
         <Box sx={{float: 'left', textAlign: "-moz-right"}}>
             <Box sx={{float: 'left', width: '50%', height:'100%'}}>
                 {selected && <Box sx={{width: '40px', textAlign: 'center', height:'100%'}}>
-                    {pinnedEffect ? <Icon>all_inclusive</Icon>
-                        : <CircularProgress variant="determinate" sx={{scale: "-0.65 0.65"}} value={progress} />}</Box>}
+                    {pinnedEffect ? <Icon sx={{paddingTop: '25%', height: '100%'}}>all_inclusive</Icon>
+                        : <CircularProgressWithLabel progress={progress} timeDisplay={timeDisplay}/>}</Box>}
                 {!effect.enabled && <Box sx={{width: '40px'}}/>}
                 {!selected && effect.enabled && <IconButton sx={{height: '100%'}} disabled={requestRunning} onClick={()=>navigateTo(effectIndex)}><Icon>play_circle_outline_arrow</Icon></IconButton>}
             </Box>
@@ -74,8 +133,8 @@ const Effect = props => {
     const { effect, effectIndex, effectEnable, navigateTo, requestRunning, gridLayout, onDragStart, onDragOver} = props;
     const [ progress, setProgress ] = useState(0);
     const [open, setOpen] = useState(false);
+    const [timeDisplay, setTimeDisplay] = useState(formatTime(remainingInterval))
     const selected = Number(effectIndex) === currentEffect;
-
     const theme = useTheme();
     const classes = effectStyle(theme);
     const CardLayout = gridLayout ? GridLayout : ListLayout
@@ -89,6 +148,7 @@ const Effect = props => {
                     const remaining = timeReference-Date.now();
                     if (remaining >= 0) {
                         timeRemaining = remaining;
+                        setTimeDisplay(formatTime(timeRemaining))
                         setProgress((timeRemaining/activeInterval)*100.0);
                     }
                 },300);
@@ -110,6 +170,7 @@ const Effect = props => {
             effectEnable={effectEnable} 
             effectIndex={effectIndex} 
             progress={progress} 
+            timeDisplay={timeDisplay}
             requestRunning={requestRunning}
             navigateTo={navigateTo}
             pinnedEffect={pinnedEffect}
@@ -146,6 +207,7 @@ const layoutProps = {
     effectEnable: PropTypes.bool.isRequired, 
     effectIndex: PropTypes.number.isRequired, 
     progress: PropTypes.number.isRequired, 
+    timeDisplay: PropTypes.string,
     requestRunning: PropTypes.func.isRequired, 
     navigateTo: PropTypes.func.isRequired, 
     pinnedEffect:PropTypes.bool.isRequired
@@ -153,5 +215,9 @@ const layoutProps = {
 
 ListLayout.propTypes = layoutProps
 GridLayout.propTypes = layoutProps
+CircularProgressWithLabel.propTypes = {
+    progress: PropTypes.number.isRequired,
+    timeDisplay: PropTypes.string.isRequired
+}
 
 export default Effect;
