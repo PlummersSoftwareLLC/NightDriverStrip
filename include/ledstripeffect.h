@@ -343,19 +343,26 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual CRGB GetBlackBodyHeatColor(float temp) const
     {
+        return ColorFromPalette(HeatColors_p, 255 * temp);
+    }
+
+    // The variant allows you to specify a base flame color other than red, and the result
+    // is interpolated from black to your color and on through yellow and white
+    
+    virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
+    {
+        if (baseColor == CRGB::Red)
+            return GetBlackBodyHeatColor(temp);
+
         temp = std::clamp(temp, 0.0f, 1.0f);
-        uint8_t temperature = (uint8_t)(255 * temp);
-        uint8_t t192 = (uint8_t)((temperature / 255.0f) * 191);
 
-        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
-        heatramp <<= 2;
+        if (temp < 0.33f)
+            return ColorFraction(baseColor, temp * 3.0f);                                                   // Interpolate from black to baseColor
+        
+        if (temp < 0.66f)
+            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interoplate from baseColor to Yellow
 
-        if (t192 > 0x80)
-            return CRGB(255, 255, heatramp);
-        else if (t192 > 0x40)
-            return CRGB(255, heatramp, 0);
-        else
-            return CRGB(heatramp, 0, 0);
+        return CRGB::Yellow + ColorFraction(CRGB::Blue,  (temp - 0.66f) * 3.0f);                            // Interpolate from Yellow to White
     }
 
     // fillSolidOnAllChannels
@@ -400,8 +407,7 @@ class LEDStripEffect : public IJSONSerializable
 
     static CRGB ColorFraction(const CRGB colorIn, float fraction)
     {
-        fraction = min(1.0f, fraction);
-        fraction = max(0.0f, fraction);
+        fraction = std::clamp(fraction, 0.0f, 1.0f);
         return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
     }
 

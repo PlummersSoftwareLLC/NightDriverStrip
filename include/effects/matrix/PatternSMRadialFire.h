@@ -56,7 +56,12 @@ class PatternSMRadialFire : public LEDStripEffect
                     Bri = 0;
                 if (Bri != 0)
                     Bri = 256 - (Bri * 0.2);
-                nblend(g()->leds[XY(x, y)], ColorFromPalette(HeatColors_p, Col, Bri), speed);
+
+                // If the palette is paused, we use it to color the fire, otherwise we just use red
+                CRGB color = (GetBlackBodyHeatColor(Col/255.0f, g()->IsPalettePaused() ? 
+                                    g()->ColorFromCurrentPalette(Col) 
+                                  : CRGB::Red).fadeToBlackBy(255-Bri));
+                nblend(g()->leds[XY(x, y)], color, speed);
             }
         }
     }
