@@ -22,10 +22,6 @@ const effectStyle = (theme) => {
             width: "100%",
             height: "50px" 
         },
-        listColumn: {
-            float: "left",
-            width: "33.33%"
-        },
         effectName: {
             marginLeft: "10px",
             marginBottom: "5px"

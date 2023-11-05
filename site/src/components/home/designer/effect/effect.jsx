@@ -5,7 +5,69 @@ import effectStyle from './style';
 import PropTypes from 'prop-types';
 import ConfigDialog from '../../config/configDialog';
 import { EffectsContext } from '../../../../context/effectsContext';
-import { height } from '@mui/system';
+
+const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, requestRunning, navigateTo, pinnedEffect}) => {
+    return <Box sx={{display: "flex", height: "100%"}} flexDirection={"row"} display={"flex"}>
+        <Box sx={{float: 'left', textAlign: "left"}} flexDirection={"row"} display={"flex"}>
+            <Checkbox checked={effect.enabled} disabled={selected} onClick={(e)=>{e.stopPropagation(); effectEnable(effectIndex,!effect.enabled);}} sx={classes.short}/>
+            <CardHeader sx={classes.short}
+                avatar={
+                    <Avatar aria-label={effect.name}>
+                        {effect.name[0]}
+                    </Avatar>
+                }
+            /> 
+        </Box>
+        <Box sx={{float:'left', textAlign: "center"}} flexGrow={1}>
+            <Box>
+                {effect.name}
+            </Box>
+        </Box>
+        <Box sx={{float: 'left', textAlign: "-moz-right"}}>
+            <Box sx={{float: 'left', width: '50%', height:'100%'}}>
+                {selected && <Box sx={{width: '40px', paddingTop: '33%', textAlign: 'center'}}>
+                    {pinnedEffect ? <Icon>all_inclusive</Icon>
+                        : <CircularProgress variant="determinate" sx={{height: '100%',scale: "-0.65 0.65"}} value={progress} />}</Box>}
+                {!effect.enabled && <Box sx={{width: '40px'}}/>}
+                {!selected && effect.enabled && <IconButton sx={{height: '100%'}} disabled={requestRunning} onClick={()=>navigateTo(effectIndex)}><Icon>play_circle_outline_arrow</Icon></IconButton>}
+            </Box>
+            <Box sx={{float: 'left', width: '50%', height:'100%'}}>
+                <IconButton sx={{height: '100%'}}
+                    onClick={()=>setOpen(true)}
+                    aria-label="show more">
+                    <Icon>settings</Icon>
+                </IconButton>
+            </Box>
+        </Box>
+    </Box>
+}
+
+const GridLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, requestRunning, navigateTo, pinnedEffect}) => {
+    return <>
+        <CardHeader
+            avatar={
+                <Avatar aria-label={effect.name}>
+                    {effect.name[0]}
+                </Avatar>
+            }
+            title={effect.name}
+            subheader={effect.enabled?(selected?"Active":"Waiting") : "Disabled"}
+            sx={classes.cardheader}
+        /> 
+        <CardContent>
+            {selected && (pinnedEffect ? <Box sx={{textAlign: 'center'}}><Icon>all_inclusive</Icon></Box> : <LinearProgress disabled={requestRunning} variant="determinate" sx={{transition: 'none'}} value={progress} />)}
+            {!selected && <Button disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)} variant="outlined" startIcon={<Icon >{effect.enabled?"stop":"circle"}</Icon>}>{effect.enabled?"Disable":"Enable"}</Button>}
+            {!selected && effect.enabled && <Button disabled={requestRunning} onClick={()=>navigateTo(effectIndex)} variant="outlined" startIcon={<Icon >start</Icon>}>Trigger</Button>}
+        </CardContent>
+        <CardActions disableSpacing>
+            <IconButton
+                onClick={()=>setOpen(true)}
+                aria-label="show more">
+                <Icon>settings</Icon>
+            </IconButton>
+        </CardActions>
+    </>
+}
 
 const Effect = props => {
     const {activeInterval,remainingInterval, pinnedEffect, currentEffect} = useContext(EffectsContext);
@@ -16,6 +78,8 @@ const Effect = props => {
 
     const theme = useTheme();
     const classes = effectStyle(theme);
+    const CardLayout = gridLayout ? GridLayout : ListLayout
+    
     useEffect(() => {
         if (selected) {
             if (remainingInterval) {
@@ -34,62 +98,22 @@ const Effect = props => {
             setProgress(0);
         }
     },[remainingInterval,selected, activeInterval]);
-
+    
     return <Card variant="outlined" sx={gridLayout ? classes.gridCard : classes.listCard} draggable 
         onDragStart={(event) => onDragStart(event, effectIndex)} 
         onDragOver={(event) => onDragOver(event, effectIndex)}
-    >
-        { gridLayout ? <>
-            <CardHeader
-                avatar={
-                    <Avatar aria-label={effect.name}>
-                        {effect.name[0]}
-                    </Avatar>
-                }
-                title={effect.name}
-                subheader={effect.enabled?(selected?"Active":"Waiting") : "Disabled"}
-                sx={classes.cardheader}
-            /> 
-            <CardContent>
-                {selected && (pinnedEffect ? <Box sx={{textAlign: 'center'}}><Icon>all_inclusive</Icon></Box> : <LinearProgress disabled={requestRunning} variant="determinate" sx={{transition: 'none'}} value={progress} />)}
-                {!selected && <Button disabled={requestRunning} onClick={()=>effectEnable(effectIndex,!effect.enabled)} variant="outlined" startIcon={<Icon >{effect.enabled?"stop":"circle"}</Icon>}>{effect.enabled?"Disable":"Enable"}</Button>}
-                {!selected && effect.enabled && <Button disabled={requestRunning} onClick={()=>navigateTo(effectIndex)} variant="outlined" startIcon={<Icon >start</Icon>}>Trigger</Button>}
-            </CardContent>
-            <CardActions disableSpacing>
-                <IconButton
-                    onClick={()=>setOpen(true)}
-                    aria-label="show more">
-                    <Icon>settings</Icon>
-                </IconButton>
-            </CardActions>
-        </>
-            : <Box onClick={()=>{setOpen(true);}} sx={{display: "flex", height: "100%"}}>
-                <Box sx={{...classes.listColumn, textAlign: "left"}} flexDirection={"row"} display={"flex"}>
-                    <Icon sx={{marginTop: '2%'}}>drag_handle</Icon>
-                    <Checkbox checked={effect.enabled} disabled={selected} onClick={(e)=>{e.stopPropagation(); effectEnable(effectIndex,!effect.enabled);}} sx={classes.short}/>
-                    <CardHeader sx={classes.short}
-                        avatar={
-                            <Avatar aria-label={effect.name} sx={{width: "30px", height: "30px"}}>
-                                {effect.name[0]}
-                            </Avatar>
-                        }
-                    /> 
-                </Box>
-                <Box sx={{...classes.listColumn, textAlign: "center"}}>
-                    <Box>
-                        {effect.name}
-                    </Box>
-                </Box>
-                <Box sx={{...classes.listColumn, textAlign: "-moz-right"}}>
-                    {selected && <Box width="64px" paddingLeft={"8px"} paddingRight={"8px"} textAlign={"center"} height={"100%"}>
-                        {pinnedEffect ? <Icon sx={{marginTop: '25%'}}>all_inclusive</Icon>
-                            : <CircularProgress variant="determinate" sx={{marginTop: "5px", scale: "-0.65 0.65"}} value={progress} />}</Box>}
-                    {!effect.enabled && <Box/>}
-                    {!selected && effect.enabled && <Button sx={{...classes.short, height: "100%"}} textalign={"center"} disabled={requestRunning} onClick={(e)=>{e.stopPropagation(); navigateTo(effectIndex);}}><Icon>play_circle_outline_arrow</Icon></Button>}
-                </Box>
-                
-            </Box>
-        }
+    ><CardLayout 
+            classes={classes}
+            setOpen={setOpen}
+            effect={effect}
+            selected={selected}
+            effectEnable={effectEnable} 
+            effectIndex={effectIndex} 
+            progress={progress} 
+            requestRunning={requestRunning}
+            navigateTo={navigateTo}
+            pinnedEffect={pinnedEffect}
+        />
         {open && <ConfigDialog heading={effect.name} effectIndex={effectIndex} open={open} setOpen={setOpen}></ConfigDialog>}
     </Card>;
 };
@@ -97,7 +121,6 @@ const Effect = props => {
 Effect.propTypes = {
     effect: PropTypes.shape({
         name: PropTypes.string.isRequired,
-        enabled: PropTypes.bool.isRequired
     }).isRequired,
     effectIndex: PropTypes.number.isRequired,
     effectEnable: PropTypes.func.isRequired,
@@ -107,5 +130,28 @@ Effect.propTypes = {
     onDragStart: PropTypes.func.isRequired,
     onDragOver: PropTypes.func.isRequired,
 };
+
+const layoutProps = {
+    classes: PropTypes.shape({
+        listColumn: PropTypes.shape({}).isRequired,
+        short: PropTypes.shape({}).isRequired, 
+        cardheader: PropTypes.shape({}).isRequired
+    }).isRequired,
+    setOpen: PropTypes.func.isRequired,
+    effect: PropTypes.shape({
+        name: PropTypes.string.isRequired, 
+        enabled: PropTypes.bool.isRequired
+    }).isRequired,
+    selected: PropTypes.bool.isRequired,
+    effectEnable: PropTypes.bool.isRequired, 
+    effectIndex: PropTypes.number.isRequired, 
+    progress: PropTypes.number.isRequired, 
+    requestRunning: PropTypes.func.isRequired, 
+    navigateTo: PropTypes.func.isRequired, 
+    pinnedEffect:PropTypes.bool.isRequired
+};
+
+ListLayout.propTypes = layoutProps
+GridLayout.propTypes = layoutProps
 
 export default Effect;
