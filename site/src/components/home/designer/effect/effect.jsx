@@ -25,9 +25,9 @@ const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectInd
         </Box>
         <Box sx={{float: 'left', textAlign: "-moz-right"}}>
             <Box sx={{float: 'left', width: '50%', height:'100%'}}>
-                {selected && <Box sx={{width: '40px', paddingTop: '33%', textAlign: 'center'}}>
+                {selected && <Box sx={{width: '40px', textAlign: 'center', height:'100%'}}>
                     {pinnedEffect ? <Icon>all_inclusive</Icon>
-                        : <CircularProgress variant="determinate" sx={{height: '100%',scale: "-0.65 0.65"}} value={progress} />}</Box>}
+                        : <CircularProgress variant="determinate" sx={{scale: "-0.65 0.65"}} value={progress} />}</Box>}
                 {!effect.enabled && <Box sx={{width: '40px'}}/>}
                 {!selected && effect.enabled && <IconButton sx={{height: '100%'}} disabled={requestRunning} onClick={()=>navigateTo(effectIndex)}><Icon>play_circle_outline_arrow</Icon></IconButton>}
             </Box>
