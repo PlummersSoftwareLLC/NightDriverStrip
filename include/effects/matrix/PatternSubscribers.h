@@ -249,7 +249,8 @@ class PatternSubscribers : public LEDStripEffect
     {
         StaticJsonDocument<_jsonSize> jsonDoc;
 
-        LEDStripEffect::SerializeSettingsToJSON(jsonObject);
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeSettingsToJSON(root);
 
         jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
         jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;
