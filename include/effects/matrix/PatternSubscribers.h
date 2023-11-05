@@ -150,7 +150,7 @@ class PatternSubscribers : public LEDStripEffect
                 "YouTube channel name",
                 "The name of the channel for which the effect should show subscriber information.",
                 SettingSpec::SettingType::String
-            );
+            ).EmptyAllowed = true;
         }
 
         // Add our SettingSpecs reference_wrappers to the base set provided by LEDStripEffect
