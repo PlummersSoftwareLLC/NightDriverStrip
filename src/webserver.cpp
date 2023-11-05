@@ -218,7 +218,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
         j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
         j["eternalInterval"]       = effectManager.IsIntervalEternal();
-        j["effectInterval"]        = effectManager.GetEffectiveInterval();
+        j["effectInterval"]        = effectManager.GetInterval();
 
         for (auto effect : effectManager.EffectsList())
         {
@@ -411,8 +411,8 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 jsonDoc["minimumValue"] = spec.MinimumValue.value();
             if (spec.MaximumValue.has_value())
                 jsonDoc["maximumValue"] = spec.MaximumValue.value();
-            if (spec.EmptyAllowed)
-                jsonDoc["emptyAllowed"] = true;
+            if (spec.EmptyAllowed.has_value())
+                jsonDoc["emptyAllowed"] = spec.EmptyAllowed.value();
             switch (spec.Access)
             {
                 case SettingSpec::SettingAccess::ReadOnly:
