@@ -20,11 +20,11 @@
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
 //
-//    Uses the improv namespace to call functions from that file. It 
-//    then sets up a callback function to be called when data is received 
-//    from the serial port. When data is received, the callback function parses 
-//    the data using parse_improv_serial_byte from the improv namespace and sends 
-//    a response using build_rpc_response from the improv namespace. The response 
+//    Uses the improv namespace to call functions from that file. It
+//    then sets up a callback function to be called when data is received
+//    from the serial port. When data is received, the callback function parses
+//    the data using parse_improv_serial_byte from the improv namespace and sends
+//    a response using build_rpc_response from the improv namespace. The response
 //    consists of the command type and a vector of strings.
 //
 // Description:
@@ -107,9 +107,6 @@ namespace improv
 
     ImprovCommand parse_improv_data(const std::vector<uint8_t> &data, bool check_checksum = true);
     ImprovCommand parse_improv_data(const uint8_t *data, size_t length, bool check_checksum = true);
-
-    bool parse_improv_serial_byte(size_t position, uint8_t byte, const uint8_t *buffer,
-                                  std::function<bool(ImprovCommand)> &&callback, std::function<void(Error)> &&on_error);
 
     std::vector<uint8_t> build_rpc_response(Command command, const std::vector<String> &datum, bool add_checksum = true);
 

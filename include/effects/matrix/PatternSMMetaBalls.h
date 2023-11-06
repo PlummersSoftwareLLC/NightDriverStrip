@@ -54,7 +54,8 @@ class PatternSMMetaBalls : public LEDStripEffect
                 {
                     sum = qadd8(sum, dist(i, j, bx[a], by[a]));
                 }
-                g()->leds[XY(i, j)] = ColorFromPalette(HeatColors_p, sum + 220, 254, LINEARBLEND);
+                // HeatColors2_p peaks with blue instead of white and looks nicer for this effect
+                g()->leds[XY(i, j)] = ColorFromPalette(HeatColors2_p, sum + 220, 254, LINEARBLEND);
             }
         }
 

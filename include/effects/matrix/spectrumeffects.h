@@ -409,7 +409,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
             if (pGFXChannel->IsPalettePaused())
             {
-                int q = ::map(i, 0, _numBars, 0, 240) + _colorOffset;
+                // We don't use the color offset when the palette is paused
+                int q = ::map(i, 0, _numBars, 0, 240);
                 DrawBar(i, pGFXChannel->ColorFromCurrentPalette(q % 240, 255, _scrollSpeed > 0 ? LINEARBLEND : NOBLEND));
             }
             else

@@ -150,10 +150,7 @@
 //---------------------------------------------------------------------------
 
 
-#define HSPI_MISO   27
-#define HSPI_MOSI   26    // This is the only IO pin used in this code (master out, slave in)
-#define HSPI_SCLK   25
-#define HSPI_SS     32
+
 #define FASTLED_ALL_PINS_HARDWARE_SPI
 #define FASTLED_ESP32_SPI_BUS HSPI
 
@@ -278,9 +275,11 @@ void setup()
 
     // Initialize Serial output
     Serial.begin(115200);
+
     // Re-route debug output to the serial port
     Debug.setSerialEnabled(true);
 
+    // Intialialize SPIFFS for file access to non-volatile storage
     if (!SPIFFS.begin(true))
         Serial.println("WARNING: SPIFFs could not be initialized!");
 
@@ -292,6 +291,7 @@ void setup()
         heap_caps_malloc_extmem_enable(128);
     #endif
 
+    // Initialize LZ library for decompressing compressed wifi packets
     uzlib_init();
 
     // Create the SystemContainer that holds primary device management objects.
@@ -322,23 +322,23 @@ void setup()
     ESP_ERROR_CHECK(err);
 
     #if ENABLE_WIFI
-        String WiFi_password;
         String WiFi_ssid;
+        String WiFi_password;
 
         // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
 
         if (!ReadWiFiConfig(WiFi_ssid, WiFi_password))
         {
             debugW("Could not read WiFI Credentials");
-            WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;
-            if (!WriteWiFiConfig(WiFi_password, WiFi_ssid))
+            WiFi_password = cszPassword;
+            if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
                 debugW("Could not even write defaults to WiFi Credentials");
         }
         else if (WiFi_ssid.length() == 0)
         {
-            WiFi_password = cszPassword;
             WiFi_ssid     = cszSSID;
+            WiFi_password = cszPassword;
         }
 
         // This chip alone is special-cased by Improv, so we pull it

@@ -328,7 +328,21 @@ void EffectManager::SetGlobalColor(CRGB color)
 
     #if (USE_HUB75)
             auto pMatrix = g();
-            pMatrix->setPalette(CRGBPalette16(oldColor, color));
+
+            // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
+            // based from where those colors sit on the spectrum
+
+            if (oldColor == color)
+            {
+                CHSV hsv = rgb2hsv_approximate(color);
+                CRGB color2 = CRGB(CHSV(hsv.hue + 64, 255, 255));
+                pMatrix->setPalette(CRGBPalette16(color, color2));
+            }
+            else
+            {
+                // But if we have two different colors, we create a palettte spread between them
+                pMatrix->setPalette(CRGBPalette16(oldColor, color));
+            }
             pMatrix->PausePalette(true);
     #else
         std::shared_ptr<LEDStripEffect> effect;
