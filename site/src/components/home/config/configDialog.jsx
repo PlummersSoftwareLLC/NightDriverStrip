@@ -4,6 +4,8 @@ import {useTheme} from "@mui/material";
 import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
 import parse from 'html-react-parser';
+import { RgbColorPicker } from "react-colorful";
+
 // Base styling for inputs.     
 const textFieldProps = {
     margin: "dense",
@@ -22,6 +24,13 @@ const settingType = {
     Palette: 5,
     Color: 6
 };
+
+const intToRGB = (int) => {
+    const b = int >> 8;
+    const g = int >> 8;
+    const r = int >> 16;
+    console.log('int',int, 'r', r, 'g', g, 'b', b)
+}
 
 /**
  * Creates an Input field based on the settingType provided.
@@ -149,11 +158,8 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         />;
     case settingType.Color:
         //  FIXME Implement a Color Config
-        return <TextField
-            {...baseProps}
-            {...textFieldProps}
-            helperText={helper}
-        />;
+        intToRGB(value)
+        return <RgbColorPicker></RgbColorPicker>;
     default:
         return <TextField
             {...baseProps}
