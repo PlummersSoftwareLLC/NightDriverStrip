@@ -57,8 +57,18 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     }, [setting, updateError, error]);
     useEffect(() => {
         if(value !== setting.value) {
-            if(value === '' && !setting.emptyAllowed) {
-                updateData(setting.name, undefined);
+            if(value === '') {
+                if(setting.emptyAllowed === undefined) {
+                    // No specification on emptyAllowed, default to not setting the value
+                    updateData(setting.name, undefined);
+                } else if (setting.emptyAllowed) {
+                    // Empty value explicitly allowed. 
+                    updateData(setting.name, value);
+                } else {
+                    // Empty value explicitly not allowed. Setting to the original value as a
+                    // placeholder. Dialog cannot be saved in this state anyway. 
+                    updateData(setting.name, setting.value);
+                }
             } else {
                 updateData(setting.name, value);
             }
@@ -118,6 +128,17 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             {...baseProps}
             {...textFieldProps}
             helperText={helper}
+            onChange={(e) => {
+                if (value === '' && (setting.emptyAllowed === undefined && !setting.emptyAllowed)) {
+                    // Value is empty and empty is not allowed
+                    setError(true);
+                    setHelper(`Empty value is not allowed for this input. Original value was '${setting.value}'`);
+                } else {
+                    setError(false);
+                    setHelper(setting.description);
+                }
+                setValue(e.target.value)
+            }}
         />;
     case settingType.Palette:
         // FIXME Implement a Palette Config
