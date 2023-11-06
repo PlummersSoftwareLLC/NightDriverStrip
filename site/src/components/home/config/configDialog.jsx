@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, GlobalStyles, InputLabel, FormHelperText, IconButton, Icon } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, GlobalStyles, InputLabel, FormHelperText, IconButton, Icon, Stack, Slider } from "@mui/material";
 import {useTheme} from "@mui/material";
 import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
@@ -22,7 +22,8 @@ const settingType = {
     Boolean: 3,
     String: 4,
     Palette: 5,
-    Color: 6
+    Color: 6,
+    Slider: 7
 };
 
 const intToRGB = (int) => {
@@ -205,6 +206,14 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             <FormHelperText>{jsxDescription}</FormHelperText>
         </Box>
     }
+    case settingType.Slider: 
+        return <Box>
+            <InputLabel sx={{ scale: "0.75" }}>{setting.friendlyName}</InputLabel>
+            <Stack>
+                <Slider min={setting.minimumValue} max={setting.maximumValue} valueLabelDisplay="auto" value={value} onChange={(e) => setValue(e.target.value)}> </Slider>
+            </Stack>
+            <FormHelperText>{jsxDescription}</FormHelperText>
+        </Box>
     default:
         return <TextField
             {...baseProps}
