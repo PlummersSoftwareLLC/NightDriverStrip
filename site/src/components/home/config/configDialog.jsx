@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, GlobalStyles } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, GlobalStyles, InputLabel, FormHelperText, IconButton, Icon } from "@mui/material";
 import {useTheme} from "@mui/material";
 import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
@@ -26,10 +26,16 @@ const settingType = {
 };
 
 const intToRGB = (int) => {
-    const b = int >> 8;
-    const g = int >> 8;
-    const r = int >> 16;
-    console.log('int',int, 'r', r, 'g', g, 'b', b)
+    const bits = int.toString(2).padStart(24, 0);
+    return {
+        r: parseInt(bits.substring(0, 8), 2),
+        g: parseInt(bits.substring(8, 16), 2),
+        b: parseInt(bits.substring(16, 24), 2)
+    }
+}
+
+const RGBToInt = ({r, g, b}) => {
+    return parseInt(r.toString(2).padStart(8, 0) + g.toString(2).padStart(8, 0) + b.toString(2).padStart(8, 0), 2);
 }
 
 /**
@@ -43,6 +49,7 @@ const intToRGB = (int) => {
 const ConfigInput = ({setting, updateData, updateError}) => {
     const [value, setValue] = useState(setting.value);
     const [error, setError] = useState(false);
+    const [additionalDialog, setAddionalDialog] = useState(false)
     const theme = useTheme();
     const jsxDescription = <>
         <GlobalStyles styles={
@@ -65,6 +72,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         updateError(setting.name, error);
     }, [setting, updateError, error]);
     useEffect(() => {
+        
         if(value !== setting.value) {
             if(value === '') {
                 if(setting.emptyAllowed === undefined) {
@@ -81,6 +89,8 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             } else {
                 updateData(setting.name, value);
             }
+        } else {
+            updateData(setting.name, undefined)
         }
     }, [value, updateData, setting]);
     const readOnly = !!setting.readOnly;
@@ -156,10 +166,29 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             {...textFieldProps}
             helperText={helper}
         />;
-    case settingType.Color:
-        //  FIXME Implement a Color Config
-        intToRGB(value)
-        return <RgbColorPicker></RgbColorPicker>;
+    case settingType.Color: {
+        const color = intToRGB(value)
+        
+        return <Box>
+            <InputLabel sx={{scale: "0.75"}}>{setting.friendlyName}</InputLabel>
+            <Box flexDirection={"row"} display={"flex"}>
+                <Box flexGrow={"1"} sx={{backgroundColor: `rgb(${color.r},${color.g},${color.b})`}} onClick={() => setAddionalDialog(true)}></Box>
+                <IconButton onClick={() => setAddionalDialog(true)}><Icon>color_lens</Icon></IconButton>
+            </Box>
+            {additionalDialog && <Dialog open={additionalDialog} onClose={() => setAddionalDialog(false)}>
+                <DialogTitle>{setting.friendlyName}</DialogTitle>
+                <DialogContent>
+                    <RgbColorPicker color={color} onChange={(color) => setValue(RGBToInt(color))}></RgbColorPicker>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAddionalDialog(false)}>Ok</Button>
+                    <Button onClick={() => setValue(setting.value)}>Reset</Button>
+                    <Button onClick={() => { setValue(setting.value); setAddionalDialog(false); }}>Cancel</Button>
+                </DialogActions>
+            </Dialog>}
+            <FormHelperText>{jsxDescription}</FormHelperText>
+        </Box>
+    }
     default:
         return <TextField
             {...baseProps}
