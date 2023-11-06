@@ -49,7 +49,7 @@ const RGBToInt = ({r, g, b}) => {
 const ConfigInput = ({setting, updateData, updateError}) => {
     const [value, setValue] = useState(setting.value);
     const [error, setError] = useState(false);
-    const [additionalDialog, setAddionalDialog] = useState(false)
+    const [additionalDialog, setAddionalDialog] = useState(-1)
     const theme = useTheme();
     const jsxDescription = <>
         <GlobalStyles styles={
@@ -72,7 +72,6 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         updateError(setting.name, error);
     }, [setting, updateError, error]);
     useEffect(() => {
-        
         if(value !== setting.value) {
             if(value === '') {
                 if(setting.emptyAllowed === undefined) {
@@ -160,12 +159,29 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             }}
         />;
     case settingType.Palette:
-        // FIXME Implement a Palette Config
-        return <TextField
-            {...baseProps}
-            {...textFieldProps}
-            helperText={helper}
-        />;
+        return <Box>
+            <InputLabel sx={{ scale: "0.75" }}>{setting.friendlyName}</InputLabel>
+            <Box flexDirection={"row"} display={"flex"} justifyContent={"space-between"} flexWrap={"wrap"}>
+                {value.map((colorInt, index) => {
+                    const color = intToRGB(colorInt);
+                    return <> 
+                        <Box sx={{ minWidth: '3vh', minHeight: '3vh', backgroundColor: `rgb(${color.r},${color.g},${color.b})`, border: `0.3vh solid`, borderRadius: '0.2vh' }} onClick={() => setAddionalDialog(index)}></Box>
+                        {additionalDialog === index && <Dialog fullScreen={false} open={additionalDialog === index} onClose={() => setAddionalDialog(-1)}>
+                            <DialogTitle>{setting.friendlyName}</DialogTitle>
+                            <DialogContent>
+                                <RgbColorPicker color={color} onChange={(color) => setValue(v => {v[index] = RGBToInt(color); return v})}></RgbColorPicker>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={() => setAddionalDialog(-1)}>Ok</Button>
+                                <Button onClick={() => setValue(v => { v[index] = RGBToInt(color); return v; })}>Reset</Button>
+                                <Button onClick={() => { setValue(v => { v[index] = RGBToInt(color); return v; }); setAddionalDialog(-1); }}>Cancel</Button>
+                            </DialogActions>
+                        </Dialog>}
+                    </>
+                })}
+            </Box>
+            <FormHelperText>{jsxDescription}</FormHelperText>
+        </Box> 
     case settingType.Color: {
         const color = intToRGB(value)
         
