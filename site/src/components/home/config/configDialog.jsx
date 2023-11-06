@@ -49,14 +49,15 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         label: setting.friendlyName,
         id: setting.name,
         onChange: (e) => setValue(e.target.value),
-        value: value
+        value: value,
+        error: error
     };
     useEffect(() => {
         updateError(setting.name, error);
     }, [setting, updateError, error]);
     useEffect(() => {
         if(value !== setting.value) {
-            if(value === '') {
+            if(value === '' && !setting.emptyAllowed) {
                 updateData(setting.name, undefined);
             } else {
                 updateData(setting.name, value);
@@ -64,15 +65,24 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         }
     }, [value, updateData, setting]);
     const readOnly = !!setting.readOnly;
+    let min;
+    let max;
     switch(setting.type) {
     case settingType.Integer:
+        min = setting.minimumValue !== undefined ? setting.minimumValue : (-2)**31;
+        max = setting.maximumValue !== undefined ? setting.maximumValue : 2**31 -1;
         return <TextField
             {...baseProps}
             {...textFieldProps}
+            onError={(e) => updateError(setting.name, e)}
             helperText={helper}
+            onChange={(e) => {
+                numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue, Math.floor);
+            }}
         />;  
     case settingType.PositiveBigInteger:
-
+        min = setting.minimumValue !== undefined ? setting.minimumValue : 0;
+        max = setting.maximumValue !== undefined ? setting.maximumValue : 2**32;
         return <TextField
             {...baseProps}
             {...textFieldProps}
@@ -80,28 +90,20 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             onError={(e) => updateError(setting.name, e)}
             helperText={helper}
             onChange={(e) => {
-                const v = e.target.value;
-                if( v === '' || v< 0 || v> 2**32) {
-                    if(!error) {
-                        setError(true);
-                        setHelper(`Value must be between 0 and ${2**32}`);
-                    }
-                } else if(error){
-                    setError(false);
-                    setHelper(jsxDescription);
-                }
-                if(!v || isNaN(v)) {
-                    setValue('');
-                } else {
-                    setValue(Math.floor(e.target.value));
-                }
+                numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue, Math.floor);
             }}
         />;
     case settingType.Float:
+        min = setting.minimumValue !== undefined ? setting.minimumValue :  -3.4028235E+38;
+        max = setting.maximumValue !== undefined ? setting.maximumValue : 3.4028235E+38;
         return <TextField
             {...baseProps}
             {...textFieldProps}
+            onError={(e) => updateError(setting.name, e)}
             helperText={helper}
+            onChange={(e) => {
+                numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue);
+            }}
         />;
     case settingType.Boolean:
         return <FormControlLabel {...baseProps} control={
@@ -139,6 +141,35 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         />;
     }
 };
+
+/**
+ * 
+ * @param {Number} value The value configured by the user
+ * @param {Boolean} error If the field is currently in an error state
+ * @param {String} description The description to show when in an ok state
+ * @param {Number} min The minimum value for the number determined by type or config
+ * @param {Number} max The maximum value for the number determined by type or config
+ * @param {Function(Boolean)} setError A callback to set the field to an error state 
+ * @param {Function(String)} setHelper A callback to set the helper text  
+ * @param {Function(Number)} setValue A callback to set the internal state tracking the variable
+ * @param {Function(Number)} filterFn A filter to apply when saving the number E.g. Math.floor for an Integer
+ */
+const numberChanged = (value, error, description, min, max, setError, setHelper, setValue, filterFn = (e) => e) => {
+    if( !value || isNaN(value) || value === '' || value < min || value > max) {
+        if(!error) {
+            setError(true);
+            setHelper(`Value must be between ${min.toLocaleString()} and ${max.toLocaleString()}`);
+        }
+    } else if(error){
+        setError(false);
+        setHelper(description);
+    }
+    if(!value || isNaN(value)) {
+        setValue('');
+    } else {
+        setValue(filterFn(value));
+    }
+}
 
 /**
  * Queries the device and loads the device settings, or effect settings for configuration.
@@ -252,7 +283,10 @@ const settingProps = PropTypes.shape({
     typeName: PropTypes.string.isRequired, 
     value: PropTypes.any,
     readOnly: PropTypes.bool,
-    writeOnly: PropTypes.bool
+    writeOnly: PropTypes.bool,
+    emptyAllowed: PropTypes.bool,
+    minimumValue: PropTypes.number,
+    maximumValue: PropTypes.number
 });
 
 
