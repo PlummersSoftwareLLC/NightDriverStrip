@@ -267,8 +267,6 @@ class PatternSubscribers : public LEDStripEffect
 
         jsonDoc[NAME_OF(youtubeChannelGuid)] = youtubeChannelGuid;
         jsonDoc[NAME_OF(youtubeChannelName)] = youtubeChannelName;
-        debugI("back RGB: %d, %d, %d", backgroundColor.r, backgroundColor.g, backgroundColor.b);
-        debugI("border RGB: %d, %d, %d", borderColor.r, borderColor.g, borderColor.b);
         jsonDoc[NAME_OF(backgroundColor)] = backgroundColor;
         jsonDoc[NAME_OF(borderColor)] = borderColor;
 
