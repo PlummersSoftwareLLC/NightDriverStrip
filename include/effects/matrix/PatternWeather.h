@@ -58,6 +58,8 @@ extern const uint8_t clearsky_night_start[]     asm("_binary_assets_bmp_clearnig
 extern const uint8_t clearsky_night_end[]       asm("_binary_assets_bmp_clearnight_jpg_end");
 extern const uint8_t fewclouds_start[]          asm("_binary_assets_bmp_fewclouds_jpg_start");
 extern const uint8_t fewclouds_end[]            asm("_binary_assets_bmp_fewclouds_jpg_end");
+extern const uint8_t fewclouds_night_start[]    asm("_binary_assets_bmp_fewcloudsnight_jpg_start");
+extern const uint8_t fewclouds_night_end[]      asm("_binary_assets_bmp_fewcloudsnight_jpg_end");
 extern const uint8_t mist_start[]               asm("_binary_assets_bmp_mist_jpg_start");
 extern const uint8_t mist_end[]                 asm("_binary_assets_bmp_mist_jpg_end");
 extern const uint8_t rain_start[]               asm("_binary_assets_bmp_rain_jpg_start");
@@ -87,7 +89,7 @@ static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int
     { 13, EmbeddedFile(snow_start, snow_end) },
     { 50, EmbeddedFile(mist_start, mist_end) },
     { 101, EmbeddedFile(clearsky_night_start, clearsky_night_end) },
-    { 102, EmbeddedFile(fewclouds_start, fewclouds_end) },
+    { 102, EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
     { 103, EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
     { 104, EmbeddedFile(brokenclouds_start, brokenclouds_end) },
     { 109, EmbeddedFile(showerrain_start, showerrain_end) },
