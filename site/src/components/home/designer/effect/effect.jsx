@@ -66,8 +66,8 @@ const CircularProgressWithLabel = ({progress, timeDisplay}) => {
 
 
 const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, timeDisplay, requestRunning, navigateTo, pinnedEffect}) => {
-    return <Box sx={{display: "flex", height: "100%"}} flexDirection={"row"} display={"flex"}>
-        <Box sx={{float: 'left', textAlign: "left"}} flexDirection={"row"} display={"flex"}>
+    return <Box sx={{display: "flex", height: "100%"}} flexDirection={"row"}>
+        <Box sx={{float: 'left', textAlign: "left", display: 'flex'}} flexDirection={"row"}>
             <Checkbox checked={effect.enabled} disabled={selected} onClick={(e)=>{e.stopPropagation(); effectEnable(effectIndex,!effect.enabled);}} sx={classes.short}/>
             <CardHeader sx={classes.short}
                 avatar={
@@ -77,17 +77,23 @@ const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectInd
                 }
             /> 
         </Box>
-        <Box sx={{float:'left', textAlign: "center"}} flexGrow={1}>
-            <Box>
-                {effect.name}
+        <Box sx={{float:'left', textAlign: "center", height:'100%'}} flexGrow={1}>
+            <Box sx={{ alignItems:'center', display: 'flex',flexDirection:'column', height:'100%'}}>
+                <Box flexGrow={1}>
+                    {effect.name}
+
+                </Box>
+                <Box flexGrow={1} sx={{maxWidth: '400px', width:'100%'}}>
+                    {selected && (pinnedEffect 
+                        ? <Box sx={{textAlign: 'center'}}><Icon>all_inclusive</Icon></Box> 
+                        : <LinearProgress disabled={requestRunning} variant="determinate" sx={{transition: 'none'}} value={progress} />
+                    )}
+                </Box>
             </Box>
         </Box>
         <Box sx={{float: 'left', textAlign: "-moz-right"}}>
             <Box sx={{float: 'left', width: '50%', height:'100%'}}>
-                {selected && <Box sx={{width: '40px', textAlign: 'center', height:'100%'}}>
-                    {pinnedEffect ? <Icon sx={{paddingTop: '25%', height: '100%'}}>all_inclusive</Icon>
-                        : <CircularProgressWithLabel progress={progress} timeDisplay={timeDisplay}/>}</Box>}
-                {!effect.enabled && <Box sx={{width: '40px'}}/>}
+                {(!effect.enabled || selected) && <Box sx={{width: '40px'}}/>}
                 {!selected && effect.enabled && <IconButton sx={{height: '100%'}} disabled={requestRunning} onClick={()=>navigateTo(effectIndex)}><Icon>play_circle_outline_arrow</Icon></IconButton>}
             </Box>
             <Box sx={{float: 'left', width: '50%', height:'100%'}}>
