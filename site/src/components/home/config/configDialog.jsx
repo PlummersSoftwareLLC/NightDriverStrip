@@ -39,6 +39,68 @@ const RGBToInt = ({r, g, b}) => {
     return parseInt(r.toString(2).padStart(8, 0) + g.toString(2).padStart(8, 0) + b.toString(2).padStart(8, 0), 2);
 }
 
+const ColorPickerDialog = ({title, color, value, setValue, open, closeFn}) => {
+    return <Dialog open={open} onClose={closeFn}>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogContent sx={{maxWidth: '250px'}}>
+            <RgbColorPicker color={color} onChange={(color) => setValue(RGBToInt(color))}></RgbColorPicker>
+            <Box sx={{minHeight: '15px'}}></Box>
+            <Box>
+                <TextField label="r" value={color.r} sx={{width: '33%'}} onChange={(e) =>{
+                    const input = e.target.value
+                    let newR = Math.min(255, Math.max(0, parseInt(input)))
+                    setValue( v => {
+                        let {r, g,b} = intToRGB(v);
+                        if (isNaN(newR)) {
+                            r = input === '' ? 0 : r;  
+                        } else {
+                            r = newR
+                        }
+                        return RGBToInt({r, g, b})
+                    })}
+                }
+                InputProps={{ inputProps: { min: 0, max: 255 } }}
+                />
+                <TextField label="g" value={color.g} sx={{width: '33%'}} onChange={(e) =>{
+                    const input = e.target.value
+                    let newG = Math.min(255, Math.max(0, parseInt(input)))
+                    setValue( v => {
+                        let {r, g,b} = intToRGB(v);
+                        if (isNaN(newG)) {
+                            g = input === '' ? 0 : r;  
+                        } else {
+                            g = newG
+                        }
+                        return RGBToInt({r, g, b})
+                    })}
+                } 
+                InputProps={{ inputProps: { min: 0, max: 255 } }}
+                />
+                <TextField label="b" value={color.b} sx={{width: '33%'}} onChange={(e) =>{
+                    const input = e.target.value
+                    let newB = Math.min(255, Math.max(0, parseInt(input)))
+                    setValue( v => {
+                        let {r, g,b} = intToRGB(v);
+                        if (isNaN(newB)) {
+                            b = input === '' ? 0 : r;  
+                        } else {
+                            b = newB
+                        }
+                        return RGBToInt({r, g, b})
+                    })}
+                } 
+                InputProps={{ inputProps: { min: 0, max: 255 } }}
+                />
+            </Box>
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={closeFn}>Ok</Button>
+            <Button onClick={() => setValue(value)}>Reset</Button>
+            <Button onClick={() => { setValue(value); closeFn() }}>Cancel</Button>
+        </DialogActions>
+    </Dialog>
+}
+
 /**
  * Creates an Input field based on the settingType provided.
  * @param {Props} props React Props
@@ -165,20 +227,13 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             <Box flexDirection={"row"} display={"flex"} justifyContent={"space-between"} flexWrap={"wrap"}>
                 {value.map((colorInt, index) => {
                     const color = intToRGB(colorInt);
-                    return <> 
+                    return <Box key={index}> 
                         <Box sx={{ minWidth: '3vh', minHeight: '3vh', backgroundColor: `rgb(${color.r},${color.g},${color.b})`, border: `0.3vh solid`, borderRadius: '0.2vh' }} onClick={() => setAddionalDialog(index)}></Box>
-                        {additionalDialog === index && <Dialog fullScreen={false} open={additionalDialog === index} onClose={() => setAddionalDialog(-1)}>
-                            <DialogTitle>{setting.friendlyName}</DialogTitle>
-                            <DialogContent>
-                                <RgbColorPicker color={color} onChange={(color) => setValue(v => {v[index] = RGBToInt(color); return v})}></RgbColorPicker>
-                            </DialogContent>
-                            <DialogActions>
-                                <Button onClick={() => setAddionalDialog(-1)}>Ok</Button>
-                                <Button onClick={() => setValue(v => { v[index] = RGBToInt(color); return v; })}>Reset</Button>
-                                <Button onClick={() => { setValue(v => { v[index] = RGBToInt(color); return v; }); setAddionalDialog(-1); }}>Cancel</Button>
-                            </DialogActions>
-                        </Dialog>}
-                    </>
+                        {additionalDialog === index && 
+                        <ColorPickerDialog title={setting.friendlyName} color={color} value={setting.value[index]} open={additionalDialog == index} closeFn={() => setAddionalDialog(-1)} 
+                            setValue={(val) => setValue(v => v.map((old, i) => i === index ? val : old))}
+                        />}
+                    </Box>
                 })}
             </Box>
             <FormHelperText>{jsxDescription}</FormHelperText>
@@ -189,20 +244,10 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         return <Box>
             <InputLabel sx={{scale: "0.75"}}>{setting.friendlyName}</InputLabel>
             <Box flexDirection={"row"} display={"flex"}>
-                <Box flexGrow={"1"} sx={{backgroundColor: `rgb(${color.r},${color.g},${color.b})`}} onClick={() => setAddionalDialog(true)}></Box>
-                <IconButton onClick={() => setAddionalDialog(true)}><Icon>color_lens</Icon></IconButton>
+                <Box flexGrow={"1"} sx={{backgroundColor: `rgb(${color.r},${color.g},${color.b})`}} onClick={() => setAddionalDialog(0)}></Box>
+                <IconButton onClick={() => setAddionalDialog(0)}><Icon>color_lens</Icon></IconButton>
             </Box>
-            {additionalDialog && <Dialog open={additionalDialog} onClose={() => setAddionalDialog(false)}>
-                <DialogTitle>{setting.friendlyName}</DialogTitle>
-                <DialogContent>
-                    <RgbColorPicker color={color} onChange={(color) => setValue(RGBToInt(color))}></RgbColorPicker>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAddionalDialog(false)}>Ok</Button>
-                    <Button onClick={() => setValue(setting.value)}>Reset</Button>
-                    <Button onClick={() => { setValue(setting.value); setAddionalDialog(false); }}>Cancel</Button>
-                </DialogActions>
-            </Dialog>}
+            {additionalDialog == 0 && <ColorPickerDialog title={setting.friendlyName} color={color} value={setting.value} setValue={setValue} open={additionalDialog == 0} closeFn={() => setAddionalDialog(-1)} /> }
             <FormHelperText>{jsxDescription}</FormHelperText>
         </Box>
     }
@@ -376,5 +421,18 @@ ConfigInput.propTypes = {
     updateData: PropTypes.func,
     updateError: PropTypes.func
 };
+
+ColorPickerDialog.propTypes = {
+    title: PropTypes.string.isRequired,
+    color: PropTypes.shape({
+        r: PropTypes.number.isRequired,
+        g: PropTypes.number.isRequired,
+        b: PropTypes.number.isRequired,
+    }), 
+    value: PropTypes.number.isRequired, 
+    setValue: PropTypes.func.isRequired, 
+    open: PropTypes.bool.isRequired, 
+    closeFn: PropTypes.func.isRequired
+}
 
 export default ConfigDialog;
