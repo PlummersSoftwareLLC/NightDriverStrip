@@ -52,6 +52,8 @@
 
 extern const uint8_t brokenclouds_start[]           asm("_binary_assets_bmp_brokenclouds_jpg_start");
 extern const uint8_t brokenclouds_end[]             asm("_binary_assets_bmp_brokenclouds_jpg_end");
+extern const uint8_t brokenclouds_night_start[]     asm("_binary_assets_bmp_brokencloudsnight_jpg_start");
+extern const uint8_t brokenclouds_night_end[]       asm("_binary_assets_bmp_brokencloudsnight_jpg_end");
 extern const uint8_t clearsky_start[]               asm("_binary_assets_bmp_clearsky_jpg_start");
 extern const uint8_t clearsky_end[]                 asm("_binary_assets_bmp_clearsky_jpg_end");
 extern const uint8_t clearsky_night_start[]         asm("_binary_assets_bmp_clearnight_jpg_start");
@@ -66,12 +68,14 @@ extern const uint8_t rain_start[]                   asm("_binary_assets_bmp_rain
 extern const uint8_t rain_end[]                     asm("_binary_assets_bmp_rain_jpg_end");
 extern const uint8_t scatteredclouds_start[]        asm("_binary_assets_bmp_scatteredclouds_jpg_start");
 extern const uint8_t scatteredclouds_end[]          asm("_binary_assets_bmp_scatteredclouds_jpg_end");
-extern const uint8_t scatteredclouds_night_start[]  asm("_binary_assets_bmp_scatteredclouds_jpg_start");
-extern const uint8_t scatteredclouds_night_end[]    asm("_binary_assets_bmp_scatteredclouds_jpg_end");
+extern const uint8_t scatteredclouds_night_start[]  asm("_binary_assets_bmp_scatteredcloudsnight_jpg_start");
+extern const uint8_t scatteredclouds_night_end[]    asm("_binary_assets_bmp_scatteredcloudsnight_jpg_end");
 extern const uint8_t showerrain_start[]             asm("_binary_assets_bmp_showerrain_jpg_start");
 extern const uint8_t showerrain_end[]               asm("_binary_assets_bmp_showerrain_jpg_end");
 extern const uint8_t snow_start[]                   asm("_binary_assets_bmp_snow_jpg_start");
 extern const uint8_t snow_end[]                     asm("_binary_assets_bmp_snow_jpg_end");
+extern const uint8_t snow_night_start[]             asm("_binary_assets_bmp_snow2_jpg_start");
+extern const uint8_t snow_night_end[]               asm("_binary_assets_bmp_snow2_jpg_end");
 extern const uint8_t thunderstorm_start[]           asm("_binary_assets_bmp_thunderstorm_jpg_start");
 extern const uint8_t thunderstorm_end[]             asm("_binary_assets_bmp_thunderstorm_jpg_end");
 extern const uint8_t thunderstorm_night_start[]     asm("_binary_assets_bmp_thunderstorm2_jpg_start");
@@ -93,11 +97,11 @@ static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int
     { 101, EmbeddedFile(clearsky_night_start, clearsky_night_end) },
     { 102, EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
     { 103, EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
-    { 104, EmbeddedFile(brokenclouds_start, brokenclouds_end) },
+    { 104, EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
     { 109, EmbeddedFile(showerrain_start, showerrain_end) },
     { 110, EmbeddedFile(rain_start, rain_end) },
     { 111, EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
-    { 113, EmbeddedFile(snow_start, snow_end) },
+    { 113, EmbeddedFile(snow_night_start, snow_night_end) },
     { 150, EmbeddedFile(mist_start, mist_end) }
 };
 
