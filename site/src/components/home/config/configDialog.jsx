@@ -39,64 +39,70 @@ const RGBToInt = ({r, g, b}) => {
     return parseInt(r.toString(2).padStart(8, 0) + g.toString(2).padStart(8, 0) + b.toString(2).padStart(8, 0), 2);
 }
 
-const ColorPickerDialog = ({title, color, value, setValue, open, closeFn}) => {
+const ColorPickerDialog = ({title, initialColor, settingValue, setValue, open, closeFn}) => {
+    const [color, setColor] = useState(initialColor)
+            
     return <Dialog open={open} onClose={closeFn}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent sx={{maxWidth: '250px'}}>
-            <RgbColorPicker color={color} onChange={(color) => setValue(RGBToInt(color))}></RgbColorPicker>
+            <RgbColorPicker color={color} onChange={(color) => setColor(color)}></RgbColorPicker>
             <Box sx={{minHeight: '15px'}}></Box>
             <Box>
-                <TextField label="r" value={color.r} sx={{width: '33%'}} onChange={(e) =>{
-                    const input = e.target.value
-                    let newR = Math.min(255, Math.max(0, parseInt(input)))
-                    setValue( v => {
-                        let {r, g,b} = intToRGB(v);
-                        if (isNaN(newR)) {
-                            r = input === '' ? 0 : r;  
-                        } else {
-                            r = newR
-                        }
-                        return RGBToInt({r, g, b})
-                    })}
-                }
-                InputProps={{ inputProps: { min: 0, max: 255 } }}
+                <TextField label="r" value={color.r} sx={{width: '33%'}}
+                    onChange={(e) =>{
+                        const input = e.target.value
+                        let newR = Math.min(255, Math.max(0, parseInt(input)))
+                        setColor( c => {
+                            let {r, g,b} = c;
+                            if (isNaN(newR)) {
+                                r = input === '' ? 0 : r;  
+                            } else {
+                                r = newR
+                            }
+                            return {r, g, b}
+                        })
+                    }
+                    }
+                    InputProps={{ inputProps: { min: 0, max: 255 } }}
                 />
-                <TextField label="g" value={color.g} sx={{width: '33%'}} onChange={(e) =>{
-                    const input = e.target.value
-                    let newG = Math.min(255, Math.max(0, parseInt(input)))
-                    setValue( v => {
-                        let {r, g,b} = intToRGB(v);
-                        if (isNaN(newG)) {
-                            g = input === '' ? 0 : r;  
-                        } else {
-                            g = newG
-                        }
-                        return RGBToInt({r, g, b})
-                    })}
-                } 
-                InputProps={{ inputProps: { min: 0, max: 255 } }}
+                <TextField label="g" value={color.g} sx={{width: '33%'}} 
+                    onChange={(e) =>{
+                        const input = e.target.value
+                        let newG = Math.min(255, Math.max(0, parseInt(input)))
+                        setColor( c => {
+                            let {r, g,b} = c;
+                            if (isNaN(newG)) {
+                                g = input === '' ? 0 : g;  
+                            } else {
+                                g = newG
+                            }
+                            return {r, g, b}
+                        })
+                    }}
+                    InputProps={{ inputProps: { min: 0, max: 255 } }}
                 />
-                <TextField label="b" value={color.b} sx={{width: '33%'}} onChange={(e) =>{
-                    const input = e.target.value
-                    let newB = Math.min(255, Math.max(0, parseInt(input)))
-                    setValue( v => {
-                        let {r, g,b} = intToRGB(v);
-                        if (isNaN(newB)) {
-                            b = input === '' ? 0 : r;  
-                        } else {
-                            b = newB
-                        }
-                        return RGBToInt({r, g, b})
-                    })}
-                } 
-                InputProps={{ inputProps: { min: 0, max: 255 } }}
+                <TextField label="b" value={color.b} sx={{width: '33%'}}
+                    onChange={(e) =>{
+                        const input = e.target.value
+                        let newB = Math.min(255, Math.max(0, parseInt(input)))
+                        setColor( c => {
+                            let {r, g, b} = c;
+                            if (isNaN(newB)) {
+                                b = input === '' ? 0 : b;  
+                            } else {
+                                b = newB
+                            }
+                            return {r, g, b}
+                        })
+                    }} 
+                    InputProps={{ inputProps: { min: 0, max: 255 } }}
                 />
             </Box>
         </DialogContent>
         <DialogActions>
-            <Button onClick={closeFn}>Ok</Button>
-            <Button onClick={() => setValue(value)}>Reset</Button>
-            <Button onClick={() => { setValue(value); closeFn() }}>Cancel</Button>
+            <Button onClick={ () => {setValue(RGBToInt(color)); closeFn();}}>Ok</Button>
+            <Button onClick={() => setColor(intToRGB(settingValue))}>Reset</Button>
+            <Button onClick={closeFn}>Cancel</Button>
         </DialogActions>
     </Dialog>
 }
@@ -110,6 +116,10 @@ const ColorPickerDialog = ({title, color, value, setValue, open, closeFn}) => {
  * @returns {React.Component} The input field to load into the dialog
  */
 const ConfigInput = ({setting, updateData, updateError}) => {
+    if(setting.type === settingType.Color) {
+        setting.type = settingType.Palette
+        setting.value = [12345, 6745323, 9756]
+    }
     const [value, setValue] = useState(setting.value);
     const [error, setError] = useState(false);
     const [additionalDialog, setAddionalDialog] = useState(-1)
@@ -230,7 +240,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
                     return <Box key={index}> 
                         <Box sx={{ minWidth: '3vh', minHeight: '3vh', backgroundColor: `rgb(${color.r},${color.g},${color.b})`, border: `0.3vh solid`, borderRadius: '0.2vh' }} onClick={() => setAddionalDialog(index)}></Box>
                         {additionalDialog === index && 
-                        <ColorPickerDialog title={setting.friendlyName} color={color} value={setting.value[index]} open={additionalDialog == index} closeFn={() => setAddionalDialog(-1)} 
+                        <ColorPickerDialog title={setting.friendlyName} initialColor={color} settingValue={setting.value[index]} open={additionalDialog == index} closeFn={() => setAddionalDialog(-1)} 
                             setValue={(val) => setValue(v => v.map((old, i) => i === index ? val : old))}
                         />}
                     </Box>
@@ -247,7 +257,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
                 <Box flexGrow={"1"} sx={{backgroundColor: `rgb(${color.r},${color.g},${color.b})`}} onClick={() => setAddionalDialog(0)}></Box>
                 <IconButton onClick={() => setAddionalDialog(0)}><Icon>color_lens</Icon></IconButton>
             </Box>
-            {additionalDialog == 0 && <ColorPickerDialog title={setting.friendlyName} color={color} value={setting.value} setValue={setValue} open={additionalDialog == 0} closeFn={() => setAddionalDialog(-1)} /> }
+            {additionalDialog == 0 && <ColorPickerDialog title={setting.friendlyName} initialColor={color} settingValue={setting.value} setValue={setValue} open={additionalDialog == 0} closeFn={() => setAddionalDialog(-1)} /> }
             <FormHelperText>{jsxDescription}</FormHelperText>
         </Box>
     }
@@ -423,13 +433,13 @@ ConfigInput.propTypes = {
 };
 
 ColorPickerDialog.propTypes = {
-    title: PropTypes.string.isRequired,
-    color: PropTypes.shape({
+    title: PropTypes.string.isRequired, 
+    initialColor: PropTypes.shape({
         r: PropTypes.number.isRequired,
         g: PropTypes.number.isRequired,
         b: PropTypes.number.isRequired,
-    }), 
-    value: PropTypes.number.isRequired, 
+    }).isRequired, 
+    settingValue: PropTypes.number.isRequired, 
     setValue: PropTypes.func.isRequired, 
     open: PropTypes.bool.isRequired, 
     closeFn: PropTypes.func.isRequired
