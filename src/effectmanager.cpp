@@ -323,42 +323,52 @@ void EffectManager::SetGlobalColor(CRGB color)
 {
     debugI("Setting Global Color");
 
-    CRGB oldColor = lastManualColor;
-    lastManualColor = color;
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+
+    deviceConfig.SetSecondColor(deviceConfig.GlobalColor());
+    deviceConfig.SetGlobalColor(color);
+
+    ApplyGlobalPaletteColors();
+}
+
+
+void EffectManager::ApplyGlobalPaletteColors()
+{
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    auto& globalColor = deviceConfig.GlobalColor();
+    auto& secondColor = deviceConfig.SecondColor();
 
     #if (USE_HUB75)
             auto pMatrix = g();
 
             // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
             // based from where those colors sit on the spectrum
-
-            if (oldColor == color)
+            if (secondColor == globalColor)
             {
-                CHSV hsv = rgb2hsv_approximate(color);
-                CRGB color2 = CRGB(CHSV(hsv.hue + 64, 255, 255));
-                pMatrix->setPalette(CRGBPalette16(color, color2));
+                CHSV hsv = rgb2hsv_approximate(globalColor);
+                pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
             }
             else
             {
                 // But if we have two different colors, we create a palettte spread between them
-                pMatrix->setPalette(CRGBPalette16(oldColor, color));
+                pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
             }
             pMatrix->PausePalette(true);
     #else
         std::shared_ptr<LEDStripEffect> effect;
 
-        if (color == CRGB(CRGB::White))
+        if (globalColor == CRGB(CRGB::White))
             effect = make_shared_psram<ColorFillEffect>(CRGB::White, 1);
         else
 
             #if ENABLE_AUDIO
                 #if SPECTRUM
-                    effect = GetSpectrumAnalyzer(color, oldColor);
+                    effect = GetSpectrumAnalyzer(globalColor, secondColor);
                 #else
-                    effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, globalColor, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
             #else
-                effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, globalColor, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
             #endif
 
         if (effect->Init(_gfx))

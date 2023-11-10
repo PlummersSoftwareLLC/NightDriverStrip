@@ -75,6 +75,8 @@ class DeviceConfig : public IJSONSerializable
     bool    rememberCurrentEffect = true;
     int     powerLimit = POWER_LIMIT_DEFAULT;
     uint8_t brightness = BRIGHTNESS_MAX;
+    CRGB    globalColor = CRGB::Red;
+    CRGB    secondColor = CRGB::Red;
 
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
@@ -119,6 +121,9 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
+    static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
+    static constexpr const char * ApplyGlobalColorTag = "applyGlobalColor";
+    static constexpr const char * SecondColorTag = NAME_OF(secondColor);
 
     DeviceConfig();
 
@@ -143,6 +148,8 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
         jsonDoc[PowerLimitTag] = powerLimit;
         jsonDoc[BrightnessTag] = brightness;
+        jsonDoc[GlobalColorTag] = globalColor;
+        jsonDoc[SecondColorTag] = secondColor;
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
@@ -171,6 +178,8 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
         SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
         SetIfPresentIn(jsonObject, brightness, BrightnessTag);
+        SetIfPresentIn(jsonObject, globalColor, GlobalColorTag);
+        SetIfPresentIn(jsonObject, secondColor, SecondColorTag);
 
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
@@ -280,6 +289,26 @@ class DeviceConfig : public IJSONSerializable
             );
             powerLimitSpec.MinimumValue = POWER_LIMIT_MIN;
             powerLimitSpec.HasValidation = true;
+
+            settingSpecs.emplace_back(
+                GlobalColorTag,
+                "Global color",
+                "Main color that is applied to all those effects that support using it.",
+                SettingSpec::SettingType::Color
+            );
+            settingSpecs.emplace_back(
+                ApplyGlobalColorTag,
+                "(Re)apply global color",
+                "You can use this to \"reselect\" and apply the current global color, to force the composition of the derived global palette.",
+                SettingSpec::SettingType::Boolean
+            ).Access = SettingSpec::SettingAccess::WriteOnly;
+            settingSpecs.emplace_back(
+                SecondColorTag,
+                "Second color",
+                "Second color that is used to create a global palette in combination with the current global color. That palette is used "
+                "by some effects. Defaults to the <em>previous</em> global color if not explicitly set.",
+                SettingSpec::SettingType::Color
+            );
 
             settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
         }
@@ -427,5 +456,25 @@ class DeviceConfig : public IJSONSerializable
     {
         if (newPowerLimit >= POWER_LIMIT_MIN)
             SetAndSave(powerLimit, newPowerLimit);
+    }
+
+    const CRGB& GlobalColor() const
+    {
+        return globalColor;
+    }
+
+    void SetGlobalColor(const CRGB& newGlobalColor)
+    {
+        SetAndSave(globalColor, newGlobalColor);
+    }
+
+    const CRGB& SecondColor() const
+    {
+        return secondColor;
+    }
+
+    void SetSecondColor(const CRGB& newSecondColor)
+    {
+        SetAndSave(secondColor, newSecondColor);
     }
 };

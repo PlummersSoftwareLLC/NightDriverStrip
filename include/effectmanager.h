@@ -67,7 +67,6 @@ class  EffectManager : public IJSONSerializable
     uint _effectInterval = 0;
     bool _bPlayAll;
     bool _bShowVU = true;
-    CRGB lastManualColor = CRGB::Red;
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
     int _effectSetVersion = 1;
@@ -319,6 +318,7 @@ public:
     // which takes drawing precedence
 
     void SetGlobalColor(CRGB color);
+    void ApplyGlobalPaletteColors();
 
     void ClearRemoteColor(bool retainRemoteEffect = false)
     {

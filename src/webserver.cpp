@@ -79,6 +79,16 @@ bool CWebServer::PushPostParamIfPresent<int>(AsyncWebServerRequest * pRequest, c
     });
 }
 
+// Push param that represents a color
+template<>
+bool CWebServer::PushPostParamIfPresent<CRGB>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<CRGB> setter)
+{
+    return PushPostParamIfPresent<CRGB>(pRequest, paramName, setter, [](AsyncWebParameter * param) constexpr
+    {
+        return CRGB(strtoul(param->value().c_str(), NULL, 10));
+    });
+}
+
 // Add CORS header to and send JSON response
 template<>
 void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse)
@@ -506,6 +516,14 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(deviceConfig.SetRememberCurrentEffect(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
+
+    bool applyGlobalColor = PushPostParamIfPresent<CRGB>(pRequest, DeviceConfig::GlobalColorTag, SET_VALUE(deviceConfig.SetGlobalColor(value)))
+                            || IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorTag);
+
+    if (PushPostParamIfPresent<CRGB>(pRequest, DeviceConfig::SecondColorTag, SET_VALUE(deviceConfig.SetSecondColor(value))))
+        g_ptrSystem->EffectManager().ApplyGlobalPaletteColors();
+    else if (applyGlobalColor)
+        g_ptrSystem->EffectManager().SetGlobalColor(g_ptrSystem->DeviceConfig().GlobalColor());
 }
 
 // Set settings and return resulting config
