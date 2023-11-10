@@ -716,7 +716,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define ENABLE_WIFI                 1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
-    
+
     #define WAIT_FOR_WIFI               1   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL           5   // How many seconds before the lamp times out and shows local content
     #define COLORDATA_SERVER_ENABLED    0   // Also provides a response packet
@@ -802,7 +802,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Spectrum"
     #endif
 
-    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_AUDIOSERIAL      0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI             1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0   // Hold in setup until we have WiFi - for strips without effects
@@ -810,7 +810,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
     #define ENABLE_NTP              1   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
-    #define ENABLE_REMOTE           1   // IR Remote Control
+    #define ENABLE_REMOTE           0   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
     #if USE_PSRAM
