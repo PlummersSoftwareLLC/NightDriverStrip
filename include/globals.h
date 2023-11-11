@@ -804,7 +804,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI                 1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+    #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
     #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
