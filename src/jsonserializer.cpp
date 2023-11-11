@@ -91,18 +91,28 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
 void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction)
 {
     // Loop is here to deal with out-of-memory conditions
+    int failCount = 0;
+    
     while(true)
     {
         pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
-        JsonObject jsonObject = pJsonDoc->to<JsonObject>();
+        
+        if (pJsonDoc->capacity() == 0) // Memory could not be allocated for the document.
+        {
+            failCount++;
+        }
+        else 
+        {
+            JsonObject jsonObject = pJsonDoc->to<JsonObject>();
+            if (serializationFunction(jsonObject))
+                break;
+        }
 
-        if (serializationFunction(jsonObject))
+        pJsonDoc.reset(nullptr); 
+        if (failCount > 5) 
             break;
-
-        pJsonDoc.reset(nullptr);
+        
         bufferSize += JSON_BUFFER_INCREMENT;
-
-        debugW("Out of memory serializing object - increasing buffer to %zu bytes", bufferSize);
     }
 }
 
@@ -115,6 +125,12 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
 
     SerializeWithBufferSize(pJsonDoc, bufferSize, [&object](JsonObject& jsonObject) { return object.SerializeToJSON(jsonObject); });
 
+    if (!pJsonDoc || pJsonDoc->capacity() == 0) // pJsonDoc could not be allcoated memory. Will skip saving file.
+    {
+        debugV("Could not allocate memory for pJsonDoc. Will skip writing file\n");
+        return false;
+    }
+    
     SPIFFS.remove(fileName);
 
     File file = SPIFFS.open(fileName, FILE_WRITE);
