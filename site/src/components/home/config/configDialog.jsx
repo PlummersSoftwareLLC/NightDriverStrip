@@ -116,10 +116,6 @@ const ColorPickerDialog = ({title, initialColor, settingValue, setValue, open, c
  * @returns {React.Component} The input field to load into the dialog
  */
 const ConfigInput = ({setting, updateData, updateError}) => {
-    if(setting.type === settingType.Color) {
-        setting.type = settingType.Palette
-        setting.value = [12345, 6745323, 9756]
-    }
     const [value, setValue] = useState(setting.value);
     const [error, setError] = useState(false);
     const [additionalDialog, setAddionalDialog] = useState(-1)
