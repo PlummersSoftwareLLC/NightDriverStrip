@@ -275,7 +275,7 @@ class DeviceConfig : public IJSONSerializable
                 BrightnessTag,
                 "Brightness",
                 "Overall brightness the connected LEDs or matrix should be run at.",
-                SettingSpec::SettingType::Integer,
+                SettingSpec::SettingType::Slider,
                 BRIGHTNESS_MIN,
                 BRIGHTNESS_MAX
             ).HasValidation = true;
