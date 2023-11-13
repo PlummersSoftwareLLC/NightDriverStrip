@@ -517,13 +517,15 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
 
-    bool applyGlobalColor = PushPostParamIfPresent<CRGB>(pRequest, DeviceConfig::GlobalColorTag, SET_VALUE(deviceConfig.SetGlobalColor(value)))
-                            || IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorTag);
+    std::optional<CRGB> globalColor = {};
+    std::optional<CRGB> secondColor = {};
 
-    if (PushPostParamIfPresent<CRGB>(pRequest, DeviceConfig::SecondColorTag, SET_VALUE(deviceConfig.SetSecondColor(value))))
-        g_ptrSystem->EffectManager().ApplyGlobalPaletteColors();
-    else if (applyGlobalColor)
-        g_ptrSystem->EffectManager().SetGlobalColor(g_ptrSystem->DeviceConfig().GlobalColor());
+    PushPostParamIfPresent<CRGB>(pRequest, DeviceConfig::GlobalColorTag, SET_VALUE(globalColor = value));
+    PushPostParamIfPresent<CRGB>(pRequest, DeviceConfig::SecondColorTag, SET_VALUE(secondColor = value));
+
+    deviceConfig.ApplyColorSettings(globalColor, secondColor,
+                                    IsPostParamTrue(pRequest, DeviceConfig::ClearGlobalColorTag),
+                                    IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorTag));
 }
 
 // Set settings and return resulting config

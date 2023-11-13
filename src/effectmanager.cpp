@@ -319,14 +319,15 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 #include "effects/strip/fireeffect.h"
 
-void EffectManager::SetGlobalColor(CRGB color)
+void EffectManager::ApplyGlobalColor(CRGB color)
 {
     debugI("Setting Global Color");
 
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
 
-    deviceConfig.SetSecondColor(deviceConfig.GlobalColor());
+    CRGB oldGlobalColor = deviceConfig.GlobalColor();
     deviceConfig.SetGlobalColor(color);
+    deviceConfig.SetSecondColor(oldGlobalColor);
 
     ApplyGlobalPaletteColors();
 }

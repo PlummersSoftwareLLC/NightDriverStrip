@@ -312,12 +312,12 @@ public:
         return _bShowVU && GetCurrentEffect().CanDisplayVUMeter();
     }
 
-    // SetGlobalColor
+    // ApplyGlobalColor
     //
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
     // which takes drawing precedence
 
-    void SetGlobalColor(CRGB color);
+    void ApplyGlobalColor(CRGB color);
     void ApplyGlobalPaletteColors();
 
     void ClearRemoteColor(bool retainRemoteEffect = false)
@@ -384,7 +384,7 @@ public:
             effect->SetEnabled(false);
 
             if (!AreEffectsEnabled())
-                SetGlobalColor(CRGB::Black);
+                ApplyGlobalColor(CRGB::Black);
 
             if (!skipSave)
                 SaveEffectManagerConfig();

@@ -144,3 +144,41 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
         }
     }
 }
+
+// This function contains the logic for dealing with the various color-related settings we have.
+// The logic effectively mimics the behavior of pressing a color button on the IR remote control when (only) the
+// global color is set or (re)applied, but also allows the secondary global palette color to be specified directly.
+// The code in this function figures out how to prioritize and combine the values of (optional) settings; the actual
+// logic for applying the correct color(s) and palette is contained in a number of EffectManager member functions.
+void DeviceConfig::ApplyColorSettings(std::optional<CRGB> globalColor, std::optional<CRGB> secondColor, bool clearGlobalColor, bool applyGlobalColor)
+{
+    // If we're asked to clear the global color, we'll remember any colors we were passed, but won't do anything with them
+    if (clearGlobalColor)
+    {
+        if (globalColor.has_value())
+            SetGlobalColor(globalColor.value());
+        if (secondColor.has_value())
+            SetSecondColor(secondColor.value());
+
+        g_ptrSystem->EffectManager().ClearRemoteColor();
+
+        return;
+    }
+
+    CRGB newGlobalColor = globalColor.has_value() ? globalColor.value() : GlobalColor();
+    applyGlobalColor = applyGlobalColor || globalColor.has_value();
+
+    // If we were given a second color, set it and the global one if necessary. Then have EffectManager do its thing...
+    if (secondColor.has_value())
+    {
+        if (applyGlobalColor)
+            SetGlobalColor(newGlobalColor);
+
+        SetSecondColor(secondColor.value());
+
+        g_ptrSystem->EffectManager().ApplyGlobalPaletteColors();
+    }
+    // ...otherwise, apply the "set global color" logic if we were asked to do so
+    else if (applyGlobalColor)
+        g_ptrSystem->EffectManager().ApplyGlobalColor(newGlobalColor);
+}

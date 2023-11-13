@@ -121,6 +121,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
+    static constexpr const char * ClearGlobalColorTag = "clearGlobalColor";
     static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
     static constexpr const char * ApplyGlobalColorTag = "applyGlobalColor";
     static constexpr const char * SecondColorTag = NAME_OF(secondColor);
@@ -291,6 +292,12 @@ class DeviceConfig : public IJSONSerializable
             powerLimitSpec.HasValidation = true;
 
             settingSpecs.emplace_back(
+                ClearGlobalColorTag,
+                "Clear global color",
+                "Stop applying the global color/derived palette. This takes precedence over the \"(Re)apply global color\" checkbox.",
+                SettingSpec::SettingType::Boolean
+            ).Access = SettingSpec::SettingAccess::WriteOnly;
+            settingSpecs.emplace_back(
                 GlobalColorTag,
                 "Global color",
                 "Main color that is applied to all those effects that support using it.",
@@ -299,7 +306,8 @@ class DeviceConfig : public IJSONSerializable
             settingSpecs.emplace_back(
                 ApplyGlobalColorTag,
                 "(Re)apply global color",
-                "You can use this to \"reselect\" and apply the current global color, to force the composition of the derived global palette.",
+                "You can use this to \"reselect\" and apply the current global color, to force the composition of the derived "
+                "global palette. This checkbox is ignored if the \"Clear global color\" checkbox is selected.",
                 SettingSpec::SettingType::Boolean
             ).Access = SettingSpec::SettingAccess::WriteOnly;
             settingSpecs.emplace_back(
@@ -477,4 +485,6 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(secondColor, newSecondColor);
     }
+
+    void ApplyColorSettings(std::optional<CRGB> globalColor, std::optional<CRGB> secondColor, bool clearGlobalColor, bool applyGlobalColor);
 };
