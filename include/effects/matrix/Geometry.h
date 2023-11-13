@@ -29,6 +29,11 @@
 #ifndef Geometry_H
 #define Geometry_H
 
+// Description: This file contains the definitions of various geometry-related structures.
+//              It includes structures for representing vertices in 3D space, points on a plane,
+//              edges with visibility, and structures to represent square and triangular faces.
+//              These structures are essential for 3D geometry manipulations and representations.
+
 struct Vertex
 {
     float x, y, z;

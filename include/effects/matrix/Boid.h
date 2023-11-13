@@ -68,6 +68,25 @@
 
 #include "Vector.h"
 
+//
+// This file defines the class `Boid`, which models the behavior of a boid (bird-like object) in a flock.
+// It includes properties such as location, velocity, acceleration, max speed, and steering force.
+// The class encapsulates behaviors like flocking, alignment, cohesion, separation, and obstacle avoidance.
+// Each boid is governed by simple rules to simulate natural flocking behavior:
+//
+// 1. **Separation**: Avoid crowding neighbors (short range repulsion).
+// 2. **Alignment**: Steer towards the average heading of neighbors.
+// 3. **Cohesion**: Steer towards the average position of neighbors (long range attraction).
+//
+// Additional behaviors like obstacle repulsion and border wrapping/avoidance are implemented for realistic movement.
+// The `Boid` constructor initializes the boid with random velocity and acceleration, and methods like `run`, 
+// `update`, and `applyForce` are used for updating the boid's state. 
+// There are methods for computing the forces applied to each boid (`flock`, `separate`, `align`, `cohesion`, 
+// `seek`, `arrive`), and for handling border behavior (`wrapAroundBorders`, `avoidBorders`).
+//
+// The boid's properties and behaviors make it suitable for creating simulations of flocking behavior in a 2D space.
+//
+
 class Boid 
 {
   public:

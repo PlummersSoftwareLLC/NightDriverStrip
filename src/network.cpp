@@ -638,6 +638,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
     // ColorDataTaskEntry
     //
     // The thread which serves requests for color data on port 49153
+    
     void IRAM_ATTR ColorDataTaskEntry(void *)
     {
         LEDViewer _viewer(12000);

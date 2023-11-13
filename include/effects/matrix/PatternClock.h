@@ -31,6 +31,14 @@
 #ifndef PatternClock_H
 #define PatternClock_H
 
+// Description:
+//
+// This file defines the PatternClock class, a subclass of LEDStripEffect.
+// The class is designed to render a clock effect on an LED matrix. It 
+// includes functionality to display time with hour, minute, and second 
+// hands, along with tick marks for each hour. The clock's appearance and 
+// behavior are customizable through various methods.
+
 class PatternClock : public LEDStripEffect
 {
     // Radius is the lesser of the height and width so that the round clock can fit
