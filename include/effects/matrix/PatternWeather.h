@@ -68,7 +68,7 @@ extern const uint8_t mist_night_start[]             asm("_binary_assets_bmp_mist
 extern const uint8_t mist_night_end[]               asm("_binary_assets_bmp_mistnight_jpg_end");
 extern const uint8_t rain_start[]                   asm("_binary_assets_bmp_rain_jpg_start");
 extern const uint8_t rain_end[]                     asm("_binary_assets_bmp_rain_jpg_end");
-extern const uint8_t rain_nighgt_start[]            asm("_binary_assets_bmp_rainnight_jpg_start");
+extern const uint8_t rain_night_start[]             asm("_binary_assets_bmp_rainnight_jpg_start");
 extern const uint8_t rain_night_end[]               asm("_binary_assets_bmp_rainnight_jpg_end");
 extern const uint8_t scatteredclouds_start[]        asm("_binary_assets_bmp_scatteredclouds_jpg_start");
 extern const uint8_t scatteredclouds_end[]          asm("_binary_assets_bmp_scatteredclouds_jpg_end");
@@ -76,6 +76,8 @@ extern const uint8_t scatteredclouds_night_start[]  asm("_binary_assets_bmp_scat
 extern const uint8_t scatteredclouds_night_end[]    asm("_binary_assets_bmp_scatteredcloudsnight_jpg_end");
 extern const uint8_t showerrain_start[]             asm("_binary_assets_bmp_showerrain_jpg_start");
 extern const uint8_t showerrain_end[]               asm("_binary_assets_bmp_showerrain_jpg_end");
+extern const uint8_t showerrain_night_start[]       asm("_binary_assets_bmp_showerrainnight_jpg_start");
+extern const uint8_t showerrain_night_end[]         asm("_binary_assets_bmp_showerrainnight_jpg_end");
 extern const uint8_t snow_start[]                   asm("_binary_assets_bmp_snow_jpg_start");
 extern const uint8_t snow_end[]                     asm("_binary_assets_bmp_snow_jpg_end");
 extern const uint8_t snow_night_start[]             asm("_binary_assets_bmp_snownight_jpg_start");
@@ -102,11 +104,11 @@ static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int
     { 102, EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
     { 103, EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
     { 104, EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
-    { 109, EmbeddedFile(showerrain_start, showerrain_end) },
-    { 110, EmbeddedFile(rain_start, rain_end) },
+    { 109, EmbeddedFile(showerrain_night_start, showerrain_night_end) },
+    { 110, EmbeddedFile(rain_night_start, rain_night_end) },
     { 111, EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
     { 113, EmbeddedFile(snow_night_start, snow_night_end) },
-    { 150, EmbeddedFile(mist_start, mist_end) }
+    { 150, EmbeddedFile(mist_night_start, mist_night_end) }
 };
 
 class PatternWeather : public LEDStripEffect
