@@ -216,7 +216,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             {...textFieldProps}
             helperText={helper}
             onChange={(e) => {
-                if (value === '' && (setting.emptyAllowed === false)) {
+                if (e.target.value === '' && (setting.emptyAllowed === false)) {
                     // Value is empty and empty is not allowed
                     setError(true);
                     setHelper(`Empty value is not allowed for this input. Original value was '${setting.value}'`);
