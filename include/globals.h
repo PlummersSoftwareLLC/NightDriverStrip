@@ -439,42 +439,42 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // known to work with at least one other type of device as well.
 
     #ifndef PROJECT_NAME
-    #define PROJECT_NAME                    "Mesmerizer"
+    #define PROJECT_NAME                "Mesmerizer"
     #endif
 
-    #define SHOW_FPS_ON_MATRIX              0
-    #define ENABLE_AUDIOSERIAL              0   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI                     1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED           1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI                   0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL               2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER                1  // Turn on the internal webserver
-    #define ENABLE_NTP                      1   // Set the clock from the web
-    #define ENABLE_OTA                      1   // Accept over the air flash updates
-    #define ENABLE_REMOTE                   1   // IR Remote Control
-    #define ENABLE_AUDIO                    1   // Listen for audio from the microphone and process it
-    #define SCALE_AUDIO_EXPONENTIAL         0
-    #define ENABLE_AUDIO_SMOOTHING          1
-    #define REQUIRE_EFFECTS_SERIALIZATION   1   // Require effects serialization to succeed
+    #define SHOW_FPS_ON_MATRIX          0
+    #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI                 1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER            1  // Turn on the internal webserver
+    #define ENABLE_NTP                  1   // Set the clock from the web
+    #define ENABLE_OTA                  1   // Accept over the air flash updates
+    #define ENABLE_REMOTE               1   // IR Remote Control
+    #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
+    #define SCALE_AUDIO_EXPONENTIAL     0
+    #define ENABLE_AUDIO_SMOOTHING      1
+    #define EFFECT_PERSISTENCE_CRITICAL 1   // Require effects serialization to succeed
 
-    #define DEFAULT_EFFECT_INTERVAL         (MILLIS_PER_SECOND * 60 * 2)
-    #define MILLIS_PER_FRAME                0
+    #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
+    #define MILLIS_PER_FRAME            0
 
-    #define NUM_CHANNELS                    1
-    #define RING_SIZE_0                     24
-    #define BONUS_PIXELS                    0
-    #define MATRIX_WIDTH                    64
-    #define MATRIX_HEIGHT                   32
-    #define NUM_FANS                        128
-    #define FAN_SIZE                        16
-    #define NUM_BANDS                       16
-    #define NUM_LEDS                        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define IR_REMOTE_PIN                   39
-    #define INPUT_PIN                       36
-    #define LED_FAN_OFFSET_BU               6
-    #define POWER_LIMIT_MW                  (5 * 8 * 1000)         // Expects at least a 5V, 8A supply
+    #define NUM_CHANNELS                1
+    #define RING_SIZE_0                 24
+    #define BONUS_PIXELS                0
+    #define MATRIX_WIDTH                64
+    #define MATRIX_HEIGHT               32
+    #define NUM_FANS                    128
+    #define FAN_SIZE                    16
+    #define NUM_BANDS                   16
+    #define NUM_LEDS                    (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define IR_REMOTE_PIN               39
+    #define INPUT_PIN                   36
+    #define LED_FAN_OFFSET_BU           6
+    #define POWER_LIMIT_MW              (5 * 8 * 1000)         // Expects at least a 5V, 8A supply
 
-    #define TOGGLE_BUTTON_1                 0
+    #define TOGGLE_BUTTON_1             0
 
 #elif TTGO
 
@@ -800,64 +800,64 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It displays a spectrum analyzer and music visualizer
 
     #ifndef PROJECT_NAME
-    #define PROJECT_NAME                    "Spectrum"
+    #define PROJECT_NAME                "Spectrum"
     #endif
 
-    #define ENABLE_AUDIOSERIAL              1   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI                     1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED           1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI                   0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL               2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER                1   // Turn on the internal webserver
-    #define ENABLE_NTP                      1   // Set the clock from the web
-    #define ENABLE_OTA                      0   // Accept over the air flash updates
-    #define ENABLE_REMOTE                   1   // IR Remote Control
-    #define ENABLE_AUDIO                    1   // Listen for audio from the microphone and process it
-    #define REQUIRE_EFFECTS_SERIALIZATION   1   // Require effects serialization to succeed
+    #define ENABLE_AUDIOSERIAL          1   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI                 1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
+    #define ENABLE_NTP                  1   // Set the clock from the web
+    #define ENABLE_OTA                  0   // Accept over the air flash updates
+    #define ENABLE_REMOTE               1   // IR Remote Control
+    #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
+    #define EFFECT_PERSISTENCE_CRITICAL 1   // Require effects serialization to succeed
 
     #if USE_PSRAM
-        #define MAX_BUFFERS                 500
+        #define MAX_BUFFERS             500
     #else
-        #define MAX_BUFFERS                 10
+        #define MAX_BUFFERS             10
     #endif
 
-    #define DEFAULT_EFFECT_INTERVAL         (60*60*24*5)
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
     #if SPECTRUM_WROVER_KIT
-        #define LED_PIN0                    5
+        #define LED_PIN0                5
     #elif ELECROW
-        #define LED_PIN0                    19
+        #define LED_PIN0                19
     #else
-        #define LED_PIN0                    26
+        #define LED_PIN0                26
     #endif
 
     #if ELECROW
-        #define IR_REMOTE_PIN               20
+        #define IR_REMOTE_PIN           20
     #endif
 
-    #define NUM_CHANNELS                    1
-    #define RING_SIZE_0                     24
-    #define BONUS_PIXELS                    0
-    #define MATRIX_WIDTH                    48
-    #define MATRIX_HEIGHT                   16
-    #define NUM_FANS                        MATRIX_WIDTH
-    #define FAN_SIZE                        MATRIX_HEIGHT
-    #define NUM_BANDS                       16
-    #define NUM_LEDS                        (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define LED_FAN_OFFSET_BU               6
-    #define POWER_LIMIT_MW                  (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
+    #define NUM_CHANNELS                1
+    #define RING_SIZE_0                 24
+    #define BONUS_PIXELS                0
+    #define MATRIX_WIDTH                48
+    #define MATRIX_HEIGHT               16
+    #define NUM_FANS                    MATRIX_WIDTH
+    #define FAN_SIZE                    MATRIX_HEIGHT
+    #define NUM_BANDS                   16
+    #define NUM_LEDS                    (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define LED_FAN_OFFSET_BU           6
+    #define POWER_LIMIT_MW              (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
     // The mic in the M5 is not quite as sensitive as the Mesermizer, so it gets a lower minimum VU than default
-    #define MIN_VU                          180
-    #define NOISE_CUTOFF                    1000
+    #define MIN_VU                      180
+    #define NOISE_CUTOFF                1000
 
     #if !(ELECROW)
-        #define TOGGLE_BUTTON_1             37
-        #define TOGGLE_BUTTON_2             39
+        #define TOGGLE_BUTTON_1         37
+        #define TOGGLE_BUTTON_2         39
     #endif
 
     #if !(SPECTRUM_WROVER_KIT)
-        #define NUM_INFO_PAGES              2
+        #define NUM_INFO_PAGES          2
     #endif
 
 #elif FANSET
@@ -1216,8 +1216,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define ENABLE_REMOTE 0
 #endif
 
-#ifndef REQUIRE_EFFECTS_SERIALIZATION
-#define REQUIRE_EFFECTS_SERIALIZATION 0
+#ifndef EFFECT_PERSISTENCE_CRITICAL
+#define EFFECT_PERSISTENCE_CRITICAL 0
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
