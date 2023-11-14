@@ -138,9 +138,9 @@ private:
     void drawPixelXYF(float x, float y, CRGB color)
     {
         #if SHOW_VU_METER
-        static constexpr bool showingVuMeter = true;
+        static constexpr bool showingVUMeter = true;
         #else
-        static constexpr bool showingVuMeter = false;
+        static constexpr bool showingVUMeter = false;
         #endif
 
         const uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
@@ -150,7 +150,7 @@ private:
             const int yn = y + ((i >> 1) & 1);
 
             // Make sure we're on the panel and leave the VU meter pixels alone, if we're showing it
-            if (!g()->isValidPixel(xn, yn) || (showingVuMeter && yn == (MATRIX_HEIGHT - 1)))
+            if (!g()->isValidPixel(xn, yn) || (showingVUMeter && yn == (MATRIX_HEIGHT - 1)))
                 continue;
 
             CRGB clr = g()->leds[XY(xn, MATRIX_HEIGHT - 1 - yn)];
