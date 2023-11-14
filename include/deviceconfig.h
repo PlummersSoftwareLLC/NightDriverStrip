@@ -65,7 +65,7 @@ class DeviceConfig : public IJSONSerializable
     // Add variables for additional settings to this list
     String  hostname = cszHostname;
     String  location = cszLocation;
-    bool    locationIsZip = false;
+    bool    locationIsZip = bLocationIsZip;
     String  countryCode = cszCountryCode;
     String  timeZone = cszTimeZone;
     String  openWeatherApiKey = cszOpenWeatherAPIKey;
