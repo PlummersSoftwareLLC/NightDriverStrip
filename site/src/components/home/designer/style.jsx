@@ -18,13 +18,22 @@ const designStyle = {
         columnGap: "3px",
         alignItems: "center",
     },
-    effects: {
+    gridEffects: {
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
         padding: "10px",
         columnGap: "15px",
         rowGap: "15px",
+        paddingTop: "20px",
+    },
+    listEffects: {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        padding: "10px",
+        columnGap: "15px",
+        rowGap: "5px",
         paddingTop: "20px",
     }
 };
