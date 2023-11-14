@@ -24,8 +24,8 @@ public:
 
     void Start() override
     {
-        std::transform(_debris_items.begin(), _debris_items.end(), _debris_items.begin(),
-            [](DebrisItem &item) { item.Clear(); return item; });
+        for (auto& debris_item : _debris_items)
+            debris_item.Clear();
 
         g()->Clear();
     }
