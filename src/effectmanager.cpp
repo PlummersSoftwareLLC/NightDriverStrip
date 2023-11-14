@@ -360,11 +360,7 @@ void EffectManager::ApplyGlobalColor(CRGB color)
     debugI("Setting Global Color");
 
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
-
-    CRGB oldGlobalColor = deviceConfig.GlobalColor();
-    deviceConfig.SetGlobalColor(color);
-    deviceConfig.SetSecondColor(oldGlobalColor);
-    deviceConfig.SetApplyGlobalColors();
+    deviceConfig.SetColorSettings(color, deviceConfig.GlobalColor());
 
     ApplyGlobalPaletteColors();
 }

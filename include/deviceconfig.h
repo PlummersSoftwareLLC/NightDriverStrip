@@ -503,5 +503,6 @@ class DeviceConfig : public IJSONSerializable
         SetAndSave(secondColor, newSecondColor);
     }
 
+    void SetColorSettings(const CRGB& globalColor, const CRGB& secondColor);
     void ApplyColorSettings(std::optional<CRGB> globalColor, std::optional<CRGB> secondColor, bool clearGlobalColor, bool applyGlobalColor);
 };

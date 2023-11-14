@@ -145,6 +145,15 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
     }
 }
 
+void DeviceConfig::SetColorSettings(const CRGB& newGlobalColor, const CRGB& newSecondColor)
+{
+    globalColor = newGlobalColor;
+    secondColor = newSecondColor;
+    applyGlobalColors = true;
+
+    SaveToJSON();
+}
+
 // This function contains the logic for dealing with the various color-related settings we have.
 // The logic effectively mimics the behavior of pressing a color button on the IR remote control when (only) the
 // global color is set or (re)applied, but also allows the secondary global palette color to be specified directly.
