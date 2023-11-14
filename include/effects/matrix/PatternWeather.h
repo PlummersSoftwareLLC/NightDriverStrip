@@ -441,8 +441,9 @@ public:
             if (iconEntry != weatherIcons.end())
             {
                 auto icon = iconEntry->second;
-                if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
-                    debugW("Could not display today icon %d", iconToday);
+                JRESULT res = TJpgDec.drawJpg(0, 10, icon.contents, icon.length);
+                if (JDR_OK != res)        // Draw the image
+                    debugW("Could not display today icon %d, %d", iconToday, res);
             }
             else
             {
