@@ -150,35 +150,44 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
 // global color is set or (re)applied, but also allows the secondary global palette color to be specified directly.
 // The code in this function figures out how to prioritize and combine the values of (optional) settings; the actual
 // logic for applying the correct color(s) and palette is contained in a number of EffectManager member functions.
-void DeviceConfig::ApplyColorSettings(std::optional<CRGB> globalColor, std::optional<CRGB> secondColor, bool clearGlobalColor, bool applyGlobalColor)
+void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::optional<CRGB> newSecondColor, bool clearGlobalColor, bool forceApplyGlobalColor)
 {
     // If we're asked to clear the global color, we'll remember any colors we were passed, but won't do anything with them
     if (clearGlobalColor)
     {
-        if (globalColor.has_value())
-            SetGlobalColor(globalColor.value());
-        if (secondColor.has_value())
-            SetSecondColor(secondColor.value());
+        if (newGlobalColor.has_value())
+            globalColor = newGlobalColor.value();
+        if (newSecondColor.has_value())
+            secondColor = newSecondColor.value();
 
         g_ptrSystem->EffectManager().ClearRemoteColor();
+
+        applyGlobalColors = false;
+
+        SaveToJSON();
 
         return;
     }
 
-    CRGB newGlobalColor = globalColor.has_value() ? globalColor.value() : GlobalColor();
-    applyGlobalColor = applyGlobalColor || globalColor.has_value();
+    CRGB finalGlobalColor = newGlobalColor.has_value() ? newGlobalColor.value() : globalColor;
+    forceApplyGlobalColor = forceApplyGlobalColor || newGlobalColor.has_value();
 
     // If we were given a second color, set it and the global one if necessary. Then have EffectManager do its thing...
-    if (secondColor.has_value())
+    if (newSecondColor.has_value())
     {
-        if (applyGlobalColor)
-            SetGlobalColor(newGlobalColor);
+        if (forceApplyGlobalColor)
+        {
+            applyGlobalColors = true;
+            globalColor = finalGlobalColor;
+        }
 
-        SetSecondColor(secondColor.value());
+        secondColor = newSecondColor.value();
 
         g_ptrSystem->EffectManager().ApplyGlobalPaletteColors();
+
+        SaveToJSON();
     }
     // ...otherwise, apply the "set global color" logic if we were asked to do so
-    else if (applyGlobalColor)
-        g_ptrSystem->EffectManager().ApplyGlobalColor(newGlobalColor);
+    else if (forceApplyGlobalColor)
+        g_ptrSystem->EffectManager().ApplyGlobalColor(finalGlobalColor);
 }

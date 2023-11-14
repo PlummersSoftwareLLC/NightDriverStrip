@@ -525,7 +525,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
 
     deviceConfig.ApplyColorSettings(globalColor, secondColor,
                                     IsPostParamTrue(pRequest, DeviceConfig::ClearGlobalColorTag),
-                                    IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorTag));
+                                    IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorsTag));
 }
 
 // Set settings and return resulting config

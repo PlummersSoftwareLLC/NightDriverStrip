@@ -76,6 +76,7 @@ class DeviceConfig : public IJSONSerializable
     int     powerLimit = POWER_LIMIT_DEFAULT;
     uint8_t brightness = BRIGHTNESS_MAX;
     CRGB    globalColor = CRGB::Red;
+    bool    applyGlobalColors = false;
     CRGB    secondColor = CRGB::Red;
 
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
@@ -123,7 +124,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
     static constexpr const char * ClearGlobalColorTag = "clearGlobalColor";
     static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
-    static constexpr const char * ApplyGlobalColorTag = "applyGlobalColor";
+    static constexpr const char * ApplyGlobalColorsTag = NAME_OF(applyGlobalColors);
     static constexpr const char * SecondColorTag = NAME_OF(secondColor);
 
     DeviceConfig();
@@ -150,6 +151,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[PowerLimitTag] = powerLimit;
         jsonDoc[BrightnessTag] = brightness;
         jsonDoc[GlobalColorTag] = globalColor;
+        jsonDoc[ApplyGlobalColorsTag] = applyGlobalColors;
         jsonDoc[SecondColorTag] = secondColor;
 
         if (includeSensitive)
@@ -180,6 +182,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
         SetIfPresentIn(jsonObject, brightness, BrightnessTag);
         SetIfPresentIn(jsonObject, globalColor, GlobalColorTag);
+        SetIfPresentIn(jsonObject, applyGlobalColors, ApplyGlobalColorsTag);
         SetIfPresentIn(jsonObject, secondColor, SecondColorTag);
 
         if (ntpServer.isEmpty())
@@ -304,7 +307,7 @@ class DeviceConfig : public IJSONSerializable
                 SettingSpec::SettingType::Color
             );
             settingSpecs.emplace_back(
-                ApplyGlobalColorTag,
+                ApplyGlobalColorsTag,
                 "(Re)apply global color",
                 "You can use this to \"reselect\" and apply the current global color, to force the composition of the derived "
                 "global palette. This checkbox is ignored if the \"Clear global color\" checkbox is selected.",
@@ -350,7 +353,6 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(hostname, newHostname);
     }
-
 
     const String &GetLocation() const
     {
@@ -469,6 +471,21 @@ class DeviceConfig : public IJSONSerializable
     const CRGB& GlobalColor() const
     {
         return globalColor;
+    }
+
+    void SetApplyGlobalColors()
+    {
+        SetAndSave(applyGlobalColors, true);
+    }
+
+    void ClearApplyGlobalColors()
+    {
+        SetAndSave(applyGlobalColors, false);
+    }
+
+    bool ApplyGlobalColors() const
+    {
+        return applyGlobalColors;
     }
 
     void SetGlobalColor(const CRGB& newGlobalColor)

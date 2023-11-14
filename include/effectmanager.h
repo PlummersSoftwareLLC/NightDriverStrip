@@ -320,16 +320,8 @@ public:
     void ApplyGlobalColor(CRGB color);
     void ApplyGlobalPaletteColors();
 
-    void ClearRemoteColor(bool retainRemoteEffect = false)
-    {
-        if (!retainRemoteEffect)
-            _tempEffect = nullptr;
-
-        #if (USE_HUB75)
-            g()->PausePalette(false);
-        #endif
-    }
-
+    void ClearRemoteColor(bool retainRemoteEffect = false);
+    
     void StartEffect()
     {
         // If there's a temporary effect override from the remote control active, we start that, else
@@ -646,22 +638,7 @@ public:
         SaveCurrentEffectIndex();
     }
 
-    bool Init()
-    {
-
-        for (int i = 0; i < _vEffects.size(); i++)
-        {
-            debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
-            if (false == _vEffects[i]->Init(_gfx))
-            {
-                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
-                return false;
-            }
-            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
-        }
-        debugV("First Effect: %s", GetCurrentEffectName().c_str());
-        return true;
-    }
+    bool Init();
 
     // EffectManager::Update
     //

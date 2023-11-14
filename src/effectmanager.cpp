@@ -319,6 +319,42 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 #include "effects/strip/fireeffect.h"
 
+bool EffectManager::Init()
+{
+    for (int i = 0; i < _vEffects.size(); i++)
+    {
+        debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
+        if (false == _vEffects[i]->Init(_gfx))
+        {
+            debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
+            return false;
+        }
+        debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
+    }
+    debugV("First Effect: %s", GetCurrentEffectName().c_str());
+
+    #if (USE_HUB75)
+        // We apply the persisted global colors only on HUB75 panels. On other devices doing so will activate a fixed
+        // (semi-)monochromatic effect, which may be confusing to the user at startup.
+        if (g_ptrSystem->DeviceConfig().ApplyGlobalColors())
+            ApplyGlobalPaletteColors();
+    #endif
+
+    return true;
+}
+
+void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
+{
+    if (!retainRemoteEffect)
+        _tempEffect = nullptr;
+
+    #if (USE_HUB75)
+        g()->PausePalette(false);
+    #endif
+
+    g_ptrSystem->DeviceConfig().ClearApplyGlobalColors();
+}
+
 void EffectManager::ApplyGlobalColor(CRGB color)
 {
     debugI("Setting Global Color");
@@ -328,10 +364,10 @@ void EffectManager::ApplyGlobalColor(CRGB color)
     CRGB oldGlobalColor = deviceConfig.GlobalColor();
     deviceConfig.SetGlobalColor(color);
     deviceConfig.SetSecondColor(oldGlobalColor);
+    deviceConfig.SetApplyGlobalColors();
 
     ApplyGlobalPaletteColors();
 }
-
 
 void EffectManager::ApplyGlobalPaletteColors()
 {
