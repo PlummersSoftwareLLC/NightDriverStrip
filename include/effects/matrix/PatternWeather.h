@@ -144,7 +144,7 @@ private:
 
     size_t DesiredFramesPerSecond() const override
     {
-        return 25;
+        return 5;
     }
 
     bool RequiresDoubleBuffering() const override
@@ -174,9 +174,10 @@ private:
     {
         HTTPClient http;
         String url;
+        bool found = false;
 
         if (!HasLocationChanged())
-            return false;
+            return found;
 
         const String& configLocation = g_ptrSystem->DeviceConfig().GetLocation();
         const String& configCountryCode = g_ptrSystem->DeviceConfig().GetCountryCode();
@@ -192,75 +193,100 @@ private:
         http.begin(url);
         int httpResponseCode = http.GET();
 
-        if (httpResponseCode <= 0)
+        if (httpResponseCode > 0)
+        {
+            AllocatedJsonDocument doc(256);
+            String jsonloc = http.getString();
+            DeserializationError de = deserializeJson(doc, jsonloc);
+            if (!de)
+            {
+                JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
+            
+                strLatitude = coordinates["lat"].as<String>();
+                strLongitude = coordinates["lon"].as<String>();
+
+                debugI("location lat: %s, lon: %s", strLatitude.c_str(), strLongitude.c_str());
+
+                strLocation = configLocation;
+                strCountryCode = configCountryCode;
+                found = true;
+            }
+            else
+            {
+                debugW("Bad location JSON: %s", de.c_str());
+            }
+
+        }
+        else
         {
             debugW("Error fetching coordinates for location: %s", configLocation.c_str());
-            http.end();
+            
             return false;
         }
 
-        AllocatedJsonDocument doc(4096);
-        deserializeJson(doc, http.getString());
-        JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
-
-        strLatitude = coordinates["lat"].as<String>();
-        strLongitude = coordinates["lon"].as<String>();
-
         http.end();
-
-        strLocation = configLocation;
-        strCountryCode = configCountryCode;
-
-        return true;
+        return found;
     }
 
     // getTomorrowTemps
     //
     // Request a forecast and then parse out the high and low temps for tomorrow
 
-    bool getTomorrowTemps(float& highTemp, float& lowTemp)
+    bool getTomorrowTemps(float& highTemp, float& lowTemp, int& icon)
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=18&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+        debugI("tomorrowURL: %s", url.c_str());
         http.begin(url);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode > 0)
         {
-            AllocatedJsonDocument doc(4096);
-            deserializeJson(doc, http.getString());
+            AllocatedJsonDocument doc(9216);
+            String tomorrowJson = http.getString();
+            debugI("tomorrow %d %s", tomorrowJson.length(), tomorrowJson.c_str());
+            DeserializationError de = deserializeJson(doc, tomorrowJson);
+            String count = doc["cnt"];
+            debugI("Return count %s DE code %s", count.c_str(), de.c_str());
             JsonArray list = doc["list"];
 
-            // Get tomorrow's date
-            time_t tomorrow = time(nullptr) + 86400;
-            tm* tomorrowTime = localtime(&tomorrow);
-            char dateStr[11];
-            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
+            // Get tomorrow's date 
+            time_t tomorrow = time(nullptr) + 86400; 
+            tm* tomorrowTime = localtime(&tomorrow); 
+            char dateStr[11]; 
+            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime); 
 
-            iconTomorrow = -1;
-
-            // Look for the temperature data for tomorrow
-            for (size_t i = 0; i < list.size(); ++i)
-            {
+            float localMin = 999.0;
+            float localMax = 0.0;
+ 
+            // Look for the temperature data for tomorrow  - needs more work
+            for (size_t i = 0; i < list.size(); i++) {
                 JsonObject entry = list[i];
-                String dt_txt = entry["dt_txt"];
-                if (dt_txt.startsWith(dateStr))
+                // convert the entry UTC to localtime
+                // if it is tomorrow then figure out the min and max and get the icon
+                time_t entry_time = entry["dt"];
+                tm* entryLocal = localtime(&entry_time);
+                char entryStr[11];
+                strftime(entryStr, sizeof(entryStr), "%Y-%m-%d", entryLocal);
+                debugI("tomorrow: %s, entry: %s", dateStr, entryStr);
+                if (strcmp(dateStr, entryStr) == 0) 
                 {
-                    //Serial.printf("Weather: Updating Forecast: %s", response.c_str());
                     JsonObject main = entry["main"];
-                    if (main["temp_max"] > 0)
-                        highTemp        = KelvinToLocal(main["temp_max"]);
-                    if (main["temp_min"] > 0)
-                        lowTemp         = KelvinToLocal(main["temp_min"]);
+                     if ((main["temp_max"] > 0) && (main["temp_max"] > localMax))
+                        localMax = main["temp_max"];
+                    if ((main["temp_min"] > 0) && (main["temp_min"] < localMin))
+                        localMin = main["temp_min"];
 
                     String iconIdTomorrow = entry["weather"][0]["icon"];
-                    iconTomorrow = iconIdTomorrow.toInt() + (iconIdTomorrow.endsWith("d") ? 0 : 100);
-
-                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, iconTomorrow);
-                    break;
+                    icon = iconIdTomorrow.toInt(); // + (iconIdTomorrow.endsWith("d") ? 0 : 100); // always a day icon
                 }
             }
+            highTemp        = KelvinToLocal(localMax);
+            lowTemp         = KelvinToLocal(localMin);
+
+            debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, (int)iconTomorrow);
+
             http.end();
             return true;
         }
@@ -287,8 +313,10 @@ private:
         if (httpResponseCode > 0)
         {
             iconToday = -1;
-            AllocatedJsonDocument jsonDoc(4096);
-            deserializeJson(jsonDoc, http.getString());
+            AllocatedJsonDocument jsonDoc(1024);
+            String todayJson = http.getString();
+            DeserializationError de = deserializeJson(jsonDoc, todayJson);
+            debugI("DE code %s", de.c_str());
 
             // Once we have a non-zero temp we can start displaying things
             if (0 < jsonDoc["main"]["temp"])
@@ -299,8 +327,9 @@ private:
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
 
             String iconIndex = jsonDoc["weather"][0]["icon"];
+            debugI("icon %s", iconIndex.c_str());
             iconToday = iconIndex.toInt() + (iconIndex.endsWith("d") ? 0 : 100);
-            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %d", (int)temperature, (int)loToday, (int)highToday, iconToday);
+            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %d", (int)temperature, (int)loToday, (int)highToday, (int)iconToday);
 
             const char * pszName = jsonDoc["name"];
             if (pszName)
@@ -330,7 +359,7 @@ private:
         if (getWeatherData())
         {
             debugW("Got today's weather");
-            if (getTomorrowTemps(highTomorrow, loTomorrow))
+            if (getTomorrowTemps(highTomorrow, loTomorrow, iconTomorrow))
             {
                 debugI("Got tomorrow's weather");
             }
@@ -405,21 +434,36 @@ public:
             g_ptrSystem->NetworkReader().FlagReader(readerIndex);
         }
 
-        // Draw the graphics
-        auto iconEntry = weatherIcons.find((iconToday));
-        if (iconEntry != weatherIcons.end())
+        if (iconToday != -1)
         {
-            auto icon = iconEntry->second;
-            if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %d", iconToday);
+            // Draw the graphics
+            auto iconEntry = weatherIcons.find((iconToday));
+            if (iconEntry != weatherIcons.end())
+            {
+                auto icon = iconEntry->second;
+                if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
+                    debugW("Could not display today icon %d", iconToday);
+            }
+            else
+            {
+                debugW("Could not find today icon %d", iconToday);
+            }
         }
 
-        iconEntry = weatherIcons.find((iconTomorrow));
-        if (iconEntry != weatherIcons.end())
+        if (iconTomorrow != -1)
         {
-            auto icon = iconEntry->second;
-            if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %d", iconTomorrow);
+
+            auto iconEntry = weatherIcons.find((iconTomorrow));
+            if (iconEntry != weatherIcons.end())
+            {
+                auto icon = iconEntry->second;
+                if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
+                    debugW("Could not display tomorrow icon %d", iconTomorrow);
+            }
+            else
+            {
+                debugW("Could not find tomorrow icon %d", iconToday);
+            }
         }
 
         // Print the town/city name
