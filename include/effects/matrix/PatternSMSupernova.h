@@ -24,9 +24,7 @@ public:
 
     void Start() override
     {
-        for (auto& debris_item : _debris_items)
-            debris_item.Clear();
-
+        std::for_each(_debris_items.begin(), _debris_items.end(), [](DebrisItem& debris_item) { debris_item.Clear(); });
         g()->Clear();
     }
 
