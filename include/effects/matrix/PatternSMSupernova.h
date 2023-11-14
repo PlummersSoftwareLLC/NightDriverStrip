@@ -1,6 +1,6 @@
 #pragma once
 
-#include "effectmanager.h"
+#include "systemcontainer.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1923-supernova
 
@@ -105,9 +105,12 @@ private:
         const int x = debris_item._position_x += debris_item._speed_x;
         const int y = debris_item._position_y += debris_item._speed_y;
 
-        if (debris_item._state == 0 || x < 0 || x >= MATRIX_WIDTH ||
-                                 y < 0 || y >= MATRIX_HEIGHT)
+        if (debris_item._state == 0
+            || x < 0 || x >= MATRIX_WIDTH
+            || y < 0 || y >= MATRIX_HEIGHT)
+        {
             debris_item._is_shift = false;
+        }
 
         return debris_item._is_shift;
     }
@@ -135,12 +138,6 @@ private:
 
     void drawPixelXYF(float x, float y, CRGB color)
     {
-        #if SHOW_VU_METER
-        static constexpr bool showingVUMeter = true;
-        #else
-        static constexpr bool showingVUMeter = false;
-        #endif
-
         const uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
         const uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
         for (uint8_t i = 0; i < 4; i++) {
@@ -148,7 +145,7 @@ private:
             const int yn = y + ((i >> 1) & 1);
 
             // Make sure we're on the panel and leave the VU meter pixels alone, if we're showing it
-            if (!g()->isValidPixel(xn, yn) || (showingVUMeter && yn == (MATRIX_HEIGHT - 1)))
+            if (!g()->isValidPixel(xn, yn) || (g_ptrSystem->EffectManager().IsVUVisible() && yn == (MATRIX_HEIGHT - 1)))
                 continue;
 
             CRGB clr = g()->leds[XY(xn, MATRIX_HEIGHT - 1 - yn)];
