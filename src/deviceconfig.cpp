@@ -45,7 +45,7 @@ void DeviceConfig::SaveToJSON()
 DeviceConfig::DeviceConfig()
 {
     writerIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        [this] { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
+        [this] { assert(SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this)); }
     );
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
