@@ -60,6 +60,25 @@
 #define PatternMandala_H
 #if     USE_HUB75
 
+// Introduction:
+// -------------
+// This file contains the implementation of the `PatternMandala` class, a sophisticated
+// effect for LED strip displays. It utilizes a noise-based algorithm to create
+// intricate, continuously evolving mandala patterns. This effect is part of a larger 
+// system that drives LED strip animations.
+//
+// Class Overview:
+// ---------------
+// `PatternMandala` is derived from `LEDStripEffect`, indicating its purpose as a specific 
+// visual effect for LED strips. It is designed to generate mandala-like patterns using 
+// noise and random number generation to achieve a dynamic, ever-changing display.
+//
+// Key Variables:
+// --------------
+// - `dx`, `dy`, `dz`, `dsx`, `dsy`: These integers store the delta values for noise
+//   coordinates and scaling, controlling the movement and zoom level of the noise pattern.
+// - `NUM_LAYERS`: A macro defining the number of noise layers used in the pattern.
+
 class PatternMandala : public LEDStripEffect
 {
 private:
