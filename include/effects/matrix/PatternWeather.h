@@ -25,7 +25,9 @@
 //
 //   Gets the weather for a given zip code
 //
-// History:     Jun-25-202         Davepl      Adapted from own code
+// History:     Jun-25-202          Davepl          Adapted from own code
+//              Nov-15-2023         mggates         Updated to use better weather icons
+//                                                  Fixed issue in tommorrow temperature selection
 //
 //---------------------------------------------------------------------------
 
@@ -131,37 +133,72 @@ private:
     float  loTomorrow         = 0.0f;
 
     bool   dataReady          = false;
+    bool   locationValid      = false;
     size_t readerIndex = std::numeric_limits<size_t>::max();
     time_t latestUpdate       = 0;
 
 
-    // The weather is obviously weather, and we don't want text overlaid on top of our text
-
+    /**
+     * @brief Should the framework show the effect title?
+     * 
+     * The weather is obviously weather, and we don't want text overlaid on top of our text
+     * 
+     * @return false
+     */
     virtual bool ShouldShowTitle() const
     {
         return false;
     }
 
-    size_t DesiredFramesPerSecond() const override
+    /**
+     * @brief How many frames per second do we want?
+     * 
+     * @return size_t 
+     */
+    virtual size_t DesiredFramesPerSecond() const override
     {
         return 5;
     }
 
-    bool RequiresDoubleBuffering() const override
+    /**
+     * @brief Do we require double buffering?
+     * 
+     * @return false 
+     */
+    virtual bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
+    /**
+     * @brief Convert Kelvin to Farenheit
+     * 
+     * @param K Kelvin Temperature
+     * @return float Farenheit Temperature
+     */
     inline float KelvinToFarenheit(float K)
     {
         return (K - 273.15) * 9.0f/5.0f + 32;
     }
 
+    /**
+     * @brief Convert Kelvin to Celsius
+     * 
+     * @param K Kelvin Temperature
+     * @return float Celsius Temperature
+     */
     inline float KelvinToCelsius(float K)
     {
         return K - 273.15;
     }
 
+    /**
+     * @brief Based on user preference convert the
+     * Kelvin temperature to the selected scale
+     * 
+     * @param K Kelvin Temperature
+     * @return float Celsius or Farenheit Temperature
+     */
     inline float KelvinToLocal(float K)
     {
         if (g_ptrSystem->DeviceConfig().UseCelsius())
@@ -170,14 +207,22 @@ private:
             return KelvinToFarenheit(K);
     }
 
+    /**
+     * @brief Get the latitude, longitude and name of the requested location
+     * Also sets the class global locationValid if the location was found
+     * 
+     * @return true location was found
+     * @return false no change to location
+     */
     bool updateCoordinates()
     {
         HTTPClient http;
         String url;
-        bool found = false;
 
         if (!HasLocationChanged())
-            return found;
+            return false;
+
+        locationValid = false;
 
         const String& configLocation = g_ptrSystem->DeviceConfig().GetLocation();
         const String& configCountryCode = g_ptrSystem->DeviceConfig().GetCountryCode();
@@ -209,7 +254,7 @@ private:
 
                 strLocation = configLocation;
                 strCountryCode = configCountryCode;
-                found = true;
+                locationValid = true;
             }
             else
             {
@@ -220,18 +265,25 @@ private:
         else
         {
             debugW("Error fetching coordinates for location: %s", configLocation.c_str());
-            
             return false;
         }
 
         http.end();
-        return found;
+        return locationValid;
     }
 
-    // getTomorrowTemps
-    //
-    // Request a forecast and then parse out the high and low temps for tomorrow
-
+    /**
+     * @brief Get the Tomorrow Temperatures
+     * 
+     * Request a forecast and then parse out the high and low temps for tomorrow
+     * along with the weather icon for mid-day
+     * 
+     * @param highTemp
+     * @param lowTemp
+     * @param icon 
+     * @return true Successful data retrieval
+     * @return false Failed data retrieval
+     */
     bool getTomorrowTemps(float& highTemp, float& lowTemp, int& icon)
     {
         HTTPClient http;
@@ -245,7 +297,6 @@ private:
         {
             AllocatedJsonDocument doc(9216);
             String tomorrowJson = http.getString();
-            debugI("tomorrow %d %s", tomorrowJson.length(), tomorrowJson.c_str());
             DeserializationError de = deserializeJson(doc, tomorrowJson);
             String count = doc["cnt"];
             debugI("Return count %s DE code %s", count.c_str(), de.c_str());
@@ -261,25 +312,32 @@ private:
             float localMax = 0.0;
  
             // Look for the temperature data for tomorrow  - needs more work
-            for (size_t i = 0; i < list.size(); i++) {
+            int slot = 0;
+            for (size_t i = 0; i < list.size(); i++) 
+            {
                 JsonObject entry = list[i];
+
                 // convert the entry UTC to localtime
                 // if it is tomorrow then figure out the min and max and get the icon
                 time_t entry_time = entry["dt"];
                 tm* entryLocal = localtime(&entry_time);
                 char entryStr[11];
                 strftime(entryStr, sizeof(entryStr), "%Y-%m-%d", entryLocal);
-                debugI("tomorrow: %s, entry: %s", dateStr, entryStr);
+
                 if (strcmp(dateStr, entryStr) == 0) 
                 {
                     JsonObject main = entry["main"];
-                     if ((main["temp_max"] > 0) && (main["temp_max"] > localMax))
+                    if ((main["temp_max"] > 0) && (main["temp_max"] > localMax))
                         localMax = main["temp_max"];
                     if ((main["temp_min"] > 0) && (main["temp_min"] < localMin))
                         localMin = main["temp_min"];
 
-                    String iconIdTomorrow = entry["weather"][0]["icon"];
-                    icon = iconIdTomorrow.toInt(); // + (iconIdTomorrow.endsWith("d") ? 0 : 100); // always a day icon
+                    slot++;
+                    if (slot == 4)
+                    {
+                        String iconIdTomorrow = entry["weather"][0]["icon"];
+                        icon = iconIdTomorrow.toInt(); // + (iconIdTomorrow.endsWith("d") ? 0 : 100); // always a day icon}
+                    }
                 }
             }
             highTemp        = KelvinToLocal(localMax);
@@ -298,10 +356,12 @@ private:
         }
     }
 
-    // getWeatherData
-    //
-    // Get the current temp and the high and low for today
-
+    /**
+     * @brief Get the current temp and weather icon along with the high and low for today
+     * 
+     * @return true - Successful Data Retrieval
+     * @return false - Failed data retrieval
+     */
     bool getWeatherData()
     {
         HTTPClient http;
@@ -346,6 +406,10 @@ private:
         }
     }
 
+    /**
+     * @brief Entry point for network handler to retrive the current weather data
+     * 
+     */
     void UpdateWeather()
     {
         while(!WiFi.isConnected())
@@ -356,24 +420,33 @@ private:
 
         updateCoordinates();
 
-        if (getWeatherData())
+        if (locationValid)
         {
-            debugW("Got today's weather");
-            if (getTomorrowTemps(highTomorrow, loTomorrow, iconTomorrow))
+            if (getWeatherData())
             {
-                debugI("Got tomorrow's weather");
+                debugW("Got today's weather");
+                if (getTomorrowTemps(highTomorrow, loTomorrow, iconTomorrow))
+                {
+                    debugI("Got tomorrow's weather");
+                }
+                else
+                {
+                    debugW("Failed to get tomorrow's weather");
+                }
             }
             else
             {
-                debugW("Failed to get tomorrow's weather");
+                debugW("Failed to get today's weather");
             }
-        }
-        else
-        {
-            debugW("Failed to get today's weather");
         }
     }
 
+    /**
+     * @brief Have the preferences for the location changed
+     * 
+     * @return true 
+     * @return false 
+     */
     bool HasLocationChanged()
     {
         String configLocation = g_ptrSystem->DeviceConfig().GetLocation();
