@@ -54,7 +54,7 @@ if not cap.isOpened():
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.92'      
+client = '192.168.8.86'      
 sock = None
 
 # Get a timestamp slightly into the future for buffering

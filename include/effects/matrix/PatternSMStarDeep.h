@@ -172,12 +172,12 @@ class PatternSMStarDeep : public LEDStripEffect
                      ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
                      xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
                      ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     ColorFromPalette(*curPalette, koler));
+                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
             DrawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
                      ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
                      xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
                      ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     ColorFromPalette(*curPalette, koler));
+                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
         }
     }
 

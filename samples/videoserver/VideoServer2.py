@@ -29,8 +29,8 @@ import datetime
 MATRIX_WIDTH = 64
 MATRIX_HEIGHT = 32
 FUTURE_DELAY = 5
-URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-ESP32_WIFI_ADDRESS = '192.168.8.39'
+URL = "https://youtu.be/WPdCT0l6vGs"
+ESP32_WIFI_ADDRESS = '192.168.8.86'
 PORT = 49152
 WIFI_COMMAND_PIXELDATA64 = 3
 
@@ -89,7 +89,8 @@ def send_video_data(stream):
         microseconds = future.microsecond
 
         # Compose and send the PIXELDATA packet
-        header = build_header(seconds, microseconds, len(pixels) / 3)
+        assert(len(pixels) % 3 == 0)
+        header = build_header(seconds, microseconds, int(len(pixels) / 3))
         complete_packet = header + pixels
 
         compressed_packet = compress_packet(complete_packet)
