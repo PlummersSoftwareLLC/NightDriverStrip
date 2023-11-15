@@ -321,46 +321,89 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 #include "effects/strip/fireeffect.h"
 
-void EffectManager::SetGlobalColor(CRGB color)
+bool EffectManager::Init()
+{
+    for (int i = 0; i < _vEffects.size(); i++)
+    {
+        debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
+        if (false == _vEffects[i]->Init(_gfx))
+        {
+            debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
+            return false;
+        }
+        debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
+    }
+    debugV("First Effect: %s", GetCurrentEffectName().c_str());
+
+    #if (USE_HUB75)
+        // We apply the persisted global colors only on HUB75 panels. On other devices doing so will activate a fixed
+        // (semi-)monochromatic effect, which may be confusing to the user at startup.
+        if (g_ptrSystem->DeviceConfig().ApplyGlobalColors())
+            ApplyGlobalPaletteColors();
+    #endif
+
+    return true;
+}
+
+void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
+{
+    if (!retainRemoteEffect)
+        _tempEffect = nullptr;
+
+    #if (USE_HUB75)
+        g()->PausePalette(false);
+    #endif
+
+    g_ptrSystem->DeviceConfig().ClearApplyGlobalColors();
+}
+
+void EffectManager::ApplyGlobalColor(CRGB color)
 {
     debugI("Setting Global Color");
 
-    CRGB oldColor = lastManualColor;
-    lastManualColor = color;
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    deviceConfig.SetColorSettings(color, deviceConfig.GlobalColor());
+
+    ApplyGlobalPaletteColors();
+}
+
+void EffectManager::ApplyGlobalPaletteColors()
+{
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    auto& globalColor = deviceConfig.GlobalColor();
+    auto& secondColor = deviceConfig.SecondColor();
 
     #if (USE_HUB75)
             auto pMatrix = g();
 
             // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
             // based from where those colors sit on the spectrum
-
-            if (oldColor == color)
+            if (secondColor == globalColor)
             {
-                CHSV hsv = rgb2hsv_approximate(color);
-                CRGB color2 = CRGB(CHSV(hsv.hue + 64, 255, 255));
-                pMatrix->setPalette(CRGBPalette16(color, color2));
+                CHSV hsv = rgb2hsv_approximate(globalColor);
+                pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
             }
             else
             {
                 // But if we have two different colors, we create a palettte spread between them
-                pMatrix->setPalette(CRGBPalette16(oldColor, color));
+                pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
             }
             pMatrix->PausePalette(true);
     #else
         std::shared_ptr<LEDStripEffect> effect;
 
-        if (color == CRGB(CRGB::White))
+        if (globalColor == CRGB(CRGB::White))
             effect = make_shared_psram<ColorFillEffect>(CRGB::White, 1);
         else
 
             #if ENABLE_AUDIO
                 #if SPECTRUM
-                    effect = GetSpectrumAnalyzer(color, oldColor);
+                    effect = GetSpectrumAnalyzer(globalColor, secondColor);
                 #else
-                    effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                    effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, globalColor, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
                 #endif
             #else
-                effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+                effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, globalColor, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
             #endif
 
         if (effect->Init(_gfx))

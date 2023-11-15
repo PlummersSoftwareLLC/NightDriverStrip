@@ -67,7 +67,6 @@ class  EffectManager : public IJSONSerializable
     uint _effectInterval = 0;
     bool _bPlayAll;
     bool _bShowVU = true;
-    CRGB lastManualColor = CRGB::Red;
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
     int _effectSetVersion = 1;
@@ -313,23 +312,16 @@ public:
         return _bShowVU && GetCurrentEffect().CanDisplayVUMeter();
     }
 
-    // SetGlobalColor
+    // ApplyGlobalColor
     //
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
     // which takes drawing precedence
 
-    void SetGlobalColor(CRGB color);
+    void ApplyGlobalColor(CRGB color);
+    void ApplyGlobalPaletteColors();
 
-    void ClearRemoteColor(bool retainRemoteEffect = false)
-    {
-        if (!retainRemoteEffect)
-            _tempEffect = nullptr;
-
-        #if (USE_HUB75)
-            g()->PausePalette(false);
-        #endif
-    }
-
+    void ClearRemoteColor(bool retainRemoteEffect = false);
+    
     void StartEffect()
     {
         // If there's a temporary effect override from the remote control active, we start that, else
@@ -384,7 +376,7 @@ public:
             effect->SetEnabled(false);
 
             if (!AreEffectsEnabled())
-                SetGlobalColor(CRGB::Black);
+                ApplyGlobalColor(CRGB::Black);
 
             if (!skipSave)
                 SaveEffectManagerConfig();
@@ -646,22 +638,7 @@ public:
         SaveCurrentEffectIndex();
     }
 
-    bool Init()
-    {
-
-        for (int i = 0; i < _vEffects.size(); i++)
-        {
-            debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
-            if (false == _vEffects[i]->Init(_gfx))
-            {
-                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
-                return false;
-            }
-            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
-        }
-        debugV("First Effect: %s", GetCurrentEffectName().c_str());
-        return true;
-    }
+    bool Init();
 
     // EffectManager::Update
     //
