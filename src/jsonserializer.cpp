@@ -88,12 +88,18 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
     return jsonReadSuccessful;
 }
 
-void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction)
+bool SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction)
 {
-    // Loop is here to deal with out-of-memory conditions
+    // Loop is here to deal with the serialization buffer being too small
     while(true)
     {
         pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
+        if (pJsonDoc->capacity() == 0)
+        {
+            debugE("Allocation of buffer for JSON serialization failed!");
+            return false;
+        }
+
         JsonObject jsonObject = pJsonDoc->to<JsonObject>();
 
         if (serializationFunction(jsonObject))
@@ -102,8 +108,10 @@ void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, s
         pJsonDoc.reset(nullptr);
         bufferSize += JSON_BUFFER_INCREMENT;
 
-        debugW("Out of memory serializing object - increasing buffer to %zu bytes", bufferSize);
+        debugW("Buffer memory too small for JSON serialization - increasing buffer to %zu bytes", bufferSize);
     }
+
+    return true;
 }
 
 bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializable& object)
@@ -113,7 +121,11 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
 
-    SerializeWithBufferSize(pJsonDoc, bufferSize, [&object](JsonObject& jsonObject) { return object.SerializeToJSON(jsonObject); });
+    if (!SerializeWithBufferSize(pJsonDoc, bufferSize, [&object](JsonObject& jsonObject) { return object.SerializeToJSON(jsonObject); }))
+    {
+        debugE("JSON serialization failed - aborting write to file %s!", fileName.c_str());
+        return false;
+    }
 
     SPIFFS.remove(fileName);
 
@@ -137,17 +149,6 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
         SPIFFS.remove(fileName);
         return false;
     }
-
-/*
-    file = SPIFFS.open(fileName);
-    if (file)
-    {
-        while (file.available())
-            Serial.write(file.read());
-
-        file.close();
-    }
-*/
 
     return true;
 }

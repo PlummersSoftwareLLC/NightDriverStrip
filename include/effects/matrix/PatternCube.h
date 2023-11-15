@@ -62,6 +62,21 @@
 
 #include "Geometry.h"
 
+// Description:
+// This file defines the PatternCube class, a subclass of LEDStripEffect.
+// The class implements a 3D rotating cube effect on an LED matrix. It 
+// features customizable parameters for cube dimensions, rotation angles, 
+// focal length of the camera, and positioning. The cube is constructed, 
+// rotated, and projected onto a 2D plane for display.
+//
+// Key Features:
+// - 3D Cube rendering with adjustable size and rotation speed.
+// - Camera perspective modeling with focal length and distance settings.
+// - Efficient calculation of cube vertices, edges, and face visibility.
+// - Dynamic LED color patterns based on cube's orientation and position.
+//
+// On displays that are 2X as wide as tall, two cubes will be drawn
+
 class PatternCube : public LEDStripEffect
 {
   private:

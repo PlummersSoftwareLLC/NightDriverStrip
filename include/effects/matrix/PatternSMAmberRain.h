@@ -60,11 +60,6 @@ class PatternSMAmberRain : public LEDStripEffect
         {
             for (u_int16_t y = startY; y < endY; y++)
             {
-                // The above assumes we have a square display. Mesmerizer doesn't.
-                // Precheck to keep Y on screen.
-		if (!g()->isValidPixel(x, y))
-                    continue;
-
                 int16_t index = XY(x, y);
                 double distance = sqrt(sq(x - centerX) + sq(y - centerY));
                 if (distance > radius)
@@ -81,7 +76,9 @@ class PatternSMAmberRain : public LEDStripEffect
                     double fraction = 1.0 - percentage;
                     brightness = 255.0 * fraction;
                 }
-                g()->leds[index] += CHSV(hue, 255, brightness);
+
+                if (g()->isValidPixel(index))
+                    g()->leds[index] += CHSV(hue, 255, brightness);
             }
         }
     }
