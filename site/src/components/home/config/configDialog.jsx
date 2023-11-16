@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, GlobalStyles, InputLabel, FormHelperText, IconButton, Icon, Stack, Slider } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, FormLabel, GlobalStyles, InputLabel, FormHelperText, IconButton, Icon, Stack, Slider, FormControl } from "@mui/material";
 import {useTheme} from "@mui/material";
 import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
@@ -8,10 +8,15 @@ import { RgbColorPicker } from "react-colorful";
 
 // Base styling for inputs.     
 const textFieldProps = {
-    margin: "dense",
     fullWidth: true,
     variant:"standard",
     FormHelperTextProps: { component: 'div' }
+};
+
+// Base styling for form control
+const formControlProps = {
+    display: 'flex',
+    paddingTop: '15px'
 };
 
 // enum definition: see types.h/SettingSpec.SettingType
@@ -131,7 +136,6 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     </>;
     const [helper, setHelper] = useState(jsxDescription);
     const baseProps = {
-        label: setting.friendlyName,
         id: setting.name,
         onChange: (e) => setValue(e.target.value),
         value: value,
@@ -168,67 +172,87 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     case settingType.Integer:
         min = setting.minimumValue !== undefined ? setting.minimumValue : (-2)**31;
         max = setting.maximumValue !== undefined ? setting.maximumValue : 2**31 -1;
-        return <TextField
-            {...baseProps}
-            {...textFieldProps}
-            onError={(e) => updateError(setting.name, e)}
-            helperText={helper}
-            onChange={(e) => {
-                numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue, Math.floor);
-            }}
-        />;  
+        return <FormControl sx={formControlProps}>
+            <FormLabel>{setting.friendlyName}</FormLabel>
+            <TextField
+                {...baseProps}
+                {...textFieldProps}
+                onError={(e) => updateError(setting.name, e)}
+                helperText={helper}
+                onChange={(e) => {
+                    numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue, Math.floor);
+                }}
+            />
+        </FormControl> 
     case settingType.PositiveBigInteger:
         min = setting.minimumValue !== undefined ? setting.minimumValue : 0;
         max = setting.maximumValue !== undefined ? setting.maximumValue : 2**32;
-        return <TextField
-            {...baseProps}
-            {...textFieldProps}
-            error={error}
-            onError={(e) => updateError(setting.name, e)}
-            helperText={helper}
-            onChange={(e) => {
-                numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue, Math.floor);
-            }}
-        />;
+        return <FormControl sx={formControlProps}>
+            <FormLabel>{setting.friendlyName}</FormLabel>
+            <TextField
+                {...baseProps}
+                {...textFieldProps}
+                error={error}
+                onError={(e) => updateError(setting.name, e)}
+                helperText={helper}
+                onChange={(e) => {
+                    numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue, Math.floor);
+                }}
+            />
+        </FormControl>
     case settingType.Float:
         min = setting.minimumValue !== undefined ? setting.minimumValue :  -3.4028235E+38;
         max = setting.maximumValue !== undefined ? setting.maximumValue : 3.4028235E+38;
-        return <TextField
-            {...baseProps}
-            {...textFieldProps}
-            onError={(e) => updateError(setting.name, e)}
-            helperText={helper}
-            onChange={(e) => {
-                numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue);
-            }}
-        />;
-    case settingType.Boolean:
-        return <FormControlLabel {...baseProps} control={
-            <Checkbox 
-                disabled={readOnly}
-                defaultChecked={!!setting.value}               
-                onChange={(e) => setValue(e.target.checked)}
+        return <FormControl sx={formControlProps}>
+            <FormLabel>{setting.friendlyName}</FormLabel>
+            <TextField
+                {...baseProps}
+                {...textFieldProps}
+                onError={(e) => updateError(setting.name, e)}
+                helperText={helper}
+                onChange={(e) => {
+                    numberChanged(e.target.value, error, jsxDescription, min, max, setError, setHelper, setValue);
+                }}
             />
-        }/>;
-    case settingType.String: 
-        return <TextField
-            {...baseProps}
-            {...textFieldProps}
-            helperText={helper}
-            onChange={(e) => {
-                if (e.target.value === '' && (setting.emptyAllowed === false)) {
-                    // Value is empty and empty is not allowed
-                    setError(true);
-                    setHelper(`Empty value is not allowed for this input. Original value was '${setting.value}'`);
-                } else {
-                    setError(false);
-                    setHelper(setting.description);
+        </FormControl> 
+    case settingType.Boolean:
+        return <FormControl sx={formControlProps}>
+            <FormControlLabel 
+                label={setting.friendlyName}
+                control={
+                    <Checkbox 
+                        sx={{paddingBottom: '0px', paddingTop: '0px'}}
+                        disabled={readOnly}
+                        defaultChecked={!!setting.value}               
+                        onChange={(e) => setValue(e.target.checked)}
+                    />
                 }
-                setValue(e.target.value)
-            }}
-        />;
+            />
+            <FormHelperText sx={{marginLeft: '0px', marginTop: '0px'}}>{jsxDescription}</FormHelperText>
+        </FormControl>
+        
+    case settingType.String: 
+        return <FormControl sx={formControlProps}>
+            <FormLabel>{setting.friendlyName}</FormLabel>
+            <TextField
+                {...baseProps}
+                {...textFieldProps}
+                helperText={helper}
+                onChange={(e) => {
+                    if (e.target.value === '' && (setting.emptyAllowed === false)) {
+                    // Value is empty and empty is not allowed
+                        setError(true);
+                        setHelper(`Empty value is not allowed for this input. Original value was '${setting.value}'`);
+                    } else {
+                        setError(false);
+                        setHelper(setting.description);
+                    }
+                    setValue(e.target.value)
+                }}
+            />
+        </FormControl>
     case settingType.Palette:
-        return <Box>
+        return <Box sx={{paddingTop: '10px'}}>
             <InputLabel sx={{ scale: "0.75" }}>{setting.friendlyName}</InputLabel>
             <Box flexDirection={"row"} display={"flex"} justifyContent={"space-between"} flexWrap={"wrap"}>
                 {value.map((colorInt, index) => {
@@ -247,8 +271,8 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     case settingType.Color: {
         const color = intToRGB(value)
         
-        return <Box>
-            <InputLabel sx={{scale: "0.75"}}>{setting.friendlyName}</InputLabel>
+        return <Box sx={{paddingTop: '10px'}}>
+            <InputLabel>{setting.friendlyName}</InputLabel>
             <Box flexDirection={"row"} display={"flex"}>
                 <Box flexGrow={"1"} sx={{backgroundColor: `rgb(${color.r},${color.g},${color.b})`}} onClick={() => setAddionalDialog(0)}></Box>
                 <IconButton onClick={() => setAddionalDialog(0)}><Icon>color_lens</Icon></IconButton>
@@ -258,19 +282,22 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         </Box>
     }
     case settingType.Slider: 
-        return <Box>
-            <InputLabel sx={{ scale: "0.75" }}>{setting.friendlyName}</InputLabel>
+        return <Box sx={{paddingTop: '10px'}}>
+            <InputLabel>{setting.friendlyName}</InputLabel>
             <Stack>
                 <Slider min={setting.minimumValue} max={setting.maximumValue} valueLabelDisplay="auto" value={value} onChange={(e) => setValue(e.target.value)}> </Slider>
             </Stack>
             <FormHelperText>{jsxDescription}</FormHelperText>
         </Box>
     default:
-        return <TextField
-            {...baseProps}
-            {...textFieldProps}
-            helperText={helper}
-        />;
+        return <FormControl sx={formControlProps}>
+            <FormLabel>{setting.friendlyName}</FormLabel>
+            <TextField
+                {...baseProps}
+                {...textFieldProps}
+                helperText={helper}
+            />
+        </FormControl>
     }
 };
 
