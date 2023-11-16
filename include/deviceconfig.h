@@ -209,7 +209,7 @@ class DeviceConfig : public IJSONSerializable
             settingSpecs.emplace_back(
                 LocationIsZipTag,
                 "Location is postal code",
-                "A boolean indicating if the value in the 'location' setting is a postal code ('true'/1) or not ('false'/0).",
+                "Indicates if the value for the \"Location\" setting is a postal code (yes if checked) or not.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
@@ -240,13 +240,13 @@ class DeviceConfig : public IJSONSerializable
             settingSpecs.emplace_back(
                 Use24HourClockTag,
                 "Use 24 hour clock",
-                "A boolean that indicates if time should be shown in 24-hour format ('true'/1) or 12-hour AM/PM format ('false'/0).",
+                "A boolean that indicates if time should be shown in 24-hour format (yes if checked) or 12-hour AM/PM format.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
                 UseCelsiusTag,
                 "Use degrees Celsius",
-                "A boolean that indicates if temperatures should be shown in degrees Celsius ('true'/1) or degrees Fahrenheit ('false'/0).",
+                "A boolean that indicates if temperatures should be shown in degrees Celsius (yes if checked) or degrees Fahrenheit.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
