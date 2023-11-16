@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormLabel, GlobalStyles, InputLabel, FormHelperText, IconButton, Icon, Stack, Slider, FormControl } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, TextField, Checkbox, FormControlLabel, FormLabel, GlobalStyles, InputLabel, FormHelperText, IconButton, Icon, Stack, Slider, FormControl } from "@mui/material";
 import {useTheme} from "@mui/material";
 import httpPrefix from "../../../espaddr";
 import PropTypes from "prop-types";
@@ -8,15 +8,15 @@ import { RgbColorPicker } from "react-colorful";
 
 // Base styling for inputs.     
 const textFieldProps = {
-    margin: "dense",
-    // fullWidth: true,
-    inputProps:{
-        style: {
-            padding: 4
-        }
-    },
-    variant:"filled",
-    FormHelperTextProps: { component: 'div' },
+    fullWidth: true,
+    variant:"standard",
+    FormHelperTextProps: { component: 'div' }
+};
+
+// Base styling for form control
+const formControlProps = {
+    display: 'flex',
+    paddingTop: '15px'
 };
 
 // enum definition: see types.h/SettingSpec.SettingType
@@ -172,7 +172,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     case settingType.Integer:
         min = setting.minimumValue !== undefined ? setting.minimumValue : (-2)**31;
         max = setting.maximumValue !== undefined ? setting.maximumValue : 2**31 -1;
-        return <FormControl sx={{display: 'flex'}}>
+        return <FormControl sx={formControlProps}>
             <FormLabel>{setting.friendlyName}</FormLabel>
             <TextField
                 {...baseProps}
@@ -187,7 +187,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     case settingType.PositiveBigInteger:
         min = setting.minimumValue !== undefined ? setting.minimumValue : 0;
         max = setting.maximumValue !== undefined ? setting.maximumValue : 2**32;
-        return <FormControl sx={{display: 'flex'}}>
+        return <FormControl sx={formControlProps}>
             <FormLabel>{setting.friendlyName}</FormLabel>
             <TextField
                 {...baseProps}
@@ -203,7 +203,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     case settingType.Float:
         min = setting.minimumValue !== undefined ? setting.minimumValue :  -3.4028235E+38;
         max = setting.maximumValue !== undefined ? setting.maximumValue : 3.4028235E+38;
-        return <FormControl sx={{display: 'flex'}}>
+        return <FormControl sx={formControlProps}>
             <FormLabel>{setting.friendlyName}</FormLabel>
             <TextField
                 {...baseProps}
@@ -216,21 +216,23 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             />
         </FormControl> 
     case settingType.Boolean:
-        return <FormControl sx={{display: 'flex'}}>
-            <FormLabel>{setting.friendlyName}</FormLabel>
-            <Box sx={{display:'flex'}}>
-                <Checkbox 
-                    sx={{paddingLeft: 0 }}
-                    disabled={readOnly}
-                    defaultChecked={!!setting.value}               
-                    onChange={(e) => setValue(e.target.checked)}
-                />
-                <FormHelperText>{jsxDescription}</FormHelperText>
-            </Box>
+        return <FormControl sx={formControlProps}>
+            <FormControlLabel 
+                label={setting.friendlyName}
+                control={
+                    <Checkbox 
+                        sx={{paddingLeft: 0 }}
+                        disabled={readOnly}
+                        defaultChecked={!!setting.value}               
+                        onChange={(e) => setValue(e.target.checked)}
+                    />
+                }
+            />
+            <FormHelperText>{jsxDescription}</FormHelperText>
         </FormControl>
         
     case settingType.String: 
-        return <FormControl sx={{display: 'flex'}}>
+        return <FormControl sx={formControlProps}>
             <FormLabel>{setting.friendlyName}</FormLabel>
             <TextField
                 {...baseProps}
@@ -250,7 +252,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             />
         </FormControl>
     case settingType.Palette:
-        return <Box>
+        return <Box sx={{paddingTop: 10}}>
             <InputLabel sx={{ scale: "0.75" }}>{setting.friendlyName}</InputLabel>
             <Box flexDirection={"row"} display={"flex"} justifyContent={"space-between"} flexWrap={"wrap"}>
                 {value.map((colorInt, index) => {
@@ -269,7 +271,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     case settingType.Color: {
         const color = intToRGB(value)
         
-        return <Box>
+        return <Box sx={{paddingTop: 10}}>
             <InputLabel>{setting.friendlyName}</InputLabel>
             <Box flexDirection={"row"} display={"flex"}>
                 <Box flexGrow={"1"} sx={{backgroundColor: `rgb(${color.r},${color.g},${color.b})`}} onClick={() => setAddionalDialog(0)}></Box>
@@ -280,7 +282,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         </Box>
     }
     case settingType.Slider: 
-        return <Box>
+        return <Box sx={{paddingTop: 10}}>
             <InputLabel>{setting.friendlyName}</InputLabel>
             <Stack>
                 <Slider min={setting.minimumValue} max={setting.maximumValue} valueLabelDisplay="auto" value={value} onChange={(e) => setValue(e.target.value)}> </Slider>
@@ -288,7 +290,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             <FormHelperText>{jsxDescription}</FormHelperText>
         </Box>
     default:
-        return <FormControl sx={{display: 'flex'}}>
+        return <FormControl sx={formControlProps}>
             <FormLabel>{setting.friendlyName}</FormLabel>
             <TextField
                 {...baseProps}
