@@ -1,5 +1,5 @@
 import {useState, useMemo, useEffect, useContext} from 'react';
-import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material';
+import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box, Popper, Button} from '@mui/material';
 import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import mainAppStyle from './style';
 import getTheme from '../../theme/theme';
@@ -103,6 +103,14 @@ const AppPannel = (props) => {
                     </IconButton>
                 </ListItemIcon>
                 <ListItemText primary="Settings"></ListItemText>
+            </ListItem>
+            <ListItem>
+                <ListItemIcon>
+                    <IconButton onClick={() => setSettings(settings => !settings)}>
+                        <Icon>settings_power</Icon>
+                    </IconButton>
+                </ListItemIcon>
+                <ListItemText primary="Device Control"></ListItemText>
             </ListItem>
             </List>
         </Drawer>
