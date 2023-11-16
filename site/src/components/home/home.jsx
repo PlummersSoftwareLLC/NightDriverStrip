@@ -9,6 +9,7 @@ import DesignerPanel from './designer/designer';
 import PropTypes from 'prop-types';
 import ConfigDialog from './config/configDialog';
 import {EffectsContext} from '../../context/effectsContext';
+import httpPrefix from "../../espaddr"
 
 const MainApp = () => {
     const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
@@ -31,6 +32,7 @@ const AppPannel = (props) => {
     const [stats, setStats] = useState(config && config.stats !== undefined ? config.stats : true);
     const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
     const [settings, setSettings] = useState(false);
+    const [deviceControlOpen, setDeviceControlOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const {sync} = useContext(EffectsContext);
     
@@ -104,9 +106,9 @@ const AppPannel = (props) => {
                 </ListItemIcon>
                 <ListItemText primary="Settings"></ListItemText>
             </ListItem>
-            <ListItem>
+            <ListItem id={'deviceControl'}>
                 <ListItemIcon>
-                    <IconButton onClick={() => setSettings(settings => !settings)}>
+                    <IconButton onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
                         <Icon>settings_power</Icon>
                     </IconButton>
                 </ListItemIcon>
@@ -122,6 +124,13 @@ const AppPannel = (props) => {
             <DesignerPanel open={designer} addNotification={addNotification}/>
         </Box>
         {settings && <ConfigDialog heading={"Device Settings"} open={settings} setOpen={setSettings} saveCallback={sync}></ConfigDialog>}
+        <Popper open={Boolean(deviceControlOpen)} placement='right' anchorEl={deviceControlOpen}>
+            <Box sx={{display: 'flex', flexDirection: 'column', bgcolor: 'background.paper'}}>
+                <Button onClick={() => fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/reset`, {method:"POST", body:new URLSearchParams({board: 1})})}>{"Reboot Device"}</Button>
+                <Button>{"Reset Device Settings"}</Button>
+                <Button>{"Reset Effect Settings"}</Button>
+            </Box>
+        </Popper>
     </Box>;
 };
 
