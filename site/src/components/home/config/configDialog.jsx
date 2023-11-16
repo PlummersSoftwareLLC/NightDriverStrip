@@ -221,13 +221,14 @@ const ConfigInput = ({setting, updateData, updateError}) => {
                 label={setting.friendlyName}
                 control={
                     <Checkbox 
+                        sx={{paddingBottom: '0px', paddingTop: '0px'}}
                         disabled={readOnly}
                         defaultChecked={!!setting.value}               
                         onChange={(e) => setValue(e.target.checked)}
                     />
                 }
             />
-            <FormHelperText sx={{marginLeft: '0px'}}>{jsxDescription}</FormHelperText>
+            <FormHelperText sx={{marginLeft: '0px', marginTop: '0px'}}>{jsxDescription}</FormHelperText>
         </FormControl>
         
     case settingType.String: 
