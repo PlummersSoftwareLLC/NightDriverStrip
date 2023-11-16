@@ -11,6 +11,8 @@ import ConfigDialog from './config/configDialog';
 import {EffectsContext} from '../../context/effectsContext';
 import httpPrefix from "../../espaddr"
 
+const resetEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/reset`
+
 const MainApp = () => {
     const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
     const theme = useMemo(
@@ -126,9 +128,25 @@ const AppPannel = (props) => {
         {settings && <ConfigDialog heading={"Device Settings"} open={settings} setOpen={setSettings} saveCallback={sync}></ConfigDialog>}
         <Popper open={Boolean(deviceControlOpen)} placement='right' anchorEl={deviceControlOpen}>
             <Box sx={{display: 'flex', flexDirection: 'column', bgcolor: 'background.paper'}}>
-                <Button onClick={() => fetch(`${httpPrefix !== undefined ? httpPrefix : ""}/reset`, {method:"POST", body:new URLSearchParams({board: 1})})}>{"Reboot Device"}</Button>
-                <Button>{"Reset Device Settings"}</Button>
-                <Button>{"Reset Effect Settings"}</Button>
+                <Button 
+                    onClick={() => {
+                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1})});
+                        setDeviceControlOpen(undefined);
+                    }}
+                >{"Reboot Device"}
+                </Button>
+                <Button 
+                    onClick={() => {
+                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1, deviceConfig: 1})});
+                        setDeviceControlOpen(undefined);
+                    }}
+                >{"Reset Device Configuration"}</Button>
+                <Button 
+                    onClick={() => {
+                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1, effectsConfig: 1})});
+                        setDeviceControlOpen(undefined);
+                    }}>
+                    {"Reset Effect Settings"}</Button>
             </Box>
         </Popper>
     </Box>;
