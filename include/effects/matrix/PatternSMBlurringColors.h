@@ -200,7 +200,15 @@ class PatternSMBlurringColors : public LEDStripEffect
                 // расстояния между 2мя соседними пикселями
 
         for (int i = 0; i < trackingOBJECT_MAX_COUNT; i++)
+        {
+            trackingObjectPosX[i] = 0;
+            trackingObjectPosY[i] = 0;
+            trackingObjectSpeedX[i] = 0;
+            trackingObjectSpeedY[i] = 0;
+            trackingObjectHue[i] = 0;
+            trackingObjectState[i] = 0;
             trackingObjectIsShift[i] = false;
+        }
 
         for (int j = 0; j < enlargedObjectNUM; j++)
         {
