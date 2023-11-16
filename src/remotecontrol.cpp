@@ -123,7 +123,7 @@ void RemoteControl::handle()
         if (RemoteColorCodes[i].code == result)
         {
             debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
-            effectManager.SetGlobalColor(RemoteColorCodes[i].color);
+            effectManager.ApplyGlobalColor(RemoteColorCodes[i].color);
             return;
         }
     }
