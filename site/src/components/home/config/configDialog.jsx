@@ -252,7 +252,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
             />
         </FormControl>
     case settingType.Palette:
-        return <Box sx={{paddingTop: 10}}>
+        return <Box sx={{paddingTop: '10px'}}>
             <InputLabel sx={{ scale: "0.75" }}>{setting.friendlyName}</InputLabel>
             <Box flexDirection={"row"} display={"flex"} justifyContent={"space-between"} flexWrap={"wrap"}>
                 {value.map((colorInt, index) => {
@@ -271,7 +271,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
     case settingType.Color: {
         const color = intToRGB(value)
         
-        return <Box sx={{paddingTop: 10}}>
+        return <Box sx={{paddingTop: '10px'}}>
             <InputLabel>{setting.friendlyName}</InputLabel>
             <Box flexDirection={"row"} display={"flex"}>
                 <Box flexGrow={"1"} sx={{backgroundColor: `rgb(${color.r},${color.g},${color.b})`}} onClick={() => setAddionalDialog(0)}></Box>
@@ -282,7 +282,7 @@ const ConfigInput = ({setting, updateData, updateError}) => {
         </Box>
     }
     case settingType.Slider: 
-        return <Box sx={{paddingTop: 10}}>
+        return <Box sx={{paddingTop: '10px'}}>
             <InputLabel>{setting.friendlyName}</InputLabel>
             <Stack>
                 <Slider min={setting.minimumValue} max={setting.maximumValue} valueLabelDisplay="auto" value={value} onChange={(e) => setValue(e.target.value)}> </Slider>
