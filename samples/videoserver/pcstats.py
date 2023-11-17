@@ -2,25 +2,22 @@
 ##
 ## videoserver - (c) 2023 Dave Plummer.  All Rights Reserved.
 ##
-## File:        videoserver2.py - Pushes video data to NightDriverStrip
+## File:        pcstats.py - Pushes text about CPU use, etc, to LED matrix
 ##
 ## Description:
 ##
-##    Pulls video from YouTube, downscales it, converts it to RGB data,
+##    Creates a bitmap of text that shows CPU usage, memory usage, etc
 ##    compresses it, and sends it over WiFi to NightDriverStrip
 ##
-## History:     Jun-11-2023     davepl      Created
+## History:     Oct-21-2023     davepl      Created
 ##
 ##---------------------------------------------------------------------------
 
 # Dependencies
 
-import cv2                          # python3 -m pip install opencv-python
-from pytube import YouTube          # python3 -m pip install pytube
-import sys
+from PIL import Image, ImageDraw, ImageFont     # python3 -m pip install pillow
 import socket
 import time
-import struct
 import zlib
 import datetime
 
@@ -28,22 +25,11 @@ import datetime
 
 MATRIX_WIDTH = 64
 MATRIX_HEIGHT = 32
-FUTURE_DELAY = 5
-URL = "https://youtu.be/WPdCT0l6vGs"
+FUTURE_DELAY = 3
 ESP32_WIFI_ADDRESS = '192.168.8.86'
 PORT = 49152
 WIFI_COMMAND_PIXELDATA64 = 3
-
-# download_video
-#
-# Open the supplied YouTube URL in the video player and return the video stream
-
-def download_video(url):
-    print("Downloading Video Data...")
-    yt = YouTube(url)
-    stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').asc().first()
-    stream.download()
-    return stream
+FPS = 20
 
 # connect_to_socket
 #
@@ -56,15 +42,11 @@ def connect_to_socket():
     return sock
 
 # send_video_data
-# 
+#
 # Take the supplied video stream and breaks each frame into a new colordata object to be sent to
 # the NightDriverStrip module over WiFi
 
-def send_video_data(stream):
-    print("Sending Video Data...")
-    cap = cv2.VideoCapture(stream.default_filename)
-    if not cap.isOpened():
-        sys.exit("Could not open video")
+def send_video_data():
 
     sock = None
     future = datetime.datetime.now() + datetime.timedelta(seconds=FUTURE_DELAY)
@@ -74,23 +56,17 @@ def send_video_data(stream):
         if sock is None:
             sock = connect_to_socket()
 
-        # Read and process a frame
-        ret, frame = cap.read()
-        if not ret:
-            break
+        contentimage = DrawFrame()
 
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        resized = cv2.resize(rgb_frame, (MATRIX_WIDTH, MATRIX_HEIGHT))
-        pixels = bytes(resized)
+        pixels = contentimage.tobytes()
 
         # Advance timestamp by one frame's worth of time as we send each packet
-        future += datetime.timedelta(seconds = 1.0 / stream.fps)
+        future += datetime.timedelta(seconds = 1.0 / FPS)
         seconds = int(future.timestamp())
         microseconds = future.microsecond
 
         # Compose and send the PIXELDATA packet
-        assert(len(pixels) % 3 == 0)
-        header = build_header(seconds, microseconds, int(len(pixels) / 3))
+        header = build_header(seconds, microseconds, len(pixels) / 3)
         complete_packet = header + pixels
 
         compressed_packet = compress_packet(complete_packet)
@@ -102,7 +78,7 @@ def send_video_data(stream):
             sock.close()
             sock = None
 
-        time.sleep(1.0 / stream.fps / 2)
+        time.sleep(1.0 / FPS)
 
 # build_header
 #
@@ -112,14 +88,14 @@ def send_video_data(stream):
 def build_header(seconds, microseconds, length32):
     commandData = (WIFI_COMMAND_PIXELDATA64).to_bytes(2, byteorder='little')
     channelData = (1).to_bytes(2, byteorder='little')
-    lengthData  = (length32).to_bytes(4, byteorder='little')
+    lengthData  = (int(length32)).to_bytes(4, byteorder='little')
     secondsData = (seconds).to_bytes(8, byteorder='little')
     microsData  = (microseconds).to_bytes(8, byteorder='little')
     return commandData + channelData + lengthData + secondsData + microsData
 
 # compress_packet
 #
-# Use zlib to lzcompress the packet and return it wrapped in the little header that indicates its 
+# Use zlib to lzcompress the packet and return it wrapped in the little header that indicates its
 # going to be a compressed packet
 
 def compress_packet(complete_packet):
@@ -129,11 +105,26 @@ def compress_packet(complete_packet):
     reservedData = (0x12345678).to_bytes(4, byteorder='little')
     return (0x44415645).to_bytes(4, byteorder='little') + compressedSizeData + expandedSizeData + reservedData + compressed_data
 
+def DrawFrame():
+        DrawFrame.frame += 1
+
+        img = Image.new('RGB', (MATRIX_WIDTH * 1, MATRIX_HEIGHT * 1), color = 'darkblue');
+        d = ImageDraw.Draw(img)
+        # use a truetype font
+        font = ImageFont.load_default()
+        d.text((0,0), "Hello World", font=font, fill=(255,255,255))
+        d.text((0,10), "Pass: " + str(DrawFrame.frame), font=font, fill=(255,255,255))
+        return img
+DrawFrame.frame = 0
+
 # main
 #
-# Entry point.  Downloads a YouTube video and sends it to the socket server on a NightDriverStrip
-# mesmerizer project to be displayed on the matrix
+# Entry point.
 
 if __name__ == "__main__":
-    stream = download_video(URL)
-    send_video_data(stream)
+
+    send_video_data()
+
+
+
+

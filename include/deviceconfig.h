@@ -75,6 +75,9 @@ class DeviceConfig : public IJSONSerializable
     bool    rememberCurrentEffect = true;
     int     powerLimit = POWER_LIMIT_DEFAULT;
     uint8_t brightness = BRIGHTNESS_MAX;
+    CRGB    globalColor = CRGB::Red;
+    bool    applyGlobalColors = false;
+    CRGB    secondColor = CRGB::Red;
 
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
@@ -119,6 +122,10 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
+    static constexpr const char * ClearGlobalColorTag = "clearGlobalColor";
+    static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
+    static constexpr const char * ApplyGlobalColorsTag = NAME_OF(applyGlobalColors);
+    static constexpr const char * SecondColorTag = NAME_OF(secondColor);
 
     DeviceConfig();
 
@@ -143,6 +150,9 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
         jsonDoc[PowerLimitTag] = powerLimit;
         jsonDoc[BrightnessTag] = brightness;
+        jsonDoc[GlobalColorTag] = globalColor;
+        jsonDoc[ApplyGlobalColorsTag] = applyGlobalColors;
+        jsonDoc[SecondColorTag] = secondColor;
 
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
@@ -171,6 +181,9 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
         SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
         SetIfPresentIn(jsonObject, brightness, BrightnessTag);
+        SetIfPresentIn(jsonObject, globalColor, GlobalColorTag);
+        SetIfPresentIn(jsonObject, applyGlobalColors, ApplyGlobalColorsTag);
+        SetIfPresentIn(jsonObject, secondColor, SecondColorTag);
 
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
@@ -209,7 +222,7 @@ class DeviceConfig : public IJSONSerializable
             settingSpecs.emplace_back(
                 LocationIsZipTag,
                 "Location is postal code",
-                "A boolean indicating if the value in the 'location' setting is a postal code ('true'/1) or not ('false'/0).",
+                "Indicates if the value for the \"Location\" setting is a postal code (yes if checked) or not.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
@@ -228,6 +241,7 @@ class DeviceConfig : public IJSONSerializable
             );
             weatherKeySpec.HasValidation = true;
             weatherKeySpec.Access = SettingSpec::SettingAccess::WriteOnly;
+            weatherKeySpec.EmptyAllowed.reset();        // Silently ignore empty value at the front-end
 
             settingSpecs.emplace_back(
                 TimeZoneTag,
@@ -239,13 +253,13 @@ class DeviceConfig : public IJSONSerializable
             settingSpecs.emplace_back(
                 Use24HourClockTag,
                 "Use 24 hour clock",
-                "A boolean that indicates if time should be shown in 24-hour format ('true'/1) or 12-hour AM/PM format ('false'/0).",
+                "A boolean that indicates if time should be shown in 24-hour format (yes if checked) or 12-hour AM/PM format.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
                 UseCelsiusTag,
                 "Use degrees Celsius",
-                "A boolean that indicates if temperatures should be shown in degrees Celsius ('true'/1) or degrees Fahrenheit ('false'/0).",
+                "A boolean that indicates if temperatures should be shown in degrees Celsius (yes if checked) or degrees Fahrenheit.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
@@ -265,7 +279,7 @@ class DeviceConfig : public IJSONSerializable
                 BrightnessTag,
                 "Brightness",
                 "Overall brightness the connected LEDs or matrix should be run at.",
-                SettingSpec::SettingType::Integer,
+                SettingSpec::SettingType::Slider,
                 BRIGHTNESS_MIN,
                 BRIGHTNESS_MAX
             ).HasValidation = true;
@@ -279,6 +293,33 @@ class DeviceConfig : public IJSONSerializable
             );
             powerLimitSpec.MinimumValue = POWER_LIMIT_MIN;
             powerLimitSpec.HasValidation = true;
+
+            settingSpecs.emplace_back(
+                ClearGlobalColorTag,
+                "Clear global color",
+                "Stop applying the global color/derived palette. This takes precedence over the \"(Re)apply global color\" checkbox.",
+                SettingSpec::SettingType::Boolean
+            ).Access = SettingSpec::SettingAccess::WriteOnly;
+            settingSpecs.emplace_back(
+                GlobalColorTag,
+                "Global color",
+                "Main color that is applied to all those effects that support using it.",
+                SettingSpec::SettingType::Color
+            );
+            settingSpecs.emplace_back(
+                ApplyGlobalColorsTag,
+                "(Re)apply global color",
+                "You can use this to \"reselect\" and apply the current global color, to force the composition of the derived "
+                "global palette. This checkbox is ignored if the \"Clear global color\" checkbox is selected.",
+                SettingSpec::SettingType::Boolean
+            ).Access = SettingSpec::SettingAccess::WriteOnly;
+            settingSpecs.emplace_back(
+                SecondColorTag,
+                "Second color",
+                "Second color that is used to create a global palette in combination with the current global color. That palette is used "
+                "by some effects. Defaults to the <em>previous</em> global color if not explicitly set.",
+                SettingSpec::SettingType::Color
+            );
 
             settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
         }
@@ -312,7 +353,6 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(hostname, newHostname);
     }
-
 
     const String &GetLocation() const
     {
@@ -427,4 +467,42 @@ class DeviceConfig : public IJSONSerializable
         if (newPowerLimit >= POWER_LIMIT_MIN)
             SetAndSave(powerLimit, newPowerLimit);
     }
+
+    const CRGB& GlobalColor() const
+    {
+        return globalColor;
+    }
+
+    void SetApplyGlobalColors()
+    {
+        SetAndSave(applyGlobalColors, true);
+    }
+
+    void ClearApplyGlobalColors()
+    {
+        SetAndSave(applyGlobalColors, false);
+    }
+
+    bool ApplyGlobalColors() const
+    {
+        return applyGlobalColors;
+    }
+
+    void SetGlobalColor(const CRGB& newGlobalColor)
+    {
+        SetAndSave(globalColor, newGlobalColor);
+    }
+
+    const CRGB& SecondColor() const
+    {
+        return secondColor;
+    }
+
+    void SetSecondColor(const CRGB& newSecondColor)
+    {
+        SetAndSave(secondColor, newSecondColor);
+    }
+
+    void SetColorSettings(const CRGB& globalColor, const CRGB& secondColor);
+    void ApplyColorSettings(std::optional<CRGB> globalColor, std::optional<CRGB> secondColor, bool clearGlobalColor, bool applyGlobalColor);
 };

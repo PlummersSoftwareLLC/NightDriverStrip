@@ -125,7 +125,7 @@ namespace ArduinoJson
 }
 
 bool BoolFromText(const String& text);
-void SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction);
+bool SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction);
 bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
 bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializable& object);
 bool RemoveJSONFile(const String & fileName);

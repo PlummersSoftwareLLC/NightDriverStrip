@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
-import { Box, Typography } from "@mui/material";
+import { useState, useEffect, useContext } from "react";
+import { Box, Icon, Typography } from "@mui/material";
 import countdownStyle from "./style";
+import { EffectsContext } from "../../../../context/effectsContext";
+import PropTypes from 'prop-types';
 
 const Countdown = props => {
-    const {  label, millisecondsRemaining, requestRefresh } = props;
+    const { remainingInterval, pinnedEffect, sync} = useContext(EffectsContext);
+    const {  label } = props;
     const [ timeRemaining, setTimeRemaining ] = useState(false);
-
     useEffect(() => {
-        if (millisecondsRemaining) {
-            const timeReference = Date.now()+millisecondsRemaining;
+        if (!pinnedEffect && remainingInterval) {
+            const timeReference = Date.now()+remainingInterval;
             setTimeRemaining(timeReference-Date.now());
             var requestSent = false;
             const interval = setInterval(()=>{
@@ -18,19 +20,23 @@ const Countdown = props => {
                 }
                 if ((remaining <= 100) && !requestSent) {
                     requestSent=true;
-                    requestRefresh();
+                    sync();
                 }
             },50);
             return ()=>clearInterval(interval);
         }
-    },[millisecondsRemaining, requestRefresh]);
+    },[pinnedEffect, remainingInterval,sync]);
 
     return (            
-        <Box sx={countdownStyle.root}>
+        <Box sx={countdownStyle.root}> 
             <Typography variant="little" color="textPrimary">{label}</Typography>:
-            <Typography color="textSecondary" sx={countdownStyle.timeremaining} variant="little">{timeRemaining}</Typography>
+            <Typography color="textSecondary" sx={pinnedEffect? countdownStyle.pinned : countdownStyle.timeremaining} variant="little">{pinnedEffect ? <Icon>all_inclusive</Icon> : timeRemaining}</Typography>
         </Box>)
 
+};
+
+Countdown.propTypes = {
+    label: PropTypes.string.isRequired
 };
 
 export default Countdown;
