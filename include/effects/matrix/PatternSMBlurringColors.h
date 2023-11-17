@@ -19,6 +19,10 @@ class PatternSMBlurringColors : public LEDStripEffect
       public:
         PowderItem()
         {
+        }
+
+        void Clear()
+        {
             _position_x = 0.0f;
             _position_y = 0.0f;
             _speed_x = 0.0f;
@@ -213,7 +217,7 @@ class PatternSMBlurringColors : public LEDStripEffect
             // quarter the distance between 2 neighboring pixels
 
         for (auto& powder_item : _powder_items)
-            powder_item._is_shift = false;
+            powder_item.Clear();
 
         for (int j = 0; j < enlargedObjectNUM; j++)
         {
