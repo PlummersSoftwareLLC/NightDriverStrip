@@ -20,8 +20,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 {
   private:
     uint8_t hue, hue2; // gradual hue shift or some other cyclic counter
-    uint8_t deltaHue;
-    uint8_t step; // some counter of frames or sequences of operations
+    uint8_t step { 0 }; // some counter of frames or sequences of operations
     std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT> noise3d[MATRIX_WIDTH * MATRIX_HEIGHT]; // Locations of snowflakes.
     uint8_t Speed = 150;                                                             // 1-255 is speed
     uint8_t Scale = 90;                                                              // 1-100 is something parameter
@@ -159,7 +158,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
         // Much of this could be calls to lineDraw() but maybe being able to do
         // both ends while iterating through the loop is a win.
         const uint8_t rows = (MATRIX_HEIGHT + 1) / 3U;
-        deltaHue = floor(Speed / 64) * 64;
+        uint8_t deltaHue = floor(Speed / 64) * 64;
         bool dir = false;
         for (uint8_t y = 0; y < rows; y++)
         {

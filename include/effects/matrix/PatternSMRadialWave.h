@@ -13,9 +13,9 @@ class PatternSMRadialWave : public LEDStripEffect
     // 22/05/22
 
     bool setupm = 1;
-    const uint8_t C_X = MATRIX_WIDTH / 2;
-    const uint8_t C_Y = MATRIX_HEIGHT / 2;
-    const uint8_t mapp = 255 / MATRIX_WIDTH;
+    static constexpr int8_t C_X = MATRIX_WIDTH / 2;
+    static constexpr int8_t C_Y = MATRIX_HEIGHT / 2;
+    static constexpr uint8_t mapp = 255 / MATRIX_WIDTH;
     // BUGBUG: should probably be allocated into slow RAM.
     struct
     {
