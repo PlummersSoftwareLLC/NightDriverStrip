@@ -418,6 +418,13 @@ private:
             vTaskDelay(pdMS_TO_TICKS(WEATHER_CHECK_WIFI_WAIT));
         }
 
+        if (g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
+        {
+            debugW("No API Key Present!");
+            return;
+        }
+
+
         updateCoordinates();
 
         if (locationValid)
@@ -549,7 +556,10 @@ public:
         String showLocation = strLocation;
         showLocation.toUpperCase();
         if (g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
+        {
             g()->print("No API Key");
+            return;
+        }
         else
             g()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
 
