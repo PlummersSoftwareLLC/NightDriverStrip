@@ -8,8 +8,8 @@ class PatternSMRadialFire : public LEDStripEffect
 {
   private:
 
-#define C_X (MATRIX_WIDTH / 2)
-#define C_Y (MATRIX_HEIGHT / 2)
+    static auto constexpr C_X = (MATRIX_WIDTH / 2);
+    static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
     // BUGBUG: should probably be dynamically allocated into non-DMAable RAM.
     byte XY_angle[MATRIX_WIDTH][MATRIX_HEIGHT];
     byte XY_radius[MATRIX_WIDTH][MATRIX_HEIGHT];

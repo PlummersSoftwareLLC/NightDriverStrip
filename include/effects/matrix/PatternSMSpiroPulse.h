@@ -12,15 +12,14 @@ class PatternSMSpiroPulse : public LEDStripEffect
   private:
     static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
     static constexpr int CenterY = ((MATRIX_HEIGHT / 2) - 0.5);
-    bool incenter;
-    byte AM = 1;
-    float Angle;
+    bool incenter {false};
+    byte AM {1};
+    float Angle {0.f};
     bool change = true;
 
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
         return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
-        // return g()->leds[XY(x, y)];
     }
 
     void drawPixelXY(uint8_t x, int8_t y, CRGB color)
@@ -92,10 +91,10 @@ class PatternSMSpiroPulse : public LEDStripEffect
                 else if (AM >= (MATRIX_WIDTH + MATRIX_HEIGHT) / 2)
                     change = false;
             }
-            incenter = 1;
+            incenter = true;
         }
         else
-            incenter = 0;
+            incenter = false;
         // Originally /3. Let's go all the way to the edges.
         float radX = CalcRad * CenterY / 2;
         float radY = CalcRad * CenterY / 2;

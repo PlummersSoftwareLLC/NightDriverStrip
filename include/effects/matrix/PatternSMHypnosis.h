@@ -41,7 +41,7 @@ class PatternSMHypnosis : public LEDStripEffect
     }
 
     uint16_t t = 0;
-    
+
     void Draw() override
     {
         t += 4;
