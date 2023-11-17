@@ -12,10 +12,9 @@ class PatternSMRainbowTunnel : public LEDStripEffect
     // Stepko and Sutaburosu
     // 23/12/21
 
-    bool setupm = 1;
-    const uint8_t C_X = MATRIX_WIDTH / 2;
-    const uint8_t C_Y = MATRIX_HEIGHT / 2;
-    const uint8_t mapp = 255 / MATRIX_WIDTH;
+    static constexpr uint8_t C_X = MATRIX_WIDTH / 2;
+    static constexpr uint8_t C_Y = MATRIX_HEIGHT / 2;
+    static constexpr uint8_t mapp = 255 / MATRIX_WIDTH;
 
     struct
     {

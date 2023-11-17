@@ -10,11 +10,8 @@ class PatternSMStarDeep : public LEDStripEffect
 {
   private:
 // Why are these named "bballs"? Probably reused effect innards.
-// const int bballsMaxNUM = 100U;  // the maximum number of tracked objects
-// (very affects memory consumption)
-#define bballsMaxNUM                                                                                                   \
-    100U // the maximum number of tracked objects (very affects memory
-         // consumption)
+   static constexpr int bballsMaxNUM = 100U; // the maximum number of tracked
+                                  // objects (very affects memory consumption)
     uint8_t bballsCOLOR[bballsMaxNUM]; // star color (reusing the Balls effect array)
     uint8_t bballsX[bballsMaxNUM];     // number of corners in the star (reusing the
                                        // Balls effect array
@@ -24,11 +21,11 @@ class PatternSMStarDeep : public LEDStripEffect
 
     float driftx, drifty;
     float cangle, sangle;
-    unsigned int counter; //, ringdelay;//, bringdelay, sumthum;
+    unsigned int counter { 0 };
     const TProgmemRGBPalette16 *curPalette = &PartyColors_p;
 
     const int STAR_BLENDER = 128U; // хз что это
-    const int CENTER_DRIFT_SPEED = 6U; // скорость перемещения плавающего центра возникновения звёзд
+    const int CENTER_DRIFT_SPEED = 6U; // speed of movement of the floating star emergence center
     const int WIDTH = MATRIX_WIDTH;
     const int HEIGHT = MATRIX_HEIGHT;
 

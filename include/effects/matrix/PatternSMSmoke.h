@@ -7,14 +7,14 @@
 class PatternSMSmoke : public LEDStripEffect
 {
 private:
-  uint8_t Scale = 50; // 1-100. SettingA
+  static constexpr uint8_t Scale = 50; // 1-100. Setting
 
   static constexpr int WIDTH = MATRIX_WIDTH;
   static constexpr int HEIGHT = MATRIX_HEIGHT;
 
-  uint8_t hue, hue2;           // постепенный сдвиг оттенка или какой-нибудь другой
-                               // цикличный счётчик
-  uint8_t deltaHue, deltaHue2; // ещё пара таких же, когда нужно много
+  uint8_t hue {0}, hue2 {0};   // gradual shift in hue or some other
+                               // cyclic counter
+  uint8_t deltaHue {0}, deltaHue2 {0};
 
 public:
   PatternSMSmoke()

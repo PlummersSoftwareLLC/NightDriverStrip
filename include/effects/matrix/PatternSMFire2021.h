@@ -52,7 +52,7 @@ class PatternSMFire2021 : public LEDStripEffect
 
     uint8_t pcnt;              // какой-то счётчик какого-то прогресса
     uint8_t deltaValue;        // просто повторно используемая переменная
-    uint16_t ff_x, ff_y, ff_z; // большие счётчики
+    uint16_t ff_x {0} , ff_y {0} , ff_z {0} ; // большие счётчики
     uint8_t step; // какой-нибудь счётчик кадров или последовательностей операций
 
     const TProgmemRGBPalette16 *curPalette;

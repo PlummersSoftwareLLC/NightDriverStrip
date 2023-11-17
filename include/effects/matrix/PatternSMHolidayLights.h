@@ -13,7 +13,7 @@ class PatternSMHolidayLights : public LEDStripEffect
   private:
 
     static constexpr int speed = (200 / (MATRIX_HEIGHT - 4));
-    byte hue;
+    byte hue {0};
     byte effId = 2; // 1 - 3
 
     const byte maxDim = max(MATRIX_WIDTH, MATRIX_HEIGHT);
@@ -22,8 +22,8 @@ class PatternSMHolidayLights : public LEDStripEffect
     const byte height_adj = (MATRIX_HEIGHT < MATRIX_WIDTH ? (MATRIX_WIDTH - MATRIX_HEIGHT) / 2 : 0);
     const bool glitch = abs(MATRIX_WIDTH - MATRIX_HEIGHT) >= minDim / 4;
 
-    byte density = 50;     //
-    byte fadingSpeed = 10; //
+    byte density = 50;
+    byte fadingSpeed = 10;
     byte updateFromRGBWeight = 10;
     const byte scaleToNumLeds = NUM_LEDS / 256;
 
