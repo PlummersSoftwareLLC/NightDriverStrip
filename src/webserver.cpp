@@ -502,8 +502,9 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
 {
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    auto& effectManager = g_ptrSystem->EffectManager();
 
-    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(g_ptrSystem->EffectManager().SetInterval(value)));
+    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(effectManager.SetInterval(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::HostnameTag, SET_VALUE(deviceConfig.SetHostname(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(deviceConfig.SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(deviceConfig.SetLocationIsZip(value)));
@@ -518,7 +519,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
 
     #if SHOW_VU_METER
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::ShowVUMeterTag, SET_VALUE(deviceConfig.SetShowVUMeter(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::ShowVUMeterTag, SET_VALUE(effectManager.ShowVU(value)));
     #endif
 
     std::optional<CRGB> globalColor = {};

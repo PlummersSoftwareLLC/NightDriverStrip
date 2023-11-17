@@ -345,6 +345,26 @@ bool EffectManager::Init()
     return true;
 }
 
+bool EffectManager::ShowVU(bool bShow)
+{
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    bool bResult = deviceConfig.ShowVUMeter();
+    debugI("Setting ShowVU to %d\n", bShow);
+    deviceConfig.SetShowVUMeter(bShow);
+
+    // Erase any exising pixels since effects don't all clear each frame
+    if (!bShow)
+        _gfx[0]->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
+
+    return bResult;
+}
+
+bool EffectManager::IsVUVisible() const
+{
+    return g_ptrSystem->DeviceConfig().ShowVUMeter() && GetCurrentEffect().CanDisplayVUMeter();
+}
+
+
 void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
 {
     if (!retainRemoteEffect)
