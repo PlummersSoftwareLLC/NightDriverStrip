@@ -123,7 +123,10 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
+    // No need to publish the show VU meter tag unless we're also publishing the setting
+    #if SHOW_VU_METER
     static constexpr const char * ShowVUMeterTag = NAME_OF(showVUMeter);
+    #endif
     static constexpr const char * ClearGlobalColorTag = "clearGlobalColor";
     static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
     static constexpr const char * ApplyGlobalColorsTag = NAME_OF(applyGlobalColors);
@@ -140,7 +143,7 @@ class DeviceConfig : public IJSONSerializable
     {
         AllocatedJsonDocument jsonDoc(_jsonSize);
 
-        // Add serialization logic for additionl settings to this code
+        // Add serialization logic for additional settings to this code
         jsonDoc[HostnameTag] = hostname;
         jsonDoc[LocationTag] = location;
         jsonDoc[LocationIsZipTag] = locationIsZip;
@@ -151,7 +154,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[NTPServerTag] = ntpServer;
         jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
         jsonDoc[PowerLimitTag] = powerLimit;
-        // Only serialize showVUMeter if it's enabled in the build
+        // Only serialize showVUMeter if the VU meter is enabled in the build
         #if SHOW_VU_METER
         jsonDoc[ShowVUMeterTag] = showVUMeter;
         #endif
@@ -187,7 +190,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
         SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
         SetIfPresentIn(jsonObject, brightness, BrightnessTag);
-        // Only deserialize showVUMeter if it's enabled in the build
+        // Only deserialize showVUMeter if the VU meter is enabled in the build
         #if SHOW_VU_METER
         SetIfPresentIn(jsonObject, showVUMeter, ShowVUMeterTag);
         #endif
@@ -263,13 +266,13 @@ class DeviceConfig : public IJSONSerializable
             settingSpecs.emplace_back(
                 Use24HourClockTag,
                 "Use 24 hour clock",
-                "A boolean that indicates if time should be shown in 24-hour format (yes if checked) or 12-hour AM/PM format.",
+                "Indicates if time should be shown in 24-hour format (yes if checked) or 12-hour AM/PM format.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
                 UseCelsiusTag,
                 "Use degrees Celsius",
-                "A boolean that indicates if temperatures should be shown in degrees Celsius (yes if checked) or degrees Fahrenheit.",
+                "Indicates if temperatures should be shown in degrees Celsius (yes if checked) or degrees Fahrenheit.",
                 SettingSpec::SettingType::Boolean
             );
             settingSpecs.emplace_back(
@@ -281,7 +284,7 @@ class DeviceConfig : public IJSONSerializable
             settingSpecs.emplace_back(
                 RememberCurrentEffectTag,
                 "Remember current effect",
-                "A boolean that indicates if the current effect index should be saved after an effect transition, so the device resumes "
+                "Indicates if the current effect index should be saved after an effect transition, so the device resumes "
                 "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
                 SettingSpec::SettingType::Boolean
             );
@@ -294,7 +297,7 @@ class DeviceConfig : public IJSONSerializable
                 BRIGHTNESS_MAX
             ).HasValidation = true;
 
-            // Only publish the VU meter setting if it's enabled in the build
+            // Only publish the VU meter setting if the VU meter is enabled in the build
             #if SHOW_VU_METER
             settingSpecs.emplace_back(
                 ShowVUMeterTag,
