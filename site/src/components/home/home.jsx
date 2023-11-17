@@ -108,9 +108,9 @@ const AppPannel = (props) => {
                 </ListItemIcon>
                 <ListItemText primary="Settings"></ListItemText>
             </ListItem>
-            <ListItem id={'deviceControl'}>
+            <ListItem onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
                 <ListItemIcon>
-                    <IconButton onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
+                    <IconButton>
                         <Icon>settings_power</Icon>
                     </IconButton>
                 </ListItemIcon>
