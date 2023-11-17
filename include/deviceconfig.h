@@ -74,6 +74,9 @@ class DeviceConfig : public IJSONSerializable
     String  ntpServer = NTP_SERVER_DEFAULT;
     bool    rememberCurrentEffect = true;
     int     powerLimit = POWER_LIMIT_DEFAULT;
+    #if SHOW_VU_METER
+    bool    showVUMeter = true;
+    #endif
     uint8_t brightness = BRIGHTNESS_MAX;
     CRGB    globalColor = CRGB::Red;
     bool    applyGlobalColors = false;
@@ -122,6 +125,9 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
+    #if SHOW_VU_METER
+    static constexpr const char * ShowVUMeterTag = NAME_OF(showVUMeter);
+    #endif
     static constexpr const char * ClearGlobalColorTag = "clearGlobalColor";
     static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
     static constexpr const char * ApplyGlobalColorsTag = NAME_OF(applyGlobalColors);
@@ -149,6 +155,9 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[NTPServerTag] = ntpServer;
         jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
         jsonDoc[PowerLimitTag] = powerLimit;
+        #if SHOW_VU_METER
+        jsonDoc[ShowVUMeterTag] = showVUMeter;
+        #endif
         jsonDoc[BrightnessTag] = brightness;
         jsonDoc[GlobalColorTag] = globalColor;
         jsonDoc[ApplyGlobalColorsTag] = applyGlobalColors;
@@ -181,6 +190,9 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
         SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
         SetIfPresentIn(jsonObject, brightness, BrightnessTag);
+        #if SHOW_VU_METER
+        SetIfPresentIn(jsonObject, showVUMeter, ShowVUMeterTag);
+        #endif
         SetIfPresentIn(jsonObject, globalColor, GlobalColorTag);
         SetIfPresentIn(jsonObject, applyGlobalColors, ApplyGlobalColorsTag);
         SetIfPresentIn(jsonObject, secondColor, SecondColorTag);
@@ -283,6 +295,15 @@ class DeviceConfig : public IJSONSerializable
                 BRIGHTNESS_MIN,
                 BRIGHTNESS_MAX
             ).HasValidation = true;
+
+            #if SHOW_VU_METER
+            settingSpecs.emplace_back(
+                ShowVUMeterTag,
+                "Show VU meter",
+                "Used to show (checked) or hide the VU meter at the top of the matrix.",
+                SettingSpec::SettingType::Boolean
+            );
+            #endif
 
             auto& powerLimitSpec = settingSpecs.emplace_back(
                 PowerLimitTag,
@@ -448,6 +469,18 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(brightness, uint8_t(std::clamp<int>(newBrightness, BRIGHTNESS_MIN, BRIGHTNESS_MAX)));
     }
+
+    #if SHOW_VU_METER
+    bool ShowVUMeter() const
+    {
+        return showVUMeter;
+    }
+
+    void SetShowVUMeter(bool newShowVUMeter)
+    {
+        SetAndSave(showVUMeter, newShowVUMeter);
+    }
+    #endif
 
     int GetPowerLimit() const
     {

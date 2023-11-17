@@ -517,6 +517,10 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
 
+    #if SHOW_VU_METER
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::ShowVUMeterTag, SET_VALUE(deviceConfig.SetShowVUMeter(value)));
+    #endif
+
     std::optional<CRGB> globalColor = {};
     std::optional<CRGB> secondColor = {};
 
