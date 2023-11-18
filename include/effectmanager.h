@@ -293,24 +293,8 @@ public:
     }
 
     // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.
-
-    virtual bool ShowVU(bool bShow)
-    {
-        bool bResult = _bShowVU;
-        debugI("Setting ShowVU to %d\n", bShow);
-        _bShowVU = bShow;
-
-        // Erase any exising pixels since effects don't all clear each frame
-        if (!bShow)
-            _gfx[0]->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
-
-        return bResult;
-    }
-
-    virtual bool IsVUVisible() const
-    {
-        return _bShowVU && GetCurrentEffect().CanDisplayVUMeter();
-    }
+    virtual bool ShowVU(bool bShow);
+    virtual bool IsVUVisible() const;
 
     // ApplyGlobalColor
     //
@@ -321,7 +305,7 @@ public:
     void ApplyGlobalPaletteColors();
 
     void ClearRemoteColor(bool retainRemoteEffect = false);
-    
+
     void StartEffect()
     {
         // If there's a temporary effect override from the remote control active, we start that, else
