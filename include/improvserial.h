@@ -35,6 +35,7 @@
 #include <improv.h>
 #include "network.h"
 #include "hexdump.h"
+#include "globals.h"
 
 #define IMPROV_LOG_FILE             "/improv.log"
 
@@ -119,8 +120,13 @@ public:
                 log_write("Responding that wiFi is connected.");
                 debugI("Sending Improv packets to indicate WiFi is connected. Ignore any IMPROV lines that follow this one.");
                 this->set_state_(improv::STATE_PROVISIONED);
-                std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
-                this->send_response_(url);
+
+                // Only send the URL to connect to if there's a webserver listening to the resulting requests
+                if (ENABLE_WEBSERVER)
+                {
+                    std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
+                    this->send_response_(url);
+                }
             }
         }
     }
@@ -288,14 +294,14 @@ protected:
                 log_write(".Received request for current state");
                 this->set_state_(WiFi.isConnected() ? improv::STATE_PROVISIONED : this->state_);
 
-                if (this->state_ == improv::STATE_PROVISIONED)
+                if (this->state_ == improv::STATE_PROVISIONED && ENABLE_WEBSERVER)
                 {
-                    log_write(".Sending response with device IP address");
+                    log_write(".Sending response with device URL");
                     std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::GET_CURRENT_STATE);
                     this->send_response_(url);
                 }
                 else
-                    log_write(".Not connected, so not sending response");
+                    log_write(".Not connected or web server not enabled, so not sending device URL");
 
                 return true;
             }
