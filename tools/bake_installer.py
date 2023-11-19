@@ -161,6 +161,16 @@ for device in devices:
 
             template = unmerged_template
 
+        manifest_file = Manifest.base + tag + Manifest.ext
+        print('=== Writing manifest file ' + manifest_file)
+        manifest = template.replace('<name>', project['name'] + ' for ' + device_name)
+        manifest = manifest.replace('<version>', version)
+        manifest = manifest.replace('<chipfamily>', chip_family)
+        manifest = manifest.replace('<tag>', tag)
+
+        with open(os.path.join(manifest_target_dir, manifest_file), 'w', encoding='utf-8') as f:
+            f.write(manifest)
+
         print('=== Computing feature flags')
         feature_letters = []
         for feature_tag in show_features.get_features(tag):
@@ -173,16 +183,6 @@ for device in devices:
 
         if len(feature_letters) > 0:
             project['name'] = project['name'] + ' (' + ','.join(feature_letters) + ')'
-
-        manifest = template.replace('<name>', project['name'] + ' for ' + device_name)
-        manifest = manifest.replace('<version>', version)
-        manifest = manifest.replace('<chipfamily>', chip_family)
-        manifest = manifest.replace('<tag>', tag)
-
-        manifest_file = Manifest.base + tag + Manifest.ext
-        print('=== Writing manifest file ' + manifest_file)
-        with open(os.path.join(manifest_target_dir, manifest_file), 'w', encoding='utf-8') as f:
-            f.write(manifest)
 
         print('=== Removing build directory ' + build_dir, flush = True)
         shutil.rmtree(build_dir)
