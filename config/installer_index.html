@@ -58,12 +58,16 @@ div#container {
       <label for="devices-dropdown">Select your device type:</label>
       <select id="devices-dropdown"></select>
 
-      <br><br>
+      <br/><br/>
 
       <label for="projects-dropdown">Then, select a project:</label>
       <select id="projects-dropdown" disabled></select>
 
-      <br><br>
+      <br/><br/>
+
+      <em><small>(Enabled features: $$FEATURE_LEGEND$$)</small></em>
+
+      <br/><br/>
 
       <div id="connect-message">After that, you can connect to the device using the button that appears below.</div>
 
@@ -81,7 +85,6 @@ div#container {
       <p class="button-row" align="center">
         <esp-web-install-button class="invisible"></esp-web-install-button>
       </p>
-
       <b>Note:</b> if the web server is enabled in the image you're flashing,
       it can take some time for it to come up after the device connects to WiFi for the first time.
     </div>

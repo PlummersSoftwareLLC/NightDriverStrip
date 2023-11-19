@@ -65,7 +65,7 @@ Please follow these steps to flash and, if supported, set up WiFi on your device
 
 3. Select your device (like "M5StickC Plus") from the drop-down list. A second drop-down with supported projects on that device will then appear.
 
-4. Select the project you want to flash in the second drop-down. When you do, a CONNECT button will appear below it.
+4. Select the project you want to flash in the second drop-down. When you do, a CONNECT button will appear below it. Note that each project's label includes an indication of the key features enabled in the build in question. The legend for each of the feature letters is shown below the project drop-down.
 
 5. Click the CONNECT button. A dialog will apear asking you to select a serial port. Depending on your system, it may show only one or a list of them. In case multiple are shown, it'll generally be the one plainly called "USB Serial Port (COMn)". Select the correct port and click Connect.
 
@@ -87,7 +87,7 @@ Please follow these steps to flash and, if supported, set up WiFi on your device
 
 11. In the WiFi connection information dialog, select or enter your SSID and password. Click CONNECT. In some cases, the WiFi connection dialog appears again after a successful connection was actually made. In that case, click SKIP. It is also possible that a time-out is reported while WiFi has actually successfully connected. In that case, click BACK.
 
-12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again and show the device's logs & console. Furthermore, if your device supports WiFi then options will be available to visit the device's web application or change the WiFi settings. Note that if you flashed a device image that includes the web server/web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
+12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again and show the device's logs & console. Furthermore, if your device supports WiFi then options will be available to visit the device's web application (provided the on-device web server is also enabled) or change the WiFi settings. Note that if you flashed a device image that includes the web server/web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
 
 ### Reconfiguring WiFi using the Web Installer
 
