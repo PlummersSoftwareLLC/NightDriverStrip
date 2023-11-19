@@ -30,7 +30,7 @@
 #    Note that it expects to be executed from the project root directory. That is,
 #    it needs to be run like this:
 #
-#    $ tools/show_envs.py
+#    $ tools/show_features.py
 #
 #    Instead of:
 #
