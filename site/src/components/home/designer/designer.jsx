@@ -95,8 +95,13 @@ const DesignerPanel = ({ open, addNotification }) => {
                         }
                     }}
                     onChange={e => {
-                        const onlyNums = e.target.value.replace(/[^0-9]/i, '');
-                        setPendingInterval(onlyNums);
+                        const v = e.target.value;
+                        if (v < 1) {
+                            setPendingInterval(v)
+                        } else {
+                            const onlyNums = e.target.value.replace(/[^0-9]/i, '');
+                            setPendingInterval(onlyNums);
+                        }
                     }} />
             </Box></ClickAwayListener>;
     };
