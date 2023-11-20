@@ -3,6 +3,7 @@ import { Box, Icon, Typography } from "@mui/material";
 import countdownStyle from "./style";
 import { EffectsContext } from "../../../../context/effectsContext";
 import PropTypes from 'prop-types';
+import { msToTimeDisp } from "../../../../util/time";
 
 const Countdown = props => {
     const { remainingInterval, pinnedEffect, sync} = useContext(EffectsContext);
@@ -22,15 +23,22 @@ const Countdown = props => {
                     requestSent=true;
                     sync();
                 }
-            },50);
+            },500);
             return ()=>clearInterval(interval);
         }
     },[pinnedEffect, remainingInterval,sync]);
-
+    let timeDisp;
+    if(pinnedEffect) {
+        timeDisp = <Icon>all_inclusive</Icon>
+    } else {
+        timeDisp = msToTimeDisp(timeRemaining)
+    }
     return (            
         <Box sx={countdownStyle.root}> 
             <Typography variant="little" color="textPrimary">{label}</Typography>:
-            <Typography color="textSecondary" sx={pinnedEffect? countdownStyle.pinned : countdownStyle.timeremaining} variant="little">{pinnedEffect ? <Icon>all_inclusive</Icon> : timeRemaining}</Typography>
+            <Typography color="textSecondary" sx={pinnedEffect? countdownStyle.pinned : countdownStyle.timeremaining} variant="little">
+                {timeDisp}
+            </Typography>
         </Box>)
 
 };

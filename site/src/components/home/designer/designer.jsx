@@ -1,19 +1,21 @@
 import {useState, useContext, useEffect} from 'react';
-import {IconButton, Icon, Typography, Box, Link, ClickAwayListener, TextField, Checkbox, FormControlLabel} from '@mui/material';
+import {IconButton, Icon, Typography, Box, Link, ClickAwayListener, TextField, Checkbox, FormControlLabel, InputAdornment} from '@mui/material';
 import Countdown from './countdown/countdown';
 import Effect from './effect/effect';
 import designStyle from './style';
 import httpPrefix from '../../../espaddr';
 import PropTypes from 'prop-types';
 import { EffectsContext} from '../../../context/effectsContext';
+import { msToTimeDisp } from '../../../util/time';
 
 const moveEffectEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/moveEffect`;
 const DesignerPanel = ({ open, addNotification }) => {
     const config = JSON.parse(localStorage.getItem('designerConfig'));
     const {pinnedEffect, activeInterval, sync, effects} = useContext(EffectsContext);
+    const activeItervalDisp = activeInterval < 1000 ? activeInterval / 1000 : Math.floor(activeInterval / 1000)
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
-    const [ pendingInterval, setPendingInterval ] = useState(activeInterval);
+    const [ pendingInterval, setPendingInterval ] = useState(activeItervalDisp);
     const [gridLayout, setGridlayout] = useState(config && config.gridLayout !== undefined ? config.gridLayout : true)
     const [dragging, setDragging] = useState(undefined)
     const [dropTarget, setDropTarget] = useState(undefined)
@@ -27,75 +29,75 @@ const DesignerPanel = ({ open, addNotification }) => {
         }));
     }, [gridLayout, showDisabled]);
 
-    const chipRequest = (url,options,operation) =>
-        new Promise((resolve,reject) =>
-            fetch(url,options)
-                .then(resolve)
-                .catch(err => {addNotification("Error",operation,err);reject(err);}));
+    useEffect(()=> {
+        setPendingInterval(activeInterval < 1000 ? activeInterval / 1000 : Math.floor(activeInterval / 1000))
+    }, [activeInterval])
+
+    const chipRequest = (url,options,operation) => {
+        return fetch(url,options).catch(err => {addNotification("Error",operation,err); throw err});
+    }
 
     const navigateTo = (idx)=>{
-        return new Promise((resolve,reject)=>{
-            setRequestRunning(true);
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/currentEffect`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})}, "navigateTo")
-                .then(resolve)
-                .then(sync)
-                .catch(reject)
-                .finally(()=>setRequestRunning(false));
-        });
+        setRequestRunning(true);
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/currentEffect`,{method:"POST", body: new URLSearchParams({currentEffectIndex:idx})}, "navigateTo")
+            .then(sync)
+            .finally(()=>setRequestRunning(false));
+        
     };
 
     const effectEnable = (idx,enable)=>{
-        return new Promise((resolve,reject)=>{
-            setRequestRunning(true);
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})},"effectEnable")
-                .then(resolve)
-                .then(sync)
-                .catch(reject)
-                .finally(()=>setRequestRunning(false));
-        });
+        setRequestRunning(true);
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${enable?"enable":"disable"}Effect`,{method:"POST", body:new URLSearchParams({effectIndex:idx})},"effectEnable")
+            .then(sync)
+            .finally(()=>setRequestRunning(false));
     };
 
     const navigate = (up)=>{
-        return new Promise((resolve,reject)=>{
-            setRequestRunning(true);
-            chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"nvigate")
-                .then(resolve)
-                .then(sync)
-                .catch(reject)
-                .finally(()=>setRequestRunning(false));
-        });
+        setRequestRunning(true);
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/${up ? "nextEffect" : "previousEffect"}`,{method:"POST"},"nvigate")
+            .then(sync)
+            .finally(()=>setRequestRunning(false));
     };
 
     const updateEventInterval = (interval)=>{
         setEditing(false);
-        return new Promise((resolve,reject)=>{
-            setRequestRunning(true);
-            return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
-                {
-                    method:"POST",
-                    body: new URLSearchParams({effectInterval:interval})
-                },"updateEventInterval").then(resolve)
-                .then(sync)
-                .catch(reject)
-                .finally(()=>setRequestRunning(false));
-        });
+        setRequestRunning(true);
+        return chipRequest(`${httpPrefix !== undefined ? httpPrefix : ""}/settings`,
+            {
+                method:"POST",
+                body: new URLSearchParams({effectInterval:interval * 1000})
+            },"updateEventInterval")
+            .then(sync)
+            .finally(()=>setRequestRunning(false));
+        
     };
 
     const displayHeader = ()=>{
         return <Box sx={designStyle.effectsHeaderValue}>
             <Typography variant="little" color="textPrimary">Interval</Typography>:
-            <Link href="#" variant="little" color="textSecondary" sx={pinnedEffect ? {height: "25px"}: {}} onClick={() => setEditing(true)}>{pinnedEffect ?<Icon>all_inclusive</Icon> : activeInterval}</Link>
+            <Link href="#" variant="little" color="textSecondary" sx={pinnedEffect ? {height: "25px"}: {}} onClick={() => setEditing(true)}>{pinnedEffect ?<Icon>all_inclusive</Icon> : msToTimeDisp(activeInterval, true)}</Link>
         </Box>;
     };
 
     const editingHeader = ()=>{
-        return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval); sync();}}>
+        return <ClickAwayListener onClickAway={()=>{updateEventInterval(pendingInterval)}}>
             <Box sx={designStyle.effectsHeaderValue}>
-                <TextField label="Interval ms"
+                <TextField label="Interval"
                     variant="outlined"
-                    type="number"
-                    defaultValue={activeInterval}
-                    onChange={event => setPendingInterval(event.target.value)} />
+                    defaultValue={activeItervalDisp}
+                    value={pendingInterval}
+                    InputProps={{
+                        endAdornment: <InputAdornment position='end'>sec</InputAdornment>,
+                    }}
+                    onKeyUp={e => {
+                        if(e.key === "Enter") {
+                            updateEventInterval(pendingInterval)
+                        }
+                    }}
+                    onChange={e => {
+                        const onlyNums = e.target.value.replace(/[^0-9]/i, '');
+                        setPendingInterval(onlyNums);
+                    }} />
             </Box></ClickAwayListener>;
     };
 
