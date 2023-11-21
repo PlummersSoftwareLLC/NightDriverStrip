@@ -109,6 +109,13 @@
 
 #include <RemoteDebug.h>
 
+// If we're not using GNU C, (unlikely in embedded, especially in this
+// heavily ESP/Arduino-accented probject) elide __attribute__ - but even
+// clang defines and supports this...
+#ifndef __GNUC__
+#  define  __attribute__(x)  /*NOTHING*/
+#endif
+
 // The goal here is to get two variables, one numeric and one string, from the *same* version
 // value.  So if version = 020,
 //
@@ -1437,6 +1444,9 @@ inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SEC
 //
 // va-args style printf that returns the formatted string as a reuslt
 
+// Let compiler warn if our arguments don't match.
+inline String str_sprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+
 inline String str_sprintf(const char *fmt, ...)
 {
     va_list args;
@@ -1445,6 +1455,10 @@ inline String str_sprintf(const char *fmt, ...)
     va_list args_copy;
     va_copy(args_copy, args);
 
+    // BUGBUG: Investigate a vasprintf here and String::copy() to get move semantics
+    // on the return.
+    // Could Save one complete format, a copy, and an alloc and we're called a
+    // few times a second.
     int requiredLen = vsnprintf(nullptr, 0, fmt, args) + 1;
     va_end(args);
 
@@ -1457,7 +1471,11 @@ inline String str_sprintf(const char *fmt, ...)
     vsnprintf(str.get(), requiredLen, fmt, args_copy);
     va_end(args_copy);
 
-    return String(str.get());
+    String retval;
+    retval.reserve(requiredLen); // At least saves one scan of the buffer.
+
+    retval = str.get();
+    return retval;
 }
 
 #include "types.h"
