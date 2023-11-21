@@ -1464,7 +1464,7 @@ inline String str_sprintf(const char *fmt, ...)
     va_end(args_copy);
 
     String retval;
-    retval.reserve(requiredLen); // At saves one scan of the buffer.
+    retval.reserve(requiredLen); // At least saves one scan of the buffer.
 
     retval = str.get();
     return retval;
