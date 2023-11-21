@@ -69,8 +69,8 @@ class DeviceConfig : public IJSONSerializable
     String  countryCode = cszCountryCode;
     String  timeZone = cszTimeZone;
     String  openWeatherApiKey = cszOpenWeatherAPIKey;
-    bool    use24HourClock = false;
-    bool    useCelsius = false;
+    bool    use24HourClock = bUse24HourClock;
+    bool    useCelsius = bUseCelsius;
     String  ntpServer = NTP_SERVER_DEFAULT;
     bool    rememberCurrentEffect = true;
     int     powerLimit = POWER_LIMIT_DEFAULT;

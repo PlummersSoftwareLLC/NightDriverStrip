@@ -37,5 +37,7 @@
 #define cszOpenWeatherAPIKey ""                     // Your OpenWeatherMap API key goes Here
 #define cszLocation          "98074"
 #define bLocationIsZip       true
+#define bUse24HourClock      false
+#define bUseCelsius          false
 #define cszCountryCode       "us"                   // Look up the Alpha-2 code for your country at https://www.iban.com/country-codes
 #define cszTimeZone          "America/Los_Angeles"
