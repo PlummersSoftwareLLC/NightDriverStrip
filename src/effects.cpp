@@ -179,8 +179,6 @@ void LoadEffectFactories()
     #elif DEMO
 
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 6, 2);
-        ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, CRGB::Blue, 1, true);
-        ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, CRGB::Green, 1);
 
     #elif LASERLINE
 

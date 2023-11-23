@@ -21,6 +21,3 @@ WebInstaller/index.html
 tools/__pycache__
 site/yarn-error.log
 site/dist
-src/effects.cpp
-build/**
-.gitignore
