@@ -264,6 +264,53 @@ protected:
     }
 };
 
+class GlobalColorFillEffect : public LEDStripEffect
+{
+  private:
+
+protected:
+
+    int _everyNth;
+    CRGB _color;
+
+  public:
+
+    GlobalColorFillEffect(int everyNth = 10)
+      : LEDStripEffect(EFFECT_STRIP_GLOBAL_COLOR_FILL, "Global Color Fill"),
+        _everyNth(everyNth)
+    {
+        debugV("Global Color Fill constructor");
+    }
+
+    GlobalColorFillEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject),
+        _everyNth(jsonObject[PTY_EVERYNTH])
+    {
+        debugV("Global Color Fill JSON constructor");
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_EVERYNTH] = _everyNth;
+
+        assert(!jsonDoc.overflowed());
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    void Draw() override
+    {
+        if (_everyNth != 1)
+          fillSolidOnAllChannels(CRGB::Black);
+        fillSolidOnAllChannels(, 0, NUM_LEDS, _everyNth);
+    }
+};
+
 #if USE_HUB75
 
 // SplashLogoEffect
