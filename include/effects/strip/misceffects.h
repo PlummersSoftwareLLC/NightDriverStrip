@@ -214,7 +214,7 @@ protected:
 //
 // Fills the pixels with a single color.
 // everyNth can be used to light some pixels with specified color, leaving the others unlit.
-// Unless a user chooses to ignor the global color, the glboal color will be used instead when
+// Unless a user chooses to ignore the global color, the global color will be used instead when
 // DeviceConfig().ApplyGlobalColors() returns true.
 
 class ColorFillEffect : public LEDStripEffect
@@ -267,7 +267,7 @@ protected:
     {
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
-        if (_ignoreGlobalColor == false && g_ptrSystem->DeviceConfig().ApplyGlobalColors() == true)
+        if (!_ignoreGlobalColor && g_ptrSystem->DeviceConfig().ApplyGlobalColors() == true)
           fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
         else
           fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
