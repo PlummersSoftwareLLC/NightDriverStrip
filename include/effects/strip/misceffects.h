@@ -267,7 +267,7 @@ protected:
     {
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
-        if (!_ignoreGlobalColor && g_ptrSystem->DeviceConfig().ApplyGlobalColors() == true)
+        if (!_ignoreGlobalColor && g_ptrSystem->DeviceConfig().ApplyGlobalColors())
           fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
         else
           fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
