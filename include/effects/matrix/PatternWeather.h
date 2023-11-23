@@ -255,7 +255,7 @@ private:
                     if (main["temp_min"] > 0)
                         lowTemp         = KelvinToLocal(main["temp_min"]);
 
-                    iconTomorrow = String(entry["weather"][0]["icon"]);
+                    iconTomorrow = entry["weather"][0]["icon"].as<String>();
 
                     debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
                     break;
@@ -298,7 +298,7 @@ private:
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
 
-            iconToday = String(jsonDoc["weather"][0]["icon"]);
+            iconToday = jsonDoc["weather"][0]["icon"].as<String>();
             debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %s", (int)temperature, (int)loToday, (int)highToday, iconToday.c_str());
 
             const char * pszName = jsonDoc["name"];
