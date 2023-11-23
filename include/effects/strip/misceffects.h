@@ -35,6 +35,7 @@
 #include "TJpg_Decoder.h"
 #endif
 #include "effects.h"
+#include "systemcontainer.h"
 
 // SimpleRainbowTestEffect
 //
@@ -209,10 +210,12 @@ protected:
     }
 };
 
-// RainbowFillEffect
+// ColorFillEffect
 //
-// Fills the spokes with a rainbow palette
-
+// Fills the pixels with a single color.
+// everyNth can be used to light some pixels with specified color, leaving the others unlit.
+// Unless a user chooses to ignor the global color, the glboal color will be used instead when
+// DeviceConfig().ApplyGlobalColors() returns true.
 
 class ColorFillEffect : public LEDStripEffect
 {
@@ -222,13 +225,15 @@ protected:
 
     int _everyNth;
     CRGB _color;
+    bool _ignoreGlobalColor;
 
   public:
 
-    ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
+    ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
       : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, "Color Fill"),
         _everyNth(everyNth),
-        _color(color)
+        _color(color),
+        _ignoreGlobalColor(ignoreGlobalColor)
     {
         debugV("Color Fill constructor");
     }
@@ -236,7 +241,8 @@ protected:
     ColorFillEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
         _everyNth(jsonObject[PTY_EVERYNTH]),
-        _color(jsonObject[PTY_COLOR].as<CRGB>())
+        _color(jsonObject[PTY_COLOR].as<CRGB>()),
+        _ignoreGlobalColor(jsonObject["igc"])
     {
         debugV("Color Fill JSON constructor");
     }
@@ -250,6 +256,7 @@ protected:
 
         jsonDoc[PTY_EVERYNTH] = _everyNth;
         jsonDoc[PTY_COLOR] = _color;
+        jsonDoc["igc"] = _ignoreGlobalColor;
 
         assert(!jsonDoc.overflowed());
 
@@ -260,7 +267,10 @@ protected:
     {
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
-        fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
+        if (_ignoreGlobalColor == false && g_ptrSystem->DeviceConfig().ApplyGlobalColors() == true)
+          fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
+        else
+          fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
     }
 };
 
