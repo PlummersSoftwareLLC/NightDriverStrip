@@ -82,6 +82,7 @@
 #define EFFECT_STRIP_TAPE_REEL                          36
 #define EFFECT_STRIP_FAN_BEAT                           37
 #define EFFECT_STRIP_SPLASH_LOGO                        38
+#define EFFECT_STRIP_GLOBAL_COLOR_FILL                  39
 
 // Matrix effects
 #define EFFECT_MATRIX_ALIEN_TEXT                       101

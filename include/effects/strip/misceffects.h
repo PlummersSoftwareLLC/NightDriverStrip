@@ -307,7 +307,8 @@ protected:
     {
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
-        fillSolidOnAllChannels(, 0, NUM_LEDS, _everyNth);
+        fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
+        //fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GetGlobalColor(), 0, NUM_LEDS, _everyNth);
     }
 };
 
