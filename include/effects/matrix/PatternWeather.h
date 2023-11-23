@@ -25,7 +25,8 @@
 //
 //   Gets the weather for a given zip code
 //
-// History:     Jun-25-202         Davepl      Adapted from own code
+// History:     Jun-25-202          Davepl          Adapted from own code
+//              Nov-15-2023         mggates         Updated to use better weather icons
 //
 //---------------------------------------------------------------------------
 
@@ -50,38 +51,65 @@
 #define WEATHER_INTERVAL_SECONDS (10*60)
 #define WEATHER_CHECK_WIFI_WAIT 5000
 
-extern const uint8_t brokenclouds_start[]    asm("_binary_assets_bmp_brokenclouds_jpg_start");
-extern const uint8_t brokenclouds_end[]      asm("_binary_assets_bmp_brokenclouds_jpg_end");
-extern const uint8_t clearsky_start[]        asm("_binary_assets_bmp_clearsky_jpg_start");
-extern const uint8_t clearsky_end[]          asm("_binary_assets_bmp_clearsky_jpg_end");
-extern const uint8_t fewclouds_start[]       asm("_binary_assets_bmp_fewclouds_jpg_start");
-extern const uint8_t fewclouds_end[]         asm("_binary_assets_bmp_fewclouds_jpg_end");
-extern const uint8_t mist_start[]            asm("_binary_assets_bmp_mist_jpg_start");
-extern const uint8_t mist_end[]              asm("_binary_assets_bmp_mist_jpg_end");
-extern const uint8_t rain_start[]            asm("_binary_assets_bmp_rain_jpg_start");
-extern const uint8_t rain_end[]              asm("_binary_assets_bmp_rain_jpg_end");
-extern const uint8_t scatteredclouds_start[] asm("_binary_assets_bmp_scatteredclouds_jpg_start");
-extern const uint8_t scatteredclouds_end[]   asm("_binary_assets_bmp_scatteredclouds_jpg_end");
-extern const uint8_t showerrain_start[]      asm("_binary_assets_bmp_showerrain_jpg_start");
-extern const uint8_t showerrain_end[]        asm("_binary_assets_bmp_showerrain_jpg_end");
-extern const uint8_t snow_start[]            asm("_binary_assets_bmp_snow_jpg_start");
-extern const uint8_t snow_end[]              asm("_binary_assets_bmp_snow_jpg_end");
-extern const uint8_t thunderstorm_start[]    asm("_binary_assets_bmp_thunderstorm_jpg_start");
-extern const uint8_t thunderstorm_end[]      asm("_binary_assets_bmp_thunderstorm_jpg_end");
+extern const uint8_t brokenclouds_start[]           asm("_binary_assets_bmp_brokenclouds_jpg_start");
+extern const uint8_t brokenclouds_end[]             asm("_binary_assets_bmp_brokenclouds_jpg_end");
+extern const uint8_t brokenclouds_night_start[]     asm("_binary_assets_bmp_brokencloudsnight_jpg_start");
+extern const uint8_t brokenclouds_night_end[]       asm("_binary_assets_bmp_brokencloudsnight_jpg_end");
+extern const uint8_t clearsky_start[]               asm("_binary_assets_bmp_clearsky_jpg_start");
+extern const uint8_t clearsky_end[]                 asm("_binary_assets_bmp_clearsky_jpg_end");
+extern const uint8_t clearsky_night_start[]         asm("_binary_assets_bmp_clearnight_jpg_start");
+extern const uint8_t clearsky_night_end[]           asm("_binary_assets_bmp_clearnight_jpg_end");
+extern const uint8_t fewclouds_start[]              asm("_binary_assets_bmp_fewclouds_jpg_start");
+extern const uint8_t fewclouds_end[]                asm("_binary_assets_bmp_fewclouds_jpg_end");
+extern const uint8_t fewclouds_night_start[]        asm("_binary_assets_bmp_fewcloudsnight_jpg_start");
+extern const uint8_t fewclouds_night_end[]          asm("_binary_assets_bmp_fewcloudsnight_jpg_end");
+extern const uint8_t mist_start[]                   asm("_binary_assets_bmp_mist_jpg_start");
+extern const uint8_t mist_end[]                     asm("_binary_assets_bmp_mist_jpg_end");
+extern const uint8_t mist_night_start[]             asm("_binary_assets_bmp_mistnight_jpg_start");
+extern const uint8_t mist_night_end[]               asm("_binary_assets_bmp_mistnight_jpg_end");
+extern const uint8_t rain_start[]                   asm("_binary_assets_bmp_rain_jpg_start");
+extern const uint8_t rain_end[]                     asm("_binary_assets_bmp_rain_jpg_end");
+extern const uint8_t rain_night_start[]             asm("_binary_assets_bmp_rainnight_jpg_start");
+extern const uint8_t rain_night_end[]               asm("_binary_assets_bmp_rainnight_jpg_end");
+extern const uint8_t scatteredclouds_start[]        asm("_binary_assets_bmp_scatteredclouds_jpg_start");
+extern const uint8_t scatteredclouds_end[]          asm("_binary_assets_bmp_scatteredclouds_jpg_end");
+extern const uint8_t scatteredclouds_night_start[]  asm("_binary_assets_bmp_scatteredcloudsnight_jpg_start");
+extern const uint8_t scatteredclouds_night_end[]    asm("_binary_assets_bmp_scatteredcloudsnight_jpg_end");
+extern const uint8_t showerrain_start[]             asm("_binary_assets_bmp_showerrain_jpg_start");
+extern const uint8_t showerrain_end[]               asm("_binary_assets_bmp_showerrain_jpg_end");
+extern const uint8_t showerrain_night_start[]       asm("_binary_assets_bmp_showerrainnight_jpg_start");
+extern const uint8_t showerrain_night_end[]         asm("_binary_assets_bmp_showerrainnight_jpg_end");
+extern const uint8_t snow_start[]                   asm("_binary_assets_bmp_snow_jpg_start");
+extern const uint8_t snow_end[]                     asm("_binary_assets_bmp_snow_jpg_end");
+extern const uint8_t snow_night_start[]             asm("_binary_assets_bmp_snownight_jpg_start");
+extern const uint8_t snow_night_end[]               asm("_binary_assets_bmp_snownight_jpg_end");
+extern const uint8_t thunderstorm_start[]           asm("_binary_assets_bmp_thunderstorm_jpg_start");
+extern const uint8_t thunderstorm_end[]             asm("_binary_assets_bmp_thunderstorm_jpg_end");
+extern const uint8_t thunderstorm_night_start[]     asm("_binary_assets_bmp_thunderstormnight_jpg_start");
+extern const uint8_t thunderstorm_night_end[]       asm("_binary_assets_bmp_thunderstormnight_jpg_end");
 
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
-static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int, EmbeddedFile>>> weatherIcons =
+static std::map<String, EmbeddedFile, std::less<String>, psram_allocator<std::pair<String, EmbeddedFile>>> weatherIcons =
 {
-    { 1, EmbeddedFile(clearsky_start, clearsky_end) },
-    { 2, EmbeddedFile(fewclouds_start, fewclouds_end) },
-    { 3, EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
-    { 4, EmbeddedFile(brokenclouds_start, brokenclouds_end) },
-    { 9, EmbeddedFile(showerrain_start, showerrain_end) },
-    { 10, EmbeddedFile(rain_start, rain_end) },
-    { 11, EmbeddedFile(thunderstorm_start, thunderstorm_end) },
-    { 13, EmbeddedFile(snow_start, snow_end) },
-    { 50, EmbeddedFile(mist_start, mist_end) }
+    { "01d", EmbeddedFile(clearsky_start, clearsky_end) },
+    { "02d", EmbeddedFile(fewclouds_start, fewclouds_end) },
+    { "03d", EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
+    { "04d", EmbeddedFile(brokenclouds_start, brokenclouds_end) },
+    { "09d", EmbeddedFile(showerrain_start, showerrain_end) },
+    { "10d", EmbeddedFile(rain_start, rain_end) },
+    { "11d", EmbeddedFile(thunderstorm_start, thunderstorm_end) },
+    { "13d", EmbeddedFile(snow_start, snow_end) },
+    { "50d", EmbeddedFile(mist_start, mist_end) },
+    { "01n", EmbeddedFile(clearsky_night_start, clearsky_night_end) },
+    { "02n", EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
+    { "03n", EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
+    { "04n", EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
+    { "09n", EmbeddedFile(showerrain_night_start, showerrain_night_end) },
+    { "10n", EmbeddedFile(rain_night_start, rain_night_end) },
+    { "11n", EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
+    { "13n", EmbeddedFile(snow_night_start, snow_night_end) },
+    { "50n", EmbeddedFile(mist_night_start, mist_night_end) }
 };
 
 class PatternWeather : public LEDStripEffect
@@ -95,8 +123,8 @@ private:
     String strLatitude        = "0.0";
     String strLongitude       = "0.0";
     int    dayOfWeek          = 0;
-    int    iconToday          = -1;
-    int    iconTomorrow       = -1;
+    String iconToday          = "";
+    String iconTomorrow       = "";
     float  temperature        = 0.0f;
     float  highToday          = 0.0f;
     float  loToday            = 0.0f;
@@ -211,7 +239,7 @@ private:
             char dateStr[11];
             strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
 
-            iconTomorrow = -1;
+            iconTomorrow = "";
 
             // Look for the temperature data for tomorrow
             for (size_t i = 0; i < list.size(); ++i)
@@ -227,10 +255,9 @@ private:
                     if (main["temp_min"] > 0)
                         lowTemp         = KelvinToLocal(main["temp_min"]);
 
-                    String iconIdTomorrow = entry["weather"][0]["icon"];
-                    iconTomorrow = iconIdTomorrow.toInt();
+                    iconTomorrow = entry["weather"][0]["icon"].as<String>();
 
-                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, iconTomorrow);
+                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
                     break;
                 }
             }
@@ -259,7 +286,7 @@ private:
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
         {
-            iconToday = -1;
+            iconToday = "";
             AllocatedJsonDocument jsonDoc(4096);
             deserializeJson(jsonDoc, http.getString());
 
@@ -271,9 +298,8 @@ private:
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
 
-            String iconIndex = jsonDoc["weather"][0]["icon"];
-            iconToday = iconIndex.toInt();
-            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %d", (int)temperature, (int)loToday, (int)highToday, iconToday);
+            iconToday = jsonDoc["weather"][0]["icon"].as<String>();
+            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %s", (int)temperature, (int)loToday, (int)highToday, iconToday.c_str());
 
             const char * pszName = jsonDoc["name"];
             if (pszName)
@@ -384,7 +410,7 @@ public:
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %d", iconToday);
+                debugW("Could not display icon %s", iconToday.c_str());
         }
 
         iconEntry = weatherIcons.find(iconTomorrow);
@@ -392,7 +418,7 @@ public:
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %d", iconTomorrow);
+                debugW("Could not display icon %s", iconTomorrow.c_str());
         }
 
         // Print the town/city name
