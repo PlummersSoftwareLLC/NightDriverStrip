@@ -35,6 +35,7 @@
 #include "TJpg_Decoder.h"
 #endif
 #include "effects.h"
+#include "systemcontainer.h"
 
 // SimpleRainbowTestEffect
 //
@@ -271,7 +272,6 @@ class GlobalColorFillEffect : public LEDStripEffect
 protected:
 
     int _everyNth;
-    CRGB _color;
 
   public:
 
@@ -308,7 +308,6 @@ protected:
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
         fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
-        //fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GetGlobalColor(), 0, NUM_LEDS, _everyNth);
     }
 };
 
