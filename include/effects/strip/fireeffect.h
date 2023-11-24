@@ -229,15 +229,16 @@ public:
                        bool reversed = false,
                        bool mirrored = false)
         : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          _palette(palette), _ignoreGlobalColor(ignoreGlobalColor)
+          _palette(palette), 
+          _ignoreGlobalColor(ignoreGlobalColor)
     {
         construct();
     }
 
     PaletteFlameEffect(const JsonObjectConst& jsonObject)
       : FireEffect(jsonObject),
-        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>(),
-        _ignoreGlobalColor(jsonObject["igc"]))
+        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        _ignoreGlobalColor(jsonObject["igc"])
     {
         construct();
     }
@@ -263,10 +264,14 @@ public:
         int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
         if (g_ptrSystem->DeviceConfig().ApplyGlobalColors() && !_ignoreGlobalColor)
         {
-            _palette[1] = g_ptrSystem->DeviceConfig().GlobalColor();
-            //_palette[2] = g_ptrSystem->DeviceConfig().SecondColor();
+            CRGBPalette16 tempPalette = _palette;
+            tempPalette[1] = g_ptrSystem->DeviceConfig().GlobalColor();
+            tempPalette[2] = g_ptrSystem->DeviceConfig().SecondColor();
+            return ColorFromPalette(tempPalette, index, 255);
+        } else
+        {
+            return ColorFromPalette(_palette, index, 255);
         }
-        return ColorFromPalette(_palette, index, 255);
 
         //        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
         //        heatramp <<=2;
@@ -276,6 +281,7 @@ public:
 #if ENABLE_AUDIO
 class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
+    bool _ignoreGlobalColor;
     void construct()
     {
         _effectNumber = EFFECT_STRIP_MUSICAL_PALETTE_FIRE;
@@ -285,6 +291,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
     MusicalPaletteFire(const String & strName,
                        CRGBPalette16 &palette,
+                       bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
@@ -293,8 +300,9 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          BeatEffectBase(1.00, 0.01)
+        : PaletteFlameEffect(strName, _ignoreGlobalColor, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+          BeatEffectBase(1.00, 0.01),
+          _ignoreGlobalColor(ignoreGlobalColor)
 
 
     {
@@ -303,7 +311,8 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
         : PaletteFlameEffect(jsonObject),
-          BeatEffectBase(1.00, 0.01)
+          BeatEffectBase(1.00, 0.01),
+          _ignoreGlobalColor(jsonObject["igc"])
 
     {
         construct();
