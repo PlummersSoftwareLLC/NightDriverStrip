@@ -300,7 +300,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : PaletteFlameEffect(strName, _ignoreGlobalColor, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+        : PaletteFlameEffect(strName, palette, _ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           BeatEffectBase(1.00, 0.01),
           _ignoreGlobalColor(ignoreGlobalColor)
 
