@@ -320,7 +320,7 @@ private:
     {
         while(!WiFi.isConnected())
         {
-            debugI("Delaying Weather update, waiting for WiFi...");
+            debugW("Delaying Weather update, waiting for WiFi...");
             vTaskDelay(pdMS_TO_TICKS(WEATHER_CHECK_WIFI_WAIT));
         }
 
@@ -328,7 +328,7 @@ private:
 
         if (getWeatherData())
         {
-            debugW("Got today's weather");
+            debugI("Got today's weather");
             if (getTomorrowTemps(highTomorrow, loTomorrow))
             {
                 debugI("Got tomorrow's weather");
@@ -399,7 +399,7 @@ public:
         {
             latestUpdate = now;
 
-            debugW("Triggering thread to check weather now...");
+            debugI("Triggering thread to check weather now...");
             // Trigger the weather reader.
             g_ptrSystem->NetworkReader().FlagReader(readerIndex);
         }
