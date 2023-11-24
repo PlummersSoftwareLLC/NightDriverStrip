@@ -34,6 +34,7 @@
 #include "globals.h"
 #include "musiceffect.h"
 #include "soundanalyzer.h"
+#include "systemcontainer.h"
 
 class FireEffect : public LEDStripEffect
 {
@@ -208,6 +209,7 @@ class FireEffect : public LEDStripEffect
 class PaletteFlameEffect : public FireEffect
 {
     CRGBPalette16 _palette;
+    bool _ignoreGlobalColor;
 
     void construct()
     {
@@ -216,7 +218,8 @@ class PaletteFlameEffect : public FireEffect
 
 public:
     PaletteFlameEffect(const String & strName,
-                       const CRGBPalette16 &palette,
+                       CRGBPalette16 &palette,
+                       bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
@@ -226,14 +229,15 @@ public:
                        bool reversed = false,
                        bool mirrored = false)
         : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          _palette(palette)
+          _palette(palette), _ignoreGlobalColor(ignoreGlobalColor)
     {
         construct();
     }
 
     PaletteFlameEffect(const JsonObjectConst& jsonObject)
       : FireEffect(jsonObject),
-        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
+        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>(),
+        _ignoreGlobalColor(jsonObject["igc"]))
     {
         construct();
     }
@@ -246,6 +250,7 @@ public:
         FireEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _palette;
+        jsonDoc["igc"] = _ignoreGlobalColor;
 
         assert(!jsonDoc.overflowed());
 
@@ -256,6 +261,11 @@ public:
     {
         temp = min(1.0f, temp);
         int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
+        if (g_ptrSystem->DeviceConfig().ApplyGlobalColors() && !_ignoreGlobalColor)
+        {
+            _palette[1] = g_ptrSystem->DeviceConfig().GlobalColor();
+            //_palette[2] = g_ptrSystem->DeviceConfig().SecondColor();
+        }
         return ColorFromPalette(_palette, index, 255);
 
         //        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
@@ -274,7 +284,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
   public:
 
     MusicalPaletteFire(const String & strName,
-                       const CRGBPalette16 &palette,
+                       CRGBPalette16 &palette,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
