@@ -321,7 +321,7 @@ public:
     void ApplyGlobalPaletteColors();
 
     void ClearRemoteColor(bool retainRemoteEffect = false);
-    
+
     void StartEffect()
     {
         // If there's a temporary effect override from the remote control active, we start that, else
@@ -483,6 +483,10 @@ public:
 
     void SetInterval(uint interval, bool skipSave = false)
     {
+        // Reject/ignore intervals smaller than a second, but allow 0 (infinity)
+        if (interval > 0 && interval < 1000)
+            return;
+
         _effectInterval = interval;
 
         if (!skipSave)
