@@ -42,13 +42,14 @@
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
+#include <chrono>
 #include <thread>
 #include <map>
 #include "TJpg_Decoder.h"
 #include "effects.h"
 #include "types.h"
 
-#define WEATHER_INTERVAL_SECONDS (10*60)
+#define WEATHER_INTERVAL_SECONDS std::chrono::seconds{(10*60)}
 #define WEATHER_CHECK_WIFI_WAIT 5000
 
 extern const uint8_t brokenclouds_start[]           asm("_binary_assets_bmp_brokenclouds_jpg_start");
@@ -133,7 +134,7 @@ private:
 
     bool   dataReady          = false;
     size_t readerIndex = std::numeric_limits<size_t>::max();
-    time_t latestUpdate       = 0;
+    std::chrono::system_clock::time_point latestUpdate = std::chrono::system_clock::from_time_t(0);
 
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
@@ -388,14 +389,13 @@ public:
 
         g()->setFont(&Apple5x7);
 
-        time_t now;
-        time(&now);
+        auto now = std::chrono::system_clock::now();
 
         auto secondsSinceLastUpdate = now - latestUpdate;
 
         // If location and/or country have changed, trigger an update regardless of timer, but
         // not more than once every half a minute
-        if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= 30))
+        if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= std::chrono::seconds{30}))
         {
             latestUpdate = now;
 
