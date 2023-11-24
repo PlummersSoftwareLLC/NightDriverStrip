@@ -12,7 +12,7 @@ const moveEffectEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/moveEf
 const DesignerPanel = ({ open, addNotification }) => {
     const config = JSON.parse(localStorage.getItem('designerConfig'));
     const {pinnedEffect, activeInterval, sync, effects} = useContext(EffectsContext);
-    const activeItervalDisp = activeInterval < 1000 ? activeInterval / 1000 : Math.floor(activeInterval / 1000)
+    const activeItervalDisp = Math.floor(activeInterval / 1000)
     const [ editing, setEditing ] = useState(false);
     const [ requestRunning, setRequestRunning ] = useState(false);
     const [ pendingInterval, setPendingInterval ] = useState(activeItervalDisp);
@@ -30,7 +30,7 @@ const DesignerPanel = ({ open, addNotification }) => {
     }, [gridLayout, showDisabled]);
 
     useEffect(()=> {
-        setPendingInterval(activeInterval < 1000 ? activeInterval / 1000 : Math.floor(activeInterval / 1000))
+        setPendingInterval(Math.floor(activeInterval / 1000))
     }, [activeInterval])
 
     const chipRequest = (url,options,operation) => {
@@ -75,7 +75,7 @@ const DesignerPanel = ({ open, addNotification }) => {
     const displayHeader = ()=>{
         return <Box sx={designStyle.effectsHeaderValue}>
             <Typography variant="little" color="textPrimary">Interval</Typography>:
-            <Link href="#" variant="little" color="textSecondary" sx={pinnedEffect ? {height: "25px"}: {}} onClick={() => setEditing(true)}>{pinnedEffect ?<Icon>all_inclusive</Icon> : msToTimeDisp(activeInterval, true)}</Link>
+            <Link href="#" variant="little" color="textSecondary" sx={pinnedEffect ? {height: "25px"}: {}} onClick={() => setEditing(true)}>{pinnedEffect ?<Icon>all_inclusive</Icon> : msToTimeDisp(activeInterval)}</Link>
         </Box>;
     };
 
@@ -95,13 +95,8 @@ const DesignerPanel = ({ open, addNotification }) => {
                         }
                     }}
                     onChange={e => {
-                        const v = e.target.value;
-                        if (v < 1) {
-                            setPendingInterval(v)
-                        } else {
-                            const onlyNums = e.target.value.replace(/[^0-9]/i, '');
-                            setPendingInterval(onlyNums);
-                        }
+                        const onlyNums = e.target.value.replace(/[^0-9]/i, '');
+                        setPendingInterval(onlyNums);
                     }} />
             </Box></ClickAwayListener>;
     };
