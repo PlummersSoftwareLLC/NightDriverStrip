@@ -230,7 +230,8 @@ private:
 
         if (httpResponseCode > 0)
         {
-            AllocatedJsonDocument doc(4096);
+            // Needs to be this large to process all the returned JSON
+            AllocatedJsonDocument doc(10240);
             deserializeJson(doc, http.getString());
             JsonArray list = doc["list"];
 
@@ -251,6 +252,7 @@ private:
             for (size_t i = 0; i < list.size(); ++i)
             {
                 JsonObject entry = list[i];
+
                 // convert the entry UTC to localtime
                 time_t entry_time = entry["dt"];
                 tm* entryLocal = localtime(&entry_time);
