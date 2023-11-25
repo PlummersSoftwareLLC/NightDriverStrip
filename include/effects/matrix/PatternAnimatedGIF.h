@@ -39,6 +39,7 @@
 #define PatternAnimatedGIF_H
 
 #include <Arduino.h>
+#include "globals.h"
 #include <string.h>
 #include <ledstripeffect.h>
 #include <ledmatrixgfx.h>
@@ -73,6 +74,10 @@ static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int
     { ColorSphere, EmbeddedFile(colorsphere_start, colorsphere_end) },
 };
 
+// For now, all gifs are assumed to be 32x32 in size.  We could make this more flexible, but it's not clear
+// that we need to.  If we do, we'll need to move the width and height into the AnimatedGIFs map so that we
+// can look them up by index.
+
 constexpr auto GIF_WIDTH = 32;
 constexpr auto GIF_HEIGHT = 32;
 
@@ -86,19 +91,21 @@ static_assert(GIF_HEIGHT <= MATRIX_HEIGHT, "GIF_HEIGHT must be <= MATRIX_HEIGHT"
 
 struct 
 {
-    long _seek = 0;
-    const uint8_t *_pgif = nullptr;
-    long _len = 0;
-    int _offsetX = 0;
-    int _offsetY = 0;
-    int _plotCount = 0;
-    int _rowCount = 0;
-    int _skipCount = 0;
-    CRGB _bkColor = CRGB::Black;
-    CRGB _skipColor = CRGB::Magenta;
-} g_gifDecoderState;
+    long            _seek      = 0;
+    const uint8_t * _pgif      = nullptr;
+    long            _len       = 0;
+    int             _offsetX   = 0;
+    int             _offsetY   = 0;
+    int             _skipCount = 0;
+    CRGB            _bkColor   = CRGB::Black;
+    CRGB            _skipColor = CRGB::Magenta;
+} 
+g_gifDecoderState;
 
-GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12> g_gifDecoder;
+// We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
+// ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
+
+std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12>>();
 
 // PatternAnimatedGIF
 //
@@ -107,7 +114,7 @@ GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12> g_gifDecoder;
 class PatternAnimatedGIF : public LEDStripEffect
 {
 private:
-
+    
     int       _gifIndex = -1;
     CRGB       _bkColor = BLACK16;
     CRGB     _skipColor = MAGENTA16;
@@ -122,21 +129,29 @@ private:
         return g_gifDecoderState._len;
     }
 
+    // Seek to the given position in the GIF file.  The GIF decoder will call this to seek to a position in the GIF file.
+
     static bool fileSeekCallback(unsigned long position) 
     {
         g_gifDecoderState._seek = position;
         return true;
     }
 
+    // Return the current position in the GIF file.  The GIF decoder will call this to get the current position.
+
     static unsigned long filePositionCallback(void) 
     {
         return g_gifDecoderState._seek;
     }
 
+    // Read a byte from the GIF file.  The GIF decoder will call this to read the GIF data.
+
     static int fileReadCallback(void) 
     {
         return pgm_read_byte(g_gifDecoderState._pgif + g_gifDecoderState._seek++);
     }
+
+    // Read N bytes from the GIF file into the buffer.  The GIF decoder will call this to read the GIF data.
 
     static int fileReadBlockCallback(void * buffer, int numberOfBytes) 
     {
@@ -145,22 +160,31 @@ private:
         return numberOfBytes; 
     }
 
+    // screenClearCallback - clears the screen with the color given to the constructor
+
     static void screenClearCallback(void) 
     {
         auto& g = *(g_ptrSystem->EffectManager().g());
         g.fillScreen(g.to16bit(g_gifDecoderState._bkColor));
     }
 
+    // We decide when to update the screen, so this is a no-op
+
     static void updateScreenCallback(void) 
     {
     }
 
+    // drawPixelCallback
+    // 
+    // This is called by the GIF decoder to draw a pixel.  We use the offset to center the GIF on the LED matrix.
+
     static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) 
     {
+        assert(x >= 0 && x < GIF_WIDTH);
+        assert(y >= 0 && y < GIF_HEIGHT);
+
         auto& g = *(g_ptrSystem->EffectManager().g(0));
-        g.drawPixel(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY, CRGB(red, green, blue));
-        g_gifDecoderState._plotCount++;
-        g_gifDecoderState._rowCount = 1;
+        g.leds[XY(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY)] = CRGB(red, green, blue);
     }
 
     // drawLineCallback
@@ -169,67 +193,8 @@ private:
 
     static void drawLineCallback(int16_t x, int16_t y, uint8_t *buf, int16_t w, uint16_t *palette, int16_t skip) 
     {
-        // I don't think this is ever called, but if it is, we need to implement it.  For now, we just
-        // call drawPixelCallback for each pixel in the line.  We can remove this if everyone else agrees
-        // its safe to do so...
-
-        #if 0 
-
-            debugW("drawLineCallback: y=%d, x=%d, w=%d, skip=%d", y, x, w, skip);
-
-            // Because this is static, we have to get the g object from the EffectManager. So we will always
-            // draw to the main surface regardless of the effect's actual drawing context, since at this point
-            // we have no idea what effect is actually running when this is executed.
-
-            auto& g = *(g_ptrSystem->EffectManager().g(0));
-
-            uint8_t pixel;
-            bool first;
-
-            if (x + w > MATRIX_WIDTH) 
-            {
-                w = MATRIX_WIDTH - x;
-                if (w + x > MATRIX_WIDTH)
-                {
-                    debugW("drawLineCallback x+w > MATRIX_WIDTH: y=%d, x=%d, w=%d, skip=%d", y, x, w, skip);
-                    return;
-                }
-            }
-
-            if (y >= MATRIX_HEIGHT || x >= MATRIX_WIDTH ) 
-            {
-                debugW("drawLineCallback invalid args: y=%d, x=%d, w=%d, skip=%d", y, x, w, skip);
-                return;
-            }
-
-
-            if (w <= 0) 
-            {
-                debugW("drawLineCallback w <= 0: y=%d, x=%d, w=%d, skip=%d", y, x, w, skip);
-                return;
-            }
-
-            int16_t endx = x + w - 1;
-            uint16_t buf565[w];
-            for (int i = 0; i < w; ) 
-            {
-                int n = 0;
-                while (i < w) {
-                    pixel = buf[i++];
-                    if (pixel == skip) 
-                    {
-                        g_gifDecoderState._skipCount++;
-                        break;
-                    }
-                    CRGB color = g.from16Bit(palette[pixel]);
-                    if (color == g_gifDecoderState.
-                    g.leds[g_gifDecoderState._offsetX + (g_gifDecoderState._offsetY * MATRIX_WIDTH) + n++] = g.from16Bit(pixel);
-                }
-            }
-            g_gifDecoderState._plotCount += w;  //count total pixels (including skipped)
-            g_gifDecoderState._rowCount += 1;   //count number of drawLines
-        #endif
-
+        // I don't think this is ever called, but if it is, we may need to implement it.  For now, it seems they just
+        // call drawPixelCallback for each pixel in the image.  
     }
 
     // OpenGif
@@ -246,18 +211,18 @@ private:
         }
 
         uint16_t x, y;
-        g_gifDecoder.getSize(&x, &y);
+        g_ptrGIFDecoder->getSize(&x, &y);
 
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
-        g_gifDecoderState._offsetX = (MATRIX_WIDTH - GIF_WIDTH) / 2;            
-        g_gifDecoderState._offsetY = (MATRIX_HEIGHT - GIF_HEIGHT) / 2;
-        g_gifDecoderState._bkColor = _bkColor;
+        g_gifDecoderState._offsetX   = (MATRIX_WIDTH - GIF_WIDTH) / 2;            
+        g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - GIF_HEIGHT) / 2;
+        g_gifDecoderState._bkColor   = _bkColor;
         g_gifDecoderState._skipColor = _skipColor;
-        g_gifDecoderState._pgif = gif->second.contents;
-        g_gifDecoderState._seek = 0;
-        g_gifDecoderState._len  = gif->second.length;
+        g_gifDecoderState._pgif      = gif->second.contents;
+        g_gifDecoderState._seek      = 0;
+        g_gifDecoderState._len       = gif->second.length;
 
         return true;
     }
@@ -307,30 +272,27 @@ public:
         
         // Set the GIF decoder callbacks to our static functions
 
-        g_gifDecoder.setScreenClearCallback( screenClearCallback );
-        g_gifDecoder.setUpdateScreenCallback( updateScreenCallback );
-        g_gifDecoder.setDrawPixelCallback( drawPixelCallback );
-        g_gifDecoder.setDrawLineCallback( drawLineCallback );
+        g_ptrGIFDecoder->setScreenClearCallback( screenClearCallback );
+        g_ptrGIFDecoder->setUpdateScreenCallback( updateScreenCallback );
+        g_ptrGIFDecoder->setDrawPixelCallback( drawPixelCallback );
+        g_ptrGIFDecoder->setDrawLineCallback( drawLineCallback );
 
-        g_gifDecoder.setFileSeekCallback( fileSeekCallback );
-        g_gifDecoder.setFilePositionCallback( filePositionCallback );
-        g_gifDecoder.setFileReadCallback( fileReadCallback );
-        g_gifDecoder.setFileReadBlockCallback( fileReadBlockCallback );
-        g_gifDecoder.setFileSizeCallback( fileSizeCallback );
+        g_ptrGIFDecoder->setFileSeekCallback( fileSeekCallback );
+        g_ptrGIFDecoder->setFilePositionCallback( filePositionCallback );
+        g_ptrGIFDecoder->setFileReadCallback( fileReadCallback );
+        g_ptrGIFDecoder->setFileReadBlockCallback( fileReadBlockCallback );
+        g_ptrGIFDecoder->setFileSizeCallback( fileSizeCallback );
 
         // Open the GIF and start decoding
         
         OpenGif();
-        if (ERROR_NONE != g_gifDecoder.startDecoding())
+        if (ERROR_NONE != g_ptrGIFDecoder->startDecoding())
             debugW("Failed to start decoding GIF");
     }
 
     void Draw() override
     {
-        if (0 > g_gifDecoder.getFrameNumber())
-            return;
-
-        g_gifDecoder.decodeFrame();
+        g_ptrGIFDecoder->decodeFrame();
     }
 };
 
