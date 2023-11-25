@@ -392,6 +392,7 @@ void EffectManager::ApplyGlobalPaletteColors()
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
     auto& globalColor = deviceConfig.GlobalColor();
     auto& secondColor = deviceConfig.SecondColor();
+    
     #if (USE_HUB75)
         auto pMatrix = g();
 

@@ -238,7 +238,7 @@ public:
     PaletteFlameEffect(const JsonObjectConst& jsonObject)
       : FireEffect(jsonObject),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
-        _ignoreGlobalColor(jsonObject["igc"])
+        _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
     {
         construct();
     }
@@ -251,7 +251,7 @@ public:
         FireEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _palette;
-        jsonDoc["igc"] = _ignoreGlobalColor;
+        jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
 
         assert(!jsonDoc.overflowed());
 
@@ -312,7 +312,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
         : PaletteFlameEffect(jsonObject),
           BeatEffectBase(1.00, 0.01),
-          _ignoreGlobalColor(jsonObject["igc"])
+          _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
 
     {
         construct();

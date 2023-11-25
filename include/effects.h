@@ -202,5 +202,6 @@
 #define PTY_SCALE           "scl"
 #define PTY_EFFECTSETVER    "esv"
 #define PTY_PROJECT         "prj"
+#define PTY_IGNOREGLOBALCOLOR   "igc"
 
 #define EFFECTS_CONFIG_FILE "/effects.cfg"
