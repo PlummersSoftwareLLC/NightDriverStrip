@@ -56,7 +56,8 @@ extern const uint8_t atomic_start[]          asm("_binary_assets_gif_atomic_gif_
 extern const uint8_t atomic_end[]            asm("_binary_assets_gif_atomic_gif_end");
 extern const uint8_t colorsphere_start[]     asm("_binary_assets_gif_colorsphere_gif_start");
 extern const uint8_t colorsphere_end[]       asm("_binary_assets_gif_colorsphere_gif_end");
-
+extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_start");
+extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
 // AnimatedGIFs
 //
 // Our set of embedded GIFs.  Currently assumed to be 32x32 in size, default FPS.
@@ -65,24 +66,28 @@ enum
 {
     INVALID     = 0,
     Atomic      = 1,
-    ColorSphere = 2
+    ColorSphere = 2,
+    Pacman      = 3
 } GIFIdentifier;
 
-static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int, EmbeddedFile>>> AnimatedGIFs =
+// GIFInfo
+// 
+// Extended "EmbeddedFile" that also tracks the width and height of the GIF
+
+struct GIFInfo : public EmbeddedFile
 {
-    { Atomic, EmbeddedFile(atomic_start, atomic_end) },
-    { ColorSphere, EmbeddedFile(colorsphere_start, colorsphere_end) },
+    uint16_t        width;
+    uint16_t        height;
+    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height) : EmbeddedFile(start, end), width(width), height(height) 
+    {}
 };
 
-// For now, all gifs are assumed to be 32x32 in size.  We could make this more flexible, but it's not clear
-// that we need to.  If we do, we'll need to move the width and height into the AnimatedGIFs map so that we
-// can look them up by index.
-
-constexpr auto GIF_WIDTH = 32;
-constexpr auto GIF_HEIGHT = 32;
-
-static_assert(GIF_WIDTH <= MATRIX_WIDTH, "GIF_WIDTH must be <= MATRIX_WIDTH");
-static_assert(GIF_HEIGHT <= MATRIX_HEIGHT, "GIF_HEIGHT must be <= MATRIX_HEIGHT");
+static std::map<int, GIFInfo, std::less<int>, psram_allocator<std::pair<int, GIFInfo>>> AnimatedGIFs =
+{
+    { Pacman, GIFInfo(pacman_start, pacman_end, 64, 12) },
+    { Atomic, GIFInfo(atomic_start, atomic_end, 32, 32) },
+    { ColorSphere, GIFInfo(colorsphere_start, colorsphere_end, 32, 32) },
+};
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and 
 // we can't pass it a pointer to our state because the callback doesn't allow you to pass any
@@ -96,7 +101,6 @@ struct
     long            _len       = 0;
     int             _offsetX   = 0;
     int             _offsetY   = 0;
-    int             _skipCount = 0;
     CRGB            _bkColor   = CRGB::Black;
     CRGB            _skipColor = CRGB::Magenta;
 } 
@@ -180,10 +184,13 @@ private:
 
     static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) 
     {
-        assert(x >= 0 && x < GIF_WIDTH);
-        assert(y >= 0 && y < GIF_HEIGHT);
-
         auto& g = *(g_ptrSystem->EffectManager().g(0));
+        if (false == g.isValidPixel(x  + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY))
+        {
+            debugW("drawPixelCallbackInvalid pixel: %d, %d", x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY);
+            return;
+        }
+
         g.leds[XY(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY)] = CRGB(red, green, blue);
     }
 
@@ -216,8 +223,8 @@ private:
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
-        g_gifDecoderState._offsetX   = (MATRIX_WIDTH - GIF_WIDTH) / 2;            
-        g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - GIF_HEIGHT) / 2;
+        g_gifDecoderState._offsetX   = (MATRIX_WIDTH - gif->second.width) / 2;            
+        g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second.height) / 2;
         g_gifDecoderState._bkColor   = _bkColor;
         g_gifDecoderState._skipColor = _skipColor;
         g_gifDecoderState._pgif      = gif->second.contents;
@@ -229,7 +236,7 @@ private:
 
     size_t DesiredFramesPerSecond() const override
     {
-        return 25;
+        return 24;
     }
 
 public:
