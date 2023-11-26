@@ -94,6 +94,7 @@ void RemoteControl::handle()
             effectManager.ClearRemoteColor();
         else
             effectManager.NextEffect();
+        
         return;
     }
     else if (IR_BMINUS == result)
