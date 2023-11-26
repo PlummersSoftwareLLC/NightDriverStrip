@@ -277,9 +277,7 @@ private:
 
                     // Use the noon slot for the icon
                     if (slot == 4)
-                    {
                         iconTomorrow = entry["weather"][0]["icon"].as<String>();
-                    }
                 }
             }
 
@@ -357,18 +355,12 @@ private:
         {
             debugI("Got today's weather");
             if (getTomorrowTemps(highTomorrow, loTomorrow))
-            {
                 debugI("Got tomorrow's weather");
-            }
             else
-            {
                 debugW("Failed to get tomorrow's weather");
-            }
         }
         else
-        {
             debugW("Failed to get today's weather");
-        }
     }
 
     bool HasLocationChanged()
