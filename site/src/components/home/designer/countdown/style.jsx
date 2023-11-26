@@ -6,7 +6,7 @@ const countdownStyle = {
         alignItems: "center",
     },
     timeremaining: {
-        width: "100px"
+        minWidth: "100px"
     },
     pinned: {
         width: "unset",

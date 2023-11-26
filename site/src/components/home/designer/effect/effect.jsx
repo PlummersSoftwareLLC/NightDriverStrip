@@ -103,7 +103,6 @@ const Effect = props => {
             setProgress(0);
         }
     },[remainingInterval,selected, activeInterval]);
-
     return <Card variant="outlined" sx={gridLayout ? classes.gridCard : classes.listCard} draggable 
         onDragStart={(event) => onDragStart(event, effectIndex)} 
         onDragOver={(event) => onDragOver(event, effectIndex)}
@@ -150,7 +149,7 @@ const layoutProps = {
     effectEnable: PropTypes.func.isRequired, 
     effectIndex: PropTypes.number.isRequired, 
     progress: PropTypes.number.isRequired, 
-    requestRunning: PropTypes.func.isRequired, 
+    requestRunning: PropTypes.bool.isRequired, 
     navigateTo: PropTypes.func.isRequired, 
     pinnedEffect:PropTypes.bool.isRequired
 };
