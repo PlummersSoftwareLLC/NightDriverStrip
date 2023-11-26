@@ -119,9 +119,9 @@ class PatternAnimatedGIF : public LEDStripEffect
 {
 private:
     
-    int       _gifIndex = -1;
-    CRGB       _bkColor = BLACK16;
-    CRGB     _skipColor = MAGENTA16;
+    int  _gifIndex  = -1;
+    CRGB _bkColor   = BLACK16;
+    CRGB _skipColor = MAGENTA16;
 
     // GIF decoder callbacks.  These are static because the decoder doesn't allow you to pass any context, so they
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
