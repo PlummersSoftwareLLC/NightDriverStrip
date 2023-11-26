@@ -218,7 +218,7 @@ class PaletteFlameEffect : public FireEffect
 
 public:
     PaletteFlameEffect(const String & strName,
-                       CRGBPalette16 &palette,
+                       CRGBPalette16 palette,
                        bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -290,7 +290,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
   public:
 
     MusicalPaletteFire(const String & strName,
-                       CRGBPalette16 &palette,
+                       CRGBPalette16 palette,
                        bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -300,9 +300,8 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : PaletteFlameEffect(strName, palette, _ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          BeatEffectBase(1.00, 0.01),
-          _ignoreGlobalColor(ignoreGlobalColor)
+        : PaletteFlameEffect(strName, palette, ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+          BeatEffectBase(1.00, 0.01)
 
 
     {
@@ -311,8 +310,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
         : PaletteFlameEffect(jsonObject),
-          BeatEffectBase(1.00, 0.01),
-          _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
+          BeatEffectBase(1.00, 0.01)
 
     {
         construct();
