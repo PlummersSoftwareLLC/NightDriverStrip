@@ -229,7 +229,7 @@ public:
                        bool reversed = false,
                        bool mirrored = false)
         : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          _palette(palette), 
+          _palette(palette),
           _ignoreGlobalColor(ignoreGlobalColor)
     {
         construct();
@@ -281,7 +281,6 @@ public:
 #if ENABLE_AUDIO
 class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
-    bool _ignoreGlobalColor;
     void construct()
     {
         _effectNumber = EFFECT_STRIP_MUSICAL_PALETTE_FIRE;

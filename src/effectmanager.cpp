@@ -392,23 +392,23 @@ void EffectManager::ApplyGlobalPaletteColors()
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
     auto& globalColor = deviceConfig.GlobalColor();
     auto& secondColor = deviceConfig.SecondColor();
-    
-    #if (USE_HUB75)
-        auto pMatrix = g();
 
-        // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
-        // based from where those colors sit on the spectrum
-        if (secondColor == globalColor)
-        {
-            CHSV hsv = rgb2hsv_approximate(globalColor);
-            pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
-        }
-        else
-        {
-            // But if we have two different colors, we create a palettte spread between them
-            pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
-        }
-        pMatrix->PausePalette(true);
+    #if (USE_HUB75)
+            auto pMatrix = g();
+
+            // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
+            // based from where those colors sit on the spectrum
+            if (secondColor == globalColor)
+            {
+                CHSV hsv = rgb2hsv_approximate(globalColor);
+                pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
+            }
+            else
+            {
+                // But if we have two different colors, we create a palettte spread between them
+                pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
+            }
+            pMatrix->PausePalette(true);
     #else
         std::shared_ptr<LEDStripEffect> effect;
         #if ENABLE_AUDIO && SPECTRUM
