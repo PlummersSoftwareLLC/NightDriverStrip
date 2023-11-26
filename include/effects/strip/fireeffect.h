@@ -218,7 +218,7 @@ class PaletteFlameEffect : public FireEffect
 
 public:
     PaletteFlameEffect(const String & strName,
-                       CRGBPalette16 palette,
+                       const CRGBPalette16 &palette,
                        bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
@@ -262,16 +262,14 @@ public:
     {
         temp = min(1.0f, temp);
         int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
-        if (g_ptrSystem->DeviceConfig().ApplyGlobalColors() && !_ignoreGlobalColor)
+        auto& deviceConfig = g_ptrSystem->DeviceConfig();
+        if (deviceConfig.ApplyGlobalColors() && !_ignoreGlobalColor)
         {
-            CRGBPalette16 tempPalette = _palette;
-            tempPalette[1] = g_ptrSystem->DeviceConfig().GlobalColor();
-            tempPalette[2] = g_ptrSystem->DeviceConfig().SecondColor();
+            auto tempPalette = CRGBPalette16(deviceConfig.GlobalColor(), deviceConfig.SecondColor());
             return ColorFromPalette(tempPalette, index, 255);
-        } else
-        {
-            return ColorFromPalette(_palette, index, 255);
         }
+        else
+            return ColorFromPalette(_palette, index, 255);
 
         //        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
         //        heatramp <<=2;
@@ -289,7 +287,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
   public:
 
     MusicalPaletteFire(const String & strName,
-                       CRGBPalette16 palette,
+                       const CRGBPalette16 &palette,
                        bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
