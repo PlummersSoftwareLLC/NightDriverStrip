@@ -75,15 +75,15 @@ enum
 } GIFIdentifier;
 
 // GIFInfo
-// 
+//
 // Extended "EmbeddedFile" that also tracks the width and height of the GIF
 
 struct GIFInfo : public EmbeddedFile
 {
     uint16_t        _width;
     uint16_t        _height;
-    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height) 
-        : EmbeddedFile(start, end), _width(width), _height(height) 
+    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height)
+        : EmbeddedFile(start, end), _width(width), _height(height)
     {}
 };
 
@@ -95,12 +95,12 @@ static std::map<int, GIFInfo, std::less<int>, psram_allocator<std::pair<int, GIF
     { ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32) },
 };
 
-// The decoder needs us to track some state, but there's only one instance of the decoder, and 
+// The decoder needs us to track some state, but there's only one instance of the decoder, and
 // we can't pass it a pointer to our state because the callback doesn't allow you to pass any
 // context, and you can't use a lambda that captures the this pointer because that can't be
-// converted to a callback function pointer.  So we have to use a global. 
+// converted to a callback function pointer.  So we have to use a global.
 
-struct 
+struct
 {
     long            _seek      = 0;
     const uint8_t * _pgif      = nullptr;
@@ -109,7 +109,7 @@ struct
     int             _offsetY   = 0;
     CRGB            _bkColor   = CRGB::Black;
     CRGB            _skipColor = CRGB::Magenta;
-} 
+}
 g_gifDecoderState;
 
 // We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
@@ -124,7 +124,7 @@ std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12>> g_ptrGIFDecoder = m
 class PatternAnimatedGIF : public LEDStripEffect
 {
 private:
-    
+
     int  _gifIndex  = -1;
     CRGB _bkColor   = BLACK16;
     CRGB _skipColor = MAGENTA16;
@@ -134,14 +134,14 @@ private:
     // these callbacks to do the actual work of fetching the bits from teh embedded GIF file and plotting them on
     // the LED matrix.
 
-    static int fileSizeCallback(void) 
+    static int fileSizeCallback(void)
     {
         return g_gifDecoderState._len;
     }
 
     // Seek to the given position in the GIF file.  The GIF decoder will call this to seek to a position in the GIF file.
 
-    static bool fileSeekCallback(unsigned long position) 
+    static bool fileSeekCallback(unsigned long position)
     {
         g_gifDecoderState._seek = position;
         return true;
@@ -149,30 +149,30 @@ private:
 
     // Return the current position in the GIF file.  The GIF decoder will call this to get the current position.
 
-    static unsigned long filePositionCallback(void) 
+    static unsigned long filePositionCallback(void)
     {
         return g_gifDecoderState._seek;
     }
 
     // Read a byte from the GIF file.  The GIF decoder will call this to read the GIF data.
 
-    static int fileReadCallback(void) 
+    static int fileReadCallback(void)
     {
         return pgm_read_byte(g_gifDecoderState._pgif + g_gifDecoderState._seek++);
     }
 
     // Read N bytes from the GIF file into the buffer.  The GIF decoder will call this to read the GIF data.
 
-    static int fileReadBlockCallback(void * buffer, int numberOfBytes) 
+    static int fileReadBlockCallback(void * buffer, int numberOfBytes)
     {
         memcpy(buffer, g_gifDecoderState._pgif + g_gifDecoderState._seek, numberOfBytes);
         g_gifDecoderState._seek += numberOfBytes;
-        return numberOfBytes; 
+        return numberOfBytes;
     }
 
     // screenClearCallback - clears the screen with the color given to the constructor
 
-    static void screenClearCallback(void) 
+    static void screenClearCallback(void)
     {
         auto& g = *(g_ptrSystem->EffectManager().g());
         g.fillScreen(g.to16bit(g_gifDecoderState._bkColor));
@@ -180,15 +180,15 @@ private:
 
     // We decide when to update the screen, so this is a no-op
 
-    static void updateScreenCallback(void) 
+    static void updateScreenCallback(void)
     {
     }
 
     // drawPixelCallback
-    // 
+    //
     // This is called by the GIF decoder to draw a pixel.  We use the offset to center the GIF on the LED matrix.
 
-    static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue) 
+    static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue)
     {
         auto& g = *(g_ptrSystem->EffectManager().g(0));
         if (false == g.isValidPixel(x  + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY))
@@ -202,12 +202,12 @@ private:
 
     // drawLineCallback
     //
-    // This is called by the GIF decoder to draw a line of pixels.  
+    // This is called by the GIF decoder to draw a line of pixels.
 
-    static void drawLineCallback(int16_t x, int16_t y, uint8_t *buf, int16_t w, uint16_t *palette, int16_t skip) 
+    static void drawLineCallback(int16_t x, int16_t y, uint8_t *buf, int16_t w, uint16_t *palette, int16_t skip)
     {
         // I don't think this is ever called, but if it is, we may need to implement it.  For now, it seems they just
-        // call drawPixelCallback for each pixel in the image.  
+        // call drawPixelCallback for each pixel in the image.
     }
 
     // OpenGif
@@ -229,7 +229,7 @@ private:
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
-        g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;            
+        g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;
         g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
         g_gifDecoderState._bkColor   = _bkColor;
         g_gifDecoderState._skipColor = _skipColor;
@@ -250,8 +250,8 @@ private:
 
 public:
 
-    // 
-    PatternAnimatedGIF(const String & friendlyName, int gifIndex, CRGB bkColor = CRGB::Black, CRGB skip = CRGB::Magenta) : 
+    //
+    PatternAnimatedGIF(const String & friendlyName, int gifIndex, CRGB bkColor = CRGB::Black, CRGB skip = CRGB::Magenta) :
         LEDStripEffect(EFFECT_MATRIX_ANIMATEDGIF, friendlyName),
         _gifIndex(gifIndex),
         _bkColor(bkColor),
@@ -261,7 +261,7 @@ public:
 
     PatternAnimatedGIF(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
-          _gifIndex(jsonObject[PTY_GIFINDEX]), 
+          _gifIndex(jsonObject[PTY_GIFINDEX]),
           _bkColor(jsonObject[PTY_BKCOLOR]),
           _skipColor(jsonObject[PTY_SKIPCOLOR])
     {
@@ -285,7 +285,7 @@ public:
     void Start() override
     {
         g()->Clear();
-        
+
         // Set the GIF decoder callbacks to our static functions
 
         g_ptrGIFDecoder->setScreenClearCallback( screenClearCallback );
@@ -300,7 +300,7 @@ public:
         g_ptrGIFDecoder->setFileSizeCallback( fileSizeCallback );
 
         // Open the GIF and start decoding
-        
+
         OpenGif();
         if (ERROR_NONE != g_ptrGIFDecoder->startDecoding())
             debugW("Failed to start decoding GIF");
