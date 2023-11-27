@@ -58,6 +58,9 @@ extern const uint8_t colorsphere_start[]     asm("_binary_assets_gif_colorsphere
 extern const uint8_t colorsphere_end[]       asm("_binary_assets_gif_colorsphere_gif_end");
 extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_start");
 extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
+extern const uint8_t threerings_start[]      asm("_binary_assets_gif_threerings_gif_start");
+extern const uint8_t threerings_end[]        asm("_binary_assets_gif_threerings_gif_end");
+
 // AnimatedGIFs
 //
 // Our set of embedded GIFs.  Currently assumed to be 32x32 in size, default FPS.
@@ -67,7 +70,8 @@ enum
     INVALID     = 0,
     Atomic      = 1,
     ColorSphere = 2,
-    Pacman      = 3
+    Pacman      = 3,
+    ThreeRings  = 4,
 } GIFIdentifier;
 
 // GIFInfo
@@ -76,17 +80,19 @@ enum
 
 struct GIFInfo : public EmbeddedFile
 {
-    uint16_t        width;
-    uint16_t        height;
-    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height) : EmbeddedFile(start, end), width(width), height(height) 
+    uint16_t        _width;
+    uint16_t        _height;
+    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height) 
+        : EmbeddedFile(start, end), _width(width), _height(height) 
     {}
 };
 
 static std::map<int, GIFInfo, std::less<int>, psram_allocator<std::pair<int, GIFInfo>>> AnimatedGIFs =
 {
-    { Pacman, GIFInfo(pacman_start, pacman_end, 64, 12) },
-    { Atomic, GIFInfo(atomic_start, atomic_end, 32, 32) },
-    { ColorSphere, GIFInfo(colorsphere_start, colorsphere_end, 32, 32) },
+    { Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12) },
+    { Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32) },
+    { ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32) },
+    { ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32) },
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and 
@@ -223,8 +229,8 @@ private:
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
-        g_gifDecoderState._offsetX   = (MATRIX_WIDTH - gif->second.width) / 2;            
-        g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second.height) / 2;
+        g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;            
+        g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
         g_gifDecoderState._bkColor   = _bkColor;
         g_gifDecoderState._skipColor = _skipColor;
         g_gifDecoderState._pgif      = gif->second.contents;
@@ -236,6 +242,9 @@ private:
 
     size_t DesiredFramesPerSecond() const override
     {
+        // Smaller animations could spec a faster framerate, but even on 32x32 the GIF decoder
+        // is pretty slow, so we'll use a default for now.
+
         return 24;
     }
 
