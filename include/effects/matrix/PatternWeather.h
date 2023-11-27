@@ -135,7 +135,6 @@ private:
     size_t readerIndex = std::numeric_limits<size_t>::max();
     time_t latestUpdate       = 0;
 
-
     // The weather is obviously weather, and we don't want text overlaid on top of our text
 
     virtual bool ShouldShowTitle() const
@@ -153,17 +152,17 @@ private:
         return false;
     }
 
-    inline float KelvinToFarenheit(float K)
+    static inline float KelvinToFarenheit(float K)
     {
         return (K - 273.15) * 9.0f/5.0f + 32;
     }
 
-    inline float KelvinToCelsius(float K)
+    static inline float KelvinToCelsius(float K) 
     {
         return K - 273.15;
     }
 
-    inline float KelvinToLocal(float K)
+    static inline float KelvinToLocal(float K)
     {
         if (g_ptrSystem->DeviceConfig().UseCelsius())
             return KelvinToCelsius(K);

@@ -142,6 +142,7 @@
 #define EFFECT_MATRIX_SMSUPERNOVA                      155
 #define EFFECT_MATRIX_SMTWISTER                        156
 #define EFFECT_MATRIX_SMWALKING_MACHINE                157
+#define EFFECT_MATRIX_ANIMATEDGIF                      158
 
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201
@@ -202,5 +203,7 @@
 #define PTY_SCALE           "scl"
 #define PTY_EFFECTSETVER    "esv"
 #define PTY_PROJECT         "prj"
-
+#define PTY_GIFINDEX        "gij"
+#define PTY_BKCOLOR         "bkg"
+#define PTY_SKIPCOLOR       "skc"
 #define EFFECTS_CONFIG_FILE "/effects.cfg"
