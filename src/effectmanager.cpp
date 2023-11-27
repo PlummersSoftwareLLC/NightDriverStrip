@@ -296,22 +296,13 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 
 // GetSpectrumAnalyzer
 //
-// A little factory that makes colored spectrum analyzers to be used by the remote control
-// colored buttons
-
-std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
-{
-    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
-    if (object->Init(g_ptrSystem->Devices()))
-        return object;
-    throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
-}
+// A little factory that makes colored spectrum analyzers
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
     CHSV hueColor = rgb2hsv_approximate(color);
     CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2), true);
     if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -335,12 +326,8 @@ bool EffectManager::Init()
     }
     debugV("First Effect: %s", GetCurrentEffectName().c_str());
 
-    #if (USE_HUB75)
-        // We apply the persisted global colors only on HUB75 panels. On other devices doing so will activate a fixed
-        // (semi-)monochromatic effect, which may be confusing to the user at startup.
-        if (g_ptrSystem->DeviceConfig().ApplyGlobalColors())
-            ApplyGlobalPaletteColors();
-    #endif
+    if (g_ptrSystem->DeviceConfig().ApplyGlobalColors())
+        ApplyGlobalPaletteColors();
 
     return true;
 }
@@ -389,38 +376,25 @@ void EffectManager::ApplyGlobalColor(CRGB color)
 
 void EffectManager::ApplyGlobalPaletteColors()
 {
-    auto& deviceConfig = g_ptrSystem->DeviceConfig();
-    auto& globalColor = deviceConfig.GlobalColor();
-    auto& secondColor = deviceConfig.SecondColor();
-
     #if (USE_HUB75)
-            auto pMatrix = g();
+        auto  pMatrix = g();
+        auto& deviceConfig = g_ptrSystem->DeviceConfig();
+        auto& globalColor = deviceConfig.GlobalColor();
+        auto& secondColor = deviceConfig.SecondColor();
 
-            // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
-            // based from where those colors sit on the spectrum
-            if (secondColor == globalColor)
-            {
-                CHSV hsv = rgb2hsv_approximate(globalColor);
-                pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
-            }
-            else
-            {
-                // But if we have two different colors, we create a palettte spread between them
-                pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
-            }
-            pMatrix->PausePalette(true);
-    #else
-        std::shared_ptr<LEDStripEffect> effect;
-        #if ENABLE_AUDIO && SPECTRUM
-            effect = GetSpectrumAnalyzer(globalColor, secondColor);
-        #else
-            effect = make_shared_psram<ColorFillEffect>(globalColor);
-        #endif
-
-        if (effect->Init(_gfx))
+        // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
+        // based from where those colors sit on the spectrum
+        if (secondColor == globalColor)
         {
-            _tempEffect = effect;
-            StartEffect();
+            CHSV hsv = rgb2hsv_approximate(globalColor);
+            pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
         }
+        else
+        {
+            // But if we have two different colors, we create a palettte spread between them
+            pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
+        }
+
+        pMatrix->PausePalette(true);
     #endif
 }
