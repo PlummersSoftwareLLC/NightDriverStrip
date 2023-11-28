@@ -212,9 +212,12 @@ public:
         return to16bit(CRGB(code));
     }
 
-    virtual void Clear()
+    virtual void Clear(CRGB color = CRGB::Black)
     {
-        memset(leds, 0, sizeof(CRGB) * _width * _height);
+        if (color == CRGB::Black)
+            memset(leds, 0, sizeof(CRGB) * _width * _height);
+        else
+            fill_solid(leds, _width * _height, color);
     }
 
     virtual bool isValidPixel(uint x, uint y) const

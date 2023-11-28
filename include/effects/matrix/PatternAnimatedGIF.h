@@ -60,6 +60,8 @@ extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_
 extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
 extern const uint8_t threerings_start[]      asm("_binary_assets_gif_threerings_gif_start");
 extern const uint8_t threerings_end[]        asm("_binary_assets_gif_threerings_gif_end");
+extern const uint8_t banana_start[]          asm("_binary_assets_gif_banana_gif_start");
+extern const uint8_t banana_end[]            asm("_binary_assets_gif_banana_gif_end");
 
 // AnimatedGIFs
 //
@@ -72,6 +74,7 @@ enum
     ColorSphere = 2,
     Pacman      = 3,
     ThreeRings  = 4,
+    Banana      = 5,
 } GIFIdentifier;
 
 // GIFInfo
@@ -89,6 +92,7 @@ struct GIFInfo : public EmbeddedFile
 
 static std::map<int, GIFInfo, std::less<int>, psram_allocator<std::pair<int, GIFInfo>>> AnimatedGIFs =
 {
+    { Banana,       GIFInfo(banana_start,      banana_end,      32, 32) },    
     { Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12) },
     { Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32) },
     { ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32) },
@@ -107,6 +111,8 @@ struct
     long            _len       = 0;
     int             _offsetX   = 0;
     int             _offsetY   = 0;
+    int             _width     = 0;
+    int             _height    = 0;
     CRGB            _bkColor   = CRGB::Black;
     CRGB            _skipColor = CRGB::Magenta;
 }
@@ -128,6 +134,7 @@ private:
     int  _gifIndex  = -1;
     CRGB _bkColor   = BLACK16;
     CRGB _skipColor = MAGENTA16;
+    bool _preClear  = false;
 
     // GIF decoder callbacks.  These are static because the decoder doesn't allow you to pass any context, so they
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
@@ -231,6 +238,8 @@ private:
 
         g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;
         g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
+        g_gifDecoderState._width     = gif->second._width;
+        g_gifDecoderState._height    = gif->second._height;
         g_gifDecoderState._bkColor   = _bkColor;
         g_gifDecoderState._skipColor = _skipColor;
         g_gifDecoderState._pgif      = gif->second.contents;
@@ -251,8 +260,9 @@ private:
 public:
 
     //
-    PatternAnimatedGIF(const String & friendlyName, int gifIndex, CRGB bkColor = CRGB::Black, CRGB skip = CRGB::Magenta) :
+    PatternAnimatedGIF(const String & friendlyName, int gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black, CRGB skip = CRGB::Magenta) :
         LEDStripEffect(EFFECT_MATRIX_ANIMATEDGIF, friendlyName),
+        _preClear(preClear),
         _gifIndex(gifIndex),
         _bkColor(bkColor),
         _skipColor(skip)
@@ -261,6 +271,7 @@ public:
 
     PatternAnimatedGIF(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
+          _preClear(jsonObject[PTY_PRECLEAR]),
           _gifIndex(jsonObject[PTY_GIFINDEX]),
           _bkColor(jsonObject[PTY_BKCOLOR]),
           _skipColor(jsonObject[PTY_SKIPCOLOR])
@@ -277,6 +288,7 @@ public:
         jsonDoc[PTY_GIFINDEX]  = _gifIndex;
         jsonDoc[PTY_BKCOLOR]   = _bkColor;
         jsonDoc[PTY_SKIPCOLOR] = _skipColor;
+        jsonDoc[PTY_PRECLEAR]  = _preClear;
 
         assert(!jsonDoc.overflowed());
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
@@ -284,7 +296,8 @@ public:
 
     void Start() override
     {
-        g()->Clear();
+        g()->Clear(_bkColor);
+
 
         // Set the GIF decoder callbacks to our static functions
 
@@ -308,6 +321,14 @@ public:
 
     void Draw() override
     {
+        // GIFs that use transparency will leave the previous frame in place, so we need
+        // to clear the screen before we draw the next frame.  We can skip this if the
+        // GIF doesn't use transparency.
+
+        if (_preClear)
+            g()->Clear(_bkColor);
+
+
         g_ptrGIFDecoder->decodeFrame();
     }
 };

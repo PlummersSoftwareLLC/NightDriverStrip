@@ -206,4 +206,5 @@
 #define PTY_GIFINDEX        "gij"
 #define PTY_BKCOLOR         "bkg"
 #define PTY_SKIPCOLOR       "skc"
+#define PTY_PRECLEAR        "prc"
 #define EFFECTS_CONFIG_FILE "/effects.cfg"
