@@ -36,6 +36,10 @@
 #include <esp_task_wdt.h>
 #include "soundanalyzer.h"
 
+#if ENABLE_VICE_SERVER
+#include "network.h"
+#endif
+
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
 
@@ -224,14 +228,14 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
     SoundAnalyzer Analyzer;
 
 #if ENABLE_VICE_SERVER
-    VICESocketServer socketServer(25232);
+    VICESocketServer socketServer(NetworkPort::VICESocketServer);
     if (!socketServer.begin())
     {
-        debugE("Unable to start socket server for VICE!");
+        debugE("Unable to start socket server on port %u for VICE!", NetworkPort::VICESocketServer);
     }
     else
     {
-        debugW("Started socket server for VICE!");
+        debugW("Started socket server for VICE on port %u!", NetworkPort::VICESocketServer);
     }
 #endif
 
