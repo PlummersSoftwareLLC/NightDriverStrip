@@ -293,7 +293,7 @@ private:
         }
         else
         {
-            debugW("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
+            debugE("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
@@ -337,7 +337,7 @@ private:
         }
         else
         {
-            debugW("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
+            debugE("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
@@ -354,15 +354,7 @@ private:
         updateCoordinates();
 
         if (getWeatherData())
-        {
-            debugI("Got today's weather");
-            if (getTomorrowTemps(highTomorrow, loTomorrow))
-                debugI("Got tomorrow's weather");
-            else
-                debugW("Failed to get tomorrow's weather");
-        }
-        else
-            debugW("Failed to get today's weather");
+            getTomorrowTemps(highTomorrow, loTomorrow);
     }
 
     bool HasLocationChanged()
