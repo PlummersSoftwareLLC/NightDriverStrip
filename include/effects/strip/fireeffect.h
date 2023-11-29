@@ -261,7 +261,7 @@ public:
     virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp = min(1.0f, temp);
-        int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
+        int index = fmap(temp, 0.0f, 1.0f, 0.0f, 240.0f);
         auto& deviceConfig = g_ptrSystem->DeviceConfig();
         if (deviceConfig.ApplyGlobalColors() && !_ignoreGlobalColor)
         {

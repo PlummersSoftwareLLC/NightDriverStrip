@@ -191,6 +191,11 @@ class LEDStripEffect : public IJSONSerializable
         return true;
     }
 
+    static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max)
+    {
+        return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
+    }
+
   public:
 
     LEDStripEffect(int effectNumber, const String & strName) :
@@ -348,7 +353,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // The variant allows you to specify a base flame color other than red, and the result
     // is interpolated from black to your color and on through yellow and white
-    
+
     virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
     {
         if (baseColor == CRGB::Red)
@@ -358,7 +363,7 @@ class LEDStripEffect : public IJSONSerializable
 
         if (temp < 0.33f)
             return ColorFraction(baseColor, temp * 3.0f);                                                   // Interpolate from black to baseColor
-        
+
         if (temp < 0.66f)
             return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interoplate from baseColor to Yellow
 
