@@ -123,10 +123,10 @@ private:
         debris_item._position_y = MATRIX_HEIGHT * 0.5;
 
         debris_item._speed_x = (((float)random8() - 127.) / 512.);
-        debris_item._speed_y = sqrtf(0.0626f - debris_item._speed_x * debris_item._speed_y);
+        debris_item._speed_y = sqrtf(0.0626f - debris_item._speed_x * debris_item._speed_x);
         if (random8(2U))
             debris_item._speed_y = -debris_item._speed_y;
-        
+
         debris_item._state = random8(1, 250);
         debris_item._hue = hue2;
         debris_item._is_shift = true;
