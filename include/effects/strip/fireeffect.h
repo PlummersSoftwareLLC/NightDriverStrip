@@ -265,7 +265,7 @@ public:
         auto& deviceConfig = g_ptrSystem->DeviceConfig();
         if (deviceConfig.ApplyGlobalColors() && !_ignoreGlobalColor)
         {
-            auto tempPalette = CRGBPalette16(deviceConfig.GlobalColor(), deviceConfig.SecondColor());
+            auto tempPalette = CRGBPalette16(CRGB::Black, deviceConfig.GlobalColor(), CRGB::Yellow, CRGB::White);
             return ColorFromPalette(tempPalette, index, 255);
         }
         else
