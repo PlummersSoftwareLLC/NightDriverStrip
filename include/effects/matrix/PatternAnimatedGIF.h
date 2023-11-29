@@ -67,7 +67,7 @@ extern const uint8_t banana_end[]            asm("_binary_assets_gif_banana_gif_
 //
 // Our set of embedded GIFs.  Currently assumed to be 32x32 in size, default FPS.
 
-enum
+enum class GIFIdentifier : int
 {
     INVALID     = 0,
     Atomic      = 1,
@@ -75,7 +75,7 @@ enum
     Pacman      = 3,
     ThreeRings  = 4,
     Banana      = 5,
-} GIFIdentifier;
+};
 
 // GIFInfo
 //
@@ -90,13 +90,13 @@ struct GIFInfo : public EmbeddedFile
     {}
 };
 
-static std::map<int, GIFInfo, std::less<int>, psram_allocator<std::pair<int, GIFInfo>>> AnimatedGIFs =
+static std::map<GIFIdentifier, GIFInfo, std::less<GIFIdentifier>, psram_allocator<std::pair<GIFIdentifier, GIFInfo>>> AnimatedGIFs =
 {
-    { Banana,       GIFInfo(banana_start,      banana_end,      32, 32) },    
-    { Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12) },
-    { Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32) },
-    { ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32) },
-    { ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32) },
+    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32) },
+    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12) },
+    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32) },
+    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32) },
+    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32) },
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and
@@ -131,10 +131,10 @@ class PatternAnimatedGIF : public LEDStripEffect
 {
 private:
 
-    int  _gifIndex  = -1;
-    CRGB _bkColor   = BLACK16;
-    CRGB _skipColor = MAGENTA16;
-    bool _preClear  = false;
+    GIFIdentifier _gifIndex  = GIFIdentifier::INVALID;
+    CRGB          _bkColor   = BLACK16;
+    CRGB          _skipColor = MAGENTA16;
+    bool          _preClear  = false;
 
     // GIF decoder callbacks.  These are static because the decoder doesn't allow you to pass any context, so they
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
@@ -226,7 +226,7 @@ private:
         auto gif = AnimatedGIFs.find(_gifIndex);
         if (gif == AnimatedGIFs.end())
         {
-            debugW("GIF not found by index: %d", _gifIndex);
+            debugW("GIF not found by index: %d", to_value(_gifIndex));
             return false;
         }
 
@@ -260,7 +260,7 @@ private:
 public:
 
     //
-    PatternAnimatedGIF(const String & friendlyName, int gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black, CRGB skip = CRGB::Magenta) :
+    PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black, CRGB skip = CRGB::Magenta) :
         LEDStripEffect(EFFECT_MATRIX_ANIMATEDGIF, friendlyName),
         _preClear(preClear),
         _gifIndex(gifIndex),
@@ -272,7 +272,7 @@ public:
     PatternAnimatedGIF(const JsonObjectConst& jsonObject)
         : LEDStripEffect(jsonObject),
           _preClear(jsonObject[PTY_PRECLEAR]),
-          _gifIndex(jsonObject[PTY_GIFINDEX]),
+          _gifIndex((GIFIdentifier)jsonObject[PTY_GIFINDEX].as<std::underlying_type_t<GIFIdentifier>>()),
           _bkColor(jsonObject[PTY_BKCOLOR]),
           _skipColor(jsonObject[PTY_SKIPCOLOR])
     {
@@ -285,7 +285,7 @@ public:
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc[PTY_GIFINDEX]  = _gifIndex;
+        jsonDoc[PTY_GIFINDEX]  = to_value(_gifIndex);
         jsonDoc[PTY_BKCOLOR]   = _bkColor;
         jsonDoc[PTY_SKIPCOLOR] = _skipColor;
         jsonDoc[PTY_PRECLEAR]  = _preClear;

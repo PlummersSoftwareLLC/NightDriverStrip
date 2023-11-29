@@ -219,7 +219,6 @@ public:
         else
             fill_solid(leds, _width * _height, color);
     }
-
     virtual bool isValidPixel(uint x, uint y) const
     {
         // Check that the pixel location is within the matrix's bounds

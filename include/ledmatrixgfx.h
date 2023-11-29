@@ -158,15 +158,16 @@ public:
 
         if (color == CRGB::Black)
         {
-            memset((void *) backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
+            memset((void *) backgroundLayer.backBuffer(), 0, sizeof(LEDMatrixGFX::SM_RGB) * _width * _height);
             memset((void *) leds, 0, sizeof(CRGB) * _width * _height);
         }
         else
         {
             for (int i = 0; i < NUM_LEDS; i++)
-                leds[i] = color;
-            for (int i = 0; i < NUM_LEDS; i++)
+            {
                 backgroundLayer.backBuffer()[i] = rgb24(color.r, color.g, color.b);
+                leds[i] = color;
+            }
         }
     }
 
