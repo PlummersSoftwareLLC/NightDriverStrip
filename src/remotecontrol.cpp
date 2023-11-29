@@ -72,6 +72,7 @@ void RemoteControl::handle()
     lastResult = result;
 
     auto &effectManager = g_ptrSystem->EffectManager();
+    auto &deviceConfig = g_ptrSystem->DeviceConfig();
 
     if (IR_ON == result)
     {
@@ -79,25 +80,30 @@ void RemoteControl::handle()
         effectManager.ClearRemoteColor();
         effectManager.SetInterval(0);
         effectManager.StartEffect();
-        g_ptrSystem->DeviceConfig().SetBrightness(BRIGHTNESS_MAX);
+        deviceConfig.SetBrightness(BRIGHTNESS_MAX);
         return;
     }
     else if (IR_OFF == result)
     {
-        auto& deviceConfig = g_ptrSystem->DeviceConfig();
         deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
         return;
     }
     else if (IR_BPLUS == result)
     {
-        effectManager.ClearRemoteColor();
-        effectManager.NextEffect();
+        if (deviceConfig.ApplyGlobalColors())
+            effectManager.ClearRemoteColor();
+        else
+            effectManager.NextEffect();
+        
         return;
     }
     else if (IR_BMINUS == result)
     {
-        effectManager.ClearRemoteColor();
-        effectManager.PreviousEffect();
+        if (deviceConfig.ApplyGlobalColors())
+            effectManager.ClearRemoteColor();
+        else
+            effectManager.PreviousEffect();
+        
         return;
     }
     else if (IR_SMOOTH == result)

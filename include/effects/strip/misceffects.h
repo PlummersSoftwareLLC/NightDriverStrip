@@ -242,7 +242,7 @@ protected:
       : LEDStripEffect(jsonObject),
         _everyNth(jsonObject[PTY_EVERYNTH]),
         _color(jsonObject[PTY_COLOR].as<CRGB>()),
-        _ignoreGlobalColor(jsonObject["igc"])
+        _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
     {
         debugV("Color Fill JSON constructor");
     }
@@ -256,7 +256,7 @@ protected:
 
         jsonDoc[PTY_EVERYNTH] = _everyNth;
         jsonDoc[PTY_COLOR] = _color;
-        jsonDoc["igc"] = _ignoreGlobalColor;
+        jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
 
         assert(!jsonDoc.overflowed());
 
