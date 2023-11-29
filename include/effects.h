@@ -205,7 +205,7 @@
 #define PTY_PROJECT         "prj"
 #define PTY_GIFINDEX        "gij"
 #define PTY_BKCOLOR         "bkg"
-#define PTY_SKIPCOLOR       "skc"
+#define PTY_FPS             "fps"
 #define PTY_PRECLEAR        "prc"
 #define PTY_IGNOREGLOBALCOLOR   "igc"
 

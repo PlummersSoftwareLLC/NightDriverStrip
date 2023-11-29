@@ -52,14 +52,14 @@
 
 // The GIF files are embedded within the flash image, and we need to tell the linker where they are
 
-extern const uint8_t atomic_start[]          asm("_binary_assets_gif_atomic_gif_start");
-extern const uint8_t atomic_end[]            asm("_binary_assets_gif_atomic_gif_end");
 extern const uint8_t colorsphere_start[]     asm("_binary_assets_gif_colorsphere_gif_start");
 extern const uint8_t colorsphere_end[]       asm("_binary_assets_gif_colorsphere_gif_end");
-extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_start");
-extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
+extern const uint8_t atomic_start[]          asm("_binary_assets_gif_atomic_gif_start");
+extern const uint8_t atomic_end[]            asm("_binary_assets_gif_atomic_gif_end");
 extern const uint8_t threerings_start[]      asm("_binary_assets_gif_threerings_gif_start");
 extern const uint8_t threerings_end[]        asm("_binary_assets_gif_threerings_gif_end");
+extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_start");
+extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
 extern const uint8_t banana_start[]          asm("_binary_assets_gif_banana_gif_start");
 extern const uint8_t banana_end[]            asm("_binary_assets_gif_banana_gif_end");
 
@@ -85,18 +85,19 @@ struct GIFInfo : public EmbeddedFile
 {
     uint16_t        _width;
     uint16_t        _height;
-    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height)
-        : EmbeddedFile(start, end), _width(width), _height(height)
+    byte            _fps;
+    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height, byte fps)
+        : EmbeddedFile(start, end), _width(width), _height(height), _fps(fps)
     {}
 };
 
 static std::map<GIFIdentifier, GIFInfo, std::less<GIFIdentifier>, psram_allocator<std::pair<GIFIdentifier, GIFInfo>>> AnimatedGIFs =
 {
-    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32) },
-    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12) },
-    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32) },
-    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32) },
-    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32) },
+    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },    
+    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },
+    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },
+    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },
+    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and
@@ -113,15 +114,15 @@ struct
     int             _offsetY   = 0;
     int             _width     = 0;
     int             _height    = 0;
+    byte            _fps       = 24;
     CRGB            _bkColor   = CRGB::Black;
-    CRGB            _skipColor = CRGB::Magenta;
 }
 g_gifDecoderState;
 
 // We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
 // ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
 
-std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12>>();
+std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>>();
 
 // PatternAnimatedGIF
 //
@@ -132,9 +133,8 @@ class PatternAnimatedGIF : public LEDStripEffect
 private:
 
     GIFIdentifier _gifIndex  = GIFIdentifier::INVALID;
-    CRGB          _bkColor   = BLACK16;
-    CRGB          _skipColor = MAGENTA16;
-    bool          _preClear  = false;
+    CRGB _bkColor   = BLACK16;
+    bool _preClear  = false;
 
     // GIF decoder callbacks.  These are static because the decoder doesn't allow you to pass any context, so they
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
@@ -189,6 +189,7 @@ private:
 
     static void updateScreenCallback(void)
     {
+        debugV("UpdateScreenCallback");
     }
 
     // drawPixelCallback
@@ -215,6 +216,8 @@ private:
     {
         // I don't think this is ever called, but if it is, we may need to implement it.  For now, it seems they just
         // call drawPixelCallback for each pixel in the image.
+
+        throw new std::runtime_error("drawLineCallback not implemented for animated GIFs");
     }
 
     // OpenGif
@@ -236,36 +239,31 @@ private:
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
+        g_gifDecoderState._pgif      = gif->second.contents;
+        g_gifDecoderState._len       = gif->second.length;
         g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;
         g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
         g_gifDecoderState._width     = gif->second._width;
         g_gifDecoderState._height    = gif->second._height;
+        g_gifDecoderState._fps       = gif->second._fps;
         g_gifDecoderState._bkColor   = _bkColor;
-        g_gifDecoderState._skipColor = _skipColor;
-        g_gifDecoderState._pgif      = gif->second.contents;
         g_gifDecoderState._seek      = 0;
-        g_gifDecoderState._len       = gif->second.length;
 
         return true;
     }
 
     size_t DesiredFramesPerSecond() const override
     {
-        // Smaller animations could spec a faster framerate, but even on 32x32 the GIF decoder
-        // is pretty slow, so we'll use a default for now.
-
-        return 24;
+        return g_gifDecoderState._fps;
     }
 
 public:
 
-    //
-    PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black, CRGB skip = CRGB::Magenta) :
+    PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black) :
         LEDStripEffect(EFFECT_MATRIX_ANIMATEDGIF, friendlyName),
         _preClear(preClear),
         _gifIndex(gifIndex),
-        _bkColor(bkColor),
-        _skipColor(skip)
+        _bkColor(bkColor)
     {
     }
 
@@ -273,8 +271,7 @@ public:
         : LEDStripEffect(jsonObject),
           _preClear(jsonObject[PTY_PRECLEAR]),
           _gifIndex((GIFIdentifier)jsonObject[PTY_GIFINDEX].as<std::underlying_type_t<GIFIdentifier>>()),
-          _bkColor(jsonObject[PTY_BKCOLOR]),
-          _skipColor(jsonObject[PTY_SKIPCOLOR])
+          _bkColor(jsonObject[PTY_BKCOLOR])
     {
     }
 
@@ -287,7 +284,6 @@ public:
 
         jsonDoc[PTY_GIFINDEX]  = to_value(_gifIndex);
         jsonDoc[PTY_BKCOLOR]   = _bkColor;
-        jsonDoc[PTY_SKIPCOLOR] = _skipColor;
         jsonDoc[PTY_PRECLEAR]  = _preClear;
 
         assert(!jsonDoc.overflowed());
@@ -314,9 +310,9 @@ public:
 
         // Open the GIF and start decoding
 
-        OpenGif();
-        if (ERROR_NONE != g_ptrGIFDecoder->startDecoding())
-            debugW("Failed to start decoding GIF");
+        if (OpenGif())
+            if (ERROR_NONE != g_ptrGIFDecoder->startDecoding())
+                debugW("Failed to start decoding GIF");
     }
 
     void Draw() override
@@ -328,8 +324,7 @@ public:
         if (_preClear)
             g()->Clear(_bkColor);
 
-
-        g_ptrGIFDecoder->decodeFrame();
+        g_ptrGIFDecoder->decodeFrame(false);    /* code */
     }
 };
 
