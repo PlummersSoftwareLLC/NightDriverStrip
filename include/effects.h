@@ -207,4 +207,6 @@
 #define PTY_BKCOLOR         "bkg"
 #define PTY_SKIPCOLOR       "skc"
 #define PTY_PRECLEAR        "prc"
+#define PTY_IGNOREGLOBALCOLOR   "igc"
+
 #define EFFECTS_CONFIG_FILE "/effects.cfg"

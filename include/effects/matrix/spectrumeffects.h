@@ -197,10 +197,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     uint8_t   _fadeRate;
 
     const CRGBPalette16 _palette;
-    float _peak1DecayRate;
-    float _peak2DecayRate;
+    bool                _ignoreGlobalColor;
+    float               _peak1DecayRate;
+    float               _peak2DecayRate;
 
-    bool      _bShowVU;
+    bool                _bShowVU;
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -308,6 +309,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     SpectrumAnalyzerEffect(const char   * pszFriendlyName,
                            int                    cNumBars = 12,
                            const CRGBPalette16  & palette = spectrumBasicColors,
+                           bool         ignoreGlobalColor = false,
                            uint16_t           scrollSpeed = 0,
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 1.0,
@@ -318,6 +320,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _scrollSpeed(scrollSpeed),
           _fadeRate(fadeRate),
           _palette(palette),
+          _ignoreGlobalColor(ignoreGlobalColor),
           _peak1DecayRate(peak1DecayRate),
           _peak2DecayRate(peak2DecayRate)
     {
@@ -335,6 +338,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _scrollSpeed(0),
           _fadeRate(fadeRate),
           _palette(baseColor),
+          _ignoreGlobalColor(true),
           _peak1DecayRate(peak1DecayRate),
           _peak2DecayRate(peak2DecayRate)
 
@@ -348,6 +352,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _scrollSpeed(jsonObject[PTY_SPEED]),
           _fadeRate(jsonObject["frt"]),
           _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+          _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR]),
           _peak1DecayRate(jsonObject["pd1"]),
           _peak2DecayRate(jsonObject["pd2"])
 
@@ -361,12 +366,13 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc[PTY_PALETTE] = _palette;
-        jsonDoc["nmb"]       = _numBars;
-        jsonDoc[PTY_SPEED]   = _scrollSpeed;
-        jsonDoc["frt"]       = _fadeRate;
-        jsonDoc["pd1"]       = _peak1DecayRate;
-        jsonDoc["pd2"]       = _peak2DecayRate;
+        jsonDoc[PTY_PALETTE]           = _palette;
+        jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
+        jsonDoc["nmb"]                 = _numBars;
+        jsonDoc[PTY_SPEED]             = _scrollSpeed;
+        jsonDoc["frt"]                 = _fadeRate;
+        jsonDoc["pd1"]                 = _peak1DecayRate;
+        jsonDoc["pd2"]                 = _peak2DecayRate;
 
         assert(!jsonDoc.overflowed());
 
@@ -407,6 +413,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             // If the palette is scrolling, we do a smooth blend.  Otherwise we do a straight color lookup, which makes the stripes
             // on the USA flag solid red rather than pinkish...
 
+            // A paused palette overrides everything else
             if (pGFXChannel->IsPalettePaused())
             {
                 // We don't use the color offset when the palette is paused
@@ -415,8 +422,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             }
             else
             {
+                // If global colors are set, we use them
+                auto& deviceConfig = g_ptrSystem->DeviceConfig();
+                std::optional<CRGBPalette16> globalPalette = {};
+
+                if (!_ignoreGlobalColor && deviceConfig.ApplyGlobalColors())
+                    globalPalette = CRGBPalette16(deviceConfig.GlobalColor(), deviceConfig.SecondColor());
+
                 int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, _scrollSpeed > 0 ? LINEARBLEND : NOBLEND));
+                DrawBar(i, ColorFromPalette(globalPalette ? *globalPalette : _palette, (q) % 255, 255, _scrollSpeed > 0 ? LINEARBLEND : NOBLEND));
             }
         }
     }

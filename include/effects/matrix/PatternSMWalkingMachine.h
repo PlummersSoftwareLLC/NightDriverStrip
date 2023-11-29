@@ -40,7 +40,7 @@ class PatternSMWalkingMachine : public LEDStripEffect
     void drawCircleF(float cx, float cy, float radius, CRGB col)
     {
         // This is either genius or crazy; it walks a box around the circle
-        // and fills in everything that's inside the radius! 
+        // and fills in everything that's inside the radius!
 
         uint8_t rad = radius;
         for (int8_t y = -radius; y < radius; y += 1)
@@ -51,11 +51,6 @@ class PatternSMWalkingMachine : public LEDStripEffect
                     drawPixelXYF(cx + x, cy + y, col);
             }
         }
-    }
-
-    static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max)
-    {
-        return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
     }
 
     void drawLineF(float x1, float y1, float x2, float y2, const CRGB &col1, const CRGB &col2)
