@@ -238,14 +238,14 @@ private:
             JsonArray list = doc["list"];
 
             // Get tomorrow's date
-            auto tomorrow = system_clock::now() + hours{24};
-            auto tomorrow_timet = system_clock::to_time_t(tomorrow);
-            auto tomorrowTime = localtime(&tomorrow_timet);
+            auto tomorrow = system_clock::now() + 24h;
+            auto tomorrowTime = system_clock::to_time_t(tomorrow);
+            auto tomorrowLocal = localtime(&tomorrowTime);
             char dateStr[11];
-            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
+            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowLocal);
 
-            float localMin = 999.0;
-            float localMax = 0.0;
+            float dailyMinimum = 999.0;
+            float dailyMaximum = 0.0;
             int slot = 0;
 
             iconTomorrow = "";
@@ -256,8 +256,8 @@ private:
                 JsonObject entry = list[i];
 
                 // convert the entry UTC to localtime
-                time_t entry_time = entry["dt"];
-                tm* entryLocal = localtime(&entry_time);
+                time_t entryTime = entry["dt"];
+                tm* entryLocal = localtime(&entryTime);
                 char entryStr[11];
                 strftime(entryStr, sizeof(entryStr), "%Y-%m-%d", entryLocal);
 
@@ -267,15 +267,15 @@ private:
                     slot++;
                     JsonObject main = entry["main"];
 
-                    // Identify the maximum of the maximum temperature
-                    float temp_max = main["temp_max"];
-                    if ((temp_max > 0) && (temp_max > localMax))
-                        localMax = temp_max;
+                    // Identify the maximum of the 3 hour maximum temperature
+                    float entryMaximum = main["temp_max"];
+                    if (entryMaximum > 0)
+                        dailyMaximum = std::max(dailyMaximum, entryMaximum);
 
-                    // Identify the minimum of the mimimum temperatures
-                    float temp_min = main["temp_min"];
-                    if ((temp_min > 0) && (temp_min < localMin))
-                        localMin = temp_min;
+                    // Identify the minimum of the 3 hour mimimum temperatures
+                    float entryMinimum = main["temp_min"];
+                    if (entryMinimum > 0)
+                        dailyMinimum = std::min(dailyMinimum, entryMinimum);
 
                     // Use the noon slot for the icon
                     if (slot == 4)
@@ -283,8 +283,8 @@ private:
                 }
             }
 
-            highTemp        = KelvinToLocal(localMax);
-            lowTemp         = KelvinToLocal(localMin);
+            highTemp        = KelvinToLocal(dailyMaximum);
+            lowTemp         = KelvinToLocal(dailyMinimum);
 
             debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
 
