@@ -91,13 +91,13 @@ struct GIFInfo : public EmbeddedFile
     {}
 };
 
-static std::map<GIFIdentifier, GIFInfo, std::less<GIFIdentifier>, psram_allocator<std::pair<GIFIdentifier, GIFInfo>>> AnimatedGIFs =
+static std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
 {
-    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },    
+//    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },    
     { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },
-    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },
-    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },
-    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },
+//    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },
+//    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },
+//    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and
@@ -122,7 +122,7 @@ g_gifDecoderState;
 // We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
 // ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
 
-std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 11, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 11, true>>();
+std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>>();
 
 // PatternAnimatedGIF
 //
@@ -293,7 +293,6 @@ public:
     void Start() override
     {
         g()->Clear(_bkColor);
-
 
         // Set the GIF decoder callbacks to our static functions
 
