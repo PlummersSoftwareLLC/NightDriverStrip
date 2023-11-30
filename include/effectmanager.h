@@ -319,7 +319,6 @@ public:
         #endif
 
         effect->Start();
-
         _effectStartTime = millis();
     }
 
@@ -523,7 +522,6 @@ public:
         _effectStartTime = millis();
 
         StartEffect();
-
         SaveCurrentEffectIndex();
     }
 
