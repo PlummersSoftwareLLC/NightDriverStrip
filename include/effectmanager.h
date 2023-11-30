@@ -312,7 +312,7 @@ public:
     // Receives an effect and sets it as the temporary effect.
     // This can be used by a user mapping a remote key to trigger a custom effect that is not in the queue.
     
-     void SetTemporaryEffect (std::shared_ptr<LEDStripEffect> tempEffect)
+     void SetTempEffect (std::shared_ptr<LEDStripEffect> tempEffect)
     {
         _tempEffect = tempEffect;
     }
@@ -321,7 +321,7 @@ public:
     //
     // Clears whatever temporary effect might be active.
 
-    void ClearTemporaryEffect()
+    void ClearTempEffect()
     {
         if (_tempEffect)
             _tempEffect = nullptr;
@@ -331,7 +331,7 @@ public:
     //
     // Checks to see if a temporary effect is set.
     
-    bool HasTemporaryEffect()
+    bool HasTempEffect()
     {
         if (_tempEffect)
             return true;
