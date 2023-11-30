@@ -306,6 +306,27 @@ public:
 
     void ClearRemoteColor(bool retainRemoteEffect = false);
 
+
+    // SetTemporaryEffect
+    //
+    // Receives an effect and sets it as the temporary effect.
+    // This can be used by a user mapping a remote key to trigger a custom effect that is not in the queue.
+    
+     void SetTemporaryEffect (std::shared_ptr<LEDStripEffect> tempEffect)
+    {
+        _tempEffect = tempEffect;
+    }
+
+    // ClearTemporaryEffect
+    //
+    // Clears whatever temporary effect might be active.
+
+    void ClearTemporaryEffect()
+    {
+        if (_tempEffect)
+            _tempEffect = nullptr;
+    }
+
     void StartEffect()
     {
         // If there's a temporary effect override from the remote control active, we start that, else
