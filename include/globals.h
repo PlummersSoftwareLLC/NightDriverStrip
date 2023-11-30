@@ -237,7 +237,16 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // LEDs, how many, on how many channels, laid out into how many fans/rings, and so on.  You can also
 // specify the audio system config like how many band channels.
 
-#if DEMO
+#if __has_include ("custom_globals.h")
+
+    // To reduce clutter, you may choose to create a new file called `custom_globals.h` in the `includes` directory.
+    // You can place your project configurations and logic to select them in that file.
+    // This can be done once you know how `platformio.ini` and `globals.h` interact with one another
+    // to create different environments and projects.
+
+    #include "custom_globals.h"
+
+#elif DEMO
 
     // This is a simple demo configuration.  To build, simply connect the data lead from a WS2812B
     // strip to pin 5 or other pin marked PIN0 below.  This does not use the OLED, LCD, or anything fancy, it simply drives the
