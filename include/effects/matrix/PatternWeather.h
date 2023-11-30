@@ -269,8 +269,7 @@ private:
 
                     // Identify the maximum of the 3 hour maximum temperature
                     float entryMaximum = main["temp_max"];
-                    if (entryMaximum > 0)
-                        dailyMaximum = std::max(dailyMaximum, entryMaximum);
+                    dailyMaximum = std::max(dailyMaximum, entryMaximum);
 
                     // Identify the minimum of the 3 hour mimimum temperatures
                     float entryMinimum = main["temp_min"];
