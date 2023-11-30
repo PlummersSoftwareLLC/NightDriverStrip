@@ -122,7 +122,7 @@ g_gifDecoderState;
 // We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
 // ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
 
-std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>>();
+std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 11, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 11, true>>();
 
 // PatternAnimatedGIF
 //
@@ -324,7 +324,7 @@ public:
         if (_preClear)
             g()->Clear(_bkColor);
 
-        g_ptrGIFDecoder->decodeFrame(false);    /* code */
+        g_ptrGIFDecoder->decodeFrame(false);   
     }
 };
 

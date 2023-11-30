@@ -203,12 +203,6 @@ void LoadEffectFactories()
         #endif
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Pacman",      GIFIdentifier::Pacman);
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Three Rings", GIFIdentifier::ThreeRings);
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Atomic",      GIFIdentifier::Atomic);
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Bananadance", GIFIdentifier::Banana,        true,               CRGB::DarkBlue);
-
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Colorball",   GIFIdentifier::ColorSphere);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",  MATRIX_WIDTH,  CRGB(0,0,40),               0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",   NUM_BANDS,     spectrumBasicColors, false, 100, 0, 0.75, 0.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",        NUM_BANDS,     USAColors_p,         true,  0, 0, 0.75, 0.75);
@@ -217,6 +211,10 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021,        PatternSMFire2021);
         ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave,               "GhostWave", 0, 30, false,  10);
         ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Pacman",      GIFIdentifier::Pacman);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Three Rings", GIFIdentifier::ThreeRings);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Atomic",      GIFIdentifier::Atomic);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Bananaman",   GIFIdentifier::Banana,        true,               CRGB::DarkBlue);
         ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
         ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
         ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Colorball",   GIFIdentifier::ColorSphere);

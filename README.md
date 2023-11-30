@@ -350,6 +350,19 @@ Add whatever you want and/or need to make your LED dreams come true. Fix my blun
 
 ## Time it takes to build this project
 
+To replicate, build the mesmerizer project.  Then delete pio/build_cache and build again, taking the time for the second build.
+
+- HP Z6 G5A, 7995WX, 128GB [96-core, 192-thread]
+  -> [davepl 11/29/2023] 25.270 seconds
+
+- 3970X, 128GB [32-core, 64-thread] Windows11+WSL2/Ubuntu02.04LTS
+  -> [davepl 11/29/2023] 34.292 seconds
+
+- Mac M1 Ultra Studio [10-core, 20-thread] 
+  -> [davepl 11/29/2023] 48.368 seconds
+
+## Old Build times, no longer relevant with current platformio, just historical curiosity:
+
 Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build after everything has been installed and downloaded.
 
 - AMD 3970 32-cores, 128GB, RAID SSD
