@@ -219,7 +219,6 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
         ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
         ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Colorball",   GIFIdentifier::ColorSphere);
         ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
         ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
         ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
