@@ -324,7 +324,7 @@ public:
         if (_preClear)
             g()->Clear(_bkColor);
 
-        g_ptrGIFDecoder->decodeFrame(false);    /* code */
+        // g_ptrGIFDecoder->decodeFrame(false);    /* code */
     }
 };
 
