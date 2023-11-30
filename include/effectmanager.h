@@ -327,18 +327,6 @@ public:
             _tempEffect = nullptr;
     }
 
-    // HasTemporaryEffect
-    //
-    // Checks to see if a temporary effect is set.
-    
-    bool HasTemporaryEffect()
-    {
-        if (_tempEffect)
-            return true;
-        else
-            return false;
-    }
-
     void StartEffect()
     {
         // If there's a temporary effect override from the remote control active, we start that, else
