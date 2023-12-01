@@ -33,6 +33,7 @@
 #if ENABLE_REMOTE
 
 #include "systemcontainer.h"
+#include "effects/strip/paletteeffect.h"
 
 #define BRIGHTNESS_STEP     20
 
@@ -121,7 +122,12 @@ void RemoteControl::handle()
     }
     else if (IR_FADE == result)
     {
-        effectManager.ShowVU( !effectManager.IsVUVisible() );
+        #if (ENABLE_AUDIO)
+            effectManager.ShowVU( !effectManager.IsVUVisible() );
+        #else
+            auto tempEffect = make_shared_psram<PaletteEffect>(CRGBPalette16(CRGB::Blue, CRGB::Red, CRGB::Blue), 32, .1, 0, NUM_LEDS, 0, LINEARBLEND, false); // Someone called the cops.
+            effectManager.SetTempEffect(tempEffect);
+       #endif
     }
 
     for (int i = 0; i < ARRAYSIZE(RemoteColorCodes); i++)
