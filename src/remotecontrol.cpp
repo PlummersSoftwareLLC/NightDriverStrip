@@ -92,35 +92,19 @@ void RemoteControl::handle()
     }
     else if (IR_BPLUS == result)
     {
-        if (deviceConfig.ApplyGlobalColors()) 
-        {
-            effectManager.ClearRemoteColor();
-        }
-        else if(effectManager.HasTempEffect())
-        {
+        if(effectManager.HasTempEffect())
             effectManager.ClearTempEffect();
-        }
         else
-        {
             effectManager.NextEffect();
-        }
         
         return;
     }
     else if (IR_BMINUS == result)
     {
-        if (deviceConfig.ApplyGlobalColors()) 
-        {
-            effectManager.ClearRemoteColor();
-        }
-        else if(effectManager.HasTempEffect())
-        {
+        if(effectManager.HasTempEffect())
             effectManager.ClearTempEffect();
-        }
         else
-        {
             effectManager.PreviousEffect();
-        }
         
         return;
     }
