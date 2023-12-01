@@ -42,13 +42,17 @@
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
+#include <chrono>
 #include <thread>
 #include <map>
 #include "TJpg_Decoder.h"
 #include "effects.h"
 #include "types.h"
 
-#define WEATHER_INTERVAL_SECONDS (10*60)
+using namespace std::chrono;
+using namespace std::chrono_literals;
+
+#define WEATHER_INTERVAL_SECONDS 600s
 #define WEATHER_CHECK_WIFI_WAIT 5000
 
 extern const uint8_t brokenclouds_start[]           asm("_binary_assets_bmp_brokenclouds_jpg_start");
@@ -133,7 +137,7 @@ private:
 
     bool   dataReady          = false;
     size_t readerIndex = std::numeric_limits<size_t>::max();
-    time_t latestUpdate       = 0;
+    system_clock::time_point latestUpdate = system_clock::from_time_t(0);
 
     // The weather is obviously weather, and we don't want text overlaid on top of our text
 
@@ -222,21 +226,27 @@ private:
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode > 0)
         {
-            AllocatedJsonDocument doc(4096);
+            // Needs to be this large to process all the returned JSON
+            AllocatedJsonDocument doc(10240);
             deserializeJson(doc, http.getString());
             JsonArray list = doc["list"];
 
             // Get tomorrow's date
-            time_t tomorrow = time(nullptr) + 86400;
-            tm* tomorrowTime = localtime(&tomorrow);
+            auto tomorrow = system_clock::now() + 24h;
+            auto tomorrowTime = system_clock::to_time_t(tomorrow);
+            auto tomorrowLocal = localtime(&tomorrowTime);
             char dateStr[11];
-            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
+            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowLocal);
+
+            float dailyMinimum = 999.0;
+            float dailyMaximum = 0.0;
+            int slot = 0;
 
             iconTomorrow = "";
 
@@ -244,28 +254,45 @@ private:
             for (size_t i = 0; i < list.size(); ++i)
             {
                 JsonObject entry = list[i];
-                String dt_txt = entry["dt_txt"];
-                if (dt_txt.startsWith(dateStr))
+
+                // convert the entry UTC to localtime
+                time_t entryTime = entry["dt"];
+                tm* entryLocal = localtime(&entryTime);
+                char entryStr[11];
+                strftime(entryStr, sizeof(entryStr), "%Y-%m-%d", entryLocal);
+
+                // if it is tomorrow then figure out the min and max and get the icon
+                if (strcmp(dateStr, entryStr) == 0) 
                 {
-                    //Serial.printf("Weather: Updating Forecast: %s", response.c_str());
+                    slot++;
                     JsonObject main = entry["main"];
-                    if (main["temp_max"] > 0)
-                        highTemp        = KelvinToLocal(main["temp_max"]);
-                    if (main["temp_min"] > 0)
-                        lowTemp         = KelvinToLocal(main["temp_min"]);
 
-                    iconTomorrow = entry["weather"][0]["icon"].as<String>();
+                    // Identify the maximum of the 3 hour maximum temperature
+                    float entryMaximum = main["temp_max"];
+                    dailyMaximum = std::max(dailyMaximum, entryMaximum);
 
-                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
-                    break;
+                    // Identify the minimum of the 3 hour mimimum temperatures
+                    float entryMinimum = main["temp_min"];
+                    if (entryMinimum > 0)
+                        dailyMinimum = std::min(dailyMinimum, entryMinimum);
+
+                    // Use the noon slot for the icon
+                    if (slot == 4)
+                        iconTomorrow = entry["weather"][0]["icon"].as<String>();
                 }
             }
+
+            highTemp        = KelvinToLocal(dailyMaximum);
+            lowTemp         = KelvinToLocal(dailyMinimum);
+
+            debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
+
             http.end();
             return true;
         }
         else
         {
-            debugW("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
+            debugE("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
@@ -309,7 +336,7 @@ private:
         }
         else
         {
-            debugW("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
+            debugE("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
@@ -319,28 +346,14 @@ private:
     {
         while(!WiFi.isConnected())
         {
-            debugI("Delaying Weather update, waiting for WiFi...");
+            debugW("Delaying Weather update, waiting for WiFi...");
             vTaskDelay(pdMS_TO_TICKS(WEATHER_CHECK_WIFI_WAIT));
         }
 
         updateCoordinates();
 
         if (getWeatherData())
-        {
-            debugW("Got today's weather");
-            if (getTomorrowTemps(highTomorrow, loTomorrow))
-            {
-                debugI("Got tomorrow's weather");
-            }
-            else
-            {
-                debugW("Failed to get tomorrow's weather");
-            }
-        }
-        else
-        {
-            debugW("Failed to get today's weather");
-        }
+            getTomorrowTemps(highTomorrow, loTomorrow);
     }
 
     bool HasLocationChanged()
@@ -387,18 +400,17 @@ public:
 
         g()->setFont(&Apple5x7);
 
-        time_t now;
-        time(&now);
+        auto now = system_clock::now();
 
         auto secondsSinceLastUpdate = now - latestUpdate;
 
         // If location and/or country have changed, trigger an update regardless of timer, but
         // not more than once every half a minute
-        if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= 30))
+        if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= 30s))
         {
             latestUpdate = now;
 
-            debugW("Triggering thread to check weather now...");
+            debugI("Triggering thread to check weather now...");
             // Trigger the weather reader.
             g_ptrSystem->NetworkReader().FlagReader(readerIndex);
         }
