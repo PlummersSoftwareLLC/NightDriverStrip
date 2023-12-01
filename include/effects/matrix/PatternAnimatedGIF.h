@@ -128,8 +128,9 @@ class PatternAnimatedGIF : public LEDStripEffect
 private:
 
     GIFIdentifier _gifIndex  = GIFIdentifier::INVALID;
-    CRGB _bkColor   = BLACK16;
-    bool _preClear  = false;
+    CRGB _bkColor            = BLACK16;
+    bool _preClear           = false;
+    bool _gifReadyToDraw     = false;
 
     // GIF decoder callbacks.  These are static because the decoder doesn't allow you to pass any context, so they
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
@@ -231,6 +232,9 @@ public:
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
+        assert(gif->second._width <= MATRIX_WIDTH);
+        assert(gif->second._height <= MATRIX_HEIGHT);
+
         g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;
         g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
         g_gifDecoderState._fps       = gif->second._fps;
@@ -243,7 +247,8 @@ public:
         g_ptrGIFDecoder->setDrawPixelCallback( drawPixelCallback );
         g_ptrGIFDecoder->setDrawLineCallback( drawLineCallback );
 
-        if (ERROR_NONE != g_ptrGIFDecoder->startDecoding((uint8_t *) gif->second.contents, gif->second.length))
+        _gifReadyToDraw = (ERROR_NONE == g_ptrGIFDecoder->startDecoding((uint8_t *) gif->second.contents, gif->second.length));
+        if (!_gifReadyToDraw)
             debugW("Failed to start decoding GIF");
     }
 
@@ -256,7 +261,10 @@ public:
         if (_preClear)
             g()->Clear(_bkColor);
 
-        g_ptrGIFDecoder->decodeFrame(false);   
+        if (_gifReadyToDraw)
+            g_ptrGIFDecoder->decodeFrame(false);   
+        else
+            g()->Clear(CRGB::Red);
     }
 };
 
