@@ -79,6 +79,7 @@ void RemoteControl::handle()
     {
         debugV("Turning ON via remote");
         effectManager.ClearRemoteColor();
+        effectManager.ClearTempEffect();
         effectManager.SetInterval(0);
         effectManager.StartEffect();
         deviceConfig.SetBrightness(BRIGHTNESS_MAX);
@@ -91,19 +92,35 @@ void RemoteControl::handle()
     }
     else if (IR_BPLUS == result)
     {
-        if (deviceConfig.ApplyGlobalColors())
+        if (deviceConfig.ApplyGlobalColors()) 
+        {
             effectManager.ClearRemoteColor();
+        }
+        else if(effectManager.HasTempEffect())
+        {
+            effectManager.ClearTempEffect();
+        }
         else
+        {
             effectManager.NextEffect();
+        }
         
         return;
     }
     else if (IR_BMINUS == result)
     {
-        if (deviceConfig.ApplyGlobalColors())
+        if (deviceConfig.ApplyGlobalColors()) 
+        {
             effectManager.ClearRemoteColor();
+        }
+        else if(effectManager.HasTempEffect())
+        {
+            effectManager.ClearTempEffect();
+        }
         else
+        {
             effectManager.PreviousEffect();
+        }
         
         return;
     }
