@@ -21,3 +21,5 @@ WebInstaller/index.html
 tools/__pycache__
 site/yarn-error.log
 site/dist
+**/custom_*.h
+custom_*.ini
