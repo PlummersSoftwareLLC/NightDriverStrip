@@ -5,16 +5,21 @@ import effectStyle from './style';
 import PropTypes from 'prop-types';
 import ConfigDialog from '../../config/configDialog';
 import { EffectsContext } from '../../../../context/effectsContext';
+import PreviewDialog from '../colordata/previewDialog';
 
-const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, requestRunning, navigateTo, pinnedEffect}) => {
+const ClickableAvatar = ({name, openPreview}) => {
+    return <Avatar aria-label={name} onClick={openPreview}>
+        {name[0]}
+    </Avatar>
+}
+
+const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, requestRunning, navigateTo, pinnedEffect, setPreview}) => {
     return <Box sx={{display: "flex", height: "100%"}} flexDirection={"row"}>
         <Box sx={{float: 'left', textAlign: "left", display: 'flex'}} flexDirection={"row"}>
             <Checkbox checked={effect.enabled} disabled={selected} onClick={(e)=>{e.stopPropagation(); effectEnable(effectIndex,!effect.enabled);}} sx={classes.short}/>
             <CardHeader sx={classes.short}
                 avatar={
-                    <Avatar aria-label={effect.name}>
-                        {effect.name[0]}
-                    </Avatar>
+                    <ClickableAvatar name={effect.name}  openPreview={() => setPreview(true)}/>
                 }
             /> 
         </Box>
@@ -48,13 +53,11 @@ const ListLayout = ({classes, setOpen, effect, selected, effectEnable, effectInd
     </Box>
 }
 
-const GridLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, requestRunning, navigateTo, pinnedEffect}) => {
+const GridLayout = ({classes, setOpen, effect, selected, effectEnable, effectIndex, progress, requestRunning, navigateTo, pinnedEffect, setPreview}) => {
     return <>
         <CardHeader
             avatar={
-                <Avatar aria-label={effect.name}>
-                    {effect.name[0]}
-                </Avatar>
+                <ClickableAvatar name={effect.name} openPreview={() => setPreview(true)}/>
             }
             title={effect.name}
             subheader={effect.enabled?(selected?"Active":"Waiting") : "Disabled"}
@@ -80,6 +83,7 @@ const Effect = props => {
     const { effect, effectIndex, effectEnable, navigateTo, requestRunning, gridLayout, onDragStart, onDragOver} = props;
     const [ progress, setProgress ] = useState(0);
     const [open, setOpen] = useState(false);
+    const [preview, setPreview] = useState(false);
     const selected = Number(effectIndex) === currentEffect;
     const theme = useTheme();
     const classes = effectStyle(theme);
@@ -109,6 +113,7 @@ const Effect = props => {
     ><CardLayout 
             classes={classes}
             setOpen={setOpen}
+            setPreview={setPreview}
             effect={effect}
             selected={selected}
             effectEnable={effectEnable} 
@@ -119,6 +124,7 @@ const Effect = props => {
             pinnedEffect={pinnedEffect}
         />
         {open && <ConfigDialog heading={effect.name} effectIndex={effectIndex} open={open} setOpen={setOpen}></ConfigDialog>}
+        {preview && <PreviewDialog open={preview} onClose={() => setPreview(false)}></PreviewDialog>}
     </Card>;
 };
 
@@ -141,6 +147,7 @@ const layoutProps = {
         cardheader: PropTypes.shape({}).isRequired
     }).isRequired,
     setOpen: PropTypes.func.isRequired,
+    setPreview: PropTypes.func.isRequired,
     effect: PropTypes.shape({
         name: PropTypes.string.isRequired, 
         enabled: PropTypes.bool.isRequired
