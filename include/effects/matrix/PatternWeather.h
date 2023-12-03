@@ -221,47 +221,44 @@ private:
     {
         HTTPClient http;
         String url;
-        bool coordinatesChanged = false;
 
-        if (HasLocationChanged())
+        if (!HasLocationChanged())
+            return false;
+
+        const String& configLocation = g_ptrSystem->DeviceConfig().GetLocation();
+        const String& configCountryCode = g_ptrSystem->DeviceConfig().GetCountryCode();
+        const bool configLocationIsZip = g_ptrSystem->DeviceConfig().IsLocationZip();
+
+        if (configLocationIsZip)
+            url = "http://api.openweathermap.org/geo/1.0/zip"
+                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+        else
+            url = "http://api.openweathermap.org/geo/1.0/direct"
+                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+
+        http.begin(url);
+        int httpResponseCode = http.GET();
+
+        if (httpResponseCode <= 0)
         {
-            const String& configLocation = g_ptrSystem->DeviceConfig().GetLocation();
-            const String& configCountryCode = g_ptrSystem->DeviceConfig().GetCountryCode();
-            const bool configLocationIsZip = g_ptrSystem->DeviceConfig().IsLocationZip();
-
-            if (configLocationIsZip)
-                url = "http://api.openweathermap.org/geo/1.0/zip"
-                    "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
-            else
-                url = "http://api.openweathermap.org/geo/1.0/direct"
-                    "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
-
-            http.begin(url);
-            int httpResponseCode = http.GET();
-
-            if (httpResponseCode > 0)
-            {
-                AllocatedJsonDocument doc(4096);
-                deserializeJson(doc, http.getString());
-                JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
-
-                strLatitude = coordinates["lat"].as<String>();
-                strLongitude = coordinates["lon"].as<String>();
-
-                strLocation = configLocation;
-                strCountryCode = configCountryCode;
-
-                coordinatesChanged = true;
-            }
-            else
-            {
-                debugE("Error fetching coordinates for location: %s", configLocation.c_str());
-            }
-
+            debugE("Error fetching coordinates for location: %s", configLocation.c_str());
             http.end();
-         }
+            return false;
+        }
 
-        return coordinatesChanged;
+        AllocatedJsonDocument doc(4096);
+        deserializeJson(doc, http.getString());
+        JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
+
+        strLatitude = coordinates["lat"].as<String>();
+        strLongitude = coordinates["lon"].as<String>();
+
+        http.end();
+
+        strLocation = configLocation;
+        strCountryCode = configCountryCode;
+
+        return true;
     }
 
     /**
@@ -277,7 +274,6 @@ private:
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
         HTTPClient http;
-        bool weatherReceived = false;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
             "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
@@ -340,15 +336,15 @@ private:
 
             debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
 
-            weatherReceived = true;
+            http.end();
+            return true;
         }
         else
         {
             debugE("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
+            http.end();
+            return false;
         }
-
-        http.end();
-        return weatherReceived;
     }
 
     /**
@@ -362,7 +358,6 @@ private:
     bool getWeatherData()
     {
         HTTPClient http;
-        bool weatherReceived = false;
 
         String url = "http://api.openweathermap.org/data/2.5/weather"
             "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
@@ -389,16 +384,15 @@ private:
             if (pszName)
                 strLocationName = pszName;
 
-            weatherReceived = true;
+            http.end();
+            return true;
         }
         else
         {
             debugE("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
-
+            http.end();
+            return false;
         }
-
-        http.end();
-        return weatherReceived;
     }
 
     /**
