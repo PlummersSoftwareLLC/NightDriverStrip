@@ -426,10 +426,10 @@ private:
      */
     bool HasLocationChanged()
     {
-        String configLocation = g_ptrSystem->DeviceConfig().GetLocation();
-        String configCountryCode =g_ptrSystem->DeviceConfig().GetCountryCode();
+        bool locationChanged = g_ptrSystem->DeviceConfig().GetLocation() != strLocation;
+        bool contryChanged = g_ptrSystem->DeviceConfig().GetCountryCode() != strCountryCode;
 
-        return strLocation != configLocation || strCountryCode != configCountryCode;
+        return locationChanged || contryChanged;
     }
 
 public:
