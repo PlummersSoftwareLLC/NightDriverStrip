@@ -221,7 +221,7 @@ private:
     {
         HTTPClient http;
         String url;
-        bool returnValue = false;
+        bool coordinatesChanged = false;
 
         if (HasLocationChanged())
         {
@@ -251,7 +251,7 @@ private:
                 strLocation = configLocation;
                 strCountryCode = configCountryCode;
 
-                returnValue = true;
+                coordinatesChanged = true;
             }
             else
             {
@@ -261,7 +261,7 @@ private:
             http.end();
          }
 
-        return returnValue;
+        return coordinatesChanged;
     }
 
     /**
@@ -277,7 +277,7 @@ private:
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
         HTTPClient http;
-        bool returnValue = false;
+        bool weatherReceived = false;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
             "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
@@ -340,7 +340,7 @@ private:
 
             debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
 
-            returnValue = true;
+            weatherReceived = true;
         }
         else
         {
@@ -348,7 +348,7 @@ private:
         }
 
         http.end();
-        return returnValue;
+        return weatherReceived;
     }
 
     /**
@@ -362,7 +362,7 @@ private:
     bool getWeatherData()
     {
         HTTPClient http;
-        bool returnValue = false;
+        bool weatherReceived = false;
 
         String url = "http://api.openweathermap.org/data/2.5/weather"
             "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
@@ -389,7 +389,7 @@ private:
             if (pszName)
                 strLocationName = pszName;
 
-            returnValue = true;
+            weatherReceived = true;
         }
         else
         {
@@ -398,7 +398,7 @@ private:
         }
 
         http.end();
-        return returnValue;
+        return weatherReceived;
     }
 
     /**
