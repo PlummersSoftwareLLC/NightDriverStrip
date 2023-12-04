@@ -73,27 +73,25 @@ public:
 
     void drawAt(int i, int j, CRGB color)
     {
-        auto graphics = _GFX[0];
+        auto graphics = g();
 
         graphics->leds[graphics->xy(i, j - 1)] += color;
         graphics->leds[graphics->xy(i, j + 1)] += color;
         graphics->leds[graphics->xy(i - 1, j)] += color;
         graphics->leds[graphics->xy(i + 1, j)] += color;
         color.maximizeBrightness();
-        graphics->leds[graphics->xy(i, j)] += color;
+        graphics->leds[XY(i, j)] += color;
     }
 
     void Draw() override
     {
-        auto graphics = _GFX[0];
-
         // Apply some blurring to whatever's already on the matrix
         // Note that we never actually clear the matrix, we just constantly
         // blur it repeatedly.  Since the blurring is 'lossy', there's
         // an automatic trend toward black -- by design.
 
         uint8_t blurAmount = beatsin8(2, 15, 255);
-        graphics->BlurFrame(blurAmount);
+        g()->BlurFrame(blurAmount);
 
         // Use two out-of-sync sine waves
         uint8_t i = beatsin8(27, borderWidth, MATRIX_WIDTH - 1 - borderWidth);
@@ -105,13 +103,13 @@ public:
         // The color of each point shifts over time, each at a different speed.
         uint16_t ms = millis();
 
-        drawAt(i, j, graphics->ColorFromCurrentPalette(ms / 11));
-        drawAt(i, j, graphics->ColorFromCurrentPalette(ms / 11));
-        drawAt(j * 2, i / 2, graphics->ColorFromCurrentPalette(ms / 13));
-        drawAt(nj * 2, ni / 2, graphics->ColorFromCurrentPalette(ms / 29));
-        drawAt(ni, nj, graphics->ColorFromCurrentPalette(ms / 17));
-        drawAt(i, nj, graphics->ColorFromCurrentPalette(ms / 37));
-        drawAt(ni, j, graphics->ColorFromCurrentPalette(ms / 41));
+        drawAt(i, j, g()->ColorFromCurrentPalette(ms / 11));
+        drawAt(i, j, g()->ColorFromCurrentPalette(ms / 11));
+        drawAt(j * 2, i / 2, g()->ColorFromCurrentPalette(ms / 13));
+        drawAt(nj * 2, ni / 2, g()->ColorFromCurrentPalette(ms / 29));
+        drawAt(ni, nj, g()->ColorFromCurrentPalette(ms / 17));
+        drawAt(i, nj, g()->ColorFromCurrentPalette(ms / 37));
+        drawAt(ni, j, g()->ColorFromCurrentPalette(ms / 41));
     }
 };
 

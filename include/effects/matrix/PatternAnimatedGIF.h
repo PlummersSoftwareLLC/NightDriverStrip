@@ -62,6 +62,8 @@ extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_
 extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
 extern const uint8_t banana_start[]          asm("_binary_assets_gif_banana_gif_start");
 extern const uint8_t banana_end[]            asm("_binary_assets_gif_banana_gif_end");
+extern const uint8_t tesseract_start[]       asm("_binary_assets_gif_tesseract_gif_start");
+extern const uint8_t tesseract_end[]         asm("_binary_assets_gif_tesseract_gif_end");
 
 // AnimatedGIFs
 //
@@ -75,6 +77,7 @@ enum class GIFIdentifier : int
     Pacman      = 3,
     ThreeRings  = 4,
     Banana      = 5,
+    Tesseract   = 6
 };
 
 // GIFInfo
@@ -98,6 +101,7 @@ static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, co
     { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },
     { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },
     { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },
+    { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and
@@ -143,6 +147,7 @@ private:
     {
         auto& g = *(g_ptrSystem->EffectManager().g());
         g.fillScreen(g.to16bit(g_gifDecoderState._bkColor));
+        g.fillScreen(BLACK16);
     }
 
     // We decide when to update the screen, so this is a no-op

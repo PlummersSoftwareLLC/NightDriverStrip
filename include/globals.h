@@ -865,8 +865,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU           6
     #define POWER_LIMIT_MW              (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    // The mic in the M5 is not quite as sensitive as the Mesermizer, so it gets a lower minimum VU than default
-    #define MIN_VU                      180
+    // The mic in the M5 is not quite the same as the Mesermizer, so it gets a different minimum VU than default
+
+    #define MIN_VU                      280
     #define NOISE_CUTOFF                1000
 
     #if !(ELECROW)
