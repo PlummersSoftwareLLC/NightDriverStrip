@@ -190,6 +190,11 @@ private:
         return g_gifDecoderState._fps;
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return !_preClear;
+    }
+
 public:
 
     PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black) :
@@ -267,8 +272,7 @@ public:
 
         if (_gifReadyToDraw)
             g_ptrGIFDecoder->decodeFrame(false);   
-        else
-            g()->Clear(CRGB::Red);
+
     }
 };
 
