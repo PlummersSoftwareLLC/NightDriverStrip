@@ -427,9 +427,9 @@ private:
     bool HasLocationChanged()
     {
         bool locationChanged = g_ptrSystem->DeviceConfig().GetLocation() != strLocation;
-        bool contryChanged = g_ptrSystem->DeviceConfig().GetCountryCode() != strCountryCode;
+        bool countryChanged = g_ptrSystem->DeviceConfig().GetCountryCode() != strCountryCode;
 
-        return locationChanged || contryChanged;
+        return locationChanged || countryChanged;
     }
 
 public:
