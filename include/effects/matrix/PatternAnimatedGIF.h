@@ -91,7 +91,7 @@ struct GIFInfo : public EmbeddedFile
     {}
 };
 
-static std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
+static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, const psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
 {
     { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 12 ) },    
     { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },
@@ -117,7 +117,7 @@ g_gifDecoderState;
 // We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
 // ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
 
-std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>>();
+const std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>>();
 
 // PatternAnimatedGIF
 //
@@ -128,8 +128,9 @@ class PatternAnimatedGIF : public LEDStripEffect
 private:
 
     GIFIdentifier _gifIndex  = GIFIdentifier::INVALID;
-    CRGB _bkColor   = BLACK16;
-    bool _preClear  = false;
+    CRGB _bkColor            = BLACK16;
+    bool _preClear           = false;
+    bool _gifReadyToDraw     = false;
 
     // GIF decoder callbacks.  These are static because the decoder doesn't allow you to pass any context, so they
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
@@ -163,7 +164,6 @@ private:
             debugW("drawPixelCallbackInvalid pixel: %d, %d", x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY);
             return;
         }
-
         g.leds[XY(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY)] = CRGB(red, green, blue);
     }
 
@@ -231,6 +231,9 @@ public:
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
+        assert(gif->second._width <= MATRIX_WIDTH);
+        assert(gif->second._height <= MATRIX_HEIGHT);
+
         g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;
         g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
         g_gifDecoderState._fps       = gif->second._fps;
@@ -243,7 +246,8 @@ public:
         g_ptrGIFDecoder->setDrawPixelCallback( drawPixelCallback );
         g_ptrGIFDecoder->setDrawLineCallback( drawLineCallback );
 
-        if (ERROR_NONE != g_ptrGIFDecoder->startDecoding((uint8_t *) gif->second.contents, gif->second.length))
+        _gifReadyToDraw = (ERROR_NONE == g_ptrGIFDecoder->startDecoding((uint8_t *) gif->second.contents, gif->second.length));
+        if (!_gifReadyToDraw)
             debugW("Failed to start decoding GIF");
     }
 
@@ -256,7 +260,10 @@ public:
         if (_preClear)
             g()->Clear(_bkColor);
 
-        g_ptrGIFDecoder->decodeFrame(false);   
+        if (_gifReadyToDraw)
+            g_ptrGIFDecoder->decodeFrame(false);   
+        else
+            g()->Clear(CRGB::Red);
     }
 };
 
