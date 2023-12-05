@@ -147,7 +147,7 @@ private:
      * @brief Should this effect show its title.
      * The weather is obviously weather, and we don't want text overlaid on top of our text
      * 
-     * @return false 
+     * @return bool - false No title rquired
      */
     virtual bool ShouldShowTitle() const
     {
@@ -157,7 +157,7 @@ private:
     /**
      * @brief How many frames per second does this effect want
      * 
-     * @return size_t 
+     * @return size_t - 25 FPS
      */
     size_t DesiredFramesPerSecond() const override
     {
@@ -167,7 +167,7 @@ private:
     /**
      * @brief Does this effect requre double buffering support
      * 
-     * @return false 
+     * @return bool - false No double buffering needed
      */
     bool RequiresDoubleBuffering() const override
     {
@@ -178,7 +178,7 @@ private:
      * @brief Convert Kelvin to Farenheit
      * 
      * @param K  Temperature in Kelvin
-     * @return float Farenheit temperature
+     * @return float - Farenheit temperature
      */
     static inline float KelvinToFarenheit(float K)
     {
@@ -189,7 +189,7 @@ private:
      * @brief Convert Kelvin to Celsius
      * 
      * @param K Temperature in Kelvin
-     * @return float Celsius temperature
+     * @return float - Celsius temperature
      */
     static inline float KelvinToCelsius(float K) 
     {
@@ -201,7 +201,7 @@ private:
      * based on the device configuration flag Use Celsius
      * 
      * @param K Temperature in Kelvin
-     * @return float temperature in selected units
+     * @return float - temperature in selected units
      */
     static inline float KelvinToLocal(float K)
     {
@@ -215,7 +215,7 @@ private:
      * @brief Update the latitude and longitude for the
      * selected city or zip code from the device configuration
      * 
-     * @return bool - updated the location 
+     * @return bool - true if the lat/log location is updated
      */
     bool updateCoordinates()
     {
@@ -269,7 +269,7 @@ private:
      * 
      * @param highTemp address to store the high temperature
      * @param lowTemp address to store the low temperature
-     * @return bool - Valid weather data retrieved 
+     * @return bool - true if valid weather data retrieved 
      */
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
@@ -353,7 +353,7 @@ private:
      * Current temperature, expected high and low temperatures,
      * and an icon for the current weather
      * 
-     * @return bool - Valid weather data retrieved 
+     * @return bool - true if valid weather data retrieved 
      */
     bool getWeatherData()
     {
