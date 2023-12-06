@@ -639,11 +639,11 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
 #if COLORDATA_SERVER_ENABLED
     // ColorDataTaskEntry
     //
-    // The thread which serves requests for color data on port 49153
-    
+    // The thread which serves requests for color data.
+
     void IRAM_ATTR ColorDataTaskEntry(void *)
     {
-        LEDViewer _viewer(12000);
+        LEDViewer _viewer(NetworkPort::ColorServer);
         int socket = -1;
 
         for(;;)
