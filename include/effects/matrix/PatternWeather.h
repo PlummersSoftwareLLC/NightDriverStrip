@@ -116,6 +116,10 @@ static std::map<String, EmbeddedFile, std::less<String>, psram_allocator<std::pa
     { "50n", EmbeddedFile(mist_night_start, mist_night_end) }
 };
 
+/**
+ * @brief This class implements the Weather Data effect
+ * 
+ */
 class PatternWeather : public LEDStripEffect
 {
 
@@ -139,33 +143,66 @@ private:
     size_t readerIndex = std::numeric_limits<size_t>::max();
     system_clock::time_point latestUpdate = system_clock::from_time_t(0);
 
-    // The weather is obviously weather, and we don't want text overlaid on top of our text
-
+    /**
+     * @brief Should this effect show its title.
+     * The weather is obviously weather, and we don't want text overlaid on top of our text
+     * 
+     * @return bool - false No title rquired
+     */
     virtual bool ShouldShowTitle() const
     {
         return false;
     }
 
+    /**
+     * @brief How many frames per second does this effect want
+     * 
+     * @return size_t - 25 FPS
+     */
     size_t DesiredFramesPerSecond() const override
     {
         return 25;
     }
 
+    /**
+     * @brief Does this effect requre double buffering support
+     * 
+     * @return bool - false No double buffering needed
+     */
     bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
+    /**
+     * @brief Convert Kelvin to Farenheit
+     * 
+     * @param K  Temperature in Kelvin
+     * @return float - Farenheit temperature
+     */
     static inline float KelvinToFarenheit(float K)
     {
         return (K - 273.15) * 9.0f/5.0f + 32;
     }
 
+    /**
+     * @brief Convert Kelvin to Celsius
+     * 
+     * @param K Temperature in Kelvin
+     * @return float - Celsius temperature
+     */
     static inline float KelvinToCelsius(float K) 
     {
         return K - 273.15;
     }
 
+    /**
+     * @brief Convert Kelvin temperature to local units
+     * based on the device configuration flag Use Celsius
+     * 
+     * @param K Temperature in Kelvin
+     * @return float - temperature in selected units
+     */
     static inline float KelvinToLocal(float K)
     {
         if (g_ptrSystem->DeviceConfig().UseCelsius())
@@ -174,6 +211,12 @@ private:
             return KelvinToFarenheit(K);
     }
 
+    /**
+     * @brief Update the latitude and longitude for the
+     * selected city or zip code from the device configuration
+     * 
+     * @return bool - true if the lat/log location is updated
+     */
     bool updateCoordinates()
     {
         HTTPClient http;
@@ -198,7 +241,7 @@ private:
 
         if (httpResponseCode <= 0)
         {
-            debugW("Error fetching coordinates for location: %s", configLocation.c_str());
+            debugE("Error fetching coordinates for location: %s", configLocation.c_str());
             http.end();
             return false;
         }
@@ -218,10 +261,16 @@ private:
         return true;
     }
 
-    // getTomorrowTemps
-    //
-    // Request a forecast and then parse out the high and low temps for tomorrow
-
+    /**
+     * @brief Get the forcast for Tomorrow from the API
+     * 
+     * Tommorow's expected high and low temperatures,
+     * and an icon for tomorrow's weather forcast
+     * 
+     * @param highTemp address to store the high temperature
+     * @param lowTemp address to store the low temperature
+     * @return bool - true if valid weather data retrieved 
+     */
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
         HTTPClient http;
@@ -298,10 +347,14 @@ private:
         }
     }
 
-    // getWeatherData
-    //
-    // Get the current temp and the high and low for today
-
+    /**
+     * @brief Get the Weather Data from the API
+     * 
+     * Current temperature, expected high and low temperatures,
+     * and an icon for the current weather
+     * 
+     * @return bool - true if valid weather data retrieved 
+     */
     bool getWeatherData()
     {
         HTTPClient http;
@@ -342,6 +395,11 @@ private:
         }
     }
 
+    /**
+     * @brief Hook called from the Network Reader Thread
+     * This drives the collection of the weather data.
+     * 
+     */
     void UpdateWeather()
     {
         while(!WiFi.isConnected())
@@ -350,45 +408,81 @@ private:
             vTaskDelay(pdMS_TO_TICKS(WEATHER_CHECK_WIFI_WAIT));
         }
 
-        updateCoordinates();
+        // Only try to update if we have an API Key
+        if (!g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
+        {
+            updateCoordinates();
 
-        if (getWeatherData())
-            getTomorrowTemps(highTomorrow, loTomorrow);
+            if (getWeatherData())
+                getTomorrowTemps(highTomorrow, loTomorrow);
+        }
     }
 
+    /**
+     * @brief Determine if the device configuration has changed the
+     * location selection
+     * 
+     * @return bool - true if the location has changed 
+     */
     bool HasLocationChanged()
     {
-        String configLocation = g_ptrSystem->DeviceConfig().GetLocation();
-        String configCountryCode =g_ptrSystem->DeviceConfig().GetCountryCode();
+        bool locationChanged = g_ptrSystem->DeviceConfig().GetLocation() != strLocation;
+        bool countryChanged = g_ptrSystem->DeviceConfig().GetCountryCode() != strCountryCode;
 
-        return strLocation != configLocation || strCountryCode != configCountryCode;
+        return locationChanged || countryChanged;
     }
 
 public:
 
+    /**
+     * @brief Construct a new Pattern Weather object
+     * 
+     */
     PatternWeather() : LEDStripEffect(EFFECT_MATRIX_WEATHER, "Weather")
     {
     }
 
+    /**
+     * @brief Construct a new Pattern Weather object
+     * 
+     * @param jsonObject Configuration JSON Object
+     */
     PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
+    /**
+     * @brief Destroy the Pattern Weather object
+     * Cancel the Network Reader thread for this index
+     */
     ~PatternWeather()
     {
         g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
+    /**
+     * @brief 
+     * 
+     * @param gfx Graphic Base engine
+     * @return bool - true if successfully initialized
+     */
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
+        // Register a Network Reader task with no interval.  Will manually flag in Draw()
         readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { UpdateWeather(); });
 
         return true;
     }
 
+    /**
+     * @brief This handles the drawing of the weather data.
+     * It also triggers the network reader on intervals.
+     * Will tell the user if there is no API Key configured
+     * 
+     */
     void Draw() override
     {
         const int fontHeight = 7;
