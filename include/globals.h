@@ -327,7 +327,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #if USE_PSRAM
         #define MAX_BUFFERS             500
     #else
-        #define MAX_BUFFERS             10
+        #define MAX_BUFFERS             20
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
