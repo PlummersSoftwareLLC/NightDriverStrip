@@ -234,7 +234,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
         ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
         ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Tesseract",   GIFIdentifier::Tesseract, true);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Tesseract",   GIFIdentifier::Tesseract, false);
         ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Nyancat",     GIFIdentifier::Nyancat);
         ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
         ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
