@@ -62,6 +62,8 @@ extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_
 extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
 extern const uint8_t banana_start[]          asm("_binary_assets_gif_banana_gif_start");
 extern const uint8_t banana_end[]            asm("_binary_assets_gif_banana_gif_end");
+extern const uint8_t nyancat_start[]         asm("_binary_assets_gif_nyancat_gif_start");
+extern const uint8_t nyancat_end[]           asm("_binary_assets_gif_nyancat_gif_end");
 extern const uint8_t tesseract_start[]       asm("_binary_assets_gif_tesseract_gif_start");
 extern const uint8_t tesseract_end[]         asm("_binary_assets_gif_tesseract_gif_end");
 
@@ -77,7 +79,8 @@ enum class GIFIdentifier : int
     Pacman      = 3,
     ThreeRings  = 4,
     Banana      = 5,
-    Tesseract   = 6
+    Tesseract   = 6,
+    Nyancat     = 7,
 };
 
 // GIFInfo
@@ -96,12 +99,13 @@ struct GIFInfo : public EmbeddedFile
 
 static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, const psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
 {
-    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 12 ) },    
-    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },
-    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },
-    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },
-    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },
-    { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },
+    { GIFIdentifier::Nyancat,      GIFInfo(nyancat_start,     nyancat_end,     64, 32, 18 ) },      // 20 KB
+    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 12 ) },      //  4 KB 
+    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },      // 36 KB
+    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },      // 21 KB
+    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },      // 52 KB
+    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },      //  9 KB
+    { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },      // 24 KB
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and

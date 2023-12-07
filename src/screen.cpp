@@ -443,6 +443,9 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             // When the button is pressed advance to the next information page on the little display
 
             g_InfoPage = (g_InfoPage + 1) % g_InfoPageCount;
+
+            // We stop rotating the effects when we are on the debug info page, and resume when we are not
+            g_ptrSystem->EffectManager().SetInterval(g_InfoPage == 1 ? 0 : DEFAULT_EFFECT_INTERVAL, true);
             bRedraw = true;
         }
 #endif
@@ -451,6 +454,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         Button2.update();
         if (Button2.pressed())
         {
+            debugW("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
             g_ptrSystem->EffectManager().NextEffect();
             bRedraw = true;
         }

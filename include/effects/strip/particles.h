@@ -43,7 +43,7 @@ class Lifespan
 {
   protected:
 
-    double                       _birthTime;
+    const double _birthTime;
 
   public:
 

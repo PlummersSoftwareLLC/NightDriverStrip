@@ -406,7 +406,9 @@ static const CRGB TwinkleColors[] =
     CRGB::Red,
     CRGB::Green,
     CRGB::Blue,
-    CRGB::White
+    CRGB::Blue,
+    CRGB::Purple,
+    CRGB::Yellow
 };
 #endif
 
@@ -494,7 +496,7 @@ class TwinkleEffect : public LEDStripEffect
 
         EVERY_N_MILLISECONDS(20)
         {
-            fadeToBlackBy(FastLED.leds(), NUM_LEDS, _fadeFactor);
+            fadeAllChannelsToBlackBy(_fadeFactor);
         }
     }
 };
