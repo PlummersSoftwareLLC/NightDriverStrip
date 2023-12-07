@@ -99,8 +99,9 @@ struct GIFInfo : public EmbeddedFile
 
 static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, const psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
 {
+    // Banana has 8 frames.  Most music is around 120BPM, so we need to play each frame for 1/15th of a second to somewhat align with a typical beat
+    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },      //  4 KB 
     { GIFIdentifier::Nyancat,      GIFInfo(nyancat_start,     nyancat_end,     64, 32, 18 ) },      // 20 KB
-    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 12 ) },      //  4 KB 
     { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },      // 36 KB
     { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },      // 21 KB
     { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },      // 52 KB
@@ -144,7 +145,6 @@ private:
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
     // these callbacks to do the actual work of plotting them on the LED matrix.
 
-
     // screenClearCallback - clears the screen with the color given to the constructor
 
     static void screenClearCallback(void)
@@ -187,15 +187,17 @@ private:
         throw new std::runtime_error("drawLineCallback not implemented for animated GIFs");
     }
 
+    // For slower animations that run at a lower framerate, we double the framerate by discarding every other frame, 
+    // which allows us to draw the VU meter and so on at a useable rate even though the animation doesn't painy every time.
+
+    static bool FrameDoubling()
+    {
+        return g_gifDecoderState._fps <= 15;
+    }
 
     size_t DesiredFramesPerSecond() const override
     {
-        return g_gifDecoderState._fps;
-    }
-
-    virtual bool RequiresDoubleBuffering() const
-    {
-        return !_preClear;
+        return FrameDoubling() ? g_gifDecoderState._fps * 2 : g_gifDecoderState._fps;
     }
 
 public:
@@ -266,6 +268,17 @@ public:
 
     void Draw() override
     {
+        // If we're running a low FPS animation, we discard alternate frames and draw every other one, which allows
+        // the VU meter to paint on every frame and remain responsive.
+        
+        static bool discardFrame = false;
+        if (FrameDoubling())
+        {
+            discardFrame = !discardFrame;
+            if (discardFrame)
+                return;
+        }
+
         // GIFs that use transparency will leave the previous frame in place, so we need
         // to clear the screen before we draw the next frame.  We can skip this if the
         // GIF doesn't use transparency.
