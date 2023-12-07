@@ -445,7 +445,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             g_InfoPage = (g_InfoPage + 1) % g_InfoPageCount;
 
             // We stop rotating the effects when we are on the debug info page, and resume when we are not
-            g_ptrSystem->EffectManager().SetInterval(g_InfoPage == 1 ? 0 : DEFAULT_EFFECT_INTERVAL, true);
+            g_ptrSystem->EffectManager().SetInterval(g_InfoPage == 0 ? 0 : DEFAULT_EFFECT_INTERVAL, true);
             bRedraw = true;
         }
 #endif

@@ -557,8 +557,6 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             g()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
         }
     }
-
-
 };
 
 template <typename StarType> class BlurStarEffect : public StarryNightEffect<StarType>
