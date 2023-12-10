@@ -179,11 +179,15 @@ void LoadEffectFactories()
     // Fill effect factories
     #elif M5DEMO
 
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p);
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 1.0, 1.0);
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, .25);        
+
         ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 8, true, true, 1);
         ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 3, true, true, 1);
         ADD_EFFECT(EFFECT_STRIP_TWINKLE, TwinkleEffect, NUM_LEDS * 4, 20, 0);
+    /*
         ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true);
-
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 4, 4, 10, 2.0, 2.0);
 
         ADD_STARRY_NIGHT_EFFECT(QuietStar, "Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);       // Rainbow Twinkle
@@ -192,10 +196,8 @@ void LoadEffectFactories()
         ADD_STARRY_NIGHT_EFFECT(QuietStar, "Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);           // Green Twinkle
         ADD_STARRY_NIGHT_EFFECT(Star, "Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);                  // Blue Sparkle
         ADD_STARRY_NIGHT_EFFECT(QuietStar, "Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0);                                                                 // Red Twinkle
+    */
 
-        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p);
-        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 1.0, 1.0);
-        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, .25);        
 
     #elif LASERLINE
 
@@ -222,6 +224,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",    NUM_BANDS,     spectrumBasicColors, false, 100, 0, 0.75, 0.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",   MATRIX_WIDTH,  CRGB(0,0,40),               0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Fire Log",    GIFIdentifier::Firelog, false);
         ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Pacman",      GIFIdentifier::Pacman);
         ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,        PatternPongClock);
         ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Colorball",   GIFIdentifier::ColorSphere);
