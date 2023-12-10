@@ -200,3 +200,41 @@ void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::o
     else if (forceApplyGlobalColor)
         g_ptrSystem->EffectManager().ApplyGlobalColor(finalGlobalColor);
 }
+
+DeviceConfig::ValidateResponse DeviceConfig::ValidateStockTickerAPIKey(const String &newStockTickerAPIKey)
+{
+    HTTPClient http;
+
+    String url = "https://finnhub.io/api/v1/quote?symbol=AAPL&token=" + urlEncode(newStockTickerAPIKey);
+
+    http.begin(url);
+
+    switch (http.GET())
+    {
+        case HTTP_CODE_OK:
+        {
+            http.end();
+            return { true, "" };
+        }
+
+        case HTTP_CODE_UNAUTHORIZED:
+        {
+            AllocatedJsonDocument jsonDoc(1024);
+            deserializeJson(jsonDoc, http.getString());
+
+            String message = "";
+            if (jsonDoc.containsKey("error"))
+                message = jsonDoc["error"].as<String>();
+
+            http.end();
+            return { false, message };
+        }
+
+        // Anything else
+        default:
+        {
+            http.end();
+            return { false, "Unable to validate" };
+        }
+    }
+}

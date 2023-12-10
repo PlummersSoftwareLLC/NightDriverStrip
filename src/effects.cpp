@@ -105,6 +105,7 @@
   #if ENABLE_WIFI
     #include "effects/matrix/PatternSubscribers.h"
     #include "effects/matrix/PatternWeather.h"
+    #include "effects/matrix/PatternStockTicker.h"
   #endif
 
 #endif  // USE_HUB75
@@ -117,6 +118,7 @@
 
 #if USE_HUB75 && ENABLE_WIFI
     std::vector<SettingSpec, psram_allocator<SettingSpec>> PatternSubscribers::mySettingSpecs = {};
+    std::vector<SettingSpec, psram_allocator<SettingSpec>> PatternStockTicker::mySettingSpecs = {};
 #endif
 
 // Effect factories for the StarryNightEffect - one per star type
@@ -231,6 +233,7 @@ void LoadEffectFactories()
       #if ENABLE_WIFI
         ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
         ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
+        ADD_EFFECT(EFFECT_MATRIX_STOCK_TICKER,      PatternStockTicker);
       #endif
 
         ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);
