@@ -194,6 +194,7 @@ public:
 class SoundAnalyzer : public AudioVariables
 {
     static const size_t MAX_SAMPLES = 256;
+    std::unique_ptr<uint16_t[]> ptrSampleBuffer;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
@@ -273,7 +274,6 @@ class SoundAnalyzer : public AudioVariables
 
     void FillBufferI2S()
     {
-        std::unique_ptr<uint16_t[]> ptrSampleBuffer(new uint16_t[MAX_SAMPLES]);
         constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
 
         size_t bytesRead = 0;
@@ -465,6 +465,7 @@ public:
 
     SoundAnalyzer()
     {
+        ptrSampleBuffer = make_unique_psram_array<uint16_t>(MAX_SAMPLES);
         _vReal      = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
         _vPeaks     = (double *)PreferPSRAMAlloc(NUM_BANDS  * sizeof(_vPeaks[0]));

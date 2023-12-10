@@ -327,7 +327,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #if USE_PSRAM
         #define MAX_BUFFERS             500
     #else
-        #define MAX_BUFFERS             20
+        #define MAX_BUFFERS             24
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
@@ -354,6 +354,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #else
         #define LED_PIN0 5
     #endif
+
 
 #elif LANTERN
 

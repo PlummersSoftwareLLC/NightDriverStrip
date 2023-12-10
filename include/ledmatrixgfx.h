@@ -251,6 +251,6 @@ public:
 
     static void StartMatrix();
     static CRGB *GetMatrixBackBuffer();
-    static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
+    static void MatrixSwapBuffers(bool bSwapBackground);
 };
 #endif

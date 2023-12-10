@@ -66,6 +66,8 @@ extern const uint8_t nyancat_start[]         asm("_binary_assets_gif_nyancat_gif
 extern const uint8_t nyancat_end[]           asm("_binary_assets_gif_nyancat_gif_end");
 extern const uint8_t tesseract_start[]       asm("_binary_assets_gif_tesseract_gif_start");
 extern const uint8_t tesseract_end[]         asm("_binary_assets_gif_tesseract_gif_end");
+extern const uint8_t firelog_start[]         asm("_binary_assets_gif_firelog_gif_start");
+extern const uint8_t firelog_end[]           asm("_binary_assets_gif_firelog_gif_end");
 
 // AnimatedGIFs
 //
@@ -81,6 +83,7 @@ enum class GIFIdentifier : int
     Banana      = 5,
     Tesseract   = 6,
     Nyancat     = 7,
+    Firelog     = 8
 };
 
 // GIFInfo
@@ -107,6 +110,7 @@ static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, co
     { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },      // 52 KB
     { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },      //  9 KB
     { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },      // 24 KB
+    { GIFIdentifier::Firelog,      GIFInfo(firelog_start,     firelog_end,     64, 32, 24 ) },      // 24 KB
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and
