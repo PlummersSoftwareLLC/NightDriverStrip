@@ -47,7 +47,7 @@ void RemoteControl::handle()
     uint result = results.value;
     _IR_Receive.resume();
 
-    debugV("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
+    debugI("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
 
     if (0xFFFFFFFF == result || result == lastResult)
     {
