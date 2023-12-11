@@ -181,7 +181,7 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p);
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 1.0, 1.0);
-        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, .25);        
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, .25);
 
         ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 8, true, true, 1);
         ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 3, true, true, 1);
@@ -217,14 +217,14 @@ void LoadEffectFactories()
     #elif MESMERIZER
 
         #ifndef EFFECT_SET_VERSION
-            #define EFFECT_SET_VERSION  5   // Bump version if default set changes in a meaningful way
+            #define EFFECT_SET_VERSION  6   // Bump version if default set changes in a meaningful way
         #endif
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",    NUM_BANDS,     spectrumBasicColors, false, 100, 0, 0.75, 0.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",   MATRIX_WIDTH,  CRGB(0,0,40),               0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Fire Log",    GIFIdentifier::Firelog, false);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Fire Log",    GIFIdentifier::Firelog);
         ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Pacman",      GIFIdentifier::Pacman);
         ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,        PatternPongClock);
         ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Colorball",   GIFIdentifier::ColorSphere);
@@ -237,7 +237,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
         ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
         ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
-        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Tesseract",   GIFIdentifier::Tesseract, false);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Tesseract",   GIFIdentifier::Tesseract);
         ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Nyancat",     GIFIdentifier::Nyancat);
         ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
         ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
