@@ -103,7 +103,7 @@ struct GIFInfo : public EmbeddedFile
 static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, const psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
 {
     // Banana has 8 frames.  Most music is around 120BPM, so we need to play each frame for 1/15th of a second to somewhat align with a typical beat
-    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },      //  4 KB 
+    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },      //  4 KB
     { GIFIdentifier::Nyancat,      GIFInfo(nyancat_start,     nyancat_end,     64, 32, 18 ) },      // 20 KB
     { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },      // 36 KB
     { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },      // 21 KB
@@ -191,8 +191,8 @@ private:
         throw new std::runtime_error("drawLineCallback not implemented for animated GIFs");
     }
 
-    // For slower animations that run at a lower framerate, we double the framerate by discarding every other frame, 
-    // which allows us to draw the VU meter and so on at a useable rate even though the animation doesn't painy every time.
+    // For slower animations that run at a lower framerate, we double the framerate by discarding every other frame,
+    // which allows us to draw the VU meter and so on at a useable rate even though the animation doesn't paint every time.
 
     static bool FrameDoubling()
     {
@@ -246,7 +246,7 @@ public:
         auto gif = AnimatedGIFs.find(_gifIndex);
         if (gif == AnimatedGIFs.end())
             throw std::runtime_error(str_sprintf("Unable to locate GIF by index %d in the map.", (int) _gifIndex).c_str());
-        
+
         // Set up the gifDecoderState with all of the context that it will need to decode and
         // draw the GIF, since the static callbacks will have no other context to work with.
 
@@ -274,7 +274,7 @@ public:
     {
         // If we're running a low FPS animation, we discard alternate frames and draw every other one, which allows
         // the VU meter to paint on every frame and remain responsive.
-        
+
         static bool discardFrame = false;
         if (FrameDoubling())
         {
@@ -291,7 +291,7 @@ public:
             g()->Clear(_bkColor);
 
         if (_gifReadyToDraw)
-            g_ptrGIFDecoder->decodeFrame(false);   
+            g_ptrGIFDecoder->decodeFrame(false);
 
     }
 };

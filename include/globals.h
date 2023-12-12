@@ -296,7 +296,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
 
 #elif M5DEMO
-    
+
     // This is the DEMO project customized for the M5 that includes screen support and other
     // features that make it well suited to the demo strip that runs in Dave's Garage
 
@@ -309,7 +309,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
     #define COLOR_ORDER             EOrder::RGB
-    
+
     #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI                 1   // Connect to WiFi
     #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
@@ -926,7 +926,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU           6
     #define POWER_LIMIT_MW              (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    // The mic in the M5 is not quite the same as the Mesermizer, so it gets a different minimum VU than default
+    // The mic in the M5 is not quite the same as the Mesmerizer, so it gets a different minimum VU than default
 
     #define MIN_VU                      280
     #define NOISE_CUTOFF                1000
