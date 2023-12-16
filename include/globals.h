@@ -216,7 +216,7 @@
 #define NET_CORE                1
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        1
-#define SCREEN_CORE             0
+#define SCREEN_CORE             1
 #define DEBUG_CORE              1
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1

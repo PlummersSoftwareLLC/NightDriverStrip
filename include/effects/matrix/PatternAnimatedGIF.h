@@ -110,7 +110,7 @@ static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, co
     { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },      // 52 KB
     { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },      //  9 KB
     { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },      // 24 KB
-    { GIFIdentifier::Firelog,      GIFInfo(firelog_start,     firelog_end,     64, 32, 24 ) },      // 24 KB
+    { GIFIdentifier::Firelog,      GIFInfo(firelog_start,     firelog_end,     64, 32, 16 ) },      // 24 KB
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and
