@@ -27,6 +27,11 @@ public:
   {
   }
 
+  virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
+  {
+      return 24;
+  }
+
   void Start() override
   {
     g()->Clear();

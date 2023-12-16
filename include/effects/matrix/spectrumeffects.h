@@ -576,13 +576,14 @@ class GhostWave : public WaveformEffect
 
     virtual bool RequiresDoubleBuffering() const override
     {
+        // MoveOutWardX in the main draw call uses the prior buffer 
         return true;
     }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
         // Looks cool at the low-50s it can actually achieve
-        return _blur > 0 ? 45 : 30;
+        return _blur > 0 ? 60 : 30;
     }
 
     virtual void Draw() override

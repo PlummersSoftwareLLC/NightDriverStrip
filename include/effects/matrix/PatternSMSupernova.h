@@ -28,7 +28,8 @@ public:
         g()->Clear();
     }
 
-    void Draw() override {
+    void Draw() override 
+    {
         step = -1;
         g()->DimAll(200);
 
@@ -39,8 +40,7 @@ public:
             }
 
             if (debris_item._is_shift && ParticlesUpdate(debris_item)) {
-                CRGB baseRGB = ColorFromPalette(HeatColors_p, debris_item._hue,
-                                                255, LINEARBLEND);
+                CRGB baseRGB = ColorFromPalette(g()->IsPalettePaused() ? g()->GetCurrentPalette() : HeatColors_p, debris_item._hue, 255, LINEARBLEND);
                 baseRGB.nscale8(debris_item._state);
                 drawPixelXYF(debris_item._position_x, debris_item._position_y, baseRGB);
             }
@@ -141,7 +141,8 @@ private:
     {
         const uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
         const uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-        for (uint8_t i = 0; i < 4; i++) {
+        for (uint8_t i = 0; i < 4; i++) 
+        {
             const int xn = x + (i & 1);
             const int yn = y + ((i >> 1) & 1);
 

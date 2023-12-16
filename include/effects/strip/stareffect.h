@@ -163,7 +163,7 @@ class MusicStar : public Star
     }
 
     virtual float PreignitionTime() const      { return 0.0f; }
-    virtual float IgnitionTime()    const      { return 0.11f; }
+    virtual float IgnitionTime()    const      { return 0.01f; }
     virtual float HoldTime()        const      { return 2.0f; }
     virtual float FadeTime()        const      { return 0.25f;  }
 
@@ -557,8 +557,6 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             g()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
         }
     }
-
-
 };
 
 template <typename StarType> class BlurStarEffect : public StarryNightEffect<StarType>

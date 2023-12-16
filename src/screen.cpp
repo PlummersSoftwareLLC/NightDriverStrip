@@ -435,6 +435,8 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         // nothing has been drawn for any page yet
 
 #ifdef TOGGLE_BUTTON_1
+        static uint effectInterval;
+
         Button1.update();
         if (Button1.pressed())
         {
@@ -443,6 +445,21 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             // When the button is pressed advance to the next information page on the little display
 
             g_InfoPage = (g_InfoPage + 1) % g_InfoPageCount;
+
+            auto& effectManager = g_ptrSystem->EffectManager();
+
+            // We stop rotating the effects when we are on the debug info page, and resume when we are not
+            if (g_InfoPage == 0)
+            {
+                effectInterval = effectManager.GetInterval();
+                effectManager.SetInterval(0, true);
+            }
+            // Restore effect interval to the value we remembered, on the proviso that effect rotation is now indeed
+            // paused. Otherwise, the user may have chosen a different effect interval while we weren't looking and
+            // we don't want to mess with that.
+            else if (effectManager.GetInterval() == 0)
+                effectManager.SetInterval(effectInterval, true);
+
             bRedraw = true;
         }
 #endif
@@ -451,6 +468,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         Button2.update();
         if (Button2.pressed())
         {
+            debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
             g_ptrSystem->EffectManager().NextEffect();
             bRedraw = true;
         }

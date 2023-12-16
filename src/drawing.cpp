@@ -294,7 +294,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             g_ptrSystem->EffectManager().SetNewFrameAvailable(true);
         }
 
-        graphics->PostProcessFrame(wifiPixelsDrawn, localPixelsDrawn);
+        graphics->PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);
 
         // Delay at least 2ms and not more than 1s until next frame is due
 
