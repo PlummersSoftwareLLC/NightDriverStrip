@@ -73,20 +73,19 @@ public:
 
     void drawAt(int i, int j, CRGB color)
     {
-        auto graphics = _GFX[0];
+        auto graphics = g();
 
         graphics->leds[graphics->xy(i, j - 1)] += color;
         graphics->leds[graphics->xy(i, j + 1)] += color;
         graphics->leds[graphics->xy(i - 1, j)] += color;
         graphics->leds[graphics->xy(i + 1, j)] += color;
         color.maximizeBrightness();
-        graphics->leds[graphics->xy(i, j)] += color;
+        graphics->leds[XY(i, j)] += color;
     }
 
     void Draw() override
     {
-        auto graphics = _GFX[0];
-
+        auto graphics = g();
         // Apply some blurring to whatever's already on the matrix
         // Note that we never actually clear the matrix, we just constantly
         // blur it repeatedly.  Since the blurring is 'lossy', there's

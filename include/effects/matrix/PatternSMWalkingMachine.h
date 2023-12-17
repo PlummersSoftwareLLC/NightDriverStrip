@@ -98,6 +98,11 @@ class PatternSMWalkingMachine : public LEDStripEffect
     {
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;           // Clears every frame, so doesn't need the old buffer copy
+    }
+
     void Start() override
     {
         g()->Clear();

@@ -42,8 +42,10 @@ static const CRGB ballColors[] =
     CRGB::Red,
     CRGB::Blue,
     CRGB::Orange,
+    CRGB::Purple,
+    CRGB::Yellow,
     CRGB::Indigo,
-    CRGB::Violet
+    
 };
 
 class BouncingBallEffect : public LEDStripEffect
@@ -151,20 +153,14 @@ private:
         else
         {
             for (int j = 0; j<_cLength; j++)                            // fade brightness all LEDs one step
-            {
                 if (random_range(0, 10)>5)
-                {
-                    CRGB c = _GFX[0]->getPixel(j);
-                    c.fadeToBlackBy(10);
-                    setPixelsOnAllChannels(j, 1, c, false);
-                }
-            }
+                    fadePixelToBlackOnAllChannelsBy(j, 50);
         }
 
         // Draw each of the the balls
         for (size_t i = 0; i < _cBalls; i++)
         {
-            TimeSinceLastBounce[i] = (g_Values.AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 3.0;        // BUGBUG hardcoded was 3 for NightDriverStrip
+            TimeSinceLastBounce[i] = (g_Values.AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 10.0;        // BUGBUG hardcoded was 3 but was too fast
             Height[i] = 0.5f * Gravity * powf(TimeSinceLastBounce[i], 2.0f) + ImpactVelocity[i] * TimeSinceLastBounce[i];
 
             if (Height[i] < 0)
