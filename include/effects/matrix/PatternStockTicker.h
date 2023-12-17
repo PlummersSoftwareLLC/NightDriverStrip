@@ -138,7 +138,7 @@ private:
      */
     size_t DesiredFramesPerSecond() const override
     {
-        return 10;
+        return 30;
     }
 
     /**
@@ -212,8 +212,8 @@ private:
                 ticker._strCompanyName    = companyData["name"].as<String>();
                 ticker._strExchangeName   = companyData["exchange"].as<String>();
                 ticker._strCurrency       = companyData["currency"].as<String>();
-                ticker._marketCap         = companyData["marketCapitalization"].as<float>();
-                ticker._sharesOutstanding = companyData["shareOutstanding"].as<float>();
+                ticker._marketCap         = companyData["marketCapitalization"];
+                ticker._sharesOutstanding = companyData["shareOutstanding"];
 
                 debugI("Got ticker header: sym %s Company %s, Exchange %s", 
                         ticker._strSymbol.c_str(), ticker._strCompanyName.c_str(), 
@@ -292,14 +292,14 @@ private:
                     dataFound = true;
 
                     ticker._isValid           = true;
-                    ticker._currentPrice      = stockData["c"].as<float>();
-                    ticker._change            = stockData["d"].as<float>();
-                    ticker._percentChange     = stockData["dp"].as<float>();
-                    ticker._highPrice         = stockData["h"].as<float>();
-                    ticker._lowPrice          = stockData["l"].as<float>();
-                    ticker._openPrice         = stockData["o"].as<float>();
-                    ticker._prevClosePrice    = stockData["pc"].as<float>();
-                    ticker._sampleTime        = stockData["t"].as<long>();
+                    ticker._currentPrice      = stockData["c"];
+                    ticker._change            = stockData["d"];
+                    ticker._percentChange     = stockData["dp"];
+                    ticker._highPrice         = stockData["h"];
+                    ticker._lowPrice          = stockData["l"];
+                    ticker._openPrice         = stockData["o"];
+                    ticker._prevClosePrice    = stockData["pc"];
+                    ticker._sampleTime        = stockData["t"];
 
                     debugI("Got ticker data: %s Now %f Lo %f, Hi %f, Change %f", 
                             ticker._strSymbol.c_str(), ticker._currentPrice, 
@@ -405,8 +405,8 @@ protected:
             {
                 mySettingSpecs.emplace_back(
                     NAME_OF(_stockTickerList),
-                    "Stock Symbols to Show",
-                    "The list of valid Stock Symbol to show, seperated by commas.  May be from any exchange.",
+                    "Stock symbols to show",
+                    "The list of valid stock symbol to show, seperated by commas.  May be from any exchange.",
                     SettingSpec::SettingType::String
                 );
             }
@@ -521,10 +521,11 @@ public:
      */
     PatternStockTicker(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
-        String storedStockList  = DEFAULT_STOCK_TICKERS;
+        String storedStockList = DEFAULT_STOCK_TICKERS;
 
-        if (jsonObject.containsKey(PTY_STOCK_TICKERS)) {
-            storedStockList = jsonObject[PTY_STOCK_TICKERS].as<String>();
+        if (jsonObject.containsKey(PTY_STOCKTICKERS))
+        {
+            storedStockList = jsonObject[PTY_STOCKTICKERS].as<String>();
         }
 
         LoadNewTickerSymbols(storedStockList);
@@ -554,7 +555,7 @@ public:
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc[PTY_STOCK_TICKERS] = _stockTickerList;
+        jsonDoc[PTY_STOCKTICKERS] = _stockTickerList;
 
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
