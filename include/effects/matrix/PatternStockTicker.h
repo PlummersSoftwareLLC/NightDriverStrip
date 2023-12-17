@@ -54,13 +54,6 @@
 // Default stock Ticker symbols for Apple, IBM, and Microsoft 
 #define DEFAULT_STOCK_TICKERS       "AAPL,IBM,MSFT"
 
-// Update stocks every 10 minutes, retry after 30 seconds on error, and check other things every 5 seconds
-#define STOCK_CHECK_INTERVAL        (10 * 60000)
-#define STOCK_CHECK_ERROR_INTERVAL  30000
-#define STOCK_READER_INTERVAL       5000
-#define STOCK_DISPLAY_INTERVAL      30000
-#define STOCK_TOGGLE_DATA_INTERVAL  5000
-#define NO_STOCK_SELECTED           -1
 
 /**
  * @brief All the data about a specific Stock Ticker
@@ -101,8 +94,15 @@ class PatternStockTicker : public LEDStripEffect
 {
 
 private:
+    // Update stocks every 10 minutes, retry after 30 seconds on error, and check other things every 5 seconds
+    static constexpr auto STOCK_CHECK_INTERVAL          = (10 * 60000);
+    static constexpr auto STOCK_CHECK_ERROR_INTERVAL    = 30000;
+    static constexpr auto STOCK_READER_INTERVAL         = 5000;
+    static constexpr auto STOCK_DISPLAY_INTERVAL        = 30000;
+    static constexpr auto STOCK_TOGGLE_DATA_INTERVAL    = 5000;
+    static constexpr auto NO_STOCK_SELECTED             = -1; 
 
-    // @todo rework this for dynamic stock list
+    // Keep the vector of stock symbol data in psram
     std::vector<StockTicker, psram_allocator<StockTicker>> _tickers = {};
     StockTicker *_currentTicker     = NULL;
     size_t _currentIndex            = NO_STOCK_SELECTED;
@@ -429,36 +429,26 @@ protected:
     int LoadNewTickerSymbols(String newSymbols)
     {
         int n = 0;
-        int commaPosition = 0;
-        int startPosition = 0;
 
-        if (!newSymbols.isEmpty())
-        {
-            commaPosition = newSymbols.indexOf(',');
-            if ( -1 == commaPosition)
-            {
-                n++;
-                addStockSymbol(newSymbols);
-            }
-            else
-            {
-                while ( -1 != commaPosition) 
-                {
-                    n++;
-                    addStockSymbol(newSymbols.substring(startPosition, commaPosition));
-                    startPosition = commaPosition + 1;
-                    commaPosition = newSymbols.indexOf(',', startPosition);
-                }
-                n++;
-                addStockSymbol(newSymbols.substring(startPosition));
-            }
+        if (!newSymbols.isEmpty())  
+        {  
+            int commaPosition = newSymbols.indexOf(',');  
+            while (-1 != commaPosition)  
+            {  
+                n++;  
+                addStockSymbol(newSymbols.substring(0, commaPosition));  
+                newSymbols = newSymbols.substring(commaPosition + 1);  
+                commaPosition = newSymbols.indexOf(',');  
+            }  
+            n++;  
+            addStockSymbol(newSymbols);  
 
-            _stockChanged = true;
-            _currentTicker = &_tickers[0];
-            _currentIndex = 0;
-        }
-        return n;
-    }
+            _stockChanged = true;  
+            _currentTicker = &_tickers[0];  
+            _currentIndex = 0;  
+        }  
+        return n;  
+    }  
 
     /**
      * @brief Add the supplied stock symbol to the vector of
