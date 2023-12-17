@@ -215,14 +215,14 @@ private:
                 ticker._marketCap         = companyData["marketCapitalization"];
                 ticker._sharesOutstanding = companyData["shareOutstanding"];
 
-                debugI("Got ticker header: sym %s Company %s, Exchange %s", 
+                debugI("Got ticker header: Symbol %s Company %s, Exchange %s", 
                         ticker._strSymbol.c_str(), ticker._strCompanyName.c_str(), 
                         ticker._strExchangeName.c_str());
             }
         }
         else
         {
-            debugE("Error (%d) fetching company data for ticker: %s", 
+            debugE("Error (%d) fetching company data for ticker: '%s'", 
                     httpResponseCode, ticker._strSymbol.c_str());
         }
 
@@ -309,7 +309,7 @@ private:
         }
         else
         {
-            debugE("Error (%d) fetching Stock data for Ticker: %s", 
+            debugE("Error (%d) fetching Stock data for Ticker: '%s'", 
                     httpResponseCode, ticker._strSymbol.c_str());
         }
 
