@@ -57,7 +57,7 @@
 
 /**
  * @brief All the data about a specific Stock Ticker
- * Stored as a circular linked list so that the draw code
+ * Stored as a standard vector so that the draw code
  * can easily move from one to the next
  * 
  */
