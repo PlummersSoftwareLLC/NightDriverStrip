@@ -260,6 +260,11 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
     auto& j = response->getRoot();
 
+    j["MATRIX_WIDTH"]          = MATRIX_WIDTH;
+    j["MATRIX_HEIGHT"]         = MATRIX_HEIGHT;
+    j["FRAMES_SOCKET"]         = !!COLORDATA_WEB_SOCKET_ENABLED;
+    j["EFFECTS_SOCKET"]        = !!EFFECTS_WEB_SOCKET_ENABLED;
+
     j["LED_FPS"]               = g_Values.FPS;
     j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
     j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;

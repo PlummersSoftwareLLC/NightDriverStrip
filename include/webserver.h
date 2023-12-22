@@ -208,6 +208,11 @@ class CWebServer
 
     // begin - register page load handlers and start serving pages
     void begin();
+
+    void AddWebSocket(AsyncWebSocket& webSocket)
+    {
+        _server.addHandler(&webSocket);
+    }
 };
 
 // Set value in lambda using a forwarding function. Always returns true

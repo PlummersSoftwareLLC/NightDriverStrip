@@ -291,7 +291,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             ShowOnboardRGBLED();
 
             g_Values.FPS = FastLED.getFPS();
-            g_ptrSystem->EffectManager().SetNewFrameAvailable(true);
+            g_ptrSystem->EffectManager().ReportNewFrameAvailable();
         }
 
         graphics->PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);

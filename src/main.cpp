@@ -376,6 +376,10 @@ void setup()
 
     #if ENABLE_WIFI && ENABLE_WEBSERVER
         g_ptrSystem->SetupWebServer();
+
+        #if WEB_SOCKETS_ANY_ENABLED
+            g_ptrSystem->SetupWebSocketServer(g_ptrSystem->WebServer());
+        #endif
     #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
