@@ -707,7 +707,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
             }
 
             #if COLORDATA_WEB_SOCKET_ENABLED
-                wsListenersPresent = webSocketServer.HaveColorDataListeners();
+                wsListenersPresent = webSocketServer.HaveColorDataClients();
             #endif
 
             if (socket >= 0 || wsListenersPresent)
@@ -752,6 +752,11 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 if (connectResult == WiFiConnectResult::Connected)
                 {
                     millisAtLastConnected = millis();
+
+                    #if WEB_SOCKETS_ANY_ENABLED
+                        // It's recommended to clean up any stale web socket clients every second or so
+                        g_ptrSystem->WebSocketServer().CleanupClients();
+                    #endif
                 }
                 else
                 {

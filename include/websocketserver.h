@@ -61,13 +61,13 @@ public:
         #endif
     }
 
-    void CleanupListeners()
+    void CleanupClients()
     {
         _colorDataSocket.cleanupClients();
         _effectChangeSocket.cleanupClients();
     }
 
-    bool HaveColorDataListeners()
+    bool HaveColorDataClients()
     {
         return _colorDataSocket.count() > 0;
     }
@@ -76,7 +76,7 @@ public:
     // reduce memory allocations and avoid the overhead of using ArduinoJson.
     void SendColorData(CRGB* leds, size_t count)
     {
-        if (!HaveColorDataListeners() || leds == nullptr || count == 0)
+        if (!HaveColorDataClients() || leds == nullptr || count == 0)
             return;
 
         const char messageHead[] = "{\"colorData\":[";
