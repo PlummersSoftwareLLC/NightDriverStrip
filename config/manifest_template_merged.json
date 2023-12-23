@@ -2,6 +2,7 @@
   "name": "<name>",
   "version": "v<version>",
   "new_install_prompt_erase": true,
+  "new_install_improv_wait_time": 15,
   "builds": [
     {
       "chipFamily": "<chipfamily>",
