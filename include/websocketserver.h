@@ -118,7 +118,7 @@ public:
 
     void OnEffectEnabledStateChanged(size_t effectIndex, bool newState) override
     {
-        _effectChangeSocket.textAll(str_sprintf("{\"effectEnabledState\":{\"index\":%zu,\"enabled\":%s}}", effectIndex, newState ? "true" : "false"));
+        _effectChangeSocket.textAll(str_sprintf("{\"effectsEnabledState\":[{\"index\":%zu,\"enabled\":%s}]}", effectIndex, newState ? "true" : "false"));
     }
 
     void OnIntervalChanged(uint interval) override
