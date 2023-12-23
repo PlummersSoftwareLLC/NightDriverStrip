@@ -134,11 +134,14 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
     if (!file)
     {
         debugE("Unable to open file %s to write JSON!", fileName.c_str());
+        pJsonDoc->clear();
         return false;
     }
 
     size_t bytesWritten = serializeJson(*pJsonDoc, file);
     debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), bytesWritten);
+
+    pJsonDoc->clear();
 
     file.flush();
     file.close();
