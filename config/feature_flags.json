@@ -25,7 +25,7 @@
         "define": "COLORDATA_SERVER_ENABLED",
         "letter": "C",
         "value": "1",
-        "show": false
+        "show": true
     },
     "ota": {
         "label": "OTA updates",

@@ -83,10 +83,8 @@ public:
             SPIFFS.remove(IMPROV_LOG_FILE);
         #endif
 
-        if (WiFi.getMode() == WIFI_STA && WiFi.isConnected())
-            this->state_ = improv::STATE_PROVISIONED;
-        else
-            this->state_ = improv::STATE_AUTHORIZED;
+        debugI("Sending Improv packet to declare we're up. Ignore any IMPROV lines that follow this one.");
+        this->set_state_(improv::STATE_AUTHORIZED);
 
         log_write("Finished Improv setup");
     }
