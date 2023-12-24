@@ -35,9 +35,12 @@
 #include <tuple>
 #include <algorithm>
 #include "jsonserializer.h"
+#include "types.h"
+
+// Make sure we have a secrets.h and that it contains everything we need.
 
 #if !__has_include("secrets.h")
-#error Copy include/secrets-example.h to include/secrets.h, edit to taste, and retry. Please see README.md
+#error Copy include/secrets.example.h to include/secrets.h, edit to taste, and retry. Please see README.md.
 #endif
 
 #include "secrets.h"
@@ -47,7 +50,7 @@
 #endif
 
 #if !defined(cszPassword)
-#error A definition for cszSSID is missing from secrets.h
+#error A definition for cszPassword is missing from secrets.h
 #endif
 
 #if !defined(cszHostname)
@@ -94,8 +97,9 @@
 //    (in deviceconfig.cpp)
 // 5. Adding (de)serialization logic for the setting to the SerializeToJSON()/DeserializeFromJSON() methods
 // 6. Adding a Get/Set method for the setting (and, where applicable, their implementation in deviceconfig.cpp)
-// 7. If you've added an entry to secrets.example.h add a test at the top of this file to confirm that the new #defines were found. This prevents drift when developers have an existing tree and don't know to refresh their modified version of secrets.h
-
+// 7. If you've added an entry to secrets.example.h to define a default value for your setting then add a
+//    test at the top of this file to confirm that the new #define is found. This prevents drift when users
+//    have an existing tree and don't know to refresh their modified version of secrets.h.
 //
 // For the first 5 points, a comment has been added to the respective place in the existing code.
 // Generally speaking, one will also want to add logic to the webserver to retrieve and set the setting.
