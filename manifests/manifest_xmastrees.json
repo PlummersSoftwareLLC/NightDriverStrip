@@ -2,6 +2,7 @@
   "name": "X-mas Trees for M5StickC Plus",
   "version": "v040",
   "new_install_prompt_erase": true,
+  "new_install_improv_wait_time": 20,
   "builds": [
     {
       "chipFamily": "ESP32",
