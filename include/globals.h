@@ -879,25 +879,29 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It displays a spectrum analyzer and music visualizer
 
     #ifndef PROJECT_NAME
-    #define PROJECT_NAME                "Spectrum"
+    #define PROJECT_NAME                    "Spectrum"
     #endif
 
-    #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI                 1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
-    #define ENABLE_NTP                  1   // Set the clock from the web
-    #define ENABLE_OTA                  0   // Accept over the air flash updates
-    #define ENABLE_REMOTE               0   // IR Remote Control
-    #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
-    #define COLORDATA_SERVER_ENABLED    0
+    #define ENABLE_AUDIOSERIAL              0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI                     1   // Connect to WiFi
+    #define WAIT_FOR_WIFI                   0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL               2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER                1   // Turn on the internal webserver
+    #define ENABLE_NTP                      1   // Set the clock from the web
+    #define ENABLE_OTA                      0   // Accept over the air flash updates
+    #define ENABLE_REMOTE                   1   // IR Remote Control
+    #define ENABLE_AUDIO                    1   // Listen for audio from the microphone and process it
+    #define COLORDATA_SERVER_ENABLED        0
 
     #if USE_PSRAM
-        #define MAX_BUFFERS             500
+        #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+        #define COLORDATA_SERVER_ENABLED    1
+        #define MAX_BUFFERS                 500
     #else
-        #define MAX_BUFFERS             10
+        #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
+        #define COLORDATA_SERVER_ENABLED    0
+        #define MIN_BUFFERS                 1
+        #define MAX_BUFFERS                 1
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
@@ -953,14 +957,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
-    #define MAX_BUFFERS                 5   // Keep buffers low because we have little memory to work with
-
     #define ENABLE_WEBSERVER            0   // Turn on the internal webserver
     #define ENABLE_NTP                  0   // Set the clock from the web
     #define ENABLE_OTA                  0   // Accept over the air flash updates
     #define ENABLE_REMOTE               1   // IR Remote Control
     #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
     #define COLORDATA_SERVER_ENABLED    0
+
+    #define MIN_BUFFERS                 1   // Keep buffers low because we have little memory to work with
+    #define MAX_BUFFERS                 1
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
