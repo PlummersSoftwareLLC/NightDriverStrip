@@ -77,6 +77,10 @@
 #error A definition for cszTimeZone is missing from secrets.h
 #endif
 
+#if !defined(cszStockTickerAPIKey)
+#error A definition for cszStockTickerAPIKey is missing from secrets.h
+#endif
+
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
 #define NTP_SERVER_DEFAULT "0.pool.ntp.org"
