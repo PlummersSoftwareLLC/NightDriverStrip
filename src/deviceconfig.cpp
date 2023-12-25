@@ -55,6 +55,7 @@ DeviceConfig::DeviceConfig()
         debugI("Loading DeviceConfig from JSON");
 
         DeserializeFromJSON(pJsonDoc->as<JsonObjectConst>(), true);
+        pJsonDoc->clear();
     }
     else
     {

@@ -519,6 +519,7 @@ std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJson
     if (jsonObject.containsKey(PTY_PROJECT)
         && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
     {
+        pJsonDoc->clear();
         return {};
     }
 
@@ -529,6 +530,7 @@ std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJson
     if (jsonVersion == EFFECT_SET_VERSION)
         return jsonObject;
 
+    pJsonDoc->clear();
     return {};
 }
 

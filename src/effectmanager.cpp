@@ -91,6 +91,8 @@ void InitEffectsManager()
             g_ptrSystem->EffectManager().DeserializeFromJSON(jsonObject.value());
         else
             g_ptrSystem->SetupEffectManager(jsonObject.value(), g_ptrSystem->Devices());
+
+        pJsonDoc->clear();
     }
     else
     {
@@ -211,18 +213,20 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
 
     auto& sourceEffect = _vEffects[index];
 
-    std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
-
-    assert(SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
-        [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); }));
-
     auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
     auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
 
     if (factoryEntry == jsonEffectFactories.end())
         return nullptr;
 
+    std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
+
+    assert(SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
+        [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); }));
+
     auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
+
+    ptrJsonDoc->clear();
 
     if (!copiedEffect)
         return nullptr;
