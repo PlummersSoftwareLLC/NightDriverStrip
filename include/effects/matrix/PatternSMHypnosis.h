@@ -26,6 +26,11 @@ class PatternSMHypnosis : public LEDStripEffect
     {
     }
 
+    size_t DesiredFramesPerSecond() const override
+    {
+        return 45;
+    }
+
     void Start() override
     {
         g()->Clear();
@@ -47,6 +52,8 @@ class PatternSMHypnosis : public LEDStripEffect
         t += 4;
         for (uint x = 0; x < MATRIX_WIDTH; x++)
             for (uint y = 0; y < MATRIX_HEIGHT; y++)
-                g()->leds[XY(x, y)] = ColorFromPalette(RainbowStripeColors_p, t / 2 + rMap[x][y].radius + rMap[x][y].angle, sin8(rMap[x][y].angle + (rMap[x][y].radius * 2) - t));
+                g()->leds[XY(x, y)] = ColorFromPalette(g()->IsPalettePaused()
+                                      ? g()->GetCurrentPalette()
+                                      : RainbowStripeColors_p, t / 2 + rMap[x][y].radius + rMap[x][y].angle, sin8(rMap[x][y].angle + (rMap[x][y].radius * 2) - t));
     }
 };

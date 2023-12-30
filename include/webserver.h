@@ -50,8 +50,9 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include "deviceconfig.h"
-#include "jsonbase.h"
 #include "effects.h"
+#include "jsonbase.h"
+#include "network.h"
 
 class CWebServer
 {
@@ -202,11 +203,16 @@ class CWebServer
   public:
 
     CWebServer()
-        : _server(80), _staticStats()
+        : _server(NetworkPort::Webserver), _staticStats()
     {}
 
     // begin - register page load handlers and start serving pages
     void begin();
+
+    void AddWebSocket(AsyncWebSocket& webSocket)
+    {
+        _server.addHandler(&webSocket);
+    }
 };
 
 // Set value in lambda using a forwarding function. Always returns true

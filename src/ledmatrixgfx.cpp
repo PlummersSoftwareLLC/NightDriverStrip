@@ -185,7 +185,7 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
     pMatrix->SetBrightness(targetBrightness);
 
-    MatrixSwapBuffers(g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0, false);
+    MatrixSwapBuffers((wifiPixelsDrawn == 0) && (g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0));
 
     FastLED.countFPS();
 }
@@ -198,7 +198,7 @@ CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
     return (CRGB *)backgroundLayer.getRealBackBuffer();
 }
 
-void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle)
+void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground)
 {
     // If an effect redraws itself entirely ever frame, it can skip saving the most recent buffer, so
     // can swap without waiting for a copy.

@@ -371,11 +371,15 @@ void setup()
     #endif
 
     #if INCOMING_WIFI_ENABLED
-        g_ptrSystem->SetupSocketServer(49152, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
+        g_ptrSystem->SetupSocketServer(NetworkPort::IncomingWiFi, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
     #endif
 
     #if ENABLE_WIFI && ENABLE_WEBSERVER
         g_ptrSystem->SetupWebServer();
+
+        #if WEB_SOCKETS_ANY_ENABLED
+            g_ptrSystem->SetupWebSocketServer(g_ptrSystem->WebServer());
+        #endif
     #endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly

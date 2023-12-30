@@ -291,10 +291,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             ShowOnboardRGBLED();
 
             g_Values.FPS = FastLED.getFPS();
-            g_ptrSystem->EffectManager().SetNewFrameAvailable(true);
+            g_ptrSystem->EffectManager().ReportNewFrameAvailable();
         }
 
-        graphics->PostProcessFrame(wifiPixelsDrawn, localPixelsDrawn);
+        graphics->PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);
 
         // Delay at least 2ms and not more than 1s until next frame is due
 

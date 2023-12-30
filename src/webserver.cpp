@@ -40,8 +40,8 @@
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
     { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } },
-    { DeviceConfig::PowerLimitTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } },
-    { DeviceConfig::BrightnessTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateBrightness(value); } }
+    { DeviceConfig::PowerLimitTag,        [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } },
+    { DeviceConfig::BrightnessTag,        [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateBrightness(value); } }
 };
 
 std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
@@ -259,6 +259,11 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest)
 
     auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
     auto& j = response->getRoot();
+
+    j["MATRIX_WIDTH"]          = MATRIX_WIDTH;
+    j["MATRIX_HEIGHT"]         = MATRIX_HEIGHT;
+    j["FRAMES_SOCKET"]         = !!COLORDATA_WEB_SOCKET_ENABLED;
+    j["EFFECTS_SOCKET"]        = !!EFFECTS_WEB_SOCKET_ENABLED;
 
     j["LED_FPS"]               = g_Values.FPS;
     j["SERIAL_FPS"]            = g_Analyzer._serialFPS;

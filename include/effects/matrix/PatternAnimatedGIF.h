@@ -62,6 +62,12 @@ extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_
 extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
 extern const uint8_t banana_start[]          asm("_binary_assets_gif_banana_gif_start");
 extern const uint8_t banana_end[]            asm("_binary_assets_gif_banana_gif_end");
+extern const uint8_t nyancat_start[]         asm("_binary_assets_gif_nyancat_gif_start");
+extern const uint8_t nyancat_end[]           asm("_binary_assets_gif_nyancat_gif_end");
+extern const uint8_t tesseract_start[]       asm("_binary_assets_gif_tesseract_gif_start");
+extern const uint8_t tesseract_end[]         asm("_binary_assets_gif_tesseract_gif_end");
+extern const uint8_t firelog_start[]         asm("_binary_assets_gif_firelog_gif_start");
+extern const uint8_t firelog_end[]           asm("_binary_assets_gif_firelog_gif_end");
 
 // AnimatedGIFs
 //
@@ -75,6 +81,9 @@ enum class GIFIdentifier : int
     Pacman      = 3,
     ThreeRings  = 4,
     Banana      = 5,
+    Tesseract   = 6,
+    Nyancat     = 7,
+    Firelog     = 8
 };
 
 // GIFInfo
@@ -91,13 +100,17 @@ struct GIFInfo : public EmbeddedFile
     {}
 };
 
-static std::map<GIFIdentifier, GIFInfo, std::less<GIFIdentifier>, psram_allocator<std::pair<GIFIdentifier, GIFInfo>>> AnimatedGIFs =
+static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, const psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
 {
-    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },    
-    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },
-    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },
-    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },
-    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },
+    // Banana has 8 frames.  Most music is around 120BPM, so we need to play each frame for 1/15th of a second to somewhat align with a typical beat
+    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },      //  4 KB
+    { GIFIdentifier::Nyancat,      GIFInfo(nyancat_start,     nyancat_end,     64, 32, 18 ) },      // 20 KB
+    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },      // 36 KB
+    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },      // 21 KB
+    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },      // 52 KB
+    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },      //  9 KB
+    { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },      // 24 KB
+    { GIFIdentifier::Firelog,      GIFInfo(firelog_start,     firelog_end,     64, 32, 16 ) },      // 24 KB
 };
 
 // The decoder needs us to track some state, but there's only one instance of the decoder, and
@@ -107,13 +120,8 @@ static std::map<GIFIdentifier, GIFInfo, std::less<GIFIdentifier>, psram_allocato
 
 struct
 {
-    long            _seek      = 0;
-    const uint8_t * _pgif      = nullptr;
-    long            _len       = 0;
     int             _offsetX   = 0;
     int             _offsetY   = 0;
-    int             _width     = 0;
-    int             _height    = 0;
     byte            _fps       = 24;
     CRGB            _bkColor   = CRGB::Black;
 }
@@ -122,7 +130,7 @@ g_gifDecoderState;
 // We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
 // ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
 
-std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 12, true>>();
+const std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>>();
 
 // PatternAnimatedGIF
 //
@@ -133,49 +141,13 @@ class PatternAnimatedGIF : public LEDStripEffect
 private:
 
     GIFIdentifier _gifIndex  = GIFIdentifier::INVALID;
-    CRGB _bkColor   = BLACK16;
-    bool _preClear  = false;
+    CRGB _bkColor            = BLACK16;
+    bool _preClear           = false;
+    bool _gifReadyToDraw     = false;
 
     // GIF decoder callbacks.  These are static because the decoder doesn't allow you to pass any context, so they
     // have to be global.  We use the global g_gifDecoderState to track state.  The GifDecoder code calls back to
-    // these callbacks to do the actual work of fetching the bits from teh embedded GIF file and plotting them on
-    // the LED matrix.
-
-    static int fileSizeCallback(void)
-    {
-        return g_gifDecoderState._len;
-    }
-
-    // Seek to the given position in the GIF file.  The GIF decoder will call this to seek to a position in the GIF file.
-
-    static bool fileSeekCallback(unsigned long position)
-    {
-        g_gifDecoderState._seek = position;
-        return true;
-    }
-
-    // Return the current position in the GIF file.  The GIF decoder will call this to get the current position.
-
-    static unsigned long filePositionCallback(void)
-    {
-        return g_gifDecoderState._seek;
-    }
-
-    // Read a byte from the GIF file.  The GIF decoder will call this to read the GIF data.
-
-    static int fileReadCallback(void)
-    {
-        return pgm_read_byte(g_gifDecoderState._pgif + g_gifDecoderState._seek++);
-    }
-
-    // Read N bytes from the GIF file into the buffer.  The GIF decoder will call this to read the GIF data.
-
-    static int fileReadBlockCallback(void * buffer, int numberOfBytes)
-    {
-        memcpy(buffer, g_gifDecoderState._pgif + g_gifDecoderState._seek, numberOfBytes);
-        g_gifDecoderState._seek += numberOfBytes;
-        return numberOfBytes;
-    }
+    // these callbacks to do the actual work of plotting them on the LED matrix.
 
     // screenClearCallback - clears the screen with the color given to the constructor
 
@@ -189,7 +161,7 @@ private:
 
     static void updateScreenCallback(void)
     {
-        debugV("UpdateScreenCallback");
+        debugV("UpdateScreenCallback from AnimatedGIF decoder.");
     }
 
     // drawPixelCallback
@@ -204,7 +176,6 @@ private:
             debugW("drawPixelCallbackInvalid pixel: %d, %d", x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY);
             return;
         }
-
         g.leds[XY(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY)] = CRGB(red, green, blue);
     }
 
@@ -220,41 +191,17 @@ private:
         throw new std::runtime_error("drawLineCallback not implemented for animated GIFs");
     }
 
-    // OpenGif
-    //
-    // Fetches the EmbeddedFile for the given GIF index and sets up the GIF decoder to use it
+    // For slower animations that run at a lower framerate, we double the framerate by discarding every other frame,
+    // which allows us to draw the VU meter and so on at a useable rate even though the animation doesn't paint every time.
 
-    bool OpenGif()
+    static bool FrameDoubling()
     {
-        auto gif = AnimatedGIFs.find(_gifIndex);
-        if (gif == AnimatedGIFs.end())
-        {
-            debugW("GIF not found by index: %d", to_value(_gifIndex));
-            return false;
-        }
-
-        uint16_t x, y;
-        g_ptrGIFDecoder->getSize(&x, &y);
-
-        // Set up the gifDecoderState with all of the context that it will need to decode and
-        // draw the GIF, since the static callbacks will have no other context to work with.
-
-        g_gifDecoderState._pgif      = gif->second.contents;
-        g_gifDecoderState._len       = gif->second.length;
-        g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;
-        g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
-        g_gifDecoderState._width     = gif->second._width;
-        g_gifDecoderState._height    = gif->second._height;
-        g_gifDecoderState._fps       = gif->second._fps;
-        g_gifDecoderState._bkColor   = _bkColor;
-        g_gifDecoderState._seek      = 0;
-
-        return true;
+        return g_gifDecoderState._fps <= 15;
     }
 
     size_t DesiredFramesPerSecond() const override
     {
-        return g_gifDecoderState._fps;
+        return FrameDoubling() ? g_gifDecoderState._fps * 2 : g_gifDecoderState._fps;
     }
 
 public:
@@ -294,6 +241,22 @@ public:
     {
         g()->Clear(_bkColor);
 
+        // Open the GIF and start decoding
+
+        auto gif = AnimatedGIFs.find(_gifIndex);
+        if (gif == AnimatedGIFs.end())
+            throw std::runtime_error(str_sprintf("Unable to locate GIF by index %d in the map.", (int) _gifIndex).c_str());
+
+        // Set up the gifDecoderState with all of the context that it will need to decode and
+        // draw the GIF, since the static callbacks will have no other context to work with.
+
+        assert(gif->second._width <= MATRIX_WIDTH);
+        assert(gif->second._height <= MATRIX_HEIGHT);
+
+        g_gifDecoderState._offsetX   = (MATRIX_WIDTH  - gif->second._width) / 2;
+        g_gifDecoderState._offsetY   = (MATRIX_HEIGHT - gif->second._height) / 2;
+        g_gifDecoderState._fps       = gif->second._fps;
+        g_gifDecoderState._bkColor   = _bkColor;
 
         // Set the GIF decoder callbacks to our static functions
 
@@ -302,21 +265,24 @@ public:
         g_ptrGIFDecoder->setDrawPixelCallback( drawPixelCallback );
         g_ptrGIFDecoder->setDrawLineCallback( drawLineCallback );
 
-        g_ptrGIFDecoder->setFileSeekCallback( fileSeekCallback );
-        g_ptrGIFDecoder->setFilePositionCallback( filePositionCallback );
-        g_ptrGIFDecoder->setFileReadCallback( fileReadCallback );
-        g_ptrGIFDecoder->setFileReadBlockCallback( fileReadBlockCallback );
-        g_ptrGIFDecoder->setFileSizeCallback( fileSizeCallback );
-
-        // Open the GIF and start decoding
-
-        if (OpenGif())
-            if (ERROR_NONE != g_ptrGIFDecoder->startDecoding())
-                debugW("Failed to start decoding GIF");
+        _gifReadyToDraw = (ERROR_NONE == g_ptrGIFDecoder->startDecoding((uint8_t *) gif->second.contents, gif->second.length));
+        if (!_gifReadyToDraw)
+            debugW("Failed to start decoding GIF");
     }
 
     void Draw() override
     {
+        // If we're running a low FPS animation, we discard alternate frames and draw every other one, which allows
+        // the VU meter to paint on every frame and remain responsive.
+
+        static bool discardFrame = false;
+        if (FrameDoubling())
+        {
+            discardFrame = !discardFrame;
+            if (discardFrame)
+                return;
+        }
+
         // GIFs that use transparency will leave the previous frame in place, so we need
         // to clear the screen before we draw the next frame.  We can skip this if the
         // GIF doesn't use transparency.
@@ -324,7 +290,9 @@ public:
         if (_preClear)
             g()->Clear(_bkColor);
 
-        g_ptrGIFDecoder->decodeFrame(false);    /* code */
+        if (_gifReadyToDraw)
+            g_ptrGIFDecoder->decodeFrame(false);
+
     }
 };
 

@@ -78,37 +78,55 @@ class PatternSMHolidayLights : public LEDStripEffect
             g()->leds[random16(NUM_LEDS)] = random(0, 16777215);
     }
 
-    void spruce()
+void spruce()
+{
+    hue++;  // Increment the hue value, which likely controls the color of the LEDs.
+
+    // Fade all LED channels to black based on the 'speed' value.
+    // The 'map' function scales the 'speed' value from one range to another.
+    fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 100));
+
+    uint8_t z;
+    if (effId == 3)
+        z = triwave8(hue);  // Set 'z' to a value calculated using 'triwave8' if 'effId' is 3.
+    else
+        z = beatsin8(1, 1, 255);  // Otherwise, set 'z' to a value calculated using 'beatsin8'.
+
+    for (uint8_t i = 0; i < minDim; i++)
     {
-        hue++;
-        fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 100));
+        // Calculate 'x' based on various factors.
+        unsigned x = beatsin16(i * (map(speed, 1, 255, 3, 20)), i * 2, (minDim * 4 - 2) - (i * 2 + 2));
 
-        uint8_t z;
-        if (effId == 3)
-            z = triwave8(hue);
-        else
-            z = beatsin8(1, 1, 255);
-
-        for (uint8_t i = 0; i < minDim; i++)
+        if (effId == 2)
         {
-            unsigned x = beatsin16(i * (map(speed, 1, 255, 3, 20) /*(NUM_LEDS/256)*/), i * 2, (minDim * 4 - 2) - (i * 2 + 2));
-            if (effId == 2)
-                drawPixelXYF_X(x / 4 + height_adj, i,
-                               random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255)
-                                                : CHSV(100, 255, map(speed, 1, 255, 128, 100)));
-            else
-                drawPixelXYF_X(x / 4 + height_adj, i, CHSV(hue + i * z, 255, 255));
+            // Draw a pixel with certain conditions if 'effId' is 2.
+            drawPixelXYF_X(x / 4 + height_adj, i,
+                           random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255)
+                                            : CHSV(100, 255, map(speed, 1, 255, 128, 100)));
         }
-
-        if (!(MATRIX_WIDTH & 0x01))
-            g()->leds[XY(MATRIX_WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0), minDim - 1 - ((millis() >> 8) & 0x01 ? 1 : 0))] =
-                CHSV(0, 255, 255);
         else
-            g()->leds[XY(MATRIX_WIDTH / 2, minDim - 1)] = CHSV(0, (millis() >> 9) & 0x01 ? 0 : 255, 255);
-
-        if (glitch)
-            confetti();
+        {
+            // Draw a pixel with different color conditions if 'effId' is not 2.
+            drawPixelXYF_X(x / 4 + height_adj, i, CHSV(hue + i * z, 255, 255));
+        }
     }
+
+    // Set a specific LED color based on some conditions and time.
+    if (!(MATRIX_WIDTH & 0x01))
+    {
+        g()->leds[XY(MATRIX_WIDTH / 2 - ((millis() >> 9) & 0x01 ? 1 : 0), minDim - 1 - ((millis() >> 8) & 0x01 ? 1 : 0))] =
+            CHSV(0, 255, 255);
+    }
+    else
+    {
+        g()->leds[XY(MATRIX_WIDTH / 2, minDim - 1)] = CHSV(0, (millis() >> 9) & 0x01 ? 0 : 255, 255);
+    }
+
+    // If 'glitch' is true, call the 'confetti' function.
+    if (glitch)
+        confetti();
+}
+
 
   public:
     PatternSMHolidayLights() : LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Tannenbaum")

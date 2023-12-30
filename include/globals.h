@@ -216,7 +216,7 @@
 #define NET_CORE                1
 #define AUDIO_CORE              0
 #define AUDIOSERIAL_CORE        1
-#define SCREEN_CORE             0
+#define SCREEN_CORE             1
 #define DEBUG_CORE              1
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
@@ -237,7 +237,16 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // LEDs, how many, on how many channels, laid out into how many fans/rings, and so on.  You can also
 // specify the audio system config like how many band channels.
 
-#if DEMO
+#if __has_include ("custom_globals.h")
+
+    // To reduce clutter, you may choose to create a new file called `custom_globals.h` in the `includes` directory.
+    // You can place your project configurations and logic to select them in that file.
+    // This can be done once you know how `platformio.ini` and `globals.h` interact with one another
+    // to create different environments and projects.
+
+    #include "custom_globals.h"
+
+#elif DEMO
 
     // This is a simple demo configuration.  To build, simply connect the data lead from a WS2812B
     // strip to pin 5 or other pin marked PIN0 below.  This does not use the OLED, LCD, or anything fancy, it simply drives the
@@ -285,6 +294,67 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef ENABLE_WEBSERVER
         #define ENABLE_WEBSERVER        0   // Turn on the internal webserver
     #endif
+
+#elif M5DEMO
+
+    // This is the DEMO project customized for the M5 that includes screen support and other
+    // features that make it well suited to the demo strip that runs in Dave's Garage
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "M5Demo"
+    #endif
+
+    #define MATRIX_WIDTH            144*5+38
+    #define MATRIX_HEIGHT           1
+    #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define NUM_CHANNELS            1
+    #define COLOR_ORDER             EOrder::RGB
+
+    #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI                 1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER            0   // Turn on the internal webserver
+    #define ENABLE_NTP                  1   // Set the clock from the web
+    #define ENABLE_OTA                  0   // Accept over the air flash updates
+    #define ENABLE_REMOTE               0   // IR Remote Control
+    #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
+    #define COLORDATA_SERVER_ENABLED    0
+    #define MIN_VU                      20
+    #define NOISE_CUTOFF                10
+
+    #if USE_PSRAM
+        #define MAX_BUFFERS             500
+    #else
+        #define MAX_BUFFERS             24
+    #endif
+
+    #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
+
+    #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
+
+    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
+        #define LED_PIN0 32
+    #elif LILYGOTDISPLAYS3
+        #define LED_PIN0 21
+    #else
+        #define LED_PIN0 5
+    #endif
+
+    #define TOGGLE_BUTTON_1 39
+    #define TOGGLE_BUTTON_2 37
+
+    #define NUM_INFO_PAGES          2
+
+    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
+        #define LED_PIN0 32
+    #elif LILYGOTDISPLAYS3
+        #define LED_PIN0 21
+    #else
+        #define LED_PIN0 5
+    #endif
+
 
 #elif LANTERN
 
@@ -856,8 +926,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU           6
     #define POWER_LIMIT_MW              (10 * 5 * 1000)         // Expects at least a 5V, 20A supply (100W)
 
-    // The mic in the M5 is not quite as sensitive as the Mesermizer, so it gets a lower minimum VU than default
-    #define MIN_VU                      180
+    // The mic in the M5 is not quite the same as the Mesmerizer, so it gets a different minimum VU than default
+
+    #define MIN_VU                      280
     #define NOISE_CUTOFF                1000
 
     #if !(ELECROW)
@@ -1376,6 +1447,22 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
     #define COLORDATA_SERVER_ENABLED 1
   #else
     #define COLORDATA_SERVER_ENABLED 0
+  #endif
+#endif
+
+#ifndef COLORDATA_WEB_SOCKET_ENABLED
+  #if ENABLE_WIFI && ENABLE_WEBSERVER && COLORDATA_SERVER_ENABLED
+    #define COLORDATA_WEB_SOCKET_ENABLED 1
+  #else
+    #define COLORDATA_WEB_SOCKET_ENABLED 0
+  #endif
+#endif
+
+#ifndef EFFECTS_WEB_SOCKET_ENABLED
+  #if ENABLE_WIFI && ENABLE_WEBSERVER
+    #define EFFECTS_WEB_SOCKET_ENABLED 1
+  #else
+    #define EFFECTS_WEB_SOCKET_ENABLED 0
   #endif
 #endif
 

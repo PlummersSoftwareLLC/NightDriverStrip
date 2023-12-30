@@ -40,6 +40,7 @@
 #include <iostream>
 #include <set>
 #include <algorithm>
+#include <functional>
 #include <math.h>
 
 #include "effectfactories.h"
@@ -47,12 +48,59 @@
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
+#define INFORM_EVENT_LISTENERS(listeners, function, ...) \
+    std::for_each(listeners.begin(), listeners.end(), [&](auto& listener) { std::invoke(&function, listener __VA_OPT__(,) __VA_ARGS__); })
+
 // Forward references to functions in our accompanying CPP file
 
 void InitSplashEffectManager();
 void InitEffectsManager();
 void SaveEffectManagerConfig();
 void RemoveEffectManagerConfig();
+
+// IFrameEventListener
+//
+// Abstract class that can be used to listen to frame-related events.
+
+class IFrameEventListener
+{
+public:
+    virtual void OnNewFrameAvailable() = 0;
+};
+
+// IEffectEventListener
+//
+// Abstract class that can be used to listen to effect-related events.
+
+class IEffectEventListener
+{
+public:
+    virtual void OnCurrentEffectChanged(size_t currentEffectIndex) = 0;
+    virtual void OnEffectListDirty() = 0;
+    virtual void OnEffectEnabledStateChanged(size_t effectIndex, bool newState) = 0;
+    virtual void OnIntervalChanged(uint interval) = 0;
+};
+
+// BaseFrameEventListener
+//
+// Basic implementation of IFrameEventListener that remembers it's been called and allows
+// that recollection to be read and cleared.
+
+class BaseFrameEventListener : public IFrameEventListener
+{
+    std::atomic<bool> _newFrameAvailable = false;
+
+public:
+    void OnNewFrameAvailable() override
+    {
+        _newFrameAvailable = true;
+    }
+
+    bool CheckAndClearNewFrameAvailable()
+    {
+        return _newFrameAvailable.exchange(false);
+    }
+};
 
 // EffectManager
 //
@@ -68,11 +116,12 @@ class  EffectManager : public IJSONSerializable
     bool _bPlayAll;
     bool _bShowVU = true;
     bool _clearTempEffectWhenExpired = false;
-    bool _newFrameAvailable = false;
     int _effectSetVersion = 1;
 
     std::vector<std::shared_ptr<GFXBase>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
+    std::vector<std::reference_wrapper<IFrameEventListener>> _frameEventListeners;
+    std::vector<std::reference_wrapper<IEffectEventListener>> _effectEventListeners;
 
     void construct(bool clearTempEffect)
     {
@@ -155,14 +204,19 @@ public:
         return _gfx[0];
     }
 
-    bool IsNewFrameAvailable() const
+    void ReportNewFrameAvailable()
     {
-        return _newFrameAvailable;
+        INFORM_EVENT_LISTENERS(_frameEventListeners, IFrameEventListener::OnNewFrameAvailable);
     }
 
-    void SetNewFrameAvailable(bool available)
+    void AddFrameEventListener(IFrameEventListener& listener)
     {
-        _newFrameAvailable = available;
+        _frameEventListeners.emplace_back(listener);
+    }
+
+    void AddEffectEventListener(IEffectEventListener& listener)
+    {
+        _effectEventListeners.emplace_back(listener);
     }
 
     // Implementation is in effects.cpp
@@ -341,6 +395,8 @@ public:
 
             if (!skipSave)
                 SaveEffectManagerConfig();
+
+            INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectEnabledStateChanged, i, true);
         }
     }
 
@@ -363,6 +419,8 @@ public:
 
             if (!skipSave)
                 SaveEffectManagerConfig();
+
+            INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectEnabledStateChanged, i, false);
         }
     }
 
@@ -408,6 +466,8 @@ public:
         }
 
         SaveEffectManagerConfig();
+
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
     }
 
     // Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
@@ -425,6 +485,8 @@ public:
         EnableEffect(_vEffects.size() - 1, true);
 
         SaveEffectManagerConfig();
+
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
 
         return true;
     }
@@ -456,6 +518,8 @@ public:
 
         SaveEffectManagerConfig();
 
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
+
         return true;
     }
 
@@ -474,6 +538,8 @@ public:
 
         if (!skipSave)
             SaveEffectManagerConfig();
+
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnIntervalChanged, interval);
     }
 
     const std::vector<std::shared_ptr<LEDStripEffect>> & EffectsList() const
@@ -523,6 +589,8 @@ public:
 
         StartEffect();
         SaveCurrentEffectIndex();
+
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, i);
     }
 
     uint GetTimeUsedByCurrentEffect() const
@@ -603,6 +671,8 @@ public:
 
         StartEffect();
         SaveCurrentEffectIndex();
+
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, _iCurrentEffect);
     }
 
     // Go back to the previous effect and abort the current one.
@@ -622,6 +692,8 @@ public:
 
         StartEffect();
         SaveCurrentEffectIndex();
+
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, _iCurrentEffect);
     }
 
     bool Init();

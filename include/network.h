@@ -33,6 +33,18 @@
     #include "socketserver.h"
 #endif
 
+    // For now, just a centralized location for the port numbers for our
+    // various services. Someday these might be configurable.
+    // This could be an enum class, but the static_cast<int> at the
+    // callers is ugly.
+    enum NetworkPort
+    {
+      ColorServer  = 12000,
+      IncomingWiFi  = 49152,
+      VICESocketServer = 25232,
+      Webserver  = 80
+    };
+
 #if ENABLE_WIFI
     enum class WiFiConnectResult
     {

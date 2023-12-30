@@ -77,10 +77,8 @@ class PatternSMBlurringColors : public LEDStripEffect
     void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
         y = MATRIX_HEIGHT - 1 - y;
-        if (g()->isValidPixel(x, y)) {
-            uint32_t thisPixel = XY(x, y);
-            g()->leds[thisPixel] = color;
-        }
+        if (g()->isValidPixel(x, y)) 
+            g()->leds[XY(x, y)] = color;
     }
 
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)

@@ -58,14 +58,9 @@ class PatternSMFire2021 : public LEDStripEffect
 
                 // Get the flame color using the black body radiation approximation, but when the palette is paused
                 // we make flame in that base color instead of the normal red
-
-                CRGB color = GetBlackBodyHeatColor(Col/255.0f, g()->IsPalettePaused() ? 
-                                  g()->ColorFromCurrentPalette(0, Bri) 
-                                : CRGB::Red).fadeToBlackBy(255-Bri);
-
                 // NightDriver mod - invert Y argument.
 
-                nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)], color, pcnt);
+                nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)], GetBlackBodyHeatColor(Col/255.0f, g()->ColorFromCurrentPalette(0, Bri)).fadeToBlackBy(255-Bri), pcnt);
             }
         }
 

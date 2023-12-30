@@ -100,13 +100,6 @@ class IdleTask
         }
     }
 
-    // If idle time is spent elsewhere, it can be credited to this task.  Shouldn't add up to more time than actual though!
-
-    void CountBonusIdleMillis(uint millis)
-    {
-        counter += millis;
-    }
-
     IdleTask() : _lastMeasurement(millis())
     {
     }

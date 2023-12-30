@@ -69,6 +69,8 @@ constexpr auto to_value(E e) noexcept
     typedef DynamicJsonDocument AllocatedJsonDocument;
 #endif
 
+uint32_t toUint32(const CRGB& color);
+
 namespace ArduinoJson
 {
     template <>
@@ -76,7 +78,7 @@ namespace ArduinoJson
     {
         static bool toJson(const CRGB& color, JsonVariant dst)
         {
-            return dst.set((uint32_t)((color.r << 16) | (color.g << 8) | color.b));
+            return dst.set(toUint32(color));
         }
 
         static CRGB fromJson(JsonVariantConst src)
