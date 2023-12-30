@@ -1,90 +1,84 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { wsPrefix } from "../../../../espaddr";
-import {Box,  Dialog, DialogActions, DialogContent, DialogTitle, Button} from "@mui/material";
-import { intToRGB, RGBToInt } from "../../../../util/color"
- 
-// Mock test colors for testing. TODO Remove
-const tempColor1 = RGBToInt({r: 255, g:0, b:0})
-const tempColor2 = RGBToInt({r: 0, g:255, b:0})
-const tempColor3 = RGBToInt({r: 0, g:0, b:255})
-const tempColor4 = RGBToInt({r: 255, g:255, b:0})
-const tempColor5 = RGBToInt({r: 255, g:0, b:255})
-const tempColor6 = RGBToInt({r: 0, g:255, b:255})
-const tempColor7 = RGBToInt({r: 255, g:255, b:255})
-const tempColor8 = RGBToInt({r: 0, g:0, b:0})
-// End mock test colors. TODO Remove
+import { StatsContext } from "../../../../context/statsContext";
+import {Dialog, DialogActions, DialogContent, DialogTitle, Button} from "@mui/material";
+import { intToRGB } from "../../../../util/color"
+import Canvas from "../canvas";
 
 const PreviewDialog = ({open, onClose}) => {
-    const [connected, setConnected] = useState(false);
+    const {matrixWidth, matrixHeight, framesSocket} = useContext(StatsContext);
+    
     let testFrame = new Array(64*32)
-    // Test frame only used for testing until ws is implemented. TODO Remove
-    for(let i = 0; i < 4; i++) {
-        const start = 512*i;
-        testFrame = testFrame.fill(tempColor1, start+0,start+64);
-        testFrame = testFrame.fill(tempColor2, start+64,start+128);
-        testFrame = testFrame.fill(tempColor3, start+128,start+192);
-        testFrame = testFrame.fill(tempColor4, start+192,start+256);
-        testFrame = testFrame.fill(tempColor5, start+256,start+320);
-        testFrame = testFrame.fill(tempColor6, start+320,start+384);
-        testFrame = testFrame.fill(tempColor7, start+384,start+448);
-        testFrame = testFrame.fill(tempColor8, start+448,start+512);
-    }
-    console.log('testFrame:', testFrame)
-    //END Test Frame. TODO Remove
-
+    const ws = useRef(null);
     const [frame, setFrame] = useState(testFrame)    
+    const [reconnect, setReconnect] = useState(true); // flip boolean to trigger a reconnect, if undefined connection should be closed, don't reconnect. 
+    // Setup Websocket reference once. 
     useEffect(() => {
-        if(!connected) {
-            const ws = {}; //Temporary to disable ws logic
-            // const ws = new WebSocket(`${wsPrefix}/colorData`); // TODO Uncomment this when ws is setup
-
-            ws.onopen = () => {
-                setConnected(true);
-            };
-            ws.onclose = () => {
-                setConnected(false)
-            }
-            ws.onmessage = (event) => {
+        const connect = () => {
+            ws.current = new WebSocket(`${wsPrefix}/frames`); 
+            ws.current.onmessage = (event) => {
+                if(!open) {
+                    console.log('message while not open')
+                    return; 
+                }
                 try {
-                    console.log('Websocket message');
-                    const json = JSON.parse(event.data);
-                    console.log('Todo process this data and push it into the frame ', json);
-                    setFrame(json) // TODO any data packing to get an array of colors. 
+                    const {colorData} = JSON.parse(event.data);
+                    setFrame(colorData)
                 } catch(err) {
                     console.log('error proccessing ws message', err);
-                    console.log('data:', event.data)
+                    console.debug('data:', event.data)
                 }
+            }    
+            ws.current.onopen = () => {
+                console.debug('frames websocket connected');   
+            };
+            ws.current.onclose = () => {
+                if(reconnect) {
+                    console.log('reconnecting');
+                    connect();                
+                }
+            };
+            const wsCurrent = ws.current;
+            return () => {
+                console.log('closing effect');
+                setReconnect(false);
+                wsCurrent.close();
             }
-            // TODO Uncomment below when WS is setup
-            // return () => ws.close();
         }
-    }, [connected])
+        if(reconnect) {
+            connect();
+        }
+    }, [open, reconnect]);
+
+    const draw = (ctx) => {
+        if(frame && matrixWidth && matrixHeight) {
+            const imageData = ctx.createImageData(matrixWidth, matrixHeight);
+            for(let i=0; i < frame.length; i++) {
+                const start = i*4;
+                const color = frame[i] ? intToRGB(frame[i]) : {r:0, b:0, g:0};
+                imageData.data[start] = color.r;
+                imageData.data[start+1] = color.g;
+                imageData.data[start+2] = color.b;
+                imageData.data[start+3] = 255; // A in a RGBA notation, Could be replaced with a brightness value later. 
+                
+            }
+            const newCanvas = document.createElement("canvas");
+            newCanvas.setAttribute('width', matrixWidth);
+            newCanvas.setAttribute('height', matrixHeight);
+            newCanvas.getContext("2d").putImageData(imageData, 0, 0);
+            ctx.drawImage(newCanvas, 0, 0);
+        }
+    }
 
     return <Dialog open={open} onClose={onClose} fullWidth={true}>
         <DialogTitle>{"Preview"}</DialogTitle>
-        <DialogContent>
-            <Frame colors={frame} width={64} height={32}></Frame>
+        <DialogContent sx={{textAlign: 'center'}}>
+            <Canvas draw={draw} scale={5} width={matrixWidth*5} height={matrixHeight*5}></Canvas>
         </DialogContent>
         <DialogActions>
             <Button onClick={onClose}>close</Button>
         </DialogActions>
     </Dialog>
-}
-
-const Frame = ({colors, width, height}) => {
-    const rows = [] 
-    for(let y = 0; y < height; y++) {
-        const row = [];
-        const startingPixel = y*width;
-        for(let x = 0; x < width; x++) {
-            const color = intToRGB(colors[startingPixel + x])
-            // TODO Improve pixel size calculation
-            row.push(<Box sx={{display: 'table-cell', width: `10px`, height: `10px`, backgroundColor: `rgb(${color.r},${color.g},${color.b})`}}/>)
-        }
-        console.log('pushing row of ', row.length, 'elements')
-        rows.push(<Box sx={{display: 'table-row', height: '1vh'}}>{row}</Box>)
-    } 
-    return <Box sx={{width: '100%', height: '100%'}}>{rows}</Box>
 }
 
 export default PreviewDialog;

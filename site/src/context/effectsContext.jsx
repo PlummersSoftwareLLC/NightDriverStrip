@@ -27,6 +27,7 @@ const EffectsProvider = ({ children }) => {
                 console.debug("Aborted update");
             }
         };
+        // TODO Update to only use interval if statsContext.effectsSocket is false. 
         const timer = setInterval(() => {
             const controller = new AbortController();
             getDataFromDevice({signal: controller.signal});
