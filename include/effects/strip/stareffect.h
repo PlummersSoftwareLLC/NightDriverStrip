@@ -33,8 +33,8 @@
 
 #include "particles.h"
 
-const int cMaxNewStarsPerFrame = NUM_LEDS / 2;
-const int cMaxStars = NUM_LEDS;
+const int cMaxNewStarsPerFrame = 144;
+const int cMaxStars = 500;
 const int starWidth = 1;
 
 
@@ -164,8 +164,8 @@ class MusicStar : public Star
 
     virtual float PreignitionTime() const      { return 0.0f;  }
     virtual float IgnitionTime()    const      { return 0.00f; }
-    virtual float HoldTime()        const      { return 0.00f; }
-    virtual float FadeTime()        const      { return 0.125f; }
+    virtual float HoldTime()        const      { return 2.00f; }
+    virtual float FadeTime()        const      { return 0.25f; }
 
 };
 
@@ -510,7 +510,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
             constexpr auto kProbabilitySpan = 2.0;
 
-            if (g_Analyzer._VU > NOISE_CUTOFF)
+            if (g_Analyzer._VU > 0)
             {
                 if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
                 {
