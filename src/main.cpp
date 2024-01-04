@@ -431,7 +431,9 @@ void setup()
         #endif
 
         // Turn off the M5 vibration motor
-        M5.Axp.SetLDOEnable(3, false);
+        #if M5STACKCORE2
+            M5.Axp.SetLDOEnable(3, false);
+        #endif
 
     #elif ELECROW
 
