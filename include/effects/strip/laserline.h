@@ -30,6 +30,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#if ENABLE_AUDIO
 
 class LaserShot
 {
@@ -136,3 +137,5 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         _shots.push_back(LaserShot(0.0, _defaultSpeed, _defaultSize, random8()));
     };
 };
+
+#endif

@@ -430,6 +430,9 @@ void setup()
             M5.begin(false);
         #endif
 
+        // Turn off the M5 vibration motor
+        M5.Axp.SetLDOEnable(3, false);
+
     #elif ELECROW
 
             debugW("Creating Elecrow Screen");
