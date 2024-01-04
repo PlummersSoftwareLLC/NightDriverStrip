@@ -33,8 +33,8 @@
 
 #include "particles.h"
 
-const int cMaxNewStarsPerFrame = 144;
-const int cMaxStars = 500;
+const int cMaxNewStarsPerFrame = NUM_LEDS / 2;
+const int cMaxStars = NUM_LEDS;
 const int starWidth = 1;
 
 
@@ -162,10 +162,10 @@ class MusicStar : public Star
         return EFFECT_STAR_MUSIC;
     }
 
-    virtual float PreignitionTime() const      { return 0.0f; }
+    virtual float PreignitionTime() const      { return 0.0f;  }
     virtual float IgnitionTime()    const      { return 0.00f; }
-    virtual float HoldTime()        const      { return 2.0f; }
-    virtual float FadeTime()        const      { return 0.25f;  }
+    virtual float HoldTime()        const      { return 0.00f; }
+    virtual float FadeTime()        const      { return 0.125f; }
 
 };
 
@@ -500,26 +500,28 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
     virtual void CreateStars()
     {
+    #if ENABLE_AUDIO
+
         for (int i = 0; i < cMaxNewStarsPerFrame; i++)
         {
             double prob = _newStarProbability;
 
-            #if ENABLE_AUDIO
-                if (_musicFactor != 1.0)
-                {
-                   prob = prob * (g_Analyzer._VURatio - 1.0) * _musicFactor;
-                }
-            #endif
+            prob = (prob / 100) + (g_Analyzer._VURatio - 1.0) * _musicFactor * 4;
 
-            constexpr auto kProbabilitySpan = 2.5;
-            if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
+            constexpr auto kProbabilitySpan = 2.0;
+
+            if (g_Analyzer._VU > NOISE_CUTOFF)
             {
-                StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
-                // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
-                _allParticles.push_back(newstar);
+                if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
+                {
+                    StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
+                    // This always starts stars on even pixel boundaries so they look like the desired width if not moving
+                    newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
+                    _allParticles.push_back(newstar);
+                }
             }
         }
+    #endif
     }
 
     virtual void Update()

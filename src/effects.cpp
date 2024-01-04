@@ -179,26 +179,20 @@ void LoadEffectFactories()
     // Fill effect factories
     #elif M5DEMO
 
-        ADD_STARRY_NIGHT_EFFECT(MusicStar, "RGB Music Blend Stars", RGBColors_p, 0.4, 1, NOBLEND, 5.0, 0.1, 10.0);                                                     // RGB Music Blur - Can You Hear Me Knockin'
-
-        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p);
-        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 1.0, 1.0);
-        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, .25);
-
-        ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 8, true, true, 1);
-        ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 3, true, true, 1);
-        ADD_EFFECT(EFFECT_STRIP_TWINKLE, TwinkleEffect, NUM_LEDS * 4, 20, 0);
-    /*
         ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true);
+        ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 3, true, true, 1);
+        ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 8, true, true, 1);
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 4, 4, 10, 2.0, 2.0);
-
-        ADD_STARRY_NIGHT_EFFECT(QuietStar, "Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);       // Rainbow Twinkle
-        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0);                                                // Rainbow Music Star
+        ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 2, 4, 10, 2.0, 2.0);
+        ADD_STARRY_NIGHT_EFFECT(QuietStar, "Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0);                                                                 // Red Twinkle
         ADD_STARRY_NIGHT_EFFECT(QuietStar, "Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);           // Green Twinkle
         ADD_STARRY_NIGHT_EFFECT(Star, "Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);                  // Blue Sparkle
-        ADD_STARRY_NIGHT_EFFECT(QuietStar, "Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0);                                                                 // Red Twinkle
-    */
-
+        ADD_STARRY_NIGHT_EFFECT(QuietStar, "Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);       // Rainbow Twinkle
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "RGB Music Blend Stars", RGBColors_p, 0.2, 1, NOBLEND, 5.0, 0.1, 2.0);                                                     // RGB Music Blur - Can You Hear Me Knockin'
+        ADD_EFFECT(EFFECT_STRIP_TWINKLE, TwinkleEffect, NUM_LEDS / 2, 20, 50);
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, .25, 1, 0, 1.0, 0.0, LINEARBLEND, true, 1.0);
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p);
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 0.0, 0.0, STARRYNIGHT_MUSICFACTOR);       // Rainbow Twinkle
 
     #elif LASERLINE
 
@@ -221,7 +215,7 @@ void LoadEffectFactories()
             #define EFFECT_SET_VERSION  6   // Bump version if default set changes in a meaningful way
         #endif
 
-        ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph");
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph",  16,            4,                   0);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",    NUM_BANDS,     spectrumBasicColors, false, 100, 0, 0.75, 0.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",   MATRIX_WIDTH,  CRGB(0,0,40),               0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);

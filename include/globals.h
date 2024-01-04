@@ -342,8 +342,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define LED_PIN0 5
     #endif
 
-    #define TOGGLE_BUTTON_1 39
-    #define TOGGLE_BUTTON_2 37
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
 
     #define NUM_INFO_PAGES          2
 
