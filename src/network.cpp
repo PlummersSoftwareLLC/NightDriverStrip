@@ -152,7 +152,7 @@ void SetupOTA(const String & strHostname)
                 #if USE_HUB75
                     auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
-                    pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+//                    pMatrix->setLeds(_GFX[0]->GetMatrixBackBuffer());
                 #endif
             }
             else

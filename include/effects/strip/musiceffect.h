@@ -85,9 +85,9 @@ class BeatEffectBase
         debugV("BeatEffectBase2::Draw");
         double elapsed = SecondsSinceLastBeat();
 
-        auto basslevel = g_Analyzer.GetPeakData()._Level[0];
+        auto basslevel = g_Analyzer.GetPeakData()._Level[0] * 2;  // Since VURatio was historically a 0-2 range, we do the same
 
-        debugV("vPeaks[0]: %0.2f", basslevel);
+        debugV("basslevel: %0.2f", basslevel);
         _samples.push_back(basslevel);
         float minimum = *min_element(_samples.begin(), _samples.end());
         float maximum = *max_element(_samples.begin(), _samples.end());

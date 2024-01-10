@@ -479,4 +479,4 @@ protected:
     #endif
 };
 
-extern ImprovSerial<typeof(Serial)> g_ImprovSerial;
+extern std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;
