@@ -1016,8 +1016,6 @@ public:
         Order((PixelOrder)jsonObject[PTY_ORDER]),
         bMulticolor(jsonObject[PTY_MULTICOLOR] == 1)
   {
-    if (bMirrored)
-      LEDCount = LEDCount / 2;
     abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
   }
 

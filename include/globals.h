@@ -879,25 +879,29 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // It displays a spectrum analyzer and music visualizer
 
     #ifndef PROJECT_NAME
-    #define PROJECT_NAME                "Spectrum"
+    #define PROJECT_NAME                    "Spectrum"
     #endif
 
-    #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI                 1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
-    #define ENABLE_NTP                  1   // Set the clock from the web
-    #define ENABLE_OTA                  0   // Accept over the air flash updates
-    #define ENABLE_REMOTE               0   // IR Remote Control
-    #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
-    #define COLORDATA_SERVER_ENABLED    0
+    #define ENABLE_AUDIOSERIAL              0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI                     1   // Connect to WiFi
+    #define WAIT_FOR_WIFI                   0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL               2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER                1   // Turn on the internal webserver
+    #define ENABLE_NTP                      1   // Set the clock from the web
+    #define ENABLE_OTA                      0   // Accept over the air flash updates
+    #define ENABLE_REMOTE                   1   // IR Remote Control
+    #define ENABLE_AUDIO                    1   // Listen for audio from the microphone and process it
+    #define COLORDATA_SERVER_ENABLED        0
 
     #if USE_PSRAM
-        #define MAX_BUFFERS             500
+        #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+        #define COLORDATA_SERVER_ENABLED    1
+        #define MAX_BUFFERS                 500
     #else
-        #define MAX_BUFFERS             10
+        #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
+        #define COLORDATA_SERVER_ENABLED    0
+        #define MIN_BUFFERS                 1
+        #define MAX_BUFFERS                 1
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
@@ -945,52 +949,50 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // An M5 stick that controls the 10 RGB fans in my PC
 
     #ifndef PROJECT_NAME
-    #define PROJECT_NAME            "Fan set"
+    #define PROJECT_NAME                "Fan set"
     #endif
 
-    #define ENABLE_AUDIOSERIAL      1   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI             1           // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1           // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0           // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       2           // How many seconds before the lamp times out and shows local content
+    #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI                 1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
+    #define ENABLE_NTP                  0   // Set the clock from the web
+    #define ENABLE_OTA                  0   // Accept over the air flash updates
+    #define ENABLE_REMOTE               1   // IR Remote Control
+    #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
+    #define COLORDATA_SERVER_ENABLED    0
 
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
-    #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              0   // Accept over the air flash updates
-    #define ENABLE_REMOTE           1   // IR Remote Control
-    #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
+    #define MIN_BUFFERS                 1   // Keep buffers low because we have little memory to work with
+    #define MAX_BUFFERS                 1
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
-    #define LED_PIN0        26
+    #define LED_PIN0                    26
 
-    #define BONUS_PIXELS            32          // Extra pixels - in this case, my case strip
-    #define NUM_CHANNELS            1           // Everything wired sequentially on a single channel
-    #define NUM_FANS                10          // My system has 10 fans.  Because RGB.
-    #define NUM_BANDS               8
-    #define NUM_RINGS               1           // Fans have a single outer ring of pixels
-    #define FAN_SIZE                16          // Each fan's pixel ring has 16 LEDs
-    #define FAN_LEN                 (NUM_FANS * FAN_SIZE)
-    #define MATRIX_WIDTH            (NUM_FANS * FAN_SIZE + BONUS_PIXELS)
-    #define NUM_LEDS                (MATRIX_WIDTH)
-    #define LED_FAN_OFFSET_BU       3
-    #define ENABLE_REMOTE           1           // IR Remote Control
-    #define ENABLE_AUDIO            1           // Listen for audio from the microphone and process it
-    #define POWER_LIMIT_MW          8000
-    #define MATRIX_HEIGHT           1
+    #define BONUS_PIXELS                32  // Extra pixels - in this case, my case strip
+    #define NUM_CHANNELS                1   // Everything wired sequentially on a single channel
+    #define NUM_FANS                    10  // My system has 10 fans.  Because RGB.
+    #define NUM_BANDS                   8
+    #define NUM_RINGS                   1   // Fans have a single outer ring of pixels
+    #define FAN_SIZE                    16  // Each fan's pixel ring has 16 LEDs
+    #define FAN_LEN                     (NUM_FANS * FAN_SIZE)
+    #define MATRIX_WIDTH                (NUM_FANS * FAN_SIZE + BONUS_PIXELS)
+    #define NUM_LEDS                    (MATRIX_WIDTH)
+    #define LED_FAN_OFFSET_BU           3
+    #define POWER_LIMIT_MW              8000
+    #define MATRIX_HEIGHT               1
 
     // Being case-mounted normally, the FANSET needs a more sensitive mic so the NOISE_CUTOFF value is are lower than spectrum
 
-    #define NOISE_CUTOFF            0
-    #define NOISE_FLOOR             0.0f
+    #define NOISE_CUTOFF                0
+    #define NOISE_FLOOR                 0.0f
 
-    #define TOGGLE_BUTTON_1         37
-    #define TOGGLE_BUTTON_2         39
+    #define TOGGLE_BUTTON_1             37
+    #define TOGGLE_BUTTON_2             39
 
-    #if !(SPECTRUM_WROVER_KIT)
-        #define NUM_INFO_PAGES          2
-    #endif
-
+    #define NUM_INFO_PAGES              2
 
 #elif SINGLE_INSULATOR
 
