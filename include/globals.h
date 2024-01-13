@@ -1563,6 +1563,7 @@ inline String str_sprintf(const char *fmt, ...)
 template <typename T>
 inline static T random_range(T lower, T upper)
 {
+#if USE_STRONG_RAND
     static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
 
     static std::random_device rd;
@@ -1575,6 +1576,17 @@ inline static T random_range(T lower, T upper)
         std::uniform_real_distribution<T> distrib(lower, upper);
         return distrib(gen);
     }
+#else
+    static bool seeded = [&] { srand(time(nullptr)); return true; } ();
+
+    if constexpr (std::is_integral<T>::value) {
+        return std::rand() % (upper - lower + 1) + lower;
+    } else if constexpr (std::is_floating_point<T>::value) {
+        return std::rand() / (RAND_MAX / (upper - lower)) + lower;
+    } else {
+        static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value, "Template argument must be numeric type");
+    }
+#endif
 }
 
 inline uint64_t ULONGFromMemory(uint8_t * payloadData)
