@@ -95,7 +95,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_Values.AppTime.LastFrameTime()));
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -112,7 +112,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     }
 };
 
-class VUMeterEffect
+class VUMeter
 {
   protected:
 
@@ -182,12 +182,35 @@ class VUMeterEffect
     }
 };
 
+class VUMeterEffect : virtual public VUMeter, public LEDStripEffect
+{
+public:
+    virtual void Draw() override
+    {
+        DrawVUMeter(g(), 0);
+    }
+
+    VUMeterEffect() : LEDStripEffect(EFFECT_STRIP_VUMETER, "VUMeter")
+    {
+    }
+
+    VUMeterEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        return true;
+    }
+};
+
 // SpectrumAnalyzerEffect
 //
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
 // matrix is 48x16 using LED Channel 0 only.   Has a VU meter up top and 16 bands.
 
-class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffect
+class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 {
   protected:
 
@@ -220,7 +243,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     void DrawBar(const uint8_t iBar, CRGB baseColor)
     {
-        auto pGFXChannel = _GFX[0];
+        auto pGFXChannel = g();
         int value, value2;
 
         static_assert(!(NUM_BANDS & 1));     // We assume an even number of bars because we peek ahead from an odd one below
@@ -618,7 +641,7 @@ class GhostWave : public WaveformEffect
 //
 // Draws an approximation of the waveform by mirroring the spectrum analyzer bars in four quadrants
 
-class SpectrumBarEffect : public LEDStripEffect
+class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 {
     byte _hueIncrement = 0;
     byte _scrollIncrement = 0;
@@ -673,8 +696,15 @@ class SpectrumBarEffect : public LEDStripEffect
         return true;
     }
 
+    void HandleBeat(bool bMajor, float elapsed, float span) override
+    {
+        debugV("Beat!  Major: %d, Elapsed: %f, Span: %f\n", bMajor, elapsed, span);
+    }
+
     void DrawGraph()
     {
+        ProcessAudio();
+
         constexpr size_t halfHeight = MATRIX_HEIGHT / 2;
         constexpr size_t halfWidth  = MATRIX_WIDTH  / 2;
 
@@ -685,7 +715,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
         // We scroll the bars ever 50ms
         static byte offset = 0;
-        EVERY_N_MILLISECONDS(50)
+        EVERY_N_MILLISECONDS(100)
             offset += _scrollIncrement;
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
@@ -705,6 +735,7 @@ class SpectrumBarEffect : public LEDStripEffect
                 break;
 
             CRGB  color = g()->IsPalettePaused() ? g()->ColorFromCurrentPalette() : CHSV(hue + iBand * _hueStep, 255, 255);
+
             g()->drawLine(x1, top, x1, bottom, color);
             g()->drawLine(x2, top, x2, bottom, color);
         }

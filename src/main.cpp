@@ -176,17 +176,17 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *);
 // Global Variables
 //
 
-DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
-DRAM_ATTR Values g_Values;
-DRAM_ATTR SoundAnalyzer g_Analyzer;
-DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
-DRAM_ATTR std::mutex g_buffer_mutex;
+std::unique_ptr<SystemContainer> g_ptrSystem;
+Values g_Values;
+SoundAnalyzer g_Analyzer;
+RemoteDebug Debug;                                                        // Instance of our telnet debug server
+std::mutex g_buffer_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
 
-ImprovSerial<typeof(Serial)> g_ImprovSerial;
+std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
@@ -194,7 +194,7 @@ ImprovSerial<typeof(Serial)> g_ImprovSerial;
 // Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of descreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
-DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
+const int g_aRingSizeTable[MAX_RINGS] =
 {
     RING_SIZE_0,
     RING_SIZE_1,
@@ -288,7 +288,7 @@ void setup()
     // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
 
     #if MESMERIZER
-        heap_caps_malloc_extmem_enable(128);
+        heap_caps_malloc_extmem_enable(96);
     #endif
 
     // Initialize LZ library for decompressing compressed wifi packets
@@ -351,7 +351,8 @@ void setup()
 
         debugW("Starting ImprovSerial for %s", family.c_str());
         String name = "NDESP32" + get_mac_address().substring(6);
-        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
+        g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
+        g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
 
     #endif
 
@@ -428,6 +429,11 @@ void setup()
             g_ptrSystem->SetupDisplay<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
         #else
             M5.begin(false);
+        #endif
+
+        // Turn off the M5 vibration motor
+        #if M5STACKCORE2
+            M5.Axp.SetLDOEnable(3, false);
         #endif
 
     #elif ELECROW
@@ -531,7 +537,7 @@ void loop()
         #if ENABLE_WIFI
             EVERY_N_MILLIS(20)
             {
-                g_ImprovSerial.loop();
+                g_pImprovSerial->loop();
             }
         #endif
 

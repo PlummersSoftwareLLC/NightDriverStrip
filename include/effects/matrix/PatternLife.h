@@ -195,12 +195,12 @@ private:
         if (random(0, 4) == 0)
         {
             seed = bakedInSeeds[random(ARRAYSIZE(bakedInSeeds))];
-            debugI("Prebaked Seed: %lu", seed);
+            debugV("Prebaked Seed: %lu", seed);
         }
         else
         {
             seed = random();
-            debugI("Randomized Seed: %lu", seed);
+            debugV("Randomized Seed: %lu", seed);
         }
 
         srand(seed);
@@ -314,7 +314,7 @@ public:
                 if (checksums[i] == crc)
                 {
                     bStuckInLoop = millis();
-                    debugW("Seed: %10lu, Generations: %5d, %s", seed, cGeneration, cGeneration > 3000 ? "Y" : "N");
+                    debugV("Seed: %10lu, Generations: %5d, %s", seed, cGeneration, cGeneration > 3000 ? "Y" : "N");
                 }
                 if (checksums[i] == 0xFFFFFFF)
                     break;

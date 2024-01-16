@@ -463,35 +463,37 @@ class TwinkleEffect : public LEDStripEffect
     {
         EVERY_N_MILLISECONDS(_updateSpeed)
         {
-            if (litPixels.size() > _countToDraw)
+            while(litPixels.size() > _countToDraw)
             {
                 size_t i = litPixels.back();
                 litPixels.pop_back();
-                _GFX[0]->setPixel(i, CRGB::Black);
+                setPixelOnAllChannels(i, CRGB::Black);
             }
 
             // Pick a random pixel and put it in the TOP slot
-            int iNew = -1;
-            for (int iPass = 0; iPass < NUM_LEDS * 10; iPass++)
+            for (int iLoop = 0; iLoop < 2; iLoop++)
             {
-                size_t i = random(0, NUM_LEDS);
-                if (_GFX[0]->getPixel(i) != CRGB(0,0,0))
-                    continue;
-                if (litPixels.end() != find(litPixels.begin(), litPixels.end(), i))
-                    continue;
-                iNew = i;
-                break;
+              int iNew = -1;
+              for (int iPass = 0; iPass < NUM_LEDS * 20; iPass++)
+              {
+                  size_t i = random(0, NUM_LEDS);
+                  if (_GFX[0]->getPixel(i) != CRGB::Black)
+                      continue;
+                  if (litPixels.end() != find(litPixels.begin(), litPixels.end(), i))
+                      continue;
+                  iNew = i;
+                  break;
+              }
+              if (iNew == -1)             // No empty slot could be found!
+              {
+                  litPixels.clear();
+                  setAllOnAllChannels(0,0,0);
+                  return;
+              }
+              assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
+              setPixelOnAllChannels(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
+              litPixels.push_front(iNew);
             }
-            if (iNew == -1)             // No empty slot could be found!
-            {
-                litPixels.clear();
-                setAllOnAllChannels(0,0,0);
-                return;
-            }
-
-            assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
-            setPixelOnAllChannels(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
-            litPixels.push_front(iNew);
         }
 
         EVERY_N_MILLISECONDS(20)
