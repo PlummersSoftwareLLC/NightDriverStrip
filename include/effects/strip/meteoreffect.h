@@ -74,8 +74,10 @@ public:
             hueval = hueval + 48;
             hueval %= 256;
             hue[i] = hueval;
-            iPos[i] = (pGFX->GetLEDCount() / meteorCount) * i;
+            iPos[i] = meteorCount < 1 ? 0 : (pGFX->GetLEDCount() / (meteorCount - 1) * i);
             speed[i] = random_range(meteorSpeedMin, meteorSpeedMax);
+            if (i % 1)
+                speed[i] *= -1;
             lastBeat[i] = g_Values.AppTime.FrameStartTime();
             bLeft[i] = i & 2;
         }

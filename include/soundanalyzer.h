@@ -111,7 +111,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 class PeakData
 {
 
-protected:
+public:
 
     double _Level[NUM_BANDS];
 
@@ -205,12 +205,11 @@ class SoundAnalyzer : public AudioVariables
 
     static const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
-    double * _vPeaks;                   // The peak value for each band
     int      _cutOffsBand[NUM_BANDS];   // The upper frequency for each band
     float    _oldVU;                    // Old VU value for damping
     float    _oldPeakVU;                // Old peak VU value for damping
     float    _oldMinVU;                 // Old min VU value for damping
-    PeakData _Peaks;                    // The peak data for the last sample pass
+    double * _vPeaks;                   // The peak value for each band
 
     PeakData::MicrophoneType _MicMode = PeakData::M5;
 
@@ -462,6 +461,8 @@ class SoundAnalyzer : public AudioVariables
     }
 
 public:
+
+    PeakData _Peaks;                    // The peak data for the last sample pass
 
     SoundAnalyzer()
     {
