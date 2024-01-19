@@ -527,7 +527,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER            1  // Turn on the internal webserver
+    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
     #define ENABLE_NTP                  1   // Set the clock from the web
     #define ENABLE_OTA                  1   // Accept over the air flash updates
     #define ENABLE_REMOTE               1   // IR Remote Control
@@ -1171,7 +1171,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef ENABLE_WEBSERVER
-#define ENABLE_WEBSERVER        0   // Chip provides a web server with controls to adjust effects
+    #define ENABLE_WEBSERVER        0   // Chip provides a web server with controls to adjust effects
+
+#endif
+
+
+#if ENABLE_WEBSERVER
+    #ifndef ENABLE_WEB_UI
+    #define ENABLE_WEB_UI           1   // Enable endpoints for the web UI
+    #endif
 #endif
 
 #ifndef ENABLE_OTA
