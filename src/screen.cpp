@@ -73,18 +73,17 @@ void BasicInfoSummary(bool bRedraw)
 
     #if USE_OLED
         const uint16_t bkgndColor = BLACK16;
+    #elif AMOLED_S3
+        const uint16_t bkgndColor  = Screen::to16bit(CRGB::Black);
+        const uint16_t borderColor = Screen::to16bit(CRGB::Red);
+        const uint16_t textColor   = Screen::to16bit(CRGB(100, 255, 20));
     #else
-        const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);
+        const uint16_t bkgndColor  = Screen::to16bit(CRGB::Blue);
+        const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
+        const uint16_t textColor   = Screen::to16bit(CRGB::White);
     #endif
 
-    const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
-    const uint16_t textColor = Screen::to16bit(CRGB::White);
 
-    // Green Terminal Theme
-    //
-    // const uint16_t bkgndColor  = Screen::to16bit(CRGB::Black);
-    // const uint16_t borderColor = Screen::to16bit(CRGB::Red);
-    // const uint16_t textColor   = Screen::to16bit(CRGB(100, 255, 20));
 
     // bRedraw is set for full redraw, in which case we fill the screen
 
@@ -101,8 +100,13 @@ void BasicInfoSummary(bool bRedraw)
     char chStatus = szStatus[c2];
     cStatus++;
 
-    //display.setFont();
-    display.setTextSize(display.width() >= 240 ? 2 : 1);
+    if (display.width() > 240)
+        display.setTextSize(3);
+    else if (display.width() >= 160)
+        display.setTextSize(2);
+    else
+        display.setTextSize(1);
+
     #if USE_OLED
         display.setTextColor(WHITE16, BLACK16);
     #else
@@ -179,13 +183,7 @@ void BasicInfoSummary(bool bRedraw)
         display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
         display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
-
-    /* Old PSRAM code
-    display.setCursor(xMargin + 0, yMargin + lineHeight * 7);
-    display.println(str_sprintf("PRAM:%dK/%dK\n",
-                                ESP.getFreePsram() / 1024,
-                                ESP.getPsramSize() / 1024));
-    */
+        
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
     //             that conveys the overall status
@@ -227,7 +225,6 @@ void BasicInfoSummary(bool bRedraw)
             display.drawRect(xMargin, top, width, height, WHITE16);
         #endif
     }
-
 
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32
     display.drawRect(0, 0, display.width(), display.height(), borderColor);
@@ -434,52 +431,58 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
-#ifdef TOGGLE_BUTTON_1
-        static uint effectInterval;
+        #ifdef TOGGLE_BUTTON_1
+            static uint effectInterval;
 
-        Button1.update();
-        if (Button1.pressed())
-        {
-            std::lock_guard<std::mutex> guard(g_ptrSystem->Display()._screenMutex);
-
-            // When the button is pressed advance to the next information page on the little display
-
-            g_InfoPage = (g_InfoPage + 1) % g_InfoPageCount;
-
-            auto& effectManager = g_ptrSystem->EffectManager();
-
-            // We stop rotating the effects when we are on the debug info page, and resume when we are not
-            if (g_InfoPage == 0)
+            Button1.update();
+            if (Button1.pressed())
             {
-                effectInterval = effectManager.GetInterval();
-                effectManager.SetInterval(0, true);
+                std::lock_guard<std::mutex> guard(g_ptrSystem->Display()._screenMutex);
+
+                // When the button is pressed advance to the next information page on the little display
+
+                g_InfoPage = (g_InfoPage + 1) % g_InfoPageCount;
+
+                auto& effectManager = g_ptrSystem->EffectManager();
+
+                // We stop rotating the effects when we are on the debug info page, and resume when we are not
+                if (g_InfoPage == 0)
+                {
+                    effectInterval = effectManager.GetInterval();
+                    effectManager.SetInterval(0, true);
+                }
+                // Restore effect interval to the value we remembered, on the proviso that effect rotation is now indeed
+                // paused. Otherwise, the user may have chosen a different effect interval while we weren't looking and
+                // we don't want to mess with that.
+                else if (effectManager.GetInterval() == 0)
+                    effectManager.SetInterval(effectInterval, true);
+
+                bRedraw = true;
             }
-            // Restore effect interval to the value we remembered, on the proviso that effect rotation is now indeed
-            // paused. Otherwise, the user may have chosen a different effect interval while we weren't looking and
-            // we don't want to mess with that.
-            else if (effectManager.GetInterval() == 0)
-                effectManager.SetInterval(effectInterval, true);
+        #endif
 
-            bRedraw = true;
-        }
-#endif
-
-#ifdef TOGGLE_BUTTON_2
-        Button2.update();
-        if (Button2.pressed())
-        {
-            debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
-            g_ptrSystem->EffectManager().NextEffect();
-            bRedraw = true;
-        }
-#endif
+        #ifdef TOGGLE_BUTTON_2
+            Button2.update();
+            if (Button2.pressed())
+            {
+                debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
+                g_ptrSystem->EffectManager().NextEffect();
+                bRedraw = true;
+            }
+        #endif
 
         UpdateScreen(bRedraw);
         if (g_Values.UpdateStarted)
+        {
             delay(200);
+        }
         else
-            delay(50);
-
+        {
+            #if AMOLED_S3
+                lv_task_handler();
+            #endif
+            delay(5);
+        }
         bRedraw = false;
     }
 }
