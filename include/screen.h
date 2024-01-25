@@ -253,6 +253,11 @@ public:
 
         ~AMOLEDScreen()
         {
+            if (canvas)
+            {
+                lv_obj_del(canvas);
+                canvas = NULL;
+            }
             if (cbuf)
             {
                 heap_caps_free(cbuf);
@@ -265,9 +270,9 @@ public:
             assert(canvas != NULL);
             assert(cbuf != NULL);
 
-            // Set the pixel color
             lv_color_t lv_color = lv_from16Bit(color); 
             lv_canvas_set_px_color(canvas, x, y, lv_color);
+
         }
 
         virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
@@ -292,7 +297,6 @@ public:
 
             lv_color_t lv_color = lv_from16Bit(color); 
             lv_canvas_fill_bg(canvas, lv_color, LV_OPA_COVER);
-            amoled.pushColors((uint16_t *)cbuf, LV_CANVAS_BUF_SIZE_TRUE_COLOR(TFT_WIDTH,TFT_HEIGHT));
         }
 
     };

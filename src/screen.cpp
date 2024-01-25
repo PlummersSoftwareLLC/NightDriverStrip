@@ -227,7 +227,7 @@ void BasicInfoSummary(bool bRedraw)
     }
 
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32
-    display.drawRect(0, 0, display.width(), display.height(), borderColor);
+    //display.drawRect(0, 0, display.width(), display.height(), borderColor);
 #endif
 }
 
@@ -481,7 +481,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             #if AMOLED_S3
                 lv_task_handler();
             #endif
-            delay(5);
+            delay(2);
         }
         bRedraw = false;
     }
