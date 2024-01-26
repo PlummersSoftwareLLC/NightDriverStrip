@@ -83,9 +83,6 @@ public:
             SPIFFS.remove(IMPROV_LOG_FILE);
         #endif
 
-        debugI("Sending Improv packet to declare we're up. Ignore any IMPROV lines that follow this one.");
-        this->set_state_(improv::STATE_AUTHORIZED);
-
         log_write("Finished Improv setup");
     }
 
@@ -95,6 +92,13 @@ public:
 
     void loop()
     {
+        static bool announcedPresence = [&]
+        {
+            debugI("Sending Improv packet to declare we're up. Ignore any IMPROV lines that follow this one.");
+            this->set_state_(improv::STATE_AUTHORIZED);
+            return true;
+        }();
+
         const uint32_t now = millis();
         if (now - this->last_read_byte_ > 50)
         {
