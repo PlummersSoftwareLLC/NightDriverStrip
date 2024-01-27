@@ -264,7 +264,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_CHANNELS            1
     #define ENABLE_AUDIO            0
 
-    #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
+    #define POWER_LIMIT_MW       12 * 10 * 1000   // 12 volts, 10 amp supply
 
     // Once you have a working project, selectively enable various additional features by setting
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
@@ -332,7 +332,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
-    #define POWER_LIMIT_MW       12 * 10 * 1000   // 10 amp supply at 5 volts assumed
+    #define POWER_LIMIT_MW       12 * 10 * 1000   // 12 volts, 10 amp supply
 
     #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
         #define LED_PIN0 32
