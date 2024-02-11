@@ -352,6 +352,9 @@ Add whatever you want and/or need to make your LED dreams come true. Fix my blun
 
 To replicate, build the mesmerizer project.  Then delete pio/build_cache and build again, taking the time for the second build.
 
+- ASUS 7995WX [96-core, 192-thread]
+  -> [davepl, 02/11/2024] 20.73 seconds
+
 - HP Z6 G5A, 7995WX, 128GB [96-core, 192-thread]
   -> [davepl 11/29/2023] 25.270 seconds
 
