@@ -77,6 +77,10 @@
 #error A definition for cszTimeZone is missing from secrets.h
 #endif
 
+#if !defined(cszStockTickerAPIKey)
+#error A definition for cszStockTickerAPIKey is missing from secrets.h
+#endif
+
 
 #define DEVICE_CONFIG_FILE "/device.cfg"
 #define NTP_SERVER_DEFAULT "0.pool.ntp.org"
@@ -123,6 +127,7 @@ class DeviceConfig : public IJSONSerializable
     CRGB    globalColor = CRGB::Red;
     bool    applyGlobalColors = false;
     CRGB    secondColor = CRGB::Red;
+    String  stockTickerApiKey = cszStockTickerAPIKey;
 
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
@@ -175,6 +180,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
     static constexpr const char * ApplyGlobalColorsTag = NAME_OF(applyGlobalColors);
     static constexpr const char * SecondColorTag = NAME_OF(secondColor);
+    static constexpr const char * StockTickerApiKeyTag = NAME_OF(stockTickerApiKey);
 
     DeviceConfig();
 
@@ -208,7 +214,10 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[SecondColorTag] = secondColor;
 
         if (includeSensitive)
+        {
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
+            jsonDoc[StockTickerApiKeyTag] = stockTickerApiKey;
+        }
 
         assert(!jsonDoc.overflowed());
 
@@ -241,6 +250,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, globalColor, GlobalColorTag);
         SetIfPresentIn(jsonObject, applyGlobalColors, ApplyGlobalColorsTag);
         SetIfPresentIn(jsonObject, secondColor, SecondColorTag);
+        SetIfPresentIn(jsonObject, stockTickerApiKey, StockTickerApiKeyTag);
 
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
@@ -360,6 +370,16 @@ class DeviceConfig : public IJSONSerializable
             );
             powerLimitSpec.MinimumValue = POWER_LIMIT_MIN;
             powerLimitSpec.HasValidation = true;
+
+            auto& stockTickerSpec = settingSpecs.emplace_back(
+                StockTickerApiKeyTag,
+                "FinnHub Stock Ticker API key",
+                "The API key for the <a href=\"https://finnhub.io/docs/api/introduction\">Finnhub API provided by Finnhub.io</a>.",
+                SettingSpec::SettingType::String
+            );
+            stockTickerSpec.HasValidation = true;
+            stockTickerSpec.Access = SettingSpec::SettingAccess::WriteOnly;
+            stockTickerSpec.EmptyAllowed.reset();        // Silently ignore empty value at the front-end
 
             settingSpecs.emplace_back(
                 ClearGlobalColorTag,
@@ -587,4 +607,17 @@ class DeviceConfig : public IJSONSerializable
 
     void SetColorSettings(const CRGB& globalColor, const CRGB& secondColor);
     void ApplyColorSettings(std::optional<CRGB> globalColor, std::optional<CRGB> secondColor, bool clearGlobalColor, bool applyGlobalColor);
+
+    const String &GetStockTickerAPIKey() const
+    {
+        return stockTickerApiKey;
+    }
+
+    ValidateResponse ValidateStockTickerAPIKey(const String &newStockTickerAPIKey);
+
+    void SetStockTickerAPIKey(const String &newStockTickerAPIKey)
+    {
+        SetAndSave(stockTickerApiKey, newStockTickerAPIKey);
+    }
+
 };
