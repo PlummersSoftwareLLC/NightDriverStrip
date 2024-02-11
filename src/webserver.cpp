@@ -134,17 +134,19 @@ void CWebServer::begin()
     debugI("Connecting Web Endpoints");
 
     // SPIFFS file requests
-    _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE,   "text/json"); });
 
+    _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE,   "text/json"); });
     #if ENABLE_IMPROV_LOGGING
         _server.on(IMPROV_LOG_FILE,      HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, IMPROV_LOG_FILE,       "text/plain"); });
     #endif
 
     // Instance handler requests
+
     _server.on("/statistics",            HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetStatistics(pRequest); });
     _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetStatistics(pRequest); });
 
     // Static handler requests
+
     _server.on("/effects",               HTTP_GET,  GetEffectListText);
     _server.on("/getEffectList",         HTTP_GET,  GetEffectListText);
     _server.on("/nextEffect",            HTTP_POST, NextEffect);
@@ -169,10 +171,11 @@ void CWebServer::begin()
     _server.on("/reset",                 HTTP_POST, Reset);
 
     // Embedded file requests
+
     ServeEmbeddedFile("/timezones.json", timezones_file);
 
     #if ENABLE_WEB_UI
-        debugI("Web UI Endpoints enabled");
+        debugI("Web UI URL pathnames enabled");
 
         ServeEmbeddedFile("/", html_file);
         ServeEmbeddedFile("/index.html", html_file);
@@ -181,6 +184,7 @@ void CWebServer::begin()
     #endif
 
     // Not found handler
+
     _server.onNotFound([](AsyncWebServerRequest *request)
     {
         if (request->method() == HTTP_OPTIONS) {

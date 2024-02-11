@@ -1171,14 +1171,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef ENABLE_WEBSERVER
-    #define ENABLE_WEBSERVER        0   // Chip provides a web server with controls to adjust effects
-
+#define ENABLE_WEBSERVER        0   // Chip provides a web server with controls to adjust effects
 #endif
-
 
 #if ENABLE_WEBSERVER
     #ifndef ENABLE_WEB_UI
-    #define ENABLE_WEB_UI           1   // Enable endpoints for the web UI
+    #define ENABLE_WEB_UI           1   // Enable HTTP pathnames for the web UI
     #endif
 #endif
 
