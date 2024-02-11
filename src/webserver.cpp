@@ -172,11 +172,16 @@ void CWebServer::begin()
 
     // Embedded file requests
 
-    ServeEmbeddedFile("/", html_file);
-    ServeEmbeddedFile("/index.html", html_file);
-    ServeEmbeddedFile("/index.js", js_file);
-    ServeEmbeddedFile("/favicon.ico", ico_file);
     ServeEmbeddedFile("/timezones.json", timezones_file);
+
+    #if ENABLE_WEB_UI
+        debugI("Web UI URL pathnames enabled");
+
+        ServeEmbeddedFile("/", html_file);
+        ServeEmbeddedFile("/index.html", html_file);
+        ServeEmbeddedFile("/index.js", js_file);
+        ServeEmbeddedFile("/favicon.ico", ico_file);
+    #endif
 
     // Not found handler
 
