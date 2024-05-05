@@ -30,12 +30,12 @@
 
 #pragma once
 
-#include <sys/cdefs.h>
-#include <sys/time.h>
-#include <time.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <ctime>
 #include <mutex>
+#include <sys/cdefs.h>
+#include <sys/time.h>
 
 // NTPTimeClient
 //
@@ -50,9 +50,7 @@ class NTPTimeClient
 
   public:
 
-    NTPTimeClient()
-    {
-    }
+    NTPTimeClient() = default;
 
     static inline bool HasClockBeenSet()
     {

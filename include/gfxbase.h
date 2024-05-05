@@ -155,7 +155,7 @@ public:
         return _currentPalette;
     }
 
-    virtual size_t GetLEDCount() const
+    [[nodiscard]] virtual size_t GetLEDCount() const
     {
         return _width * _height;
     }
@@ -194,7 +194,7 @@ public:
         uint8_t g = gamma6[(color >> 5) & 0x3F];
         uint8_t b = gamma5[color & 0x1F];
 
-        return CRGB(r, g, b);
+        return {r, g, b};
     }
 
     static uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) // Convert RGB -> 16bit 5:6:5
@@ -219,13 +219,13 @@ public:
         else
             fill_solid(leds, _width * _height, color);
     }
-    virtual bool isValidPixel(uint x, uint y) const
+    [[nodiscard]] virtual bool isValidPixel(uint x, uint y) const
     {
         // Check that the pixel location is within the matrix's bounds
         return x < _width && y < _height;
     }
 
-    virtual bool isValidPixel(uint n) const
+    [[nodiscard]] virtual bool isValidPixel(uint n) const
     {
         // Check that the pixel location is within the matrix's bounds
         return n < _width * _height;
@@ -247,7 +247,7 @@ public:
     // If your matrix uses a different approach, you can override this function and implement it
     // in the XY() function of your class
 
-    virtual uint16_t xy(uint16_t x, uint16_t y) const
+    [[nodiscard]] virtual uint16_t xy(uint16_t x, uint16_t y) const
     {
         if (x & 0x01)
         {
@@ -272,7 +272,7 @@ public:
         #define XY(x, y) xy(x, y)
     #endif
 
-    virtual CRGB getPixel(int16_t x, int16_t y) const
+    [[nodiscard]] virtual CRGB getPixel(int16_t x, int16_t y) const
     {
         if (isValidPixel(x, y))
             return leds[XY(x, y)];
@@ -280,7 +280,7 @@ public:
             throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 
-    virtual CRGB getPixel(int16_t i) const
+    [[nodiscard]] virtual CRGB getPixel(int16_t i) const
     {
         if (isValidPixel(i))
             return leds[i];
@@ -328,7 +328,7 @@ public:
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    void setPixel(int16_t x, int16_t y, CRGB color)
+    void setPixel(int16_t x, int16_t y, CRGB color) const
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
@@ -408,7 +408,7 @@ public:
     //   We are now at pixel 5, frac2 = .75
     //   We fill pixel with .75 worth of color
 
-    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false)
+    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false) const
     {
         float frac1 = fPos - floor(fPos);                 // eg:   3.25 becomes 0.25
         float frac2 = fPos + count - floor(fPos + count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
@@ -452,7 +452,7 @@ public:
                 leds[(int)p] = bMerge ? leds[(int)p] + c : c;
             count--;
             p++;
-        };
+        }
 
         // Final pixel, if in bounds
         if (count > 0)
@@ -460,7 +460,7 @@ public:
                 leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
-    void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
+    void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount) const
     {
         // blur rows same as columns, for irregular matrix
         uint8_t keep = 255 - blur_amount;
@@ -484,7 +484,7 @@ public:
     }
 
     // blurColumns: perform a blur1d on each column of a rectangular matrix
-    void blurColumns(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
+    void blurColumns(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount) const
     {
         // blur columns
         uint8_t keep = 255 - blur_amount;
@@ -507,7 +507,7 @@ public:
         }
     }
 
-    void blur2d(CRGB *leds, uint16_t width, uint16_t firstColumn, uint16_t height, uint16_t firstRow, fract8 blur_amount)
+    void blur2d(CRGB *leds, uint16_t width, uint16_t firstColumn, uint16_t height, uint16_t firstRow, fract8 blur_amount) const
     {
         blurRows(leds, width, height, firstColumn, blur_amount);
         blurColumns(leds, width, height, firstRow, blur_amount);
@@ -576,14 +576,13 @@ public:
         _palettePaused = bPaused;
     }
 
-    bool IsPalettePaused() const
+    [[nodiscard]] bool IsPalettePaused() const
     {
         return _palettePaused;
     }
 
     void UpdatePaletteCycle()
     {
-
         ChangePalettePeriodically();
         uint8_t maxChanges = 24;
         nblendPaletteTowardPalette(_currentPalette, _targetPalette, maxChanges);
@@ -601,7 +600,7 @@ public:
                 drawPixel(x, y, color);
     }
 
-    void setPalette(CRGBPalette16 palette)
+    void setPalette(const CRGBPalette16& palette)
     {
         _currentPalette = palette;
         _targetPalette = palette;
@@ -668,7 +667,7 @@ public:
         _currentPalette = _targetPalette;
     }
 
-    void setPalette(String paletteName)
+    void setPalette(const String& paletteName)
     {
         if (paletteName == "Rainbow")
             loadPalette(0);
@@ -742,10 +741,10 @@ public:
     // Oscillators and Emitters
 
     // the oscillators: linear ramps 0-255
-    uint8_t osci[6];
+    uint8_t osci[6]{};
 
     // sin8(osci) swinging between 0 to _width - 1
-    uint8_t p[6];
+    uint8_t p[6]{};
 
     // set the speeds (and by that ratios) of the oscillators here
 
@@ -775,7 +774,7 @@ public:
 
     // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
 
-    void Caleidoscope1()
+    void Caleidoscope1() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -789,7 +788,7 @@ public:
     }
 
     // mirror the first 16x16 quadrant 3 times onto a 32x32
-    void Caleidoscope2()
+    void Caleidoscope2() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -803,7 +802,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 16x16
-    void Caleidoscope3()
+    void Caleidoscope3() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -815,7 +814,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 16x16 (90 degrees rotated compared to Caleidoscope3)
-    void Caleidoscope4()
+    void Caleidoscope4() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -827,7 +826,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 8x8
-    void Caleidoscope5()
+    void Caleidoscope5() const
     {
         for (int x = 0; x < _width / 4; x++)
         {
@@ -846,7 +845,7 @@ public:
         }
     }
 
-    void Caleidoscope6()
+    void Caleidoscope6() const
     {
         for (int x = 1; x < ((_width + 1) / 2); x++)
         {
@@ -883,7 +882,7 @@ public:
     // create a square twister to the left or counter-clockwise
     // x and y for center, r for radius
 
-    void SpiralStream(int x, int y, int r, uint8_t dimm)
+    void SpiralStream(int x, int y, int r, uint8_t dimm) const
     {
         for (int d = r; d >= 0; d--)
         { // from the outside to the inside
@@ -911,7 +910,7 @@ public:
     }
 
     // expand everything within a circle
-    void Expand(int centerX, int centerY, int radius, uint8_t dimm)
+    void Expand(int centerX, int centerY, int radius, uint8_t dimm) const
     {
         if (radius == 0)
             return;
@@ -973,7 +972,7 @@ public:
     }
 
     // give it a linear tail to the right
-    void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT) const
     {
         for (int x = fromX + 1; x < toX; x++)
         {
@@ -988,7 +987,7 @@ public:
     }
 
     // give it a linear tail to the left
-    void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT) const
     {
         for (int x = toX; x < fromX; x++)
         {
@@ -1003,7 +1002,7 @@ public:
     }
 
     // give it a linear tail downwards
-    void StreamDown(uint8_t scale)
+    void StreamDown(uint8_t scale) const
     {
         for (int x = 0; x < _width; x++)
         {
@@ -1018,7 +1017,7 @@ public:
     }
 
     // give it a linear tail upwards
-    void StreamUp(uint8_t scale)
+    void StreamUp(uint8_t scale) const
     {
         for (int x = 0; x < _width; x++)
         {
@@ -1033,7 +1032,7 @@ public:
     }
 
     // give it a linear tail up and to the left
-    void StreamUpAndLeft(uint8_t scale)
+    void StreamUpAndLeft(uint8_t scale) const
     {
         for (int x = 0; x < _width - 1; x++)
         {
@@ -1051,7 +1050,7 @@ public:
 
     // give it a linear tail up and to the right
 
-    void StreamUpAndRight(uint8_t scale)
+    void StreamUpAndRight(uint8_t scale) const
     {
         for (int x = 0; x < _width - 1; x++)
         {
@@ -1072,7 +1071,7 @@ public:
 
     // just move everything one line down - BUGBUG (DAVEPL) Redundant with MoveX?
 
-    void MoveDown()
+    void MoveDown() const
     {
         for (int y = _height - 1; y > 0; y--)
         {
@@ -1085,7 +1084,7 @@ public:
 
     // just move everything one line down - BUGBUG (davepl) Redundant with MoveY?
 
-    void VerticalMoveFrom(int start, int end)
+    void VerticalMoveFrom(int start, int end) const
     {
         for (int y = end; y > start; y--)
         {
@@ -1099,7 +1098,7 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
 
-    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) const
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1110,7 +1109,7 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
     {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
@@ -1147,12 +1146,12 @@ public:
     }
 
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false) const
     {
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
 
-    void drawLine(int x0, int y0, int x1, int y1, CRGB color)
+    void drawLine(int x0, int y0, int x1, int y1, CRGB color) const
     {
         BresenhamLine(x0, y0, x1, y1, color);
     }
@@ -1166,12 +1165,12 @@ public:
         }
     }
 
-    CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
+    [[nodiscard]] CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
     {
         return ColorFromPalette(_currentPalette, index, brightness, _currentBlendType);
     }
 
-    CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v) const
+    [[nodiscard]] static CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
     {
         CHSV hsv = CHSV(h, s, v);
         CRGB rgb;
@@ -1254,7 +1253,7 @@ public:
 
     // MoveX - Shift the content on the matrix left or right
 
-    void MoveX(uint8_t delta)
+    void MoveX(uint8_t delta) const
     {
         for (int y = 0; y < _height; y++)
         {

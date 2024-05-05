@@ -31,13 +31,13 @@
 #pragma once
 
 #include "effects.h"
-#include "jsonserializer.h"
-#include "types.h"
 #include "gfxbase.h"
+#include "jsonserializer.h"
 #include "ledmatrixgfx.h"
-#include <memory>
+#include "types.h"
+#include <cstdlib>
 #include <list>
-#include <stdlib.h>
+#include <memory>
 
 // This macro returns from the invoking function (which would usually be SetSetting())
 // if the settingName and propertyName passed to it match, and the "value" was thus
@@ -90,32 +90,32 @@ class LEDStripEffect : public IJSONSerializable
 
     // Helper functions for known setting types, as defined in SettingSpec::SettingType
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toInt());
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), NULL, 10));
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), nullptr, 10));
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toFloat());
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, BoolFromText(value));
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value);
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
     {
         if (settingName != propertyName)
             return false;
@@ -136,9 +136,9 @@ class LEDStripEffect : public IJSONSerializable
         return true;
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), nullptr, 10)));
     }
 
     // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
@@ -152,11 +152,11 @@ class LEDStripEffect : public IJSONSerializable
     virtual bool FillSettingSpecs()
     {
         // Bail out if the SettingSpecs reference_wrapper vector is already filled
-        if (_settingSpecs.size() > 0)
+        if (!_settingSpecs.empty())
             return false;
 
         // Lazily load the SettingSpec instances if they're not already there
-        if (_baseSettingSpecs.size() == 0)
+        if (_baseSettingSpecs.empty())
         {
             _baseSettingSpecs.emplace_back(
                 ACTUAL_NAME_OF(_friendlyName),
@@ -205,7 +205,7 @@ class LEDStripEffect : public IJSONSerializable
             _friendlyName = strName;
     }
 
-    LEDStripEffect(const JsonObjectConst&  jsonObject)
+    explicit LEDStripEffect(const JsonObjectConst&  jsonObject)
         : _effectNumber(jsonObject[PTY_EFFECTNR]),
           _friendlyName(jsonObject["fn"].as<String>())
     {
@@ -224,9 +224,7 @@ class LEDStripEffect : public IJSONSerializable
             _maximumEffectTime = 0;
     }
 
-    virtual ~LEDStripEffect()
-    {
-    }
+    virtual ~LEDStripEffect() = default;
 
     virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
@@ -244,7 +242,7 @@ class LEDStripEffect : public IJSONSerializable
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
 
-    std::shared_ptr<GFXBase> g(size_t channel = 0) const
+    [[nodiscard]] std::shared_ptr<GFXBase> g(size_t channel = 0) const
     {
         return _GFX[channel];
     }
@@ -265,37 +263,37 @@ class LEDStripEffect : public IJSONSerializable
       }
     #endif
 
-    virtual bool CanDisplayVUMeter() const
+    [[nodiscard]] virtual bool CanDisplayVUMeter() const
     {
         return true;
     }
 
-    virtual const String & FriendlyName() const             // User-visible effect name
+    [[nodiscard]] virtual const String & FriendlyName() const             // User-visible effect name
     {
         return _friendlyName;
     }
 
-    int EffectNumber() const
+    [[nodiscard]] int EffectNumber() const
     {
         return _effectNumber;
     }
 
-    virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
+    [[nodiscard]] virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
     {
         return 30;
     }
 
-    virtual size_t MaximumEffectTime() const                // For splash screens and similar, a max display time for the effect
+    [[nodiscard]] virtual size_t MaximumEffectTime() const                // For splash screens and similar, a max display time for the effect
     {
         return _maximumEffectTime;
     }
 
-    virtual bool HasMaximumEffectTime() const
+    [[nodiscard]] virtual bool HasMaximumEffectTime() const
     {
         return MaximumEffectTime() != 0;
     }
 
-    virtual bool ShouldShowTitle() const                    // True if the effect should show the title overlay
+    [[nodiscard]] virtual bool ShouldShowTitle() const                    // True if the effect should show the title overlay
     {
         return true;
     }
@@ -303,10 +301,10 @@ class LEDStripEffect : public IJSONSerializable
     // RequiresDoubleBuffering
     //
     // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
-    // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
+    // If, on the other hand, it renders from scratch every time, starting with a black fill, etc, then it does not,
     // and it can override this method and return false;
 
-    virtual bool RequiresDoubleBuffering() const
+    [[nodiscard]] virtual bool RequiresDoubleBuffering() const
     {
         return true;
     }
@@ -346,7 +344,7 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Given a temp in the 0-1 range, returns a fire-appropriate black body radiator color for it
 
-    virtual CRGB GetBlackBodyHeatColor(float temp) const
+    [[nodiscard]] virtual CRGB GetBlackBodyHeatColor(float temp) const
     {
         return ColorFromPalette(HeatColors_p, 255 * temp);
     }
@@ -354,7 +352,7 @@ class LEDStripEffect : public IJSONSerializable
     // The variant allows you to specify a base flame color other than red, and the result
     // is interpolated from black to your color and on through yellow and white
 
-    virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
+    [[nodiscard]] virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
     {
         if (baseColor == CRGB::Red)
             return GetBlackBodyHeatColor(temp);
@@ -365,7 +363,7 @@ class LEDStripEffect : public IJSONSerializable
             return ColorFraction(baseColor, temp * 3.0f);                                                   // Interpolate from black to baseColor
 
         if (temp < 0.66f)
-            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interoplate from baseColor to Yellow
+            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interpolate from baseColor to Yellow
 
         return CRGB::Yellow + ColorFraction(CRGB::Blue,  (temp - 0.66f) * 3.0f);                            // Interpolate from Yellow to White
     }
@@ -493,7 +491,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // SerializeToJSON
     //
-    // Serialize this effects paramters to a JSON document
+    // Serialize this effects parameters to a JSON document
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
@@ -518,7 +516,7 @@ class LEDStripEffect : public IJSONSerializable
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual bool IsEnabled() const
+    [[nodiscard]] virtual bool IsEnabled() const
     {
         return _enabled;
     }
@@ -533,7 +531,7 @@ class LEDStripEffect : public IJSONSerializable
         _coreEffect = true;
     }
 
-    bool IsCoreEffect() const
+    [[nodiscard]] bool IsCoreEffect() const
     {
         return _coreEffect;
     }

@@ -99,12 +99,12 @@ class EffectFactories
             factory(factory)
         {}
 
-        int EffectNumber() const
+        [[nodiscard]] int EffectNumber() const
         {
             return effectNumber;
         }
 
-        std::shared_ptr<LEDStripEffect> CreateEffect() const
+        [[nodiscard]] std::shared_ptr<LEDStripEffect> CreateEffect() const
         {
             auto pEffect = factory();
 
@@ -143,7 +143,7 @@ class EffectFactories
 
     bool IsEmpty()
     {
-        return defaultFactories.size() == 0 && jsonFactories.size() == 0;
+        return defaultFactories.empty() && jsonFactories.empty();
     }
 
     void ClearDefaultFactories()

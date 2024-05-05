@@ -36,6 +36,7 @@
 #include <pixeltypes.h>
 #include <memory>
 #include <iostream>
+#include <utility>
 #include "values.h"
 
 class LEDBuffer
@@ -54,7 +55,7 @@ class LEDBuffer
   public:
 
     explicit LEDBuffer(std::shared_ptr<GFXBase> pStrand) :
-                 _pStrand(pStrand),
+                 _pStrand(std::move(pStrand)),
                  _pixelCount(0),
                  _timeStampMicroseconds(0),
                  _timeStampSeconds(0)
@@ -62,20 +63,18 @@ class LEDBuffer
         _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
     }
 
-    ~LEDBuffer()
-    {
-    }
+    ~LEDBuffer() = default;
 
-    uint64_t Seconds()      const  { return _timeStampSeconds;      }
-    uint64_t MicroSeconds() const  { return _timeStampMicroseconds; }
-    uint32_t Length()       const  { return _pixelCount;            }
+    [[nodiscard]] uint64_t Seconds()      const  { return _timeStampSeconds;      }
+    [[nodiscard]] uint64_t MicroSeconds() const  { return _timeStampMicroseconds; }
+    [[nodiscard]] uint32_t Length()       const  { return _pixelCount;            }
     
-    double TimeTillDue() const  
+    [[nodiscard]] double TimeTillDue() const
     { 
         return g_Values.AppTime.CurrentTime() - _timeStampSeconds - (_timeStampMicroseconds / (double) MICROS_PER_SECOND); 
     }
 
-    bool IsBufferOlderThan(const timeval & tv) const
+    [[nodiscard]] bool IsBufferOlderThan(const timeval & tv) const
     {
         if (Seconds() < tv.tv_sec)
             return true;
@@ -181,7 +180,7 @@ class LEDBufferManager
             _ppBuffers->push_back(make_shared_psram<LEDBuffer>(pGFX));
     }
 
-    double AgeOfOldestBuffer()
+    double AgeOfOldestBuffer() const
     {
         if (false == IsEmpty())
         {
@@ -194,7 +193,7 @@ class LEDBufferManager
         }
     }
 
-    double AgeOfNewestBuffer()
+    [[nodiscard]] double AgeOfNewestBuffer() const
     {
         if (false == IsEmpty())
         {
@@ -211,7 +210,7 @@ class LEDBufferManager
     //
     // The fixed, maximum size of the whole thing if it were full
 
-    size_t BufferCount() const
+    [[nodiscard]] size_t BufferCount() const
     {
         return _cBuffers;
     }
@@ -220,7 +219,7 @@ class LEDBufferManager
     //
     // The variable, current count of buffers in use
 
-    size_t Depth() const
+    [[nodiscard]] size_t Depth() const
     {
         if (_iNextBuffer < _iLastBuffer)
             return (_iNextBuffer + _cBuffers - _iLastBuffer);
@@ -228,7 +227,7 @@ class LEDBufferManager
             return _iNextBuffer - _iLastBuffer;
     }
 
-    inline bool IsEmpty() const
+    [[nodiscard]] inline bool IsEmpty() const
     {
         return _iNextBuffer == _iLastBuffer;
     }
@@ -237,7 +236,7 @@ class LEDBufferManager
     //
     // Get a pointer to the most recently added (newest) buffer, or nullptr if empty
 
-    std::shared_ptr<LEDBuffer> PeekNewestBuffer() const
+    [[nodiscard]] std::shared_ptr<LEDBuffer> PeekNewestBuffer() const
     {
         if (IsEmpty())
             return nullptr;
@@ -284,7 +283,7 @@ class LEDBufferManager
     //
     // Take a "peek" at the newest buffer, or nullptr if empty
 
-    const std::shared_ptr<LEDBuffer> PeekOldestBuffer() const
+    [[nodiscard]] std::shared_ptr<LEDBuffer> PeekOldestBuffer() const
     {
         if (IsEmpty())
             return nullptr;
@@ -292,7 +291,7 @@ class LEDBufferManager
         return (*_ppBuffers)[_iLastBuffer];
     }
 
-    const std::shared_ptr<LEDBuffer> operator[](size_t index) const
+    std::shared_ptr<LEDBuffer> operator[](size_t index) const
     {
         if (IsEmpty())
             return nullptr;

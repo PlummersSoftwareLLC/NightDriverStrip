@@ -27,6 +27,8 @@
 //---------------------------------------------------------------------------
 #pragma once
 
+#include <utility>
+
 #include "types.h"
 
 #if INCOMING_WIFI_ENABLED
@@ -91,15 +93,6 @@
       }
     }
 
-    // get_mac_address_raw
-    //
-    // Reads the raw MAC
-
-    inline void get_mac_address_raw(uint8_t *mac)
-    {
-        esp_efuse_mac_get_default(mac);
-    }
-
     // get_mac_address
     //
     // Returns a packed (non-pretty, without colons) version of the MAC id
@@ -109,17 +102,6 @@
       uint8_t mac[6];
       WiFi.macAddress(mac);
       return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    }
-
-    // get_mac_address_pretty()
-    //
-    // Returns a packed (non-pretty, without colons) version of the MAC id
-
-    inline String get_mac_address_pretty()
-    {
-      uint8_t mac[6];
-      WiFi.macAddress(mac);
-      return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
 
     // NetworkReader
@@ -140,24 +122,24 @@
       {
           std::function<void()> reader;
           std::atomic_ulong readInterval;
-          std::atomic_ulong lastReadMs;
+          std::atomic_ulong lastReadMs{};
           std::atomic_bool flag = false;
           std::atomic_bool canceled = false;
 
           ReaderEntry(std::function<void()> reader, unsigned long interval) :
-              reader(reader),
+              reader(std::move(reader)),
               readInterval(interval)
           {}
 
           ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag, bool canceled) :
-              reader(reader),
+              reader(std::move(reader)),
               readInterval(interval),
               lastReadMs(lastReadMs),
               flag(flag),
               canceled(canceled)
           {}
 
-          ReaderEntry(ReaderEntry&& entry) : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag, entry.canceled)
+          ReaderEntry(ReaderEntry&& entry)  noexcept : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag, entry.canceled)
           {}
       };
 

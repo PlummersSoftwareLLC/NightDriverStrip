@@ -130,7 +130,7 @@ class DeviceConfig : public IJSONSerializable
 
     static constexpr int _jsonSize = 1024;
 
-    void SaveToJSON();
+    void SaveToJSON() const;
 
     template <typename T>
     void SetAndSave(T& target, const T& source)

@@ -85,20 +85,20 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include <algorithm>
+#include <cerrno>
+#include <cinttypes>
+#include <cmath>
+#include <deque>
+#include <exception>
 #include <iostream>
 #include <memory>
-#include <string>
-#include <sstream>
-#include <sys/time.h>
-#include <exception>
 #include <mutex>
-#include <vector>
-#include <errno.h>
-#include <math.h>
-#include <deque>
-#include <algorithm>
 #include <numeric>
+#include <sstream>
+#include <string>
+#include <sys/time.h>
+#include <vector>
 
 #include <Arduino.h>
 
@@ -1290,6 +1290,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
   #endif
 #endif
 
+// As a sanity check, USE_PSRAM without BOARD_HAS_PSRAM is a nonsensical
+// configuration. Make that a hard build error instead of looping in
+// JSON buffer-town and other runtime weirdness.
+// Intentionally breaks convention of #if over #ifdef.
+#if USE_PSRAM && !BOARD_HAS_PSRAM
+  #error Attempt to USE_PSRAM without BOARD_HAS_PSRAM. Check platform config.
+#endif
+
 #ifndef TIME_BEFORE_LOCAL
 #define TIME_BEFORE_LOCAL 5
 #endif
@@ -1577,8 +1585,6 @@ inline static T random_range(T lower, T upper)
         return distrib(gen);
     }
 #else
-    static bool seeded = [&] { srand(time(nullptr)); return true; } ();
-
     if constexpr (std::is_integral<T>::value) {
         return std::rand() % (upper - lower + 1) + lower;
     } else if constexpr (std::is_floating_point<T>::value) {
@@ -1589,7 +1595,7 @@ inline static T random_range(T lower, T upper)
 #endif
 }
 
-inline uint64_t ULONGFromMemory(uint8_t * payloadData)
+inline uint64_t ULONGFromMemory(const uint8_t * payloadData)
 {
     return  (uint64_t)payloadData[7] << 56  |
             (uint64_t)payloadData[6] << 48  |
@@ -1601,7 +1607,7 @@ inline uint64_t ULONGFromMemory(uint8_t * payloadData)
             (uint64_t)payloadData[0];
 }
 
-inline uint32_t DWORDFromMemory(uint8_t * payloadData)
+inline uint32_t DWORDFromMemory(const uint8_t * payloadData)
 {
     return  (uint32_t)payloadData[3] << 24  |
             (uint32_t)payloadData[2] << 16  |
@@ -1609,7 +1615,7 @@ inline uint32_t DWORDFromMemory(uint8_t * payloadData)
             (uint32_t)payloadData[0];
 }
 
-inline uint16_t WORDFromMemory(uint8_t * payloadData)
+inline uint16_t WORDFromMemory(const uint8_t * payloadData)
 {
     return  (uint16_t)payloadData[1] << 8   |
             (uint16_t)payloadData[0];

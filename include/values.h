@@ -38,12 +38,12 @@
 struct Values
 {
     CAppTime AppTime;                                                       // Keeps track of frame times
-    volatile double FreeDrawTime = 0.0;
-    float Brite;
-    uint32_t Watts;
-    uint32_t FPS = 0;                                                       // Our global framerate
-    bool UpdateStarted = false;                                             // Has an OTA update started?
-    uint8_t Fader = 255;
+    volatile double FreeDrawTime{0.0};
+    float Brite{0};
+    uint32_t Watts{0};
+    uint32_t FPS{0};                                                       // Our global framerate
+    bool UpdateStarted{false};                                             // Has an OTA update started?
+    uint8_t Fader{255};
 #if USE_HUB75
     int MatrixPowerMilliwatts = 0;                                         // Matrix power draw in mw
     uint8_t MatrixScaledBrightness = 255;                                  // 0-255 scaled brightness to stay in limit

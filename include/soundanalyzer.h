@@ -62,7 +62,6 @@ struct AudioVariables
     float _VU               = 0.0;          // Instantaneous read of VU value
     float _PeakVU           = MAX_VU;       // How high our peak VU scale is in live mode
     float _MinVU            = 0.0;          // How low our peak VU scale is in live mode
-    unsigned long _cSamples = 0U;           // Total number of samples successfully collected
     int _AudioFPS           = 0;            // Framerate of the audio sampler
     int _serialFPS          = 0;            // How many serial packets are processed per second
     uint _msLastRemote      = 0;            // When the last Peak data came in from external (ie: WiFi)

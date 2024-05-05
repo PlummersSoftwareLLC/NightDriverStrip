@@ -59,7 +59,7 @@ private:
 
     int                         _port;
     int                         _server_fd;
-    struct sockaddr_in          _address;
+    struct sockaddr_in          _address{};
 
     const int BUFFER_SIZE = 1024;
 
@@ -158,7 +158,7 @@ public:
         return new_socket;
     }
 
-    bool SendPacket(int socket, void * pData, size_t cbSize)
+    static bool SendPacket(int socket, void * pData, size_t cbSize)
     {
         // Send data to the emulator's virtual serial port
 

@@ -36,11 +36,11 @@
 #pragma once
 
 #include <sys/types.h>
-#include <errno.h>
+#include <cerrno>
 #include <iostream>
 #include <set>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 #include "effectfactories.h"
 
@@ -108,8 +108,8 @@ class  EffectManager : public IJSONSerializable
     // Implementation is in effects.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
-    void SaveCurrentEffectIndex();
-    bool ReadCurrentEffectIndex(size_t& index);
+    static void SaveCurrentEffectIndex();
+    static bool ReadCurrentEffectIndex(size_t& index);
 
     void ClearEffects()
     {
@@ -158,7 +158,7 @@ public:
         return _gfx[0];
     }
 
-    bool IsNewFrameAvailable() const
+    [[nodiscard]] bool IsNewFrameAvailable() const
     {
         return _newFrameAvailable;
     }
@@ -290,14 +290,14 @@ public:
     }
 
     // Must provide at least one drawing instance, like the first matrix or strip we are drawing on
-    inline std::shared_ptr<GFXBase> g(int iChannel = 0) const
+    [[nodiscard]] inline std::shared_ptr<GFXBase> g(int iChannel = 0) const
     {
         return _gfx[iChannel];
     }
 
     // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.
     virtual bool ShowVU(bool bShow);
-    virtual bool IsVUVisible() const;
+    [[nodiscard]] virtual bool IsVUVisible() const;
 
     // ApplyGlobalColor
     //
@@ -369,7 +369,7 @@ public:
         }
     }
 
-    bool IsEffectEnabled(size_t i) const
+    [[nodiscard]] bool IsEffectEnabled(size_t i) const
     {
         if (i >= _vEffects.size())
         {

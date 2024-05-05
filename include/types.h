@@ -78,7 +78,7 @@ class CAppTime
         NewFrame();
     }
 
-    double FrameStartTime() const
+    [[nodiscard]] double FrameStartTime() const
     {
         return _lastFrame;
     }
@@ -90,7 +90,7 @@ class CAppTime
         return (double)tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
     }
 
-    double FrameElapsedTime() const
+    [[nodiscard]] double FrameElapsedTime() const
     {
         return FrameStartTime() - CurrentTime();
     }
@@ -108,7 +108,7 @@ class CAppTime
         return tv;
     }
 
-    double LastFrameTime() const
+    [[nodiscard]] double LastFrameTime() const
     {
         return _deltaTime;
     }
@@ -150,13 +150,13 @@ struct SettingSpec
     };
 
     // "Technical" name of the setting, as in the (JSON) property it is stored in.
-    const char* Name;
+    const char* Name{};
 
     // "Friendly" name of the setting, as in the one to be presented to the user in a user interface.
-    const char* FriendlyName;
+    const char* FriendlyName{};
 
     // Description of the purpose and/or value of the setting
-    const char* Description;
+    const char* Description{};
 
     // Value type of the setting
     SettingType Type;
@@ -222,10 +222,9 @@ struct SettingSpec
       : SettingSpec(name, friendlyName, nullptr, type, min, max)
     {}
 
-    SettingSpec()
-    {}
+    SettingSpec() = default;
 
-    virtual String TypeName() const
+    [[nodiscard]] virtual String TypeName() const
     {
         const String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color", "Slider" };
         return names[static_cast<int>(Type)];
@@ -274,17 +273,17 @@ public:
     typedef const T& const_reference;
     typedef T value_type;
 
-    psram_allocator(){}
-    ~psram_allocator(){}
+    psram_allocator()= default;
+    ~psram_allocator()= default;
 
     template <class U> struct rebind { typedef psram_allocator<U> other; };
     template <class U> psram_allocator(const psram_allocator<U>&){}
 
     pointer address(reference x) const {return &x;}
     const_pointer address(const_reference x) const {return &x;}
-    size_type max_size() const throw() {return size_t(-1) / sizeof(value_type);}
+    [[nodiscard]] size_type max_size() const noexcept {return size_t(-1) / sizeof(value_type);}
 
-    pointer allocate(size_type n, const void * hint = 0)
+    pointer allocate(size_type n, [[maybe_unused]] const void * hint = nullptr)
     {
         void * pmem = PreferPSRAMAlloc(n*sizeof(T));
         return static_cast<pointer>(pmem) ;
