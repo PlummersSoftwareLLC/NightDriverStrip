@@ -341,8 +341,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #define NUM_INFO_PAGES          2
-
     #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
@@ -402,8 +400,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #define NUM_INFO_PAGES          2
-
 #elif TREESET
 
     #ifndef PROJECT_NAME
@@ -435,7 +431,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 12
 
     #define TOGGLE_BUTTON  37
-    #define NUM_INFO_PAGES 2
 
 #elif WROVERKIT
 
@@ -499,8 +494,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_2 39
 
     #define LED_PIN0 32
-
-    #define NUM_INFO_PAGES          2
 
 #elif MESMERIZER
 
@@ -583,7 +576,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_FAN_OFFSET_BU 6
 
     #define TOGGLE_BUTTON_1         35
-    #define NUM_INFO_PAGES          2
 
 #elif XMASTREES
 
@@ -623,7 +615,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define TOGGLE_BUTTON_1         37
     #define TOGGLE_BUTTON_2         39
-    #define NUM_INFO_PAGES 2
 
 #elif ATOMLIGHT
 
@@ -787,7 +778,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
-    #define LED_PIN0        5
+
+    #ifndef LED_PIN0
+        #define LED_PIN0        5
+    #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)
 
@@ -915,10 +909,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define TOGGLE_BUTTON_2         39
     #endif
 
-    #if !(SPECTRUM_WROVER_KIT)
-        #define NUM_INFO_PAGES          2
-    #endif
-
 #elif FANSET
 
     // An M5 stick that controls the 10 RGB fans in my PC
@@ -965,8 +955,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define TOGGLE_BUTTON_1             37
     #define TOGGLE_BUTTON_2             39
-
-    #define NUM_INFO_PAGES              2
 
 #elif SINGLE_INSULATOR
 
@@ -1033,8 +1021,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #define NUM_INFO_PAGES          2
-
 #elif CUBE
 
     // A cube of 5 x 5 x 5 LEDs
@@ -1067,8 +1053,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA        0
 
     #define TOGGLE_BUTTON  37
-    #define NUM_INFO_PAGES 1
-
     #define COLOR_ORDER EOrder::RGB
 
 #else
@@ -1199,7 +1183,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef NUM_INFO_PAGES
-#define NUM_INFO_PAGES 1
+#define NUM_INFO_PAGES 2
 #endif
 
 #ifndef COLOR_ORDER
@@ -1326,7 +1310,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
-    #elif ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
+    #elif USE_TFTSPI || ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
 
         #define USE_TFTSPI 1                                  // Use TFT_eSPI
 
@@ -1341,6 +1325,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #elif ELECROW
 
         // Implies ElecrowScreen
+    
+    #elif AMOLED_S3
+
+        // Implicitly uses LilyGoScreen3
 
     #else                                                     // unsupported board defined in platformio
         #error Unknown Display! Check platformio.ini board definition.
@@ -1360,6 +1348,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TFT_WIDTH   240
     #define TFT_HEIGHT  320
 #endif
+
+#if AMOLED_S3
+    #define TFT_WIDTH   240
+    #define TFT_HEIGHT  536
+#endif
+
 
 #ifdef ESP32FEATHERTFT
     #define ONBOARD_PIXEL_ORDER     EOrder::RGB

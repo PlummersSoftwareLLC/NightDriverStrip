@@ -397,3 +397,12 @@ Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build
 
 - Jetson Nano 2G, 4 Core ARM A57
   -> [davepl 10/04/2021] 2 min 56 seconds
+
+## UPC Codes
+
+  UPC Number      EAN Number
+1	646680745383	0646680745383 - Mesmerizer Kit w/ Screen
+2	646680745390	0646680745390 - Available
+3	646680745406	0646680745406 - Available
+4	646680745413	0646680745413 - Available
+5	646680745420	0646680745420 - Available

@@ -324,7 +324,7 @@ public:
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    void setPixel(int16_t x, int16_t y, CRGB color)
+    virtual void setPixel(int16_t x, int16_t y, CRGB color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
@@ -590,7 +590,7 @@ public:
         loadPalette(_randomPaletteIndex);
     }
 
-    void fillRectangle(int x0, int y0, int x1, int y1, CRGB color)
+    virtual void fillRectangle(int x0, int y0, int x1, int y1, CRGB color)
     {
         for (int x = x0; x < x1; x++)
             for (int y = y0; y < y1; y++)
@@ -1148,7 +1148,7 @@ public:
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
 
-    void drawLine(int x0, int y0, int x1, int y1, CRGB color)
+    virtual void drawLine(int x0, int y0, int x1, int y1, CRGB color)
     {
         BresenhamLine(x0, y0, x1, y1, color);
     }
