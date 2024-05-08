@@ -217,7 +217,7 @@ void LoadEffectFactories()
     #elif MESMERIZER
 
         #ifndef EFFECT_SET_VERSION
-            #define EFFECT_SET_VERSION  6   // Bump version if default set changes in a meaningful way
+            #define EFFECT_SET_VERSION  7   // Bump version if default set changes in a meaningful way
         #endif
 
         ADD_EFFECT(EFFECT_MATRIX_STOCKS,            PatternStocks);

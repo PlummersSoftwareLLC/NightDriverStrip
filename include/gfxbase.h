@@ -298,16 +298,12 @@ public:
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
-        else
-            debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
     void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
-        else
-            debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)

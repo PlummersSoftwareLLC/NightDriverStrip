@@ -65,6 +65,10 @@
 #error A definition for cszQuoteServer is missing from secrets.h
 #endif
 
+#if !defined(cszStockList)
+#error A definition for cszStockList is missing from secrets.h
+#endif
+
 #if !defined(cszLocation)
 #error A definition for cszLocation is missing from secrets.h
 #endif
