@@ -397,3 +397,12 @@ Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build
 
 - Jetson Nano 2G, 4 Core ARM A57
   -> [davepl 10/04/2021] 2 min 56 seconds
+
+
+UPC Codes
+-----------------------------------------------------------------------------
+1	646680745383	MESMERKIT     Mesmerizer Kit w/64x32 Matrix, Remote, Receiver
+2	646680745390	MESMERPCB     Assembled PCB Only
+3	646680745406	
+4	646680745413	
+5	646680745420	
