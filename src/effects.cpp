@@ -105,6 +105,7 @@
   #if ENABLE_WIFI
     #include "effects/matrix/PatternSubscribers.h"
     #include "effects/matrix/PatternWeather.h"
+    #include "effects/matrix/PatternStocks.h"
   #endif
 
 #endif  // USE_HUB75
@@ -216,8 +217,10 @@ void LoadEffectFactories()
     #elif MESMERIZER
 
         #ifndef EFFECT_SET_VERSION
-            #define EFFECT_SET_VERSION  6   // Bump version if default set changes in a meaningful way
+            #define EFFECT_SET_VERSION  6  // Bump version if default set changes in a meaningful way
         #endif
+
+        ADD_EFFECT(EFFECT_MATRIX_STOCKS,            PatternStocks);
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph",  16,            4,                   0);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",    NUM_BANDS,     spectrumBasicColors, false, 100, 0, 0.75, 0.75);

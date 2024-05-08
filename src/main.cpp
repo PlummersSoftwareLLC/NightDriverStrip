@@ -410,6 +410,12 @@ void setup()
         Button2.setPressedState(LOW);
     #endif
 
+    #if AMOLED_S3
+        #include "amoled/LilyGo_AMOLED.h"
+        debugW("Creating AMOLED Screen");
+        g_ptrSystem->SetupDisplay<AMOLEDScreen>(TFT_HEIGHT, TFT_WIDTH);
+    #endif
+
     #if USE_TFTSPI
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
