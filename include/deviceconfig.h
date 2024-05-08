@@ -61,6 +61,10 @@
 #error A definition for cszOpenWeatherAPIKey is missing from secrets.h
 #endif
 
+#if !defined(cszQuoteServer)
+#error A definition for cszQuoteServer is missing from secrets.h
+#endif
+
 #if !defined(cszLocation)
 #error A definition for cszLocation is missing from secrets.h
 #endif
@@ -113,6 +117,7 @@ class DeviceConfig : public IJSONSerializable
     String  countryCode = cszCountryCode;
     String  timeZone = cszTimeZone;
     String  openWeatherApiKey = cszOpenWeatherAPIKey;
+    String  quoteServer = cszQuoteServer;
     bool    use24HourClock = false;
     bool    useCelsius = false;
     String  ntpServer = NTP_SERVER_DEFAULT;

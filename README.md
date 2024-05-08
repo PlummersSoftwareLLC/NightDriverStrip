@@ -250,7 +250,7 @@ Furthermore, it's also possible to "ignore" the persisted effect list altogether
 
 ## Fetching things from the Internet
 
-If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
+If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.  PatternStocks pulls live (15-min delay) stock quotes from a private server.
 
 ## Build pointers
 
