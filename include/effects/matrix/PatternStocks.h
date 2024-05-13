@@ -238,14 +238,14 @@ private:
             }
             else
             {
-                Serial.printf("Failed to parse JSON: %s\n", error.c_str());
+                debugE("Failed to parse JSON: %s\n", error.c_str());
                 if (callback)
                     callback(StockData()); // Parsing error
             }
         }
         else
         {
-            Serial.printf("[HTTP] GET failed, error: %s\n", http.errorToString(httpCode).c_str());
+            debugE("[HTTP] GET failed, error: %s\n", http.errorToString(httpCode).c_str());
             if (callback)
                 callback(StockData()); // HTTP request error
         }
@@ -329,7 +329,7 @@ public:
 
     static void FetchQuotesTask(void *pvParameters) 
     {
-        auto *instance = static_cast<PatternStocks*>(pvParameters); // Cast the void pointer back to the correct type
+        auto instance = static_cast<PatternStocks*>(pvParameters); // Cast the void pointer back to the correct type
 
         debugI("Background task started to update stocks...");
         instance->isUpdating = true;
@@ -480,12 +480,10 @@ public:
     {
         static uint lastCount = 0;
 
-        //static StockData stockData;
-
         g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
         
-        // Periodically refecth the stock data from the server
+        // Periodically refetch the stock data from the server
 
         if (WiFi.isConnected())
         {

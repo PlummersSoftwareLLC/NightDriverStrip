@@ -220,8 +220,6 @@ void LoadEffectFactories()
             #define EFFECT_SET_VERSION  6  // Bump version if default set changes in a meaningful way
         #endif
 
-        ADD_EFFECT(EFFECT_MATRIX_STOCKS,            PatternStocks);
-
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph",  16,            4,                   0);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum",    NUM_BANDS,     spectrumBasicColors, false, 100, 0, 0.75, 0.75);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",   MATRIX_WIDTH,  CRGB(0,0,40),               0, 1.25, 1.25);
@@ -253,6 +251,7 @@ void LoadEffectFactories()
 
 
       #if ENABLE_WIFI
+        ADD_EFFECT(EFFECT_MATRIX_STOCKS,            PatternStocks);
         ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
         ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
       #endif
