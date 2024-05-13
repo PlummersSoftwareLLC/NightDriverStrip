@@ -49,10 +49,6 @@
 #include <vector>
 #include <map>
 
-#include "TJpg_Decoder.h"
-#include "effects.h"
-#include "types.h"
-
 // We can only include the font header once, and Weather already does it, so we just extern it.  If
 // the weather effect is not included in the build, we'll then have to include it here.
 
@@ -62,7 +58,13 @@ using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-#define STOCKS_INTERVAL_SECONDS 6s
+#define STOCKS_UPDATE_INTERVAL_SECONDS 10s
+#define STOCKS_FETCH_INTERVAL_SECONDS  60s
+
+
+// AnimatedText
+//
+// A class that draws text on the screen and animates it from one position to another
 
 class AnimatedText
 {
@@ -96,6 +98,10 @@ class AnimatedText
         this->pfont = pfont;
     }
 
+    // UpdatePos
+    //
+    // Updates the position of the text based on the elapsed time since the start of the animation
+
     void UpdatePos()
     {
         // Current time
@@ -112,6 +118,10 @@ class AnimatedText
         currentY = startY + (endY - startY) * progress;
     }
 
+    // Draw
+    // 
+    // Draws the text on the screen at the current position
+
     void Draw(GFXBase *g)
     {
         g->setFont(pfont);
@@ -121,7 +131,11 @@ class AnimatedText
     }
 };
 
-// StockData and StockPoint are used to hold the data retrieved from the server
+// StockPoint and StockData
+//
+// StockData and StockPoint are used to hold the data retrieved from the server.  A point is a single
+// data point in the history of a stock, and StockData is the data for a single stock, including the
+// current price and the history of points.
 
 class StockPoint 
 {
@@ -135,11 +149,13 @@ class StockData
 public:
     String symbol;
     system_clock::time_point timestamp;
+
     float open = 0.0f;
     float high = 0.0f;
     float low = 0.0f;
     float close = 0.0f;
     float volume = 0.0f;
+    
     vector<StockPoint> points;
 
     String to_string() const 
@@ -161,19 +177,21 @@ public:
 //
 // Retrieves stock quotes from private server and displays them
 
-AnimatedText textSymbol = AnimatedText("STOCK",  CRGB::White, &Apple5x7, 1.0f, 0, 0,  MATRIX_WIDTH, 0);
-AnimatedText textPrice  = AnimatedText("PRICE",  CRGB::Grey, &Apple5x7,  1.0f, 0, 8,  MATRIX_WIDTH, 8);
-AnimatedText textChange = AnimatedText("CHANGE", CRGB::White, &Apple5x7, 1.0f, 0, 16, MATRIX_WIDTH, 16);
-AnimatedText textVolume = AnimatedText("VOLUME", CRGB::Grey, &Apple5x7,  1.0f, 0, 24, MATRIX_WIDTH, 24);
-
 class PatternStocks : public LEDStripEffect
 {
+    AnimatedText textSymbol = AnimatedText("STOCK",  CRGB::White, &Apple5x7,  1.0f, MATRIX_WIDTH, 0,  0, 0);
+    AnimatedText textPrice  = AnimatedText("PRICE",  CRGB::Grey,  &Apple5x7,  1.0f, MATRIX_WIDTH, 8,  0, 8);
+    AnimatedText textChange = AnimatedText("CHANGE", CRGB::White, &Apple5x7,  1.0f, MATRIX_WIDTH, 16, 0, 16);
+    AnimatedText textVolume = AnimatedText("VOLUME", CRGB::Grey,  &Apple5x7,  1.0f, MATRIX_WIDTH, 24, 0, 24);
+
 private:
         
     int          iCurrentStock = 0;
 
     bool isUpdating = false;                // Flag to check if update is in progress
     system_clock::time_point lastUpdate;    // Time of last update
+    system_clock::time_point nextFetch = system_clock::now();  // Time of last quote pull
+
     std::map<String, StockData> stockData;  // map of stock symbols to quotes
 
     using StockDataCallback = function<void(const StockData&)>;
@@ -193,7 +211,7 @@ private:
         {
             debugI("HTTP GET OK");
             String payload = http.getString(); // Get the response payload
-            DynamicJsonDocument doc(4096);
+            DynamicJsonDocument doc(8192);
             DeserializationError error = deserializeJson(doc, payload);
             debugV("JSON: %s", payload.c_str());
             
@@ -356,17 +374,36 @@ public:
         return true;
     }
 
+    // StartQuoteDisplay
+    //
+    // Given a StockData, sets the current display to show the stock data
+
     void StartQuoteDisplay(StockData data)
     {
         // Display the stock data
         debugI("Displaying stock data for %s", data.symbol.c_str());
 
-        textSymbol = AnimatedText(data.symbol, CRGB::White, &Apple5x7, 1.0f, 64, 0, 0, 0);
-        textPrice  = AnimatedText(String(data.close, 2), CRGB::LightGrey, &Apple5x7, 1.0f, 64, 0, 32, 0);
-        textChange = AnimatedText(String(data.close - data.open, 2), data.close >= data.open ? CRGB::Green : CRGB::Red, &Apple5x7, 1.0f, MATRIX_WIDTH, 7, 32, 7);
-        textVolume = AnimatedText(String(data.volume, 0), CRGB::LightGrey, &Apple5x7, 1.0f, -MATRIX_WIDTH, 15, 0, 15);
+        auto pricetext = data.close >= 10000 ? String(data.close, 0) : String(data.close, 2);
+        auto pricelen  = pricetext.length();
+        constexpr auto textwidth = 5;
+        
+        auto changetext = String(data.close - data.open, 2);
+        auto changelen  = changetext.length();
+
+        auto voltext = String(data.volume, 0);
+        auto vollen  = voltext.length();
+
+        textSymbol = AnimatedText(data.symbol, CRGB::White, &Apple5x7, 0.50f, -MATRIX_WIDTH, 8, 0, 8);
+        textPrice  = AnimatedText(pricetext, CRGB::White, &Apple5x7, 0.75f, -MATRIX_WIDTH, 8, MATRIX_WIDTH - pricelen * textwidth, 8);
+        textChange = AnimatedText(changetext, data.close >= data.open ? CRGB::LightGreen : CRGB::Red, &Apple5x7, 1.0f, -MATRIX_WIDTH, 15, MATRIX_WIDTH - changelen * textwidth, 15);
+        textVolume = AnimatedText(voltext, CRGB::LightGrey, &Apple5x7, 1.0f, -MATRIX_WIDTH * 2, 22, MATRIX_WIDTH - vollen * textwidth, 22);
     }
 
+    // UpdateQuoteDisplay
+    //
+    // Updates the position of the text and draws it on the screen, then draws
+    // the up/down graph of the stock
+    
     void UpdateQuoteDisplay()
     {
         textSymbol.UpdatePos();
@@ -378,22 +415,95 @@ public:
         textPrice.Draw(g().get());
         textChange.Draw(g().get());
         textVolume.Draw(g().get());
+
+        if (stockData.empty())
+            return;
+
+        auto it = stockData.begin();
+        std::advance(it, iCurrentStock);
+        StockData & currentStock = it->second;
+
+        // Draw the stock history graph
+
+        int x = 0;
+        int y = 24;
+        int w = MATRIX_WIDTH;
+        int h = MATRIX_HEIGHT - y;
+        int n = std::min((uint)MATRIX_WIDTH, currentStock.points.size());
+
+        if (n > 0)
+        {
+            float max = 0.0f;
+            float min = numeric_limits<float>::max();
+
+            // We have the high and low data in the stock, but let's not trust it and calculate it ourselves
+            
+            for (int i = 0; i < n; i++)
+            {
+                max = std::max(max, currentStock.points[i].val);
+                min = std::min(min, currentStock.points[i].val);
+            }
+
+            // Now draw each vertical line segment
+
+            float range = max - min;
+            if (range > 0.0f)
+            {
+                float scale = h / range;
+                float breakeven = currentStock.open;
+                float breakevenY = y + h - (breakeven - min) * scale;
+
+                for (int i = 0; i < n - 1; i++)
+                {
+                    float x0 = MATRIX_WIDTH-1-i;
+                    float y0 = y + h - (currentStock.points[i].val - min) * scale;
+                    float x1 = x0;
+                    float y1 = y + h - (currentStock.points[i + 1].val - min) * scale;
+
+                    // Now draw from bottom up to breakeven in red, and from breakeven to top in green
+                    
+                    if (currentStock.points[i].val < breakeven)
+                        g()->drawLine(x0, breakevenY, x1, y1, CRGB::Red);
+                    else
+                        g()->drawLine(x0, y0, x1, breakevenY, CRGB::Green);
+                }
+            }
+        }
     }
+
+    // Draw
+    //
+    // Draws the stock display made up of four animated text flyers (price, symbol, change, volume)
+    // and the stock history graph
 
     void Draw() override
     {
+        static uint lastCount = 0;
+
+        //static StockData stockData;
+
         g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
         
+        // Periodically refecth the stock data from the server
+
         if (WiFi.isConnected())
         {
-            BackgroundFetchQuotes();                
+            if (system_clock::now() > nextFetch)
+            {
+                nextFetch = system_clock::now() + STOCKS_FETCH_INTERVAL_SECONDS;
+                BackgroundFetchQuotes();                
+            }
         }
 
+        // Rotate the display through the available stock data
+
         auto now = system_clock::now();
-        if (now - lastUpdate >= STOCKS_INTERVAL_SECONDS) 
+        if (now - lastUpdate >= STOCKS_UPDATE_INTERVAL_SECONDS || stockData.size() != lastCount) 
         {
             lastUpdate = now;
+            lastCount = stockData.size();
+            
             if (!stockData.empty())
             {
                 int index = iCurrentStock;
@@ -403,6 +513,9 @@ public:
                 StartQuoteDisplay(it->second);
             }
         }    
+
+        // Paint Frame
+
         UpdateQuoteDisplay();
     }
 };

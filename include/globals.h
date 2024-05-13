@@ -538,6 +538,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define TOGGLE_BUTTON_1             0
 
+    #define COLOR_ORDER                 EOrder::RGB
+
 #elif TTGO
 
     // Variant of Spectrum set up for a TTGO using a MAX4466 microphone on pin27
