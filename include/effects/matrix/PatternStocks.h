@@ -190,12 +190,13 @@ private:
     // This requires a matching INIT_EFFECT_SETTING_SPECS() in effects.cpp or linker errors will ensue
     DECLARE_EFFECT_SETTING_SPECS(mySettingSpecs);
 
+    size_t       readerIndex = SIZE_MAX;
+
     String       stockServer = DEFAULT_STOCK_SERVER;
     String       tickerSymbols = DEFAULT_TICKER_SYMBOLS;
 
     int          iCurrentStock = 0;
-
-    size_t readerIndex = std::numeric_limits<size_t>::max();
+    size_t       lastCount     = SIZE_MAX;
 
     system_clock::time_point lastUpdate;    // Time of last update
     system_clock::time_point nextFetch = system_clock::now();  // Time of last quote pull
@@ -394,8 +395,9 @@ public:
         // Register a Network Reader task with no interval.  Will manually flag in Draw()
         readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { FetchQuotes(); });
 
+        // Fire off the stock data reader for an initial download of stock data
         lastUpdate = system_clock::now();
-
+        g_ptrSystem->NetworkReader().FlagReader(readerIndex);
 
         return true;
     }
@@ -504,8 +506,6 @@ public:
 
     void Draw() override
     {
-        static uint lastCount = 0;
-
         g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
 
@@ -524,15 +524,20 @@ public:
         // Rotate the display through the available stock data
 
         auto now = system_clock::now();
-        if (now - lastUpdate >= STOCKS_UPDATE_INTERVAL_SECONDS || stockData.size() != lastCount)
+
+        // We move on to next stock if the interval has passed, or we have less stock data available than before
+        auto showNextStock = now - lastUpdate >= STOCKS_UPDATE_INTERVAL_SECONDS || stockData.size() < lastCount;
+
+        // Only do something if we should and have stock data to show
+        if (showNextStock && !stockData.empty())
         {
             lastUpdate = now;
             lastCount = stockData.size();
 
-            if (!stockData.empty())
+            if (showNextStock)
             {
-                int index = iCurrentStock;
                 iCurrentStock = (iCurrentStock + 1) % stockData.size();
+
                 auto it = stockData.begin();
                 std::advance(it, iCurrentStock);
                 StartQuoteDisplay(it->second);
@@ -565,7 +570,17 @@ public:
     bool SetSetting(const String& name, const String& value) override
     {
         RETURN_IF_SET(name, NAME_OF(stockServer), stockServer, value);
-        RETURN_IF_SET(name, NAME_OF(tickerSymbols), tickerSymbols, value);
+
+        // If we receive a new list of stock ticker symbols then forget what stock data we
+        // have and trigger a reload.
+        if (SetIfSelected(name, NAME_OF(tickerSymbols), tickerSymbols, value))
+        {
+            iCurrentStock = 0;
+            stockData.clear();
+            lastCount = SIZE_MAX;
+            g_ptrSystem->NetworkReader().FlagReader(readerIndex);
+            return true;
+        }
 
         return LEDStripEffect::SetSetting(name, value);
     }

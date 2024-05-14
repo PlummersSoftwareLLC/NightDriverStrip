@@ -56,7 +56,7 @@ class PatternSubscribers : public LEDStripEffect
     CRGB borderColor                        = CRGB(160,160,255);
     bool guidUpdated                        = true;
 
-    size_t readerIndex                      = std::numeric_limits<size_t>::max();
+    size_t readerIndex                      = SIZE_MAX;
 
     unsigned long msLastCheck;
     bool succeededBefore                    = false;
