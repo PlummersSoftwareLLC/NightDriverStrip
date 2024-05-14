@@ -81,7 +81,7 @@ class AnimatedText
     system_clock::time_point startTime;
     const GFXfont * pfont;
 
-    
+
   public:
     AnimatedText(String text, CRGB color, const GFXfont * pfont, float animationTime, int startX, int startY, int endX, int endY)
     {
@@ -119,7 +119,7 @@ class AnimatedText
     }
 
     // Draw
-    // 
+    //
     // Draws the text on the screen at the current position
 
     void Draw(GFXBase *g)
@@ -137,14 +137,14 @@ class AnimatedText
 // data point in the history of a stock, and StockData is the data for a single stock, including the
 // current price and the history of points.
 
-class StockPoint 
+class StockPoint
 {
 public:
     system_clock::time_point dt;
     float val;
 };
 
-class StockData 
+class StockData
 {
 public:
     String symbol;
@@ -155,19 +155,19 @@ public:
     float low = 0.0f;
     float close = 0.0f;
     float volume = 0.0f;
-    
+
     vector<StockPoint> points;
 
-    String to_string() const 
+    String to_string() const
     {
         String oss;
-        oss = "Symbol: " + symbol + 
-               " Timestamp: " + timestamp.time_since_epoch().count() + 
-               " Open: " + open + 
-               " High: " + high + 
-               " Low: " + low + 
-               " Close: " + close + 
-               " Volume: " + volume + 
+        oss = "Symbol: " + symbol +
+               " Timestamp: " + timestamp.time_since_epoch().count() +
+               " Open: " + open +
+               " High: " + high +
+               " Low: " + low +
+               " Close: " + close +
+               " Volume: " + volume +
                " History: " + points.size() + " points";
         return oss;
     }
@@ -185,14 +185,21 @@ class PatternStocks : public LEDStripEffect
     AnimatedText textVolume = AnimatedText("VOLUME", CRGB::Grey,  &Apple5x7,  1.0f, MATRIX_WIDTH, 24, 0, 24);
 
 private:
-        
+
+    String       stockServer = cszQuoteServer;
+    String       tickerSymbols = cszStockList;
+
     int          iCurrentStock = 0;
 
-    bool isUpdating = false;                // Flag to check if update is in progress
+    size_t readerIndex = std::numeric_limits<size_t>::max();
+
     system_clock::time_point lastUpdate;    // Time of last update
     system_clock::time_point nextFetch = system_clock::now();  // Time of last quote pull
 
     std::map<String, StockData> stockData;  // map of stock symbols to quotes
+
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
+
 
     using StockDataCallback = function<void(const StockData&)>;
 
@@ -200,21 +207,19 @@ private:
 
     void GetQuote(const String &symbol, StockDataCallback callback = nullptr)
     {
-        String url   = String(cszQuoteServer);        
-        String query = "/?ticker=" + symbol;
-        int port     = 8888;
+        String url   = "http://" + stockServer + "/?ticker=" + symbol;
 
-        http.begin(url, port, query);
+        http.begin(url);
 
         int httpCode = http.GET();
-        if (httpCode == HTTP_CODE_OK) 
+        if (httpCode == HTTP_CODE_OK)
         {
             debugI("HTTP GET OK");
             String payload = http.getString(); // Get the response payload
             DynamicJsonDocument doc(8192);
             DeserializationError error = deserializeJson(doc, payload);
             debugV("JSON: %s", payload.c_str());
-            
+
             if (!error)
             {
                 StockData stockData;
@@ -264,7 +269,7 @@ private:
         // and I want to flex, but also because strtok() is not thread-safe and we're using threads here.  So there.
         // Also, I'm using std::string here because std::getline() is easier to use with std::string than with String.
 
-        auto split = [](const String& s, char delimiter) -> std::vector<String> 
+        auto split = [](const String& s, char delimiter) -> std::vector<String>
         {
             std::vector<String> tokens;
             std::istringstream tokenStream(s.c_str());
@@ -284,7 +289,7 @@ private:
 
         for (const String& symbol : symbolList)
         {
-            GetQuote(symbol, [this, callback](const StockData& stockDataReceived) 
+            GetQuote(symbol, [this, callback](const StockData& stockDataReceived)
             {
                 if (!stockDataReceived.symbol.isEmpty())    // Check if the stock data is not empty
                     this->stockData[stockDataReceived.symbol] = stockDataReceived;
@@ -294,10 +299,21 @@ private:
         }
     }
 
+    void FetchQuotes()
+    {
+        debugI("Starting update of stocks...");
+        GetAllQuotes(String(cszStockList), [](const StockData& stockDataReceived)
+        {
+            if (!stockDataReceived.symbol.isEmpty())
+                debugI("Received stock data for %s", stockDataReceived.symbol.c_str());
+            else
+                debugI("Failed to retrieve stock data");
+        });
+    }
 
     // Should this effect show its title.
     // The stocks effect does not show a title so it doesn't obscure our text display
-    
+
     virtual bool ShouldShowTitle() const
     {
         return false;
@@ -313,6 +329,34 @@ private:
         return false;
     }
 
+  protected:
+
+    static constexpr int _jsonSize = LEDStripEffect::_jsonSize + 192;
+
+    // Add our own SettingSpec instances to the standard set
+    bool FillSettingSpecs() override
+    {
+        // Don't continue if this instance's SettingSpec reference_wrapper vector is already filled
+        if (!LEDStripEffect::FillSettingSpecs())
+            return false;
+
+        // Lazily load this class' SettingSpec instances if they haven't been already
+        if (mySettingSpecs.size() == 0)
+        {
+            mySettingSpecs.emplace_back(NAME_OF(stockServer), "Stock server location",
+                                        "The host and port of the service that provides stock data.",
+                                        SettingSpec::SettingType::String);
+            mySettingSpecs.emplace_back(NAME_OF(tickerSymbols), "Ticker symbols",
+                                        "Comma-separated list of ticker symbols to show data for.",
+                                        SettingSpec::SettingType::String);
+        }
+
+        // Add our SettingSpecs reference_wrappers to the base set provided by LEDStripEffect
+        _settingSpecs.insert(_settingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
+
+        return true;
+    }
+
 public:
 
     PatternStocks() : LEDStripEffect(EFFECT_MATRIX_STOCKS, "Stocks")
@@ -321,55 +365,43 @@ public:
 
     PatternStocks(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
+        if (jsonObject.containsKey("sds"))
+            stockServer = jsonObject["sds"].as<String>();
+        if (jsonObject.containsKey("tsl"))
+            tickerSymbols = jsonObject["tsl"].as<String>();
     }
 
     ~PatternStocks()
     {
+        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
-    static void FetchQuotesTask(void *pvParameters) 
+    bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto instance = static_cast<PatternStocks*>(pvParameters); // Cast the void pointer back to the correct type
+        StaticJsonDocument<_jsonSize> jsonDoc;
 
-        debugI("Background task started to update stocks...");
-        instance->isUpdating = true;
-        instance->GetAllQuotes(String(cszStockList), [instance](const StockData& stockDataReceived) 
-        {
-            if (!stockDataReceived.symbol.isEmpty())
-                debugI("Received stock data for %s", stockDataReceived.symbol.c_str());
-            else
-                debugI("Failed to retrieve stock data");
-        });
-        instance->isUpdating = false;
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
 
-        vTaskDelete(NULL); // Cleanly delete the task once done
+        jsonDoc["sds"] = stockServer;
+        jsonDoc["tsl"] = tickerSymbols;
+
+        assert(!jsonDoc.overflowed());
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    void BackgroundFetchQuotes()
-    {
-        // Use a C++ thread to run GetAllQuotes without blocking the main thread because we're cool like that,
-        // and Init cannot be used because it's called from the main thread
-
-        if (!isUpdating)
-        {
-            isUpdating = true;
-            xTaskCreate(
-                    FetchQuotesTask,          // Task function
-                    "FetchQuotes",            // Name of the task (for debugging purposes)
-                    8192,                     // Stack size in words
-                    this,                     // Pass the `this` pointer as the task parameter
-                    1,                        // Priority of the task
-                    NULL                      // Task handle (not needed unless you want to reference the task later)
-                );
-        }
-    }
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
+        // Register a Network Reader task with no interval.  Will manually flag in Draw()
+        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { FetchQuotes(); });
+
         lastUpdate = system_clock::now();
+
 
         return true;
     }
@@ -386,7 +418,7 @@ public:
         auto pricetext = data.close >= 10000 ? String(data.close, 0) : String(data.close, 2);
         auto pricelen  = pricetext.length();
         constexpr auto textwidth = 5;
-        
+
         auto changetext = String(data.close - data.open, 2);
         auto changelen  = changetext.length();
 
@@ -403,7 +435,7 @@ public:
     //
     // Updates the position of the text and draws it on the screen, then draws
     // the up/down graph of the stock
-    
+
     void UpdateQuoteDisplay()
     {
         textSymbol.UpdatePos();
@@ -437,7 +469,7 @@ public:
             float min = numeric_limits<float>::max();
 
             // We have the high and low data in the stock, but let's not trust it and calculate it ourselves
-            
+
             for (int i = 0; i < n; i++)
             {
                 max = std::max(max, currentStock.points[i].val);
@@ -461,7 +493,7 @@ public:
                     float y1 = y + h - (currentStock.points[i + 1].val - min) * scale;
 
                     // Now draw from bottom up to breakeven in red, and from breakeven to top in green
-                    
+
                     if (currentStock.points[i].val < breakeven)
                         g()->drawLine(x0, breakevenY, x1, y1, CRGB::Red);
                     else
@@ -482,7 +514,7 @@ public:
 
         g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
-        
+
         // Periodically refetch the stock data from the server
 
         if (WiFi.isConnected())
@@ -490,18 +522,19 @@ public:
             if (system_clock::now() > nextFetch)
             {
                 nextFetch = system_clock::now() + STOCKS_FETCH_INTERVAL_SECONDS;
-                BackgroundFetchQuotes();                
+                // Trigger the stock data reader.
+                g_ptrSystem->NetworkReader().FlagReader(readerIndex);
             }
         }
 
         // Rotate the display through the available stock data
 
         auto now = system_clock::now();
-        if (now - lastUpdate >= STOCKS_UPDATE_INTERVAL_SECONDS || stockData.size() != lastCount) 
+        if (now - lastUpdate >= STOCKS_UPDATE_INTERVAL_SECONDS || stockData.size() != lastCount)
         {
             lastUpdate = now;
             lastCount = stockData.size();
-            
+
             if (!stockData.empty())
             {
                 int index = iCurrentStock;
@@ -510,12 +543,39 @@ public:
                 std::advance(it, iCurrentStock);
                 StartQuoteDisplay(it->second);
             }
-        }    
+        }
 
         // Paint Frame
 
         UpdateQuoteDisplay();
     }
+
+    // Extension override to serialize our settings on top of those from LEDStripEffect
+    bool SerializeSettingsToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<_jsonSize> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeSettingsToJSON(root);
+
+        jsonDoc[NAME_OF(stockServer)] = stockServer;
+        jsonDoc[NAME_OF(tickerSymbols)] = tickerSymbols;
+
+        if (jsonDoc.overflowed())
+            debugE("JSON buffer overflow while serializing settings for PatternStocks - object incomplete!");
+
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    // Extension override to accept our settings on top of those known by LEDStripEffect
+    bool SetSetting(const String& name, const String& value) override
+    {
+        RETURN_IF_SET(name, NAME_OF(stockServer), stockServer, value);
+        RETURN_IF_SET(name, NAME_OF(tickerSymbols), tickerSymbols, value);
+
+        return LEDStripEffect::SetSetting(name, value);
+    }
+
 };
 
 #endif
