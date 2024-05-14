@@ -217,7 +217,7 @@ private:
         {
             debugI("HTTP GET OK");
             String payload = http.getString(); // Get the response payload
-            DynamicJsonDocument doc(8192);
+            AllocatedJsonDocument doc(8192);
             DeserializationError error = deserializeJson(doc, payload);
             debugV("JSON: %s", payload.c_str());
 
