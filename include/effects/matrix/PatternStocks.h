@@ -209,9 +209,7 @@ private:
 
     void GetQuote(const String &symbol, StockDataCallback callback = nullptr)
     {
-        String url   = "http://" + stockServer + "/?ticker=" + symbol;
-
-        http.begin(url);
+        http.begin("http://" + stockServer + "/?ticker=" + symbol);
 
         int httpCode = http.GET();
         if (httpCode == HTTP_CODE_OK)
