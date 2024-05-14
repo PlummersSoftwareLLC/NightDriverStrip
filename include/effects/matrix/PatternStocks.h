@@ -61,6 +61,8 @@ using namespace std::chrono_literals;
 #define STOCKS_UPDATE_INTERVAL_SECONDS 10s
 #define STOCKS_FETCH_INTERVAL_SECONDS  60s
 
+#define DEFAULT_STOCK_SERVER           "davepl.com:8888"
+#define DEFAULT_TICKER_SYMBOLS         "AAPL,AMZN,TSLA,MSFT"
 
 // AnimatedText
 //
@@ -185,9 +187,11 @@ class PatternStocks : public LEDStripEffect
     AnimatedText textVolume = AnimatedText("VOLUME", CRGB::Grey,  &Apple5x7,  1.0f, MATRIX_WIDTH, 24, 0, 24);
 
 private:
+    // This requires a matching INIT_EFFECT_SETTING_SPECS() in effects.cpp or linker errors will ensue
+    DECLARE_EFFECT_SETTING_SPECS(mySettingSpecs);
 
-    String       stockServer = cszQuoteServer;
-    String       tickerSymbols = cszStockList;
+    String       stockServer = DEFAULT_STOCK_SERVER;
+    String       tickerSymbols = DEFAULT_TICKER_SYMBOLS;
 
     int          iCurrentStock = 0;
 
@@ -197,9 +201,6 @@ private:
     system_clock::time_point nextFetch = system_clock::now();  // Time of last quote pull
 
     std::map<String, StockData> stockData;  // map of stock symbols to quotes
-
-    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
-
 
     using StockDataCallback = function<void(const StockData&)>;
 
@@ -302,7 +303,7 @@ private:
     void FetchQuotes()
     {
         debugI("Starting update of stocks...");
-        GetAllQuotes(String(cszStockList), [](const StockData& stockDataReceived)
+        GetAllQuotes(tickerSymbols, [](const StockData& stockDataReceived)
         {
             if (!stockDataReceived.symbol.isEmpty())
                 debugI("Received stock data for %s", stockDataReceived.symbol.c_str());
@@ -333,13 +334,9 @@ private:
 
     static constexpr int _jsonSize = LEDStripEffect::_jsonSize + 192;
 
-    // Add our own SettingSpec instances to the standard set
-    bool FillSettingSpecs() override
+    // Create our SettingSpec instances if needed, and return (a pointer to) them
+    EffectSettingSpecs* FillSettingSpecs() override
     {
-        // Don't continue if this instance's SettingSpec reference_wrapper vector is already filled
-        if (!LEDStripEffect::FillSettingSpecs())
-            return false;
-
         // Lazily load this class' SettingSpec instances if they haven't been already
         if (mySettingSpecs.size() == 0)
         {
@@ -347,14 +344,11 @@ private:
                                         "The host and port of the service that provides stock data.",
                                         SettingSpec::SettingType::String);
             mySettingSpecs.emplace_back(NAME_OF(tickerSymbols), "Ticker symbols",
-                                        "Comma-separated list of ticker symbols to show data for.",
+                                        "Comma-separated list of ticker symbols to show stock data for.",
                                         SettingSpec::SettingType::String);
         }
 
-        // Add our SettingSpecs reference_wrappers to the base set provided by LEDStripEffect
-        _settingSpecs.insert(_settingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
-
-        return true;
+        return &mySettingSpecs;
     }
 
 public:

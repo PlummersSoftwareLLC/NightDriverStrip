@@ -114,10 +114,13 @@
     #include "ledstripgfx.h"
 #endif
 
-// Static initializers for effects that need them
+// Inform the linker which effects have setting specs, and in which class member
+
+INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 
 #if USE_HUB75 && ENABLE_WIFI
-    std::vector<SettingSpec, psram_allocator<SettingSpec>> PatternSubscribers::mySettingSpecs = {};
+    INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);
+    INIT_EFFECT_SETTING_SPECS(PatternStocks, mySettingSpecs);
 #endif
 
 // Effect factories for the StarryNightEffect - one per star type

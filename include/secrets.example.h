@@ -39,5 +39,3 @@
 #define bLocationIsZip       true
 #define cszCountryCode       "us"                   // Look up the Alpha-2 code for your country at https://www.iban.com/country-codes
 #define cszTimeZone          "America/Los_Angeles"
-#define cszQuoteServer       "davepl.com:8888"
-#define cszStockList         "AAPL,AMZN,TSLA,MSFT"

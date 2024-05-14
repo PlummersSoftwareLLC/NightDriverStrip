@@ -39,6 +39,25 @@
 #include <list>
 #include <stdlib.h>
 
+// Declarations related to effect settings, and their SettingSpecs. The definitions revolving around
+// SettingSpecs are mainly there because getting it right is a bit finnicky due to the container type
+// used and the class static nature of the actual containers. Particularly adding an initializer for
+// a SettingSpec container is easy to overlook.
+
+// The type for effect SettingSpec containers
+using EffectSettingSpecs = std::vector<SettingSpec, psram_allocator<SettingSpec>>;
+
+// Declares a static class member variable that contains the SettingSpecs for an effect, if it has them.
+// If an effect uses this macro, it also needs a matching INIT_EFFECT_SETTING_SPECS invocation in
+// effects.cpp, or linker errors will ensue.
+#define DECLARE_EFFECT_SETTING_SPECS(memberName) \
+    static EffectSettingSpecs memberName
+
+// Initializes the effect setting specs member that's been added to an effect class. There must be one
+// use of this in effects.cpp for every use DECLARE_EFFECT_SETTING_SPECS, or the linker will balk.
+#define INIT_EFFECT_SETTING_SPECS(effectName, specsMember) \
+    EffectSettingSpecs effectName::specsMember = {}
+
 // This macro returns from the invoking function (which would usually be SetSetting())
 // if the settingName and propertyName passed to it match, and the "value" was thus
 // assigned to the "property".
@@ -62,8 +81,49 @@ class LEDStripEffect : public IJSONSerializable
         All               = MaximumEffectTime   // | next one | one after that | etc.
     };
 
+    DECLARE_EFFECT_SETTING_SPECS(_baseSettingSpecs);
+    std::vector<std::reference_wrapper<SettingSpec>> _settingSpecReferences;
+
     bool   _coreEffect = false;
-    static std::vector<SettingSpec, psram_allocator<SettingSpec>> _baseSettingSpecs;
+
+    // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
+    // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecReferences
+    // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
+    // memory.
+    void FillBaseSettingSpecs()
+    {
+        // If the base SettingSpec instances already exist, bail out...
+        if (_baseSettingSpecs.size() != 0)
+            return;
+
+        // ...otherwise, create and add them
+
+        _baseSettingSpecs.emplace_back(
+            ACTUAL_NAME_OF(_friendlyName),
+            "Friendly name",
+            "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
+            SettingSpec::SettingType::String
+        );
+        _baseSettingSpecs.emplace_back(
+            ACTUAL_NAME_OF(_maximumEffectTime),
+            "Maximum effect time",
+            "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
+            "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
+            SettingSpec::SettingType::PositiveBigInteger
+        );
+        _baseSettingSpecs.emplace_back(
+            "hasMaximumEffectTime",
+            "Has maximum effect time set",
+            "Indicates if the effect has a maximum effect time set.",
+            SettingSpec::SettingType::Boolean
+        ).Access = SettingSpec::SettingAccess::ReadOnly;
+        _baseSettingSpecs.emplace_back(
+            "clearMaximumEffectTime",
+            "Clear maximum effect time",
+            "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
+            SettingSpec::SettingType::Boolean
+        ).Access = SettingSpec::SettingAccess::WriteOnly;
+    }
 
   protected:
 
@@ -72,7 +132,6 @@ class LEDStripEffect : public IJSONSerializable
     String _friendlyName;
     bool   _enabled = true;
     size_t _maximumEffectTime = 0;
-    std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
 
     // JSON document size used for serializations of this class. Should probably be made bigger for effects (i.e. subclasses)
     //   that serialize additional properties.
@@ -141,54 +200,11 @@ class LEDStripEffect : public IJSONSerializable
         SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
     }
 
-    // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
-    // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecs
-    // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
-    // memory.
-    //
-    // Overrides of this virtual function in effects that publish additional settings should first
-    // call this implementation (i.e. LEDStripEffect::FillSettingSpecs()) and only continue if it returns
-    // true.
-    virtual bool FillSettingSpecs()
+    // Overrides of this method should fill the respective effect's SettingSpec vector and return a pointer to it.
+    // Returning nullptr indicates the effect has no SettingSpec instances to add to the base set.
+    virtual EffectSettingSpecs* FillSettingSpecs()
     {
-        // Bail out if the SettingSpecs reference_wrapper vector is already filled
-        if (_settingSpecs.size() > 0)
-            return false;
-
-        // Lazily load the SettingSpec instances if they're not already there
-        if (_baseSettingSpecs.size() == 0)
-        {
-            _baseSettingSpecs.emplace_back(
-                ACTUAL_NAME_OF(_friendlyName),
-                "Friendly name",
-                "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
-                SettingSpec::SettingType::String
-            );
-            _baseSettingSpecs.emplace_back(
-                ACTUAL_NAME_OF(_maximumEffectTime),
-                "Maximum effect time",
-                "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-                "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
-                SettingSpec::SettingType::PositiveBigInteger
-            );
-            _baseSettingSpecs.emplace_back(
-                "hasMaximumEffectTime",
-                "Has maximum effect time set",
-                "Indicates if the effect has a maximum effect time set.",
-                SettingSpec::SettingType::Boolean
-            ).Access = SettingSpec::SettingAccess::ReadOnly;
-            _baseSettingSpecs.emplace_back(
-                "clearMaximumEffectTime",
-                "Clear maximum effect time",
-                "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
-                SettingSpec::SettingType::Boolean
-            ).Access = SettingSpec::SettingAccess::WriteOnly;
-        }
-
-        // Add reference_wrappers for the actual SettingSpecs instances to our effect instance's vector
-        _settingSpecs.insert(_settingSpecs.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
-
-        return true;
+        return nullptr;
     }
 
     static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max)
@@ -542,9 +558,26 @@ class LEDStripEffect : public IJSONSerializable
     // returns a vector with reference_wrappers to them.
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
-        FillSettingSpecs();
+        // If the SettingSpecs reference_wrapper vector is already filled, return that
+        if (_settingSpecReferences.size() > 0)
+            return _settingSpecReferences;
 
-        return _settingSpecs;
+        // Create the SettingSpec instances that are available for all effects
+        FillBaseSettingSpecs();
+
+        // Add reference_wrappers for the base SettingSpecs instances to the vector
+        _settingSpecReferences.insert(_settingSpecReferences.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
+
+        // Get any SettingSpec instances that our effect subclass has defined
+        auto pEffectSettingSpecs = FillSettingSpecs();
+
+        if (pEffectSettingSpecs)
+        {
+            // Add reference_wrappers for the effect SettingSpecs instances to the vector
+            _settingSpecReferences.insert(_settingSpecReferences.end(), pEffectSettingSpecs->begin(), pEffectSettingSpecs->end());
+        }
+
+        return _settingSpecReferences;
     }
 
     // Serialize the "known effect settings" for this effect to JSON. In principle, there
