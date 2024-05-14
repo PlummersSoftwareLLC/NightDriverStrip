@@ -18,7 +18,7 @@ jobs:
     - name: Find environments
       id: envs
       run: |
-        if [[ $(< config/ci_exclude.json) != '[]' ]]; then echo "Note: skipping envs $(< config/ci_exclude.json)"; fi
+        if [[ $(< config/ci_exclude.json) != '[]' ]]; then echo "::warning title='Skipped environments'::Skipped: $(< config/ci_exclude.json)"; fi
         echo "envs=$(tools/show_envs.py | jq -c --argfile ex config/ci_exclude.json '. - $ex')" >> $GITHUB_OUTPUT
 
     outputs:
