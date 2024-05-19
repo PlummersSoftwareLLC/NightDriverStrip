@@ -1327,7 +1327,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #elif ELECROW
 
         // Implies ElecrowScreen
-    
+
     #elif AMOLED_S3
 
         // Implicitly uses LilyGoScreen3
@@ -1358,9 +1358,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 
 #ifdef ESP32FEATHERTFT
-    #define ONBOARD_PIXEL_ORDER     EOrder::RGB
-    #define ONBOARD_PIXEL_POWER     34
-    #define ONBOARD_PIXEL_DATA      33
+// Commented out because FastLED crashes if the onboard pixel is used
+//    #define ONBOARD_PIXEL_ORDER     EOrder::RGB
+//    #define ONBOARD_PIXEL_POWER     34
+//    #define ONBOARD_PIXEL_DATA      33
 #endif
 
 #ifndef USE_OLED
