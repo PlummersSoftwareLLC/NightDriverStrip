@@ -40,8 +40,8 @@
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 extern std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
-static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
-static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
+static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
+static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
 
 //
 // EffectManager initialization functions

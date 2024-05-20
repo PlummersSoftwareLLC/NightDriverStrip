@@ -32,25 +32,25 @@
 
 // Include the effect classes we'll need later
 
-#include "effects/strip/fireeffect.h"          // fire effects
-#include "effects/strip/paletteeffect.h"       // palette effects
-#include "effects/strip/doublepaletteeffect.h" // double palette effect
-#include "effects/strip/meteoreffect.h"        // meteor blend effect
-#include "effects/strip/stareffect.h"          // star effects
-#include "effects/strip/bouncingballeffect.h"  // bouincing ball effectsenable+
+#include "effects/strip/fireeffect.h"           // fire effects
+#include "effects/strip/paletteeffect.h"        // palette effects
+#include "effects/strip/doublepaletteeffect.h"  // double palette effect
+#include "effects/strip/meteoreffect.h"         // meteor blend effect
+#include "effects/strip/stareffect.h"           // star effects
+#include "effects/strip/bouncingballeffect.h"   // bouincing ball effectsenable+
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
 #include "effects/strip/misceffects.h"
-#include "effects/matrix/PatternClock.h"       // No matrix dependencies
+#include "effects/matrix/PatternClock.h"        // No matrix dependencies
 
 #if ENABLE_AUDIO
-    #include "effects/matrix/spectrumeffects.h"    // Musis spectrum effects
-    #include "effects/strip/musiceffect.h"         // Music based effects
+    #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
+    #include "effects/strip/musiceffect.h"      // Music based effects
 #endif
 
 #if FAN_SIZE
-    #include "effects/strip/faneffects.h" // Fan-based effects
+    #include "effects/strip/faneffects.h"       // Fan-based effects
 #endif
 
 //
@@ -105,6 +105,7 @@
   #if ENABLE_WIFI
     #include "effects/matrix/PatternSubscribers.h"
     #include "effects/matrix/PatternWeather.h"
+    #include "effects/matrix/PatternStocks.h"
   #endif
 
 #endif  // USE_HUB75
@@ -113,10 +114,13 @@
     #include "ledstripgfx.h"
 #endif
 
-// Static initializers for effects that need them
+// Inform the linker which effects have setting specs, and in which class member
+
+INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 
 #if USE_HUB75 && ENABLE_WIFI
-    std::vector<SettingSpec, psram_allocator<SettingSpec>> PatternSubscribers::mySettingSpecs = {};
+    INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);
+    INIT_EFFECT_SETTING_SPECS(PatternStocks, mySettingSpecs);
 #endif
 
 // Effect factories for the StarryNightEffect - one per star type
@@ -216,7 +220,7 @@ void LoadEffectFactories()
     #elif MESMERIZER
 
         #ifndef EFFECT_SET_VERSION
-            #define EFFECT_SET_VERSION  6   // Bump version if default set changes in a meaningful way
+            #define EFFECT_SET_VERSION  6  // Bump version if default set changes in a meaningful way
         #endif
 
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph",  16,            4,                   0);
@@ -250,6 +254,7 @@ void LoadEffectFactories()
 
 
       #if ENABLE_WIFI
+        ADD_EFFECT(EFFECT_MATRIX_STOCKS,            PatternStocks);
         ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
         ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
       #endif

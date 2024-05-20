@@ -77,16 +77,20 @@
 #error A definition for cszTimeZone is missing from secrets.h
 #endif
 
+// Define this to true to make the DeviceConfig ignore any JSON-persisted config that may be on the device.
+// Note that effect settings are not impacted by this setting. Their persisted config is part of the effects
+// list JSON, which can be ignored separately (search for EFFECT_SET_VERSION in effects.cpp).
+#define IGNORE_SAVED_DEVICE_CONFIG  false
 
-#define DEVICE_CONFIG_FILE "/device.cfg"
-#define NTP_SERVER_DEFAULT "0.pool.ntp.org"
-#define BRIGHTNESS_MIN uint8_t(10)
-#define BRIGHTNESS_MAX uint8_t(255)
-#define POWER_LIMIT_MIN 2000
-#define POWER_LIMIT_DEFAULT 4500
+#define DEVICE_CONFIG_FILE          "/device.cfg"
+#define NTP_SERVER_DEFAULT          "0.pool.ntp.org"
+#define BRIGHTNESS_MIN              uint8_t(10)
+#define BRIGHTNESS_MAX              uint8_t(255)
+#define POWER_LIMIT_MIN             2000
+#define POWER_LIMIT_DEFAULT         4500
 
 // DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should
-// be managed using overrides of the respective methods in LEDStripEffect (HasSettings(), GetSettingSpecs(),
+// be managed using overrides of the respective methods in LEDStripEffect (mainly FillSettingSpecs(),
 // SerializeSettingsToJSON() and SetSetting()).
 //
 // Adding a setting to the list of known/saved settings requires the following:
@@ -222,6 +226,10 @@ class DeviceConfig : public IJSONSerializable
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
+        // If we're told to ignore saved config, we shouldn't touch anything
+        if (IGNORE_SAVED_DEVICE_CONFIG)
+            return true;
+
         // Add deserialization logic for additional settings to this code
         SetIfPresentIn(jsonObject, hostname, HostnameTag);
         SetIfPresentIn(jsonObject, location, LocationTag);

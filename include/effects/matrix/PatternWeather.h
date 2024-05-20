@@ -118,7 +118,7 @@ static std::map<String, EmbeddedFile, std::less<String>, psram_allocator<std::pa
 
 /**
  * @brief This class implements the Weather Data effect
- * 
+ *
  */
 class PatternWeather : public LEDStripEffect
 {
@@ -140,13 +140,13 @@ private:
     float  loTomorrow         = 0.0f;
 
     bool   dataReady          = false;
-    size_t readerIndex = std::numeric_limits<size_t>::max();
+    size_t readerIndex        = SIZE_MAX;
     system_clock::time_point latestUpdate = system_clock::from_time_t(0);
 
     /**
      * @brief Should this effect show its title.
      * The weather is obviously weather, and we don't want text overlaid on top of our text
-     * 
+     *
      * @return bool - false No title rquired
      */
     virtual bool ShouldShowTitle() const
@@ -156,7 +156,7 @@ private:
 
     /**
      * @brief How many frames per second does this effect want
-     * 
+     *
      * @return size_t - 25 FPS
      */
     size_t DesiredFramesPerSecond() const override
@@ -166,7 +166,7 @@ private:
 
     /**
      * @brief Does this effect requre double buffering support
-     * 
+     *
      * @return bool - false No double buffering needed
      */
     bool RequiresDoubleBuffering() const override
@@ -176,7 +176,7 @@ private:
 
     /**
      * @brief Convert Kelvin to Farenheit
-     * 
+     *
      * @param K  Temperature in Kelvin
      * @return float - Farenheit temperature
      */
@@ -187,11 +187,11 @@ private:
 
     /**
      * @brief Convert Kelvin to Celsius
-     * 
+     *
      * @param K Temperature in Kelvin
      * @return float - Celsius temperature
      */
-    static inline float KelvinToCelsius(float K) 
+    static inline float KelvinToCelsius(float K)
     {
         return K - 273.15;
     }
@@ -199,7 +199,7 @@ private:
     /**
      * @brief Convert Kelvin temperature to local units
      * based on the device configuration flag Use Celsius
-     * 
+     *
      * @param K Temperature in Kelvin
      * @return float - temperature in selected units
      */
@@ -214,7 +214,7 @@ private:
     /**
      * @brief Update the latitude and longitude for the
      * selected city or zip code from the device configuration
-     * 
+     *
      * @return bool - true if the lat/log location is updated
      */
     bool updateCoordinates()
@@ -263,13 +263,13 @@ private:
 
     /**
      * @brief Get the forcast for Tomorrow from the API
-     * 
+     *
      * Tommorow's expected high and low temperatures,
      * and an icon for tomorrow's weather forcast
-     * 
+     *
      * @param highTemp address to store the high temperature
      * @param lowTemp address to store the low temperature
-     * @return bool - true if valid weather data retrieved 
+     * @return bool - true if valid weather data retrieved
      */
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
@@ -311,7 +311,7 @@ private:
                 strftime(entryStr, sizeof(entryStr), "%Y-%m-%d", entryLocal);
 
                 // if it is tomorrow then figure out the min and max and get the icon
-                if (strcmp(dateStr, entryStr) == 0) 
+                if (strcmp(dateStr, entryStr) == 0)
                 {
                     slot++;
                     JsonObject main = entry["main"];
@@ -349,11 +349,11 @@ private:
 
     /**
      * @brief Get the Weather Data from the API
-     * 
+     *
      * Current temperature, expected high and low temperatures,
      * and an icon for the current weather
-     * 
-     * @return bool - true if valid weather data retrieved 
+     *
+     * @return bool - true if valid weather data retrieved
      */
     bool getWeatherData()
     {
@@ -398,7 +398,7 @@ private:
     /**
      * @brief Hook called from the Network Reader Thread
      * This drives the collection of the weather data.
-     * 
+     *
      */
     void UpdateWeather()
     {
@@ -421,8 +421,8 @@ private:
     /**
      * @brief Determine if the device configuration has changed the
      * location selection
-     * 
-     * @return bool - true if the location has changed 
+     *
+     * @return bool - true if the location has changed
      */
     bool HasLocationChanged()
     {
@@ -436,7 +436,7 @@ public:
 
     /**
      * @brief Construct a new Pattern Weather object
-     * 
+     *
      */
     PatternWeather() : LEDStripEffect(EFFECT_MATRIX_WEATHER, "Weather")
     {
@@ -444,7 +444,7 @@ public:
 
     /**
      * @brief Construct a new Pattern Weather object
-     * 
+     *
      * @param jsonObject Configuration JSON Object
      */
     PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
@@ -461,8 +461,8 @@ public:
     }
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * @param gfx Graphic Base engine
      * @return bool - true if successfully initialized
      */
@@ -481,7 +481,7 @@ public:
      * @brief This handles the drawing of the weather data.
      * It also triggers the network reader on intervals.
      * Will tell the user if there is no API Key configured
-     * 
+     *
      */
     void Draw() override
     {

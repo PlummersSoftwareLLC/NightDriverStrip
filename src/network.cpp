@@ -755,8 +755,8 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 }
             }
 
-            // If the reader container isn't available yet, we'll sleep for a second before we check again
-            if (!g_ptrSystem->HasNetworkReader())
+            // If the reader container isn't available yet or WiFi isn't up yet, we'll sleep for a second before we check again
+            if (!g_ptrSystem->HasNetworkReader() || !WiFi.isConnected())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
                 continue;

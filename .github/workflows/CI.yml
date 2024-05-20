@@ -8,16 +8,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
     - name: Find environments
       id: envs
-      run: echo "envs=$(tools/show_envs.py)" >> $GITHUB_OUTPUT
+      run: |
+        if [[ $(< config/ci_exclude.json) != '[]' ]]; then echo "::warning title=Some environments were skipped::Environments not built: $(< config/ci_exclude.json)"; fi
+        echo "envs=$(tools/show_envs.py | jq -c --argfile ex config/ci_exclude.json '. - $ex')" >> $GITHUB_OUTPUT
 
     outputs:
       envs: ${{ steps.envs.outputs.envs }}
@@ -33,10 +35,10 @@ jobs:
         envname: ${{ fromJson(needs.collect-environments.outputs.envs) }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -66,7 +68,7 @@ jobs:
 
     steps:
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -79,7 +81,7 @@ jobs:
         remove-dotnet: 'true'
         remove-haskell: 'true'
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install PlatformIO
       run: |
