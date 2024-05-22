@@ -39,6 +39,7 @@ _Davepl, 9/19/2021_
 - [Sample parts (Plummer's Software LLC Amazon affiliate links)](#sample-parts-plummers-software-llc-amazon-affiliate-links)
 - [Contributing, and the BlinkenPerBit metric](#contributing-and-the-blinkenperbit-metric)
 - [Time it takes to build this project](#time-it-takes-to-build-this-project)
+- [Old Build times, no longer relevant with current platformio, just historical curiosity:](#old-build-times-no-longer-relevant-with-current-platformio-just-historical-curiosity)
 
 ## What NightDriverStrip is
 
@@ -361,7 +362,7 @@ To replicate, build the mesmerizer project.  Then delete pio/build_cache and bui
 - 3970X, 128GB [32-core, 64-thread] Windows11+WSL2/Ubuntu02.04LTS
   -> [davepl 11/29/2023] 34.292 seconds
 
-- Mac M1 Ultra Studio [10-core, 20-thread] 
+- Mac M1 Ultra Studio [10-core, 20-thread]
   -> [davepl 11/29/2023] 48.368 seconds
 
 ## Old Build times, no longer relevant with current platformio, just historical curiosity:
@@ -397,11 +398,3 @@ Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build
 
 - Jetson Nano 2G, 4 Core ARM A57
   -> [davepl 10/04/2021] 2 min 56 seconds
-
-UPC Codes
------------------------------------------------------------------------------
-1	646680745383	MESMERKIT     Mesmerizer Kit w/64x32 Matrix, Remote, Receiver
-2	646680745390	MESMERPCB     Assembled PCB Only
-3	646680745406	
-4	646680745413	
-5	646680745420	
