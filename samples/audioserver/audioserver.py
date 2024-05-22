@@ -95,7 +95,7 @@ while True:
 
     # Compute band values
     band_values = []
-    for i in range(len(bands)-1):
+    for i in range(len(bands)-1):                                       # BUGBUG RANGE stops one before
         band_start = np.searchsorted(freqs, bands[i])
         band_stop = np.searchsorted(freqs, bands[i+1])
         band_value = np.median(fft_data[band_start:band_stop])

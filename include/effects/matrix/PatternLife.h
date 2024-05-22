@@ -162,7 +162,7 @@ private:
     //
     // Example:  Seed: 92465, Generations: 1626
 
-    static constexpr long bakedInSeeds[] =
+    static constexpr std::array<unsigned long, 19> bakedInSeeds = 
     {
         130908,         // 3253
         1576,           // 3125
@@ -185,7 +185,6 @@ private:
         555109764,      // 4470
     };
 
-
     void randomFillWorld()
     {
         // Some fraction of the time we pick a pre-baked seed that we know lasts for a lot
@@ -194,7 +193,7 @@ private:
         srand(millis());
         if (random(0, 4) == 0)
         {
-            seed = bakedInSeeds[random(ARRAYSIZE(bakedInSeeds))];
+            seed = bakedInSeeds[random(std::size(bakedInSeeds))];
             debugV("Prebaked Seed: %lu", seed);
         }
         else

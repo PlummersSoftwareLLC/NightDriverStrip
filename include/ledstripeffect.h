@@ -343,7 +343,7 @@ class LEDStripEffect : public IJSONSerializable
                 CRGB::Indigo,
                 CRGB::Violet
             };
-        int randomColorIndex = random_range(0U, ARRAYSIZE(colors));
+        int randomColorIndex = random_range(0U, std::size(colors));
         return colors[randomColorIndex];
     }
 

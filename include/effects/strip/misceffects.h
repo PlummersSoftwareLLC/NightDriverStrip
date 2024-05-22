@@ -393,15 +393,15 @@ class StatusEffect : public LEDStripEffect
 };
 
 #if CLASSIC_GE_C9
-static const CRGB TwinkleColors[] =
+static constexpr auto TwinkleColors =  to_array(
 {
     CRGB(238, 51, 39),      // Red
     CRGB(0, 172, 87),       // Green
     CRGB(250, 164, 25),     // Yellow
     CRGB(0, 131, 203)       // Blue
-};
+});
 #else
-static const CRGB TwinkleColors[] =
+static constexpr auto TwinkleColors =  to_array(
 {
     CRGB::Red,
     CRGB::Green,
@@ -409,7 +409,7 @@ static const CRGB TwinkleColors[] =
     CRGB::Blue,
     CRGB::Purple,
     CRGB::Yellow
-};
+});
 #endif
 
 class TwinkleEffect : public LEDStripEffect
@@ -491,7 +491,7 @@ class TwinkleEffect : public LEDStripEffect
                   return;
               }
               assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
-              setPixelOnAllChannels(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
+              setPixelOnAllChannels(iNew, TwinkleColors[random(0, std::size(TwinkleColors))]);
               litPixels.push_front(iNew);
             }
         }

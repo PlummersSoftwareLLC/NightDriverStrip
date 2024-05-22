@@ -58,7 +58,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-#define STOCKS_UPDATE_INTERVAL_SECONDS 10s
+#define STOCKS_UPDATE_INTERVAL_SECONDS 6s
 #define STOCKS_FETCH_INTERVAL_SECONDS  60s
 
 #define DEFAULT_STOCK_SERVER           "davepl.com:8888"
@@ -416,7 +416,8 @@ public:
         auto changetext = String(data.close - data.open, 2);
         auto changelen  = changetext.length();
 
-        auto voltext = String(data.volume, 0);
+        constexpr auto formatVolumeLargerThan = 1000000;
+        auto voltext = formatSize(data.volume, formatVolumeLargerThan);
         auto vollen  = voltext.length();
 
         textSymbol = AnimatedText(data.symbol, CRGB::White, &Apple5x7, 0.50f, -MATRIX_WIDTH, 8, 0, 8);
@@ -424,6 +425,7 @@ public:
         textChange = AnimatedText(changetext, data.close >= data.open ? CRGB::LightGreen : CRGB::Red, &Apple5x7, 1.0f, -MATRIX_WIDTH, 15, MATRIX_WIDTH - changelen * textwidth, 15);
         textVolume = AnimatedText(voltext, CRGB::LightGrey, &Apple5x7, 1.0f, -MATRIX_WIDTH * 2, 22, MATRIX_WIDTH - vollen * textwidth, 22);
     }
+
 
     // UpdateQuoteDisplay
     //
@@ -459,23 +461,15 @@ public:
 
         if (n > 0)
         {
-            float max = 0.0f;
-            float min = numeric_limits<float>::max();
-
             // We have the high and low data in the stock, but let's not trust it and calculate it ourselves
+            // If this works, Davepl wrote it.  If not, Robert made me do it!
 
-            for (int i = 0; i < n; i++)
-            {
-                max = std::max(max, currentStock.points[i].val);
-                min = std::min(min, currentStock.points[i].val);
-            }
+            auto [minpoint, maxpoint] = std::minmax_element(currentStock.points.begin(), currentStock.points.end(), [](const StockPoint& a, const StockPoint& b) { return a.val < b.val; }); 
+            float min = minpoint->val, max = maxpoint->val, range = max - min;
 
-            // Now draw each vertical line segment
-
-            float range = max - min;
             if (range > 0.0f)
             {
-                float scale = h / range;
+                float scale = range > 0.0f ? h / range : 0.0f;
                 float breakeven = currentStock.open;
                 float breakevenY = y + h - (breakeven - min) * scale;
 
@@ -511,7 +505,7 @@ public:
 
         if (WiFi.isConnected())
         {
-            if (system_clock::now() > nextFetch)
+            if (system_clock::now() >= nextFetch)
             {
                 nextFetch = system_clock::now() + STOCKS_FETCH_INTERVAL_SECONDS;
                 // Trigger the stock data reader.

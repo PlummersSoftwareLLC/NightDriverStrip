@@ -42,6 +42,7 @@
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
+#include <array>
 #include <chrono>
 #include <thread>
 #include <map>
@@ -92,9 +93,9 @@ extern const uint8_t thunderstorm_end[]             asm("_binary_assets_bmp_thun
 extern const uint8_t thunderstorm_night_start[]     asm("_binary_assets_bmp_thunderstormnight_jpg_start");
 extern const uint8_t thunderstorm_night_end[]       asm("_binary_assets_bmp_thunderstormnight_jpg_end");
 
-static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
+static constexpr auto pszDaysOfWeek = to_array( { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" } );
 
-static std::map<String, EmbeddedFile, std::less<String>, psram_allocator<std::pair<String, EmbeddedFile>>> weatherIcons =
+static std::map<const String, EmbeddedFile, std::less<const String>, psram_allocator<std::pair<const String, EmbeddedFile>>> weatherIcons =
 {
     { "01d", EmbeddedFile(clearsky_start, clearsky_end) },
     { "02d", EmbeddedFile(fewclouds_start, fewclouds_end) },

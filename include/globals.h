@@ -90,6 +90,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <iomanip>
 #include <sys/time.h>
 #include <exception>
 #include <mutex>
@@ -153,7 +154,6 @@
 // NAME_OF with first character cut off - addresses underscore-prefixed (member) variables
 #define ACTUAL_NAME_OF(x)   ((#x) + 1)
 
-#define ARRAYSIZE(a)        (sizeof(a)/sizeof(a[0]))        // Returns the number of elements in an array
 #define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))    // Calculate period in microseconds (us) from frequency in Hz
 #define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
 
@@ -540,6 +540,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define COLOR_ORDER                 EOrder::RGB
 
+    #define MIN_VU                      80
+
 #elif TTGO
 
     // Variant of Spectrum set up for a TTGO using a MAX4466 microphone on pin27
@@ -870,7 +872,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define COLORDATA_SERVER_ENABLED    1
         #define MAX_BUFFERS                 500
     #else
-        #define INCOMING_WIFI_ENABLED       0   // Accepting incoming color data and commands
+        #define INCOMING_WIFI_ENABLED       0   // Do not accept incoming color data and commands
         #define COLORDATA_SERVER_ENABLED    0
         #define MIN_BUFFERS                 1
         #define MAX_BUFFERS                 1
@@ -1156,10 +1158,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR (MAX_VU / 2)
+        #define NOISE_FLOOR 200
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF 2000
+        #define NOISE_CUTOFF 1800
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
@@ -1603,6 +1605,47 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
    if (flags == -1) return false;
    flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
    return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+}
+
+// formatSize
+// 
+// Returns a string with the size formatted in a human readable format.  
+// For example, 1024 becomes "1K", 1000*1000 becomes "1M", etc.
+// It pains me not to use 1024, but such are the times we live in.
+
+inline String formatSize(size_t size, size_t threshold = 1000) 
+{
+    // If the size is less than the threshold, we don't need to worry about precision because
+    // we'll be showing whole units 
+    const int precision = size >= threshold ? 2 : 0;
+
+    const char* suffixes[] = {"", "K", "M", "G", "T", "P", "E", "Z"};
+    size_t suffixIndex = 0;
+    double sizeDouble = static_cast<double>(size);
+
+    while (sizeDouble >= threshold && suffixIndex < (sizeof(suffixes) / sizeof(suffixes[0])) - 1) 
+    {
+        sizeDouble /= 1000;
+        ++suffixIndex;
+    }
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(precision) << sizeDouble << suffixes[suffixIndex];
+    return String(oss.str().c_str());
+}
+
+// to_array
+//
+// Because the ESP32 compiler, as of this writing, doesn't have std::to_array, we provide our own (davepl).
+// BUGBUG: Once we have compiler support we shoud use the C++20 versions
+
+template <typename T, std::size_t N>
+constexpr std::array<T, N> to_array(const T (&arr)[N]) {
+    std::array<T, N> result{};
+    for (std::size_t i = 0; i < N; ++i) {
+        result[i] = arr[i];
+    }
+    return result;
 }
 
 // 16-bit (5:6:5) color definitions for common colors

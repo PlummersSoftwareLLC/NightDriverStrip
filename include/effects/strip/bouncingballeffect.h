@@ -36,7 +36,7 @@
 //
 // Draws a set of N bouncing balls using a simple little kinematics formula.  Clears the section first.
 
-static const CRGB ballColors[] =
+static constexpr auto ballColors = to_array(
 {
     CRGB::Green,
     CRGB::Red,
@@ -45,8 +45,7 @@ static const CRGB ballColors[] =
     CRGB::Purple,
     CRGB::Yellow,
     CRGB::Indigo,
-    
-};
+});
 
 class BouncingBallEffect : public LEDStripEffect
 {
@@ -60,15 +59,15 @@ private:
 
     const bool _bErase;
 
-    float Gravity = -9.81;
-    float StartHeight = 1;
-    float ImpactVelocityStart = sqrt(-2 * Gravity * StartHeight);
+    static constexpr float Gravity = -9.81f;
+    static constexpr float StartHeight = 1.0f;
+    static constexpr float ImpactVelocityStart = sqrt(-2.0f * Gravity * StartHeight);
 
     std::vector<double> ClockTimeSinceLastBounce;
     std::vector<double> TimeSinceLastBounce;
-    std::vector<float> Height;
-    std::vector<float> ImpactVelocity;
-    std::vector<float> Dampening;
+    std::vector<float>  Height;
+    std::vector<float>  ImpactVelocity;
+    std::vector<float>  Dampening;
     std::vector<CRGB>   Colors;
 
   public:
@@ -134,7 +133,7 @@ private:
             ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();
             Dampening[i]                = 1.0f - i / powf(_cBalls, 2);               // Was 0.9
             TimeSinceLastBounce[i]      = 0;
-            Colors[i]                   = ballColors[i % ARRAYSIZE(ballColors)];
+            Colors[i]                   = ballColors[i % std::size(ballColors)];
         }
         return true;
     }
@@ -174,9 +173,9 @@ private:
             }
 
             float position = Height[i] * (_cLength - 1) / StartHeight;
-            setPixelsOnAllChannels(position, _cBallSize, Colors[i % ARRAYSIZE(ballColors)]);
+            setPixelsOnAllChannels(position, _cBallSize, Colors[i % std::size(ballColors)]);
             if (_bMirrored)
-                setPixelsOnAllChannels(_cLength-1-position, _cBallSize, Colors[i % ARRAYSIZE(ballColors)], true);
+                setPixelsOnAllChannels(_cLength-1-position, _cBallSize, Colors[i % std::size(ballColors)], true);
         }
     }
 };

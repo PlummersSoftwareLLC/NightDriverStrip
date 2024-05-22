@@ -500,7 +500,7 @@ bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password)
     {
         // Read the SSID and Password from the NVS partition name/value keypair set
 
-        auto len = ARRAYSIZE(szBuffer);
+        auto len = std::size(szBuffer);
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_ssid), szBuffer, &len);
         if (ESP_OK != err)
         {
@@ -510,7 +510,7 @@ bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password)
         }
         WiFi_ssid = szBuffer;
 
-        len = ARRAYSIZE(szBuffer);
+        len = std::size(szBuffer);
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_password), szBuffer, &len);
         if (ESP_OK != err)
         {

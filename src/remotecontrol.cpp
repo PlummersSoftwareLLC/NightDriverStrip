@@ -132,7 +132,7 @@ void RemoteControl::handle()
         effectManager.ShowVU( !effectManager.IsVUVisible() );
     }
 
-    for (int i = 0; i < ARRAYSIZE(RemoteColorCodes); i++)
+    for (int i = 0; i < std::size(RemoteColorCodes); i++)
     {
         if (RemoteColorCodes[i].code == result)
         {

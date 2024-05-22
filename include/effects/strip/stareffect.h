@@ -617,7 +617,7 @@ public:
 
 
         // Rotate the buffer
-        //memmove(buffer, buffer + 1, ARRAYSIZE(buffer) * (Count - 1));
+        //memmove(buffer, buffer + 1, std::size(buffer) * (Count - 1));
         for (int i = 0; i < NUM_TWINKLES - 1; i++)
             buffer[i] = buffer[i + 1];
 
