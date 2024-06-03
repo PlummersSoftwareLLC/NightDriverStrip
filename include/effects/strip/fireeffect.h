@@ -34,6 +34,7 @@
 #include "globals.h"
 #include "musiceffect.h"
 #include "soundanalyzer.h"
+#include "systemcontainer.h"
 
 class FireEffect : public LEDStripEffect
 {
@@ -208,6 +209,7 @@ class FireEffect : public LEDStripEffect
 class PaletteFlameEffect : public FireEffect
 {
     CRGBPalette16 _palette;
+    bool _ignoreGlobalColor;
 
     void construct()
     {
@@ -217,6 +219,7 @@ class PaletteFlameEffect : public FireEffect
 public:
     PaletteFlameEffect(const String & strName,
                        const CRGBPalette16 &palette,
+                       bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
@@ -226,14 +229,16 @@ public:
                        bool reversed = false,
                        bool mirrored = false)
         : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          _palette(palette)
+          _palette(palette),
+          _ignoreGlobalColor(ignoreGlobalColor)
     {
         construct();
     }
 
     PaletteFlameEffect(const JsonObjectConst& jsonObject)
       : FireEffect(jsonObject),
-        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
+        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
     {
         construct();
     }
@@ -246,6 +251,7 @@ public:
         FireEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_PALETTE] = _palette;
+        jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
 
         assert(!jsonDoc.overflowed());
 
@@ -255,8 +261,15 @@ public:
     virtual CRGB GetBlackBodyHeatColor(float temp) const override
     {
         temp = min(1.0f, temp);
-        int index = map(temp, 0.0f, 1.0f, 0.0f, 240.0f);
-        return ColorFromPalette(_palette, index, 255);
+        int index = fmap(temp, 0.0f, 1.0f, 0.0f, 240.0f);
+        auto& deviceConfig = g_ptrSystem->DeviceConfig();
+        if (deviceConfig.ApplyGlobalColors() && !_ignoreGlobalColor)
+        {
+            auto tempPalette = CRGBPalette16(CRGB::Black, deviceConfig.GlobalColor(), CRGB::Yellow, CRGB::White);
+            return ColorFromPalette(tempPalette, index, 255);
+        }
+        else
+            return ColorFromPalette(_palette, index, 255);
 
         //        uint8_t heatramp = (uint8_t)(t192 & 0x3F);
         //        heatramp <<=2;
@@ -275,6 +288,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
     MusicalPaletteFire(const String & strName,
                        const CRGBPalette16 &palette,
+                       bool ignoreGlobalColor = false,
                        int ledCount = NUM_LEDS,
                        int cellsPerLED = 1,
                        int cooling = 20,         // Was 1.8 for NightDriverStrip
@@ -283,7 +297,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        int sparkHeight = 3,
                        bool reversed = false,
                        bool mirrored = false)
-        : PaletteFlameEffect(strName, palette, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+        : PaletteFlameEffect(strName, palette, ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           BeatEffectBase(1.00, 0.01)
 
 

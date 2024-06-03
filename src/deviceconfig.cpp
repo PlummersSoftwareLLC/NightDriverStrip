@@ -45,7 +45,7 @@ void DeviceConfig::SaveToJSON()
 DeviceConfig::DeviceConfig()
 {
     writerIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        [this] { SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this); }
+        [this] { assert(SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this)); }
     );
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
@@ -55,6 +55,7 @@ DeviceConfig::DeviceConfig()
         debugI("Loading DeviceConfig from JSON");
 
         DeserializeFromJSON(pJsonDoc->as<JsonObjectConst>(), true);
+        pJsonDoc->clear();
     }
     else
     {
@@ -143,4 +144,60 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
             return { false, "Unable to validate" };
         }
     }
+}
+
+void DeviceConfig::SetColorSettings(const CRGB& newGlobalColor, const CRGB& newSecondColor)
+{
+    globalColor = newGlobalColor;
+    secondColor = newSecondColor;
+    applyGlobalColors = true;
+
+    SaveToJSON();
+}
+
+// This function contains the logic for dealing with the various color-related settings we have.
+// The logic effectively mimics the behavior of pressing a color button on the IR remote control when (only) the
+// global color is set or (re)applied, but also allows the secondary global palette color to be specified directly.
+// The code in this function figures out how to prioritize and combine the values of (optional) settings; the actual
+// logic for applying the correct color(s) and palette is contained in a number of EffectManager member functions.
+void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::optional<CRGB> newSecondColor, bool clearGlobalColor, bool forceApplyGlobalColor)
+{
+    // If we're asked to clear the global color, we'll remember any colors we were passed, but won't do anything with them
+    if (clearGlobalColor)
+    {
+        if (newGlobalColor.has_value())
+            globalColor = newGlobalColor.value();
+        if (newSecondColor.has_value())
+            secondColor = newSecondColor.value();
+
+        g_ptrSystem->EffectManager().ClearRemoteColor();
+
+        applyGlobalColors = false;
+
+        SaveToJSON();
+
+        return;
+    }
+
+    CRGB finalGlobalColor = newGlobalColor.has_value() ? newGlobalColor.value() : globalColor;
+    forceApplyGlobalColor = forceApplyGlobalColor || newGlobalColor.has_value();
+
+    // If we were given a second color, set it and the global one if necessary. Then have EffectManager do its thing...
+    if (newSecondColor.has_value())
+    {
+        if (forceApplyGlobalColor)
+        {
+            applyGlobalColors = true;
+            globalColor = finalGlobalColor;
+        }
+
+        secondColor = newSecondColor.value();
+
+        g_ptrSystem->EffectManager().ApplyGlobalPaletteColors();
+
+        SaveToJSON();
+    }
+    // ...otherwise, apply the "set global color" logic if we were asked to do so
+    else if (forceApplyGlobalColor)
+        g_ptrSystem->EffectManager().ApplyGlobalColor(finalGlobalColor);
 }

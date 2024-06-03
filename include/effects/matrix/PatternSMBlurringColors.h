@@ -3,17 +3,52 @@
 #include "effectmanager.h"
 #include "effects/matrix/Boid.h"
 #include "effects/matrix/Vector.h"
+#include "gfxbase.h"
 
 // Derived from https://editor.soulmatelights.com/gallery/2128-bluringcolors
 
 class PatternSMBlurringColors : public LEDStripEffect
 {
   private:
-    uint8_t Scale = 10; // 1-100 Setting
-    uint8_t Speed = 95; // 1-100. Odd or even only. Setting
+    // A more cache-friendly version of the 7 independent arrays that were
+    // used. This allows better locality per member, especially since we
+    // access them sequentially.
+    // Nothing special here; just a default-zero initialized struct.
+    class PowderItem
+    {
+      public:
+        PowderItem()
+        {
+        }
+
+        void Clear()
+        {
+            _position_x = 0.0f;
+            _position_y = 0.0f;
+            _speed_x = 0.0f;
+            _speed_y = 0.0f;
+            _state = 0;
+            _hue = 0;
+            _is_shift = false;
+        }
+
+        float _position_x;
+        float _position_y;
+        float _speed_x;
+        float _speed_y;
+        uint8_t _hue;
+        uint8_t _state;
+        bool _is_shift;
+    };
+
+    uint8_t Scale = 10; // 1-100 # of Boids. Should be a Setting
+    uint8_t Speed = 95; // 1-100. Odd or even only. Should be a bool Setting
 
     const int WIDTH = MATRIX_WIDTH;
     const int HEIGHT = MATRIX_HEIGHT;
+
+    static constexpr int powder_item_max_count = (100U);
+    std::array<PowderItem, powder_item_max_count> _powder_items;
 
     // matrix size constants are calculated only here and do not change in effects
     const uint8_t CENTER_X_MINOR =
@@ -28,28 +63,11 @@ class PatternSMBlurringColors : public LEDStripEffect
     const uint8_t CENTER_Y_MAJOR =
         MATRIX_HEIGHT / 2 + (MATRIX_HEIGHT % 2); // center of the YGREK matrix, shifted up if the height is even
 
-    // FIXME: this is large enough it should probably go into PSMEM.
-    static constexpr int trackingOBJECT_MAX_COUNT = (100U);
-    // максимальное количество отслеживаемых объектов (очень влияет на
-    // расход памяти)
-    float trackingObjectPosX[trackingOBJECT_MAX_COUNT];
-    float trackingObjectPosY[trackingOBJECT_MAX_COUNT];
-    float trackingObjectSpeedX[trackingOBJECT_MAX_COUNT];
-    float trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
-    uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
-    uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT];
-    bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
-    // BugBug: could be a std::Bitfield<T>
-    static constexpr int enlargedOBJECT_MAX_COUNT = (MATRIX_WIDTH * 2);
-    // максимальное количество сложных отслеживаемых объектов
-    // (меньше, чем trackingOBJECT_MAX_COUNT)
-    uint8_t enlargedObjectNUM; // используемое в эффекте количество объектов
+    uint8_t enlargedObjectNUM; // number of objects used in the effect
 
-    float accel;
-    uint8_t hue, hue2;  // постепенный сдвиг оттенка или какой-нибудь другой
-                        // цикличный счётчик
-    uint8_t deltaValue; // просто повторно используемая переменная
-    uint8_t step; // какой-нибудь счётчик кадров или последовательностей операций
+    uint8_t hue, hue2;  // gradual shift in hue or some other cyclic counter
+    uint8_t deltaValue; // just a reusable variable
+    uint8_t step;       // some kind of frame or sequence counter
 
     [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
     {
@@ -58,11 +76,9 @@ class PatternSMBlurringColors : public LEDStripEffect
 
     void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
-	y = MATRIX_HEIGHT - 1 - y;
-        if (g()->isValidPixel(x, y)) {
-            uint32_t thisPixel = XY(x, y);
-            g()->leds[thisPixel] = color;
-	}
+        y = MATRIX_HEIGHT - 1 - y;
+        if (g()->isValidPixel(x, y)) 
+            g()->leds[XY(x, y)] = color;
     }
 
     static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
@@ -72,15 +88,12 @@ class PatternSMBlurringColors : public LEDStripEffect
 
     void drawPixelXYF(float x, float y, CRGB color)
     {
-        //  if (x<0 || y<0) return; //не похоже, чтобы отрицательные значения хоть
-        //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
-        // extract the fractional parts and derive their inverses
+        // Extract the fractional parts and derive their inverses.
         uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
-        // calculate the intensities for each affected pixel
-        // #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+        // Calculate the intensities for each affected pixel.
         uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-        // multiply the intensities by the colour, and saturating-add them to the
-        // pixels
+        // Multiply the intensities by the colour, and saturating-add them
+        // to the pixels.
         for (uint8_t i = 0; i < 4; i++)
         {
             int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
@@ -96,84 +109,87 @@ class PatternSMBlurringColors : public LEDStripEffect
 
     static const uint8_t AVAILABLE_BOID_COUNT = 7U;
     Boid boids[AVAILABLE_BOID_COUNT];
-    void particlesUpdate2(uint8_t i)
-    {
-        trackingObjectState[i]--; // ttl // ещё и сюда надо speedfactor вкорячить.
-                                  // удачи там!
 
-        // apply velocity
-        trackingObjectPosX[i] += trackingObjectSpeedX[i] + accel;
-        trackingObjectPosY[i] += trackingObjectSpeedY[i] + accel;
-        if (trackingObjectState[i] == 0 || trackingObjectPosX[i] <= -1 || trackingObjectPosX[i] >= WIDTH ||
-            trackingObjectPosY[i] <= -1 || trackingObjectPosY[i] >= HEIGHT)
-            trackingObjectIsShift[i] = false;
+    bool inline ParticlesUpdate(PowderItem& powder_item)
+    {
+        powder_item._state--; // ttl // You also need to add speedfactor here.
+                                  // good luck there!
+
+        // Apply velocity.
+        powder_item._position_x += powder_item._speed_x;
+        powder_item._position_y += powder_item._speed_y;
+        if (powder_item._state == 0 ||
+            powder_item._position_x <= -1 || powder_item._position_x >= WIDTH ||
+            powder_item._position_y <= -1 || powder_item._position_y >= HEIGHT)
+            powder_item._is_shift = false;
+
+        return powder_item._is_shift;
     }
 
-    // ============= ЭФФЕКТ ИСТОЧНИКИ ===============
+    // ============= EFFECT SOURCES ===============
     // (c) SottNick
-    // такое себе зрелище
+    // Such a spectacle
 
-    void fountainsDrift(uint8_t j)
+    void FountainsDrift(uint8_t j)
     {
-        // float shift = random8()
-        boids[j].location.x += boids[j].velocity.x + accel;
-        boids[j].location.y += boids[j].velocity.y + accel;
-        if (boids[j].location.x + boids[j].velocity.x < 0)
+        Boid&boid = boids[j];
+        boid.location.x += boid.velocity.x;
+        boid.location.y += boid.velocity.y;
+        if (boid.location.x + boid.velocity.x < 0)
         {
-            // boids[j].location.x = WIDTH - 1 + boids[j].location.x;
-            boids[j].location.x = -boids[j].location.x;
-            boids[j].velocity.x = -boids[j].velocity.x;
+            // boid.location.x = WIDTH - 1 + boid.location.x;
+            boid.location.x = -boid.location.x;
+            boid.velocity.x = -boid.velocity.x;
         }
-        if (boids[j].location.x > WIDTH - 1)
+        if (boid.location.x > WIDTH - 1)
         {
-            // boids[j].location.x = boids[j].location.x + 1 - WIDTH;
-            boids[j].location.x = WIDTH + WIDTH - 2 - boids[j].location.x;
-            boids[j].velocity.x = -boids[j].velocity.x;
+            // boid.location.x = boid.location.x + 1 - WIDTH;
+            boid.location.x = WIDTH + WIDTH - 2 - boid.location.x;
+            boid.velocity.x = -boid.velocity.x;
         }
-        if (boids[j].location.y < 0)
+        if (boid.location.y < 0)
         {
-            // boids[j].location.y = HEIGHT - 1 + boids[j].location.y;
-            boids[j].location.y = -boids[j].location.y;
-            boids[j].velocity.y = -boids[j].velocity.y;
+            // boid.location.y = HEIGHT - 1 + boid.location.y;
+            boid.location.y = -boid.location.y;
+            boid.velocity.y = -boid.velocity.y;
         }
-        if (boids[j].location.y > HEIGHT - 1)
+        if (boid.location.y > HEIGHT - 1)
         {
-            // boids[j].location.y = boids[j].location.y + 1 - HEIGHT;
-            boids[j].location.y = HEIGHT + HEIGHT - 2 - boids[j].location.y;
-            boids[j].velocity.y = -boids[j].velocity.y;
+            // boid.location.y = boid.location.y + 1 - HEIGHT;
+            boid.location.y = HEIGHT + HEIGHT - 2 - boid.location.y;
+            boid.velocity.y = -boid.velocity.y;
         }
     }
 
-    void fountainsEmit(uint8_t i)
+    void FountainsEmit(PowderItem& powder_item)
     {
         if (hue++ & 0x01)
             hue2 += 4;
 
         uint8_t j = random8(enlargedObjectNUM);
-        fountainsDrift(j);
-        trackingObjectPosX[i] = boids[j].location.x;
-        trackingObjectPosY[i] = boids[j].location.y;
+        FountainsDrift(j);
+        powder_item._position_x = boids[j].location.x;
+        powder_item._position_y = boids[j].location.y;
 
-        trackingObjectSpeedX[i] = ((float)random8() - 127.) / 512.; // random(_hVar)-_constVel; // particle->vx
-        trackingObjectSpeedY[i] =
-            sqrt(0.0626 - trackingObjectSpeedX[i] *
-                              trackingObjectSpeedX[i]); // sqrt(pow(_constVel,2)-pow(trackingObjectSpeedX[i],2));
-                                                        // // particle->vy зависит от
+        powder_item._speed_x = (random8() - 127.f) / 512.f;
+        powder_item._speed_y =
+            sqrtf(0.0626f - powder_item._speed_x * powder_item._speed_x);
 
-        const auto kScalingFactor = 1.25;
-        trackingObjectSpeedX[i] *= kScalingFactor;
-        trackingObjectSpeedY[i] *= kScalingFactor;
+        const auto kScalingFactor = 1.25f;
+        powder_item._speed_x *= kScalingFactor;
+        powder_item._speed_y *= kScalingFactor;
 
         if (random8(2U))
         {
-            trackingObjectSpeedY[i] = -trackingObjectSpeedY[i];
+            powder_item._speed_y = -powder_item._speed_y;
         }
-        trackingObjectState[i] = random8(50, 250); // random8(minLife, maxLife);// particle->ttl
+        powder_item._state = random8(50, 250);
+
         if (Speed & 0x01)
-            trackingObjectHue[i] = hue2; // (counter/2)%255; // particle->hue
+            powder_item._hue = hue2;
         else
-            trackingObjectHue[i] = boids[j].colorIndex; // random8();
-        trackingObjectIsShift[i] = true;                // particle->isAlive
+            powder_item._hue = boids[j].colorIndex;
+        powder_item._is_shift = true; // particle->isAlive
     }
 
   public:
@@ -189,60 +205,50 @@ class PatternSMBlurringColors : public LEDStripEffect
     {
         g()->Clear();
 
-        enlargedObjectNUM = (Scale + 5U); // / 99.0 * (AVAILABLE_BOID_COUNT ) ;
+        enlargedObjectNUM = (Scale + 5U); // / 99.0 * (AVAILABLE_BOID_COUNT) ;
         if (enlargedObjectNUM > AVAILABLE_BOID_COUNT)
             enlargedObjectNUM = AVAILABLE_BOID_COUNT;
 
-        // deltaValue = 10; // количество зарождающихся частиц за 1 цикл
-        deltaValue =
-            trackingOBJECT_MAX_COUNT / (sqrt(CENTER_X_MAJOR * CENTER_X_MAJOR + CENTER_Y_MAJOR * CENTER_Y_MAJOR) * 4U) +
-            1U; // 4 - это потому что за 1 цикл частица пролетает ровно четверть
-                // расстояния между 2мя соседними пикселями
+        deltaValue = powder_item_max_count /
+            (sqrt(CENTER_X_MAJOR * CENTER_X_MAJOR + CENTER_Y_MAJOR * CENTER_Y_MAJOR) * 4U) + 1U;
+            // 4 - this is because in 1 cycle the particle flies exactly a
+            // quarter the distance between 2 neighboring pixels
 
-        for (int i = 0; i < trackingOBJECT_MAX_COUNT; i++)
-            trackingObjectIsShift[i] = false;
+        for (auto& powder_item : _powder_items)
+            powder_item.Clear();
 
         for (int j = 0; j < enlargedObjectNUM; j++)
         {
-            boids[j] = Boid(random8(WIDTH), random8(HEIGHT));
-            // boids[j].location.x = random8(WIDTH);
-            // boids[j].location.y = random8(HEIGHT);
-            boids[j].velocity.x = 1; //((float)random8()-127.)/512.;
-            boids[j].velocity.y = 1; // sqrt(0.0626-boids[j].velocity.x*boids[j].velocity.x) /  8.; //
-                                     // скорость источников в восемь раз ниже, чем скорость частиц
-            // boids[j].velocity.x /= 8.; // скорость источников в восемь раз ниже,
-            // чем скорость частиц if(random8(10U))
-            //   boids[j].velocity.y = -boids[j].velocity.y;
-            // boids[j].colorIndex += random8();
+            auto boid = Boid(random8(WIDTH), random8(HEIGHT));
+            boid.velocity.x = 1;
+            boid.velocity.y = 1;
+
+            boids[j] = boid;
         }
     }
 
     void Draw() override
     {
-        step = deltaValue; //счётчик количества частиц в очереди на зарождение в
-                           //этом цикле
-        // dimAll(10);
+        step = deltaValue; // counter of the number of particles in the
+                           // queue for nucleation in this loop
         g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 0, 27);
+
         // go over particles and update matrix cells on the way
-        for (int i = 0; i < trackingOBJECT_MAX_COUNT; i++)
+        for (auto& powder_item : _powder_items)
         {
-            if (!trackingObjectIsShift[i] && step)
+            if (!powder_item._is_shift && step)
             {
-                // emitter->emit(&particles[i], this->g);
-                fountainsEmit(i);
+                FountainsEmit(powder_item);
                 step--;
             }
-            if (trackingObjectIsShift[i])
-            { // particle->isAlive
-                // particles[i].update(this->g);
-                particlesUpdate2(i);
+
+            if (powder_item._is_shift && ParticlesUpdate(powder_item)) {
 
                 // generate RGB values for particle
-                CRGB baseRGB = CHSV(trackingObjectHue[i], 255, 255); // particles[i].hue
+                CRGB baseRGB = CHSV(powder_item._hue, 255, 255);
 
-                // baseRGB.fadeToBlackBy(255-trackingObjectState[i]);
-                baseRGB.nscale8(trackingObjectState[i]); // эквивалент
-                drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB);
+                baseRGB.nscale8(powder_item._state); // equivalent
+                drawPixelXYF(powder_item._position_x, powder_item._position_y, baseRGB);
             }
         }
     }

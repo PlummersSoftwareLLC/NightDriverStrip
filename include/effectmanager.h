@@ -67,7 +67,6 @@ class  EffectManager : public IJSONSerializable
     uint _effectInterval = 0;
     bool _bPlayAll;
     bool _bShowVU = true;
-    CRGB lastManualColor = CRGB::Red;
     bool _clearTempEffectWhenExpired = false;
     bool _newFrameAvailable = false;
     int _effectSetVersion = 1;
@@ -83,11 +82,14 @@ class  EffectManager : public IJSONSerializable
         {
             _clearTempEffectWhenExpired = true;
 
-            // This is a hacky way to ensure that we start the correct effect after the temporary one.
+            // This ensures that we start the correct effect after the temporary one.
             //   The switching to the next effect is taken care of by NextEffect(), which starts with
-            //   increasing _iCurrentEffect. We therefore need to decrease it here, to make sure that
-            //   the first effect after the temporary one is the one we want (either the then current
-            //   one when the chip was powered off, or the one at index 0).
+            //   increasing _iCurrentEffect. We therefore need to set it to the previous effect, to
+            //   make sure that the first effect after the temporary one is the one we want (either the
+            //   then current one when the chip was powered off, or the one at index 0).
+            if (_iCurrentEffect == 0)
+                _iCurrentEffect = EffectCount();
+
             _iCurrentEffect--;
         }
     }
@@ -294,41 +296,18 @@ public:
     }
 
     // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.
+    virtual bool ShowVU(bool bShow);
+    virtual bool IsVUVisible() const;
 
-    virtual bool ShowVU(bool bShow)
-    {
-        bool bResult = _bShowVU;
-        debugI("Setting ShowVU to %d\n", bShow);
-        _bShowVU = bShow;
-
-        // Erase any exising pixels since effects don't all clear each frame
-        if (!bShow)
-            _gfx[0]->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
-
-        return bResult;
-    }
-
-    virtual bool IsVUVisible() const
-    {
-        return _bShowVU && GetCurrentEffect().CanDisplayVUMeter();
-    }
-
-    // SetGlobalColor
+    // ApplyGlobalColor
     //
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
     // which takes drawing precedence
 
-    void SetGlobalColor(CRGB color);
+    void ApplyGlobalColor(CRGB color);
+    void ApplyGlobalPaletteColors();
 
-    void ClearRemoteColor(bool retainRemoteEffect = false)
-    {
-        if (!retainRemoteEffect)
-            _tempEffect = nullptr;
-
-        #if (USE_HUB75)
-            g()->PausePalette(false);
-        #endif
-    }
+    void ClearRemoteColor(bool retainRemoteEffect = false);
 
     void StartEffect()
     {
@@ -343,7 +322,6 @@ public:
         #endif
 
         effect->Start();
-
         _effectStartTime = millis();
     }
 
@@ -384,7 +362,7 @@ public:
             effect->SetEnabled(false);
 
             if (!AreEffectsEnabled())
-                SetGlobalColor(CRGB::Black);
+                ApplyGlobalColor(CRGB::Black);
 
             if (!skipSave)
                 SaveEffectManagerConfig();
@@ -491,6 +469,10 @@ public:
 
     void SetInterval(uint interval, bool skipSave = false)
     {
+        // Reject/ignore intervals smaller than a second, but allow 0 (infinity)
+        if (interval > 0 && interval < 1000)
+            return;
+
         _effectInterval = interval;
 
         if (!skipSave)
@@ -543,7 +525,6 @@ public:
         _effectStartTime = millis();
 
         StartEffect();
-
         SaveCurrentEffectIndex();
     }
 
@@ -646,22 +627,7 @@ public:
         SaveCurrentEffectIndex();
     }
 
-    bool Init()
-    {
-
-        for (int i = 0; i < _vEffects.size(); i++)
-        {
-            debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
-            if (false == _vEffects[i]->Init(_gfx))
-            {
-                debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
-                return false;
-            }
-            debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
-        }
-        debugV("First Effect: %s", GetCurrentEffectName().c_str());
-        return true;
-    }
+    bool Init();
 
     // EffectManager::Update
     //

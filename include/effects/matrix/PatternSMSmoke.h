@@ -7,14 +7,14 @@
 class PatternSMSmoke : public LEDStripEffect
 {
 private:
-  uint8_t Scale = 50; // 1-100. SettingA
+  static constexpr uint8_t Scale = 50; // 1-100. Setting
 
   static constexpr int WIDTH = MATRIX_WIDTH;
   static constexpr int HEIGHT = MATRIX_HEIGHT;
 
-  uint8_t hue, hue2;           // постепенный сдвиг оттенка или какой-нибудь другой
-                               // цикличный счётчик
-  uint8_t deltaHue, deltaHue2; // ещё пара таких же, когда нужно много
+  uint8_t hue {0}, hue2 {0};   // gradual shift in hue or some other
+                               // cyclic counter
+  uint8_t deltaHue {0}, deltaHue2 {0};
 
 public:
   PatternSMSmoke()
@@ -25,6 +25,11 @@ public:
   PatternSMSmoke(const JsonObjectConst &jsonObject)
       : LEDStripEffect(jsonObject)
   {
+  }
+
+  virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
+  {
+      return 24;
   }
 
   void Start() override
@@ -64,18 +69,12 @@ public:
     // Two diagonal (note Y is used for height AND X offset)
     // "wipers", of different colors. Each leaves a
     // sky-written trailer of color.
-    // slew is used to make the lines look less mathematically diagonal
-    // and introduce some delay between color1 and color2. This gives a
-    // "tear" in the refresh and as a bonus, gives some 'pepper in fire'
-    // effect to he colors which gets quickly blended.
     for (uint8_t y = 0; y < HEIGHT; y++)
     {
-      uint8_t slew = random8(8) - 8/2 + 1;
-      uint8_t slew2 = random8(8) - 8/2 + 1;
-      g()->leds[XY((deltaHue + y + slew + 1U) % WIDTH, HEIGHT - 1U - y)] += color;
-      g()->leds[XY((deltaHue + y + slew2) % WIDTH, HEIGHT - 1U - y)] += color2; // color2
-      g()->leds[XY((deltaHue2 + y + slew2) % WIDTH, y)] += color;
-      g()->leds[XY((deltaHue2 + y + slew + 1U) % WIDTH, y)] += color2; // color2
+      g()->leds[XY((deltaHue + y + 1U) % WIDTH, HEIGHT - 1U - y)] += color;
+      g()->leds[XY((deltaHue + y) % WIDTH, HEIGHT - 1U - y)] += color2; // color2
+      g()->leds[XY((deltaHue2 + y) % WIDTH, y)] += color;
+      g()->leds[XY((deltaHue2 + y + 1U) % WIDTH, y)] += color2; // color2
     }
 
     EVERY_N_MILLISECONDS(100)

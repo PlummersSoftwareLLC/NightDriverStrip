@@ -25,10 +25,6 @@
                     "name": "Ledstrip"
                 },
                 {
-                    "tag": "ttgo",
-                    "name": "TTGO"
-                },
-                {
                     "tag": "umbrella",
                     "name": "Umbrella"
                 }
@@ -87,6 +83,17 @@
                 {
                     "tag": "heltecv2demo",
                     "name":"Demo"
+                }
+            ]
+        },
+        {
+            "tag": "ttgo",
+            "chipfamily": "ESP32",
+            "name": "LilyGO TTGO",
+            "projects": [
+                {
+                    "tag": "ttgo",
+                    "name": "TTGO"
                 }
             ]
         },

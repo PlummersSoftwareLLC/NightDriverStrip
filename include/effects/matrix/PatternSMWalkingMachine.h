@@ -39,6 +39,9 @@ class PatternSMWalkingMachine : public LEDStripEffect
 
     void drawCircleF(float cx, float cy, float radius, CRGB col)
     {
+        // This is either genius or crazy; it walks a box around the circle
+        // and fills in everything that's inside the radius!
+
         uint8_t rad = radius;
         for (int8_t y = -radius; y < radius; y += 1)
         {
@@ -48,11 +51,6 @@ class PatternSMWalkingMachine : public LEDStripEffect
                     drawPixelXYF(cx + x, cy + y, col);
             }
         }
-    }
-
-    static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max)
-    {
-        return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
     }
 
     void drawLineF(float x1, float y1, float x2, float y2, const CRGB &col1, const CRGB &col2)
@@ -100,6 +98,11 @@ class PatternSMWalkingMachine : public LEDStripEffect
     {
     }
 
+    virtual bool RequiresDoubleBuffering() const
+    {
+        return false;           // Clears every frame, so doesn't need the old buffer copy
+    }
+
     void Start() override
     {
         g()->Clear();
@@ -111,11 +114,8 @@ class PatternSMWalkingMachine : public LEDStripEffect
 
         for (uint8_t i = 0; i < 7; i++)
         {
-            dot[i].posX =
-                (beatsin16(4, (MATRIX_WIDTH >> 3) << 8, (MATRIX_WIDTH - (MATRIX_WIDTH >> 3) - 1) << 8, i * 8192, i * 8192)) / 255.f;
-            dot[i].posY = (beatsin16(4, (MATRIX_HEIGHT >> 3) << 8, (MATRIX_HEIGHT - (MATRIX_HEIGHT >> 3) - 1) << 8, i * 4096,
-                                     16384 + i * 8192)) /
-                          255.f;
+            dot[i].posX = (beatsin16(4, (MATRIX_WIDTH >> 3) << 8, (MATRIX_WIDTH - (MATRIX_WIDTH >> 3) - 1) << 8, i * 8192, i * 8192)) / 255.f;
+            dot[i].posY = (beatsin16(4, (MATRIX_HEIGHT >> 3) << 8, (MATRIX_HEIGHT - (MATRIX_HEIGHT >> 3) - 1) << 8, i * 4096, 16384 + i * 8192)) /  255.f;
         }
         for (uint8_t i = 0; i < 7; i++)
         {

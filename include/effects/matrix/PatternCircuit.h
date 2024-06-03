@@ -58,6 +58,35 @@
 #ifndef PatternCircuit_H
 #define PatternCircuit_H
 
+// Description: This file defines the PatternCircuit class, a subclass of LEDStripEffect, 
+//              designed to create a dynamic 'circuit-like' visual effect on an LED matrix.
+//              The effect simulates 'snakes' of light moving across the matrix, reminiscent 
+//              of electrical currents flowing through a circuit.
+//
+//              The PatternCircuit class uses a 'Path' structure to define the trajectory and 
+//              appearance of each snake. Each Path contains a series of 'pixels', representing 
+//              the segments of the snake, and a 'direction' indicating the movement of the snake.
+//
+//              The main features of the PatternCircuit class include:
+//
+//              - Multiple snake paths: Multiple instances of Path are created to simulate 
+//                several snakes moving independently on the matrix.
+//
+//              - Randomized movement: The snakes change direction randomly, enhancing the 
+//                dynamic feel of the effect.
+//
+//              - Color and brightness variation: Each segment of a snake has a different color 
+//                and brightness, fading towards the tail, creating a sense of depth and movement.
+//
+//              - Reset mechanism: The entire pattern resets at a regular interval, ensuring 
+//                the effect remains lively and unpredictable.
+//
+//              The Draw() method is the heart of the PatternCircuit effect. It periodically resets 
+//              the paths, fades random pixels to create a dynamic background, and updates the 
+//              position and direction of each snake. The draw method of each Path instance is 
+//              responsible for rendering the snake on the LED matrix, using a palette of colors 
+//              to create a gradient effect along the length of the snake.
+
 class PatternCircuit : public LEDStripEffect
 {
 private:
@@ -157,7 +186,7 @@ private:
 
     void construct()
     {
-        snakes = new Path[snakeCount];
+        snakes = (Path *) PreferPSRAMAlloc(snakeCount * sizeof(Path)); //
     }
 
 public:
@@ -173,7 +202,7 @@ public:
 
     ~PatternCircuit()
     {
-        delete[] snakes;
+        free(snakes);
     }
 
     unsigned long msStart;

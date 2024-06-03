@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="img-no-display">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
+<title>NightDriverLED ESP32 Installation Wizard</title>
+<style>
+html {
+  height: 100%;
+  overflow: auto;
+}
+body {
+  background: black no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  color: white;
+  font-family:Arial, Helvetica, sans-serif
+}
+div#outer {
+  display: table;
+  height: 100%;
+  width: 100%;
+}
+div#container {
+	display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+}
+#paragraph {
+	padding: 20px 0 30px 40px;
+	margin: 0 auto;
+	text-align: left;
+	width: 560px;
+	color: #146b9d;
+	font-size: 11pt;
+	font-weight: bold;
+	font-family: Verdana;
+}
+.invisible {
+  visibility: hidden;
+}
+</style>
+
+ <script
+  src="esp32webtools/install-button.js"
+></script>
+
+</head>
+<body>
+    <center>
+
+    <div class="content">
+      <img src="assets/NightDriverLogo-small.png" style="width: 640px; height: 380px" />
+      <h1>NightDriverLED ESP32 Installation Wizard</h1>
+      <label for="devices-dropdown">Select your device type:</label>
+      <select id="devices-dropdown"></select>
+
+      <br/><br/>
+
+      <label for="projects-dropdown">Then, select a project:</label>
+      <select id="projects-dropdown" disabled></select>
+
+      <br/><br/>
+
+      <em><small>(Enabled features: $$FEATURE_LEGEND$$)</small></em>
+
+      <br/><br/>
+
+      <div id="connect-message">After that, you can connect to the device using the button that appears below.</div>
+
+      <!--
+      <br><br>
+
+      <label for="bitrates-dropdown">Optionally, select a different flash speed:</label>
+      <select id="bitrates-dropdown">
+        <option value="115200" selected>115,200 bps</option>
+        <option value="921600">921,600 bps</option>
+        <option value="1500000">1,500,000 bps</option>
+      </select>
+      -->
+
+      <p class="button-row" align="center">
+        <esp-web-install-button class="invisible"></esp-web-install-button>
+      </p>
+      <b>Note:</b> if the web server is enabled in the image you're flashing,
+      it can take some time for it to come up after the device connects to WiFi for the first time.
+    </div>
+
+    </center>
+
+    <script>
+      const devicesDropdown = document.getElementById("devices-dropdown");
+      const projectsDropdown = document.getElementById("projects-dropdown");
+      // const bitratesDropdown = document.getElementById("bitrates-dropdown");
+      const connectMessage = document.getElementById("connect-message");
+      const installButton = document.querySelector('esp-web-install-button');
+      let devices = [];
+
+      // This is made global to allow the modified code in install-button.js to read its value.
+      // window.selectedBaudRate = parseInt(bitratesDropdown.value);
+      window.selectedBaudRate = 115200; // statically set to 115200 baud, because other values don't work
+
+      // Load JSON file
+      fetch("web_projects.json")
+        .then(response => response.json())
+        .then(data => {
+          devices = data.devices;
+          populateDevicesDropdown(devices);
+        });
+
+      // Show/hide connect message and connect button, dependent on if a manifest file name is passed
+      function setManifest(manifest) {
+        if (manifest !== undefined) {
+          installButton.manifest = manifest;
+          if (!connectMessage.classList.contains('invisible'))
+            connectMessage.classList.add('invisible');
+          installButton.classList.remove('invisible');
+        }
+        else {
+          delete installButton.manifest;
+          connectMessage.classList.remove('invisible');
+          if (!installButton.classList.contains('invisible'))
+            installButton.classList.add('invisible');
+        }
+      }
+
+      // Show connect message and hide connect button
+      function clearManifest() {
+        setManifest(undefined);
+      }
+
+      // Set or clear manifest based on project dropdown selection
+      function updateManifest() {
+        let tag = projectsDropdown.value;
+
+        if (tag)
+          setManifest(`manifests/manifest_${tag}.json`);
+        else
+          clearManifest();
+      }
+
+      // Populate devices dropdown
+      function populateDevicesDropdown(devices) {
+        if (devices.length > 1) {
+          let option = document.createElement("option");
+          option.value = "";
+          option.text = "-- Select device --";
+          devicesDropdown.appendChild(option);
+        }
+
+        for (let device of devices) {
+          let option = document.createElement("option");
+          option.value = device.tag;
+          option.text = device.name;
+          devicesDropdown.appendChild(option);
+        }
+      }
+
+      // Populate projects dropdown
+      function populateProjectsDropdown(projects) {
+        projectsDropdown.innerHTML = "";
+
+        if (projects === undefined) {
+          projectsDropdown.disabled = true;
+        }
+        else {
+          if (projects.length > 1) {
+            let option = document.createElement("option");
+            option.value = "";
+            option.text = "-- Select project --";
+            projectsDropdown.appendChild(option);
+          }
+
+          for (let project of projects) {
+            let option = document.createElement("option");
+            option.value = project.tag;
+            option.text = project.name;
+            projectsDropdown.appendChild(option);
+          }
+
+          projectsDropdown.disabled = false;
+        }
+
+        updateManifest();
+      }
+
+      devicesDropdown.addEventListener("change", function() {
+        let tag = devicesDropdown.value;
+        let selectedDevice = devices.find(device => device.tag === tag);
+
+        populateProjectsDropdown(selectedDevice?.projects);
+      });
+
+      projectsDropdown.addEventListener("change", updateManifest);
+
+      /*
+      bitratesDropdown.addEventListener("change", function() {
+        window.selectedBaudRate = parseInt(bitratesDropdown.value);
+      });
+      */
+    </script>
+  </body>
+  </html>

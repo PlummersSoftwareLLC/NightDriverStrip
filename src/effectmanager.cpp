@@ -40,8 +40,8 @@
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 extern std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
-static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = std::numeric_limits<size_t>::max();
-static DRAM_ATTR size_t l_CurrentEffectWriterIndex = std::numeric_limits<size_t>::max();
+static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
+static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
 
 //
 // EffectManager initialization functions
@@ -73,9 +73,11 @@ void InitEffectsManager()
 
     LoadEffectFactories();
 
-    l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        [] { SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()); }
-    );
+    l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter([]()
+    {
+        if (!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
+            throw std::runtime_error("Effects serialization failed");
+    });
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
     std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
@@ -89,6 +91,8 @@ void InitEffectsManager()
             g_ptrSystem->EffectManager().DeserializeFromJSON(jsonObject.value());
         else
             g_ptrSystem->SetupEffectManager(jsonObject.value(), g_ptrSystem->Devices());
+
+        pJsonDoc->clear();
     }
     else
     {
@@ -209,18 +213,20 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
 
     auto& sourceEffect = _vEffects[index];
 
-    std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
-
-    SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
-        [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); });
-
     auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
     auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
 
     if (factoryEntry == jsonEffectFactories.end())
         return nullptr;
 
+    std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
+
+    assert(SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
+        [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); }));
+
     auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
+
+    ptrJsonDoc->clear();
 
     if (!copiedEffect)
         return nullptr;
@@ -294,22 +300,13 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 
 // GetSpectrumAnalyzer
 //
-// A little factory that makes colored spectrum analyzers to be used by the remote control
-// colored buttons
-
-std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color1, CRGB color2)
-{
-    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color1, color2));
-    if (object->Init(g_ptrSystem->Devices()))
-        return object;
-    throw std::runtime_error("Could not initialize new spectrum analyzer, two color version!");
-}
+// A little factory that makes colored spectrum analyzers
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
     CHSV hueColor = rgb2hsv_approximate(color);
     CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2));
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2), true);
     if (object->Init(g_ptrSystem->Devices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -319,52 +316,89 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 #include "effects/strip/fireeffect.h"
 
-void EffectManager::SetGlobalColor(CRGB color)
+bool EffectManager::Init()
+{
+    for (int i = 0; i < _vEffects.size(); i++)
+    {
+        debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
+        if (false == _vEffects[i]->Init(_gfx))
+        {
+            debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
+            return false;
+        }
+        debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
+    }
+    debugV("First Effect: %s", GetCurrentEffectName().c_str());
+
+    if (g_ptrSystem->DeviceConfig().ApplyGlobalColors())
+        ApplyGlobalPaletteColors();
+
+    return true;
+}
+
+bool EffectManager::ShowVU(bool bShow)
+{
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    bool bResult = deviceConfig.ShowVUMeter();
+    debugI("Setting ShowVU to %d\n", bShow);
+    deviceConfig.SetShowVUMeter(bShow);
+
+    // Erase any exising pixels since effects don't all clear each frame
+    if (!bShow)
+        _gfx[0]->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
+
+    return bResult;
+}
+
+bool EffectManager::IsVUVisible() const
+{
+    return g_ptrSystem->DeviceConfig().ShowVUMeter() && GetCurrentEffect().CanDisplayVUMeter();
+}
+
+
+void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
+{
+    if (!retainRemoteEffect)
+        _tempEffect = nullptr;
+
+    #if (USE_HUB75)
+        g()->PausePalette(false);
+    #endif
+
+    g_ptrSystem->DeviceConfig().ClearApplyGlobalColors();
+}
+
+void EffectManager::ApplyGlobalColor(CRGB color)
 {
     debugI("Setting Global Color");
 
-    CRGB oldColor = lastManualColor;
-    lastManualColor = color;
+    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    deviceConfig.SetColorSettings(color, deviceConfig.GlobalColor());
 
+    ApplyGlobalPaletteColors();
+}
+
+void EffectManager::ApplyGlobalPaletteColors()
+{
     #if (USE_HUB75)
-            auto pMatrix = g();
+        auto  pMatrix = g();
+        auto& deviceConfig = g_ptrSystem->DeviceConfig();
+        auto& globalColor = deviceConfig.GlobalColor();
+        auto& secondColor = deviceConfig.SecondColor();
 
-            // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
-            // based from where those colors sit on the spectrum
-
-            if (oldColor == color)
-            {
-                CHSV hsv = rgb2hsv_approximate(color);
-                CRGB color2 = CRGB(CHSV(hsv.hue + 64, 255, 255));
-                pMatrix->setPalette(CRGBPalette16(color, color2));
-            }
-            else
-            {
-                // But if we have two different colors, we create a palettte spread between them
-                pMatrix->setPalette(CRGBPalette16(oldColor, color));
-            }
-            pMatrix->PausePalette(true);
-    #else
-        std::shared_ptr<LEDStripEffect> effect;
-
-        if (color == CRGB(CRGB::White))
-            effect = make_shared_psram<ColorFillEffect>(CRGB::White, 1);
-        else
-
-            #if ENABLE_AUDIO
-                #if SPECTRUM
-                    effect = GetSpectrumAnalyzer(color, oldColor);
-                #else
-                    effect = make_shared_psram<MusicalPaletteFire>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-                #endif
-            #else
-                effect = make_shared_psram<PaletteFlameEffect>("Custom Fire", CRGBPalette16(CRGB::Black, color, CRGB::Yellow, CRGB::White), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
-            #endif
-
-        if (effect->Init(_gfx))
+        // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
+        // based from where those colors sit on the spectrum
+        if (secondColor == globalColor)
         {
-            _tempEffect = effect;
-            StartEffect();
+            CHSV hsv = rgb2hsv_approximate(globalColor);
+            pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
         }
+        else
+        {
+            // But if we have two different colors, we create a palettte spread between them
+            pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
+        }
+
+        pMatrix->PausePalette(true);
     #endif
 }

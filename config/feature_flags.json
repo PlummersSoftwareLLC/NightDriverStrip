@@ -1,0 +1,58 @@
+{
+    "wifi": {
+        "label": "WiFi",
+        "define": "ENABLE_WIFI",
+        "letter": "N",
+        "value": "1",
+        "show": true
+    },
+    "webserver": {
+        "label": "webserver",
+        "define": "ENABLE_WEBSERVER",
+        "letter": "W",
+        "value": "1",
+        "show": true
+    },
+    "socketserver": {
+        "label": "socket server",
+        "define": "INCOMING_WIFI_ENABLED",
+        "letter": "S",
+        "value": "1",
+        "show": true
+    },
+    "colorserver": {
+        "label": "color data server",
+        "define": "COLORDATA_SERVER_ENABLED",
+        "letter": "C",
+        "value": "1",
+        "show": true
+    },
+    "ota": {
+        "label": "OTA updates",
+        "define": "ENABLE_OTA",
+        "letter": "O",
+        "value": "1",
+        "show": false
+    },
+    "remote": {
+        "label": "IR remote control",
+        "define": "ENABLE_REMOTE",
+        "letter": "R",
+        "value": "1",
+        "show": true
+    },
+    "audio": {
+        "label": "incoming audio",
+        "define": "ENABLE_AUDIO",
+        "letter": "A",
+        "value": "1",
+        "show": false
+    },
+    "ntp": {
+        "label": "NTP time synchronization",
+        "define": "ENABLE_NTP",
+        "letter": "T",
+        "value": "1",
+        "show": false
+    }
+}

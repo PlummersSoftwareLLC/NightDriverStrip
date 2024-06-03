@@ -2,6 +2,7 @@
 .vscode/**
 NightDriverStrip.code-workspace
 src/uzlib/src/*.o
+src/-defines-.cpp
 .history
 include/secrets.h
 lib/*
@@ -15,7 +16,10 @@ WebInstaller/assets/**
 WebInstaller/firmware/**
 WebInstaller/manifests/**
 WebInstaller/web_projects.json
+WebInstaller/index.html
 .idea/**
 tools/__pycache__
 site/yarn-error.log
 site/dist
+**/custom_*.h
+custom_*.ini

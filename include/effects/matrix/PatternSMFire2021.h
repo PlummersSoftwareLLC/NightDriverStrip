@@ -12,7 +12,7 @@ class PatternSMFire2021 : public LEDStripEffect
 
     uint8_t pcnt;              // какой-то счётчик какого-то прогресса
     uint8_t deltaValue;        // просто повторно используемая переменная
-    uint16_t ff_x, ff_y, ff_z; // большие счётчики
+    uint16_t ff_x {0} , ff_y {0} , ff_z {0} ; // большие счётчики
     uint8_t step; // какой-нибудь счётчик кадров или последовательностей операций
 
     const TProgmemRGBPalette16 *curPalette;
@@ -58,14 +58,9 @@ class PatternSMFire2021 : public LEDStripEffect
 
                 // Get the flame color using the black body radiation approximation, but when the palette is paused
                 // we make flame in that base color instead of the normal red
-
-                CRGB color = GetBlackBodyHeatColor(Col/255.0f, g()->IsPalettePaused() ? 
-                                  g()->ColorFromCurrentPalette(0, Bri) 
-                                : CRGB::Red).fadeToBlackBy(255-Bri);
-
                 // NightDriver mod - invert Y argument.
 
-                nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)], color, pcnt);
+                nblend(g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)], GetBlackBodyHeatColor(Col/255.0f, g()->ColorFromCurrentPalette(0, Bri)).fadeToBlackBy(255-Bri), pcnt);
             }
         }
 

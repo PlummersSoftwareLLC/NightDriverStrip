@@ -35,6 +35,7 @@ import glob
 import json
 import shutil
 import subprocess
+import show_features
 
 class Dirs:
     config = 'config'
@@ -51,14 +52,13 @@ class Manifest:
     merged_template = 'manifest_template_merged.json'
 
 webprojects_file = 'web_projects.json'
+feature_flags_file = 'feature_flags.json'
 merged_image = 'merged_image.bin'
 globals_h = 'globals.h'
+index_template_file = 'installer_index.html'
+index_file = 'index.html'
 
-# Do some ground work to set up the web installer directory, starting with the project config...
-webprojects_path = os.path.join(Dirs.config, webprojects_file)
-shutil.copy(webprojects_path, Dirs.webinstaller)
-
-# ...then the installer image assets...
+# Do some ground work to set up the web installer directory, starting with the installer image assets...
 assets_target_dir = os.path.join(Dirs.webinstaller, Dirs.assets)
 if not os.path.exists(assets_target_dir):
     os.makedirs(assets_target_dir)
@@ -92,10 +92,13 @@ with open(os.path.join(Dirs.include, globals_h), "r", encoding='utf-8') as f:
 # Create a neat 3-digit version number
 version = '0' * (3 - len(version)) + version
 
+with open(os.path.join(Dirs.config, feature_flags_file), "r", encoding='utf-8') as f:
+    known_features = json.load(f)
+
 # Now read the device and project config
-with open(webprojects_path, "r", encoding='utf-8') as f:
-    json_data = json.load(f)
-    devices = json_data['devices']
+with open(os.path.join(Dirs.config, webprojects_file), "r", encoding='utf-8') as f:
+    webprojects = json.load(f)
+    devices = webprojects['devices']
 
 # Find out how many projects we're going to build
 projectCount = 0
@@ -104,6 +107,7 @@ for device in devices:
     projectCount += len(device['projects'])
 
 currentProject = 0
+used_features = []
 
 # Start building images!
 for device in devices:
@@ -138,9 +142,12 @@ for device in devices:
         build_dir = os.path.join('.pio', 'build', tag)
 
         if merge_firmware:
-            # Copy only the merged image from the build directory
-            print('=== Copying merged firmware file ' + merged_image)
-            shutil.copy(os.path.join(build_dir, merged_image), firmware_target_dir)
+            image_source_path = os.path.join(build_dir, merged_image)
+            # If the merged image doesn't exist that means the build was effectively executed from cache. Which
+            # means in turn that the merged image should already be in its target location.
+            if (os.path.exists(image_source_path)):
+                print('=== Copying merged firmware file ' + merged_image)
+                shutil.copy(image_source_path, firmware_target_dir)
 
             template = merged_template
         else:
@@ -154,15 +161,50 @@ for device in devices:
 
             template = unmerged_template
 
+        manifest_file = Manifest.base + tag + Manifest.ext
+        print('=== Writing manifest file ' + manifest_file)
         manifest = template.replace('<name>', project['name'] + ' for ' + device_name)
         manifest = manifest.replace('<version>', version)
         manifest = manifest.replace('<chipfamily>', chip_family)
         manifest = manifest.replace('<tag>', tag)
 
-        manifest_file = Manifest.base + tag + Manifest.ext
-        print('=== Writing manifest file ' + manifest_file)
         with open(os.path.join(manifest_target_dir, manifest_file), 'w', encoding='utf-8') as f:
             f.write(manifest)
 
+        print('=== Computing feature flags')
+        feature_letters = []
+        for feature_tag in show_features.get_features(tag):
+            feature = known_features[feature_tag]
+            # Only report features we should
+            if feature['show']:
+                feature_letters.append(feature['letter'])
+                if feature_tag not in used_features:
+                    used_features.append(feature_tag)
+
+        if len(feature_letters) > 0:
+            project['name'] = project['name'] + ' (' + ','.join(feature_letters) + ')'
+
         print('=== Removing build directory ' + build_dir, flush = True)
         shutil.rmtree(build_dir)
+
+print('===')
+print('=' * 79)
+print('===')
+
+print('=== Writing web projects JSON file')
+with open(os.path.join(Dirs.webinstaller, webprojects_file), 'w', encoding='utf-8') as f:
+    json.dump(webprojects, fp=f)
+
+print('=== Writing index.html')
+legend_entries = []
+for feature_tag, feature in known_features.items():
+    if feature_tag in used_features:
+        legend_entries.append(feature['letter'] + ': ' + feature['label'])
+
+# Load template for index.html...
+with open(os.path.join(Dirs.config, index_template_file), "r", encoding='utf-8') as f:
+    index_template = f.read()
+
+# ...and write it with the feature legend injected
+with open(os.path.join(Dirs.webinstaller, index_file), 'w', encoding='utf-8') as f:
+    f.write(index_template.replace('$$FEATURE_LEGEND$$', ', '.join(legend_entries)))

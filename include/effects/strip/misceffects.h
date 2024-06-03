@@ -35,6 +35,7 @@
 #include "TJpg_Decoder.h"
 #endif
 #include "effects.h"
+#include "systemcontainer.h"
 
 // SimpleRainbowTestEffect
 //
@@ -209,10 +210,12 @@ protected:
     }
 };
 
-// RainbowFillEffect
+// ColorFillEffect
 //
-// Fills the spokes with a rainbow palette
-
+// Fills the pixels with a single color.
+// everyNth can be used to light some pixels with specified color, leaving the others unlit.
+// Unless a user chooses to ignore the global color, the global color will be used instead when
+// DeviceConfig().ApplyGlobalColors() returns true.
 
 class ColorFillEffect : public LEDStripEffect
 {
@@ -222,13 +225,15 @@ protected:
 
     int _everyNth;
     CRGB _color;
+    bool _ignoreGlobalColor;
 
   public:
 
-    ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10)
+    ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
       : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, "Color Fill"),
         _everyNth(everyNth),
-        _color(color)
+        _color(color),
+        _ignoreGlobalColor(ignoreGlobalColor)
     {
         debugV("Color Fill constructor");
     }
@@ -236,7 +241,8 @@ protected:
     ColorFillEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
         _everyNth(jsonObject[PTY_EVERYNTH]),
-        _color(jsonObject[PTY_COLOR].as<CRGB>())
+        _color(jsonObject[PTY_COLOR].as<CRGB>()),
+        _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
     {
         debugV("Color Fill JSON constructor");
     }
@@ -250,6 +256,7 @@ protected:
 
         jsonDoc[PTY_EVERYNTH] = _everyNth;
         jsonDoc[PTY_COLOR] = _color;
+        jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
 
         assert(!jsonDoc.overflowed());
 
@@ -260,7 +267,10 @@ protected:
     {
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);
-        fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
+        if (!_ignoreGlobalColor && g_ptrSystem->DeviceConfig().ApplyGlobalColors())
+          fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
+        else
+          fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
     }
 };
 
@@ -396,7 +406,9 @@ static const CRGB TwinkleColors[] =
     CRGB::Red,
     CRGB::Green,
     CRGB::Blue,
-    CRGB::White
+    CRGB::Blue,
+    CRGB::Purple,
+    CRGB::Yellow
 };
 #endif
 
@@ -451,40 +463,42 @@ class TwinkleEffect : public LEDStripEffect
     {
         EVERY_N_MILLISECONDS(_updateSpeed)
         {
-            if (litPixels.size() > _countToDraw)
+            while(litPixels.size() > _countToDraw)
             {
                 size_t i = litPixels.back();
                 litPixels.pop_back();
-                _GFX[0]->setPixel(i, CRGB::Black);
+                setPixelOnAllChannels(i, CRGB::Black);
             }
 
             // Pick a random pixel and put it in the TOP slot
-            int iNew = -1;
-            for (int iPass = 0; iPass < NUM_LEDS * 10; iPass++)
+            for (int iLoop = 0; iLoop < 2; iLoop++)
             {
-                size_t i = random(0, NUM_LEDS);
-                if (_GFX[0]->getPixel(i) != CRGB(0,0,0))
-                    continue;
-                if (litPixels.end() != find(litPixels.begin(), litPixels.end(), i))
-                    continue;
-                iNew = i;
-                break;
+              int iNew = -1;
+              for (int iPass = 0; iPass < NUM_LEDS * 20; iPass++)
+              {
+                  size_t i = random(0, NUM_LEDS);
+                  if (_GFX[0]->getPixel(i) != CRGB::Black)
+                      continue;
+                  if (litPixels.end() != find(litPixels.begin(), litPixels.end(), i))
+                      continue;
+                  iNew = i;
+                  break;
+              }
+              if (iNew == -1)             // No empty slot could be found!
+              {
+                  litPixels.clear();
+                  setAllOnAllChannels(0,0,0);
+                  return;
+              }
+              assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
+              setPixelOnAllChannels(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
+              litPixels.push_front(iNew);
             }
-            if (iNew == -1)             // No empty slot could be found!
-            {
-                litPixels.clear();
-                setAllOnAllChannels(0,0,0);
-                return;
-            }
-
-            assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
-            setPixelOnAllChannels(iNew, TwinkleColors[random(0, ARRAYSIZE(TwinkleColors))]);
-            litPixels.push_front(iNew);
         }
 
         EVERY_N_MILLISECONDS(20)
         {
-            fadeToBlackBy(FastLED.leds(), NUM_LEDS, _fadeFactor);
+            fadeAllChannelsToBlackBy(_fadeFactor);
         }
     }
 };

@@ -117,7 +117,8 @@ void SetupOTA(const String & strHostname)
         ArduinoOTA.setHostname(strHostname.c_str());
 
     ArduinoOTA
-        .onStart([] {
+        .onStart([]()
+        {
             g_Values.UpdateStarted = true;
 
             String type;
@@ -134,7 +135,8 @@ void SetupOTA(const String & strHostname)
             debugI("Start updating from OTA ");
             debugI("%s", type.c_str());
         })
-        .onEnd([] {
+        .onEnd([]()
+        {
             debugI("\nEnd OTA");
             g_Values.UpdateStarted = false;
         })
@@ -150,7 +152,7 @@ void SetupOTA(const String & strHostname)
                 #if USE_HUB75
                     auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
-                    pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
+//                    pMatrix->setLeds(_GFX[0]->GetMatrixBackBuffer());
                 #endif
             }
             else
@@ -637,10 +639,11 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
 #if COLORDATA_SERVER_ENABLED
     // ColorDataTaskEntry
     //
-    // The thread which serves requests for color data on port 49153
+    // The thread which serves requests for color data.
+
     void IRAM_ATTR ColorDataTaskEntry(void *)
     {
-        LEDViewer _viewer(12000);
+        LEDViewer _viewer(NetworkPort::ColorServer);
         int socket = -1;
 
         for(;;)
@@ -752,8 +755,8 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 }
             }
 
-            // If the reader container isn't available yet, we'll sleep for a second before we check again
-            if (!g_ptrSystem->HasNetworkReader())
+            // If the reader container isn't available yet or WiFi isn't up yet, we'll sleep for a second before we check again
+            if (!g_ptrSystem->HasNetworkReader() || !WiFi.isConnected())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
                 continue;

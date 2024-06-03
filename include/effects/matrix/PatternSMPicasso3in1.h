@@ -16,8 +16,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
                        // up. Scale -68 -2 == number of circles  *68=2, 69=3, 70=4, etc. 80
                        // up? SLOW
     static constexpr int trackingOBJECT_MAX_COUNT = 100U;
-    // максимальное количество отслеживаемых объектов (очень влияет на
-    // расход памяти)
+    // maximum number of tracked objects (greatly affects memory consumption)
     float trackingObjectPosX[trackingOBJECT_MAX_COUNT] {0};
     float trackingObjectPosY[trackingOBJECT_MAX_COUNT] {0};
     float trackingObjectSpeedX[trackingOBJECT_MAX_COUNT] {0};
@@ -27,11 +26,11 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT] {0};
     bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT] {0};
     static constexpr int enlargedOBJECT_MAX_COUNT = (MATRIX_WIDTH * 2);
-    // максимальное количество сложных отслеживаемых объектов
-    // (меньше, чем trackingOBJECT_MAX_COUNT)
+    // maximum number of complex tracked objects
+    // (less than trackingOBJECT_MAX_COUNT)
     uint8_t enlargedObjectNUM; // используемое в эффекте количество объектов
     long enlargedObjectTime[enlargedOBJECT_MAX_COUNT] {0};
-    int _scale{-1};
+    int _scale {-1};
 
     void PicassoGenerate(bool reset)
     {

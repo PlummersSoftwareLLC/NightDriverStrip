@@ -47,7 +47,7 @@ void RemoteControl::handle()
     uint result = results.value;
     _IR_Receive.resume();
 
-    debugV("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
+    debugI("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
 
     if (0xFFFFFFFF == result || result == lastResult)
     {
@@ -56,7 +56,13 @@ void RemoteControl::handle()
         // Only the OFF key runs at the full unbounded speed, so you can rapidly dim.  But everything
         // else has its repeat rate clamped here.
 
-        const auto kMinRepeatms = (lastResult == IR_OFF) ? 0 : 200;
+        auto kMinRepeatms = 200;
+        if (result == IR_OFF)
+            kMinRepeatms = 0;               // Dim as fast as the remote sends it
+        else if (result == 0xFFFFFFFF)
+            kMinRepeatms = 500;             // Repeats happen at 500ms
+        else if (result == lastResult)
+            kMinRepeatms = 50;              // Manual presses get debounced to at least 50ms
 
         if (millis() - lastRepeatTime > kMinRepeatms)
         {
@@ -72,6 +78,7 @@ void RemoteControl::handle()
     lastResult = result;
 
     auto &effectManager = g_ptrSystem->EffectManager();
+    auto &deviceConfig = g_ptrSystem->DeviceConfig();
 
     if (IR_ON == result)
     {
@@ -79,25 +86,32 @@ void RemoteControl::handle()
         effectManager.ClearRemoteColor();
         effectManager.SetInterval(0);
         effectManager.StartEffect();
-        g_ptrSystem->DeviceConfig().SetBrightness(BRIGHTNESS_MAX);
+        deviceConfig.SetBrightness(BRIGHTNESS_MAX);
         return;
     }
     else if (IR_OFF == result)
     {
-        auto& deviceConfig = g_ptrSystem->DeviceConfig();
         deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
         return;
     }
     else if (IR_BPLUS == result)
     {
-        effectManager.ClearRemoteColor();
-        effectManager.NextEffect();
+        effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
+        if (deviceConfig.ApplyGlobalColors())
+            effectManager.ClearRemoteColor();
+        else
+            effectManager.NextEffect();
+
         return;
     }
     else if (IR_BMINUS == result)
     {
-        effectManager.ClearRemoteColor();
-        effectManager.PreviousEffect();
+        effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
+        if (deviceConfig.ApplyGlobalColors())
+            effectManager.ClearRemoteColor();
+        else
+            effectManager.PreviousEffect();
+
         return;
     }
     else if (IR_SMOOTH == result)
@@ -123,7 +137,7 @@ void RemoteControl::handle()
         if (RemoteColorCodes[i].code == result)
         {
             debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
-            effectManager.SetGlobalColor(RemoteColorCodes[i].color);
+            effectManager.ApplyGlobalColor(RemoteColorCodes[i].color);
             return;
         }
     }

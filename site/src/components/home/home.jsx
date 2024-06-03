@@ -1,5 +1,5 @@
 import {useState, useMemo, useEffect, useContext} from 'react';
-import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box} from '@mui/material';
+import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box, Popper, Button} from '@mui/material';
 import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import mainAppStyle from './style';
 import getTheme from '../../theme/theme';
@@ -9,6 +9,9 @@ import DesignerPanel from './designer/designer';
 import PropTypes from 'prop-types';
 import ConfigDialog from './config/configDialog';
 import {EffectsContext} from '../../context/effectsContext';
+import httpPrefix from "../../espaddr"
+
+const resetEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/reset`
 
 const MainApp = () => {
     const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
@@ -31,6 +34,7 @@ const AppPannel = (props) => {
     const [stats, setStats] = useState(config && config.stats !== undefined ? config.stats : true);
     const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
     const [settings, setSettings] = useState(false);
+    const [deviceControlOpen, setDeviceControlOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const {sync} = useContext(EffectsContext);
     
@@ -104,6 +108,14 @@ const AppPannel = (props) => {
                 </ListItemIcon>
                 <ListItemText primary="Settings"></ListItemText>
             </ListItem>
+            <ListItem onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
+                <ListItemIcon>
+                    <IconButton>
+                        <Icon>settings_power</Icon>
+                    </IconButton>
+                </ListItemIcon>
+                <ListItemText primary="Device Control"></ListItemText>
+            </ListItem>
             </List>
         </Drawer>
         <Box
@@ -114,6 +126,29 @@ const AppPannel = (props) => {
             <DesignerPanel open={designer} addNotification={addNotification}/>
         </Box>
         {settings && <ConfigDialog heading={"Device Settings"} open={settings} setOpen={setSettings} saveCallback={sync}></ConfigDialog>}
+        <Popper open={Boolean(deviceControlOpen)} placement='right' anchorEl={deviceControlOpen}>
+            <Box sx={{display: 'flex', flexDirection: 'column', bgcolor: 'background.paper'}}>
+                <Button 
+                    onClick={() => {
+                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1})});
+                        setDeviceControlOpen(undefined);
+                    }}
+                >{"Reboot Device"}
+                </Button>
+                <Button 
+                    onClick={() => {
+                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1, deviceConfig: 1})});
+                        setDeviceControlOpen(undefined);
+                    }}
+                >{"Reset Device Configuration"}</Button>
+                <Button 
+                    onClick={() => {
+                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1, effectsConfig: 1})});
+                        setDeviceControlOpen(undefined);
+                    }}>
+                    {"Reset Effect Settings"}</Button>
+            </Box>
+        </Popper>
     </Box>;
 };
 

@@ -150,14 +150,25 @@ public:
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }
 
-    void Clear() override
+    void Clear(CRGB color = CRGB::Black) override
     {
         // NB: We directly clear the backbuffer because otherwise effects would start with a snapshot of the effect
         //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
         //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
 
-        memset((void *) backgroundLayer.backBuffer(), 0, sizeof(CRGB) * _width * _height);
-        memset((void *) leds, 0, sizeof(CRGB) * _width * _height);
+        if (color == CRGB::Black)
+        {
+            memset((void *) backgroundLayer.backBuffer(), 0, sizeof(LEDMatrixGFX::SM_RGB) * _width * _height);
+            memset((void *) leds, 0, sizeof(CRGB) * _width * _height);
+        }
+        else
+        {
+            for (int i = 0; i < NUM_LEDS; i++)
+            {
+                backgroundLayer.backBuffer()[i] = rgb24(color.r, color.g, color.b);
+                leds[i] = color;
+            }
+        }
     }
 
     const String & GetCaption()
@@ -240,6 +251,6 @@ public:
 
     static void StartMatrix();
     static CRGB *GetMatrixBackBuffer();
-    static void MatrixSwapBuffers(bool bSwapBackground, bool bSwapTitle);
+    static void MatrixSwapBuffers(bool bSwapBackground);
 };
 #endif

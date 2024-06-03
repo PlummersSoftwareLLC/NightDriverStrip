@@ -25,7 +25,8 @@
 //
 //   Gets the weather for a given zip code
 //
-// History:     Jun-25-202         Davepl      Adapted from own code
+// History:     Jun-25-202          Davepl          Adapted from own code
+//              Nov-15-2023         mggates         Updated to use better weather icons
 //
 //---------------------------------------------------------------------------
 
@@ -41,49 +42,84 @@
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <FontGfx_apple5x7.h>
+#include <chrono>
 #include <thread>
 #include <map>
 #include "TJpg_Decoder.h"
 #include "effects.h"
 #include "types.h"
 
-#define WEATHER_INTERVAL_SECONDS (10*60)
+using namespace std::chrono;
+using namespace std::chrono_literals;
+
+#define WEATHER_INTERVAL_SECONDS 600s
 #define WEATHER_CHECK_WIFI_WAIT 5000
 
-extern const uint8_t brokenclouds_start[]    asm("_binary_assets_bmp_brokenclouds_jpg_start");
-extern const uint8_t brokenclouds_end[]      asm("_binary_assets_bmp_brokenclouds_jpg_end");
-extern const uint8_t clearsky_start[]        asm("_binary_assets_bmp_clearsky_jpg_start");
-extern const uint8_t clearsky_end[]          asm("_binary_assets_bmp_clearsky_jpg_end");
-extern const uint8_t fewclouds_start[]       asm("_binary_assets_bmp_fewclouds_jpg_start");
-extern const uint8_t fewclouds_end[]         asm("_binary_assets_bmp_fewclouds_jpg_end");
-extern const uint8_t mist_start[]            asm("_binary_assets_bmp_mist_jpg_start");
-extern const uint8_t mist_end[]              asm("_binary_assets_bmp_mist_jpg_end");
-extern const uint8_t rain_start[]            asm("_binary_assets_bmp_rain_jpg_start");
-extern const uint8_t rain_end[]              asm("_binary_assets_bmp_rain_jpg_end");
-extern const uint8_t scatteredclouds_start[] asm("_binary_assets_bmp_scatteredclouds_jpg_start");
-extern const uint8_t scatteredclouds_end[]   asm("_binary_assets_bmp_scatteredclouds_jpg_end");
-extern const uint8_t showerrain_start[]      asm("_binary_assets_bmp_showerrain_jpg_start");
-extern const uint8_t showerrain_end[]        asm("_binary_assets_bmp_showerrain_jpg_end");
-extern const uint8_t snow_start[]            asm("_binary_assets_bmp_snow_jpg_start");
-extern const uint8_t snow_end[]              asm("_binary_assets_bmp_snow_jpg_end");
-extern const uint8_t thunderstorm_start[]    asm("_binary_assets_bmp_thunderstorm_jpg_start");
-extern const uint8_t thunderstorm_end[]      asm("_binary_assets_bmp_thunderstorm_jpg_end");
+extern const uint8_t brokenclouds_start[]           asm("_binary_assets_bmp_brokenclouds_jpg_start");
+extern const uint8_t brokenclouds_end[]             asm("_binary_assets_bmp_brokenclouds_jpg_end");
+extern const uint8_t brokenclouds_night_start[]     asm("_binary_assets_bmp_brokencloudsnight_jpg_start");
+extern const uint8_t brokenclouds_night_end[]       asm("_binary_assets_bmp_brokencloudsnight_jpg_end");
+extern const uint8_t clearsky_start[]               asm("_binary_assets_bmp_clearsky_jpg_start");
+extern const uint8_t clearsky_end[]                 asm("_binary_assets_bmp_clearsky_jpg_end");
+extern const uint8_t clearsky_night_start[]         asm("_binary_assets_bmp_clearnight_jpg_start");
+extern const uint8_t clearsky_night_end[]           asm("_binary_assets_bmp_clearnight_jpg_end");
+extern const uint8_t fewclouds_start[]              asm("_binary_assets_bmp_fewclouds_jpg_start");
+extern const uint8_t fewclouds_end[]                asm("_binary_assets_bmp_fewclouds_jpg_end");
+extern const uint8_t fewclouds_night_start[]        asm("_binary_assets_bmp_fewcloudsnight_jpg_start");
+extern const uint8_t fewclouds_night_end[]          asm("_binary_assets_bmp_fewcloudsnight_jpg_end");
+extern const uint8_t mist_start[]                   asm("_binary_assets_bmp_mist_jpg_start");
+extern const uint8_t mist_end[]                     asm("_binary_assets_bmp_mist_jpg_end");
+extern const uint8_t mist_night_start[]             asm("_binary_assets_bmp_mistnight_jpg_start");
+extern const uint8_t mist_night_end[]               asm("_binary_assets_bmp_mistnight_jpg_end");
+extern const uint8_t rain_start[]                   asm("_binary_assets_bmp_rain_jpg_start");
+extern const uint8_t rain_end[]                     asm("_binary_assets_bmp_rain_jpg_end");
+extern const uint8_t rain_night_start[]             asm("_binary_assets_bmp_rainnight_jpg_start");
+extern const uint8_t rain_night_end[]               asm("_binary_assets_bmp_rainnight_jpg_end");
+extern const uint8_t scatteredclouds_start[]        asm("_binary_assets_bmp_scatteredclouds_jpg_start");
+extern const uint8_t scatteredclouds_end[]          asm("_binary_assets_bmp_scatteredclouds_jpg_end");
+extern const uint8_t scatteredclouds_night_start[]  asm("_binary_assets_bmp_scatteredcloudsnight_jpg_start");
+extern const uint8_t scatteredclouds_night_end[]    asm("_binary_assets_bmp_scatteredcloudsnight_jpg_end");
+extern const uint8_t showerrain_start[]             asm("_binary_assets_bmp_showerrain_jpg_start");
+extern const uint8_t showerrain_end[]               asm("_binary_assets_bmp_showerrain_jpg_end");
+extern const uint8_t showerrain_night_start[]       asm("_binary_assets_bmp_showerrainnight_jpg_start");
+extern const uint8_t showerrain_night_end[]         asm("_binary_assets_bmp_showerrainnight_jpg_end");
+extern const uint8_t snow_start[]                   asm("_binary_assets_bmp_snow_jpg_start");
+extern const uint8_t snow_end[]                     asm("_binary_assets_bmp_snow_jpg_end");
+extern const uint8_t snow_night_start[]             asm("_binary_assets_bmp_snownight_jpg_start");
+extern const uint8_t snow_night_end[]               asm("_binary_assets_bmp_snownight_jpg_end");
+extern const uint8_t thunderstorm_start[]           asm("_binary_assets_bmp_thunderstorm_jpg_start");
+extern const uint8_t thunderstorm_end[]             asm("_binary_assets_bmp_thunderstorm_jpg_end");
+extern const uint8_t thunderstorm_night_start[]     asm("_binary_assets_bmp_thunderstormnight_jpg_start");
+extern const uint8_t thunderstorm_night_end[]       asm("_binary_assets_bmp_thunderstormnight_jpg_end");
 
 static const char * pszDaysOfWeek[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
-static std::map<int, EmbeddedFile, std::less<int>, psram_allocator<std::pair<int, EmbeddedFile>>> weatherIcons =
+static std::map<String, EmbeddedFile, std::less<String>, psram_allocator<std::pair<String, EmbeddedFile>>> weatherIcons =
 {
-    { 1, EmbeddedFile(clearsky_start, clearsky_end) },
-    { 2, EmbeddedFile(fewclouds_start, fewclouds_end) },
-    { 3, EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
-    { 4, EmbeddedFile(brokenclouds_start, brokenclouds_end) },
-    { 9, EmbeddedFile(showerrain_start, showerrain_end) },
-    { 10, EmbeddedFile(rain_start, rain_end) },
-    { 11, EmbeddedFile(thunderstorm_start, thunderstorm_end) },
-    { 13, EmbeddedFile(snow_start, snow_end) },
-    { 50, EmbeddedFile(mist_start, mist_end) }
+    { "01d", EmbeddedFile(clearsky_start, clearsky_end) },
+    { "02d", EmbeddedFile(fewclouds_start, fewclouds_end) },
+    { "03d", EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
+    { "04d", EmbeddedFile(brokenclouds_start, brokenclouds_end) },
+    { "09d", EmbeddedFile(showerrain_start, showerrain_end) },
+    { "10d", EmbeddedFile(rain_start, rain_end) },
+    { "11d", EmbeddedFile(thunderstorm_start, thunderstorm_end) },
+    { "13d", EmbeddedFile(snow_start, snow_end) },
+    { "50d", EmbeddedFile(mist_start, mist_end) },
+    { "01n", EmbeddedFile(clearsky_night_start, clearsky_night_end) },
+    { "02n", EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
+    { "03n", EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
+    { "04n", EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
+    { "09n", EmbeddedFile(showerrain_night_start, showerrain_night_end) },
+    { "10n", EmbeddedFile(rain_night_start, rain_night_end) },
+    { "11n", EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
+    { "13n", EmbeddedFile(snow_night_start, snow_night_end) },
+    { "50n", EmbeddedFile(mist_night_start, mist_night_end) }
 };
 
+/**
+ * @brief This class implements the Weather Data effect
+ *
+ */
 class PatternWeather : public LEDStripEffect
 {
 
@@ -95,8 +131,8 @@ private:
     String strLatitude        = "0.0";
     String strLongitude       = "0.0";
     int    dayOfWeek          = 0;
-    int    iconToday          = -1;
-    int    iconTomorrow       = -1;
+    String iconToday          = "";
+    String iconTomorrow       = "";
     float  temperature        = 0.0f;
     float  highToday          = 0.0f;
     float  loToday            = 0.0f;
@@ -104,38 +140,70 @@ private:
     float  loTomorrow         = 0.0f;
 
     bool   dataReady          = false;
-    size_t readerIndex = std::numeric_limits<size_t>::max();
-    time_t latestUpdate       = 0;
+    size_t readerIndex        = SIZE_MAX;
+    system_clock::time_point latestUpdate = system_clock::from_time_t(0);
 
-
-    // The weather is obviously weather, and we don't want text overlaid on top of our text
-
+    /**
+     * @brief Should this effect show its title.
+     * The weather is obviously weather, and we don't want text overlaid on top of our text
+     *
+     * @return bool - false No title rquired
+     */
     virtual bool ShouldShowTitle() const
     {
         return false;
     }
 
+    /**
+     * @brief How many frames per second does this effect want
+     *
+     * @return size_t - 25 FPS
+     */
     size_t DesiredFramesPerSecond() const override
     {
         return 25;
     }
 
+    /**
+     * @brief Does this effect requre double buffering support
+     *
+     * @return bool - false No double buffering needed
+     */
     bool RequiresDoubleBuffering() const override
     {
         return false;
     }
 
-    inline float KelvinToFarenheit(float K)
+    /**
+     * @brief Convert Kelvin to Farenheit
+     *
+     * @param K  Temperature in Kelvin
+     * @return float - Farenheit temperature
+     */
+    static inline float KelvinToFarenheit(float K)
     {
         return (K - 273.15) * 9.0f/5.0f + 32;
     }
 
-    inline float KelvinToCelsius(float K)
+    /**
+     * @brief Convert Kelvin to Celsius
+     *
+     * @param K Temperature in Kelvin
+     * @return float - Celsius temperature
+     */
+    static inline float KelvinToCelsius(float K)
     {
         return K - 273.15;
     }
 
-    inline float KelvinToLocal(float K)
+    /**
+     * @brief Convert Kelvin temperature to local units
+     * based on the device configuration flag Use Celsius
+     *
+     * @param K Temperature in Kelvin
+     * @return float - temperature in selected units
+     */
+    static inline float KelvinToLocal(float K)
     {
         if (g_ptrSystem->DeviceConfig().UseCelsius())
             return KelvinToCelsius(K);
@@ -143,6 +211,12 @@ private:
             return KelvinToFarenheit(K);
     }
 
+    /**
+     * @brief Update the latitude and longitude for the
+     * selected city or zip code from the device configuration
+     *
+     * @return bool - true if the lat/log location is updated
+     */
     bool updateCoordinates()
     {
         HTTPClient http;
@@ -167,7 +241,7 @@ private:
 
         if (httpResponseCode <= 0)
         {
-            debugW("Error fetching coordinates for location: %s", configLocation.c_str());
+            debugE("Error fetching coordinates for location: %s", configLocation.c_str());
             http.end();
             return false;
         }
@@ -187,68 +261,100 @@ private:
         return true;
     }
 
-    // getTomorrowTemps
-    //
-    // Request a forecast and then parse out the high and low temps for tomorrow
-
+    /**
+     * @brief Get the forcast for Tomorrow from the API
+     *
+     * Tommorow's expected high and low temperatures,
+     * and an icon for tomorrow's weather forcast
+     *
+     * @param highTemp address to store the high temperature
+     * @param lowTemp address to store the low temperature
+     * @return bool - true if valid weather data retrieved
+     */
     bool getTomorrowTemps(float& highTemp, float& lowTemp)
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
         if (httpResponseCode > 0)
         {
-            AllocatedJsonDocument doc(4096);
+            // Needs to be this large to process all the returned JSON
+            AllocatedJsonDocument doc(10240);
             deserializeJson(doc, http.getString());
             JsonArray list = doc["list"];
 
             // Get tomorrow's date
-            time_t tomorrow = time(nullptr) + 86400;
-            tm* tomorrowTime = localtime(&tomorrow);
+            auto tomorrow = system_clock::now() + 24h;
+            auto tomorrowTime = system_clock::to_time_t(tomorrow);
+            auto tomorrowLocal = localtime(&tomorrowTime);
             char dateStr[11];
-            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowTime);
+            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", tomorrowLocal);
 
-            iconTomorrow = -1;
+            float dailyMinimum = 999.0;
+            float dailyMaximum = 0.0;
+            int slot = 0;
+
+            iconTomorrow = "";
 
             // Look for the temperature data for tomorrow
             for (size_t i = 0; i < list.size(); ++i)
             {
                 JsonObject entry = list[i];
-                String dt_txt = entry["dt_txt"];
-                if (dt_txt.startsWith(dateStr))
+
+                // convert the entry UTC to localtime
+                time_t entryTime = entry["dt"];
+                tm* entryLocal = localtime(&entryTime);
+                char entryStr[11];
+                strftime(entryStr, sizeof(entryStr), "%Y-%m-%d", entryLocal);
+
+                // if it is tomorrow then figure out the min and max and get the icon
+                if (strcmp(dateStr, entryStr) == 0)
                 {
-                    //Serial.printf("Weather: Updating Forecast: %s", response.c_str());
+                    slot++;
                     JsonObject main = entry["main"];
-                    if (main["temp_max"] > 0)
-                        highTemp        = KelvinToLocal(main["temp_max"]);
-                    if (main["temp_min"] > 0)
-                        lowTemp         = KelvinToLocal(main["temp_min"]);
 
-                    String iconIdTomorrow = entry["weather"][0]["icon"];
-                    iconTomorrow = iconIdTomorrow.toInt();
+                    // Identify the maximum of the 3 hour maximum temperature
+                    float entryMaximum = main["temp_max"];
+                    dailyMaximum = std::max(dailyMaximum, entryMaximum);
 
-                    debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %d", (int)lowTemp, (int)highTemp, iconTomorrow);
-                    break;
+                    // Identify the minimum of the 3 hour mimimum temperatures
+                    float entryMinimum = main["temp_min"];
+                    if (entryMinimum > 0)
+                        dailyMinimum = std::min(dailyMinimum, entryMinimum);
+
+                    // Use the noon slot for the icon
+                    if (slot == 4)
+                        iconTomorrow = entry["weather"][0]["icon"].as<String>();
                 }
             }
+
+            highTemp        = KelvinToLocal(dailyMaximum);
+            lowTemp         = KelvinToLocal(dailyMinimum);
+
+            debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
+
             http.end();
             return true;
         }
         else
         {
-            debugW("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
+            debugE("Error fetching forecast data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
     }
 
-    // getWeatherData
-    //
-    // Get the current temp and the high and low for today
-
+    /**
+     * @brief Get the Weather Data from the API
+     *
+     * Current temperature, expected high and low temperatures,
+     * and an icon for the current weather
+     *
+     * @return bool - true if valid weather data retrieved
+     */
     bool getWeatherData()
     {
         HTTPClient http;
@@ -259,7 +365,7 @@ private:
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
         {
-            iconToday = -1;
+            iconToday = "";
             AllocatedJsonDocument jsonDoc(4096);
             deserializeJson(jsonDoc, http.getString());
 
@@ -271,9 +377,8 @@ private:
             highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
             loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
 
-            String iconIndex = jsonDoc["weather"][0]["icon"];
-            iconToday = iconIndex.toInt();
-            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %d", (int)temperature, (int)loToday, (int)highToday, iconToday);
+            iconToday = jsonDoc["weather"][0]["icon"].as<String>();
+            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %s", (int)temperature, (int)loToday, (int)highToday, iconToday.c_str());
 
             const char * pszName = jsonDoc["name"];
             if (pszName)
@@ -284,73 +389,100 @@ private:
         }
         else
         {
-            debugW("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
+            debugE("Error fetching Weather data for location: %s in country: %s", strLocation.c_str(), strCountryCode.c_str());
             http.end();
             return false;
         }
     }
 
+    /**
+     * @brief Hook called from the Network Reader Thread
+     * This drives the collection of the weather data.
+     *
+     */
     void UpdateWeather()
     {
         while(!WiFi.isConnected())
         {
-            debugI("Delaying Weather update, waiting for WiFi...");
+            debugW("Delaying Weather update, waiting for WiFi...");
             vTaskDelay(pdMS_TO_TICKS(WEATHER_CHECK_WIFI_WAIT));
         }
 
-        updateCoordinates();
+        // Only try to update if we have an API Key
+        if (!g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
+        {
+            updateCoordinates();
 
-        if (getWeatherData())
-        {
-            debugW("Got today's weather");
-            if (getTomorrowTemps(highTomorrow, loTomorrow))
-            {
-                debugI("Got tomorrow's weather");
-            }
-            else
-            {
-                debugW("Failed to get tomorrow's weather");
-            }
-        }
-        else
-        {
-            debugW("Failed to get today's weather");
+            if (getWeatherData())
+                getTomorrowTemps(highTomorrow, loTomorrow);
         }
     }
 
+    /**
+     * @brief Determine if the device configuration has changed the
+     * location selection
+     *
+     * @return bool - true if the location has changed
+     */
     bool HasLocationChanged()
     {
-        String configLocation = g_ptrSystem->DeviceConfig().GetLocation();
-        String configCountryCode =g_ptrSystem->DeviceConfig().GetCountryCode();
+        bool locationChanged = g_ptrSystem->DeviceConfig().GetLocation() != strLocation;
+        bool countryChanged = g_ptrSystem->DeviceConfig().GetCountryCode() != strCountryCode;
 
-        return strLocation != configLocation || strCountryCode != configCountryCode;
+        return locationChanged || countryChanged;
     }
 
 public:
 
+    /**
+     * @brief Construct a new Pattern Weather object
+     *
+     */
     PatternWeather() : LEDStripEffect(EFFECT_MATRIX_WEATHER, "Weather")
     {
     }
 
+    /**
+     * @brief Construct a new Pattern Weather object
+     *
+     * @param jsonObject Configuration JSON Object
+     */
     PatternWeather(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
     }
 
+    /**
+     * @brief Destroy the Pattern Weather object
+     * Cancel the Network Reader thread for this index
+     */
     ~PatternWeather()
     {
         g_ptrSystem->NetworkReader().CancelReader(readerIndex);
     }
 
+    /**
+     * @brief
+     *
+     * @param gfx Graphic Base engine
+     * @return bool - true if successfully initialized
+     */
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
 
+        // Register a Network Reader task with no interval.  Will manually flag in Draw()
         readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { UpdateWeather(); });
 
         return true;
     }
 
+    /**
+     * @brief This handles the drawing of the weather data.
+     * It also triggers the network reader on intervals.
+     * Will tell the user if there is no API Key configured
+     *
+     */
     void Draw() override
     {
         const int fontHeight = 7;
@@ -362,18 +494,17 @@ public:
 
         g()->setFont(&Apple5x7);
 
-        time_t now;
-        time(&now);
+        auto now = system_clock::now();
 
         auto secondsSinceLastUpdate = now - latestUpdate;
 
         // If location and/or country have changed, trigger an update regardless of timer, but
         // not more than once every half a minute
-        if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= 30))
+        if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= 30s))
         {
             latestUpdate = now;
 
-            debugW("Triggering thread to check weather now...");
+            debugI("Triggering thread to check weather now...");
             // Trigger the weather reader.
             g_ptrSystem->NetworkReader().FlagReader(readerIndex);
         }
@@ -384,7 +515,7 @@ public:
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %d", iconToday);
+                debugW("Could not display icon %s", iconToday.c_str());
         }
 
         iconEntry = weatherIcons.find(iconTomorrow);
@@ -392,7 +523,7 @@ public:
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %d", iconTomorrow);
+                debugW("Could not display icon %s", iconTomorrow.c_str());
         }
 
         // Print the town/city name

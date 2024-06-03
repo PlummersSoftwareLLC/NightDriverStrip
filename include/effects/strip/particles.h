@@ -43,7 +43,7 @@ class Lifespan
 {
   protected:
 
-    double                       _birthTime;
+    const double _birthTime;
 
   public:
 
@@ -398,7 +398,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
       _allParticles.push_back(newparticle);
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
       for (int pass = 0; pass < 1; pass++)
       {
@@ -451,7 +451,7 @@ class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public Pa
     {
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -729,7 +729,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
     }
 
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -820,7 +820,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -908,7 +908,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -953,7 +953,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
     {
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do

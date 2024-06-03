@@ -10,18 +10,17 @@ const effectStyle = (theme) => {
         hidden: {
             display: "none"
         },
-        effect: {
+        gridCard: {
             width: "180px",
             display: "flex",
             flexDirection: "column",
             flexWrap: "nowrap",
             justifyContent: "space-between",
         },
-        effectPannel: {
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-around",
+        listCard: {
+            ":after": {content: '""', display: "table", clear: "both"}, 
+            width: "100%",
+            height: "50px" 
         },
         effectName: {
             marginLeft: "10px",
@@ -29,6 +28,10 @@ const effectStyle = (theme) => {
         },
         unselected: {
             opacity: "30%"
+        },
+        short: {
+            paddingTop: "2px",
+            paddingBottom: "2px"
         },
         selected: {
             backgroundColor: theme.palette.background.paper,

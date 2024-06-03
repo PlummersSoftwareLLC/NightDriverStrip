@@ -39,6 +39,7 @@ _Davepl, 9/19/2021_
 - [Sample parts (Plummer's Software LLC Amazon affiliate links)](#sample-parts-plummers-software-llc-amazon-affiliate-links)
 - [Contributing, and the BlinkenPerBit metric](#contributing-and-the-blinkenperbit-metric)
 - [Time it takes to build this project](#time-it-takes-to-build-this-project)
+- [Old Build times, no longer relevant with current platformio, just historical curiosity:](#old-build-times-no-longer-relevant-with-current-platformio-just-historical-curiosity)
 
 ## What NightDriverStrip is
 
@@ -65,7 +66,7 @@ Please follow these steps to flash and, if supported, set up WiFi on your device
 
 3. Select your device (like "M5StickC Plus") from the drop-down list. A second drop-down with supported projects on that device will then appear.
 
-4. Select the project you want to flash in the second drop-down. When you do, a CONNECT button will appear below it.
+4. Select the project you want to flash in the second drop-down. When you do, a CONNECT button will appear below it. Note that each project's label includes an indication of the key features enabled in the build in question. The legend for each of the feature letters is shown below the project drop-down.
 
 5. Click the CONNECT button. A dialog will apear asking you to select a serial port. Depending on your system, it may show only one or a list of them. In case multiple are shown, it'll generally be the one plainly called "USB Serial Port (COMn)". Select the correct port and click Connect.
 
@@ -87,7 +88,7 @@ Please follow these steps to flash and, if supported, set up WiFi on your device
 
 11. In the WiFi connection information dialog, select or enter your SSID and password. Click CONNECT. In some cases, the WiFi connection dialog appears again after a successful connection was actually made. In that case, click SKIP. It is also possible that a time-out is reported while WiFi has actually successfully connected. In that case, click BACK.
 
-12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again and show the device's logs & console. Furthermore, if your device supports WiFi then options will be available to visit the device's web application or change the WiFi settings. Note that if you flashed a device image that includes the web server/web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
+12. Now, a dialog will appear that will show the details of the project you flashed. It will also provide options to flash again and show the device's logs & console. Furthermore, if your device supports WiFi then options will be available to visit the device's web application (provided the on-device web server is also enabled) or change the WiFi settings. Note that if you flashed a device image that includes the web server/web application, it may take a minute or so to come up after the connection to the WiFi network has been made.
 
 ### Reconfiguring WiFi using the Web Installer
 
@@ -250,7 +251,7 @@ Furthermore, it's also possible to "ignore" the persisted effect list altogether
 
 ## Fetching things from the Internet
 
-If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
+If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.  PatternStocks pulls live (15-min delay) stock quotes from a private server.
 
 ## Build pointers
 
@@ -349,6 +350,22 @@ A lifetime of coding has taught me to err on the side of simplicity, so please d
 Add whatever you want and/or need to make your LED dreams come true. Fix my blunders. Fill in the obvious gaps in my knowledge. Whatever has the most blinken for the fewest bits get my vote. You only get so much additional cool blinken for every byte of code and program. That return is measured in BlinkenPerBit, the amount of blinking awesomeness the code adds divided by the impact on the source (and binary).
 
 ## Time it takes to build this project
+
+To replicate, build the mesmerizer project.  Then delete pio/build_cache and build again, taking the time for the second build.
+
+- ASUS 7995WX [96-core, 192-thread]
+  -> [davepl, 02/11/2024] 20.73 seconds
+
+- HP Z6 G5A, 7995WX, 128GB [96-core, 192-thread]
+  -> [davepl 11/29/2023] 25.270 seconds
+
+- 3970X, 128GB [32-core, 64-thread] Windows11+WSL2/Ubuntu02.04LTS
+  -> [davepl 11/29/2023] 34.292 seconds
+
+- Mac M1 Ultra Studio [10-core, 20-thread]
+  -> [davepl 11/29/2023] 48.368 seconds
+
+## Old Build times, no longer relevant with current platformio, just historical curiosity:
 
 Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build after everything has been installed and downloaded.
 

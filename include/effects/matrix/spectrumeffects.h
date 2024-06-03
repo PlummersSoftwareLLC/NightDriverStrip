@@ -95,7 +95,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
         fadeAllChannelsToBlackBy(min(255.0,2000.0 * g_Values.AppTime.LastFrameTime()));
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -112,7 +112,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     }
 };
 
-class VUMeterEffect
+class VUMeter
 {
   protected:
 
@@ -182,12 +182,35 @@ class VUMeterEffect
     }
 };
 
+class VUMeterEffect : virtual public VUMeter, public LEDStripEffect
+{
+public:
+    virtual void Draw() override
+    {
+        DrawVUMeter(g(), 0);
+    }
+
+    VUMeterEffect() : LEDStripEffect(EFFECT_STRIP_VUMETER, "VUMeter")
+    {
+    }
+
+    VUMeterEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        return true;
+    }
+};
+
 // SpectrumAnalyzerEffect
 //
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
 // matrix is 48x16 using LED Channel 0 only.   Has a VU meter up top and 16 bands.
 
-class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffect
+class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 {
   protected:
 
@@ -197,10 +220,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     uint8_t   _fadeRate;
 
     const CRGBPalette16 _palette;
-    float _peak1DecayRate;
-    float _peak2DecayRate;
+    bool                _ignoreGlobalColor;
+    float               _peak1DecayRate;
+    float               _peak2DecayRate;
 
-    bool      _bShowVU;
+    bool                _bShowVU;
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -219,7 +243,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
 
     void DrawBar(const uint8_t iBar, CRGB baseColor)
     {
-        auto pGFXChannel = _GFX[0];
+        auto pGFXChannel = g();
         int value, value2;
 
         static_assert(!(NUM_BANDS & 1));     // We assume an even number of bars because we peek ahead from an odd one below
@@ -308,6 +332,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
     SpectrumAnalyzerEffect(const char   * pszFriendlyName,
                            int                    cNumBars = 12,
                            const CRGBPalette16  & palette = spectrumBasicColors,
+                           bool         ignoreGlobalColor = false,
                            uint16_t           scrollSpeed = 0,
                            uint8_t               fadeRate = 0,
                            float           peak1DecayRate = 1.0,
@@ -318,6 +343,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _scrollSpeed(scrollSpeed),
           _fadeRate(fadeRate),
           _palette(palette),
+          _ignoreGlobalColor(ignoreGlobalColor),
           _peak1DecayRate(peak1DecayRate),
           _peak2DecayRate(peak2DecayRate)
     {
@@ -335,6 +361,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _scrollSpeed(0),
           _fadeRate(fadeRate),
           _palette(baseColor),
+          _ignoreGlobalColor(true),
           _peak1DecayRate(peak1DecayRate),
           _peak2DecayRate(peak2DecayRate)
 
@@ -348,6 +375,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
           _scrollSpeed(jsonObject[PTY_SPEED]),
           _fadeRate(jsonObject["frt"]),
           _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+          _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR]),
           _peak1DecayRate(jsonObject["pd1"]),
           _peak2DecayRate(jsonObject["pd2"])
 
@@ -361,12 +389,13 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc[PTY_PALETTE] = _palette;
-        jsonDoc["nmb"]       = _numBars;
-        jsonDoc[PTY_SPEED]   = _scrollSpeed;
-        jsonDoc["frt"]       = _fadeRate;
-        jsonDoc["pd1"]       = _peak1DecayRate;
-        jsonDoc["pd2"]       = _peak2DecayRate;
+        jsonDoc[PTY_PALETTE]           = _palette;
+        jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
+        jsonDoc["nmb"]                 = _numBars;
+        jsonDoc[PTY_SPEED]             = _scrollSpeed;
+        jsonDoc["frt"]                 = _fadeRate;
+        jsonDoc["pd1"]                 = _peak1DecayRate;
+        jsonDoc["pd2"]                 = _peak2DecayRate;
 
         assert(!jsonDoc.overflowed());
 
@@ -407,6 +436,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             // If the palette is scrolling, we do a smooth blend.  Otherwise we do a straight color lookup, which makes the stripes
             // on the USA flag solid red rather than pinkish...
 
+            // A paused palette overrides everything else
             if (pGFXChannel->IsPalettePaused())
             {
                 // We don't use the color offset when the palette is paused
@@ -415,8 +445,15 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeterEffe
             }
             else
             {
+                // If global colors are set, we use them
+                auto& deviceConfig = g_ptrSystem->DeviceConfig();
+                std::optional<CRGBPalette16> globalPalette = {};
+
+                if (!_ignoreGlobalColor && deviceConfig.ApplyGlobalColors())
+                    globalPalette = CRGBPalette16(deviceConfig.GlobalColor(), deviceConfig.SecondColor());
+
                 int q = ::map(i, 0, _numBars, 0, 255) + _colorOffset;
-                DrawBar(i, ColorFromPalette(_palette, (q) % 255, 255, _scrollSpeed > 0 ? LINEARBLEND : NOBLEND));
+                DrawBar(i, ColorFromPalette(globalPalette ? *globalPalette : _palette, (q) % 255, 255, _scrollSpeed > 0 ? LINEARBLEND : NOBLEND));
             }
         }
     }
@@ -562,13 +599,14 @@ class GhostWave : public WaveformEffect
 
     virtual bool RequiresDoubleBuffering() const override
     {
+        // MoveOutWardX in the main draw call uses the prior buffer 
         return true;
     }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
         // Looks cool at the low-50s it can actually achieve
-        return _blur > 0 ? 45 : 30;
+        return _blur > 0 ? 60 : 30;
     }
 
     virtual void Draw() override
@@ -603,7 +641,7 @@ class GhostWave : public WaveformEffect
 //
 // Draws an approximation of the waveform by mirroring the spectrum analyzer bars in four quadrants
 
-class SpectrumBarEffect : public LEDStripEffect
+class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 {
     byte _hueIncrement = 0;
     byte _scrollIncrement = 0;
@@ -658,8 +696,15 @@ class SpectrumBarEffect : public LEDStripEffect
         return true;
     }
 
+    void HandleBeat(bool bMajor, float elapsed, float span) override
+    {
+        debugV("Beat!  Major: %d, Elapsed: %f, Span: %f\n", bMajor, elapsed, span);
+    }
+
     void DrawGraph()
     {
+        ProcessAudio();
+
         constexpr size_t halfHeight = MATRIX_HEIGHT / 2;
         constexpr size_t halfWidth  = MATRIX_WIDTH  / 2;
 
@@ -670,7 +715,7 @@ class SpectrumBarEffect : public LEDStripEffect
 
         // We scroll the bars ever 50ms
         static byte offset = 0;
-        EVERY_N_MILLISECONDS(50)
+        EVERY_N_MILLISECONDS(100)
             offset += _scrollIncrement;
 
         for (int iBand = 0; iBand < NUM_BANDS; iBand++)
@@ -690,6 +735,7 @@ class SpectrumBarEffect : public LEDStripEffect
                 break;
 
             CRGB  color = g()->IsPalettePaused() ? g()->ColorFromCurrentPalette() : CHSV(hue + iBand * _hueStep, 255, 255);
+
             g()->drawLine(x1, top, x1, bottom, color);
             g()->drawLine(x2, top, x2, bottom, color);
         }

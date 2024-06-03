@@ -111,7 +111,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 class PeakData
 {
 
-protected:
+public:
 
     double _Level[NUM_BANDS];
 
@@ -194,6 +194,7 @@ public:
 class SoundAnalyzer : public AudioVariables
 {
     static const size_t MAX_SAMPLES = 256;
+    std::unique_ptr<uint16_t[]> ptrSampleBuffer;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
@@ -204,14 +205,17 @@ class SoundAnalyzer : public AudioVariables
 
     static const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
-    double * _vPeaks;
-    int      _cutOffsBand[NUM_BANDS];
-    float    _oldVU;
-    float    _oldPeakVU;
-    float    _oldMinVU;
-    PeakData _Peaks;
+    int      _cutOffsBand[NUM_BANDS];   // The upper frequency for each band
+    float    _oldVU;                    // Old VU value for damping
+    float    _oldPeakVU;                // Old peak VU value for damping
+    float    _oldMinVU;                 // Old min VU value for damping
+    double * _vPeaks;                   // The peak value for each band
 
     PeakData::MicrophoneType _MicMode = PeakData::M5;
+
+    // GetBandIndex
+    //
+    // Given a frequency, returns the index of the band that frequency belongs to
 
     int GetBandIndex(float frequency)
     {
@@ -223,6 +227,10 @@ class SoundAnalyzer : public AudioVariables
         return NUM_BANDS-1;
     }
 
+    // GetBucketFrequency
+    //
+    // Given a bucket index, returns the frequency that bucket represents
+    
     float GetBucketFrequency(int bin_index)
     {
         float bin_width = SAMPLING_FREQUENCY / (MAX_SAMPLES / 2);
@@ -265,7 +273,6 @@ class SoundAnalyzer : public AudioVariables
 
     void FillBufferI2S()
     {
-        std::unique_ptr<uint16_t[]> ptrSampleBuffer(new uint16_t[MAX_SAMPLES]);
         constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
 
         size_t bytesRead = 0;
@@ -455,8 +462,11 @@ class SoundAnalyzer : public AudioVariables
 
 public:
 
+    PeakData _Peaks;                    // The peak data for the last sample pass
+
     SoundAnalyzer()
     {
+        ptrSampleBuffer = make_unique_psram_array<uint16_t>(MAX_SAMPLES);
         _vReal      = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
         _vPeaks     = (double *)PreferPSRAMAlloc(NUM_BANDS  * sizeof(_vPeaks[0]));

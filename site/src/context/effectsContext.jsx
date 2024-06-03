@@ -41,22 +41,14 @@ const EffectsProvider = ({ children }) => {
         setCurrentEffect(activeEffect);
         if (!pinnedEffect) {
             const timer = setTimeout(() => {
-                setCurrentEffect((c) => {
-                    if(effects === undefined || c === undefined) {
-                        return activeEffect === undefined ? 0 : Number(activeEffect);
-                    }
-                    if(c >= effects.length -1) {
-                        return 0;
-                    } 
-                    return ++c;
-                    
-                });
+                // Timer expired, trigger a resync. 
+                setEffectTrigger(s => !s);
             }, remainingInterval+10);
             return () => {
                 clearTimeout(timer);
             };
         }
-    }, [activeEffect])
+    }, [activeEffect, activeInterval])
     return (
         <EffectsContext.Provider value={{activeInterval, remainingInterval, activeEffect, pinnedEffect,currentEffect, effects, sync: () => setEffectTrigger(s => !s)}}>
             {children}

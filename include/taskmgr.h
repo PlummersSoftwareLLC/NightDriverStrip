@@ -58,6 +58,7 @@
 #define NET_STACK_SIZE     8192
 #define DEBUG_STACK_SIZE   8192                 // Needs a lot of stack for output if UpdateClockFromWeb is called from debugger
 #define REMOTE_STACK_SIZE  4096
+#define SCREEN_STACK_SIZE  8192
 
 class IdleTask
 {
@@ -98,13 +99,6 @@ class IdleTask
                 counter += kMillisPerLoop;
             }
         }
-    }
-
-    // If idle time is spent elsewhere, it can be credited to this task.  Shouldn't add up to more time than actual though!
-
-    void CountBonusIdleMillis(uint millis)
-    {
-        counter += millis;
     }
 
     IdleTask() : _lastMeasurement(millis())
@@ -285,7 +279,7 @@ public:
     {
         #if USE_SCREEN
             Serial.print( str_sprintf(">> Launching Screen Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
-            xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", DEFAULT_STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
+            xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", SCREEN_STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
             CheckHeap();
         #endif
     }

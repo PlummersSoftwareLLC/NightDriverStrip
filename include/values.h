@@ -50,4 +50,4 @@ struct Values
 #endif
 };
 
-extern DRAM_ATTR Values g_Values;
+extern Values g_Values;

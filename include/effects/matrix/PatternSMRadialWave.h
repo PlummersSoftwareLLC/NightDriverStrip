@@ -13,9 +13,9 @@ class PatternSMRadialWave : public LEDStripEffect
     // 22/05/22
 
     bool setupm = 1;
-    const uint8_t C_X = MATRIX_WIDTH / 2;
-    const uint8_t C_Y = MATRIX_HEIGHT / 2;
-    const uint8_t mapp = 255 / MATRIX_WIDTH;
+    static constexpr int8_t C_X = MATRIX_WIDTH / 2;
+    static constexpr int8_t C_Y = MATRIX_HEIGHT / 2;
+    static constexpr uint8_t mapp = 255 / MATRIX_WIDTH;
     // BUGBUG: should probably be allocated into slow RAM.
     struct
     {
@@ -30,6 +30,11 @@ class PatternSMRadialWave : public LEDStripEffect
 
     PatternSMRadialWave(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
     {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
+    {
+        return 45;
     }
 
     void Start() override
@@ -48,9 +53,8 @@ class PatternSMRadialWave : public LEDStripEffect
 
     void Draw() override
     {
-        static byte speed = 1;
-        static uint32_t t;
-        t += speed;
+        static uint32_t t = 0;
+        t++;
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {
             for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
@@ -60,6 +64,5 @@ class PatternSMRadialWave : public LEDStripEffect
                 g()->leds[XY(x, y)] = CHSV(t + radius, 255, sin8(t * 4 + sin8(t * 4 - radius) + angle * 3));
             }
         }
-        //  delay(16);
     }
 };
