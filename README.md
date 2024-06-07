@@ -45,6 +45,8 @@ _Davepl, 9/19/2021_
 
 NightDriverStrip is a source code package for building a flash program that you upload to the [ESP32 microcontroller](https://en.wikipedia.org/wiki/ESP32). It can drive up to 8 channels of WS2812B style LEDs connected to the chip pins and display fancy colors and patterns and designs on them. There are numerous effects built in that can be configured to be shown on the LED strip, including audio/music/beat-reactive effects for modules equipped with a microphone. It can also optionally receive color data for the LEDs in a simple LZ-compressed (or non-compressed) format over a TCP/IP socket that is opened by default on port 49152. The ESP32 keeps its clock in sync using NTP.
 
+NightDriver can drive both WS2812B style strips and HUB75 style matrices.
+
 More recently, a web installer has been added to the project with which most of the NightDriver projects can be flashed on supported devices, using nothing but a web browser. Please refer to the next section if this is how you'd like to get started.
 
 ## Using the Web Installer
