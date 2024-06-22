@@ -411,6 +411,16 @@ class LEDStripEffect : public IJSONSerializable
         }
     }
 
+    // SetPixelsFOnAllChannels
+    //
+    // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
+
+    void setPixelsFOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false)
+    {
+        for (auto& device : _GFX)
+            device->setPixelsF(fPos, count, c, bMerge);
+    }
+    
     // ClearFrameOnAllChannels
     //
     // Clears ALL the channels

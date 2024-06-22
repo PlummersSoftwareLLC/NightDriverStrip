@@ -15,7 +15,7 @@
 
 # Dependencies
 
-from PIL import Image, ImageDraw, ImageFont     # python3 -m pip install pillow
+from PIL import Image, ImageDraw, ImageFont     # python3` -m pip install pillow`
 import socket
 import time
 import zlib
@@ -26,7 +26,7 @@ import datetime
 MATRIX_WIDTH = 64
 MATRIX_HEIGHT = 32
 FUTURE_DELAY = 3
-ESP32_WIFI_ADDRESS = '192.168.8.86'
+ESP32_WIFI_ADDRESS = '192.168.8.235'
 PORT = 49152
 WIFI_COMMAND_PIXELDATA64 = 3
 FPS = 20

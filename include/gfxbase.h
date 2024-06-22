@@ -132,7 +132,7 @@ protected:
         0xc7, 0xcf, 0xd6, 0xde, 0xe6, 0xee, 0xf7, 0xff
     });
 
-    static const int _paletteCount = 10;
+    static constexpr int _paletteCount = 10;
     int _paletteIndex = -1;
     uint _lastSecond = 99;
     bool _palettePaused = false;

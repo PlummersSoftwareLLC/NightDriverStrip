@@ -194,17 +194,17 @@ public:
 
 class SoundAnalyzer : public AudioVariables
 {
-    static const size_t MAX_SAMPLES = 256;
+    static constexpr size_t MAX_SAMPLES = 256;
     std::unique_ptr<uint16_t[]> ptrSampleBuffer;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
 
-    static const size_t SAMPLING_FREQUENCY = 20000;
-    static const size_t LOWEST_FREQ = 40;
-    static const size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
+    static constexpr size_t SAMPLING_FREQUENCY = 20000;
+    static constexpr size_t LOWEST_FREQ = 40;
+    static constexpr size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
-    static const size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
+    static constexpr size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
 
     int      _cutOffsBand[NUM_BANDS];   // The upper frequency for each band
     float    _oldVU;                    // Old VU value for damping

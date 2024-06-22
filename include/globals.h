@@ -634,12 +634,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define WAIT_FOR_WIFI           0               // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       3               // How many seconds before the lamp times out and shows local content
 
-    #define NUM_LEDS               (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define MAX_BUFFERS     30                      // Times 4 channels, but they're only NUM_LEDS big
     #define NUM_CHANNELS    4                       // One per spoke
     #define MATRIX_WIDTH    53                      // Number of pixels wide (how many LEDs per channel)
     #define MATRIX_HEIGHT   1                       // Number of pixels tall
+    #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   1                       // IR Remote Control
+    #define IR_REMOTE_PIN   35                      // Eric's is PIN 35   
     #define ENABLE_AUDIO    1                       // Listen for audio from the microphone and process it
     #define USE_SCREEN      0                       // Normally we use a tiny board inside the lamp with no screen
     #define FAN_SIZE        NUM_LEDS                // Allows us to use fan effects on the spokes
@@ -647,8 +648,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_RINGS       1
     #define LED_FAN_OFFSET_BU 0
     #define BONUS_PIXELS      0
-
-    #define IR_REMOTE_PIN 15                        // Eric's is PIN 35
 
     // Original Wiring:
     //   Fine red     = 3.3v
@@ -659,12 +658,51 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     //        blue    = IO12
     //        purple  = IO4
 
-    // Eric's Version Wiring is the same.  Which is a complete coincidence but handy!
+    // Wiring is:
 
     #define LED_PIN0         5
     #define LED_PIN1        16
     #define LED_PIN2        17
     #define LED_PIN3        18
+
+    #define DEFAULT_EFFECT_INTERVAL     (1000*60*5)
+
+#elif SPIRALLAMP
+
+    // This is the "Tiki Atomic Fire Lamp" project, which is an LED lamp with 4 arms of 53 LEDs each.
+    // Each arm is wired as a separate channel.
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Spiral Light"
+    #endif
+
+    #define ENABLE_WIFI             1               // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1               // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0               // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       3               // How many seconds before the lamp times out and shows local content
+
+    #define MAX_BUFFERS     30                      // Times 4 channels, but they're only NUM_LEDS big
+    #define NUM_CHANNELS    2                       // One per spoke
+    #define MATRIX_WIDTH    172                     // Number of pixels wide (how many LEDs per channel)
+    #define MATRIX_HEIGHT   1                       // Number of pixels tall
+    #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
+    #define ENABLE_REMOTE   1                       // IR Remote Control
+    #define IR_REMOTE_PIN   26
+    #define ENABLE_AUDIO    1                       // Listen for audio from the microphone and process it
+    #define USE_SCREEN      1                       // Normally we use a tiny board inside the lamp with no screen
+    #define FAN_SIZE        NUM_LEDS                // Allows us to use fan effects on the spokes
+    #define NUM_FANS        1                       // Our fans are on channels, not in sequential order, so only one "fan"
+    #define NUM_RINGS       1
+    #define LED_FAN_OFFSET_BU 0
+    #define BONUS_PIXELS      0
+
+    // Wiring is:
+
+    #define TOGGLE_BUTTON_1         39
+    #define TOGGLE_BUTTON_2         37
+
+    #define LED_PIN0                32
+    #define LED_PIN1                33
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*60*5)
 

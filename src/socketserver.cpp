@@ -3,9 +3,9 @@
 
 #if INCOMING_WIFI_ENABLED
 
-int SocketServer::ProcessIncomingConnectionsLoop()
+bool SocketServer::ProcessIncomingConnectionsLoop()
 {
-    if (0 == _server_fd)
+    if (0 >= _server_fd)
     {
         debugW("No _server_fd, returning.");
         return false;
