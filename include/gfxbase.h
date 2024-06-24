@@ -287,6 +287,8 @@ public:
 
     #if USE_HUB75
         #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
+    #elif HELMET
+        #define XY(x, y) xy(x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
     #else
         #define XY(x, y) xy(x, y)
     #endif

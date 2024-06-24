@@ -358,7 +358,7 @@ void setup()
 
     // Setup config objects
     g_ptrSystem->SetupConfig();
-
+    
     #if ENABLE_WIFI
         // We create the network reader here, so classes can register their readers from this point onwards.
         //   Note that the thread that executes the readers is started further down, along with other networking
@@ -600,6 +600,6 @@ void loop()
         // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise, we delay a bit to share the CPU.
 
         if (!g_Values.UpdateStarted)
-            delay(10);
+            delay(1);
     }
 }

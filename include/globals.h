@@ -951,6 +951,62 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define TOGGLE_BUTTON_2         39
     #endif
 
+#elif HELMET
+
+    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
+    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
+    // It displays a spectrum analyzer and music visualizer
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME                    "Helmet"
+    #endif
+
+    #define POWER_LIMIT_MW                  3000
+
+    #define ENABLE_AUDIOSERIAL              0   // Report peaks at 2400baud on serial port for PETRock consumption
+    #define ENABLE_WIFI                     1   // Connect to WiFi
+    #define WAIT_FOR_WIFI                   0   // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL               2   // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WEBSERVER                1   // Turn on the internal webserver
+    #define ENABLE_NTP                      1   // Set the clock from the web
+    #define ENABLE_OTA                      0   // Accept over the air flash updates
+    #define ENABLE_REMOTE                   1   // IR Remote Control
+    #define ENABLE_AUDIO                    1   // Listen for audio from the microphone and process it
+    #define COLORDATA_SERVER_ENABLED        0
+
+    #if USE_PSRAM
+        #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
+        #define COLORDATA_SERVER_ENABLED    1
+        #define MAX_BUFFERS                 500
+    #else
+        #define INCOMING_WIFI_ENABLED       0   // Do not accept incoming color data and commands
+        #define COLORDATA_SERVER_ENABLED    0
+        #define MIN_BUFFERS                 1
+        #define MAX_BUFFERS                 1
+    #endif
+
+    #define DEFAULT_EFFECT_INTERVAL         0   // Do not auto-advance unless the button is presssed
+
+    #define LED_PIN0                        26   
+    #define NUM_CHANNELS                    1
+    #define RING_SIZE_0                     24
+    #define BONUS_PIXELS                    0
+    #define MATRIX_WIDTH                    32
+    #define MATRIX_HEIGHT                   8
+    #define NUM_FANS                        MATRIX_WIDTH
+    #define FAN_SIZE                        MATRIX_HEIGHT
+    #define NUM_BANDS                       16
+    #define NUM_LEDS                        (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define LED_FAN_OFFSET_BU               6
+
+    // The mic in the M5 is not quite the same as the Mesmerizer, so it gets a different minimum VU than default
+
+    #define MIN_VU                          280
+    #define NOISE_CUTOFF                    1000
+
+    #define TOGGLE_BUTTON_1         39
+    #define TOGGLE_BUTTON_2         37
+
 #elif FANSET
 
     // An M5 stick that controls the 10 RGB fans in my PC

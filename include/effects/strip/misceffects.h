@@ -503,6 +503,55 @@ class TwinkleEffect : public LEDStripEffect
     }
 };
 
+// SilonEffect
+// 
+// A Battlestar Galactica inspired effect that moves red and green bars back and forth
+
+class SilonEffect : public LEDStripEffect
+{
+  public:
+
+    SilonEffect() : LEDStripEffect(EFFECT_MATRIX_SILON, "SilonEffect")
+    {
+    }
+
+    SilonEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    int _offset = 0;
+    int _direction = 1;
+
+    virtual size_t DesiredFramesPerSecond() const           
+    {
+        return 20;
+    }
+
+    virtual void Draw() override
+    {
+        _offset += _direction;
+        if (_offset >= MATRIX_WIDTH)
+        {
+            _offset = MATRIX_WIDTH - 1;
+            _direction = -1;
+        }
+        if (_offset <= 0)
+        {
+            _offset = 0;
+            _direction = 1;
+        }
+        fadeAllChannelsToBlackBy(75);
+
+        for (int y = 0; y < MATRIX_HEIGHT; y++)
+        {
+            setPixelOnAllChannels(_offset, y, CRGB::Red);
+            setPixelOnAllChannels(MATRIX_WIDTH - 1 - _offset, y, CRGB::Green);
+        }
+    }
+};
+
+
 #if HEXAGON
 ////////////////////////////////////////////////
 // Hexagon Effects

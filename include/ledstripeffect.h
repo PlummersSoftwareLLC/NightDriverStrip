@@ -506,6 +506,11 @@ class LEDStripEffect : public IJSONSerializable
             device->setPixel(i, c);
     }
 
+    void setPixelOnAllChannels(int x, int y, CRGB c)
+    {
+        for (auto& device : _GFX)
+            device->setPixel(x, y, c);
+    }
     // setPixelsOnAllChannels
     //
     // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
