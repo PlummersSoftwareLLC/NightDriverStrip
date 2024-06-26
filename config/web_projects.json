@@ -98,6 +98,17 @@
             ]
         },
         {
+            "tag": "m5stack-core2",
+            "chipfamily": "ESP32",
+            "name": "M5Stack Core2",
+            "projects": [
+                {
+                    "tag": "m5stackdemo",
+                    "name":"Demo"
+                }
+            ]
+        },
+        {
             "tag": "m5stick-c",
             "chipfamily": "ESP32",
             "name": "M5StickC",
