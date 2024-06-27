@@ -1,0 +1,55 @@
+name: Web Installer build and deploy
+
+on:
+  workflow_call:
+    inputs:
+      release-name:
+        description: 'Name of the Web Installer release'
+        required: true
+        type: string
+
+jobs:
+  build-and-publish-installer:
+    runs-on: ubuntu-latest
+
+    env:
+      PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+        remove-android: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+        remove-dotnet: 'true'
+        remove-haskell: 'true'
+
+    - uses: actions/checkout@v4
+
+    - name: Install PlatformIO
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -o get-platformio.py
+        python get-platformio.py
+        echo "${PLATFORMIO_CORE_DIR}/penv/bin" >> $GITHUB_PATH
+
+    - name: Copy secrets and clear SSID
+      run: |
+        grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
+        echo '#define cszSSID ""' >> include/secrets.h
+
+    - name: Build web installer environments and installer
+      run: |
+        python tools/bake_installer.py ${{ inputs.release-name }}
+        touch WebInstaller/.nojekyll
+
+    - name: Push to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: pages
+        folder: WebInstaller
