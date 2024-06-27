@@ -45,7 +45,7 @@ jobs:
 
     - name: Build web installer environments and installer
       run: |
-        python tools/bake_installer.py ${{ inputs.release-name }}
+        python tools/bake_installer.py '${{ inputs.release-name }}'
         touch WebInstaller/.nojekyll
 
     - name: Push to GitHub Pages
