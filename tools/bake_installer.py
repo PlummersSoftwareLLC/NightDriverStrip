@@ -35,6 +35,7 @@ import glob
 import json
 import shutil
 import subprocess
+import sys
 import show_features
 
 class Dirs:
@@ -57,6 +58,7 @@ merged_image = 'merged_image.bin'
 globals_h = 'globals.h'
 index_template_file = 'installer_index.html'
 index_file = 'index.html'
+release_name = sys.argv[1] if len(sys.argv) > 1 else 'unnamed'
 
 # Do some ground work to set up the web installer directory, starting with the installer image assets...
 assets_target_dir = os.path.join(Dirs.webinstaller, Dirs.assets)
@@ -204,6 +206,9 @@ for feature_tag, feature in known_features.items():
 # Load template for index.html...
 with open(os.path.join(Dirs.config, index_template_file), "r", encoding='utf-8') as f:
     index_template = f.read()
+
+# ...then inject release name...
+index_template = index_template.replace('$$RELEASE_NAME$$', release_name)
 
 # ...and write it with the feature legend injected
 with open(os.path.join(Dirs.webinstaller, index_file), 'w', encoding='utf-8') as f:
