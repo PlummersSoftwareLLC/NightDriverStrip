@@ -2,7 +2,7 @@
 
 **DEVELOPERS WANTED!** We are searching for talented React and C++ developers to help out on this project.  Check out the code and if you're interested, contact <davepl@davepl.com>.
 
-![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
+![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg) [![Release actions](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/release.yml/badge.svg)](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/release.yml)
 
 <!-- markdownlint-disable MD033 /no-inline-html -->
 <img src="assets/NightDriverLogo-small.png" width="400" />
