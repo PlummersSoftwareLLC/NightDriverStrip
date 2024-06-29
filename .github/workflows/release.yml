@@ -1,4 +1,4 @@
-name: Release actions
+name: Release Web Installer build and deploy
 
 on:
   release:
