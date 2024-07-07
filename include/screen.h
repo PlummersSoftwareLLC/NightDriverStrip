@@ -117,7 +117,9 @@ public:
     //
     // Display code for the M5 based TFT displays on the M5 Stick, Stick C Plus, and Stack
 
-    #include <M5Display.h>
+    #if M5STICKCPLUS2
+        #include <M5UnitLCD.h>
+    #endif
 
     // M5Screen
     //
@@ -125,16 +127,11 @@ public:
 
     class M5Screen : public Screen
     {
-      private:
-
-        M5Display m5display;
-
       public:
 
         M5Screen(int w, int h) : Screen(w, h)
         {
             M5.Lcd.fillScreen(GREEN16);
-            M5.Lcd.setRotation(1);
         }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override

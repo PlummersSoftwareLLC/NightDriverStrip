@@ -427,12 +427,25 @@ void setup()
         debugW("Creating LCD Screen");
         g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
-    #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
+    #elif M5STICKCPLUS2
+
+        auto cfg = M5.config();
+
+        M5.begin(cfg);
+        M5.Display.startWrite();
+        M5.Display.setRotation(1);
+        M5.Display.setTextDatum(top_center);
+        M5.Display.setTextColor(WHITE);
+
+        g_ptrSystem->SetupDisplay<M5Screen>(M5.Lcd.width(), M5.Lcd.height());
+
+    #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2 
 
         #if USE_M5DISPLAY
             M5.begin();
+            M5.Lcd.setRotation(1);
             debugW("Creating M5 Screen");
-            g_ptrSystem->SetupDisplay<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
+            g_ptrSystem->SetupDisplay<M5Screen>(M5.Lcd.width(), M5.Lcd.height());
         #else
             M5.begin(false);
         #endif

@@ -60,7 +60,7 @@ struct AudioVariables
     float _VURatio          = 1.0;          // Current VU as a ratio to its recent min and max
     float _VURatioFade      = 1.0;          // Same as gVURatio but with a slow decay
     float _VU               = 0.0;          // Instantaneous read of VU value
-    float _PeakVU           = MAX_VU;       // How high our peak VU scale is in live mode
+    float _PeakVU           = 0.0;          // How high our peak VU scale is in live mode
     float _MinVU            = 0.0;          // How low our peak VU scale is in live mode
     unsigned long _cSamples = 0U;           // Total number of samples successfully collected
     int _AudioFPS           = 0;            // Framerate of the audio sampler
@@ -120,7 +120,8 @@ public:
     {
         MESMERIZERMIC,
         PCREMOTE,
-        M5
+        M5,
+        M5PLUS2
     } MicrophoneType;
 
     PeakData()
@@ -153,7 +154,7 @@ public:
       {
         case MESMERIZERMIC:
         {
-            static constexpr std::array<float, 16> Scalars16  = {0.4, .5, 0.75, 1.0, 0.6, 0.6, 0.8, 0.8, 1.2, 1.5, 3.0, 3.0, 3.0, 3.0, 3.5, 3.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static constexpr std::array<float, 16> Scalars16  = {0.4, .5, 0.75, 1.0, 0.6, 0.6, 0.8, 0.8, 1.2, 1.5, 3.0, 3.0, 3.0, 3.0, 3.5, 2.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
             float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -164,9 +165,15 @@ public:
             float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
+        case M5PLUS2:
+        {
+            static constexpr std::array<float, 16> Scalars16  = {0.3, .5, 0.8, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7}; 
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            return result;
+        }
         default:
         {
-            static constexpr std::array<float, 16> Scalars16  = {0.2, .25, 0.4, 0.6, 1.5, 1.2, 1.5, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 6.0, 5.0}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
+            static constexpr std::array<float, 16> Scalars16  = {0.5, .5, 0.8, 1.0, 1.5, 1.2, 1.5, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 2.5}; 
             float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
             return result;
         }
@@ -212,7 +219,7 @@ class SoundAnalyzer : public AudioVariables
     float    _oldMinVU;                 // Old min VU value for damping
     double * _vPeaks;                   // The peak value for each band
 
-    PeakData::MicrophoneType _MicMode = PeakData::M5;
+    PeakData::MicrophoneType _MicMode;
 
     // GetBandIndex
     //
@@ -266,7 +273,7 @@ class SoundAnalyzer : public AudioVariables
     {
         arduinoFFT _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
         _FFT.DCRemoval();
-        _FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+        _FFT.Windowing(FFT_WIN_TYP_BLACKMAN, FFT_FORWARD);
         _FFT.Compute(FFT_FORWARD);
         _FFT.ComplexToMagnitude();
         _FFT.MajorPeak();
@@ -278,8 +285,11 @@ class SoundAnalyzer : public AudioVariables
 
         size_t bytesRead = 0;
 
-        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW
+        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW 
             ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
+        #elif M5STICKCPLUS2
+            if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
+                bytesRead = bytesExpected;
         #else
             ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
             ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
@@ -293,7 +303,9 @@ class SoundAnalyzer : public AudioVariables
         }
 
         for (int i = 0; i < MAX_SAMPLES; i++)
+        {
             _vReal[i] = ptrSampleBuffer[i];
+        }
     }
 
     // UpdateVU
@@ -350,7 +362,6 @@ class SoundAnalyzer : public AudioVariables
 
         double averageSum = 0.0f;
 
-        int hitCount[NUM_BANDS] = {0};
         for (int i = 0; i < NUM_BANDS; i++)
             _vPeaks[i] = 0.0f;
 
@@ -361,22 +372,23 @@ class SoundAnalyzer : public AudioVariables
             {
                 // Track the average and the peak value
 
-                averageSum += _vReal[i];
+                double vVal = _vReal[i];
+                averageSum += vVal;
 
                 // If it's above the noise floor, figure out which band this belongs to and
                 // if it's a new peak for that band, record that fact
 
                 int iBand = GetBandIndex(freq);
-                _vPeaks[iBand] += _vReal[i];
-                hitCount[iBand]++;
+                if (vVal > _vPeaks[iBand])
+                    _vPeaks[iBand] = _vReal[i];
             }
         }
+        averageSum = averageSum / (MAX_SAMPLES / 2 - 2);
 
         // Noise gate - if the signal in this band is below a threshold we define, then we say there's no energy in this band
 
         for (int i = 0; i < NUM_BANDS; i++)
         {
-            _vPeaks[i] /= std::max(1, hitCount[i]);                       // max to avoid div by zero error
             _vPeaks[i] *= PeakData::GetBandScalar(_MicMode, i);
             if (_vPeaks[i] < NOISE_CUTOFF)
                 _vPeaks[i] = 0.0f;
@@ -415,7 +427,8 @@ class SoundAnalyzer : public AudioVariables
 
         // We'll use the average as the gVU.  I assume the average of the samples tracks sound pressure level, but don't really know...
 
-        float newval = averageSum / (MAX_SAMPLES / 2 - 2);
+        float newval = averageSum;
+
         debugV("AverageSum : %f", averageSum);
         debugV("Newval     : %f", newval);
 
@@ -424,7 +437,7 @@ class SoundAnalyzer : public AudioVariables
         EVERY_N_MILLISECONDS(100)
         {
             auto peaks = GetPeakData();
-            debugV("Audio Data -- Sum: %0.2f, _MinVU: %f0.2, _PeakVU: %f0.2, _VU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
+            debugV("Audio Data -- Sum: %0.2f, _MinVU: %0.2f, _PeakVU: %0.2f, _VU: %f, Peak0: %f, Peak1: %f, Peak2: %f, Peak3: %f", averageSum, _MinVU, _PeakVU, _VU, peaks[0], peaks[1], peaks[2], peaks[3]);
         }
 
         return PeakData(_vPeaks);
@@ -536,7 +549,11 @@ public:
         err += i2s_set_pin(Speak_I2S_NUMBER, &tx_pin_config);  // Set the I2S pin number.
         err += i2s_set_clk(Speak_I2S_NUMBER, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);  // Set the clock and bitwidth used by I2S Rx and Tx.
 
-    #elif M5STICKC || M5STICKCPLUS
+    #elif M5STICKCPLUS2
+
+        M5.Mic.begin();
+
+    #elif M5STICKC || M5STICKCPLUS 
 
         i2s_config_t i2s_config =
         {
@@ -706,7 +723,9 @@ public:
     {
         if (millis() - _msLastRemote > AUDIO_PEAK_REMOTE_TIMEOUT)
         {
-            #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
+            #if M5STICKCPLUS2
+                _MicMode = PeakData::M5PLUS2;
+            #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2 
                 _MicMode = PeakData::M5;
             #else
                 _MicMode = PeakData::MESMERIZERMIC;

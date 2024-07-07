@@ -551,6 +551,48 @@ class SilonEffect : public LEDStripEffect
     }
 };
 
+// PDPGridEffect
+// 
+// A Display for the front of the PDP-11/34
+
+class PDPGridEffect : public LEDStripEffect
+{
+  public:
+
+    PDPGridEffect() : LEDStripEffect(EFFECT_MATRIX_PDPGRID, "PDPGRIDEffect")
+    {
+    }
+
+    PDPGridEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    int _offset = 0;
+    int _direction = 1;
+
+    virtual size_t DesiredFramesPerSecond() const           
+    {
+        return 20;
+    }
+
+    virtual void Draw() override
+    {
+        fadeAllChannelsToBlackBy(255 * g_Values.AppTime.LastFrameTime());
+
+        EVERY_N_MILLISECONDS(200)
+        {
+          g()->MoveY(1);
+          for (int x = 0; x < MATRIX_WIDTH; x++)
+          {
+              if (random(0, 100) < 20)
+                  setPixelOnAllChannels(x, MATRIX_HEIGHT-1, CRGB::Red);
+              else
+                  setPixelOnAllChannels(x, MATRIX_HEIGHT-1, CRGB::Black);
+          }
+        }
+    }
+};
 
 #if HEXAGON
 ////////////////////////////////////////////////

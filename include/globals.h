@@ -172,6 +172,11 @@
 #undef min                                      // They define a min() on us
 #endif
 
+#if M5STICKCPLUS2
+#include "M5StickCPlus2.h"
+#undef min                                      // They define a min() on us
+#endif
+
 #if M5STACKCORE2
 #include "M5Core2.h"
 #undef min                                      // They define a min() on us
@@ -276,7 +281,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
-    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
+    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -320,7 +325,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
     #define COLORDATA_SERVER_ENABLED    0
     #define MIN_VU                      20
-    #define NOISE_CUTOFF                10
+    #define NOISE_CUTOFF                1000
 
     #if USE_PSRAM
         #define MAX_BUFFERS             500
@@ -330,7 +335,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
-    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
+    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -341,7 +346,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2
+    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -382,7 +387,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #if M5STICKC
         #define LED_PIN0 33
-    #elif M5STICKCPLUS || M5STACKCORE2
+    #elif M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
         #define LED_PIN0 32
     #else
         #define LED_PIN0 5
@@ -396,6 +401,55 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define ENABLE_WEBSERVER        0                                       // Turn on the internal webserver
     #define DEFAULT_EFFECT_INTERVAL 1000 * 60 * 60 * 24                     // One a day!
+
+    #define TOGGLE_BUTTON_1 37
+    #define TOGGLE_BUTTON_2 39
+
+#elif PDPGRID
+
+    // A matrix grid display for the front of the PDP-11
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "PDPGrid"
+    #endif
+
+    #define NUM_FANS                1
+    #define NUM_RINGS               4
+    #define FAN_SIZE                (RING_SIZE_0 + RING_SIZE_1 + RING_SIZE_2 + RING_SIZE_3)
+    #define RING_SIZE_0             16
+    #define RING_SIZE_1             12
+    #define RING_SIZE_2             8
+    #define RING_SIZE_3             1
+    #define MATRIX_WIDTH            14
+    #define MATRIX_HEIGHT           16
+    #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #define NUM_CHANNELS            1
+    #define ENABLE_AUDIO            1
+
+    #define POWER_LIMIT_MW          1000
+
+    // Once you have a working project, selectively enable various additional features by setting
+    // them to 1 in the list below.  This config assumes no audio (mic), or screen, etc.
+
+    #define ENABLE_WIFI             1   // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local contexnt
+    #define ENABLE_NTP              1   // Set the clock from the web
+    #define ENABLE_OTA              1   // Accept over the air flash updates
+    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+
+    #define LED_PIN0                32
+
+    #define MIN_VU                  280
+    #define NOISE_CUTOFF            1000
+    #define NOISE_FLOOR             2000
+
+    // The webserver serves files that are baked into the device firmware. When running you should be able to
+    // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
+    // watching the serial output or checking your router for the DHCP given to a new device; often they're
+    // named "esp32-" followed by a seemingly random 6-digit hexadecimal number.
+
+    #define DEFAULT_EFFECT_INTERVAL 0
 
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
@@ -903,7 +957,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA                      0   // Accept over the air flash updates
     #define ENABLE_REMOTE                   1   // IR Remote Control
     #define ENABLE_AUDIO                    1   // Listen for audio from the microphone and process it
-    #define COLORDATA_SERVER_ENABLED        0
 
     #if USE_PSRAM
         #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
@@ -943,8 +996,15 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The mic in the M5 is not quite the same as the Mesmerizer, so it gets a different minimum VU than default
 
-    #define MIN_VU                      280
-    #define NOISE_CUTOFF                1000
+    #if M5STICKCPLUS2
+        // The M5 Stick C Plus TWO seems to generate very high audio levels, so the cutoffs are wildly different,
+        // though I'm curious if that could be a bug elsewhere, or if adapting these level is the right thing to do.
+        #define MIN_VU                  60000
+        #define NOISE_CUTOFF            100000
+        #define NOISE_FLOOR             200000
+    #else
+        #define NOISE_CUTOFF                1000
+    #endif
 
     #if !(ELECROW)
         #define TOGGLE_BUTTON_1         37
@@ -961,7 +1021,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME                    "Helmet"
     #endif
 
-    #define POWER_LIMIT_MW                  3000
+    #define POWER_LIMIT_MW                  1000
 
     #define ENABLE_AUDIOSERIAL              0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI                     1   // Connect to WiFi
@@ -1261,7 +1321,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
     #endif
     #ifndef ENABLE_AUDIO_SMOOTHING
-        #define ENABLE_AUDIO_SMOOTHING 1
+        #define ENABLE_AUDIO_SMOOTHING 0
     #endif
     #ifndef BARBEAT_ENHANCE
         #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
@@ -1400,6 +1460,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
+    #elif M5STICKCPLUS2                                       // screen definitions for m5stick-c-plus2 
+    
+        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
+
     #elif M5STICKC                                            // screen definitions for m5stick-c (or m5stick-c plus)
 
         #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
@@ -1497,7 +1561,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 extern DRAM_ATTR const int g_aRingSizeTable[];
 
-#define MICROS_PER_SECOND   1000000UL
+#ifndef MICROS_PER_SECOND
+    #define MICROS_PER_SECOND 1000000
+#endif
+
 #define MILLIS_PER_SECOND   1000
 #define MICROS_PER_MILLI    1000
 
@@ -1507,6 +1574,10 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 
 #ifndef M5STICKCPLUS
 #define M5STICKCPLUS 0
+#endif
+
+#ifndef M5STICKCPLUS2
+#define M5STICKCPLUS2 0
 #endif
 
 #ifndef M5STACKCORE2
@@ -1534,7 +1605,7 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
         #elif M5STACKCORE2
             #define INPUT_PIN (0)
             #define IO_PIN    (0)
-        #elif M5STICKC || M5STICKCPLUS
+        #elif M5STICKC || M5STICKCPLUS || M5STICKCPLUS2
             #define INPUT_PIN (34)
             #define IO_PIN (0)
         #else

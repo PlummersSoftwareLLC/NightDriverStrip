@@ -212,6 +212,10 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 2.0f, 0.1, 0.0, 1.0, 0.0, LINEARBLEND, true, 1.0);
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 10, 32);
 
+    #elif PDPGRID
+
+        ADD_EFFECT(EFFECT_MATRIX_PDPGRID, PDPGridEffect);
+
     #elif LANTERN
 
         ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true);
