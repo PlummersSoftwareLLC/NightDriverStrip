@@ -276,7 +276,6 @@ class SoundAnalyzer : public AudioVariables
         _FFT.Windowing(FFT_WIN_TYP_BLACKMAN, FFT_FORWARD);
         _FFT.Compute(FFT_FORWARD);
         _FFT.ComplexToMagnitude();
-        _FFT.MajorPeak();
     }
 
     void FillBufferI2S()
@@ -285,15 +284,13 @@ class SoundAnalyzer : public AudioVariables
 
         size_t bytesRead = 0;
 
-        #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || ELECROW 
-            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
-        #elif M5STICKCPLUS2
+        #if USE_M5
             if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
                 bytesRead = bytesExpected;
         #else
-            ESP_ERROR_CHECK(i2s_adc_enable(EXAMPLE_I2S_NUM));
-            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, (100 / portTICK_RATE_MS)));
-            ESP_ERROR_CHECK(i2s_adc_disable(EXAMPLE_I2S_NUM));
+            ESP_ERROR_CHECK(i2s_start(EXAMPLE_I2S_NUM));
+            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, 100 / portTICK_RATE_MS));
+            ESP_ERROR_CHECK(i2s_stop(EXAMPLE_I2S_NUM));
         #endif
 
         if (bytesRead != bytesExpected)
@@ -367,6 +364,11 @@ class SoundAnalyzer : public AudioVariables
 
         for (int i = 2; i < MAX_SAMPLES / 2; i++)
         {
+            #if USE_M5
+                // The M5 Mic returns some large vales, so we normalize here
+                _vReal[i] = _vReal[i] / MAX_SAMPLES;
+            #endif
+
             int freq = GetBucketFrequency(i-2);
             if (freq >= LOWEST_FREQ)
             {
@@ -419,11 +421,16 @@ class SoundAnalyzer : public AudioVariables
         // just triggering the bottom pixel, and real silence yielding darkness
 
         allBandsPeak = std::max((double)NOISE_FLOOR, allBandsPeak);
-        debugV("All Bands Peak: %f", allBandsPeak);
+        debugV("All Bands Peak: %lf", allBandsPeak);
 
         // Normalize all the bands relative to allBandsPeak
         for (int i = 0; i < NUM_BANDS; i++)
             _vPeaks[i] /= allBandsPeak;
+
+        if (_VURatio < 1.0)
+
+            for (int i = 0; i < NUM_BANDS; i++)
+                _vPeaks[i] = max(0.0, _vPeaks[i]);
 
         // We'll use the average as the gVU.  I assume the average of the samples tracks sound pressure level, but don't really know...
 
@@ -504,7 +511,7 @@ public:
 
     // BeatEnhance
     //
-    // Looks like pure voodoo, but it returns the multiplier by which to scale a vale to enhance it
+    // Looks like pure voodoo, but it returns the multiplier by which to scale a value to enhance it
     // by the current VURatioFade amount.  The amt amount is the amount of your factor that should be
     // made up of the VURatioFade multiplier.  So passing a 0.75 is a lot of beat enhancement, whereas
     // 0.25 is a little bit.
@@ -521,65 +528,20 @@ public:
 
         debugV("Begin SamplerBufferInitI2S...");
 
-    #if M5STACKCORE2
+    #if USE_M5
 
-        esp_err_t err = ESP_OK;
-
-        i2s_driver_uninstall(Speak_I2S_NUMBER);  // Uninstall the I2S driver.  卸载I2S驱动
-        i2s_config_t i2s_config =
-        {
-            .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
-            .sample_rate = SAMPLING_FREQUENCY,  // Set the I2S sampling rate.
-            .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,  // Fixed 12-bit stereo MSB.
-            .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT,  // Set the channel format.
-            .communication_format = I2S_COMM_FORMAT_STAND_I2S,  // Set the format of the communication.
-            .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,  // Set the interrupt flag.
-            .dma_buf_count = 2,        // DMA buffer count.
-            .dma_buf_len = 256,        // DMA buffer length.
-        };
-
-        err += i2s_driver_install(Speak_I2S_NUMBER, &i2s_config, 0, NULL);
-
-        i2s_pin_config_t tx_pin_config;
-        tx_pin_config.mck_io_num = I2S_PIN_NO_CHANGE;
-        tx_pin_config.bck_io_num = CONFIG_I2S_BCK_PIN;            // Link the BCK to the CONFIG_I2S_BCK_PIN pin.
-        tx_pin_config.ws_io_num = CONFIG_I2S_LRCK_PIN;
-        tx_pin_config.data_out_num = CONFIG_I2S_DATA_PIN;
-        tx_pin_config.data_in_num = CONFIG_I2S_DATA_IN_PIN;
-        err += i2s_set_pin(Speak_I2S_NUMBER, &tx_pin_config);  // Set the I2S pin number.
-        err += i2s_set_clk(Speak_I2S_NUMBER, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);  // Set the clock and bitwidth used by I2S Rx and Tx.
-
-    #elif M5STICKCPLUS2
-
+        auto miccfg = M5.Mic.config();
+        miccfg.over_sampling = 4;
+        miccfg.magnification = 1;
+        miccfg.dma_buf_count = 2;
+        miccfg.dma_buf_len = MAX_SAMPLES;
+        miccfg.sample_rate = SAMPLING_FREQUENCY;
+        miccfg.use_adc = false;
+        M5.Mic.config(miccfg);
+        
         M5.Mic.begin();
-
-    #elif M5STICKC || M5STICKCPLUS 
-
-        i2s_config_t i2s_config =
-        {
-            .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
-            .sample_rate = SAMPLING_FREQUENCY,
-            .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // is fixed at 12bit, stereo, MSB
-            .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT,
-            .communication_format = I2S_COMM_FORMAT_STAND_I2S, // Set the format of the communication.
-            .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-            .dma_buf_count = 2,
-            .dma_buf_len = 256,
-        };
-
-        i2s_pin_config_t pin_config;
-
-        pin_config.mck_io_num = I2S_PIN_NO_CHANGE;
-        pin_config.bck_io_num = I2S_PIN_NO_CHANGE;
-        pin_config.ws_io_num = IO_PIN;
-        pin_config.data_out_num = I2S_PIN_NO_CHANGE;
-        pin_config.data_in_num = INPUT_PIN;
-
-        i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
-        i2s_set_pin(I2S_NUM_0, &pin_config);
-        i2s_set_clk(I2S_NUM_0, SAMPLING_FREQUENCY, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
-
-#elif ELECROW
+   
+    #elif ELECROW 
 
         const i2s_config_t i2s_config = {
                 .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
@@ -605,7 +567,7 @@ public:
             ESP_ERROR_CHECK( i2s_set_pin(I2S_NUM_0, &pin_config) );
             ESP_ERROR_CHECK( i2s_start(I2S_NUM_0) );
 
-#elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT 
+    #elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT 
 
         i2s_config_t i2s_config;
         i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
@@ -623,7 +585,7 @@ public:
         ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
         ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
 
-#else
+    #else
 
         i2s_config_t i2s_config;
         i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
@@ -641,7 +603,7 @@ public:
         ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
         ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
 
-#endif
+    #endif
 
         debugV("SamplerBufferInitI2S Complete\n");
     }
@@ -725,7 +687,7 @@ public:
         {
             #if M5STICKCPLUS2
                 _MicMode = PeakData::M5PLUS2;
-            #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2 
+            #elif USE_M5
                 _MicMode = PeakData::M5;
             #else
                 _MicMode = PeakData::MESMERIZERMIC;

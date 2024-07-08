@@ -117,9 +117,7 @@ public:
     //
     // Display code for the M5 based TFT displays on the M5 Stick, Stick C Plus, and Stack
 
-    #if M5STICKCPLUS2
-        #include <M5UnitLCD.h>
-    #endif
+    #include <M5UnitLCD.h>
 
     // M5Screen
     //

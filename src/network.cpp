@@ -600,12 +600,8 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
 
         for (;;)                                                // Call Debug.handle() 20 times a second
         {
-            EVERY_N_MILLIS(50)
-            {
-                Debug.handle();
-            }
-
-            delay(10);
+            Debug.handle();
+            delay(MILLIS_PER_SECOND / 20);
         }
     }
 #endif

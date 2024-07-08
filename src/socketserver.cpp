@@ -47,6 +47,21 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
         return false;
     }
 
+    if (_pBuffer == nullptr) 
+    {
+        debugE("Buffer not allocated!");
+        close(new_socket);
+        ResetReadBuffer();
+        return false;
+    }
+
+    // Ensure the new_socket is valid
+    if (new_socket < 0) {
+        debugE("Invalid socket!");
+        ResetReadBuffer();
+        return false;
+    }
+
     do
     {
         bool bSendResponsePacket = false;
@@ -110,7 +125,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             bSendResponsePacket = true;
         }
         else
-        {
+        {     
             // Read the rest of the data
             uint16_t command16   = WORDFromMemory(&_pBuffer.get()[0]);
 
@@ -228,6 +243,9 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             if (sizeof(response) != write(new_socket, &response, sizeof(response)))
                 debugW("Unable to send response back to server.");
         }
+
+        delay(100);
+
     } while (true);
 
     close(new_socket);

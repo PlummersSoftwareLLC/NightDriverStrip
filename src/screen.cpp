@@ -488,7 +488,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             #if AMOLED_S3
                 lv_task_handler();
             #endif
-            delay(2);
+            delay(1);
         }
         bRedraw = false;
     }

@@ -162,23 +162,12 @@
 // of the OLED/LCD is now controlled separately, but M5 is always equipped
 // with one (but it doesn't have to be used!).
 
-#if M5STICKC
-#include "M5StickC.h"
-#undef min                                      // They define a min() on us
+#if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
+    #define USE_M5 1    
 #endif
 
-#if M5STICKCPLUS
-#include "M5StickCPlus.h"
-#undef min                                      // They define a min() on us
-#endif
-
-#if M5STICKCPLUS2
-#include "M5StickCPlus2.h"
-#undef min                                      // They define a min() on us
-#endif
-
-#if M5STACKCORE2
-#include "M5Core2.h"
+#if USE_M5
+#include "M5Unified.h"
 #undef min                                      // They define a min() on us
 #endif
 
@@ -281,7 +270,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
-    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
+    #if USE_M5
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -335,7 +324,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
-    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
+    #if USE_M5
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -346,7 +335,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
+    #if USE_M5
         #define LED_PIN0 32
     #elif LILYGOTDISPLAYS3
         #define LED_PIN0 21
@@ -996,16 +985,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The mic in the M5 is not quite the same as the Mesmerizer, so it gets a different minimum VU than default
 
-    #if M5STICKCPLUS2
-        // The M5 Stick C Plus TWO seems to generate very high audio levels, so the cutoffs are wildly different,
-        // though I'm curious if that could be a bug elsewhere, or if adapting these level is the right thing to do.
-        #define MIN_VU                  60000
-        #define NOISE_CUTOFF            100000
-        #define NOISE_FLOOR             200000
-    #else
-        #define NOISE_CUTOFF                1000
-    #endif
-
+     #define MIN_VU                  150
+     #define NOISE_CUTOFF            100
+ 
     #if !(ELECROW)
         #define TOGGLE_BUTTON_1         37
         #define TOGGLE_BUTTON_2         39
@@ -1312,10 +1294,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 200
+        #define NOISE_FLOOR 4000
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF 1800
+        #define NOISE_CUTOFF 1000
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
@@ -1456,19 +1438,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
 
-    #elif M5STICKCPLUS                                        // screen definitions for m5stick-c-plus
-
-        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
-
-    #elif M5STICKCPLUS2                                       // screen definitions for m5stick-c-plus2 
-    
-        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
-
-    #elif M5STICKC                                            // screen definitions for m5stick-c (or m5stick-c plus)
-
-        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
-
-    #elif M5STACKCORE2                                        // screen definitions for m5stick-c (or m5stick-c plus)
+    #elif USE_M5                                        // screen definitions for m5stick-c-plus
 
         #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
@@ -1602,10 +1572,7 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
             #define INPUT_PIN (36)
         #elif ELECROW
             #define INPUT_PIN (41)
-        #elif M5STACKCORE2
-            #define INPUT_PIN (0)
-            #define IO_PIN    (0)
-        #elif M5STICKC || M5STICKCPLUS || M5STICKCPLUS2
+        #elif USE_M5
             #define INPUT_PIN (34)
             #define IO_PIN (0)
         #else
