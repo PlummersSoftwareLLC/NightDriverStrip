@@ -58,11 +58,11 @@ def build_env(tag: str, version: str):
     build_dir = os.path.join('.pio', 'build', tag)
 
     if project['merge']:
-        image_source_path = os.path.join(build_dir, installer_vars.merged_image)
+        image_source_path = os.path.join(build_dir, installer_vars.Files.merged_image)
         # If the merged image doesn't exist that means the build was effectively executed from cache. Which
         # means in turn that the merged image should already be in its target location.
         if (os.path.exists(image_source_path)):
-            print('=== Copying merged firmware file ' + installer_vars.merged_image)
+            print('=== Copying merged firmware file ' + installer_vars.Files.merged_image)
             shutil.copy(image_source_path, firmware_target_dir)
 
         with open(os.path.join(installer_vars.Dirs.config, installer_vars.Manifest.merged_template), "r", encoding='utf-8') as f:
@@ -72,7 +72,7 @@ def build_env(tag: str, version: str):
         bin_files = glob.glob(os.path.join(build_dir, '*.bin'))
 
         for bin_file in bin_files:
-            if not bin_file.endswith(installer_vars.merged_image):
+            if not bin_file.endswith(installer_vars.Files.merged_image):
                 print('=== Copying binary file ' + bin_file)
                 shutil.copy(bin_file, firmware_target_dir)
 
@@ -88,7 +88,7 @@ def build_env(tag: str, version: str):
     with open(os.path.join(project_dir, installer_vars.Files.manifest), 'w', encoding='utf-8') as f:
         f.write(manifest)
 
-    print('=== Computing feature flags')
+    print('=== Computing and writing feature flags')
 
     with open(os.path.join(project_dir, installer_vars.Files.features), 'w', encoding='utf-8') as f:
         f.write(json.dumps(show_features.get_features(tag)))
