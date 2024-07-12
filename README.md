@@ -39,7 +39,7 @@ _Davepl, 9/19/2021_
 - [Sample parts (Plummer's Software LLC Amazon affiliate links)](#sample-parts-plummers-software-llc-amazon-affiliate-links)
 - [Contributing, and the BlinkenPerBit metric](#contributing-and-the-blinkenperbit-metric)
 - [Time it takes to build this project](#time-it-takes-to-build-this-project)
-- [Old Build times, no longer relevant with current platformio, just historical curiosity:](#old-build-times-no-longer-relevant-with-current-platformio-just-historical-curiosity)
+- [Old Build times, no longer relevant with current platformio, just historical curiosity](#old-build-times-no-longer-relevant-with-current-platformio-just-historical-curiosity)
 
 ## What NightDriverStrip is
 
@@ -367,7 +367,7 @@ To replicate, build the mesmerizer project.  Then delete pio/build_cache and bui
 - Mac M1 Ultra Studio [10-core, 20-thread]
   -> [davepl 11/29/2023] 48.368 seconds
 
-## Old Build times, no longer relevant with current platformio, just historical curiosity:
+## Old Build times, no longer relevant with current platformio, just historical curiosity
 
 Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build after everything has been installed and downloaded.
 
