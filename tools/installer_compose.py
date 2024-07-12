@@ -2,7 +2,7 @@
 
 #--------------------------------------------------------------------------
 #
-# File:        bake_vars.py
+# File:        installer_compose.py
 #
 # NightDriverStrip - (c) 2024 Plummer's Software LLC.  All Rights Reserved.
 #
