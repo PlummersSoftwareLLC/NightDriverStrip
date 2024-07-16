@@ -39,7 +39,7 @@ _Davepl, 9/19/2021_
 - [Sample parts (Plummer's Software LLC Amazon affiliate links)](#sample-parts-plummers-software-llc-amazon-affiliate-links)
 - [Contributing, and the BlinkenPerBit metric](#contributing-and-the-blinkenperbit-metric)
 - [Time it takes to build this project](#time-it-takes-to-build-this-project)
-- [Old Build times, no longer relevant with current platformio, just historical curiosity:](#old-build-times-no-longer-relevant-with-current-platformio-just-historical-curiosity)
+- [Old Build times, no longer relevant with current platformio, just historical curiosity](#old-build-times-no-longer-relevant-with-current-platformio-just-historical-curiosity)
 
 ## What NightDriverStrip is
 
@@ -261,8 +261,13 @@ If you develop an effect that requires data to be pulled in from the Internet th
 
 The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
 
-To compile the front-end application (which is part of every PlatformIO build) NPM is required. Documentation is available online concerning [NPM installation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
-The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2. For details on working with the frontend application see [site/README.md](./site/README.md).
+To compile the front-end application (which is part of every PlatformIO build) a recent version of NodeJS with NPM is required. They can be downloaded from the [NodeJS website](https://nodejs.org/en). Instructions for supported ways to install NodeJS are available there as well. Please do read and follow them.
+
+**Note** that installing NodeJS using your operating system's/distribution's default package manager is likely to leave you with a much older NodeJS version than you need.
+
+The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2; newer versions should also work in principle.
+
+For details on working with the frontend application see [site/README.md](./site/README.md).
 
 ### Build commands
 
@@ -367,7 +372,7 @@ To replicate, build the mesmerizer project.  Then delete pio/build_cache and bui
 - Mac M1 Ultra Studio [10-core, 20-thread]
   -> [davepl 11/29/2023] 48.368 seconds
 
-## Old Build times, no longer relevant with current platformio, just historical curiosity:
+## Old Build times, no longer relevant with current platformio, just historical curiosity
 
 Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build after everything has been installed and downloaded.
 
