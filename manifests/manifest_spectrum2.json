@@ -1,5 +1,5 @@
 {
-  "name": "Atom Light for ESP32",
+  "name": "Spectrum for M5StickC Plus2",
   "version": "v040",
   "new_install_prompt_erase": true,
   "new_install_improv_wait_time": 20,
@@ -7,7 +7,7 @@
     {
       "chipFamily": "ESP32",
       "parts": [
-        { "path": "../firmware/atomlight/merged_image.bin", "offset": 0 }
+        { "path": "../firmware/spectrum2/merged_image.bin", "offset": 0 }
       ]
     }
   ]
