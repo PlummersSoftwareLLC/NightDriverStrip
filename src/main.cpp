@@ -427,20 +427,15 @@ void setup()
         debugW("Creating LCD Screen");
         g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
-    #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
+    #elif USE_M5
 
-        #if USE_M5DISPLAY
-            M5.begin();
-            debugW("Creating M5 Screen");
-            g_ptrSystem->SetupDisplay<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
-        #else
-            M5.begin(false);
-        #endif
+        M5.begin();
+        M5.Display.startWrite();
+        M5.Display.setRotation(1);
+        M5.Display.setTextDatum(top_center);
+        M5.Display.setTextColor(WHITE);
 
-        // Turn off the M5 vibration motor
-        #if M5STACKCORE2
-            M5.Axp.SetLDOEnable(3, false);
-        #endif
+        g_ptrSystem->SetupDisplay<M5Screen>(M5.Lcd.width(), M5.Lcd.height());
 
     #elif ELECROW
 
@@ -600,6 +595,6 @@ void loop()
         // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise, we delay a bit to share the CPU.
 
         if (!g_Values.UpdateStarted)
-            delay(10);
+            delay(1);
     }
 }

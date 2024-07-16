@@ -86,7 +86,7 @@
 #define NTP_SERVER_DEFAULT          "0.pool.ntp.org"
 #define BRIGHTNESS_MIN              uint8_t(10)
 #define BRIGHTNESS_MAX              uint8_t(255)
-#define POWER_LIMIT_MIN             2000
+#define POWER_LIMIT_MIN             1000
 #define POWER_LIMIT_DEFAULT         4500
 
 // DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should

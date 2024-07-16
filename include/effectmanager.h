@@ -68,7 +68,7 @@ class  EffectManager : public IJSONSerializable
     bool _bPlayAll;
     bool _bShowVU = true;
     bool _clearTempEffectWhenExpired = false;
-    bool _newFrameAvailable = false;
+    std::atomic_bool _newFrameAvailable = false;
     int _effectSetVersion = 1;
 
     std::vector<std::shared_ptr<GFXBase>> _gfx;

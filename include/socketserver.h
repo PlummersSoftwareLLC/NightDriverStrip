@@ -112,7 +112,7 @@ public:
         _server_fd(-1),
         _cbReceived(0)
     {
-        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug
+        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug        
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -175,6 +175,7 @@ public:
     void ResetReadBuffer()
     {
         _cbReceived = 0;
+        memset(_pBuffer.get(), 0, MAXIMUM_PACKET_SIZE);
     }
 
     // ReadUntilNBytesReceived
@@ -204,7 +205,11 @@ public:
 
             // Read data from the socket until we have _bcNeeded bytes in the buffer
 
-            int cbRead = read(socket, (uint8_t *) _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
+            int cbRead = 0;
+            do 
+            {
+                cbRead = read(socket, (uint8_t *) _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
+            } while (cbRead < 0 && errno == EINTR);
 
             // Restore the old state
 
@@ -226,7 +231,7 @@ public:
     // Socket server main ProcessIncomingConnectionsLoop - accepts new connections and reads from them, dispatching
     // data packets into our buffer and closing the socket if anything goes weird.
 
-    int ProcessIncomingConnectionsLoop();
+    bool ProcessIncomingConnectionsLoop();
 
     // DecompressBuffer
     //

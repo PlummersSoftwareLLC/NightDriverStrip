@@ -86,14 +86,14 @@ class IdleTask
             int delta = millis() - _lastMeasurement;
             if (delta >= kMillisPerCalc)
             {
-                //Serial.printf("Core %u Spent %lu in delay during a window of %d for a ratio of %f\n",
-                //  xPortGetCoreID(), counter, delta, (float)counter/delta);
+                // We've used up all the time, so calculate the idle ratio and reset the counter
                 _idleRatio = ((float) counter  / delta);
                 _lastMeasurement = millis();
                 counter = 0;
             }
             else
             {
+                // Burn a little time and update the counter
                 esp_task_wdt_reset();
                 delayMicroseconds(kMillisPerLoop*1000);
                 counter += kMillisPerLoop;
@@ -383,6 +383,7 @@ public:
 
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show
+    
     TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
     {
         // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method

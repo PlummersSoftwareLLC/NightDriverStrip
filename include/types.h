@@ -241,11 +241,23 @@ inline void * PreferPSRAMAlloc(size_t s)
     if (psramInit())
     {
         debugV("PSRAM Array Request for %u bytes\n", s);
-        return ps_malloc(s);
+        auto p = ps_malloc(s);
+        if (!p)
+        {
+            debugE("PSRAM Allocation failed for %u bytes\n", s);
+            throw std::bad_alloc();
+        }
+        return p;
     }
     else
     {
-        return malloc(s);
+        auto p = malloc(s);
+        if (!p)
+        {
+            debugE("RAM Allocation failed for %u bytes\n", s);
+            throw std::bad_alloc();
+        }   
+        return p;
     }
 }
 

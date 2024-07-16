@@ -164,8 +164,8 @@ class MusicStar : public Star
 
     virtual float PreignitionTime() const      { return 0.0f;  }
     virtual float IgnitionTime()    const      { return 0.00f; }
-    virtual float HoldTime()        const      { return 2.00f; }
-    virtual float FadeTime()        const      { return 0.25f; }
+    virtual float HoldTime()        const      { return 0.00f; }
+    virtual float FadeTime()        const      { return 0.5f; }
 
 };
 
@@ -506,9 +506,9 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         {
             double prob = _newStarProbability;
 
-            prob = (prob / 100) + (g_Analyzer._VURatio - 1.0) * _musicFactor * 4;
+            prob = (prob / 100) + (g_Analyzer._VURatio - 1.0) * _musicFactor;
 
-            constexpr auto kProbabilitySpan = 2.0;
+            constexpr auto kProbabilitySpan = 1.0;
 
             if (g_Analyzer._VU > 0)
             {
@@ -550,13 +550,12 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
             fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer._VURatioFade));
         }
 
-        //Serial.printf("Stars: %d Deltatime: %lf\n", _allParticles.size(), g_AppTime.DeltaTime());
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
         {
             i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            g()->setPixelsF(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
+            setPixelsFOnAllChannels(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
         }
     }
 };
@@ -617,7 +616,7 @@ public:
 
 
         // Rotate the buffer
-        //memmove(buffer, buffer + 1, ARRAYSIZE(buffer) * (Count - 1));
+        //memmove(buffer, buffer + 1, std::size(buffer) * (Count - 1));
         for (int i = 0; i < NUM_TWINKLES - 1; i++)
             buffer[i] = buffer[i + 1];
 

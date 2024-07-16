@@ -949,7 +949,7 @@ protected:
   CRGBPalette16 Palette;
   int LEDCount; // Number of LEDs total
   int CellsPerLED;
-  int Cooling;     // Rate at which the pixels cool off
+  float Cooling;     // Rate at which the pixels cool off
   int Sparks;      // How many sparks will be attempted each frame
   int SparkHeight; // If created, max height for a spark
   int Sparking;    // Probability of a spark each attempt
@@ -976,7 +976,7 @@ public:
   FireFanEffect(CRGBPalette16 palette,
                 int ledCount,
                 int cellsPerLED = 1,
-                int cooling = 20,
+                float cooling = 20,
                 int sparking = 100,
                 int sparks = 3,
                 int sparkHeight = 4,
@@ -1067,7 +1067,7 @@ public:
     {
       for (int i = 0; i < CellCount(); i++)
       {
-        int coolingAmount = random(0, Cooling);
+        float coolingAmount = random_range(0.0f, 2.0f);
         abHeat[i] = ::max(0.0, abHeat[i] - coolingAmount * (2.0 - g_Analyzer._VURatio));
       }
     }

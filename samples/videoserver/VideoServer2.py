@@ -28,9 +28,9 @@ import datetime
 
 MATRIX_WIDTH = 64
 MATRIX_HEIGHT = 32
-FUTURE_DELAY = 5
-URL = "https://youtu.be/WPdCT0l6vGs"
-ESP32_WIFI_ADDRESS = '192.168.8.127'
+FUTURE_DELAY = 5 
+URL = "https://youtu.be/dQw4w9WgXcQ"
+ESP32_WIFI_ADDRESS = '192.168.8.87'
 PORT = 49152
 WIFI_COMMAND_PIXELDATA64 = 3
 
@@ -102,7 +102,7 @@ def send_video_data(stream):
             sock.close()
             sock = None
 
-        time.sleep(1.0 / stream.fps / 2)
+        time.sleep(1.0 / stream.fps)
 
 # build_header
 #

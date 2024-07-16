@@ -145,6 +145,8 @@
 #define EFFECT_MATRIX_SMWALKING_MACHINE                157
 #define EFFECT_MATRIX_ANIMATEDGIF                      158
 #define EFFECT_MATRIX_STOCKS                           159
+#define EFFECT_MATRIX_SILON                            160
+#define EFFECT_MATRIX_PDPGRID                          161
 
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201

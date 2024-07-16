@@ -380,9 +380,6 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
     debugV("payloadLength: %zu, command16: %d", payloadLength, command16);
 
-    // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
-    // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
-
     switch (command16)
     {
         // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
@@ -417,13 +414,14 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
             uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
-
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
                    channel16,
                    length32,
                    seconds,
                    micros);
 
+            // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
+            // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
             // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
 
             if (channel16 == 0)
@@ -500,7 +498,7 @@ bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password)
     {
         // Read the SSID and Password from the NVS partition name/value keypair set
 
-        auto len = ARRAYSIZE(szBuffer);
+        auto len = std::size(szBuffer);
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_ssid), szBuffer, &len);
         if (ESP_OK != err)
         {
@@ -510,7 +508,7 @@ bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password)
         }
         WiFi_ssid = szBuffer;
 
-        len = ARRAYSIZE(szBuffer);
+        len = std::size(szBuffer);
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_password), szBuffer, &len);
         if (ESP_OK != err)
         {
@@ -602,12 +600,8 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
 
         for (;;)                                                // Call Debug.handle() 20 times a second
         {
-            EVERY_N_MILLIS(50)
-            {
-                Debug.handle();
-            }
-
-            delay(10);
+            Debug.handle();
+            delay(MILLIS_PER_SECOND / 20);
         }
     }
 #endif

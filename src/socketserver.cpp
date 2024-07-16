@@ -3,9 +3,9 @@
 
 #if INCOMING_WIFI_ENABLED
 
-int SocketServer::ProcessIncomingConnectionsLoop()
+bool SocketServer::ProcessIncomingConnectionsLoop()
 {
-    if (0 == _server_fd)
+    if (0 >= _server_fd)
     {
         debugW("No _server_fd, returning.");
         return false;
@@ -43,6 +43,21 @@ int SocketServer::ProcessIncomingConnectionsLoop()
     {
         debugW("Unable to set read timeout on socket!");
         close(new_socket);
+        ResetReadBuffer();
+        return false;
+    }
+
+    if (_pBuffer == nullptr) 
+    {
+        debugE("Buffer not allocated!");
+        close(new_socket);
+        ResetReadBuffer();
+        return false;
+    }
+
+    // Ensure the new_socket is valid
+    if (new_socket < 0) {
+        debugE("Invalid socket!");
         ResetReadBuffer();
         return false;
     }
@@ -110,7 +125,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
             bSendResponsePacket = true;
         }
         else
-        {
+        {     
             // Read the rest of the data
             uint16_t command16   = WORDFromMemory(&_pBuffer.get()[0]);
 
@@ -228,6 +243,9 @@ int SocketServer::ProcessIncomingConnectionsLoop()
             if (sizeof(response) != write(new_socket, &response, sizeof(response)))
                 debugW("Unable to send response back to server.");
         }
+
+        delay(100);
+
     } while (true);
 
     close(new_socket);

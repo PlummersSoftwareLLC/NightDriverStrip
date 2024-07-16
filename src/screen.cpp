@@ -158,7 +158,7 @@ void BasicInfoSummary(bool bRedraw)
     time(&t);
     struct tm *tmp = localtime(&t);
     char szTime[16];
-    strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
+    strftime(szTime, std::size(szTime), "%H:%M:%S", tmp);
 
     display.setCursor(xMargin + 0, yMargin + lineHeight * 3);
     display.println(str_sprintf("CLCK:%s %04.3lf",
@@ -255,10 +255,17 @@ void CurrentEffectSummary(bool bRedraw)
     static auto lastFullDraw = 0;
     static auto lastAudio = 0;
     static auto lastSerial = 0;
+    static auto lastScreen = millis();
+    float screenFPS = 0;
     auto yh = 2; // Start at top of screen
 
     display.setTextSize(display.width() > 160 ? 2 : 1);
     const int topMargin = display.fontHeight() * 3 + 4;
+
+    screenFPS = (millis() - lastScreen) / 1000.0f;
+    if (screenFPS != 0)
+        screenFPS = 1.0f / screenFPS;
+    lastScreen = millis();
 
     if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
     {
@@ -311,7 +318,7 @@ void CurrentEffectSummary(bool bRedraw)
             display.setTextColor(YELLOW16, backColor);
             display.setTextSize(1);
             yh = display.height() - display.fontHeight();
-            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
+            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS, (int) screenFPS);
             auto w = display.textWidth(strOut);
             display.setCursor(display.width() / 2 - w / 2, yh);
             display.print(strOut);
@@ -481,7 +488,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             #if AMOLED_S3
                 lv_task_handler();
             #endif
-            delay(2);
+            delay(1);
         }
         bRedraw = false;
     }

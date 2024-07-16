@@ -343,7 +343,7 @@ class LEDStripEffect : public IJSONSerializable
                 CRGB::Indigo,
                 CRGB::Violet
             };
-        int randomColorIndex = random_range(0U, ARRAYSIZE(colors));
+        int randomColorIndex = random_range(0U, std::size(colors));
         return colors[randomColorIndex];
     }
 
@@ -411,6 +411,16 @@ class LEDStripEffect : public IJSONSerializable
         }
     }
 
+    // SetPixelsFOnAllChannels
+    //
+    // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
+
+    void setPixelsFOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false)
+    {
+        for (auto& device : _GFX)
+            device->setPixelsF(fPos, count, c, bMerge);
+    }
+    
     // ClearFrameOnAllChannels
     //
     // Clears ALL the channels
@@ -496,6 +506,11 @@ class LEDStripEffect : public IJSONSerializable
             device->setPixel(i, c);
     }
 
+    void setPixelOnAllChannels(int x, int y, CRGB c)
+    {
+        for (auto& device : _GFX)
+            device->setPixel(x, y, c);
+    }
     // setPixelsOnAllChannels
     //
     // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
