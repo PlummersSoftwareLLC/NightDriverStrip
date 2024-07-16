@@ -261,7 +261,7 @@ If you develop an effect that requires data to be pulled in from the Internet th
 
 The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
 
-To compile the front-end application (which is part of every PlatformIO build) a recent version of NodeJS with NPM is required. They can be downloaded from the [NodeJS website](https://nodejs.org/en). Instructions for supported ways to install NodeJS is available there as well. Please do read and follow them.
+To compile the front-end application (which is part of every PlatformIO build) a recent version of NodeJS with NPM is required. They can be downloaded from the [NodeJS website](https://nodejs.org/en). Instructions for supported ways to install NodeJS are available there as well. Please do read and follow them.
 
 **Note** that installing NodeJS using your operating system's/distribution's default package manager is likely to leave you with a much older NodeJS version than you need.
 
