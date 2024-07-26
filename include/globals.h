@@ -313,8 +313,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE               0   // IR Remote Control
     #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
     #define COLORDATA_SERVER_ENABLED    0
-    #define MIN_VU                      20
-    #define NOISE_CUTOFF                1000
 
     #if USE_PSRAM
         #define MAX_BUFFERS             500
@@ -428,10 +426,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
     #define LED_PIN0                32
-
-    #define MIN_VU                  280
-    #define NOISE_CUTOFF            1000
-    #define NOISE_FLOOR             2000
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
     // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
@@ -581,9 +575,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define TOGGLE_BUTTON_1             0
 
-    #define COLOR_ORDER                 EOrder::RGB
+    // The mesmerizer mic isn't quite as sensitive as the M5 mic that the code was originally written for
+    // so we adjust by a scalar to get the same effect.
+    
+    #define AUDIO_MIC_SCALAR            1.5
 
-    #define MIN_VU                      80
+    #define COLOR_ORDER                 EOrder::RGB
 
 #elif TTGO
 
@@ -983,11 +980,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS                    (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU           6
 
-    // The mic in the M5 is not quite the same as the Mesmerizer, so it gets a different minimum VU than default
+    //#define MIN_VU                      400
+    //#define NOISE_FLOOR                 30
+    //#define NOISE_CUTOFF                5
 
-     #define MIN_VU                  150
-     #define NOISE_CUTOFF            100
- 
     #if !(ELECROW)
         #define TOGGLE_BUTTON_1         37
         #define TOGGLE_BUTTON_2         39
@@ -1040,11 +1036,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_BANDS                       16
     #define NUM_LEDS                        (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define LED_FAN_OFFSET_BU               6
-
-    // The mic in the M5 is not quite the same as the Mesmerizer, so it gets a different minimum VU than default
-
-    #define MIN_VU                          280
-    #define NOISE_CUTOFF                    1000
 
     #define TOGGLE_BUTTON_1         39
     #define TOGGLE_BUTTON_2         37
@@ -1294,10 +1285,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define NUM_BANDS 16
     #endif
     #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 4000
+        #define NOISE_FLOOR 30
     #endif
     #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF 1000
+        #define NOISE_CUTOFF 10
+    #endif
+    #ifndef AUDIO_MIC_SCALAR
+        #define AUDIO_MIC_SCALAR 1.0
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again

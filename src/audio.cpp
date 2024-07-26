@@ -80,6 +80,9 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
                                 0.0 :
                                 (g_Analyzer._VU - g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
 
+        debugV("VU: %f\n", g_Analyzer._VU);
+        debugV("PeakVU: %f\n", g_Analyzer._PeakVU);
+        debugV("MinVU: %f\n", g_Analyzer._MinVU);
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
         // Delay enough time to yield 60fps max

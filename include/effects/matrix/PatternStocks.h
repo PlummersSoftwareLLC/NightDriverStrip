@@ -464,7 +464,11 @@ public:
             // We have the high and low data in the stock, but let's not trust it and calculate it ourselves
             // If this works, Davepl wrote it.  If not, Robert made me do it!
 
-            auto [minpoint, maxpoint] = std::minmax_element(currentStock.points.begin(), currentStock.points.end(), [](const StockPoint& a, const StockPoint& b) { return a.val < b.val; }); 
+            auto [minpoint, maxpoint] = 
+                std::minmax_element(currentStock.points.begin(), currentStock.points.end(), [](const StockPoint& a, const StockPoint& b) 
+                { 
+                        return a.val < b.val; 
+                }); 
             float min = minpoint->val, max = maxpoint->val, range = max - min;
 
             if (range > 0.0f)

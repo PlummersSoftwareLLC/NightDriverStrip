@@ -155,7 +155,7 @@ class VUMeter
         const int MAX_FADE = 256;
 
         int xHalf = pGFXChannel->width()/2-1;
-        int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; // map(g_Analyzer._VU, 0, MAX_VU/8, 1, xHalf);
+        int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; 
         bars = min(bars, xHalf);
 
         EraseVUMeter(pGFXChannel, bars, yVU);

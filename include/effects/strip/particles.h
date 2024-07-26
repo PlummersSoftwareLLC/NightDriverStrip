@@ -478,7 +478,7 @@ class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public Pa
       // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
       // pass and rely on the fade effects of the particles to blend the
 
-      float amount = g_Analyzer._VU / MAX_VU;
+      float amount = g_Analyzer._VU / 4096;
 
       _baseColor = CRGB(500 * amount, 0, 0);
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);

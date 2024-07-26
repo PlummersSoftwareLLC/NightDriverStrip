@@ -36,14 +36,6 @@
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
 #include <driver/adc.h>
-// #include <driver/adc_deprecated.h>
-
-#define SUPERSAMPLES 1                                    // How many supersamples to take
-#define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
-#define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
-#ifndef MAX_VU
-  #define MAX_VU (MAX_ANALOG_IN / 2)
-#endif
 
 #define MS_PER_SECOND 1000
 
@@ -77,8 +69,6 @@ class SoundAnalyzer : public AudioVariables // Non-audio case.  Inherits only th
 
 #define EXAMPLE_I2S_NUM (I2S_NUM_0)
 #define EXAMPLE_I2S_FORMAT (I2S_CHANNEL_FMT_RIGHT_LEFT)                                         // I2S data format
-#define I2S_ADC_UNIT ADC_UNIT_1                                                                 // I2S built-in ADC unit
-#define I2S_ADC_CHANNEL ADC1_CHANNEL_0                                                          // I2S built-in ADC channel
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 void IRAM_ATTR AudioSerialTaskEntry(void *);
@@ -89,7 +79,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // results are simplified down to this small class of band peaks.
 
 #ifndef MIN_VU
-#define MIN_VU 180              // Minimum VU value to use for the span when computing VURatio.  Contributes to
+#define MIN_VU 2                // Minimum VU value to use for the span when computing VURatio.  Contributes to
 #endif                          // how dynamic the music is (smaller values == more dynamic)
 
 
@@ -202,7 +192,7 @@ public:
 class SoundAnalyzer : public AudioVariables
 {
     static constexpr size_t MAX_SAMPLES = 256;
-    std::unique_ptr<uint16_t[]> ptrSampleBuffer;
+    std::unique_ptr<int16_t[]> ptrSampleBuffer;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
@@ -288,9 +278,9 @@ class SoundAnalyzer : public AudioVariables
             if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
                 bytesRead = bytesExpected;
         #else
-            ESP_ERROR_CHECK(i2s_start(EXAMPLE_I2S_NUM));
-            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, 100 / portTICK_RATE_MS));
-            ESP_ERROR_CHECK(i2s_stop(EXAMPLE_I2S_NUM));
+            ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, 100 / portTICK_PERIOD_MS));
+            ESP_ERROR_CHECK(i2s_stop(I2S_NUM_0));
         #endif
 
         if (bytesRead != bytesExpected)
@@ -364,10 +354,7 @@ class SoundAnalyzer : public AudioVariables
 
         for (int i = 2; i < MAX_SAMPLES / 2; i++)
         {
-            #if USE_M5
-                // The M5 Mic returns some large vales, so we normalize here
-                _vReal[i] = _vReal[i] / MAX_SAMPLES;
-            #endif
+            _vReal[i] = _vReal[i] / MAX_SAMPLES * AUDIO_MIC_SCALAR;
 
             int freq = GetBucketFrequency(i-2);
             if (freq >= LOWEST_FREQ)
@@ -399,7 +386,7 @@ class SoundAnalyzer : public AudioVariables
         // Print out the low 4 and high 4 bands so we can monitor levels in the debugger if needed
         EVERY_N_SECONDS(1)
         {
-            debugV("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
+            debugE("Raw Peaks: %0.1lf %0.1lf  %0.1lf  %0.1lf <--> %0.1lf  %0.1lf  %0.1lf  %0.1lf",
                    _vPeaks[0], _vPeaks[1], _vPeaks[2], _vPeaks[3], _vPeaks[12], _vPeaks[13], _vPeaks[14], _vPeaks[15]);
         }
         // If you want the peaks to be a lot more prominent, you can exponentially raise the values
@@ -489,7 +476,10 @@ public:
 
     SoundAnalyzer()
     {
-        ptrSampleBuffer = make_unique_psram_array<uint16_t>(MAX_SAMPLES);
+        ptrSampleBuffer.reset( (int16_t *)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_8BIT) );
+        if (!ptrSampleBuffer)
+            throw std::runtime_error("Failed to allocate sample buffer");
+
         _vReal      = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
         _vPeaks     = (double *)PreferPSRAMAlloc(NUM_BANDS  * sizeof(_vPeaks[0]));
@@ -530,17 +520,13 @@ public:
 
     #if USE_M5
 
-        auto miccfg = M5.Mic.config();
-        miccfg.over_sampling = 4;
-        miccfg.magnification = 1;
-        miccfg.dma_buf_count = 2;
-        miccfg.dma_buf_len = MAX_SAMPLES;
-        miccfg.sample_rate = SAMPLING_FREQUENCY;
-        miccfg.use_adc = false;
-        M5.Mic.config(miccfg);
-        
+
+        // Can't use speaker and mic at the same time, and speaker defaults on, so turn it off
+
+        M5.Speaker.setVolume(255);
+        M5.Speaker.end();
         M5.Mic.begin();
-   
+        
     #elif ELECROW 
 
         const i2s_config_t i2s_config = {
@@ -582,8 +568,8 @@ public:
 
         ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
         ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
-        ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
+        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
+        ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
 
     #else
 
@@ -600,7 +586,7 @@ public:
 
         ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
         ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
+        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
         ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
 
     #endif
