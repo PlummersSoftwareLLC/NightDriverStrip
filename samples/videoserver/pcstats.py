@@ -15,7 +15,7 @@
 
 # Dependencies
 
-from PIL import Image, ImageDraw, ImageFont     # python3` -m pip install pillow`
+from PIL import Image, ImageDraw, ImageFont     # python3 -m pip install pillow
 import socket
 import time
 import zlib

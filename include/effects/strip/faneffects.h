@@ -957,7 +957,7 @@ protected:
   bool bMirrored;  // If mirrored we split and duplicate the drawing
   bool bMulticolor; // If true each channel spoke will be a different color
   PixelOrder Order;
- 
+
   std::unique_ptr<uint8_t[]> abHeat; // Heat table to map temp to color
 
   // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
@@ -1067,8 +1067,8 @@ public:
     {
       for (int i = 0; i < CellCount(); i++)
       {
-          float coolingAmount = random_range(0.0f, 2.0f);
-          abHeat[i] = ::max(0.0, abHeat[i] - coolingAmount * (2.0 - g_Analyzer._VURatio));
+        float coolingAmount = random_range(0.0f, 2.0f);
+        abHeat[i] = ::max(0.0, abHeat[i] - coolingAmount * (2.0 - g_Analyzer._VURatio));
       }
     }
 

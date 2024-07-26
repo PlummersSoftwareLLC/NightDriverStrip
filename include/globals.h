@@ -163,7 +163,7 @@
 // with one (but it doesn't have to be used!).
 
 #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
-    #define USE_M5 1    
+    #define USE_M5 1
 #endif
 
 #if USE_M5
@@ -680,7 +680,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define MATRIX_HEIGHT   1                       // Number of pixels tall
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   1                       // IR Remote Control
-    #define IR_REMOTE_PIN   35                      // Eric's is PIN 35   
+    #define IR_REMOTE_PIN   35                      // Eric's is PIN 35
     #define ENABLE_AUDIO    1                       // Listen for audio from the microphone and process it
     #define USE_SCREEN      0                       // Normally we use a tiny board inside the lamp with no screen
     #define FAN_SIZE        NUM_LEDS                // Allows us to use fan effects on the spokes
@@ -991,10 +991,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #elif HELMET
 
-    // This project is set up as a 48x16 matrix of 16x16 WS2812B panels such as: https://amzn.to/3ABs5DK
-    // It uses an M5StickCPlus which has a microphone and LCD built in:  https://amzn.to/3CrvCFh
-    // It displays a spectrum analyzer and music visualizer
-
     #ifndef PROJECT_NAME
     #define PROJECT_NAME                    "Helmet"
     #endif
@@ -1010,7 +1006,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA                      0   // Accept over the air flash updates
     #define ENABLE_REMOTE                   1   // IR Remote Control
     #define ENABLE_AUDIO                    1   // Listen for audio from the microphone and process it
-    #define COLORDATA_SERVER_ENABLED        0
 
     #if USE_PSRAM
         #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
@@ -1025,7 +1020,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL         0   // Do not auto-advance unless the button is presssed
 
-    #define LED_PIN0                        26   
+    #define LED_PIN0                        26
     #define NUM_CHANNELS                    1
     #define RING_SIZE_0                     24
     #define BONUS_PIXELS                    0
@@ -1735,22 +1730,22 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 }
 
 // formatSize
-// 
-// Returns a string with the size formatted in a human readable format.  
+//
+// Returns a string with the size formatted in a human readable format.
 // For example, 1024 becomes "1K", 1000*1000 becomes "1M", etc.
 // It pains me not to use 1024, but such are the times we live in.
 
-inline String formatSize(size_t size, size_t threshold = 1000) 
+inline String formatSize(size_t size, size_t threshold = 1000)
 {
     // If the size is less than the threshold, we don't need to worry about precision because
-    // we'll be showing whole units 
+    // we'll be showing whole units
     const int precision = size >= threshold ? 2 : 0;
 
     const char* suffixes[] = {"", "K", "M", "G", "T", "P", "E", "Z"};
     size_t suffixIndex = 0;
     double sizeDouble = static_cast<double>(size);
 
-    while (sizeDouble >= threshold && suffixIndex < (sizeof(suffixes) / sizeof(suffixes[0])) - 1) 
+    while (sizeDouble >= threshold && suffixIndex < (sizeof(suffixes) / sizeof(suffixes[0])) - 1)
     {
         sizeDouble /= 1000;
         ++suffixIndex;

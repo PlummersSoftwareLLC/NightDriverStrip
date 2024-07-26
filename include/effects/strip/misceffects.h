@@ -504,7 +504,7 @@ class TwinkleEffect : public LEDStripEffect
 };
 
 // SilonEffect
-// 
+//
 // A Battlestar Galactica inspired effect that moves red and green bars back and forth
 
 class SilonEffect : public LEDStripEffect
@@ -523,7 +523,7 @@ class SilonEffect : public LEDStripEffect
     int _offset = 0;
     int _direction = 1;
 
-    virtual size_t DesiredFramesPerSecond() const           
+    virtual size_t DesiredFramesPerSecond() const
     {
         return 20;
     }
@@ -552,14 +552,14 @@ class SilonEffect : public LEDStripEffect
 };
 
 // PDPGridEffect
-// 
+//
 // A Display for the front of the PDP-11/34
 
 class PDPGridEffect : public LEDStripEffect
 {
   public:
 
-    PDPGridEffect() : LEDStripEffect(EFFECT_MATRIX_PDPGRID, "PDPGRIDEffect")
+    PDPGridEffect() : LEDStripEffect(EFFECT_MATRIX_PDPGRID, "PDPGridEffect")
     {
     }
 
@@ -571,7 +571,7 @@ class PDPGridEffect : public LEDStripEffect
     int _offset = 0;
     int _direction = 1;
 
-    virtual size_t DesiredFramesPerSecond() const           
+    virtual size_t DesiredFramesPerSecond() const
     {
         return 20;
     }
