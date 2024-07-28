@@ -36,14 +36,6 @@
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
 #include <driver/adc.h>
-// #include <driver/adc_deprecated.h>
-
-#define SUPERSAMPLES 1                                    // How many supersamples to take
-#define SAMPLE_BITS 12                                    // Sample resolution (0-4095)
-#define MAX_ANALOG_IN ((1 << SAMPLE_BITS) * SUPERSAMPLES) // What our max analog input value is on all analog pins (4096 is default 12 bit resolution)
-#ifndef MAX_VU
-  #define MAX_VU (MAX_ANALOG_IN / 2)
-#endif
 
 #define MS_PER_SECOND 1000
 
@@ -77,8 +69,6 @@ class SoundAnalyzer : public AudioVariables // Non-audio case.  Inherits only th
 
 #define EXAMPLE_I2S_NUM (I2S_NUM_0)
 #define EXAMPLE_I2S_FORMAT (I2S_CHANNEL_FMT_RIGHT_LEFT)                                         // I2S data format
-#define I2S_ADC_UNIT ADC_UNIT_1                                                                 // I2S built-in ADC unit
-#define I2S_ADC_CHANNEL ADC1_CHANNEL_0                                                          // I2S built-in ADC channel
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 void IRAM_ATTR AudioSerialTaskEntry(void *);
@@ -89,7 +79,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 // results are simplified down to this small class of band peaks.
 
 #ifndef MIN_VU
-#define MIN_VU 180              // Minimum VU value to use for the span when computing VURatio.  Contributes to
+#define MIN_VU 2                // Minimum VU value to use for the span when computing VURatio.  Contributes to
 #endif                          // how dynamic the music is (smaller values == more dynamic)
 
 
@@ -155,26 +145,26 @@ public:
         case MESMERIZERMIC:
         {
             static constexpr std::array<float, 16> Scalars16  = {0.4, .5, 0.75, 1.0, 0.6, 0.6, 0.8, 0.8, 1.2, 1.5, 3.0, 3.0, 3.0, 3.0, 3.5, 2.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
         case PCREMOTE:
         {
 
             static constexpr std::array<float, 16> Scalars16  = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
         case M5PLUS2:
         {
-            static constexpr std::array<float, 16> Scalars16  = {0.3, .5, 0.8, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7}; 
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            static constexpr std::array<float, 16> Scalars16  = {0.5, 1.0, 2.5, 2.2, 1.5, 2.0, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.0, 0.8, 1.0, 1.0}; 
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
         default:
         {
             static constexpr std::array<float, 16> Scalars16  = {0.5, .5, 0.8, 1.0, 1.5, 1.2, 1.5, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 2.5}; 
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
       }
@@ -202,13 +192,13 @@ public:
 class SoundAnalyzer : public AudioVariables
 {
     static constexpr size_t MAX_SAMPLES = 256;
-    std::unique_ptr<uint16_t[]> ptrSampleBuffer;
+    std::unique_ptr<int16_t[]> ptrSampleBuffer;
 
     // I'm old enough I can only hear up to about 12K, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
 
     static constexpr size_t SAMPLING_FREQUENCY = 20000;
-    static constexpr size_t LOWEST_FREQ = 40;
+    static constexpr size_t LOWEST_FREQ = 100;
     static constexpr size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
     static constexpr size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
@@ -288,9 +278,9 @@ class SoundAnalyzer : public AudioVariables
             if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
                 bytesRead = bytesExpected;
         #else
-            ESP_ERROR_CHECK(i2s_start(EXAMPLE_I2S_NUM));
-            ESP_ERROR_CHECK(i2s_read(EXAMPLE_I2S_NUM, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, 100 / portTICK_RATE_MS));
-            ESP_ERROR_CHECK(i2s_stop(EXAMPLE_I2S_NUM));
+            ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *) ptrSampleBuffer.get(), bytesExpected, &bytesRead, 100 / portTICK_PERIOD_MS));
+            ESP_ERROR_CHECK(i2s_stop(I2S_NUM_0));
         #endif
 
         if (bytesRead != bytesExpected)
@@ -364,10 +354,7 @@ class SoundAnalyzer : public AudioVariables
 
         for (int i = 2; i < MAX_SAMPLES / 2; i++)
         {
-            #if USE_M5
-                // The M5 Mic returns some large vales, so we normalize here
-                _vReal[i] = _vReal[i] / MAX_SAMPLES;
-            #endif
+            _vReal[i] = _vReal[i] / MAX_SAMPLES * AUDIO_MIC_SCALAR;
 
             int freq = GetBucketFrequency(i-2);
             if (freq >= LOWEST_FREQ)
@@ -468,16 +455,19 @@ class SoundAnalyzer : public AudioVariables
         }
         else
         {
-            // uses geometric spacing to calculate the upper frequency for each of the 12 bands, starting with a frequency of 200 Hz
-            // and ending with a frequency of 12.5 kHz. The spacing ratio r is calculated as the 11th root of the ratio of the maximum
-            // frequency to the minimum frequency, and each upper frequency is calculated as f1 * r^(i+1).
-
+            // Calculate the logarithmic spacing for the frequency bands
             float f1 = LOWEST_FREQ;
             float f2 = HIGHEST_FREQ;
-            float r = pow(f2 / f1, 1.0 / (NUM_BANDS - 1));
+
+            // Calculate the ratio based on logarithmic scale
+            float log_f1 = log10(f1);
+            float log_f2 = log10(f2);
+            float delta = (log_f2 - log_f1) / (NUM_BANDS - 1);
+
             for (int i = 0; i < NUM_BANDS; i++)
             {
-                _cutOffsBand[i] = round(f1 * pow(r, i + 1));
+                // Calculate the upper frequency for each band
+                _cutOffsBand[i] = round(pow(10, log_f1 + delta * (i + 1)));
                 debugV("BAND %d: %d\n", i, _cutOffsBand[i]);
             }
         }
@@ -489,7 +479,10 @@ public:
 
     SoundAnalyzer()
     {
-        ptrSampleBuffer = make_unique_psram_array<uint16_t>(MAX_SAMPLES);
+        ptrSampleBuffer.reset( (int16_t *)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_8BIT) );
+        if (!ptrSampleBuffer)
+            throw std::runtime_error("Failed to allocate sample buffer");
+
         _vReal      = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
         _vPeaks     = (double *)PreferPSRAMAlloc(NUM_BANDS  * sizeof(_vPeaks[0]));
@@ -530,17 +523,13 @@ public:
 
     #if USE_M5
 
-        auto miccfg = M5.Mic.config();
-        miccfg.over_sampling = 4;
-        miccfg.magnification = 1;
-        miccfg.dma_buf_count = 2;
-        miccfg.dma_buf_len = MAX_SAMPLES;
-        miccfg.sample_rate = SAMPLING_FREQUENCY;
-        miccfg.use_adc = false;
-        M5.Mic.config(miccfg);
-        
+
+        // Can't use speaker and mic at the same time, and speaker defaults on, so turn it off
+
+        M5.Speaker.setVolume(255);
+        M5.Speaker.end();
         M5.Mic.begin();
-   
+        
     #elif ELECROW 
 
         const i2s_config_t i2s_config = {
@@ -582,8 +571,8 @@ public:
 
         ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
         ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
-        ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
+        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
+        ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
 
     #else
 
@@ -600,8 +589,8 @@ public:
 
         ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
         ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(EXAMPLE_I2S_NUM, &i2s_config, 0, NULL));
-        ESP_ERROR_CHECK(i2s_set_adc_mode(I2S_ADC_UNIT, I2S_ADC_CHANNEL));
+        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
+        ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
 
     #endif
 
