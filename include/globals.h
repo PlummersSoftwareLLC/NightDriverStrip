@@ -554,7 +554,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE               1   // IR Remote Control
     #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
     #define SCALE_AUDIO_EXPONENTIAL     0
-    #define ENABLE_AUDIO_SMOOTHING      1
     #define EFFECT_PERSISTENCE_CRITICAL 1   // Require effects serialization to succeed
 
     #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
@@ -1292,7 +1291,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
     #endif
     #ifndef ENABLE_AUDIO_SMOOTHING
-        #define ENABLE_AUDIO_SMOOTHING 0
+        #define ENABLE_AUDIO_SMOOTHING 1
     #endif
     #ifndef BARBEAT_ENHANCE
         #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music

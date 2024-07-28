@@ -145,26 +145,26 @@ public:
         case MESMERIZERMIC:
         {
             static constexpr std::array<float, 16> Scalars16  = {0.4, .5, 0.75, 1.0, 0.6, 0.6, 0.8, 0.8, 1.2, 1.5, 3.0, 3.0, 3.0, 3.0, 3.5, 2.5}; //  {0.08, 0.12, 0.3, 0.35, 0.35, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.4, 1.4, 1.0, 1.0, 1.0};
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
         case PCREMOTE:
         {
 
             static constexpr std::array<float, 16> Scalars16  = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
         case M5PLUS2:
         {
-            static constexpr std::array<float, 16> Scalars16  = {0.3, .5, 0.8, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7}; 
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            static constexpr std::array<float, 16> Scalars16  = {0.5, 1.0, 2.5, 2.2, 1.5, 2.0, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.0, 0.8, 1.0, 1.0}; 
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
         default:
         {
             static constexpr std::array<float, 16> Scalars16  = {0.5, .5, 0.8, 1.0, 1.5, 1.2, 1.5, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 2.5}; 
-            float result = (NUM_BANDS == 16) ? Scalars16[i] : map(i, 0, NUM_BANDS - 1, 1.0, 1.0);
+            float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
       }
@@ -198,7 +198,7 @@ class SoundAnalyzer : public AudioVariables
     // school that you need to sample at double the frequency you want to process, so 24000 is 12K
 
     static constexpr size_t SAMPLING_FREQUENCY = 20000;
-    static constexpr size_t LOWEST_FREQ = 40;
+    static constexpr size_t LOWEST_FREQ = 100;
     static constexpr size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
     static constexpr size_t _sampling_period_us = PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
@@ -455,16 +455,19 @@ class SoundAnalyzer : public AudioVariables
         }
         else
         {
-            // uses geometric spacing to calculate the upper frequency for each of the 12 bands, starting with a frequency of 200 Hz
-            // and ending with a frequency of 12.5 kHz. The spacing ratio r is calculated as the 11th root of the ratio of the maximum
-            // frequency to the minimum frequency, and each upper frequency is calculated as f1 * r^(i+1).
-
+            // Calculate the logarithmic spacing for the frequency bands
             float f1 = LOWEST_FREQ;
             float f2 = HIGHEST_FREQ;
-            float r = pow(f2 / f1, 1.0 / (NUM_BANDS - 1));
+
+            // Calculate the ratio based on logarithmic scale
+            float log_f1 = log10(f1);
+            float log_f2 = log10(f2);
+            float delta = (log_f2 - log_f1) / (NUM_BANDS - 1);
+
             for (int i = 0; i < NUM_BANDS; i++)
             {
-                _cutOffsBand[i] = round(f1 * pow(r, i + 1));
+                // Calculate the upper frequency for each band
+                _cutOffsBand[i] = round(pow(10, log_f1 + delta * (i + 1)));
                 debugV("BAND %d: %d\n", i, _cutOffsBand[i]);
             }
         }

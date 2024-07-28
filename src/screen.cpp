@@ -349,8 +349,8 @@ void CurrentEffectSummary(bool bRedraw)
 
     // Draw the spectrum analyzer bars
 
-    int spectrumTop = topMargin + ySizeVU + 1; // Start at the bottom of the VU meter
-    int bandHeight = display.height() - spectrumTop - display.BottomMargin;
+    const int spectrumTop = topMargin + ySizeVU + 1; // Start at the bottom of the VU meter
+    const int bandHeight = display.height() - spectrumTop - display.BottomMargin;
 
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
     {
@@ -363,14 +363,14 @@ void CurrentEffectSummary(bool bRedraw)
         auto val = min(1.0f, g_Analyzer._peak2Decay[iBand]);
         assert(bandHeight * val <= bandHeight);
         display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
+        for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += display.width() / 40)
+            display.drawFastHLine(iBand * bandWidth, iLine, bandWidth, BLACK16);
     }
-
-    display.EndFrame();
 
     // Draw horizontal lines so the bars look like they are made of segments
 
-//    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += display.height() / 25)
-//        display.drawLine(0, iLine, display.width()-1, iLine, BLACK16);
+    display.EndFrame();
+
 #endif
 }
 
