@@ -1761,7 +1761,7 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
 #define RED16       0xF800
 #define GREEN16     0x07E0
 #define CYAN16      0x07FF
-#define MAGENTA16   0xF81Fk
+#define MAGENTA16   0xF81F
 #define YELLOW16    0xFFE0
 #define WHITE16     0xFFFF
 
