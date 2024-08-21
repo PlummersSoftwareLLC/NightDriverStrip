@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//    Palettes and other color table defnitions that need to be in a CPP file
+//    Palettes and other color table definitions that need to be in a CPP file
 //
 // History:     May-11-2021         Davepl      Commented
 //
@@ -41,18 +41,6 @@ DEFINE_GRADIENT_PALETTE( vu_gpGreen )
 };
 const CRGBPalette16 vuPaletteGreen = vu_gpGreen;
 
-const CRGBPalette16 golden(CRGB::Gold);
-
-DEFINE_GRADIENT_PALETTE( gpSeahawks ) 
-{
-    0,       0,     0,   4,      
-    64,      3,    38,  58,      
-   128,      0,    21,  50,      
-   192,     78,   167,   1,      
-   255,     54,    87, 140,      
-};
-const CRGBPalette16 vuPaletteSeahawks = gpSeahawks;
-
 DEFINE_GRADIENT_PALETTE( vu_gpBlue ) 
 {
       0,     0,   0,   4,   // near black green
@@ -62,30 +50,6 @@ DEFINE_GRADIENT_PALETTE( vu_gpBlue )
     255,   255,   0,   0    // red
 };
 const CRGBPalette16 vuPaletteBlue = vu_gpBlue;
-
-DEFINE_GRADIENT_PALETTE(bluesky_gp)
-{
-    0, 0, 0, 64,          // black
-    64, 0, 0, 128,       // blue
-    96, 0, 64, 255,    // Cyan blue
-    128, 255, 255, 255,      // white
-    160, 0, 64, 255, 
-    192, 0, 0, 128,    // dark blue
-    255, 0, 0, 64
-}; // dark blue
-const CRGBPalette16 bluesky_pal = bluesky_gp;
-
-DEFINE_GRADIENT_PALETTE(redorange_gp)
-{
-    0,    128,   0, 0,  
-    64,   192,   0, 0,  
-    96,   255,   64, 0,  
-    128,  255,  255, 0,  
-    160,  192,   64, 0,
-    192,  128,    0, 0,  
-    255,   64,    0, 0
-}; 
-const CRGBPalette16 redorange_pal = redorange_gp;
 
 extern const TProgmemRGBPalette16 BlueHeatColors_p FL_PROGMEM =
 {

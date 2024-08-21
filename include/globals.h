@@ -84,23 +84,8 @@
 
 #pragma once
 
-#include <inttypes.h>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <iomanip>
-#include <sys/time.h>
-#include <exception>
-#include <mutex>
-#include <vector>
-#include <errno.h>
-#include <math.h>
-#include <deque>
-#include <algorithm>
-#include <numeric>
-
-#include <Arduino.h>
+#include <sstream> // Why is formatSize here when it's used in ONE effect!?!?!
+#include <iomanip> // Same!
 
 //  See https://github.com/PlummersSoftwareLLC/NightDriverStrip/issues/515
 #define FASTLED_ESP32_FLASH_LOCK 1
@@ -142,7 +127,7 @@
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
 
 #define FASTLED_INTERNAL        1       // Silence FastLED build banners
-#define NTP_DELAY_SECONDS       5*60    // delay count for NTP update, in seconds
+#define NTP_DELAY_SECONDS       (5*60)  // delay count for NTP update, in seconds
 #define NTP_DELAY_ERROR_SECONDS 30      // delay count for NTP updates if no time was set, in seconds
 #define NTP_PACKET_LENGTH       48      // ntp packet length
 
@@ -157,7 +142,7 @@
 #define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
 
 // I've built and run this on the Heltec Wifi 32 module and the M5StickC.  The
-// main difference is pinout and the OLED/LCD screen.  The presense of absence
+// main difference is pinout and the OLED/LCD screen.  The presence of absence
 // of the OLED/LCD is now controlled separately, but M5 is always equipped
 // with one (but it doesn't have to be used!).
 
@@ -179,17 +164,17 @@
 //
 // Idle tasks in taskmgr run at IDLE_PRIORITY+1 so you want to be at least +2
 
-#define DRAWING_PRIORITY        tskIDLE_PRIORITY+8
-#define SOCKET_PRIORITY         tskIDLE_PRIORITY+7
-#define AUDIOSERIAL_PRIORITY    tskIDLE_PRIORITY+6      // If equal or lower than audio, will produce garbage on serial
-#define NET_PRIORITY            tskIDLE_PRIORITY+5
-#define AUDIO_PRIORITY          tskIDLE_PRIORITY+4
-#define SCREEN_PRIORITY         tskIDLE_PRIORITY+3
+#define DRAWING_PRIORITY        (tskIDLE_PRIORITY+8)
+#define SOCKET_PRIORITY         (tskIDLE_PRIORITY+7)
+#define AUDIOSERIAL_PRIORITY    (tskIDLE_PRIORITY+6)      // If equal or lower than audio, will produce garbage on serial
+#define NET_PRIORITY            (tskIDLE_PRIORITY+5)
+#define AUDIO_PRIORITY          (tskIDLE_PRIORITY+4)
+#define SCREEN_PRIORITY         (tskIDLE_PRIORITY+3)
 
-#define REMOTE_PRIORITY         tskIDLE_PRIORITY+3
-#define DEBUG_PRIORITY          tskIDLE_PRIORITY+2
-#define JSONWRITER_PRIORITY     tskIDLE_PRIORITY+2
-#define COLORDATA_PRIORITY      tskIDLE_PRIORITY+2
+#define REMOTE_PRIORITY         (tskIDLE_PRIORITY+3)
+#define DEBUG_PRIORITY          (tskIDLE_PRIORITY+2)
+#define JSONWRITER_PRIORITY     (tskIDLE_PRIORITY+2)
+#define COLORDATA_PRIORITY      (tskIDLE_PRIORITY+2)
 
 // If you experiment and mess these up, my go-to solution is to put Drawing on Core 0, and everything else on Core 1.
 // My current core layout is as follows, and as of today it's solid as of (7/16/21).
@@ -223,7 +208,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 // Project Configuration
 //
-// One and only one of DEMO, SPECTRUM, ATOMLIGHT, etc should be set to true by the build config for your project
+// One and only one of DEMO, SPECTRUM, ATOMLIGHT, etc. should be set to true by the build config for your project
 //
 // I've used this code to build a dozen different projects, most of which can be created by defining
 // the right built environment (like INSULATORS=1).  The config here defines everything about the
@@ -1657,7 +1642,7 @@ inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SEC
 
 // str_snprintf
 //
-// va-args style printf that returns the formatted string as a reuslt
+// va-args style printf that returns the formatted string as a result
 
 // Let compiler warn if our arguments don't match.
 inline String str_sprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
@@ -1731,7 +1716,7 @@ inline static T random_range(T lower, T upper)
 #endif
 }
 
-inline uint64_t ULONGFromMemory(uint8_t * payloadData)
+inline uint64_t ULONGFromMemory(const uint8_t * payloadData)
 {
     return  (uint64_t)payloadData[7] << 56  |
             (uint64_t)payloadData[6] << 48  |
@@ -1743,7 +1728,7 @@ inline uint64_t ULONGFromMemory(uint8_t * payloadData)
             (uint64_t)payloadData[0];
 }
 
-inline uint32_t DWORDFromMemory(uint8_t * payloadData)
+inline uint32_t DWORDFromMemory(const uint8_t * payloadData)
 {
     return  (uint32_t)payloadData[3] << 24  |
             (uint32_t)payloadData[2] << 16  |
@@ -1751,7 +1736,7 @@ inline uint32_t DWORDFromMemory(uint8_t * payloadData)
             (uint32_t)payloadData[0];
 }
 
-inline uint16_t WORDFromMemory(uint8_t * payloadData)
+inline uint16_t WORDFromMemory(const uint8_t * payloadData)
 {
     return  (uint16_t)payloadData[1] << 8   |
             (uint16_t)payloadData[0];
@@ -1777,7 +1762,7 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 
 // formatSize
 //
-// Returns a string with the size formatted in a human readable format.
+// Returns a string with the size formatted in a human-readable format.
 // For example, 1024 becomes "1K", 1000*1000 becomes "1M", etc.
 // It pains me not to use 1024, but such are the times we live in.
 
@@ -1806,7 +1791,7 @@ inline String formatSize(size_t size, size_t threshold = 1000)
 // to_array
 //
 // Because the ESP32 compiler, as of this writing, doesn't have std::to_array, we provide our own (davepl).
-// BUGBUG: Once we have compiler support we shoud use the C++20 versions
+// BUGBUG: Once we have compiler support we should use the C++20 versions
 
 template <typename T, std::size_t N>
 constexpr std::array<T, N> to_array(const T (&arr)[N]) {
@@ -1824,7 +1809,7 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
 #define RED16       0xF800
 #define GREEN16     0x07E0
 #define CYAN16      0x07FF
-#define MAGENTA16   0xF81F
+#define MAGENTA16   0xF81Fk
 #define YELLOW16    0xFFE0
 #define WHITE16     0xFFFF
 
