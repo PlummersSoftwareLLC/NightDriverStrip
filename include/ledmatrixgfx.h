@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//   Provides a Adafruit_GFX implementation for our RGB LED panel so that
+//   Provides an Adafruit_GFX implementation for our RGB LED panel so that
 //   we can use primitives such as lines and fills on it.
 //
 // History:     Oct-9-2018         Davepl      Created from other projects
@@ -55,26 +55,21 @@ public:
     typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;
     static const uint8_t kMatrixWidth = MATRIX_WIDTH;                                   // known working: 32, 64, 96, 128
     static const uint8_t kMatrixHeight = MATRIX_HEIGHT;                                 // known working: 16, 32, 48, 64
-    static const uint8_t kRefreshDepth = COLOR_DEPTH;                                   // known working: 24, 36, 48
-    static const uint8_t kDmaBufferRows = 4;                                            // known working: 2-4, use 2 to save memory, more to keep from dropping frames and automatically lowering refresh rate
     static const uint8_t kPanelType = SMARTMATRIX_HUB75_32ROW_MOD16SCAN;                // use SMARTMATRIX_HUB75_16ROW_MOD8SCAN for common 16x32 panels
     static const uint8_t kMatrixOptions = (SMARTMATRIX_OPTIONS_BOTTOM_TO_TOP_STACKING   /* | SMARTMATRIX_OPTIONS_ESP32_CALC_TASK_CORE_1 */); // see http://docs.pixelmatix.com/SmartMatrix for options
     static const uint8_t kBackgroundLayerOptions = (SM_BACKGROUND_OPTIONS_NONE);
     static const uint8_t kDefaultBrightness = 255; // full (100%) brightness
-    static const rgb24   defaultBackgroundColor;
 
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
-    static SmartMatrixHub75Refresh<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrixRefresh;
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
 
     LEDMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
     {
     }
 
-    ~LEDMatrixGFX()
-    {
-    }
+    ~LEDMatrixGFX() override
+    = default;
 
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
@@ -82,9 +77,9 @@ public:
 
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            auto matrix = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
-            devices.push_back(matrix);
-            matrix->loadPalette(0);
+            auto tmp_matrix = make_shared_psram<LEDMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            devices.push_back(tmp_matrix);
+            tmp_matrix->loadPalette(0);
         }
 
         // We don't need color correction on the title layer, but we want it on the main background
@@ -96,7 +91,7 @@ public:
         std::static_pointer_cast<LEDMatrixGFX>(devices[0])->setLeds(GetMatrixBackBuffer());
     }
 
-    void SetBrightness(byte amount)
+    static void SetBrightness(byte amount)
     {
         matrix.setBrightness(amount);
     }
@@ -134,7 +129,7 @@ public:
         return 0;
     }
 
-    // Whereas an LEDStripGFX would track it's own memory for the CRGB array, we simply point to the buffer already used for
+    // Whereas an LEDStripGFX would track its own memory for the CRGB array, we simply point to the buffer already used for
     // the matrix display memory.  That also eliminated having a local draw buffer that is then copied, because the effects
     // can render directly to the right back buffer automatically.
 

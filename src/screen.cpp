@@ -28,7 +28,6 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-#include <algorithm>
 #include "globals.h"
 #include "systemcontainer.h"
 #include "soundanalyzer.h"

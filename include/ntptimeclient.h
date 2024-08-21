@@ -32,7 +32,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/time.h>
-#include <time.h>
+#include <ctime>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <mutex>
@@ -51,8 +51,7 @@ class NTPTimeClient
   public:
 
     NTPTimeClient()
-    {
-    }
+    = default;
 
     static inline bool HasClockBeenSet()
     {

@@ -32,6 +32,7 @@
 #include <mutex>
 #include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
 #include "globals.h"
+#include "colordata.h"
 #include "effects/matrix/spectrumeffects.h"
 #include "systemcontainer.h"
 
@@ -42,8 +43,6 @@ static DRAM_ATTR uint64_t l_usLastWifiDraw = 0;
 // from the led buffer.
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
-
-extern const CRGBPalette16 vuPaletteGreen;
 
 std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);    // Defined in effectmanager.cpp
 
@@ -132,7 +131,7 @@ uint16_t LocalDraw()
             {
                 debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - l_usLastWifiDraw) / (float)MICROS_PER_SECOND);
                 // It's important to return 0 when you do not draw so that the caller knows we did not
-                // render any pixels, and we can/should wait until the next frame.  Otherwise the caller might
+                // render any pixels, and we can/should wait until the next frame.  Otherwise, the caller might
                 // draw the strip needlessly, which can take significant time.
                 return 0;
             }

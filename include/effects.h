@@ -90,7 +90,7 @@
 #define EFFECT_MATRIX_CIRCUIT                          103
 #define EFFECT_MATRIX_CLOCK                            104
 #define EFFECT_MATRIX_CUBE                             105
-#define EFFECT_MATRIX_FLOW_FIELD                       106
+// Was #define EFFECT_MATRIX_FLOW_FIELD                106
 #define EFFECT_MATRIX_LIFE                             107
 #define EFFECT_MATRIX_MANDALA                          108
 #define EFFECT_MATRIX_SUNBURST                         109
@@ -108,7 +108,7 @@
 #define EFFECT_MATRIX_QR                               121
 #define EFFECT_MATRIX_RADAR                            122
 #define EFFECT_MATRIX_SERENDIPITY                      123
-#define EFFECT_MATRIX_SPARK                            124
+// Was #define EFFECT_MATRIX_SPARK                     124
 #define EFFECT_MATRIX_SPIN                             125
 #define EFFECT_MATRIX_SPIRO                            126
 #define EFFECT_MATRIX_SUBSCRIBERS                      127

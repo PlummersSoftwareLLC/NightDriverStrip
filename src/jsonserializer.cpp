@@ -36,7 +36,7 @@
 
 bool BoolFromText(const String& text)
 {
-    return text == "true" || strtol(text.c_str(), NULL, 10);
+    return text == "true" || strtol(text.c_str(), nullptr, 10);
 }
 
 bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
@@ -88,7 +88,7 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
     return jsonReadSuccessful;
 }
 
-bool SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction)
+bool SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, const std::function<bool(JsonObject&)>& serializationFunction)
 {
     // Loop is here to deal with the serialization buffer being too small
     while(true)
@@ -161,7 +161,7 @@ bool RemoveJSONFile(const String & fileName)
     return SPIFFS.remove(fileName);
 }
 
-size_t JSONWriter::RegisterWriter(std::function<void()> writer)
+size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
 {
     // Add the writer with its flag unset
     writers.emplace_back(writer);

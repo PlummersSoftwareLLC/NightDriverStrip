@@ -137,7 +137,7 @@ bool EffectManager::ReadCurrentEffectIndex(size_t& index)
 
             if (!valueString.isEmpty())
             {
-                index = strtoul(valueString.c_str(), NULL, 10);
+                index = strtoul(valueString.c_str(), nullptr, 10);
                 readIndex = true;
             }
         }
@@ -318,15 +318,15 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 bool EffectManager::Init()
 {
-    for (int i = 0; i < _vEffects.size(); i++)
+    for (const auto & _vEffect : _vEffects)
     {
-        debugV("About to init effect %s", _vEffects[i]->FriendlyName().c_str());
-        if (false == _vEffects[i]->Init(_gfx))
+        debugV("About to init effect %s", _vEffect->FriendlyName().c_str());
+        if (false == _vEffect->Init(_gfx))
         {
-            debugW("Could not initialize effect: %s\n", _vEffects[i]->FriendlyName().c_str());
+            debugW("Could not initialize effect: %s\n", _vEffect->FriendlyName().c_str());
             return false;
         }
-        debugV("Loaded Effect: %s", _vEffects[i]->FriendlyName().c_str());
+        debugV("Loaded Effect: %s", _vEffect->FriendlyName().c_str());
     }
     debugV("First Effect: %s", GetCurrentEffectName().c_str());
 
@@ -362,13 +362,15 @@ void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
         _tempEffect = nullptr;
 
     #if (USE_HUB75)
+        // BUGBUG: This is either indented too deeply or the
+        // if is missing parens.
         g()->PausePalette(false);
     #endif
 
     g_ptrSystem->DeviceConfig().ClearApplyGlobalColors();
 }
 
-void EffectManager::ApplyGlobalColor(CRGB color)
+void EffectManager::ApplyGlobalColor(CRGB color) const
 {
     debugI("Setting Global Color");
 
@@ -378,7 +380,7 @@ void EffectManager::ApplyGlobalColor(CRGB color)
     ApplyGlobalPaletteColors();
 }
 
-void EffectManager::ApplyGlobalPaletteColors()
+void EffectManager::ApplyGlobalPaletteColors() const
 {
     #if (USE_HUB75)
         auto  pMatrix = g();
@@ -395,7 +397,7 @@ void EffectManager::ApplyGlobalPaletteColors()
         }
         else
         {
-            // But if we have two different colors, we create a palettte spread between them
+            // But if we have two different colors, we create a palette spread between them
             pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
         }
 
