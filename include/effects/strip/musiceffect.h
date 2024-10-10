@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <deque>
+
 #include "effects.h"
 #include "faneffects.h"
 

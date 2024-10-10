@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//    Palettes and other color table defnitions.  CPP daa in colordata.cpp
+//    Palettes and other color table definitions.  CPP daa in colordata.cpp
 //
 // History:     May-11-2021         Davepl      Commented
 //
@@ -34,7 +34,6 @@
 extern const CRGBPalette16 vuPaletteGreen;
 extern const CRGBPalette16 vuPaletteBlue;
 extern const CRGBPalette16 spectrumBasicColors;
-extern const CRGBPalette16 bluesky_pal;
 extern const TProgmemRGBGradientPalette_byte vu_gpGreen[];
 extern const TProgmemRGBPalette16 BlueHeatColors_p;
 extern const TProgmemRGBPalette16 HeatColors2_p;

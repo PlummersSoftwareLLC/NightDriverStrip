@@ -29,10 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
-#include <WiFiClientSecure.h>
-#include <HTTPClient.h>
 #include <ESPmDNS.h>
-#include <nvs_flash.h>                   // Non-volatile storage access
 #include <nvs.h>
 
 #include "globals.h"
@@ -591,7 +588,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
         Debug.setResetCmdEnabled(true);                         // Enable the reset command
         Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
         Debug.showColors(false);                                // Colors
-        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug externsions we add
+        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug extensions we add
 
         while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
             delay(100);
@@ -815,7 +812,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
         }
     }
 
-    size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval, bool flag)
+    size_t NetworkReader::RegisterReader(const std::function<void()>& reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset
         auto& readerEntry = readers.emplace_back(reader, interval);

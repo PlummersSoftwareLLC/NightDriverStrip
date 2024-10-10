@@ -132,12 +132,12 @@ void RemoteControl::handle()
         effectManager.ShowVU( !effectManager.IsVUVisible() );
     }
 
-    for (int i = 0; i < std::size(RemoteColorCodes); i++)
+    for (const auto RemoteColorCode : RemoteColorCodes)
     {
-        if (RemoteColorCodes[i].code == result)
+        if (RemoteColorCode.code == result)
         {
-            debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
-            effectManager.ApplyGlobalColor(RemoteColorCodes[i].color);
+            debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCode.color);
+            effectManager.ApplyGlobalColor(RemoteColorCode.color);
             return;
         }
     }

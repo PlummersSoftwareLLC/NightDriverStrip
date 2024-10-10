@@ -33,6 +33,8 @@
 
 #if ENABLE_AUDIO
 
+#include <deque>
+
 class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
   protected:

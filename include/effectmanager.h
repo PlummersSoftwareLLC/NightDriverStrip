@@ -24,7 +24,7 @@
 // Description:
 //
 //    Based on my original ESP32LEDStick project this is the class that keeps
-//    track of internal efects, which one is active, rotating among them,
+//    track of internal effects, which one is active, rotating among them,
 //    and fading between them.
 //
 //
@@ -35,12 +35,7 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
 #include <set>
-#include <algorithm>
-#include <math.h>
 
 #include "effectfactories.h"
 
@@ -66,7 +61,6 @@ class  EffectManager : public IJSONSerializable
     uint _effectStartTime;
     uint _effectInterval = 0;
     bool _bPlayAll;
-    bool _bShowVU = true;
     bool _clearTempEffectWhenExpired = false;
     std::atomic_bool _newFrameAvailable = false;
     int _effectSetVersion = 1;
@@ -108,8 +102,8 @@ class  EffectManager : public IJSONSerializable
     // Implementation is in effects.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
-    void SaveCurrentEffectIndex();
-    bool ReadCurrentEffectIndex(size_t& index);
+    static void SaveCurrentEffectIndex();
+    static bool ReadCurrentEffectIndex(size_t& index);
 
     void ClearEffects()
     {
@@ -120,7 +114,7 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
+    EffectManager(const std::shared_ptr<LEDStripEffect>& effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
@@ -222,7 +216,7 @@ public:
         {
             // Try to load effect enabled state from JSON also, default to "enabled" otherwise
             JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
-            int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
+            size_t enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
 
             for (int i = 0; i < _vEffects.size(); i++)
             {
@@ -295,7 +289,7 @@ public:
         return _gfx[iChannel];
     }
 
-    // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.
+    // ShowVU - Control whether VU meter should be drawn.  Returns the previous state when set.
     virtual bool ShowVU(bool bShow);
     virtual bool IsVUVisible() const;
 
@@ -304,8 +298,8 @@ public:
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
     // which takes drawing precedence
 
-    void ApplyGlobalColor(CRGB color);
-    void ApplyGlobalPaletteColors();
+    void ApplyGlobalColor(CRGB color) const;
+    void ApplyGlobalPaletteColors() const;
 
     void ClearRemoteColor(bool retainRemoteEffect = false);
 
@@ -484,17 +478,17 @@ public:
         return _vEffects;
     }
 
-    const size_t EffectCount() const
+    size_t EffectCount() const
     {
         return _vEffects.size();
     }
 
-    const bool AreEffectsEnabled() const
+    bool AreEffectsEnabled() const
     {
         return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
     }
 
-    const size_t GetCurrentEffectIndex() const
+    size_t GetCurrentEffectIndex() const
     {
         return _iCurrentEffect;
     }
@@ -562,7 +556,7 @@ public:
 
     void CheckEffectTimerExpired()
     {
-        // If interval is zero, the current effect never expires unless it thas a max effect time set
+        // If interval is zero, the current effect never expires unless it has a max effect time set
 
         if (IsIntervalEternal() && !GetCurrentEffect().HasMaximumEffectTime())
             return;
@@ -587,7 +581,7 @@ public:
         g->CyclePalette(1);
     }
 
-    void PreviousPalette()
+    void PreviousPalette() const
     {
         g()->CyclePalette(-1);
     }
