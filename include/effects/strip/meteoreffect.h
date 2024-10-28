@@ -81,6 +81,16 @@ public:
             lastBeat[i] = g_Values.AppTime.FrameStartTime();
             bLeft[i] = i & 2;
         }
+
+        // Special case 2-meteor to be red on both ends
+
+        if (meteorCount == 2)
+        {
+            hue[0] = HUE_RED;
+            hue[1] = HUE_RED;
+            iPos[0] = 0;
+            iPos[1] = pGFX->GetLEDCount() - 1;
+        }
     }
 
     virtual void Reverse(int iMeteor)
@@ -92,7 +102,7 @@ public:
     {
         static CHSV hsv;
         hsv.val = 255;
-        hsv.sat = 240;
+        hsv.sat = 255;
 
         for (int j = 0; j<pGFX->GetLEDCount(); j++)                         // fade brightness all LEDs one step
         {

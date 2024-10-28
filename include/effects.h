@@ -83,6 +83,7 @@
 #define EFFECT_STRIP_FAN_BEAT                           37
 #define EFFECT_STRIP_SPLASH_LOGO                        38
 #define EFFECT_STRIP_VUMETER                            39
+#define EFFECT_STRIP_VUMETER_VERTICAL                   40
 
 // Matrix effects
 #define EFFECT_MATRIX_ALIEN_TEXT                       101
@@ -147,6 +148,7 @@
 #define EFFECT_MATRIX_STOCKS                           159
 #define EFFECT_MATRIX_SILON                            160
 #define EFFECT_MATRIX_PDPGRID                          161
+#define EFFECT_MATRIX_AUDIOSPIKE                       162
 
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201
@@ -183,6 +185,7 @@
 #define PTY_SPARKS          "spc"
 #define PTY_SPARKING        "spg"
 #define PTY_SPARKHEIGHT     "sph"
+#define PTY_SPARKTEMP       "spt"
 #define PTY_COOLING         "clg"
 #define PTY_PALETTE         "plt"
 #define PTY_ORDER           "ord"
@@ -194,6 +197,7 @@
 #define PTY_MAXSPEED        "mxs"
 #define PTY_SPEEDDIVISOR    "sdd"
 #define PTY_DELTAHUE        "dth"
+#define PTY_MIRRORED        "mrd"
 #define PTY_EVERYNTH        "ent"
 #define PTY_COLOR           "clr"
 #define PTY_BLEND           "bld"

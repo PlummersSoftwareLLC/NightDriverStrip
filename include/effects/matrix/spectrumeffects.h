@@ -120,14 +120,14 @@ class VUMeter
     //
     // Draw i-th pixel in row y
 
-    void DrawVUPixels(std::shared_ptr<GFXBase> pGFXChannel, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
+    virtual void DrawVUPixels(std::vector<std::shared_ptr<GFXBase>> & GFX, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
     {
         if (g_Analyzer.MicMode() == PeakData::PCREMOTE)
             pPalette = &vuPaletteBlue;
 
-        int xHalf = pGFXChannel->width()/2;
-        pGFXChannel->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
-        pGFXChannel->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
+        int xHalf = GFX[0]->width()/2;
+        GFX[0]->setPixel(xHalf-i-1, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*(256/xHalf)).fadeToBlackBy(fadeBy));
+        GFX[0]->setPixel(xHalf+i,   yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen, i*(256/xHalf)).fadeToBlackBy(fadeBy));
     }
 
 
@@ -140,25 +140,25 @@ class VUMeter
 
   public:
 
-    inline void EraseVUMeter(std::shared_ptr<GFXBase> pGFXChannel, int start, int yVU) const
+    virtual inline void EraseVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int start, int yVU) const
     {
-        int xHalf = pGFXChannel->width()/2;
+        int xHalf = GFX[0]->width()/2;
         for (int i = start; i <= xHalf; i++)
         {
-            pGFXChannel->setPixel(xHalf-i,   yVU, CRGB::Black);
-            pGFXChannel->setPixel(xHalf-1+i,   yVU, CRGB::Black);
+            GFX[0]->setPixel(xHalf-i, yVU, CRGB::Black);
+            GFX[0]->setPixel(xHalf-1+i, yVU, CRGB::Black);
         }
     }
 
-    void DrawVUMeter(std::shared_ptr<GFXBase> pGFXChannel, int yVU, const CRGBPalette16 * pPalette = nullptr)
+    virtual void DrawVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int yVU = 0, const CRGBPalette16 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
 
-        int xHalf = pGFXChannel->width()/2-1;
+        int xHalf = GFX[0]->width()/2-1;
         int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf; 
         bars = min(bars, xHalf);
 
-        EraseVUMeter(pGFXChannel, bars, yVU);
+        EraseVUMeter(GFX, bars, yVU);
 
         if (bars >= iPeakVUy)
         {
@@ -173,13 +173,66 @@ class VUMeter
         if (iPeakVUy > 1)
         {
             int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
-            DrawVUPixels(pGFXChannel, iPeakVUy,   yVU, fade);
-            DrawVUPixels(pGFXChannel, iPeakVUy-1, yVU, fade);
+            DrawVUPixels(GFX, iPeakVUy,   yVU, fade);
+            DrawVUPixels(GFX, iPeakVUy-1, yVU, fade);
         }
 
         for (int i = 0; i < bars; i++)
-            DrawVUPixels(pGFXChannel, i, yVU, i > bars ? 255 : 0, pPalette);
+            DrawVUPixels(GFX, i, yVU, i > bars ? 255 : 0, pPalette);
     }
+};
+
+class VUMeterVertical : public VUMeter
+{
+private:    
+    virtual inline void EraseVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int start, int yVU) const
+    {
+        for (int i = start; i <= GFX[0]->width(); i++)
+            for (auto& device : GFX)
+                device->setPixel(i, yVU, CRGB::Black);
+    }
+
+    // DrawVUPixels
+    //
+    // Draw i-th pixel in row y
+
+    virtual void DrawVUPixels(std::vector<std::shared_ptr<GFXBase>> & GFX, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr) override
+    {
+        for (auto& device : GFX)
+            device->setPixel(i, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*256/GFX[0]->width()).fadeToBlackBy(fadeBy));
+    }
+
+public:
+    void DrawVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int yVU = 0, const CRGBPalette16 * pPalette = nullptr)
+    {
+        const int MAX_FADE = 256;
+
+        int size = GFX[0]->width();
+        int bars  = g_Analyzer._VURatioFade / 2.0 * size; 
+        bars = min(bars, size);
+
+        EraseVUMeter(GFX, bars, yVU);
+
+        if (bars >= iPeakVUy)
+        {
+            msPeakVU = millis();
+            iPeakVUy = bars;
+        }
+        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
+        {
+            iPeakVUy = 0;
+        }
+
+        if (iPeakVUy > 1)
+        {
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
+            DrawVUPixels(GFX, iPeakVUy,   yVU, fade);
+            DrawVUPixels(GFX, iPeakVUy-1, yVU, fade);
+        }
+
+        for (int i = 0; i < bars; i++)
+            DrawVUPixels(GFX, i, yVU, i > bars ? 255 : 0, pPalette);
+    }    
 };
 
 class VUMeterEffect : virtual public VUMeter, public LEDStripEffect
@@ -187,7 +240,7 @@ class VUMeterEffect : virtual public VUMeter, public LEDStripEffect
 public:
     virtual void Draw() override
     {
-        DrawVUMeter(g(), 0);
+        DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
     VUMeterEffect() : LEDStripEffect(EFFECT_STRIP_VUMETER, "VUMeter")
@@ -205,6 +258,28 @@ public:
     }
 };
 
+class VUMeterVerticalEffect : virtual public VUMeterVertical, public LEDStripEffect
+{
+public:
+    virtual void Draw() override
+    {
+        DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
+    }
+
+    VUMeterVerticalEffect() : LEDStripEffect(EFFECT_STRIP_VUMETER_VERTICAL, "Vertical VUMeter")
+    {
+    }
+
+    VUMeterVerticalEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        return true;
+    }
+};
 // SpectrumAnalyzerEffect
 //
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
@@ -776,6 +851,66 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 
         g()->DimAll(200);
         DrawGraph();
+    }
+};
+
+// AudioSpikeEffect [MATRIX EFFECT]
+//
+// Simply displays the raw audio sample buffer as a waveform
+
+class AudioSpikeEffect : public LEDStripEffect
+{
+  protected:
+
+  public:
+
+    AudioSpikeEffect(const String & pszFriendlyName)
+        : LEDStripEffect(EFFECT_MATRIX_AUDIOSPIKE, pszFriendlyName)
+    {
+    }
+
+    AudioSpikeEffect(const JsonObjectConst& jsonObject)
+        : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        assert(!jsonDoc.overflowed());
+        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    }
+
+    virtual size_t DesiredFramesPerSecond() const override
+    {
+        return 60;
+    }
+
+    virtual void Draw() override
+    {
+        fadeAllChannelsToBlackBy(50);
+        
+        static int colorOffset = 0;
+        colorOffset+= 4;
+
+        static int offset = 2; 
+
+        const int16_t * data = g_Analyzer.GetSampleBuffer();
+        int lastY = map(data[offset], 0, 2500, 0, MATRIX_HEIGHT);
+        for (int32_t x = 0; x < MATRIX_WIDTH; ++x)
+        {
+            byte y1 = map(data[offset+x], 0, 2500, 0, MATRIX_HEIGHT);
+            CRGB color = ColorFromPalette(spectrumBasicColors, (y1 * 4) + colorOffset, 255, NOBLEND);
+            g()->drawLine(x, lastY, x+1, y1, color);
+            lastY = y1;
+        }    
+        offset += MATRIX_WIDTH;
+        if (offset + MATRIX_WIDTH > g_Analyzer.GetSampleBufferSize())
+            offset = 2;
     }
 };
 

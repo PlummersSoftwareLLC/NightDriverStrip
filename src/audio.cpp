@@ -65,7 +65,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         static float lastVU = 0.0;
         constexpr auto VU_DECAY_PER_SECOND = 4.0;
         if (g_Analyzer._VURatio > lastVU)
-            lastVU = g_Analyzer._VURatio;
+            lastVU += (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND * 2;
         else
             lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
         lastVU = std::max(lastVU, 0.0f);

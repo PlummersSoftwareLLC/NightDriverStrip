@@ -267,7 +267,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         uint16_t wifiPixelsDrawn    = 0;
         double frameStartTime       = g_Values.AppTime.FrameStartTime();
 
-        auto graphics = g_ptrSystem->EffectManager().GetBaseGraphics();
+        auto graphics = g_ptrSystem->EffectManager().GetBaseGraphics()[0];
 
         graphics->PrepareFrame();
 

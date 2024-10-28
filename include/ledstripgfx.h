@@ -44,10 +44,17 @@ protected:
     {
         // Macro to add LEDs to a channel
 
-        #define ADD_CHANNEL(channel) \
-            debugI("Adding %zu LEDs to pin %d from channel %d on FastLED.", devices[channel]->GetLEDCount(), LED_PIN ## channel, channel); \
-            FastLED.addLeds<WS2812B, LED_PIN ## channel, COLOR_ORDER>(devices[channel]->leds, devices[channel]->GetLEDCount()); \
-            pinMode(LED_PIN ## channel, OUTPUT)
+        #if FASTLED_EXPERIMENTAL_ESP32_RGBW_ENABLED
+            #define ADD_CHANNEL(channel) \
+                debugI("Adding %zu LEDs to pin %d from channel %d on FastLED.", devices[channel]->GetLEDCount(), LED_PIN ## channel, channel); \
+                FastLED.addLeds<WS2812, LED_PIN ## channel, COLOR_ORDER>(devices[channel]->leds, devices[channel]->GetLEDCount()).setRgbw(Rgbw(kRGBWDefaultColorTemp, FASTLED_EXPERIMENTAL_ESP32_RGBW_MODE )); \
+                pinMode(LED_PIN ## channel, OUTPUT)
+        #else
+            #define ADD_CHANNEL(channel) \
+                debugI("Adding %zu LEDs to pin %d from channel %d on FastLED.", devices[channel]->GetLEDCount(), LED_PIN ## channel, channel); \
+                FastLED.addLeds<WS2812B, LED_PIN ## channel, COLOR_ORDER>(devices[channel]->leds, devices[channel]->GetLEDCount()); \
+                pinMode(LED_PIN ## channel, OUTPUT)
+        #endif
 
         debugI("Adding LEDs to FastLED...");
 

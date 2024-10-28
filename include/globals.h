@@ -1,4 +1,3 @@
-#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        Globals.h
@@ -715,25 +714,25 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Spiral Light"
     #endif
 
-    #define ENABLE_WIFI             1               // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1               // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI           0               // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL       3               // How many seconds before the lamp times out and shows local content
+    #define ENABLE_WIFI             1              // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1              // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0              // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       3              // How many seconds before the lamp times out and shows local content
 
-    #define MAX_BUFFERS     30                      // Times 4 channels, but they're only NUM_LEDS big
-    #define NUM_CHANNELS    2                       // One per spoke
-    #define MATRIX_WIDTH    172                     // Number of pixels wide (how many LEDs per channel)
-    #define MATRIX_HEIGHT   1                       // Number of pixels tall
-    #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
-    #define ENABLE_REMOTE   1                       // IR Remote Control
-    #define IR_REMOTE_PIN   26
-    #define ENABLE_AUDIO    1                       // Listen for audio from the microphone and process it
-    #define USE_SCREEN      1                       // Normally we use a tiny board inside the lamp with no screen
-    #define FAN_SIZE        NUM_LEDS                // Allows us to use fan effects on the spokes
-    #define NUM_FANS        1                       // Our fans are on channels, not in sequential order, so only one "fan"
-    #define NUM_RINGS       1
-    #define LED_FAN_OFFSET_BU 0
-    #define BONUS_PIXELS      0
+    #define MAX_BUFFERS             30             // Times 4 channels, but they're only NUM_LEDS big
+    #define NUM_CHANNELS            2              // One per spoke
+    #define MATRIX_WIDTH            172            // Number of pixels wide (how many LEDs per channel)
+    #define MATRIX_HEIGHT           1              // Number of pixels tall
+    #define NUM_LEDS                (MATRIX_WIDTH * MATRIX_HEIGHT)
+    #define ENABLE_REMOTE           1              // IR Remote Control
+    #define IR_REMOTE_PIN           26
+    #define ENABLE_AUDIO            1              // Listen for audio from the microphone and process it
+    #define USE_SCREEN              1              // Normally we use a tiny board inside the lamp with no screen
+    #define FAN_SIZE                NUM_LEDS       // Allows us to use fan effects on the spokes
+    #define NUM_FANS                1              // Our fans are on channels, not in sequential order, so only one "fan"
+    #define NUM_RINGS               1
+    #define FULL_COLOR_REMOTE_FILL  1              // Remote control color buttons fill the whole strip
+    #define BRIGHTNESS_MIN          0              // Allow OFF button to turn lamp entirely off
 
     // Wiring is:
 
@@ -744,6 +743,38 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define LED_PIN1                33
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*60*5)
+
+#elif PLATECOVER
+
+    // This is the "Tiki Atomic Fire Lamp" project, which is an LED lamp with 4 arms of 53 LEDs each.
+    // Each arm is wired as a separate channel.
+
+    #ifndef PROJECT_NAME
+    #define PROJECT_NAME            "Plate Cover"
+    #endif
+
+    #define ENABLE_WIFI             1               // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   1               // Accepting incoming color data and commands
+    #define WAIT_FOR_WIFI           0               // Hold in setup until we have WiFi - for strips without effects
+    #define TIME_BEFORE_LOCAL       3               // How many seconds before the lamp times out and shows local content
+    #define MAX_BUFFERS             60              // Times 4 channels, but they're only NUM_LEDS big
+    #define NUM_CHANNELS            1               // One per spoke
+    #define MATRIX_WIDTH            40              // Number of pixels wide (how many LEDs per channel)
+    #define MATRIX_HEIGHT           1               // Number of pixels tall
+    #define NUM_LEDS                40
+    #define ENABLE_REMOTE           1               // IR Remote Control
+    #define IR_REMOTE_PIN           26
+    #define ENABLE_AUDIO            1               // Listen for audio from the microphone and process it
+    #define USE_SCREEN              1               // Normally we use a tiny board inside the lamp with no screen
+    #define FAN_SIZE                NUM_LEDS        // Allows us to use fan effects on the spokes
+    // Wiring is:
+
+    #define TOGGLE_BUTTON_1         39
+    #define TOGGLE_BUTTON_2         37
+
+    #define LED_PIN0                32
+
+    #define DEFAULT_EFFECT_INTERVAL 0               // No scheduled effect changes
 
 #elif UMBRELLA
 
@@ -1244,7 +1275,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MAX_BUFFERS
-#define MAX_BUFFERS (500)           // Just some reasonable guess, limiting it to 24 frames per second for 20 seconds
+#define MAX_BUFFERS (180)           // Six seconds at 30fps
 #endif
 
 #ifndef ENABLE_WEBSERVER
@@ -1510,6 +1541,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define MATRIX_CENTER_Y ((MATRIX_HEIGHT + 1) / 2)
 #endif
 
+// When you press a color button on the remote, the color is used to create a temporary fill effect, but
+// only when this is set to 1.  Otherwise, just the global colors are set, and it's up to the active effect
+// to actually use them.
+
+#ifndef FULL_COLOR_REMOTE_FILL
+#define FULL_COLOR_REMOTE_FILL 0
+#endif
+
 // Common globals
 
 // g_aRingSizeTable
@@ -1736,9 +1775,8 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 
 inline String formatSize(size_t size, size_t threshold = 1000)
 {
-    // If the size is less than the threshold, we don't need to worry about precision because
-    // we'll be showing whole units
-    const int precision = size >= threshold ? 2 : 0;
+    // If the size is above the threshold, we want a precision of 2 to show more accurate value
+    const int precision = size < threshold ? 0 : 2;
 
     const char* suffixes[] = {"", "K", "M", "G", "T", "P", "E", "Z"};
     size_t suffixIndex = 0;
@@ -1752,8 +1790,10 @@ inline String formatSize(size_t size, size_t threshold = 1000)
 
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(precision) << sizeDouble << suffixes[suffixIndex];
-    return String(oss.str().c_str());
+    std::string result = oss.str();  // Store the result to avoid dangling pointer
+    return String(result.c_str());
 }
+
 
 // to_array
 //
