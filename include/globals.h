@@ -1330,6 +1330,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef SPECTRUMBARBEAT_ENHANCE
         #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
     #endif
+    #ifndef VU_REACTIVITY_RATIO 
+        #define VU_REACTIVITY_RATIO 10.0                // How much the VU meter reacts to the music going up vs down
+    #endif        
 #endif
 
 

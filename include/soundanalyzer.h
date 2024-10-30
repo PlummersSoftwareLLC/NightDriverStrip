@@ -652,16 +652,18 @@ public:
 
     inline void UpdatePeakData()
     {
+        const float maxIncrease = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate * VU_REACTIVITY_RATIO);
+        
         for (int i = 0; i < NUM_BANDS; i++)
         {
             if (_Peaks[i] > _peak1Decay[i])
             {
-                _peak1Decay[i] = _Peaks[i];
+                _peak1Decay[i] = std::min(_Peaks[i], _peak1Decay[i] + maxIncrease);
                 _lastPeak1Time[i] = millis();
             }
             if (_Peaks[i] > _peak2Decay[i])
             {
-                _peak2Decay[i] = _Peaks[i];
+                _peak2Decay[i] = std::min(_Peaks[i], _peak2Decay[i] + maxIncrease);
             }
         }
     }

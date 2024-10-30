@@ -68,13 +68,11 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         // Fade out the VU ratio... The current peak goes up at 10x the rate it comes back down,
         // which is controlled by this constant
 
-        constexpr auto VU_REACTIVITY_RATIO = 10.0;
-
         if (g_Analyzer._VURatio > lastVU)
             lastVU += (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND * VU_REACTIVITY_RATIO;
         else
             lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
-            
+
         lastVU = std::max(lastVU, 0.0f);
         lastVU = std::min(lastVU, 2.0f);
         g_Analyzer._VURatioFade = lastVU;
