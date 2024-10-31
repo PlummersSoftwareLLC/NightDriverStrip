@@ -153,9 +153,19 @@ public:
         ClearEffects();
     }
 
-    std::shared_ptr<GFXBase> GetBaseGraphics()
+    // SetTempEffect - Sets a temporary effect to be played until remote changes it.
+    //                 The effect must have already had its Init() function called.
+
+    void SetTempEffect(std::shared_ptr<LEDStripEffect> effect)
     {
-        return _gfx[0];
+        _tempEffect = effect;
+    }
+
+    // GetBaseGraphics - Returns the vector of GFXBase objects that the effects use to draw
+    
+    std::vector<std::shared_ptr<GFXBase>> & GetBaseGraphics()
+    {
+        return _gfx;
     }
 
     bool IsNewFrameAvailable() const

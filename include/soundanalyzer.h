@@ -502,6 +502,19 @@ public:
         free(_vPeaks);
     }
 
+    // These functions allow access to the last-acquired sample buffer and its size so that 
+    // effects can draw the waveform or do other things with the raw audio data
+    
+    const int16_t * GetSampleBuffer() const
+    {
+        return ptrSampleBuffer.get();
+    }
+
+    const size_t GetSampleBufferSize() const
+    {
+        return MAX_SAMPLES;
+    }
+
     // BeatEnhance
     //
     // Looks like pure voodoo, but it returns the multiplier by which to scale a value to enhance it
@@ -643,12 +656,14 @@ public:
         {
             if (_Peaks[i] > _peak1Decay[i])
             {
-                _peak1Decay[i] = _Peaks[i];
+                const float maxIncrease = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate * VU_REACTIVITY_RATIO);  
+                _peak1Decay[i] = std::min(_Peaks[i], _peak1Decay[i] + maxIncrease);
                 _lastPeak1Time[i] = millis();
             }
             if (_Peaks[i] > _peak2Decay[i])
             {
-                _peak2Decay[i] = _Peaks[i];
+                const float maxIncrease = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak2DecayRate * VU_REACTIVITY_RATIO);
+                _peak2Decay[i] = std::min(_Peaks[i], _peak2Decay[i] + maxIncrease);
             }
         }
     }

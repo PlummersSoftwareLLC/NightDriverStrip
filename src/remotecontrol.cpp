@@ -33,6 +33,8 @@
 #if ENABLE_REMOTE
 
 #include "systemcontainer.h"
+#include "effects/strip/misceffects.h"
+#include "systemcontainer.h"
 
 #define BRIGHTNESS_STEP     20
 
@@ -91,7 +93,14 @@ void RemoteControl::handle()
     }
     else if (IR_OFF == result)
     {
-        deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
+        #if HUB75
+            deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
+        #else
+            effectManager.ClearRemoteColor();
+            effectManager.SetInterval(0);
+            effectManager.StartEffect();
+            deviceConfig.SetBrightness(0);
+        #endif
         return;
     }
     else if (IR_BPLUS == result)
@@ -132,12 +141,25 @@ void RemoteControl::handle()
         effectManager.ShowVU( !effectManager.IsVUVisible() );
     }
 
+    debugI("Looking for match for remote color code: %08X\n", result);
+
     for (int i = 0; i < std::size(RemoteColorCodes); i++)
     {
         if (RemoteColorCodes[i].code == result)
         {
-            debugV("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
+            // To set a solid color fill based on the remote buttons, we take the color from the table, 
+            // crate a ColorFillEffect, and apply it as a temporary effect.  This will override the current
+            // effect until the next effect change or remote command.
+            
+            debugI("Changing Color via remote: %08X\n", (uint) RemoteColorCodes[i].color);
             effectManager.ApplyGlobalColor(RemoteColorCodes[i].color);
+            #if FULL_COLOR_REMOTE_FILL
+                auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCodes[i].color, 1, true);
+                if (effect->Init(g_ptrSystem->EffectManager().GetBaseGraphics()))
+                    g_ptrSystem->EffectManager().SetTempEffect(effect);
+                else
+                    debugE("Could not initialize new color fill effect");
+            #endif
             return;
         }
     }

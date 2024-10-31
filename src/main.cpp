@@ -253,6 +253,10 @@ Bounce2::Button Button1;
 Bounce2::Button Button2;
 #endif
 
+#ifdef TOGGLE_BUTTON_3
+Bounce2::Button Button3;
+#endif
+
 // setup
 //
 // Invoked once at boot, does initial chip setup and application initial init, then spins off worker tasks and returns
@@ -408,6 +412,12 @@ void setup()
         Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
         Button2.interval(1);
         Button2.setPressedState(LOW);
+    #endif
+
+    #ifdef TOGGLE_BUTTON_3
+        Button3.attach(TOGGLE_BUTTON_3, INPUT_PULLUP);
+        Button3.interval(1);
+        Button3.setPressedState(LOW);
     #endif
 
     #if AMOLED_S3
