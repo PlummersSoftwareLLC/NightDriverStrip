@@ -450,7 +450,7 @@ void LoadEffectFactories()
     #elif PLATECOVER
 
         #ifndef EFFECT_SET_VERSION
-            #define EFFECT_SET_VERSION  3
+            #define EFFECT_SET_VERSION  1
         #endif    
 
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, "Solid White", CRGB::White, 1);
