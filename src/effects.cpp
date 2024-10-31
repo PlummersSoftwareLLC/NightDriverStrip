@@ -276,7 +276,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Lines", 38);
         ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Circles", 73);
         ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);
- //     ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
         ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);
         ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);
         ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);
@@ -449,6 +449,10 @@ void LoadEffectFactories()
 
     #elif PLATECOVER
 
+        #ifndef EFFECT_SET_VERSION
+            #define EFFECT_SET_VERSION  3
+        #endif    
+
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, "Solid White", CRGB::White, 1);
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, "Solid Red",   CRGB::Red,   1);
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, "Solid Amber", CRGB(255, 50, 0), 1);
@@ -458,6 +462,10 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, "Off", CRGB::Black, 1);
 
     #elif SPIRALLAMP
+
+        #ifndef EFFECT_SET_VERSION
+            #define EFFECT_SET_VERSION  3
+        #endif
 
         ADD_EFFECT(EFFECT_STRIP_VUMETER_VERTICAL, VUMeterVerticalEffect);
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 4, 4, 10, 1.0, 1.0);

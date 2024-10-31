@@ -65,7 +65,6 @@
 #pragma once
 
 #include <stdexcept>
-#include <Arduino.h>
 #include "Adafruit_GFX.h"
 #include "pixeltypes.h"
 #include "effects/matrix/Boid.h"
