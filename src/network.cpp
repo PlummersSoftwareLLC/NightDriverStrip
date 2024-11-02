@@ -49,6 +49,51 @@ static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 
+#if ENABLE_ESPNOW
+
+// ESPNOW Support
+// 
+// We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
+typedef enum
+{
+    ESPNOW_NEXTEFFECT,
+    ESPNOW_PREVEFFECT,
+} ESPNOW_COMMAND;
+
+typedef struct Message 
+{
+    byte            cbSize;
+    ESPNOW_COMMAND  command;
+} Message;
+
+Message message;
+
+void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen) 
+{
+    memcpy(&message, data, sizeof(message));
+    debugI("ESPNOW Message received.");
+    if (message.cbSize != sizeof(message))
+    {
+        debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));
+        return;
+    }
+
+    switch(message.command)
+    {
+        case ESPNOW_NEXTEFFECT:
+            g_ptrSystem->EffectManager().NextEffect();
+            break;
+        case ESPNOW_PREVEFFECT:
+            g_ptrSystem->EffectManager().PreviousEffect();
+            break;
+        default:
+            debugE("ESPNOW Message received with unknown command: %d", message.command);
+            break;
+    }
+}
+
+#endif
+
 // processRemoteDebugCmd
 //
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls

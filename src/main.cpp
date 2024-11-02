@@ -165,12 +165,14 @@
 #include "values.h"
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include <TJpg_Decoder.h>
+#include <esp_now.h>
 
 #if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
+void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
 
 //
 // Global Variables
@@ -323,7 +325,18 @@ void setup()
         err = nvs_flash_init();
     }
 
+
     ESP_ERROR_CHECK(err);
+
+    #if ENABLE_ESPNOW
+        WiFi.mode(WIFI_STA);  // or WIFI_AP if applicable
+
+        if (esp_now_init() != ESP_OK) 
+            throw std::runtime_error("Error initializing ESP-NOW");
+        // Register receive callback function
+        esp_now_register_recv_cb(onReceiveESPNOW);
+        debugI("ESP-NOW initialized with MAC address: %s", WiFi.macAddress().c_str());
+    #endif
 
     #if ENABLE_WIFI
         String WiFi_ssid;
@@ -534,6 +547,7 @@ void setup()
     taskManager.StartSocketThread();
 
     SaveEffectManagerConfig();
+    // Start the main loop
 }
 
 // loop - main execution loop
@@ -569,7 +583,7 @@ void loop()
             String strOutput;
 
             #if ENABLE_WIFI
-                strOutput += str_sprintf("WiFi: %s, IP: %s, ", WLtoString(WiFi.status()), WiFi.localIP().toString().c_str());
+                strOutput += str_sprintf("WiFi: %s, MAC: %s, IP: %s ", WLtoString(WiFi.status()), WiFi.macAddress().c_str(), WiFi.localIP().toString().c_str());
             #endif
 
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());

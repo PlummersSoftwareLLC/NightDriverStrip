@@ -753,8 +753,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "Plate Cover"
     #endif
 
-    #define ENABLE_WIFI             1               // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1               // Accepting incoming color data and commands
+    #define ENABLE_ESPNOW           1               // Connect to ESPNOW and listen for packets
+    #define ENABLE_WIFI             0               // Connect to WiFi
+    #define INCOMING_WIFI_ENABLED   0               // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0               // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       3               // How many seconds before the lamp times out and shows local content
     #define MAX_BUFFERS             60              // Times 4 channels, but they're only NUM_LEDS big
@@ -1290,6 +1291,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef ENABLE_OTA
 #define ENABLE_OTA              1   // Listen for over the air update to the flash
+#endif
+
+#ifndef ENABLE_ESPNOW
+#define ENABLE_ESPNOW           0   // Listen for ESPNOW packets
 #endif
 
 #ifndef ENABLE_NTP
