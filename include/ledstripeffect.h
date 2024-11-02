@@ -392,15 +392,18 @@ class LEDStripEffect : public IJSONSerializable
 
     void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0, uint everyN = 1)
     {
-        if (!_GFX[0])
-            throw std::runtime_error("Graphics not set up properly");
+        if (_GFX.size() == 0)
+        {
+            debugE("fillSolidOnAllChannels called with no GFX devices");
+            throw std::runtime_error("Graphics not set up properly, no GFX devices");
+        }
 
         if (numToFill == 0)
             numToFill = _cLEDs-iStart;
 
         if (iStart + numToFill > _cLEDs)
         {
-            printf("Boundary Exceeded in FillRainbow");
+            debugE("Boundary Exceeded in FillRainbow");
             return;
         }
 
@@ -446,26 +449,28 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Fill all channels with a progressive rainbow, using arbitrary start, length, step, and initial color and hue change rate
 
-    void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1)
+    void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1, bool bMirrored = false)
     {
-        if (iStart + numToFill > _cLEDs)
-        {
-            printf("Boundary Exceeded in FillRainbow");
-            return;
-        }
 
-        CHSV hsv;
-        hsv.hue = initialhue;
-        hsv.val = 255;
-        hsv.sat = 240;
         for (int i = 0; i < numToFill; i+=everyNth)
         {
+            CHSV hsv;
+            hsv.hue = initialhue + i * deltahue;
+            hsv.val = 255;
+            hsv.sat = 255;
             CRGB rgb;
             hsv2rgb_rainbow(hsv, rgb);
-            setPixelOnAllChannels(iStart + i, rgb);
-            hsv.hue += deltahue;
+            if (bMirrored)
+            {
+                setPixelOnAllChannels(iStart + i, rgb);
+                setPixelOnAllChannels(iStart + numToFill - i - 1, rgb);
+            }
+            else
+            {
+                setPixelOnAllChannels(iStart + i, rgb);
+            }
             for (int q = 1; q < everyNth; q++)
-                _GFX[q]->setPixel(iStart + i + q, CRGB::Black);
+                setPixelOnAllChannels(iStart + i + q, CRGB::Black);
         }
     }
 

@@ -122,7 +122,7 @@ uint16_t LocalDraw()
                 #if SHOW_VU_METER
                     static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
                     if (effectManager.IsVUVisible())
-                        spectrum->DrawVUMeter(effectManager.g(), 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
+                        spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
                 #endif
 
                 debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
@@ -267,7 +267,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         uint16_t wifiPixelsDrawn    = 0;
         double frameStartTime       = g_Values.AppTime.FrameStartTime();
 
-        auto graphics = g_ptrSystem->EffectManager().GetBaseGraphics();
+        auto graphics = g_ptrSystem->EffectManager().GetBaseGraphics()[0];
 
         graphics->PrepareFrame();
 

@@ -228,6 +228,8 @@ public:
                 return;
             }
 
+            amoled.setBrightness(255);
+            
             // Register lvgl helper
             beginLvglHelper(amoled);
 

@@ -161,13 +161,15 @@ protected:
 
     float _speedDivisor;
     int   _deltaHue;
+    bool  _mirrored;
 
   public:
 
-    RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14)
+    RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14, bool mirrored = false)
       : LEDStripEffect(EFFECT_STRIP_RAINBOW_FILL, "RainbowFill Rainbow"),
         _speedDivisor(speedDivisor),
-        _deltaHue(deltaHue)
+        _deltaHue(deltaHue),
+        _mirrored(mirrored)
     {
         debugV("RainbowFill constructor");
     }
@@ -175,7 +177,8 @@ protected:
     RainbowFillEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
         _speedDivisor(jsonObject[PTY_SPEEDDIVISOR]),
-        _deltaHue(jsonObject[PTY_DELTAHUE])
+        _deltaHue(jsonObject[PTY_DELTAHUE]),
+        _mirrored(jsonObject[PTY_MIRRORED])
     {
         debugV("RainbowFill JSON constructor");
     }
@@ -189,6 +192,7 @@ protected:
 
         jsonDoc[PTY_SPEEDDIVISOR] = _speedDivisor;
         jsonDoc[PTY_DELTAHUE] = _deltaHue;
+        jsonDoc[PTY_MIRRORED] = _mirrored;
 
         assert(!jsonDoc.overflowed());
 
@@ -205,7 +209,7 @@ protected:
 
         hue += (float) msElapsed / _speedDivisor;
         hue = fmod(hue, 256.0);
-        fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue);
+        fillRainbowAllChannels(0, _cLEDs, hue, _deltaHue, 1, _mirrored);
         delay(10);
     }
 };
@@ -228,6 +232,15 @@ protected:
     bool _ignoreGlobalColor;
 
   public:
+
+    ColorFillEffect(const String &name, CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
+      : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, name),
+        _everyNth(everyNth),
+        _color(color),
+        _ignoreGlobalColor(ignoreGlobalColor)
+    {
+        debugV("Color Fill constructor");
+    }
 
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
       : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, "Color Fill"),

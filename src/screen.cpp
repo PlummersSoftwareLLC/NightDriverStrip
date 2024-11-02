@@ -240,6 +240,15 @@ void CurrentEffectSummary(bool bRedraw)
     auto& display = g_ptrSystem->Display();
     display.StartFrame();
 
+    // Force a full redraw if we've changed to a new display page
+    
+    static auto lastPage = g_InfoPage;
+    if (lastPage != g_InfoPage)
+    {
+        lastPage = g_InfoPage;
+        bRedraw = true;
+    }
+
     if (bRedraw)
         display.fillScreen(BLACK16);
 
@@ -267,7 +276,7 @@ void CurrentEffectSummary(bool bRedraw)
         screenFPS = 1.0f / screenFPS;
     lastScreen = millis();
 
-    if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
+    if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
     {
         lastFullDraw = millis();
         if (bRedraw != false ||
@@ -285,7 +294,7 @@ void CurrentEffectSummary(bool bRedraw)
 
             //display.setFont();
             display.setTextColor(YELLOW16, backColor);
-            String sEffect = String("Current Effect: ") +
+            String sEffect = String("Effect: ") +
                              String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
                              String("/") +
                              String(g_ptrSystem->EffectManager().EffectCount());
@@ -472,9 +481,23 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             Button2.update();
             if (Button2.pressed())
             {
-                debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
-                g_ptrSystem->EffectManager().NextEffect();
-                bRedraw = true;
+                if (g_InfoPage == 1)
+                {
+                    // If we're on the effect summary page, the button advances the effect
+                    debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
+                    g_ptrSystem->EffectManager().NextEffect();
+                    bRedraw = true;
+                }
+                else if (g_InfoPage == 0)
+                {
+                    // If we're on the debug page the button will reduce the brightness                    
+                    static int brightness = 255;
+                    brightness /= 2;
+                    if (brightness < 4)
+                        brightness = 255;
+                    auto &deviceConfig = g_ptrSystem->DeviceConfig();
+                    deviceConfig.SetBrightness(brightness);
+                }
             }
         #endif
 

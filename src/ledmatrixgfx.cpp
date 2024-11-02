@@ -93,7 +93,7 @@ void LEDMatrixGFX::PrepareFrame()
         matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
-        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
         pMatrix->setLeds(GetMatrixBackBuffer());
 
         // We set ourselves to the lower of the fader value or the brightness value,
