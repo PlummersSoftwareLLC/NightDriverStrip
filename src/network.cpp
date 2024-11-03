@@ -49,6 +49,92 @@ static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 
+#if ENABLE_ESPNOW
+
+// ESPNOW Support
+// 
+// We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
+enum class ESPNowCommand : uint8_t 
+{
+    ESPNOW_NEXTEFFECT = 1,
+    ESPNOW_PREVEFFECT,
+    ESPNOW_SETEFFECT,
+    ESPNOW_INVALID = 255    // Followed by a uint32_t argument
+};
+
+// Message class
+//
+// Encapsulates an ESPNOW message, which is a command and an optional argument
+class Message 
+{
+public:
+    constexpr Message(ESPNowCommand cmd, uint32_t argument) 
+        : cbSize(sizeof(Message)), command(cmd), arg1(argument) 
+    {
+    }
+
+    constexpr Message() 
+        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0) 
+    {
+    }
+
+    const uint8_t* data() const 
+    {
+        return reinterpret_cast<const uint8_t*>(this);
+    }
+
+    constexpr size_t byte_size() const 
+    {
+        return sizeof(Message);
+    }
+
+    uint8_t       cbSize;
+    ESPNowCommand command;
+    uint32_t      arg1;
+} __attribute__((packed));
+
+// onReceiveESPNOW
+// 
+// Callback function for ESPNOW that is called when a data packet is received
+
+void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen) 
+{
+    Message message;
+
+    memcpy(&message, data, sizeof(message));
+    debugI("ESPNOW Message received.");
+    
+    if (message.cbSize != sizeof(message))
+    {
+        debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));
+        return;
+    }
+
+    switch(message.command)
+    {
+        case ESPNowCommand::ESPNOW_NEXTEFFECT:
+            debugI("ESPNOW Next effect");
+            g_ptrSystem->EffectManager().NextEffect();
+            break;
+
+        case ESPNowCommand::ESPNOW_PREVEFFECT:
+            debugI("ESPNOW Previous effect");
+            g_ptrSystem->EffectManager().PreviousEffect();
+            break;
+
+        case ESPNowCommand::ESPNOW_SETEFFECT:
+            debugI("ESPNOW Setting effect index to %d", message.arg1);
+            g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
+            break;
+
+        default:
+            debugE("ESPNOW Message received with unknown command: %d", (byte) message.command);
+            break;
+    }
+}
+
+#endif
+
 // processRemoteDebugCmd
 //
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls
