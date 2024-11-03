@@ -54,24 +54,56 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
 // ESPNOW Support
 // 
 // We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
-typedef enum
+enum class ESPNowCommand : uint8_t 
 {
-    ESPNOW_NEXTEFFECT,
+    ESPNOW_NEXTEFFECT = 1,
     ESPNOW_PREVEFFECT,
-} ESPNOW_COMMAND;
+    ESPNOW_SETEFFECT,
+    ESPNOW_INVALID = 255    // Followed by a uint32_t argument
+};
 
-typedef struct Message 
+// Message class
+//
+// Encapsulates an ESPNOW message, which is a command and an optional argument
+class Message 
 {
-    byte            cbSize;
-    ESPNOW_COMMAND  command;
-} Message;
+public:
+    constexpr Message(ESPNowCommand cmd, uint32_t argument) 
+        : cbSize(sizeof(Message)), command(cmd), arg1(argument) 
+    {
+    }
 
-Message message;
+    constexpr Message() 
+        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0) 
+    {
+    }
+
+    const uint8_t* data() const 
+    {
+        return reinterpret_cast<const uint8_t*>(this);
+    }
+
+    constexpr size_t byte_size() const 
+    {
+        return sizeof(Message);
+    }
+
+    uint8_t       cbSize;
+    ESPNowCommand command;
+    uint32_t      arg1;
+} __attribute__((packed));
+
+// onReceiveESPNOW
+// 
+// Callback function for ESPNOW that is called when a data packet is received
 
 void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen) 
 {
+    Message message;
+
     memcpy(&message, data, sizeof(message));
     debugI("ESPNOW Message received.");
+    
     if (message.cbSize != sizeof(message))
     {
         debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));
@@ -80,14 +112,23 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 
     switch(message.command)
     {
-        case ESPNOW_NEXTEFFECT:
+        case ESPNowCommand::ESPNOW_NEXTEFFECT:
+            debugI("ESPNOW Next effect");
             g_ptrSystem->EffectManager().NextEffect();
             break;
-        case ESPNOW_PREVEFFECT:
+
+        case ESPNowCommand::ESPNOW_PREVEFFECT:
+            debugI("ESPNOW Previous effect");
             g_ptrSystem->EffectManager().PreviousEffect();
             break;
+
+        case ESPNowCommand::ESPNOW_SETEFFECT:
+            debugI("ESPNOW Setting effect index to %d", message.arg1);
+            g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
+            break;
+
         default:
-            debugE("ESPNOW Message received with unknown command: %d", message.command);
+            debugE("ESPNOW Message received with unknown command: %d", (byte) message.command);
             break;
     }
 }
