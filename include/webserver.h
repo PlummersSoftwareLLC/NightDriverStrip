@@ -147,7 +147,7 @@ class CWebServer
     static void AddCORSHeaderAndSendBadRequest(AsyncWebServerRequest * pRequest, const String& message)
     {
         AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json",
-            R"({"message": ")" + message + "\"}"));
+            "{\"message\": \"" + message + "\"}"));
     }
 
     // Straightforward support functions

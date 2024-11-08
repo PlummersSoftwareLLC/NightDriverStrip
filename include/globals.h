@@ -84,8 +84,8 @@
 
 #pragma once
 
-#include <sstream> // Why is formatSize here when it's used in ONE effect!?!?!
-#include <iomanip> // Same!
+#include <sstream>
+#include <iomanip>
 
 //  See https://github.com/PlummersSoftwareLLC/NightDriverStrip/issues/515
 #define FASTLED_ESP32_FLASH_LOCK 1
