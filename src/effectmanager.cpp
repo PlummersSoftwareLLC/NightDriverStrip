@@ -362,8 +362,6 @@ void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
         _tempEffect = nullptr;
 
     #if (USE_HUB75)
-        // BUGBUG: This is either indented too deeply or the
-        // if is missing parens.
         g()->PausePalette(false);
     #endif
 
