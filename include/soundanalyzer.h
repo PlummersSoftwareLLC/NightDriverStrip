@@ -40,12 +40,12 @@
 #define MS_PER_SECOND 1000
 
 // These are the audio variables that are referenced by many audio effects.  In order to allow non-audio code to reference them too without
-// including all the audio code (such as logging code, etc), we put the publicly exposed variables into a structure, and then the SoundAnalyzer
+// including all the audio code (such as logging code, etc.), we put the publicly exposed variables into a structure, and then the SoundAnalyzer
 // class will inherit them.
 //
 // In the non-audio case, there's a stub class that includes ONLY the audio variables and none of the code or buffers.
 //
-// In both cases, the AudioVariables are accessiable as g_Analyzer.  It'll just be a stub in the non-audio case
+// In both cases, the AudioVariables are accessible as g_Analyzer.  It'll just be a stub in the non-audio case
 
 struct AudioVariables
 {
@@ -66,9 +66,6 @@ class SoundAnalyzer : public AudioVariables // Non-audio case.  Inherits only th
 };
 
 #else // Audio case
-
-#define EXAMPLE_I2S_NUM (I2S_NUM_0)
-#define EXAMPLE_I2S_FORMAT (I2S_CHANNEL_FMT_RIGHT_LEFT)                                         // I2S data format
 
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 void IRAM_ATTR AudioSerialTaskEntry(void *);
@@ -119,21 +116,25 @@ public:
         // BUGBUG (davepl) consider std::fill
         for (auto & i: _Level)
             i = 0.0f;
+        // RAIDRAID(robertl): Isn't that just
+        // std::fill(_Level.begin(), _Level.end(), 0.0f);
     }
 
-    PeakData(double *pDoubles)
+    explicit PeakData(double *pDoubles)
     {
         SetData(pDoubles);
     }
 
     PeakData &operator=(const PeakData &other)
     {
+        if (this == &other)
+            return *this;
         for (int i = 0; i < NUM_BANDS; i++)
             _Level[i] = other._Level[i];
         return *this;
     }
 
-    const float operator[](std::size_t n) const
+    float operator[](std::size_t n) const
     {
         return _Level[n];
     }
@@ -257,7 +258,7 @@ class SoundAnalyzer : public AudioVariables
     // SampleBuffer::FFT
     //
     // Run the FFT on the sample buffer.  When done the first two buckets are VU data and only the first MAX_SAMPLES/2
-    // are valid.  For each bucket afterwards you can call BucketFrequency to find out what freq corresponds to what bucket
+    // are valid.  For each bucket afterward you can call BucketFrequency to find out what freq corresponds to what bucket
 
     void FFT()
     {
@@ -438,7 +439,7 @@ class SoundAnalyzer : public AudioVariables
     }
 
     //
-    // Calculate a logrithmic scale for the bands like you would find on a graphic equalizer display
+    // Calculate a logarithmic scale for the bands like you would find on a graphic equalizer display
     //
 
     void CalculateBandCutoffs(float lowFreq, float highFreq)
@@ -584,7 +585,7 @@ public:
 
         ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
         ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
+        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, nullptr));
         ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
 
     #else
@@ -709,7 +710,7 @@ public:
             for (int i = 0; i < NUM_BANDS; i++)
                 sum += _Peaks[i];
 
-            // Scale it so that its not always in the top red
+            // Scale it so that it is not always in the top red
             _MicMode = PeakData::PCREMOTE;
             UpdateVU(sum / NUM_BANDS);
         }

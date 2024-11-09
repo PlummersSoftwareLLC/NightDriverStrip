@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include <deque>
+
 #include "particles.h"
 
 const int cMaxNewStarsPerFrame = 144;

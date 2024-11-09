@@ -132,7 +132,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     else
     {
         debugI("Adjusting time by %lf to %lf", delta, dNew);
-        settimeofday(&tvNew, NULL);                                 // Set the ESP32 rtc.
+        settimeofday(&tvNew, nullptr);                                 // Set the ESP32 rtc.
     }
 
     // Time has been received.

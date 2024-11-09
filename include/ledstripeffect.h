@@ -31,16 +31,17 @@
 #pragma once
 
 #include "effects.h"
-#include "jsonserializer.h"
-#include "types.h"
 #include "gfxbase.h"
+#include "jsonserializer.h"
 #include "ledmatrixgfx.h"
+#include "types.h"
+
 #include <memory>
 #include <list>
-#include <stdlib.h>
+#include <cstdlib>
 
 // Declarations related to effect settings, and their SettingSpecs. The definitions revolving around
-// SettingSpecs are mainly there because getting it right is a bit finnicky due to the container type
+// SettingSpecs are mainly there because getting it right is a bit finicky due to the container type
 // used and the class static nature of the actual containers. Particularly adding an initializer for
 // a SettingSpec container is easy to overlook.
 
@@ -90,10 +91,10 @@ class LEDStripEffect : public IJSONSerializable
     // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecReferences
     // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
     // memory.
-    void FillBaseSettingSpecs()
+    static void FillBaseSettingSpecs()
     {
         // If the base SettingSpec instances already exist, bail out...
-        if (_baseSettingSpecs.size() != 0)
+        if (!_baseSettingSpecs.empty())
             return;
 
         // ...otherwise, create and add them
@@ -149,32 +150,32 @@ class LEDStripEffect : public IJSONSerializable
 
     // Helper functions for known setting types, as defined in SettingSpec::SettingType
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toInt());
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), NULL, 10));
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), nullptr, 10));
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toFloat());
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, BoolFromText(value));
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value);
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
     {
         if (settingName != propertyName)
             return false;
@@ -195,7 +196,7 @@ class LEDStripEffect : public IJSONSerializable
         return true;
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
     }
@@ -221,7 +222,7 @@ class LEDStripEffect : public IJSONSerializable
             _friendlyName = strName;
     }
 
-    LEDStripEffect(const JsonObjectConst&  jsonObject)
+    explicit LEDStripEffect(const JsonObjectConst&  jsonObject)
         : _effectNumber(jsonObject[PTY_EFFECTNR]),
           _friendlyName(jsonObject["fn"].as<String>())
     {
@@ -241,8 +242,7 @@ class LEDStripEffect : public IJSONSerializable
     }
 
     virtual ~LEDStripEffect()
-    {
-    }
+    = default;
 
     virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
@@ -319,7 +319,7 @@ class LEDStripEffect : public IJSONSerializable
     // RequiresDoubleBuffering
     //
     // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
-    // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
+    // If, on the other hand, it renders from scratch every time, starting with a black fill, etc., then it does not,
     // and it can override this method and return false;
 
     virtual bool RequiresDoubleBuffering() const
@@ -381,7 +381,7 @@ class LEDStripEffect : public IJSONSerializable
             return ColorFraction(baseColor, temp * 3.0f);                                                   // Interpolate from black to baseColor
 
         if (temp < 0.66f)
-            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interoplate from baseColor to Yellow
+            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interpolate from baseColor to Yellow
 
         return CRGB::Yellow + ColorFraction(CRGB::Blue,  (temp - 0.66f) * 3.0f);                            // Interpolate from Yellow to White
     }
@@ -529,7 +529,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // SerializeToJSON
     //
-    // Serialize this effects paramters to a JSON document
+    // Serialize this effects parameters to a JSON document
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
@@ -579,7 +579,7 @@ class LEDStripEffect : public IJSONSerializable
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
         // If the SettingSpecs reference_wrapper vector is already filled, return that
-        if (_settingSpecReferences.size() > 0)
+        if (!_settingSpecReferences.empty())
             return _settingSpecReferences;
 
         // Create the SettingSpec instances that are available for all effects
