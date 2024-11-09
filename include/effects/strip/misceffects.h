@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include <deque>
+
 #if USE_HUB75
 #include "TJpg_Decoder.h"
 #endif

@@ -30,10 +30,8 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
 #include <tuple>
-#include <algorithm>
 #include "jsonserializer.h"
 #include "types.h"
 
@@ -146,7 +144,7 @@ class DeviceConfig : public IJSONSerializable
 
     static constexpr int _jsonSize = 1024;
 
-    void SaveToJSON();
+    void SaveToJSON() const;
 
     template <typename T>
     void SetAndSave(T& target, const T& source)
@@ -274,14 +272,14 @@ class DeviceConfig : public IJSONSerializable
         return true;
     }
 
-    void RemovePersisted()
+    static void RemovePersisted()
     {
         RemoveJSONFile(DEVICE_CONFIG_FILE);
     }
 
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
-        if (settingSpecs.size() == 0)
+        if (settingSpecs.empty())
         {
             // Add SettingSpec for additional settings to this list
             settingSpecs.emplace_back(
@@ -476,7 +474,7 @@ class DeviceConfig : public IJSONSerializable
         return openWeatherApiKey;
     }
 
-    ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
+    static ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
 
     void SetOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
     {
@@ -518,7 +516,7 @@ class DeviceConfig : public IJSONSerializable
         return brightness;
     }
 
-    ValidateResponse ValidateBrightness(const String& newBrightness)
+    static ValidateResponse ValidateBrightness(const String& newBrightness)
     {
         auto newNumericBrightness = newBrightness.toInt();
 
@@ -556,7 +554,7 @@ class DeviceConfig : public IJSONSerializable
         return powerLimit;
     }
 
-    ValidateResponse ValidatePowerLimit(const String& newPowerLimit)
+    static ValidateResponse ValidatePowerLimit(const String& newPowerLimit)
     {
         if (newPowerLimit.toInt() < POWER_LIMIT_MIN)
             return { false, String("powerLimit is below minimum value of ") + POWER_LIMIT_MIN };

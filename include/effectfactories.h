@@ -143,7 +143,7 @@ class EffectFactories
 
     bool IsEmpty()
     {
-        return defaultFactories.size() == 0 && jsonFactories.size() == 0;
+        return defaultFactories.empty() && jsonFactories.empty();
     }
 
     void ClearDefaultFactories()

@@ -37,7 +37,7 @@
 #include "effects/strip/doublepaletteeffect.h"  // double palette effect
 #include "effects/strip/meteoreffect.h"         // meteor blend effect
 #include "effects/strip/stareffect.h"           // star effects
-#include "effects/strip/bouncingballeffect.h"   // bouincing ball effectsenable+
+#include "effects/strip/bouncingballeffect.h"   // bouncing ball effectsenable+
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"

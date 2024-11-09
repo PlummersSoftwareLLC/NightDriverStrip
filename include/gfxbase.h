@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//   Provides a Adafruit_GFX implementation for our RGB LED panel so that
+//   Provides an Adafruit_GFX implementation for our RGB LED panel so that
 //   we can use primitives such as lines and fills on it.  Incorporates
 //   the Effects class from Aurora (see below) so it's available as well.
 //
@@ -251,7 +251,7 @@ public:
     }
 
     // Matrices that are built from individually addressable strips like WS2812b generally
-    // follow a boustrophodon layout as follows:
+    // follow a boustrophedon layout as follows:
     //
     //     0 >  1 >  2 >  3 >  4
     //                         |
@@ -261,7 +261,7 @@ public:
     //                         |
     //    19 < 18 < 17 < 16 < 15
     //     |
-    //    (etc)
+    //    (etc.)
     //
     // If your matrix uses a different approach, you can override this function and implement it
     // in the XY() function of your class
@@ -425,7 +425,7 @@ public:
     //   We are now at pixel 5, frac2 = .75
     //   We fill pixel with .75 worth of color
 
-    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false)
+    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false) const
     {
         float frac1 = fPos - floor(fPos);                 // eg:   3.25 becomes 0.25
         float frac2 = fPos + count - floor(fPos + count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
@@ -450,7 +450,7 @@ public:
         c1 = c1.fadeToBlackBy(fade1);
         c2 = c2.fadeToBlackBy(fade2);
 
-        // These assignments use the + operator of CRGB to merge the colors when requested, and its pretty
+        // These assignments use the + operator of CRGB to merge the colors when requested, and it's pretty
         // naive, just saturating each color element at 255, so the operator could be improved or replaced
         // if needed...
 
@@ -618,13 +618,15 @@ public:
                 drawPixel(x, y, color);
     }
 
-    void setPalette(CRGBPalette16 palette)
+    void setPalette(const CRGBPalette16& palette)
     {
         _currentPalette = palette;
         _targetPalette = palette;
         _currentPaletteName = "Custom";
     }
 
+    // Note that this function may recurse without
+    // bound if your random() is very very dumb.
     void loadPalette(int index)
     {
         _paletteIndex = index;
@@ -685,7 +687,7 @@ public:
         _currentPalette = _targetPalette;
     }
 
-    void setPalette(String paletteName)
+    void setPalette(const String& paletteName)
     {
         if (paletteName == "Rainbow")
             loadPalette(0);
@@ -711,7 +713,7 @@ public:
             RandomPalette();
     }
 
-    void listPalettes() const
+    static void listPalettes()
     {
         Serial.println(F("{"));
         Serial.print(F("  \"count\": "));
@@ -788,12 +790,12 @@ public:
         memset(p, 0, sizeof(p));
     }
 
-    // All the caleidoscope functions work directly within the screenbuffer (leds array).
-    // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it arround.
+    // All the Caleidoscope functions work directly within the screenbuffer (leds array).
+    // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it around.
 
     // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
 
-    void Caleidoscope1()
+    void Caleidoscope1() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -807,7 +809,7 @@ public:
     }
 
     // mirror the first 16x16 quadrant 3 times onto a 32x32
-    void Caleidoscope2()
+    void Caleidoscope2() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -821,7 +823,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 16x16
-    void Caleidoscope3()
+    void Caleidoscope3() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -833,7 +835,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 16x16 (90 degrees rotated compared to Caleidoscope3)
-    void Caleidoscope4()
+    void Caleidoscope4() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -845,7 +847,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 8x8
-    void Caleidoscope5()
+    void Caleidoscope5() const
     {
         for (int x = 0; x < _width / 4; x++)
         {
@@ -864,7 +866,7 @@ public:
         }
     }
 
-    void Caleidoscope6()
+    void Caleidoscope6() const
     {
         for (int x = 1; x < ((_width + 1) / 2); x++)
         {
@@ -901,7 +903,7 @@ public:
     // create a square twister to the left or counter-clockwise
     // x and y for center, r for radius
 
-    void SpiralStream(int x, int y, int r, uint8_t dimm)
+    void SpiralStream(int x, int y, int r, uint8_t dimm) const
     {
         for (int d = r; d >= 0; d--)
         { // from the outside to the inside
@@ -1117,7 +1119,7 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
 
-    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) const
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1128,7 +1130,7 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
     {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
@@ -1165,7 +1167,7 @@ public:
     }
 
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false) const
     {
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
@@ -1175,7 +1177,7 @@ public:
         BresenhamLine(x0, y0, x1, y1, color);
     }
 
-    void DimAll(uint8_t value)
+    void DimAll(uint8_t value) const
     {
         for (int i = 0; i < NUM_LEDS; i++)
         {
@@ -1189,7 +1191,7 @@ public:
         return ColorFromPalette(_currentPalette, index, brightness, _currentBlendType);
     }
 
-    CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v) const
+    static CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
     {
         CHSV hsv = CHSV(h, s, v);
         CRGB rgb;
@@ -1272,7 +1274,7 @@ public:
 
     // MoveX - Shift the content on the matrix left or right
 
-    void MoveX(uint8_t delta)
+    void MoveX(uint8_t delta) const
     {
         for (int y = 0; y < _height; y++)
         {
@@ -1285,9 +1287,9 @@ public:
         }
     }
 
-    // MoveY - Shifts the content on the matix up or down
+    // MoveY - Shifts the content on the matrix up or down
 
-    void MoveY(uint8_t delta)
+    void MoveY(uint8_t delta) const
     {
         CRGB tmp = 0;
         for (int x = 0; x < _width; x++)

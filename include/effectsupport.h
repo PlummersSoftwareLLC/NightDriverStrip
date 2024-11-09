@@ -102,29 +102,6 @@ const CRGBPalette16 GreenColors_p =
     CRGB::LimeGreen
 };
 
-const CRGBPalette16 PurpleColors_p =
-{
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-
-    CRGB::Purple,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-
-    CRGB::Pink,
-    CRGB::Maroon,
-    CRGB::Violet,
-    CRGB::DarkViolet,
-};
-
 const CRGBPalette16 RGBColors_p =
 {
     CRGB::Red,
@@ -144,25 +121,6 @@ const CRGBPalette16 RGBColors_p =
     CRGB::Blue,
     CRGB::Blue
 };
-
-const CRGBPalette16 MagentaColors_p =
-{
-    CRGB::Pink,
-    CRGB::DeepPink,
-    CRGB::HotPink,
-    CRGB::LightPink,
-    CRGB::LightCoral,
-    CRGB::Purple,
-    CRGB::MediumPurple,
-    CRGB::Magenta,
-    CRGB::DarkMagenta,
-    CRGB::DarkSalmon,
-    CRGB::MediumVioletRed,
-    CRGB::Pink,
-    CRGB::DeepPink,
-    CRGB::HotPink,
-    CRGB::LightPink,
-    CRGB::Magenta};
 
 const CRGBPalette16 spectrumBasicColors =
 {

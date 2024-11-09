@@ -35,7 +35,7 @@
 //    can be 8 such channels connected to 8 different pins.
 //    By default, NightDriver draws client effects, and there many
 //    built in, from marquees to fire.  But it can also receive color
-//    data from a server.  So it firsts checks to see if there is
+//    data from a server.  So it first checks to see if there is
 //    data coming in, and if so, draws that.  If not it falls back
 //    to internal drawing.  The server sends a simple packet with
 //    an LED count, timestamp, and then the color data for the LEDs.
@@ -193,7 +193,7 @@ std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
 //
-// Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of descreasing
+// Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of decreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
 const int g_aRingSizeTable[MAX_RINGS] =
@@ -285,9 +285,9 @@ void setup()
     // Re-route debug output to the serial port
     Debug.setSerialEnabled(true);
 
-    // Intialialize SPIFFS for file access to non-volatile storage
+    // Initialize SPIFFS for file access to non-volatile storage
     if (!SPIFFS.begin(true))
-        Serial.println("WARNING: SPIFFs could not be initialized!");
+        Serial.println("WARNING: SPIFFS could not be initialized!");
 
     // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
     // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default

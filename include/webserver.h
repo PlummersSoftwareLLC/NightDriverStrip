@@ -22,11 +22,11 @@
 //
 // Description:
 //
-//   Web server that fulfills requests by serving them from statically
-//   files in flash.  Requires the espressif-esp32 WebServer class.
+//   Web server that fulfills requests by serving them from static
+//   files in flash.  Requires the Espressif-esp32 WebServer class.
 //
 //   This class contains an early attempt at exposing a REST api for
-//   adjusting effect paramters.  I'm in no way attached to it and it
+//   adjusting effect parameters.  I'm in no way attached to it and it
 //   should likely be redone!
 //
 //   Server also exposes basic RESTful API for querying variables etc.
@@ -39,20 +39,20 @@
 
 #pragma once
 
-#include <map>
-#include <WiFi.h>
-#include <FS.h>
-#include <SPIFFS.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <Arduino.h>
-#include <AsyncJson.h>
-#include <ArduinoJson.h>
-#include <HTTPClient.h>
 #include "deviceconfig.h"
-#include "effects.h"
 #include "jsonbase.h"
 #include "network.h"
+
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <AsyncJson.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <FS.h>
+#include <HTTPClient.h>
+#include <SPIFFS.h>
+#include <WiFi.h>
+#include <map>
 
 class CWebServer
 {
@@ -182,7 +182,7 @@ class CWebServer
     static void PreviousEffect(AsyncWebServerRequest * pRequest);
 
     // Not static because it uses member _staticStats
-    void GetStatistics(AsyncWebServerRequest * pRequest);
+    void GetStatistics(AsyncWebServerRequest * pRequest) const;
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
     void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
