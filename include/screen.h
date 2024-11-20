@@ -315,7 +315,7 @@ public:
 
     public:
         #if ARDUINO_HELTEC_WIFI_LoRa_32_V3
-            OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R0, /*reset*/ 21, /*clk*/ 18, /*data*/ 17)
+            OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 21, /*clk*/ 18, /*data*/ 17)
         #else
             OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
         #endif
@@ -364,7 +364,9 @@ public:
         SSD1306Screen(int w, int h) : Screen(w, h)
         {
             Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, false /*Serial Enable*/);
-            Heltec.display->screenRotate(ANGLE_180_DEGREE);
+            #ifdef SCREEN_ROTATION
+                Heltec.display->screenRotate(SCREEN_ROTATION);
+            #endif
         }
 
         virtual void StartFrame() override
