@@ -314,8 +314,11 @@ public:
         U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled;
 
     public:
-
-        OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
+        #if ARDUINO_HELTEC_WIFI_LoRa_32_V3
+            OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R0, /*reset*/ 21, /*clk*/ 18, /*data*/ 17)
+        #else
+            OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
+        #endif
         {
             oled.begin();
             oled.clear();
