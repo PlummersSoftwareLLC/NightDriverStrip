@@ -360,7 +360,7 @@ public:
 
         SSD1306Screen(int w, int h) : Screen(w, h)
         {
-            Heltec.begin(true /*DisplayEnable Enable*/, true /*LoRa Disable*/, false /*Serial Enable*/);
+            Heltec.begin(true /*DisplayEnable Enable*/, true /*LoRa Enable*/, false /*Serial Enable*/);
             Heltec.display->screenRotate(ANGLE_180_DEGREE);
         }
 
