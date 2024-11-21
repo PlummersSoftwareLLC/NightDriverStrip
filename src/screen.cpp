@@ -251,7 +251,7 @@ void CurrentEffectSummary(bool bRedraw)
     if (bRedraw)
         display.fillScreen(BLACK16);
 
-    #if ARDUINO_HELTEC_WIFI_LoRa_32_V3
+    #if ARDUINO_HELTEC_WIFI_LORA_32_V3
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 0));
     #else
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
