@@ -222,11 +222,14 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
         if (bSendResponsePacket)
         {
+            static uint64_t sequence = 0;
+
             debugV("Sending Response Packet from Socket Server");
             auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
             SocketResponse response = {
                                         .size = sizeof(SocketResponse),
+                                        .sequence     = sequence++,
                                         .flashVersion = FLASH_VERSION,
                                         .currentClock = g_Values.AppTime.CurrentTime(),
                                         .oldestPacket = bufferManager.AgeOfOldestBuffer(),
