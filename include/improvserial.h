@@ -124,7 +124,7 @@ public:
                 this->set_state_(improv::STATE_PROVISIONED);
 
                 // Only send the URL to connect to if there's a webserver listening to the resulting requests
-                if (ENABLE_WEBSERVER)
+                if constexpr (ENABLE_WEBSERVER)
                 {
                     std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
                     this->send_response_(url);

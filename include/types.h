@@ -55,7 +55,7 @@ class CAppTime
 
     // NewFrame
     //
-    // Call this at the start of every frame or udpate, and it'll figure out and keep track of how
+    // Call this at the start of every frame or update, and it'll figure out and keep track of how
     // long between frames
 
     void NewFrame()
@@ -150,13 +150,13 @@ struct SettingSpec
     };
 
     // "Technical" name of the setting, as in the (JSON) property it is stored in.
-    const char* Name;
+    const char* Name{};
 
     // "Friendly" name of the setting, as in the one to be presented to the user in a user interface.
-    const char* FriendlyName;
+    const char* FriendlyName{};
 
     // Description of the purpose and/or value of the setting
-    const char* Description;
+    const char* Description{};
 
     // Value type of the setting
     SettingType Type;
@@ -205,7 +205,7 @@ struct SettingSpec
     SettingSpec(const char* name, const char* friendlyName, SettingType type) : SettingSpec(name, friendlyName, nullptr, type)
     {}
 
-    // Constructor that sets both mininum and maximum values
+    // Constructor that sets both minimum and maximum values
     SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, double min, double max)
       : Name(name),
         FriendlyName(friendlyName),
@@ -217,13 +217,13 @@ struct SettingSpec
         FinishAndValidateInitialization();
     }
 
-    // Constructor that sets both mininum and maximum values
+    // Constructor that sets both minimum and maximum values
     SettingSpec(const char* name, const char* friendlyName, SettingType type, double min, double max)
       : SettingSpec(name, friendlyName, nullptr, type, min, max)
     {}
 
     SettingSpec()
-    {}
+    = default;
 
     virtual String TypeName() const
     {
@@ -267,12 +267,12 @@ inline void * PreferPSRAMAlloc(size_t s)
 // I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
 // with make_shared<> so I had to provide this allocator instead.
 //
-// When enabled, this puts all of the LEDBuffers in PSRAM.  The table that keeps track
+// When enabled, this puts all the LEDBuffers in PSRAM.  The table that keeps track
 // of them is still in base ram.
 //
 // (Davepl - I opted to make this *prefer* psram but return regular ram otherwise. It
 //           avoids a lot of ifdef USE_PSRAM in the code.  But I've only proved it
-//           correct, not tried it on a chip without yet.
+//           correct, not tried it on a chip without yet.)
 
 template <typename T>
 class psram_allocator
@@ -286,11 +286,11 @@ public:
     typedef const T& const_reference;
     typedef T value_type;
 
-    psram_allocator(){}
-    ~psram_allocator(){}
+    psram_allocator()= default;
+    ~psram_allocator()= default;
 
     template <class U> struct rebind { typedef psram_allocator<U> other; };
-    template <class U> psram_allocator(const psram_allocator<U>&){}
+    template <class U> explicit psram_allocator(const psram_allocator<U>&){}
 
     pointer address(reference x) const {return &x;}
     const_pointer address(const_reference x) const {return &x;}

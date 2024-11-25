@@ -32,6 +32,8 @@
 
 #pragma once
 
+#include <deque>
+
 #include "effects.h"
 
 // Lifespan

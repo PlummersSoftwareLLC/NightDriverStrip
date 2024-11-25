@@ -28,7 +28,6 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-#include <algorithm>
 #include "globals.h"
 #include "systemcontainer.h"
 #include "soundanalyzer.h"
@@ -252,7 +251,11 @@ void CurrentEffectSummary(bool bRedraw)
     if (bRedraw)
         display.fillScreen(BLACK16);
 
-    uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
+    #if ARDUINO_HELTEC_WIFI_LORA_32_V3
+        uint16_t backColor = Screen::to16bit(CRGB(0, 0, 0));
+    #else
+        uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
+    #endif
 
     // We only draw after a page flip or if anything has changed about the information that will be
     // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
