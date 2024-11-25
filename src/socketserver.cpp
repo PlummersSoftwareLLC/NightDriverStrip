@@ -244,7 +244,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 debugW("Unable to send response back to server.");
         }
 
-        delay(100);
+        delay(1);
 
     } while (true);
 
