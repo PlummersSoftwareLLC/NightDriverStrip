@@ -23,13 +23,13 @@ import datetime
 
 # Constants
 
-MATRIX_WIDTH = 64*8
+MATRIX_WIDTH = 64
 MATRIX_HEIGHT = 32
-FUTURE_DELAY = 1
-ESP32_WIFI_ADDRESS = 'pi4-8g-02'
+FUTURE_DELAY = 3
+ESP32_WIFI_ADDRESS = '192.168.8.161'
 PORT = 49152
 WIFI_COMMAND_PIXELDATA64 = 3
-FPS = 120
+FPS = 60
 
 # connect_to_socket
 #
@@ -49,9 +49,9 @@ def connect_to_socket():
 def send_video_data():
 
     sock = None
-    future = datetime.datetime.now() + datetime.timedelta(seconds=FUTURE_DELAY)
-
     while True:
+        future = datetime.datetime.now() + datetime.timedelta(seconds=FUTURE_DELAY)
+
         # Connect to the socket if not already connected
         if sock is None:
             sock = connect_to_socket()
@@ -61,7 +61,7 @@ def send_video_data():
         pixels = contentimage.tobytes()
 
         # Advance timestamp by one frame's worth of time as we send each packet
-        future += datetime.timedelta(seconds = 1.0 / FPS)
+
         seconds = int(future.timestamp())
         microseconds = future.microsecond
 
