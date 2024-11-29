@@ -61,7 +61,7 @@ using namespace std::chrono_literals;
 #define STOCKS_UPDATE_INTERVAL_SECONDS 6s
 #define STOCKS_FETCH_INTERVAL_SECONDS  60s
 
-#define DEFAULT_STOCK_SERVER           "davepl.com:8888"
+#define DEFAULT_STOCK_SERVER           "davepl.dyndns.org:8888"
 #define DEFAULT_TICKER_SYMBOLS         "AAPL,AMZN,TSLA,MSFT"
 
 // AnimatedText
@@ -152,6 +152,7 @@ public:
     String symbol;
     system_clock::time_point timestamp;
 
+    float previousClose = 0.0f;
     float open = 0.0f;
     float high = 0.0f;
     float low = 0.0f;
@@ -162,16 +163,15 @@ public:
 
     String to_string() const
     {
-        String oss;
-        oss = "Symbol: " + symbol +
+        return "Symbol: " + symbol +
                " Timestamp: " + timestamp.time_since_epoch().count() +
+               " Previous close: " + previousClose +
                " Open: " + open +
                " High: " + high +
                " Low: " + low +
                " Close: " + close +
                " Volume: " + volume +
                " History: " + points.size() + " points";
-        return oss;
     }
 };
 
@@ -223,13 +223,14 @@ private:
             if (!error)
             {
                 StockData stockData;
-                stockData.symbol    = doc["symbol"].as<String>();
-                stockData.timestamp = system_clock::from_time_t(doc["timestamp"].as<time_t>());
-                stockData.open      = doc["open"].as<float>();
-                stockData.high      = doc["high"].as<float>();
-                stockData.low       = doc["low"].as<float>();
-                stockData.close     = doc["close"].as<float>();
-                stockData.volume    = doc["volume"].as<float>();
+                stockData.symbol        = doc["symbol"].as<String>();
+                stockData.timestamp     = system_clock::from_time_t(doc["timestamp"].as<time_t>());
+                stockData.previousClose = doc["previous_close"].as<float>();
+                stockData.open          = doc["open"].as<float>();
+                stockData.high          = doc["high"].as<float>();
+                stockData.low           = doc["low"].as<float>();
+                stockData.close         = doc["close"].as<float>();
+                stockData.volume        = doc["volume"].as<float>();
 
                 for (JsonVariant point : doc["points"].as<JsonArray>())
                 {
@@ -413,7 +414,7 @@ public:
         auto pricelen  = pricetext.length();
         constexpr auto textwidth = 5;
 
-        auto changetext = String(data.close - data.open, 2);
+        auto changetext = String(data.close - data.previousClose, 2);
         auto changelen  = changetext.length();
 
         constexpr auto formatVolumeLargerThan = 1000000;
@@ -422,7 +423,7 @@ public:
 
         textSymbol = AnimatedText(data.symbol, CRGB::White, &Apple5x7, 0.50f, -MATRIX_WIDTH, 8, 0, 8);
         textPrice  = AnimatedText(pricetext, CRGB::White, &Apple5x7, 0.75f, -MATRIX_WIDTH, 8, MATRIX_WIDTH - pricelen * textwidth, 8);
-        textChange = AnimatedText(changetext, data.close >= data.open ? CRGB::LightGreen : CRGB::Red, &Apple5x7, 1.0f, -MATRIX_WIDTH, 15, MATRIX_WIDTH - changelen * textwidth, 15);
+        textChange = AnimatedText(changetext, data.close >= data.previousClose ? CRGB::LightGreen : CRGB::Red, &Apple5x7, 1.0f, -MATRIX_WIDTH, 15, MATRIX_WIDTH - changelen * textwidth, 15);
         textVolume = AnimatedText(voltext, CRGB::LightGrey, &Apple5x7, 1.0f, -MATRIX_WIDTH * 2, 22, MATRIX_WIDTH - vollen * textwidth, 22);
     }
 
@@ -469,12 +470,16 @@ public:
                 { 
                         return a.val < b.val; 
                 }); 
-            float min = minpoint->val, max = maxpoint->val, range = max - min;
+
+            // We're comparing against the previous day's close, so make sure we include that in the range
+            float min = std::min(minpoint->val, currentStock.previousClose);
+            float max = std::max(maxpoint->val, currentStock.previousClose);
+            float range = max - min;
 
             if (range > 0.0f)
             {
                 float scale = range > 0.0f ? h / range : 0.0f;
-                float breakeven = currentStock.open;
+                float breakeven = currentStock.previousClose;
                 float breakevenY = y + h - (breakeven - min) * scale;
 
                 for (int i = 0; i < n - 1; i++)
