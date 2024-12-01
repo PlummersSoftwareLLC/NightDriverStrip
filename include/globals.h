@@ -79,6 +79,7 @@
 //              Jul-24-2023  v038       Davepl      NTP clock fix
 //              Jul-26-2023  v039       Davepl      NTP every minute, stack sizes
 //              Jul-26-2023  v040       Davepl      NTP every 5 minutes, Wifi delay code
+//              Nov-30-2024  v041       Davepl      WiFi FPS fix, sequence number in response
 //
 //---------------------------------------------------------------------------
 
@@ -109,7 +110,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          40   // Update ONLY this to increment the version number
+#define FLASH_VERSION          41   // Update ONLY this to increment the version number
 
 #ifndef USE_HUB75                   // We support strips by default unless specifically defined out
     #ifndef USE_WS281X
