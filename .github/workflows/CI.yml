@@ -19,7 +19,7 @@ jobs:
       id: envs
       run: |
         if [[ $(< config/ci_exclude.json) != '[]' ]]; then echo "::warning title=Some environments were skipped::Environments not built: $(< config/ci_exclude.json)"; fi
-        echo "envs=$(tools/show_envs.py | jq -c --argfile ex config/ci_exclude.json '. - $ex')" >> $GITHUB_OUTPUT
+        echo "envs=$(tools/show_envs.py | jq -c --slurpfile ex config/ci_exclude.json '. - $ex[0]')" >> $GITHUB_OUTPUT
 
     outputs:
       envs: ${{ steps.envs.outputs.envs }}

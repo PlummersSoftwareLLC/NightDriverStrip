@@ -36,6 +36,7 @@ _Davepl, 9/19/2021_
   - [Build commands](#build-commands)
 - [File system](#file-system)
 - [Tools](#tools)
+- [COM port problems](#com-port-problems)
 - [Bonus exercise](#bonus-exercise)
 - [Super Bonus Exercise](#super-bonus-exercise)
 - [Sample parts (Plummer's Software LLC Amazon affiliate links)](#sample-parts-plummers-software-llc-amazon-affiliate-links)
@@ -330,6 +331,12 @@ Instead of:
 cd tools
 ./buddybuild.sh
 ```
+
+## COM port problems
+
+Specifically on the Windows platform, there have been cases where people have experienced problems communicating to the serial port that the ESP32 device is connected to from PlatformIO, usually in the shape of PlatformIO showing messages that the COM port in question doesn't exist where it absolutely did before. This tends to be caused by the COM port being used by another process within PlatformIO (the monitor function being a known cause), or some other application effectively blocking the COM port in question. A confirmed example of the latter is Malwarebytes.
+
+If you experience such difficulties accessing serial ports, the tools in the Sysinternals toolkit (particularly Process Explorer and Portmon, available [from Microsoft](https://learn.microsoft.com/en-us/sysinternals/)) may be helpful towards finding the culprit.
 
 ## Bonus exercise
 
