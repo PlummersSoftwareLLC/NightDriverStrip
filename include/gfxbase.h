@@ -1126,7 +1126,7 @@ public:
         }
     }
 
-void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
     {
 	int dx = abs(x1 - x0); // Delta in x direction
 	int dy = abs(y1 - y0); // Delta in y direction
@@ -1138,7 +1138,7 @@ void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = fal
 	while (true)
 	{
 	    int index = XY(x0, y0);
-	    if (isValidPixel(index)
+	    if (isValidPixel(index))
 	    {
 		// Optimization opportunity: unswtitch bMerge into another function
 		leds[index] = bMerge ? leds[index] + color : color;
