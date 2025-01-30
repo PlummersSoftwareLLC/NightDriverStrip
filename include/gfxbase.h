@@ -1128,38 +1128,38 @@ public:
 
     void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
     {
-	int dx = abs(x1 - x0); // Delta in x direction
-	int dy = abs(y1 - y0); // Delta in y direction
-	int sx = (x0 < x1) ? 1 : -1; // Step in x direction
-	int sy = (y0 < y1) ? 1 : -1; // Step in y direction
+        int dx = abs(x1 - x0); // Delta in x direction
+        int dy = abs(y1 - y0); // Delta in y direction
+        int sx = (x0 < x1) ? 1 : -1; // Step in x direction
+        int sy = (y0 < y1) ? 1 : -1; // Step in y direction
 
-	int err = dx - dy; // Initial error term
+        int err = dx - dy; // Initial error term
 
-	while (true)
-	{
-	    int index = XY(x0, y0);
-	    if (isValidPixel(index))
-	    {
-		// Optimization opportunity: unswtitch bMerge into another function
-		leds[index] = bMerge ? leds[index] + color : color;
-	    }
+        while (true)
+        {
+            int index = XY(x0, y0);
+            if (isValidPixel(index))
+            {
+                // Optimization opportunity: unswtitch bMerge into another function
+                leds[index] = bMerge ? leds[index] + color : color;
+            }
 
-	    if (x0 == x1 && y0 == y1)
-		break; // Exit the loop once we've reached the destination
+            if (x0 == x1 && y0 == y1)
+                break; // Exit the loop once we've reached the destination
 
-	    int e2 = 2 * err; // Error term multiplied by 2 for efficiency. Saves second test for Y.
-	    if (e2 > -dy) // Move in the x direction if needed
-	    {
-		err -= dy;
-		x0 += sx;
-	    }
+            int e2 = 2 * err; // Error term multiplied by 2 for efficiency. Saves second test for Y.
+            if (e2 > -dy) // Move in the x direction if needed
+            {
+                err -= dy;
+                x0 += sx;
+            }
 
-	    if (e2 < dx) // Move in the y direction if needed
-	    {
-		err += dx;
-		y0 += sy;
-	    }
-	}
+            if (e2 < dx) // Move in the y direction if needed
+            {
+                err += dx;
+                y0 += sy;
+            }
+        }
     }
 
     void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false) const
