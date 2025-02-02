@@ -689,28 +689,24 @@ public:
 
     void setPalette(const String& paletteName)
     {
-        if (paletteName == "Rainbow")
-            loadPalette(0);
-        // else if (paletteName == "RainbowStripe")
-        //   loadPalette(1);
-        else if (paletteName == "Ocean")
-            loadPalette(1);
-        else if (paletteName == "Cloud")
-            loadPalette(2);
-        else if (paletteName == "Forest")
-            loadPalette(3);
-        else if (paletteName == "Party")
-            loadPalette(4);
-        else if (paletteName == "Grayscale")
-            loadPalette(5);
-        else if (paletteName == "Heat")
-            loadPalette(6);
-        else if (paletteName == "Lava")
-            loadPalette(7);
-        else if (paletteName == "Ice")
-            loadPalette(8);
-        else if (paletteName == "Random")
-            RandomPalette();
+        static const std::unordered_map<const char*, int> paletteMap = {
+            {"Rainbow", 0},
+            {"Ocean", 1},
+            {"Cloud", 2},
+            {"Forest", 3},
+            {"Party", 4},
+            {"Grayscale", 5},
+            {"Heat", 6},
+            {"Lava", 7},
+            {"Ice", 8}
+        };
+
+        auto it = paletteMap.find(paletteName.c_str());
+        if (it != paletteMap.end()) {
+            loadPalette(it->second);  // Found a matching palette, load it
+        } else if (paletteName == "Random") {
+            RandomPalette();  // Special case for "Random"
+        }
     }
 
     static void listPalettes()
@@ -1132,40 +1128,39 @@ public:
 
     void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
     {
-        int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int dx = abs(x1 - x0); // Delta in x direction
+        int dy = abs(y1 - y0); // Delta in y direction
+        int sx = (x0 < x1) ? 1 : -1; // Step in x direction
+        int sy = (y0 < y1) ? 1 : -1; // Step in y direction
 
-        int err = dx + dy;  // Error must be declared here
+        int err = dx - dy; // Initial error term
 
-        for (;;)
+        while (true)
         {
-            if (isValidPixel(x0, y0))
-                leds[XY(x0, y0)] = bMerge ? leds[XY(x0, y0)] + color : color;
+            int index = XY(x0, y0);
+            if (isValidPixel(index))
+            {
+                // Optimization opportunity: unswtitch bMerge into another function
+                leds[index] = bMerge ? leds[index] + color : color;
+            }
 
             if (x0 == x1 && y0 == y1)
-                break;
+                break; // Exit the loop once we've reached the destination
 
-            int e2 = 2 * err;
-            if (e2 >= dy)
+            int e2 = 2 * err; // Error term multiplied by 2 for efficiency. Saves second test for Y.
+            if (e2 > -dy) // Move in the x direction if needed
             {
-                err += dy;
+                err -= dy;
                 x0 += sx;
             }
-            // Recheck after x-axis update
-            if (x0 == x1 && y0 == y1)
-                break;
 
-            if (e2 <= dx)
+            if (e2 < dx) // Move in the y direction if needed
             {
                 err += dx;
                 y0 += sy;
             }
-            // Recheck after y-axis update
-            if (x0 == x1 && y0 == y1)
-                break;
         }
     }
-
 
     void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false) const
     {
