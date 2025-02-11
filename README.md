@@ -1,6 +1,9 @@
 # NightDriverStrip <!-- omit in toc -->
 
-**DEVELOPERS WANTED!** We are searching for talented React and C++ developers to help out on this project.  Check out the code and if you're interested, contact <davepl@davepl.com>.
+- **Mesmerizer kits**, as demonstrated in [this video](https://youtu.be/COJnlehBcKw) and featured in the background of many other Dave's Garage videos, are now [available for sale on eBay](https://www.ebay.com/itm/335801442651)! (If that listing expires before we update the link, check out [Dave's listings](https://www.ebay.com/sch/i.html?_dkr=1&iconV2Request=true&_blrs=recall_filtering&_ssn=davepl&_oac=1); if the kits are available then the listing will be there.)
+- We are searching for **talented React and C++ developers** to help out on this project.  Check out the code and if you're interested, contact <davepl@davepl.com>.
+
+&nbsp;
 
 ![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg) ![Release Web Installer build and deploy](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/release.yml/badge.svg)
 
