@@ -53,9 +53,9 @@ std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{
 
 // Push param that represents a bool. Values considered true are text "true" and any whole number not equal to 0
 template<>
-bool CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
+bool CWebServer::PushPostParamIfPresent<bool>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
 {
-    return PushPostParamIfPresent<bool>(pRequest, paramName, std::move(setter), [](AsyncWebParameter * param) constexpr
+    return PushPostParamIfPresent<bool>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
     {
         return BoolFromText(param->value());
     });
@@ -63,9 +63,9 @@ bool CWebServer::PushPostParamIfPresent<bool>(AsyncWebServerRequest * pRequest, 
 
 // Push param that represents a size_t
 template<>
-bool CWebServer::PushPostParamIfPresent<size_t>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
+bool CWebServer::PushPostParamIfPresent<size_t>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
 {
-    return PushPostParamIfPresent<size_t>(pRequest, paramName, std::move(setter), [](AsyncWebParameter * param) constexpr
+    return PushPostParamIfPresent<size_t>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr -> size_t
     {
         return strtoul(param->value().c_str(), nullptr, 10);
     });
@@ -73,9 +73,9 @@ bool CWebServer::PushPostParamIfPresent<size_t>(AsyncWebServerRequest * pRequest
 
 // Push param that represents an int
 template<>
-bool CWebServer::PushPostParamIfPresent<int>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<int> setter)
+bool CWebServer::PushPostParamIfPresent<int>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<int> setter)
 {
-    return PushPostParamIfPresent<int>(pRequest, paramName, std::move(setter), [](AsyncWebParameter * param) constexpr
+    return PushPostParamIfPresent<int>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
     {
         return std::stoi(param->value().c_str());
     });
@@ -83,9 +83,9 @@ bool CWebServer::PushPostParamIfPresent<int>(AsyncWebServerRequest * pRequest, c
 
 // Push param that represents a color
 template<>
-bool CWebServer::PushPostParamIfPresent<CRGB>(AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<CRGB> setter)
+bool CWebServer::PushPostParamIfPresent<CRGB>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<CRGB> setter)
 {
-    return PushPostParamIfPresent<CRGB>(pRequest, paramName, std::move(setter), [](AsyncWebParameter * param) constexpr
+    return PushPostParamIfPresent<CRGB>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
     {
         return CRGB(strtoul(param->value().c_str(), nullptr, 10));
     });
