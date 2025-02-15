@@ -113,10 +113,8 @@ class CWebServer
 
         debugV("found %s", paramName.c_str());
 
-        const AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
-
         // Extract the value and pass it off to the setter
-        return setter(getter(param));
+        return setter(getter(pRequest->getParam(paramName, true, false)));
     }
 
     // Generic param value forwarder. The type argument must be implicitly convertable from String!

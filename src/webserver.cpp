@@ -65,7 +65,7 @@ bool CWebServer::PushPostParamIfPresent<bool>(const AsyncWebServerRequest * pReq
 template<>
 bool CWebServer::PushPostParamIfPresent<size_t>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
 {
-    return PushPostParamIfPresent<size_t>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr -> size_t
+    return PushPostParamIfPresent<size_t>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
     {
         return strtoul(param->value().c_str(), nullptr, 10);
     });
