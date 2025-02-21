@@ -1334,10 +1334,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define NUM_RINGS 1
 #endif
 
-#ifndef NUM_INFO_PAGES
-#define NUM_INFO_PAGES 2
-#endif
-
 #ifndef COLOR_ORDER
 #define COLOR_ORDER EOrder::GRB
 #endif
@@ -1480,6 +1476,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #endif // end USE_SCREEN
 
+#if USE_OLED
+    #define NUM_INFO_PAGES 1        // Only allow "Basic Info Summary" page on monochrome OLED screens
+#endif
+
 #if USE_LCD
     // These pins are based on the Espressif WROVER-KIT, which uses an ILI9314 chipset for its display
     // connected as follows:
@@ -1532,6 +1532,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef MATRIX_CENTER_Y
 #define MATRIX_CENTER_Y ((MATRIX_HEIGHT + 1) / 2)
+#endif
+
+#ifndef NUM_INFO_PAGES
+#define NUM_INFO_PAGES 2
 #endif
 
 // When you press a color button on the remote, the color is used to create a temporary fill effect, but
