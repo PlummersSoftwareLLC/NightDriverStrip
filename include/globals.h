@@ -1441,7 +1441,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
         #ifndef USE_SSD1306
-            #define NUM_INFO_PAGES 1        // Only allow "Basic Info Summary" page on monochrome OLED screens
+            #define NUM_INFO_PAGES 1        // Only display "BasicInfoSummary" if not SSD1306
         #endif
 
     #elif USE_M5                                        // screen definitions for m5stick-c-plus

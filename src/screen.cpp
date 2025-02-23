@@ -251,7 +251,7 @@ void CurrentEffectSummary(bool bRedraw)
     if (bRedraw)
         display.fillScreen(BLACK16);
 
-    #if USE_SSD1306     // Set background color to black for monochrome SSD1306 screen
+    #if USE_SSD1306     // Set background color to black for monochrome SSD1306 OLED screen
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 0));
     #else
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
