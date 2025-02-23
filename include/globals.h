@@ -1334,10 +1334,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define NUM_RINGS 1
 #endif
 
-#ifndef NUM_INFO_PAGES
-#define NUM_INFO_PAGES 2
-#endif
-
 #ifndef COLOR_ORDER
 #define COLOR_ORDER EOrder::GRB
 #endif
@@ -1440,15 +1436,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #if USE_SCREEN
 
-    #if ARDUINO_HELTEC_WIFI_KIT_32_V3
-
-        #define USE_OLED 1
-        #define USE_SSD1306 1
-
-    #elif ARDUINO_HELTEC_WIFI_KIT_32
+    #if ARDUINO_HELTEC_WIFI_KIT_32
                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
+        #if !(USE_SSD1306)
+            #define NUM_INFO_PAGES 1        // Only display "BasicInfoSummary" if not SSD1306
+        #endif
 
     #elif USE_M5                                        // screen definitions for m5stick-c-plus
 
@@ -1532,6 +1526,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef MATRIX_CENTER_Y
 #define MATRIX_CENTER_Y ((MATRIX_HEIGHT + 1) / 2)
+#endif
+
+#ifndef NUM_INFO_PAGES
+#define NUM_INFO_PAGES 2
 #endif
 
 // When you press a color button on the remote, the color is used to create a temporary fill effect, but

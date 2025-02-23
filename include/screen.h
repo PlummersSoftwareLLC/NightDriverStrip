@@ -350,7 +350,7 @@ public:
 
     // SSD1306Screen
     //
-    // Display code for the SSD1306 display on the Heltect Wifi Kit 32 V3
+    // Display code for the SSD1306 display on supported Heltec ESP32 boards
 
     #include <U8g2lib.h>                // Library for monochrome displays
     #include <gfxfont.h>                // Adafruit GFX font structs

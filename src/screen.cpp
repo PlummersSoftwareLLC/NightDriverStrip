@@ -251,7 +251,7 @@ void CurrentEffectSummary(bool bRedraw)
     if (bRedraw)
         display.fillScreen(BLACK16);
 
-    #if ARDUINO_HELTEC_WIFI_LORA_32_V3
+    #if USE_SSD1306     // Set background color to black for monochrome SSD1306 OLED screen
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 0));
     #else
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
