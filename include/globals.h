@@ -1436,15 +1436,13 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #if USE_SCREEN
 
-    #if ARDUINO_HELTEC_WIFI_KIT_32_V3
-
-        #define USE_OLED 1
-        #define USE_SSD1306 1
-
-    #elif ARDUINO_HELTEC_WIFI_KIT_32
+    #if ARDUINO_HELTEC_WIFI_KIT_32
                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
+        #ifndef USE_SSD1306
+            #define NUM_INFO_PAGES 1        // Only allow "Basic Info Summary" page on monochrome OLED screens
+        #endif
 
     #elif USE_M5                                        // screen definitions for m5stick-c-plus
 
@@ -1475,10 +1473,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
 
 #endif // end USE_SCREEN
-
-#if USE_OLED
-    #define NUM_INFO_PAGES 1        // Only allow "Basic Info Summary" page on monochrome OLED screens
-#endif
 
 #if USE_LCD
     // These pins are based on the Espressif WROVER-KIT, which uses an ILI9314 chipset for its display
