@@ -1440,7 +1440,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
-        #ifndef USE_SSD1306
+        #if !(USE_SSD1306)
             #define NUM_INFO_PAGES 1        // Only display "BasicInfoSummary" if not SSD1306
         #endif
 
