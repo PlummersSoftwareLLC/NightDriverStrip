@@ -93,7 +93,7 @@ void RemoteControl::handle()
     }
     else if (IR_OFF == result)
     {
-        #if HUB75
+        #if USE_HUB75
             deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
         #else
             effectManager.ClearRemoteColor();
