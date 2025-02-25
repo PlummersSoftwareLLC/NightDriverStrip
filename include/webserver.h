@@ -40,7 +40,6 @@
 #pragma once
 
 #include "deviceconfig.h"
-#include "jsonbase.h"
 #include "network.h"
 
 #include <Arduino.h>
@@ -150,6 +149,7 @@ class CWebServer
 
     // Straightforward support functions
 
+    static void SendBufferOverflowResponse(AsyncWebServerRequest * pRequest);
     static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
     static const std::vector<std::reference_wrapper<SettingSpec>> & LoadDeviceSettingSpecs();
     static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);

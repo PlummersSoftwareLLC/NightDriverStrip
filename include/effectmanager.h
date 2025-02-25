@@ -215,14 +215,14 @@ public:
         }
 
         // Check if there's a persisted effect set version, and remember it if so
-        if (jsonObject.containsKey(PTY_EFFECTSETVER))
+        if (jsonObject[PTY_EFFECTSETVER].is<int>())
             _effectSetVersion = jsonObject[PTY_EFFECTSETVER];
 
         LoadJSONAndMissingEffects(effectsArray);
 
         // "eef" was the array of effect enabled flags. They have now been integrated in the effects themselves;
         //   this code is there to "migrate" users who already had a serialized effect config on their device
-        if (jsonObject.containsKey("eef"))
+        if (jsonObject["eef"].is<JsonArrayConst>())
         {
             // Try to load effect enabled state from JSON also, default to "enabled" otherwise
             JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
@@ -238,10 +238,10 @@ public:
         }
 
         // "ivl" contains the effect interval in ms
-        SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
+        SetInterval(jsonObject["ivl"].is<uint>() ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
         // Try to read the effectindex from its own file. If that fails, "cei" may contain the current effect index instead
-        if (!ReadCurrentEffectIndex(_iCurrentEffect) && jsonObject.containsKey("cei"))
+        if (!ReadCurrentEffectIndex(_iCurrentEffect) && jsonObject["cei"].is<size_t>())
             _iCurrentEffect = jsonObject["cei"];
 
         // Make sure that if we read an index, it's sane
@@ -262,11 +262,7 @@ public:
     // The function then sets the "ivl" and "cei" fields in the JSON object to the current effect interval
     // and the current effect index, respectively.
     //
-    // The function creates a nested array ("eef") in the JSON object to store the enabled state of each effect.
-    // It iterates through all effects, and for each effect, it adds a value of 1 to the array if the effect
-    // is enabled, and 0 if it is not.
-    //
-    // Next, the function creates another nested array ("efs") in the JSON object to store the effects themselves.
+    // Next, the function creates a nested array ("efs") in the JSON object to store the effects themselves.
     // It iterates through all effects, and for each effect, it creates a nested object in the effects array
     // and attempts to serialize the effect into this object. If serialization of any effect fails, the function
     // immediately returns false.
@@ -281,11 +277,11 @@ public:
         jsonObject[PTY_PROJECT] = PROJECT_NAME;
         jsonObject[PTY_EFFECTSETVER] = _effectSetVersion;
 
-        JsonArray effectsArray = jsonObject.createNestedArray("efs");
+        JsonArray effectsArray = jsonObject["efs"].to<JsonArray>();
 
         for (auto & effect : _vEffects)
         {
-            JsonObject effectObject = effectsArray.createNestedObject();
+            JsonObject effectObject = effectsArray.add<JsonObject>();
             if (!(effect->SerializeToJSON(effectObject)))
                 return false;
         }

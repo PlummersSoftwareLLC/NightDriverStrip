@@ -50,7 +50,7 @@ class PatternSMFire2021 : public LEDStripEffect
             for (unsigned y = 0; y < MATRIX_HEIGHT; y++)
             {
                 int16_t Bri = inoise8(x * deltaValue, (y * deltaValue) - ff_x, ff_z) - (y * (255 / MATRIX_HEIGHT));
-                byte Col = Bri; // inoise8(x * deltaValue, (y * deltaValue) - ff_x, ff_z) - (y * (255 / MATRIX_HEIGHT));
+                uint8_t Col = Bri; // inoise8(x * deltaValue, (y * deltaValue) - ff_x, ff_z) - (y * (255 / MATRIX_HEIGHT));
                 if (Bri < 0)
                     Bri = 0;
                 if (Bri != 0)

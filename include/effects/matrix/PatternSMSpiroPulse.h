@@ -13,7 +13,7 @@ class PatternSMSpiroPulse : public LEDStripEffect
     static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
     static constexpr int CenterY = ((MATRIX_HEIGHT / 2) - 0.5);
     bool incenter {false};
-    byte AM {1};
+    uint8_t AM {1};
     float Angle {0.f};
     bool change = true;
 
@@ -98,7 +98,7 @@ class PatternSMSpiroPulse : public LEDStripEffect
         // Originally /3. Let's go all the way to the edges.
         float radX = CalcRad * CenterY / 2;
         float radY = CalcRad * CenterY / 2;
-        for (byte i = 0; i < AM; i++)
+        for (uint8_t i = 0; i < AM; i++)
         {
             drawPixelXYF((CenterX + sin(t + (Angle * i)) * radX), (CenterY + cos(t + (Angle * i)) * radY),
                          ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));

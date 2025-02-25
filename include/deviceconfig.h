@@ -142,8 +142,6 @@ class DeviceConfig : public IJSONSerializable
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
     size_t writerIndex;
 
-    static constexpr int _jsonSize = 1024;
-
     void SaveToJSON() const;
 
     template <typename T>
@@ -160,7 +158,7 @@ class DeviceConfig : public IJSONSerializable
     template <typename T>
     void SetIfPresentIn(const JsonObjectConst& jsonObject, T& target, const char *tag)
     {
-        if (jsonObject.containsKey(tag))
+        if (jsonObject[tag].is<T>())
             target = jsonObject[tag].as<T>();
     }
 
@@ -199,7 +197,7 @@ class DeviceConfig : public IJSONSerializable
 
     bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
     {
-        AllocatedJsonDocument jsonDoc(_jsonSize);
+        auto jsonDoc = CreateJsonDocument();
 
         // Add serialization logic for additional settings to this code
         jsonDoc[HostnameTag] = hostname;
@@ -263,7 +261,7 @@ class DeviceConfig : public IJSONSerializable
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
 
-        if (jsonObject.containsKey(TimeZoneTag))
+        if (jsonObject[TimeZoneTag].is<String>())
             return SetTimeZone(jsonObject[TimeZoneTag], true);
 
         if (!skipWrite)
