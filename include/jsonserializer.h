@@ -66,11 +66,11 @@ constexpr auto to_value(E e) noexcept
         }
     };
 
-    static auto g_jsonPsramAllocator = JsonPsramAllocator();    
-
     inline JsonDocument CreateJsonDocument()
     {
-        return JsonDocument(&g_jsonPsramAllocator);
+        static auto jsonPsramAllocator = JsonPsramAllocator();
+
+        return JsonDocument(&jsonPsramAllocator);
     }
 
 #else
