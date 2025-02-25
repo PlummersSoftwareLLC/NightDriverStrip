@@ -59,7 +59,7 @@ class CWebServer
   private:
     // Template for param to value converter function, used by PushPostParamIfPresent()
     template<typename Tv>
-    using ParamValueGetter = std::function<Tv(AsyncWebParameter *param)>;
+    using ParamValueGetter = std::function<Tv(const AsyncWebParameter *param)>;
 
     // Template for value setting forwarding function, used by PushPostParamIfPresent()
     template<typename Tv>
@@ -106,25 +106,23 @@ class CWebServer
 
     // Convert param value to a specific type and forward it to a setter function that expects that type as an argument
     template<typename Tv>
-    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
+    static bool PushPostParamIfPresent(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
     {
         if (!pRequest->hasParam(paramName, true, false))
             return false;
 
         debugV("found %s", paramName.c_str());
 
-        AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
-
         // Extract the value and pass it off to the setter
-        return setter(getter(param));
+        return setter(getter(pRequest->getParam(paramName, true, false)));
     }
 
     // Generic param value forwarder. The type argument must be implicitly convertable from String!
     //   Some specializations of this are included in the CPP file
     template<typename Tv>
-    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter)
+    static bool PushPostParamIfPresent(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter)
     {
-        return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) { return param->value(); });
+        return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](const AsyncWebParameter * param) { return param->value(); });
     }
 
     // AddCORSHeaderAndSend(OK)Response
@@ -190,7 +188,7 @@ class CWebServer
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {
             Serial.printf("GET for: %s\n", strUri);
-            AsyncWebServerResponse *response = request->beginResponse_P(200, file.type, file.contents, file.length);
+            AsyncWebServerResponse *response = request->beginResponse(200, file.type, file.contents, file.length);
             if (file.encoding)
             {
                 response->addHeader("Content-Encoding", file.encoding);
