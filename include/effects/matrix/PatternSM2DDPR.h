@@ -70,12 +70,12 @@ class PatternSM2DDPR : public LEDStripEffect
                 int brightness = 1;
                 if (dist += radius)
                 {
-                    brightness = map(dist, -effTimer, radius, 255, 110);
+                    brightness = ::map(dist, -effTimer, radius, 255, 110);
                     brightness += ZVoffset;
                     brightness = sin8(brightness);
                 }
 
-                int hue = map(dist, radius, -3, 125, 255);
+                int hue = ::map(dist, radius, -3, 125, 255);
                 g()->leds[XY(x, y)] = CHSV(hue, 255, brightness);
             }
         }

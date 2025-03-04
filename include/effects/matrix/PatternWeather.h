@@ -247,7 +247,7 @@ private:
             return false;
         }
 
-        AllocatedJsonDocument doc(4096);
+        auto doc = CreateJsonDocument();
         deserializeJson(doc, http.getString());
         JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
 
@@ -283,7 +283,7 @@ private:
         if (httpResponseCode > 0)
         {
             // Needs to be this large to process all the returned JSON
-            AllocatedJsonDocument doc(10240);
+            auto doc = CreateJsonDocument();
             deserializeJson(doc, http.getString());
             JsonArray list = doc["list"];
 
@@ -367,7 +367,7 @@ private:
         if (httpResponseCode > 0)
         {
             iconToday = "";
-            AllocatedJsonDocument jsonDoc(4096);
+            auto jsonDoc = CreateJsonDocument();
             deserializeJson(jsonDoc, http.getString());
 
             // Once we have a non-zero temp we can start displaying things

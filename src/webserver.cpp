@@ -219,52 +219,55 @@ long CWebServer::GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool 
     return strtol(pRequest->getParam("effectIndex", post, false)->value().c_str(), nullptr, 10);
 }
 
+void CWebServer::SendBufferOverflowResponse(AsyncWebServerRequest * pRequest)
+{
+    AddCORSHeaderAndSendResponse(
+        pRequest, 
+        pRequest->beginResponse(
+            HTTP_CODE_INTERNAL_SERVER_ERROR, 
+            "text/json", 
+            "{\"message\": \"JSON response buffer overflow\"}"
+        )
+    );
+}
+
 void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 {
-    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-    bool bufferOverflow;
     debugV("GetEffectListText");
 
-    do
+    auto response = new AsyncJsonResponse();
+    auto& j = response->getRoot();
+    auto& effectManager = g_ptrSystem->EffectManager();
+
+    j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
+    j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
+    j["eternalInterval"]       = effectManager.IsIntervalEternal();
+    j["effectInterval"]        = effectManager.GetInterval();
+
+    for (const auto& effect : effectManager.EffectsList())
     {
-        bufferOverflow = false;
-        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
-        auto& j = response->getRoot();
-        auto& effectManager = g_ptrSystem->EffectManager();
+        auto effectDoc = CreateJsonDocument();
 
-        j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
-        j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
-        j["eternalInterval"]       = effectManager.IsIntervalEternal();
-        j["effectInterval"]        = effectManager.GetInterval();
+        effectDoc["name"]    = effect->FriendlyName();
+        effectDoc["enabled"] = effect->IsEnabled();
+        effectDoc["core"]    = effect->IsCoreEffect();
 
-        for (const auto& effect : effectManager.EffectsList())
+        if (!j["Effects"].add(effectDoc))
         {
-            StaticJsonDocument<256> effectDoc;
-
-            effectDoc["name"]    = effect->FriendlyName();
-            effectDoc["enabled"] = effect->IsEnabled();
-            effectDoc["core"]    = effect->IsCoreEffect();
-
-            if (!j["Effects"].add(effectDoc))
-            {
-                bufferOverflow = true;
-                jsonBufferSize += JSON_BUFFER_INCREMENT;
-                debugV("JSON response buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
-                break;
-            }
+            debugV("JSON response buffer overflow!");
+            SendBufferOverflowResponse(pRequest);
+            return;
         }
+    }
 
-        if (!bufferOverflow)
-            AddCORSHeaderAndSendResponse(pRequest, response.release());
-
-    } while (bufferOverflow);
+    AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
 void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest) const
 {
     debugV("GetStatistics");
 
-    auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
+    auto response = new AsyncJsonResponse();
     auto& j = response->getRoot();
 
     j["LED_FPS"]               = g_Values.FPS;
@@ -400,67 +403,54 @@ void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
 
 void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs)
 {
-    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-    bool bufferOverflow;
+    auto response = new AsyncJsonResponse();
+    auto jsonArray = response->getRoot().to<JsonArray>();
 
-    do
+    for (auto& specWrapper : settingSpecs)
     {
-        bufferOverflow = false;
-        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
-        auto jsonArray = response->getRoot().to<JsonArray>();
+        auto& spec = specWrapper.get();
+        auto specObject = jsonArray.add<JsonObject>();
 
-        for (auto& specWrapper : settingSpecs)
+        auto jsonDoc = CreateJsonDocument();
+
+        jsonDoc["name"] = spec.Name;
+        jsonDoc["friendlyName"] = spec.FriendlyName;
+        if (spec.Description)
+            jsonDoc["description"] = spec.Description;
+        jsonDoc["type"] = to_value(spec.Type);
+        jsonDoc["typeName"] = spec.TypeName();
+        if (spec.HasValidation)
+            jsonDoc["hasValidation"] = true;
+        if (spec.MinimumValue.has_value())
+            jsonDoc["minimumValue"] = spec.MinimumValue.value();
+        if (spec.MaximumValue.has_value())
+            jsonDoc["maximumValue"] = spec.MaximumValue.value();
+        if (spec.EmptyAllowed.has_value())
+            jsonDoc["emptyAllowed"] = spec.EmptyAllowed.value();
+        switch (spec.Access)
         {
-            auto& spec = specWrapper.get();
-            auto specObject = jsonArray.createNestedObject();
-
-            StaticJsonDocument<384> jsonDoc;
-
-            jsonDoc["name"] = spec.Name;
-            jsonDoc["friendlyName"] = spec.FriendlyName;
-            if (spec.Description)
-                jsonDoc["description"] = spec.Description;
-            jsonDoc["type"] = to_value(spec.Type);
-            jsonDoc["typeName"] = spec.TypeName();
-            if (spec.HasValidation)
-                jsonDoc["hasValidation"] = true;
-            if (spec.MinimumValue.has_value())
-                jsonDoc["minimumValue"] = spec.MinimumValue.value();
-            if (spec.MaximumValue.has_value())
-                jsonDoc["maximumValue"] = spec.MaximumValue.value();
-            if (spec.EmptyAllowed.has_value())
-                jsonDoc["emptyAllowed"] = spec.EmptyAllowed.value();
-            switch (spec.Access)
-            {
-                case SettingSpec::SettingAccess::ReadOnly:
-                    jsonDoc["readOnly"] = true;
-                    break;
-
-                case SettingSpec::SettingAccess::WriteOnly:
-                    jsonDoc["writeOnly"] = true;
-                    break;
-
-                default:
-                    // Default is read/write, so we don't need to specify that
-                    break;
-            }
-
-            if (jsonDoc.overflowed())
-                debugE("JSON buffer overflow while serializing SettingSpec - object incomplete!");
-
-            if (!specObject.set(jsonDoc.as<JsonObjectConst>()))
-            {
-                bufferOverflow = true;
-                jsonBufferSize += JSON_BUFFER_INCREMENT;
-                debugV("JSON response buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
+            case SettingSpec::SettingAccess::ReadOnly:
+                jsonDoc["readOnly"] = true;
                 break;
-            }
+
+            case SettingSpec::SettingAccess::WriteOnly:
+                jsonDoc["writeOnly"] = true;
+                break;
+
+            default:
+                // Default is read/write, so we don't need to specify that
+                break;
         }
 
-        if (!bufferOverflow)
-            AddCORSHeaderAndSendResponse(pRequest, response.release());
+        if (jsonDoc.overflowed() || !specObject.set(jsonDoc.as<JsonObjectConst>()))
+        {
+            debugV("JSON response buffer overflow!");
+            SendBufferOverflowResponse(pRequest);
+            return;
+        }
+    }
 
-    } while (bufferOverflow);
+    AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
 const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
@@ -492,7 +482,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 {
     debugV("GetSettings");
 
-    auto response = new AsyncJsonResponse(false, JSON_BUFFER_BASE_SIZE);
+    auto response = new AsyncJsonResponse();
     response->addHeader("Server", "NightDriverStrip");
     auto root = response->getRoot();
     JsonObject jsonObject = root.to<JsonObject>();
@@ -582,22 +572,17 @@ void CWebServer::GetEffectSettingSpecs(AsyncWebServerRequest * pRequest)
 
 void CWebServer::SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect)
 {
-    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
+    auto response = std::make_unique<AsyncJsonResponse>();
+    auto jsonObject = response->getRoot().to<JsonObject>();
 
-    do
+    if (effect->SerializeSettingsToJSON(jsonObject))
     {
-        auto response = std::make_unique<AsyncJsonResponse>(false, jsonBufferSize);
-        auto jsonObject = response->getRoot().to<JsonObject>();
+        AddCORSHeaderAndSendResponse(pRequest, response.release());
+        return;
+    }
 
-        if (effect->SerializeSettingsToJSON(jsonObject))
-        {
-            AddCORSHeaderAndSendResponse(pRequest, response.release());
-            return;
-        }
-
-        jsonBufferSize += JSON_BUFFER_INCREMENT;
-        debugV("JSON response buffer overflow! Increased buffer to %zu bytes", jsonBufferSize);
-    } while (true);
+    debugV("JSON response buffer overflow!");
+    SendBufferOverflowResponse(pRequest);
 }
 
 void CWebServer::GetEffectSettings(AsyncWebServerRequest * pRequest)

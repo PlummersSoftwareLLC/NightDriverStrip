@@ -47,9 +47,9 @@ class PatternSMRainbowTunnel : public LEDStripEffect
 
     void Draw() override
     {
-        static constexpr byte scaleX = 4;
-        static constexpr byte scaleY = 4;
-        static constexpr byte speed = 2;
+        static constexpr uint8_t scaleX = 4;
+        static constexpr uint8_t scaleY = 4;
+        static constexpr uint8_t speed = 2;
         
         static uint16_t t;
 
@@ -58,8 +58,8 @@ class PatternSMRainbowTunnel : public LEDStripEffect
         {
             for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
             {
-                byte angle = rMap[x][y].angle;
-                byte radius = rMap[x][y].radius;
+                uint8_t angle = rMap[x][y].angle;
+                uint8_t radius = rMap[x][y].radius;
                 g()->leds[XY(x, y)] =
                     CHSV((angle * scaleX) - t + (radius * scaleY), 255, constrain(radius * 3, 0, 255));
             }

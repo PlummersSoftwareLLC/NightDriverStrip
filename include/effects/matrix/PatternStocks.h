@@ -216,7 +216,7 @@ private:
         {
             debugI("HTTP GET OK");
             String payload = http.getString(); // Get the response payload
-            AllocatedJsonDocument doc(8192);
+            auto doc = CreateJsonDocument();
             DeserializationError error = deserializeJson(doc, payload);
             debugV("JSON: %s", payload.c_str());
 
@@ -332,8 +332,6 @@ private:
 
   protected:
 
-    static constexpr int _jsonSize = LEDStripEffect::_jsonSize + 192;
-
     // Create our SettingSpec instances if needed, and return (a pointer to) them
     EffectSettingSpecs* FillSettingSpecs() override
     {
@@ -359,9 +357,9 @@ public:
 
     PatternStocks(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
     {
-        if (jsonObject.containsKey("sds"))
+        if (jsonObject["sds"].is<String>())
             stockServer = jsonObject["sds"].as<String>();
-        if (jsonObject.containsKey("tsl"))
+        if (jsonObject["tsl"].is<String>())
             tickerSymbols = jsonObject["tsl"].as<String>();
     }
 
@@ -372,7 +370,7 @@ public:
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -553,7 +551,7 @@ public:
     // Extension override to serialize our settings on top of those from LEDStripEffect
     bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeSettingsToJSON(root);

@@ -65,7 +65,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 384);
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -468,7 +468,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -576,7 +576,7 @@ class WaveformEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -671,7 +671,7 @@ class GhostWave : public WaveformEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -731,9 +731,9 @@ class GhostWave : public WaveformEffect
 
 class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 {
-    byte _hueIncrement = 0;
-    byte _scrollIncrement = 0;
-    byte _hueStep = 0;
+    uint8_t _hueIncrement = 0;
+    uint8_t _scrollIncrement = 0;
+    uint8_t _hueStep = 0;
 
     void construct()
     {
@@ -742,7 +742,7 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 
     public:
 
-    SpectrumBarEffect(const char   * pszFriendlyName, byte hueStep = 16, byte hueIncrement = 4, byte scrollIncrement = 0)
+    SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
         :LEDStripEffect(EFFECT_MATRIX_SPECTRUMBAR, pszFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
@@ -760,7 +760,7 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -797,12 +797,12 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
         constexpr size_t halfWidth  = MATRIX_WIDTH  / 2;
 
         // We step the hue ever 30ms
-        static byte hue = 0;
+        static uint8_t hue = 0;
         EVERY_N_MILLISECONDS(30)
             hue -= _hueIncrement;
 
         // We scroll the bars ever 50ms
-        static byte offset = 0;
+        static uint8_t offset = 0;
         EVERY_N_MILLISECONDS(100)
             offset += _scrollIncrement;
 
@@ -876,7 +876,7 @@ class AudioSpikeEffect : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -900,10 +900,10 @@ class AudioSpikeEffect : public LEDStripEffect
         static int offset = 2; 
 
         const int16_t * data = g_Analyzer.GetSampleBuffer();
-        int lastY = map(data[offset], 0, 2500, 0, MATRIX_HEIGHT);
+        int lastY = ::map(data[offset], 0, 2500, 0, MATRIX_HEIGHT);
         for (int32_t x = 0; x < MATRIX_WIDTH; ++x)
         {
-            byte y1 = map(data[offset+x], 0, 2500, 0, MATRIX_HEIGHT);
+            uint8_t y1 = ::map(data[offset+x], 0, 2500, 0, MATRIX_HEIGHT);
             CRGB color = ColorFromPalette(spectrumBasicColors, (y1 * 4) + colorOffset, 255, NOBLEND);
             g()->drawLine(x, lastY, x+1, y1, color);
             lastY = y1;

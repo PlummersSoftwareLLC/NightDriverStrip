@@ -561,36 +561,32 @@ void LoadEffectFactories()
     assert(!g_ptrEffectFactories->IsEmpty());
 }
 
-extern DRAM_ATTR size_t g_EffectsManagerJSONBufferSize;
-
 // Load the effects JSON file and check if it's appropriate to use
-std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
 {
     // If the effect set version is defined to 0, we ignore whatever is persisted
     if (EFFECT_SET_VERSION == 0)
         return {};
 
-    if (!LoadJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, pJsonDoc))
+    if (!LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
         return {};
 
-    auto jsonObject = pJsonDoc->as<JsonObjectConst>();
+    auto jsonObject = jsonDoc.as<JsonObjectConst>();
 
     // Ignore JSON if it was persisted for a different project
-    if (jsonObject.containsKey(PTY_PROJECT)
+    if (jsonObject[PTY_PROJECT].is<String>()
         && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
     {
-        pJsonDoc->clear();
         return {};
     }
 
     // Default to 1 if no effect set version was persisted
-    int jsonVersion = jsonObject.containsKey(PTY_EFFECTSETVER) ? jsonObject[PTY_EFFECTSETVER] : 1;
+    int jsonVersion = jsonObject[PTY_EFFECTSETVER].is<int>() ? jsonObject[PTY_EFFECTSETVER] : 1;
 
     // Only return the JSON object if the persistent version matches the current one
     if (jsonVersion == EFFECT_SET_VERSION)
         return jsonObject;
 
-    pJsonDoc->clear();
     return {};
 }
 

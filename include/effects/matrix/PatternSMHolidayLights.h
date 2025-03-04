@@ -13,19 +13,19 @@ class PatternSMHolidayLights : public LEDStripEffect
   private:
 
     static constexpr int speed = (200 / (MATRIX_HEIGHT - 4));
-    byte hue {0};
-    byte effId = 2; // 1 - 3
+    uint8_t hue {0};
+    uint8_t effId = 2; // 1 - 3
 
-    const byte maxDim = max(MATRIX_WIDTH, MATRIX_HEIGHT);
-    const byte minDim = min(MATRIX_WIDTH, MATRIX_HEIGHT);
-    const byte width_adj = (MATRIX_WIDTH < MATRIX_HEIGHT ? (MATRIX_HEIGHT - MATRIX_WIDTH) / 2 : 0);
-    const byte height_adj = (MATRIX_HEIGHT < MATRIX_WIDTH ? (MATRIX_WIDTH - MATRIX_HEIGHT) / 2 : 0);
+    const uint8_t maxDim = max(MATRIX_WIDTH, MATRIX_HEIGHT);
+    const uint8_t minDim = min(MATRIX_WIDTH, MATRIX_HEIGHT);
+    const uint8_t width_adj = (MATRIX_WIDTH < MATRIX_HEIGHT ? (MATRIX_HEIGHT - MATRIX_WIDTH) / 2 : 0);
+    const uint8_t height_adj = (MATRIX_HEIGHT < MATRIX_WIDTH ? (MATRIX_WIDTH - MATRIX_HEIGHT) / 2 : 0);
     const bool glitch = abs(MATRIX_WIDTH - MATRIX_HEIGHT) >= minDim / 4;
 
-    byte density = 50;
-    byte fadingSpeed = 10;
-    byte updateFromRGBWeight = 10;
-    const byte scaleToNumLeds = NUM_LEDS / 256;
+    uint8_t density = 50;
+    uint8_t fadingSpeed = 10;
+    uint8_t updateFromRGBWeight = 10;
+    const uint8_t scaleToNumLeds = NUM_LEDS / 256;
 
     CRGB RGBweight(uint16_t idx)
     {

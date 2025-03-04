@@ -61,7 +61,7 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
 // Declare these here just so InitEffectsManager can refer to them. They're defined elsewhere or further down.
 
 void LoadEffectFactories();
-std::optional<JsonObjectConst> LoadEffectsJSONFile(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
+std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc);
 void WriteCurrentEffectIndexFile();
 
 // InitEffectsManager
@@ -75,13 +75,13 @@ void InitEffectsManager()
 
     l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter([]()
     {
-        if (!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_EffectsManagerJSONBufferSize, g_ptrSystem->EffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
+        if (!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_ptrSystem->EffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
             throw std::runtime_error("Effects serialization failed");
     });
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
-    std::unique_ptr<AllocatedJsonDocument> pJsonDoc;
-    auto jsonObject = LoadEffectsJSONFile(pJsonDoc);
+    auto jsonDoc = CreateJsonDocument();
+    auto jsonObject = LoadEffectsJSONFile(jsonDoc);
 
     if (jsonObject)
     {
@@ -91,8 +91,6 @@ void InitEffectsManager()
             g_ptrSystem->EffectManager().DeserializeFromJSON(jsonObject.value());
         else
             g_ptrSystem->SetupEffectManager(jsonObject.value(), g_ptrSystem->Devices());
-
-        pJsonDoc->clear();
     }
     else
     {
@@ -209,8 +207,6 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
         return nullptr;
     }
 
-    static size_t jsonBufferSize = JSON_BUFFER_BASE_SIZE;
-
     auto& sourceEffect = _vEffects[index];
 
     auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
@@ -219,14 +215,12 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
     if (factoryEntry == jsonEffectFactories.end())
         return nullptr;
 
-    std::unique_ptr<AllocatedJsonDocument> ptrJsonDoc = nullptr;
+    auto jsonDoc = CreateJsonDocument();
+    auto jsonObject = jsonDoc.to<JsonObject>();
 
-    assert(SerializeWithBufferSize(ptrJsonDoc, jsonBufferSize,
-        [&sourceEffect](JsonObject &jsonObject) { return sourceEffect->SerializeToJSON(jsonObject); }));
+    assert(sourceEffect->SerializeToJSON(jsonObject));
 
-    auto copiedEffect = factoryEntry->second(ptrJsonDoc->as<JsonObjectConst>());
-
-    ptrJsonDoc->clear();
+    auto copiedEffect = factoryEntry->second(jsonDoc.as<JsonObjectConst>());
 
     if (!copiedEffect)
         return nullptr;
