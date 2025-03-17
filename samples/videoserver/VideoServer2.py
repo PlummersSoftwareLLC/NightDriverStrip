@@ -16,7 +16,7 @@
 # Dependencies
 
 import cv2                          # python3 -m pip install opencv-python
-from pytube import YouTube          # python3 -m pip install pytube
+from pytubefix import YouTube      # python3 -m pip install pytubefix
 import sys
 import socket
 import time
