@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include <arduinoFFT.h>
+#include <ArduinoFFT.h>
 #include <driver/i2s.h>
 #include <driver/adc.h>
 
@@ -262,11 +262,11 @@ class SoundAnalyzer : public AudioVariables
 
     void FFT()
     {
-        arduinoFFT _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
-        _FFT.DCRemoval();
-        _FFT.Windowing(FFT_WIN_TYP_BLACKMAN, FFT_FORWARD);
-        _FFT.Compute(FFT_FORWARD);
-        _FFT.ComplexToMagnitude();
+        ArduinoFFT<double> _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
+        _FFT.dcRemoval();
+        _FFT.windowing(FFTWindow::Blackman, FFTDirection::Forward);
+        _FFT.compute(FFTDirection::Forward);
+        _FFT.complexToMagnitude();
     }
 
     void FillBufferI2S()
