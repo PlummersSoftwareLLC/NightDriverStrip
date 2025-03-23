@@ -406,9 +406,9 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
     auto response = new AsyncJsonResponse();
     auto jsonArray = response->getRoot().to<JsonArray>();
 
-    for (auto& specWrapper : settingSpecs)
+    for (const auto& specWrapper : settingSpecs)
     {
-        auto& spec = specWrapper.get();
+        const auto& spec = specWrapper.get();
         auto specObject = jsonArray.add<JsonObject>();
 
         auto jsonDoc = CreateJsonDocument();
