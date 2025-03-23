@@ -265,7 +265,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         data.header[0] = ((3 << 4) + 15);
 
         // Change the 0-2 range of the VURatioFade to 0-16 for the PET
-        data.vu = (byte)((g_Analyzer._VURatioFade / 2.0f) * (float)MAXPET);
+        data.vu = (uint8_t)((g_Analyzer._VURatioFade / 2.0f) * (float)MAXPET);
 
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display

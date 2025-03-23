@@ -67,7 +67,7 @@ class PatternSMFlowFields : public LEDStripEffect
         }
     }
 
-    byte hue = 0;
+    uint8_t hue = 0;
     std::array<Boid, NUM_PARTICLES> boids; // this makes the boids
 
     uint16_t x;
@@ -107,7 +107,7 @@ class PatternSMFlowFields : public LEDStripEffect
             int ioffset = scale * boid.location.x;
             int joffset = scale * boid.location.y;
 
-            byte angle = inoise8(x + ioffset, y + joffset, z);
+            uint8_t angle = inoise8(x + ioffset, y + joffset, z);
 
             boid.velocity.x = (float)sin8(angle) * 0.0078125 - 1.0;
             boid.velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);

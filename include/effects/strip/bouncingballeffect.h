@@ -92,7 +92,7 @@ private:
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize + 128> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);

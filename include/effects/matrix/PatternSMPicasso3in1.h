@@ -172,7 +172,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);

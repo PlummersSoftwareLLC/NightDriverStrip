@@ -34,7 +34,6 @@
 #include <atomic>
 #include <utility>
 #include <ArduinoJson.h>
-#include "jsonbase.h"
 
 struct IJSONSerializable
 {
@@ -49,25 +48,38 @@ constexpr auto to_value(E e) noexcept
 }
 
 #if USE_PSRAM
-    struct JsonPsramAllocator
+
+    struct JsonPsramAllocator : ArduinoJson::Allocator
     {
-        static void* allocate(size_t size) {
+        void* allocate(size_t size) override 
+        {
             return ps_malloc(size);
         }
 
-        static void deallocate(void* pointer) {
+        void deallocate(void* pointer) override 
+        {
             free(pointer);
         }
 
-        static void* reallocate(void* ptr, size_t new_size) {
+        void* reallocate(void* ptr, size_t new_size) override {
             return ps_realloc(ptr, new_size);
         }
     };
 
-    typedef BasicJsonDocument<JsonPsramAllocator> AllocatedJsonDocument;
+    inline JsonDocument CreateJsonDocument()
+    {
+        static auto jsonPsramAllocator = JsonPsramAllocator();
+
+        return JsonDocument(&jsonPsramAllocator);
+    }
 
 #else
-    typedef DynamicJsonDocument AllocatedJsonDocument;
+
+    inline JsonDocument CreateJsonDocument()
+    {
+        return JsonDocument();
+    }
+
 #endif
 
 namespace ArduinoJson
@@ -91,12 +103,17 @@ namespace ArduinoJson
         }
     };
 
+    inline bool canConvertFromJson(JsonVariantConst src, const CRGB&)
+    {
+        return Converter<CRGB>::checkJson(src);
+    }
+    
     template <>
     struct Converter<CRGBPalette16>
     {
         static bool toJson(const CRGBPalette16& palette, JsonVariant dst)
         {
-            AllocatedJsonDocument doc(384);
+            auto doc = CreateJsonDocument();
 
             JsonArray colors = doc.to<JsonArray>();
 
@@ -123,12 +140,16 @@ namespace ArduinoJson
             return src.is<JsonArrayConst>() && src.as<JsonArrayConst>().size() == 16;
         }
     };
+
+    inline bool canConvertFromJson(JsonVariantConst src, const CRGBPalette16&)
+    {
+        return Converter<CRGBPalette16>::checkJson(src);
+    }
 }
 
 bool BoolFromText(const String& text);
-bool SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, const std::function<bool(JsonObject&)>& serializationFunction);
-bool LoadJSONFile(const String & fileName, size_t& bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc);
-bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializable& object);
+bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc);
+bool SaveToJSONFile(const String & fileName, IJSONSerializable& object);
 bool RemoveJSONFile(const String & fileName);
 
 #define JSON_WRITER_DELAY 3000
