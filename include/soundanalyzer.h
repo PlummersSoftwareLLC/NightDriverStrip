@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include <ArduinoFFT.h>
+#include <arduinoFFT.h>
 #include <driver/i2s.h>
 #include <driver/adc.h>
 
