@@ -254,12 +254,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
-    #if USE_M5
-        #define LED_PIN0 32
-    #elif LILYGOTDISPLAYS3
-        #define LED_PIN0 21
-    #else
-        #define LED_PIN0 5
+    #ifndef LED_PIN0
+      #if USE_M5
+          #define LED_PIN0 32
+      #elif LILYGOTDISPLAYS3
+          #define LED_PIN0 21
+      #else
+          #define LED_PIN0 5
+      #endif
     #endif
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
@@ -306,25 +308,18 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
-    #if USE_M5
-        #define LED_PIN0 32
-    #elif LILYGOTDISPLAYS3
-        #define LED_PIN0 21
-    #else
-        #define LED_PIN0 5
+    #ifndef LED_PIN0
+      #if USE_M5
+          #define LED_PIN0 32
+      #elif LILYGOTDISPLAYS3
+          #define LED_PIN0 21
+      #else
+          #define LED_PIN0 5
+      #endif
     #endif
 
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
-
-    #if USE_M5
-        #define LED_PIN0 32
-    #elif LILYGOTDISPLAYS3
-        #define LED_PIN0 21
-    #else
-        #define LED_PIN0 5
-    #endif
-
 
 #elif LANTERN
 
@@ -356,12 +351,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_NTP              0   // Set the clock from the web
     #define ENABLE_OTA              0   // Accept over the air flash updates
 
-    #if M5STICKC
+    #ifndef LED_PIN0
+      #if M5STICKC
         #define LED_PIN0 33
-    #elif M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
-        #define LED_PIN0 32
-    #else
-        #define LED_PIN0 5
+      #elif M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
+          #define LED_PIN0 32
+      #else
+          #define LED_PIN0 5
+      #endif
     #endif
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
@@ -409,7 +406,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              1   // Accept over the air flash updates
     #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
-    #define LED_PIN0                32
+    #ifndef LED_PIN0
+      #define LED_PIN0                32
+    #endif
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
     // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
@@ -437,7 +436,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_REMOTE           1   // IR Remote Control
     #define ENABLE_AUDIO            1   // Listen for audio from the microphone and process it
 
-    #define LED_PIN0          26
+    #ifndef LED_PIN0
+      #define LED_PIN0          26
+    #endif
+
     #define NUM_CHANNELS      1
     #define RING_SIZE_0       24
     #define BONUS_PIXELS      0
@@ -471,7 +473,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_OTA              1   // Accept over the air flash updates
     #define WAIT_FOR_WIFI           0   // Don't *need* it so don't wait for it
 
-    #define LED_PIN0 5
+    #ifndef LED_PIN0
+      #define LED_PIN0 5
+    #endif
 
     // The webserver serves files that are baked into the device firmware. When running you should be able to
     // see/select the list of effects by visiting the chip's IP in a browser.  You can get the chip's IP by
@@ -514,7 +518,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1 37
     #define TOGGLE_BUTTON_2 39
 
-    #define LED_PIN0 32
+    #ifndef LED_PIN0
+      #define LED_PIN0 32
+    #endif
 
 #elif MESMERIZER
 
@@ -590,7 +596,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define MAX_BUFFERS     20
 
-    #define LED_PIN0        21          // Note that TFT board on TFTGO uses pins 19, 18, 5, 16, 23, and 4
+    #ifndef LED_PIN0
+      #define LED_PIN0        21          // Note that TFT board on TFTGO uses pins 19, 18, 5, 16, 23, and 4
+    #endif
     #define NUM_CHANNELS    1
     #define RING_SIZE_0     24
     #define BONUS_PIXELS    0
@@ -628,7 +636,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define MAX_BUFFERS     20
 
-    #define LED_PIN0        26
+    #ifndef LED_PIN0
+      #define LED_PIN0        26
+    #endif
     #define NUM_CHANNELS    1
     #define RING_SIZE_0     24
     #define BONUS_PIXELS    0
@@ -758,7 +768,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define TOGGLE_BUTTON_1         39
     #define TOGGLE_BUTTON_2         37
 
-    #define LED_PIN0                32
+    #ifndef LED_PIN0
+      #define LED_PIN0                32
+    #endif
 
     #define DEFAULT_EFFECT_INTERVAL 0               // No scheduled effect changes
 
@@ -784,7 +796,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The "Tiki Fire Umbrella" project, with 8 channels
 
-    #define LED_PIN0                5   // Only one pin, it's routed to all 8 spokes.  Independent turned out not to be that useful.
+    #ifndef LED_PIN0
+      #define LED_PIN0                5   // Only one pin, it's routed to all 8 spokes.  Independent turned out not to be that useful.
+    #endif
+
     #define NUM_CHANNELS    1
     #define MATRIX_WIDTH    228                   // Number of pixels wide (how many LEDs per channel)
     #define MATRIX_HEIGHT   1                     // Number of pixels tall
@@ -811,7 +826,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (10*60*24)
 
-    #define LED_PIN0        26
+    #ifndef LED_PIN0
+      #define LED_PIN0        26
+    #endif
     #define NUM_CHANNELS    1
     #define BONUS_PIXELS    0
     #define NUM_FANS        1
@@ -845,7 +862,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
-    #define LED_PIN0        5
+
+    #ifndef LED_PIN0
+      #define LED_PIN0        5
+    #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)
 
@@ -878,7 +898,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
 
     #ifndef LED_PIN0
-        #define LED_PIN0        5
+      #define LED_PIN0        5
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)
@@ -908,7 +928,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    1                     // Listen for audio from the microphone and process it
-    #define LED_PIN0        5
+    #ifndef LED_PIN0
+      #define LED_PIN0        5
+    #endif
 
     #define DEFAULT_EFFECT_INTERVAL     (1000*20)
 
@@ -937,7 +959,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define NUM_LEDS        (MATRIX_WIDTH * MATRIX_HEIGHT)
     #define ENABLE_REMOTE   0                     // IR Remote Control
     #define ENABLE_AUDIO    0                     // Listen for audio from the microphone and process it
-    #define LED_PIN0        17
+    #ifndef LED_PIN0
+      #define LED_PIN0        17
+    #endif
     #define DEFAULT_EFFECT_INTERVAL     (1000*60*60*24)
 
 #elif SPECTRUM
@@ -973,12 +997,14 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
+    #ifndef LED_PIN0
     #if SPECTRUM_WROVER_KIT
         #define LED_PIN0                5
     #elif ELECROW
         #define LED_PIN0                19
     #else
         #define LED_PIN0                26
+    #endif
     #endif
 
     #if ELECROW
@@ -1035,8 +1061,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL         0   // Do not auto-advance unless the button is presssed
+  
+    #ifndef LED_PIN0
+      #define LED_PIN0                        26
+    #endif
 
-    #define LED_PIN0                        26
     #define NUM_CHANNELS                    1
     #define RING_SIZE_0                     24
     #define BONUS_PIXELS                    0
@@ -1076,7 +1105,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (60*60*24*5)
 
-    #define LED_PIN0                    26
+    #ifndef LED_PIN0
+      #define LED_PIN0                    26
+    #endif
 
     #define BONUS_PIXELS                32  // Extra pixels - in this case, my case strip
     #define NUM_CHANNELS                1   // Everything wired sequentially on a single channel
@@ -1125,10 +1156,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define LED_FAN_OFFSET_BU 6
 
-    #if M5STICKC
-        #define LED_PIN0 26
-    #else
-        #define LED_PIN0 5
+    #ifndef LED_PIN0
+      #if M5STICKC
+          #define LED_PIN0 26
+      #else
+          #define LED_PIN0 5
+      #endif
     #endif
 
 #elif INSULATORS
@@ -1146,7 +1179,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (0)
 
-    #define LED_PIN0          26
+    #ifndef LED_PIN0
+      #define LED_PIN0          26
+    #endif
+
     #define NUM_CHANNELS      1
     #define RING_SIZE_0       12
     #define BONUS_PIXELS      0
@@ -1179,7 +1215,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     #define DEFAULT_EFFECT_INTERVAL     (1000 * 60 * 10)    // 10 min
 
-    #define LED_PIN0          26
+    #ifndef LED_PIN0
+      #define LED_PIN0          26
+    #endif
+
     #define NUM_CHANNELS      1
     #define RING_SIZE_0       25                    // Treat each layer as one ring
     #define BONUS_PIXELS      0
@@ -1538,6 +1577,31 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef FULL_COLOR_REMOTE_FILL
 #define FULL_COLOR_REMOTE_FILL 0
+#endif
+
+// Convenience shortcut to avoid cluttering all the above with #if pretzels.
+// This allows single, easy setting from either a platform.ini (or override)
+// or allowing this to be set from the command line build. e.g.:
+// $ PLATFORMIO_BUILD_FLAGS="-DLED_PIN0=14 -DUSE_ALL_NETWORKING" \
+//   pio run --target upload -e lilygo-tdisplay-s3-demo
+
+#ifdef USE_ALL_NETWORKING
+  #undef ENABLE_WIFI
+  #define ENABLE_WIFI             1   // Connect to WiFi
+
+  #undef INCOMING_WIFI_ENABLED
+  #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+  #undef ENABLE_NTP
+  #define ENABLE_NTP              1   // Set the clock from the web
+
+  #undef ENABLE_OTA
+  #define ENABLE_OTA              1
+
+  #undef ENABLE_WEBSERVER
+  #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+
+  #undef ENABLE_WEB_UI
+  #define ENABLE_WEB_UI           1   // Enable HTTP pathnames for the web UI
 #endif
 
 // Common globals
