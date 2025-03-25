@@ -1585,7 +1585,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // $ PLATFORMIO_BUILD_FLAGS="-DLED_PIN0=14 -DUSE_ALL_NETWORKING" \
 //   pio run --target upload -e lilygo-tdisplay-s3-demo
 
-#ifdef USE_ALL_NETWORKING
+#if USE_ALL_NETWORKING
     #undef ENABLE_WIFI
     #define ENABLE_WIFI             1   // Connect to WiFi
 
