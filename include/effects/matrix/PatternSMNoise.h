@@ -390,9 +390,7 @@ class PatternSMNoise : public LEDStripEffect
 
         jsonDoc[PTY_EFFECT] = to_value(_effect);
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Start() override

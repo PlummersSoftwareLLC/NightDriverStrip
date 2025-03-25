@@ -106,9 +106,7 @@ class PaletteEffect : public LEDStripEffect
         jsonDoc[PTY_ERASE] = _bErase;
         jsonDoc["bns"] = _brightness;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     ~PaletteEffect()
