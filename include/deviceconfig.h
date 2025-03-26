@@ -222,9 +222,7 @@ class DeviceConfig : public IJSONSerializable
         if (includeSensitive)
             jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override

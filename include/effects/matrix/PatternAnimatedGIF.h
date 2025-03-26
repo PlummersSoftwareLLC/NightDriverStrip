@@ -233,8 +233,7 @@ public:
         jsonDoc[PTY_BKCOLOR]   = _bkColor;
         jsonDoc[PTY_PRECLEAR]  = _preClear;
 
-        assert(!jsonDoc.overflowed());
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Start() override

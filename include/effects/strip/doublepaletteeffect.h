@@ -67,9 +67,7 @@ class DoublePaletteEffect : public LEDStripEffect
         paletteObj = jsonDoc["pt2"].to<JsonObject>();
         _PaletteEffect2.SerializeToJSON(paletteObj);
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override

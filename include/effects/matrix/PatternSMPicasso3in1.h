@@ -179,9 +179,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
         jsonDoc[PTY_SCALE] = _scale;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
 

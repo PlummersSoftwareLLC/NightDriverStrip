@@ -725,9 +725,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
 
         jsonDoc[PTY_PALETTE] = _Palette;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
 
@@ -817,9 +815,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
         jsonDoc[PTY_PALETTE] = _Palette;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
@@ -905,9 +901,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
         jsonDoc[PTY_PALETTE] = _Palette;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
