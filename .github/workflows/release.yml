@@ -1,0 +1,12 @@
+name: Release Web Installer build and deploy
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  call-web-installer:
+    uses: ./.github/workflows/web_installer.yml
+    with:
+      release-name: ${{ github.event.release.name }}
+    secrets: inherit

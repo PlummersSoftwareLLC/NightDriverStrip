@@ -30,22 +30,77 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
 #include <tuple>
-#include <algorithm>
 #include "jsonserializer.h"
+#include "types.h"
+
+#if ENABLE_WIFI
+// Make sure we have a secrets.h and that it contains everything we need.
+
+#if !__has_include("secrets.h")
+#error Copy include/secrets.example.h to include/secrets.h, edit to taste, and retry. Please see README.md.
+#endif
+
 #include "secrets.h"
 
-#define DEVICE_CONFIG_FILE "/device.cfg"
-#define NTP_SERVER_DEFAULT "0.pool.ntp.org"
-#define BRIGHTNESS_MIN uint8_t(10)
-#define BRIGHTNESS_MAX uint8_t(255)
-#define POWER_LIMIT_MIN 2000
-#define POWER_LIMIT_DEFAULT 4500
+#if !defined(cszSSID)
+#error A definition for cszSSID is missing from secrets.h
+#endif
+
+#if !defined(cszPassword)
+#error A definition for cszPassword is missing from secrets.h
+#endif
+
+#if !defined(cszHostname)
+#error A definition for cszHostname is missing from secrets.h
+#endif
+
+#if !defined(cszOpenWeatherAPIKey)
+#error A definition for cszOpenWeatherAPIKey is missing from secrets.h
+#endif
+
+#if !defined(cszLocation)
+#error A definition for cszLocation is missing from secrets.h
+#endif
+
+#if !defined(bLocationIsZip)
+#error A definition for bLocationIsZip is missing from secrets.h
+#endif
+
+#if !defined(cszCountryCode)
+#error A definition for cszCountryCode is missing from secrets.h
+#endif
+
+#if !defined(cszTimeZone)
+#error A definition for cszTimeZone is missing from secrets.h
+#endif
+#else
+#define cszHostname ""
+#define cszLocation ""
+#define bLocationIsZip false
+#define cszCountryCode ""
+#define cszTimeZone ""
+#define cszOpenWeatherAPIKey ""
+#define cszSSID ""
+#endif // ENABLE_WIFI
+
+// Define this to true to make the DeviceConfig ignore any JSON-persisted config that may be on the device.
+// Note that effect settings are not impacted by this setting. Their persisted config is part of the effects
+// list JSON, which can be ignored separately (search for EFFECT_SET_VERSION in effects.cpp).
+#define IGNORE_SAVED_DEVICE_CONFIG  false
+
+#define DEVICE_CONFIG_FILE          "/device.cfg"
+#define NTP_SERVER_DEFAULT          "0.pool.ntp.org"
+#ifndef BRIGHTNESS_MIN
+    #define BRIGHTNESS_MIN          uint8_t(10)
+#endif
+#define BRIGHTNESS_MAX              uint8_t(255)
+#define POWER_LIMIT_MIN             1000
+#define POWER_LIMIT_DEFAULT         4500
 
 // DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should
-// be managed using overrides of the respective methods in LEDStripEffect (HasSettings(), GetSettingSpecs(),
+// be managed using overrides of the respective methods in LEDStripEffect (mainly FillSettingSpecs(),
 // SerializeSettingsToJSON() and SetSetting()).
 //
 // Adding a setting to the list of known/saved settings requires the following:
@@ -56,6 +111,9 @@
 //    (in deviceconfig.cpp)
 // 5. Adding (de)serialization logic for the setting to the SerializeToJSON()/DeserializeFromJSON() methods
 // 6. Adding a Get/Set method for the setting (and, where applicable, their implementation in deviceconfig.cpp)
+// 7. If you've added an entry to secrets.example.h to define a default value for your setting then add a
+//    test at the top of this file to confirm that the new #define is found. This prevents drift when users
+//    have an existing tree and don't know to refresh their modified version of secrets.h.
 //
 // For the first 5 points, a comment has been added to the respective place in the existing code.
 // Generally speaking, one will also want to add logic to the webserver to retrieve and set the setting.
@@ -84,9 +142,7 @@ class DeviceConfig : public IJSONSerializable
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
     size_t writerIndex;
 
-    static constexpr int _jsonSize = 1024;
-
-    void SaveToJSON();
+    void SaveToJSON() const;
 
     template <typename T>
     void SetAndSave(T& target, const T& source)
@@ -102,7 +158,7 @@ class DeviceConfig : public IJSONSerializable
     template <typename T>
     void SetIfPresentIn(const JsonObjectConst& jsonObject, T& target, const char *tag)
     {
-        if (jsonObject.containsKey(tag))
+        if (jsonObject[tag].is<T>())
             target = jsonObject[tag].as<T>();
     }
 
@@ -141,7 +197,7 @@ class DeviceConfig : public IJSONSerializable
 
     bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
     {
-        AllocatedJsonDocument jsonDoc(_jsonSize);
+        auto jsonDoc = CreateJsonDocument();
 
         // Add serialization logic for additional settings to this code
         jsonDoc[HostnameTag] = hostname;
@@ -178,6 +234,10 @@ class DeviceConfig : public IJSONSerializable
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject, bool skipWrite)
     {
+        // If we're told to ignore saved config, we shouldn't touch anything
+        if (IGNORE_SAVED_DEVICE_CONFIG)
+            return true;
+
         // Add deserialization logic for additional settings to this code
         SetIfPresentIn(jsonObject, hostname, HostnameTag);
         SetIfPresentIn(jsonObject, location, LocationTag);
@@ -201,7 +261,7 @@ class DeviceConfig : public IJSONSerializable
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
 
-        if (jsonObject.containsKey(TimeZoneTag))
+        if (jsonObject[TimeZoneTag].is<String>())
             return SetTimeZone(jsonObject[TimeZoneTag], true);
 
         if (!skipWrite)
@@ -210,14 +270,14 @@ class DeviceConfig : public IJSONSerializable
         return true;
     }
 
-    void RemovePersisted()
+    static void RemovePersisted()
     {
         RemoveJSONFile(DEVICE_CONFIG_FILE);
     }
 
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
-        if (settingSpecs.size() == 0)
+        if (settingSpecs.empty())
         {
             // Add SettingSpec for additional settings to this list
             settingSpecs.emplace_back(
@@ -412,7 +472,7 @@ class DeviceConfig : public IJSONSerializable
         return openWeatherApiKey;
     }
 
-    ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
+    static ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
 
     void SetOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
     {
@@ -454,7 +514,7 @@ class DeviceConfig : public IJSONSerializable
         return brightness;
     }
 
-    ValidateResponse ValidateBrightness(const String& newBrightness)
+    static ValidateResponse ValidateBrightness(const String& newBrightness)
     {
         auto newNumericBrightness = newBrightness.toInt();
 
@@ -492,7 +552,7 @@ class DeviceConfig : public IJSONSerializable
         return powerLimit;
     }
 
-    ValidateResponse ValidatePowerLimit(const String& newPowerLimit)
+    static ValidateResponse ValidatePowerLimit(const String& newPowerLimit)
     {
         if (newPowerLimit.toInt() < POWER_LIMIT_MIN)
             return { false, String("powerLimit is below minimum value of ") + POWER_LIMIT_MIN };

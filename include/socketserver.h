@@ -65,6 +65,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 struct SocketResponse
 {
     uint32_t    size;              // 4
+    uint64_t    sequence;          // 8 
     uint32_t    flashVersion;      // 4
     double      currentClock;      // 8
     double      oldestPacket;      // 8
@@ -75,7 +76,7 @@ struct SocketResponse
     uint32_t    bufferPos;         // 4
     uint32_t    fpsDrawing;        // 4
     uint32_t    watts;             // 4
-};
+} __attribute__((packed));
 
 static_assert(sizeof(double) == 8);             // SocketResponse on wire uses 8 byte floats
 static_assert(sizeof(float)  == 4);             // PeakData on wire uses 4 byte floats
@@ -85,7 +86,7 @@ static_assert(sizeof(float)  == 4);             // PeakData on wire uses 4 byte 
 // floats land on byte multiples of 8, otherwise you'll get packing bytes inserted.  Welcome to my world! Once upon
 // a time, I ported about a billion lines of x86 'pragma_pack(1)' code to the MIPS (davepl)!
 
-static_assert( sizeof(SocketResponse) == 64, "SocketResponse struct size is not what is expected - check alignment and float size" );
+static_assert( sizeof(SocketResponse) == 72, "SocketResponse struct size is not what is expected - check alignment and float size" );
 
 // SocketServer
 //
@@ -112,7 +113,7 @@ public:
         _server_fd(-1),
         _cbReceived(0)
     {
-        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug
+        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug        
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -175,6 +176,7 @@ public:
     void ResetReadBuffer()
     {
         _cbReceived = 0;
+        memset(_pBuffer.get(), 0, MAXIMUM_PACKET_SIZE);
     }
 
     // ReadUntilNBytesReceived
@@ -204,7 +206,11 @@ public:
 
             // Read data from the socket until we have _bcNeeded bytes in the buffer
 
-            int cbRead = read(socket, (uint8_t *) _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
+            int cbRead = 0;
+            do 
+            {
+                cbRead = read(socket, (uint8_t *) _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
+            } while (cbRead < 0 && errno == EINTR);
 
             // Restore the old state
 
@@ -226,7 +232,7 @@ public:
     // Socket server main ProcessIncomingConnectionsLoop - accepts new connections and reads from them, dispatching
     // data packets into our buffer and closing the socket if anything goes weird.
 
-    int ProcessIncomingConnectionsLoop();
+    bool ProcessIncomingConnectionsLoop();
 
     // DecompressBuffer
     //

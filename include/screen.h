@@ -117,7 +117,7 @@ public:
     //
     // Display code for the M5 based TFT displays on the M5 Stick, Stick C Plus, and Stack
 
-    #include <M5Display.h>
+    #include <M5UnitLCD.h>
 
     // M5Screen
     //
@@ -125,16 +125,11 @@ public:
 
     class M5Screen : public Screen
     {
-      private:
-
-        M5Display m5display;
-
       public:
 
         M5Screen(int w, int h) : Screen(w, h)
         {
             M5.Lcd.fillScreen(GREEN16);
-            M5.Lcd.setRotation(1);
         }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
@@ -171,8 +166,10 @@ public:
         {
             tft.begin();
 
-            pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
-            digitalWrite(TFT_BL, 128);
+            #ifdef TFT_BL
+                pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
+                digitalWrite(TFT_BL, 128);
+            #endif
 
             tft.setRotation(3);
             tft.fillScreen(TFT_GREEN);
@@ -196,6 +193,112 @@ public:
     };
 #endif
 
+#if AMOLED_S3
+
+    #include "amoled/LilyGo_AMOLED.h"
+    #include "amoled/lv_conf.h"
+    #include "amoled/LV_Helper.h"
+
+    // AMOLEDScreen
+    //
+    // Screen class that works with the AMOLED S3
+    
+    class AMOLEDScreen : public Screen
+    {
+        LilyGo_Class amoled;
+        lv_color_t * cbuf = NULL;
+        lv_obj_t * canvas = NULL;
+
+        inline lv_color_t lv_from16Bit(uint16_t color)
+        {
+            uint8_t r = gamma5[color >> 11];
+            uint8_t g = gamma6[(color >> 5) & 0x3F];
+            uint8_t b = gamma5[color & 0x1F];
+
+            return lv_color_make(r, g, b);
+        }
+
+    public:
+
+        AMOLEDScreen(int w, int h) : Screen(w, h)
+        {
+            if (!amoled.begin())
+            {
+                debugE("AMOLED begin failed");
+                return;
+            }
+
+            amoled.setBrightness(255);
+            
+            // Register lvgl helper
+            beginLvglHelper(amoled);
+
+            const size_t kBufferSize = LV_CANVAS_BUF_SIZE_TRUE_COLOR(w,h);
+            cbuf = (lv_color_t *)heap_caps_malloc(kBufferSize, MALLOC_CAP_SPIRAM);
+            if (cbuf == NULL)
+            {
+                debugE("AMOLED malloc failed");
+                return;
+            }
+            debugW("Allocated %d bytes for lvgl canvas: %p\n", sizeof(lv_color_t) * w * h, cbuf);
+            
+            canvas = lv_canvas_create(lv_scr_act());
+            lv_canvas_set_buffer(canvas, cbuf, w, h, LV_IMG_CF_TRUE_COLOR);
+            lv_obj_center(canvas);
+            lv_canvas_fill_bg(canvas, lv_from16Bit(GREEN16), LV_OPA_COVER);            
+        }
+
+        ~AMOLEDScreen()
+        {
+            if (canvas)
+            {
+                lv_obj_del(canvas);
+                canvas = NULL;
+            }
+            if (cbuf)
+            {
+                heap_caps_free(cbuf);
+                cbuf = NULL;
+            }
+        }   
+
+        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+        {
+            assert(canvas != NULL);
+            assert(cbuf != NULL);
+
+            lv_color_t lv_color = lv_from16Bit(color); 
+            lv_canvas_set_px_color(canvas, x, y, lv_color);
+
+        }
+
+        virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
+        {
+            assert(canvas != NULL);
+            assert(cbuf != NULL);
+
+            // Define the rectangle's properties
+            lv_draw_rect_dsc_t rect_dsc;
+            lv_draw_rect_dsc_init(&rect_dsc);
+            rect_dsc.bg_opa = LV_OPA_COVER;
+            rect_dsc.bg_color = lv_from16Bit(color); 
+
+            // Draw the rectangle
+            lv_canvas_draw_rect(canvas, x, y, w, h, &rect_dsc);
+        }
+
+        virtual void fillScreen(uint16_t color) override
+        {
+            assert(canvas);
+            assert(cbuf);
+
+            lv_color_t lv_color = lv_from16Bit(color); 
+            lv_canvas_fill_bg(canvas, lv_color, LV_OPA_COVER);
+        }
+
+    };
+#endif
+
 #if USE_OLED && !USE_SSD1306
 
     // OLEDScreen
@@ -211,8 +314,11 @@ public:
         U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled;
 
     public:
-
-        OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
+        #if ARDUINO_HELTEC_WIFI_LORA_32_V3
+            OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 21, /*clk*/ 18, /*data*/ 17)
+        #else
+            OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
+        #endif
         {
             oled.begin();
             oled.clear();
@@ -244,7 +350,7 @@ public:
 
     // SSD1306Screen
     //
-    // Display code for the SSD1306 display on the Heltect Wifi Kit 32 V3
+    // Display code for the SSD1306 display on supported Heltec ESP32 boards
 
     #include <U8g2lib.h>                // Library for monochrome displays
     #include <gfxfont.h>                // Adafruit GFX font structs
@@ -257,8 +363,10 @@ public:
 
         SSD1306Screen(int w, int h) : Screen(w, h)
         {
-            Heltec.begin(true /*DisplayEnable Enable*/, true /*LoRa Disable*/, false /*Serial Enable*/);
-            Heltec.display->screenRotate(ANGLE_180_DEGREE);
+            Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, false /*Serial Enable*/);
+            #if ROTATE_SCREEN
+                Heltec.display->screenRotate(ANGLE_180_DEGREE);
+            #endif
         }
 
         virtual void StartFrame() override
@@ -453,11 +561,10 @@ public:
         {
             hspi.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
 
-            #ifndef TFT_BL
-            #define TFT_BL 5 // LED back-light
-            #endif
+            #ifdef TFT_BL
             pinMode(TFT_BL, OUTPUT); //initialize BL
-
+            #endif
+            
             pLCD = std::make_unique<Adafruit_ILI9341>(&hspi, TFT_DC, TFT_CS, TFT_RST);
             pLCD->begin();
             pLCD->setRotation(1);

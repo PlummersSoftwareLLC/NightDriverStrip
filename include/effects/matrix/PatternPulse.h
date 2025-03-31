@@ -160,7 +160,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         return 30;
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         if (span > 1.5)
         {

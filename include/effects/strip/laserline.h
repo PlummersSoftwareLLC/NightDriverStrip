@@ -30,6 +30,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#if ENABLE_AUDIO
 
 class LaserShot
 {
@@ -92,7 +93,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -131,8 +132,10 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         }
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         _shots.push_back(LaserShot(0.0, _defaultSpeed, _defaultSize, random8()));
     };
 };
+
+#endif

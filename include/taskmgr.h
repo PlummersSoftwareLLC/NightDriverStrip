@@ -45,10 +45,12 @@
 
 #include <Arduino.h>
 #include <esp_task_wdt.h>
+
+#include <utility>
 #include "ledstripeffect.h"
 
 // Stack size for the taskmgr's idle threads
-#define DEFAULT_STACK_SIZE 2048+512
+#define DEFAULT_STACK_SIZE (2048 + 512)
 
 #define IDLE_STACK_SIZE    2048
 #define DRAWING_STACK_SIZE 4096
@@ -58,6 +60,7 @@
 #define NET_STACK_SIZE     8192
 #define DEBUG_STACK_SIZE   8192                 // Needs a lot of stack for output if UpdateClockFromWeb is called from debugger
 #define REMOTE_STACK_SIZE  4096
+#define SCREEN_STACK_SIZE  8192
 
 class IdleTask
 {
@@ -78,21 +81,21 @@ class IdleTask
         _lastMeasurement = millis();
         counter = 0;
 
-        // We need to whack the watchdog so we delay in smalle bites until we've used up all the time
+        // We need to whack the watchdog so we delay in smaller bites until we've used up all the time
 
         while (true)
         {
             int delta = millis() - _lastMeasurement;
             if (delta >= kMillisPerCalc)
             {
-                //Serial.printf("Core %u Spent %lu in delay during a window of %d for a ratio of %f\n",
-                //  xPortGetCoreID(), counter, delta, (float)counter/delta);
+                // We've used up all the time, so calculate the idle ratio and reset the counter
                 _idleRatio = ((float) counter  / delta);
                 _lastMeasurement = millis();
                 counter = 0;
             }
             else
             {
+                // Burn a little time and update the counter
                 esp_task_wdt_reset();
                 delayMicroseconds(kMillisPerLoop*1000);
                 counter += kMillisPerLoop;
@@ -153,12 +156,11 @@ public:
         else if (iCore == 1)
             return _taskIdle1.GetCPUUsage();
         else
-            throw new std::runtime_error("Invalid core passed to GetCPUUsagePercentCPU");
+            throw std::runtime_error("Invalid core passed to GetCPUUsagePercentCPU");
     }
 
     TaskManager()
-    {
-    }
+    = default;
 
     // CheckHeap
     //
@@ -224,7 +226,7 @@ private:
         LEDStripEffect* pEffect;
 
         EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
-          : function(function),
+          : function(std::move(function)),
             pEffect(pEffect)
         {}
     };
@@ -278,7 +280,7 @@ public:
     {
         #if USE_SCREEN
             Serial.print( str_sprintf(">> Launching Screen Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
-            xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", DEFAULT_STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
+            xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", SCREEN_STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
             CheckHeap();
         #endif
     }
@@ -382,11 +384,12 @@ public:
 
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show
+    
     TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
     {
         // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method
         //   deletes the object as soon as it can.
-        EffectTaskParams* pTaskParams = new EffectTaskParams(function, pEffect);
+        EffectTaskParams* pTaskParams = new EffectTaskParams(std::move(function), pEffect);
         TaskHandle_t effectTask = nullptr;
 
         Serial.print( str_sprintf(">> Launching %s Effect Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", name, ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );

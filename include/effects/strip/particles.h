@@ -32,6 +32,8 @@
 
 #pragma once
 
+#include <deque>
+
 #include "effects.h"
 
 // Lifespan
@@ -152,7 +154,7 @@ class FadingCountDownObject : public FadingObject
 
     virtual unsigned long CurrentCountdown()
     {
-        return map(Age(), 0, TotalLifetime(), _maxValue, 0);
+        return ::map(Age(), 0, TotalLifetime(), _maxValue, 0);
     }
 };
 
@@ -398,7 +400,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
       _allParticles.push_back(newparticle);
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
       for (int pass = 0; pass < 1; pass++)
       {
@@ -451,7 +453,7 @@ class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public Pa
     {
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -478,7 +480,7 @@ class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public Pa
       // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
       // pass and rely on the fade effects of the particles to blend the
 
-      float amount = g_Analyzer._VU / MAX_VU;
+      float amount = g_Analyzer._VU / 4096;
 
       _baseColor = CRGB(500 * amount, 0, 0);
       setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
@@ -716,7 +718,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -729,7 +731,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
     }
 
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -808,7 +810,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -820,7 +822,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -896,7 +898,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -908,7 +910,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
         return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do
@@ -953,7 +955,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
     {
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         int iInsulator;
         do

@@ -35,7 +35,7 @@
 //    can be 8 such channels connected to 8 different pins.
 //    By default, NightDriver draws client effects, and there many
 //    built in, from marquees to fire.  But it can also receive color
-//    data from a server.  So it firsts checks to see if there is
+//    data from a server.  So it first checks to see if there is
 //    data coming in, and if so, draws that.  If not it falls back
 //    to internal drawing.  The server sends a simple packet with
 //    an LED count, timestamp, and then the color data for the LEDs.
@@ -165,36 +165,38 @@
 #include "values.h"
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include <TJpg_Decoder.h>
+#include <esp_now.h>
 
 #if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
+void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
 
 //
 // Global Variables
 //
 
-DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
-DRAM_ATTR Values g_Values;
-DRAM_ATTR SoundAnalyzer g_Analyzer;
-DRAM_ATTR RemoteDebug Debug;                                                        // Instance of our telnet debug server
-DRAM_ATTR std::mutex g_buffer_mutex;
+std::unique_ptr<SystemContainer> g_ptrSystem;
+Values g_Values;
+SoundAnalyzer g_Analyzer;
+RemoteDebug Debug;                                                        // Instance of our telnet debug server
+std::mutex g_buffer_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
 
-ImprovSerial<typeof(Serial)> g_ImprovSerial;
+std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
 //
-// Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of descreasing
+// Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of decreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
-DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
+const int g_aRingSizeTable[MAX_RINGS] =
 {
     RING_SIZE_0,
     RING_SIZE_1,
@@ -253,6 +255,10 @@ Bounce2::Button Button1;
 Bounce2::Button Button2;
 #endif
 
+#ifdef TOGGLE_BUTTON_3
+Bounce2::Button Button3;
+#endif
+
 // setup
 //
 // Invoked once at boot, does initial chip setup and application initial init, then spins off worker tasks and returns
@@ -279,16 +285,16 @@ void setup()
     // Re-route debug output to the serial port
     Debug.setSerialEnabled(true);
 
-    // Intialialize SPIFFS for file access to non-volatile storage
+    // Initialize SPIFFS for file access to non-volatile storage
     if (!SPIFFS.begin(true))
-        Serial.println("WARNING: SPIFFs could not be initialized!");
+        Serial.println("WARNING: SPIFFS could not be initialized!");
 
     // Enabling PSRAM allows us to use the extra 4MB of RAM on the ESP32-WROVER chip, but it caused
     // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default
     // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
 
     #if MESMERIZER
-        heap_caps_malloc_extmem_enable(128);
+        heap_caps_malloc_extmem_enable(96);
     #endif
 
     // Initialize LZ library for decompressing compressed wifi packets
@@ -319,7 +325,18 @@ void setup()
         err = nvs_flash_init();
     }
 
+
     ESP_ERROR_CHECK(err);
+
+    #if ENABLE_ESPNOW
+        WiFi.mode(WIFI_STA);  // or WIFI_AP if applicable
+
+        if (esp_now_init() != ESP_OK) 
+            throw std::runtime_error("Error initializing ESP-NOW");
+        // Register receive callback function
+        esp_now_register_recv_cb(onReceiveESPNOW);
+        debugI("ESP-NOW initialized with MAC address: %s", WiFi.macAddress().c_str());
+    #endif
 
     #if ENABLE_WIFI
         String WiFi_ssid;
@@ -351,7 +368,8 @@ void setup()
 
         debugW("Starting ImprovSerial for %s", family.c_str());
         String name = "NDESP32" + get_mac_address().substring(6);
-        g_ImprovSerial.setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
+        g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
+        g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
 
     #endif
 
@@ -413,6 +431,18 @@ void setup()
         Button2.setPressedState(LOW);
     #endif
 
+    #ifdef TOGGLE_BUTTON_3
+        Button3.attach(TOGGLE_BUTTON_3, INPUT_PULLUP);
+        Button3.interval(1);
+        Button3.setPressedState(LOW);
+    #endif
+
+    #if AMOLED_S3
+        #include "amoled/LilyGo_AMOLED.h"
+        debugW("Creating AMOLED Screen");
+        g_ptrSystem->SetupDisplay<AMOLEDScreen>(TFT_HEIGHT, TFT_WIDTH);
+    #endif
+
     #if USE_TFTSPI
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
@@ -424,15 +454,15 @@ void setup()
         debugW("Creating LCD Screen");
         g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
-    #elif M5STICKC || M5STICKCPLUS || M5STACKCORE2
+    #elif USE_M5
 
-        #if USE_M5DISPLAY
-            M5.begin();
-            debugW("Creating M5 Screen");
-            g_ptrSystem->SetupDisplay<M5Screen>(TFT_HEIGHT, TFT_WIDTH);
-        #else
-            M5.begin(false);
-        #endif
+        M5.begin();
+        M5.Display.startWrite();
+        M5.Display.setRotation(1);
+        M5.Display.setTextDatum(top_center);
+        M5.Display.setTextColor(WHITE);
+
+        g_ptrSystem->SetupDisplay<M5Screen>(M5.Lcd.width(), M5.Lcd.height());
 
     #elif ELECROW
 
@@ -521,6 +551,7 @@ void setup()
     taskManager.StartSocketThread();
 
     SaveEffectManagerConfig();
+    // Start the main loop
 }
 
 // loop - main execution loop
@@ -535,7 +566,7 @@ void loop()
         #if ENABLE_WIFI
             EVERY_N_MILLIS(20)
             {
-                g_ImprovSerial.loop();
+                g_pImprovSerial->loop();
             }
         #endif
 
@@ -556,7 +587,7 @@ void loop()
             String strOutput;
 
             #if ENABLE_WIFI
-                strOutput += str_sprintf("WiFi: %s, IP: %s, ", WLtoString(WiFi.status()), WiFi.localIP().toString().c_str());
+                strOutput += str_sprintf("WiFi: %s, MAC: %s, IP: %s ", WLtoString(WiFi.status()), WiFi.macAddress().c_str(), WiFi.localIP().toString().c_str());
             #endif
 
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
@@ -592,6 +623,6 @@ void loop()
         // Once an update is underway, we loop tightly on ArduinoOTA.handle.  Otherwise, we delay a bit to share the CPU.
 
         if (!g_Values.UpdateStarted)
-            delay(10);
+            delay(1);
     }
 }

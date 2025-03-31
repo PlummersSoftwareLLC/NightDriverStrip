@@ -1,4 +1,4 @@
-import{E as e,g as t,_ as o,s as l,y as i,m as n,D as s}from"./styles-e96248a3.js";const a=s`
+import{D as e,f as t,_ as o,s as l,x as i,k as n,C as a}from"./styles-QAqj_a9t.js";const s=a`
   <svg
     version="1.1"
     id="Capa_1"
@@ -69,7 +69,7 @@ import{E as e,g as t,_ as o,s as l,y as i,m as n,D as s}from"./styles-e96248a3.j
                   >Mac</a
                 >
                 <br />
-                (download via blue button with ${a} icon)
+                (download via blue button with ${s} icon)
               </li>
               <li>
                 CH340, CH341 drivers:
@@ -86,7 +86,7 @@ import{E as e,g as t,_ as o,s as l,y as i,m as n,D as s}from"./styles-e96248a3.j
                   >Mac</a
                 >
                 <br />
-                (download via blue button with ${a} icon)
+                (download via blue button with ${s} icon)
               </li>
             </ul>
           </li>

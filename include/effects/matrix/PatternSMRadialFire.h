@@ -11,8 +11,8 @@ class PatternSMRadialFire : public LEDStripEffect
     static auto constexpr C_X = (MATRIX_WIDTH / 2);
     static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
     // BUGBUG: should probably be dynamically allocated into non-DMAable RAM.
-    byte XY_angle[MATRIX_WIDTH][MATRIX_HEIGHT];
-    byte XY_radius[MATRIX_WIDTH][MATRIX_HEIGHT];
+    uint8_t XY_angle[MATRIX_WIDTH][MATRIX_HEIGHT];
+    uint8_t XY_radius[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
     PatternSMRadialFire() : LEDStripEffect(EFFECT_MATRIX_SMRADIAL_FIRE, "RadialFire")
@@ -38,20 +38,20 @@ class PatternSMRadialFire : public LEDStripEffect
 
     void Draw() override
     {
-        static byte scaleX = 16;
-        static byte scaleY = 1;
+        static uint8_t scaleX = 16;
+        static uint8_t scaleY = 1;
 
-        static byte speed = 24;
+        static uint8_t speed = 24;
         static uint32_t t;
         t += speed;
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {
             for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
             {
-                byte angle = XY_angle[x][y];
-                byte radius = XY_radius[x][y];
+                uint8_t angle = XY_angle[x][y];
+                uint8_t radius = XY_radius[x][y];
                 int16_t Bri = inoise8(angle * scaleX, (radius * scaleY) - t) - radius * (255 / MATRIX_HEIGHT);
-                byte Col = Bri;
+                uint8_t Col = Bri;
                 if (Bri < 0)
                     Bri = 0;
                 if (Bri != 0)

@@ -1,4 +1,4 @@
-name: PlatformIO CI
+name: CI
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -8,16 +8,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
     - name: Find environments
       id: envs
-      run: echo "envs=$(tools/show_envs.py)" >> $GITHUB_OUTPUT
+      run: |
+        if [[ $(< config/ci_exclude.json) != '[]' ]]; then echo "::warning title=Some environments were skipped::Environments not built: $(< config/ci_exclude.json)"; fi
+        echo "envs=$(tools/show_envs.py | jq -c --slurpfile ex config/ci_exclude.json '. - $ex[0]')" >> $GITHUB_OUTPUT
 
     outputs:
       envs: ${{ steps.envs.outputs.envs }}
@@ -33,10 +35,10 @@ jobs:
         envname: ${{ fromJson(needs.collect-environments.outputs.envs) }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -54,51 +56,12 @@ jobs:
     - name: "Build environment: ${{ matrix.envname }}"
       run: pio run -e ${{ matrix.envname }}
 
-  build-and-publish-installer:
-    if: ( github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/main' ) || ( github.repository_owner == 'rbergen' && github.ref == 'refs/heads/staging' )
-
-    runs-on: ubuntu-latest
+  call-web-installer:
+    if: ( github.repository_owner == 'rbergen' && github.ref == 'refs/heads/staging' )
 
     needs: [build-environment]
 
-    env:
-      PLATFORMIO_CORE_DIR: ${{ github.workspace }}/.platformio
-
-    steps:
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-
-    - name: Maximize build space
-      uses: easimon/maximize-build-space@master
-      with:
-        remove-android: 'true'
-        remove-codeql: 'true'
-        remove-docker-images: 'true'
-        remove-dotnet: 'true'
-        remove-haskell: 'true'
-
-    - uses: actions/checkout@v3
-
-    - name: Install PlatformIO
-      run: |
-        curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -o get-platformio.py
-        python get-platformio.py
-        echo "${PLATFORMIO_CORE_DIR}/penv/bin" >> $GITHUB_PATH
-
-    - name: Copy secrets and clear SSID
-      run: |
-        grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
-        echo '#define cszSSID ""' >> include/secrets.h
-
-    - name: Build web installer environments and installer
-      run: |
-        python tools/bake_installer.py
-        touch WebInstaller/.nojekyll
-
-    - name: Push to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        branch: pages
-        folder: WebInstaller
+    uses: ./.github/workflows/web_installer.yml
+    with:
+      release-name: ${{ github.ref_name }} commit ${{ github.sha }}
+    secrets: inherit

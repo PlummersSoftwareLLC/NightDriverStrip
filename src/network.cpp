@@ -29,10 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
-#include <WiFiClientSecure.h>
-#include <HTTPClient.h>
 #include <ESPmDNS.h>
-#include <nvs_flash.h>                   // Non-volatile storage access
 #include <nvs.h>
 
 #include "globals.h"
@@ -48,6 +45,92 @@ static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 // Static initializers
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
+
+#if ENABLE_ESPNOW
+
+// ESPNOW Support
+// 
+// We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
+enum class ESPNowCommand : uint8_t 
+{
+    ESPNOW_NEXTEFFECT = 1,
+    ESPNOW_PREVEFFECT,
+    ESPNOW_SETEFFECT,
+    ESPNOW_INVALID = 255    // Followed by a uint32_t argument
+};
+
+// Message class
+//
+// Encapsulates an ESPNOW message, which is a command and an optional argument
+class Message 
+{
+public:
+    constexpr Message(ESPNowCommand cmd, uint32_t argument) 
+        : cbSize(sizeof(Message)), command(cmd), arg1(argument) 
+    {
+    }
+
+    constexpr Message() 
+        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0) 
+    {
+    }
+
+    const uint8_t* data() const 
+    {
+        return reinterpret_cast<const uint8_t*>(this);
+    }
+
+    constexpr size_t byte_size() const 
+    {
+        return sizeof(Message);
+    }
+
+    uint8_t       cbSize;
+    ESPNowCommand command;
+    uint32_t      arg1;
+} __attribute__((packed));
+
+// onReceiveESPNOW
+// 
+// Callback function for ESPNOW that is called when a data packet is received
+
+void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen) 
+{
+    Message message;
+
+    memcpy(&message, data, sizeof(message));
+    debugI("ESPNOW Message received.");
+    
+    if (message.cbSize != sizeof(message))
+    {
+        debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));
+        return;
+    }
+
+    switch(message.command)
+    {
+        case ESPNowCommand::ESPNOW_NEXTEFFECT:
+            debugI("ESPNOW Next effect");
+            g_ptrSystem->EffectManager().NextEffect();
+            break;
+
+        case ESPNowCommand::ESPNOW_PREVEFFECT:
+            debugI("ESPNOW Previous effect");
+            g_ptrSystem->EffectManager().PreviousEffect();
+            break;
+
+        case ESPNowCommand::ESPNOW_SETEFFECT:
+            debugI("ESPNOW Setting effect index to %d", message.arg1);
+            g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
+            break;
+
+        default:
+            debugE("ESPNOW Message received with unknown command: %d", (byte) message.command);
+            break;
+    }
+}
+
+#endif
 
 // processRemoteDebugCmd
 //
@@ -150,9 +233,8 @@ void SetupOTA(const String & strHostname)
                 debugI("OTA Progress: %u%%\r", p);
 
                 #if USE_HUB75
-                    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
+                    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
-                    pMatrix->setLeds(LEDMatrixGFX::GetMatrixBackBuffer());
                 #endif
             }
             else
@@ -380,9 +462,6 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
     debugV("payloadLength: %zu, command16: %d", payloadLength, command16);
 
-    // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
-    // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
-
     switch (command16)
     {
         // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
@@ -417,13 +496,14 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
             uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
-
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
                    channel16,
                    length32,
                    seconds,
                    micros);
 
+            // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
+            // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
             // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
 
             if (channel16 == 0)
@@ -500,7 +580,7 @@ bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password)
     {
         // Read the SSID and Password from the NVS partition name/value keypair set
 
-        auto len = ARRAYSIZE(szBuffer);
+        auto len = std::size(szBuffer);
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_ssid), szBuffer, &len);
         if (ESP_OK != err)
         {
@@ -510,7 +590,7 @@ bool ReadWiFiConfig(String& WiFi_ssid, String& WiFi_password)
         }
         WiFi_ssid = szBuffer;
 
-        len = ARRAYSIZE(szBuffer);
+        len = std::size(szBuffer);
         err = nvs_get_str(nvsROHandle, NAME_OF(WiFi_password), szBuffer, &len);
         if (ESP_OK != err)
         {
@@ -593,7 +673,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
         Debug.setResetCmdEnabled(true);                         // Enable the reset command
         Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
         Debug.showColors(false);                                // Colors
-        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug externsions we add
+        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug extensions we add
 
         while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
             delay(100);
@@ -602,12 +682,8 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
 
         for (;;)                                                // Call Debug.handle() 20 times a second
         {
-            EVERY_N_MILLIS(50)
-            {
-                Debug.handle();
-            }
-
-            delay(10);
+            Debug.handle();
+            delay(MILLIS_PER_SECOND / 20);
         }
     }
 #endif
@@ -774,8 +850,8 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 }
             }
 
-            // If the reader container isn't available yet, we'll sleep for a second before we check again
-            if (!g_ptrSystem->HasNetworkReader())
+            // If the reader container isn't available yet or WiFi isn't up yet, we'll sleep for a second before we check again
+            if (!g_ptrSystem->HasNetworkReader() || !WiFi.isConnected())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
                 continue;
@@ -840,7 +916,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
         }
     }
 
-    size_t NetworkReader::RegisterReader(std::function<void()> reader, unsigned long interval, bool flag)
+    size_t NetworkReader::RegisterReader(const std::function<void()>& reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset
         auto& readerEntry = readers.emplace_back(reader, interval);

@@ -94,8 +94,8 @@ struct GIFInfo : public EmbeddedFile
 {
     uint16_t        _width;
     uint16_t        _height;
-    byte            _fps;
-    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height, byte fps)
+    uint8_t         _fps;
+    GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height, uint8_t fps)
         : EmbeddedFile(start, end), _width(width), _height(height), _fps(fps)
     {}
 };
@@ -122,7 +122,7 @@ struct
 {
     int             _offsetX   = 0;
     int             _offsetY   = 0;
-    byte            _fps       = 24;
+    uint8_t         _fps       = 24;
     CRGB            _bkColor   = CRGB::Black;
 }
 g_gifDecoderState;
@@ -224,7 +224,7 @@ public:
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);

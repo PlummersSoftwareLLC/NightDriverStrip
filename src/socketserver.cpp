@@ -3,9 +3,9 @@
 
 #if INCOMING_WIFI_ENABLED
 
-int SocketServer::ProcessIncomingConnectionsLoop()
+bool SocketServer::ProcessIncomingConnectionsLoop()
 {
-    if (0 == _server_fd)
+    if (0 >= _server_fd)
     {
         debugW("No _server_fd, returning.");
         return false;
@@ -13,7 +13,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
     int new_socket = 0;
 
-    // Accept a new incoming connnection
+    // Accept a new incoming connection
     int addrlen = sizeof(_address);
     if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0)
     {
@@ -43,6 +43,21 @@ int SocketServer::ProcessIncomingConnectionsLoop()
     {
         debugW("Unable to set read timeout on socket!");
         close(new_socket);
+        ResetReadBuffer();
+        return false;
+    }
+
+    if (_pBuffer == nullptr) 
+    {
+        debugE("Buffer not allocated!");
+        close(new_socket);
+        ResetReadBuffer();
+        return false;
+    }
+
+    // Ensure the new_socket is valid
+    if (new_socket < 0) {
+        debugE("Invalid socket!");
         ResetReadBuffer();
         return false;
     }
@@ -80,7 +95,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
                 debugW("Could not read compressed data from stream\n");
                 break;
             }
-            debugV("Successfuly read %u bytes", COMPRESSED_HEADER_SIZE + compressedSize);
+            debugV("Successfully read %u bytes", COMPRESSED_HEADER_SIZE + compressedSize);
 
             // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
             // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
@@ -110,7 +125,7 @@ int SocketServer::ProcessIncomingConnectionsLoop()
             bSendResponsePacket = true;
         }
         else
-        {
+        {     
             // Read the rest of the data
             uint16_t command16   = WORDFromMemory(&_pBuffer.get()[0]);
 
@@ -207,11 +222,14 @@ int SocketServer::ProcessIncomingConnectionsLoop()
 
         if (bSendResponsePacket)
         {
+            static uint64_t sequence = 0;
+
             debugV("Sending Response Packet from Socket Server");
             auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
             SocketResponse response = {
                                         .size = sizeof(SocketResponse),
+                                        .sequence     = sequence++,
                                         .flashVersion = FLASH_VERSION,
                                         .currentClock = g_Values.AppTime.CurrentTime(),
                                         .oldestPacket = bufferManager.AgeOfOldestBuffer(),
@@ -228,6 +246,9 @@ int SocketServer::ProcessIncomingConnectionsLoop()
             if (sizeof(response) != write(new_socket, &response, sizeof(response)))
                 debugW("Unable to send response back to server.");
         }
+
+        delay(1);
+
     } while (true);
 
     close(new_socket);

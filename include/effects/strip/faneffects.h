@@ -695,7 +695,7 @@ public:
 
   bool SerializeToJSON(JsonObject& jsonObject) override
   {
-    AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
+    auto jsonDoc = CreateJsonDocument();
 
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
@@ -772,7 +772,7 @@ public:
 
   bool SerializeToJSON(JsonObject& jsonObject) override
   {
-    StaticJsonDocument<LEDStripEffect::_jsonSize> jsonDoc;
+    auto jsonDoc = CreateJsonDocument();
 
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
@@ -949,13 +949,15 @@ protected:
   CRGBPalette16 Palette;
   int LEDCount; // Number of LEDs total
   int CellsPerLED;
-  int Cooling;     // Rate at which the pixels cool off
+  float Cooling;     // Rate at which the pixels cool off
   int Sparks;      // How many sparks will be attempted each frame
   int SparkHeight; // If created, max height for a spark
-  int Sparking;    // Probability of a spark each attempt
+  uint8_t Sparking;    // Probability of a spark each attempt
   bool bReversed;  // If reversed we draw from 0 outwards
   bool bMirrored;  // If mirrored we split and duplicate the drawing
   bool bMulticolor; // If true each channel spoke will be a different color
+  uint8_t MaxSparkTemp; // How hot a spark can be
+
   PixelOrder Order;
 
   std::unique_ptr<uint8_t[]> abHeat; // Heat table to map temp to color
@@ -976,14 +978,15 @@ public:
   FireFanEffect(CRGBPalette16 palette,
                 int ledCount,
                 int cellsPerLED = 1,
-                int cooling = 20,
-                int sparking = 100,
+                float cooling = 20,
+                uint8_t sparking = 100,
                 int sparks = 3,
                 int sparkHeight = 4,
                 PixelOrder order = Sequential,
                 bool breversed = false,
                 bool bmirrored = false,
-                bool bmulticolor = false)
+                bool bmulticolor = false,
+                uint8_t maxSparkTemp = 255)
       : LEDStripEffect(EFFECT_STRIP_FIRE_FAN, "FireFanEffect"),
         Palette(palette),
         LEDCount(ledCount),
@@ -995,7 +998,8 @@ public:
         bReversed(breversed),
         bMirrored(bmirrored),
         Order(order),
-        bMulticolor(bmulticolor)
+        bMulticolor(bmulticolor),
+        MaxSparkTemp(maxSparkTemp)
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
@@ -1014,16 +1018,15 @@ public:
         bReversed(jsonObject[PTY_REVERSED]),
         bMirrored(jsonObject[PTY_MIRORRED]),
         Order((PixelOrder)jsonObject[PTY_ORDER]),
-        bMulticolor(jsonObject[PTY_MULTICOLOR] == 1)
+        bMulticolor(jsonObject[PTY_MULTICOLOR] == 1),
+        MaxSparkTemp(jsonObject[PTY_SPARKTEMP])
   {
-    if (bMirrored)
-      LEDCount = LEDCount / 2;
     abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
   }
 
   bool SerializeToJSON(JsonObject& jsonObject) override
   {
-    AllocatedJsonDocument jsonDoc(LEDStripEffect::_jsonSize + 512);
+    auto jsonDoc = CreateJsonDocument();
 
     JsonObject root = jsonDoc.to<JsonObject>();
     LEDStripEffect::SerializeToJSON(root);
@@ -1034,6 +1037,7 @@ public:
     jsonDoc[PTY_COOLING] = Cooling;
     jsonDoc[PTY_SPARKS] = Sparks;
     jsonDoc[PTY_SPARKHEIGHT] = SparkHeight;
+    jsonDoc[PTY_SPARKTEMP] = MaxSparkTemp;
     jsonDoc[PTY_SPARKING] = Sparking;
     jsonDoc[PTY_REVERSED] = bReversed;
     jsonDoc[PTY_MIRORRED] = bMirrored;
@@ -1045,7 +1049,7 @@ public:
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
   }
 
-  CRGB GetBlackBodyHeatColorByte(byte temp) const
+  CRGB GetBlackBodyHeatColorByte(uint8_t temp) const
   {
     return ColorFromPalette(Palette, temp, 255);
   }
@@ -1069,8 +1073,8 @@ public:
     {
       for (int i = 0; i < CellCount(); i++)
       {
-        int coolingAmount = random(0, Cooling);
-        abHeat[i] = ::max(0.0, abHeat[i] - coolingAmount * (2.0 - g_Analyzer._VURatio));
+        float coolingAmount = random_range(0.0f, Cooling);
+        abHeat[i] = ::max(0.0, abHeat[i] - (double) coolingAmount);
       }
     }
 
@@ -1091,10 +1095,10 @@ public:
     {
       for (int i = 0; i < Sparks; i++)
       {
-        if (random(255) < Sparking / 4 + Sparking * (g_Analyzer._VURatio / 2.0) * 0.5)
+        if (random(255) < Sparking)
         {
           int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
-          abHeat[y] = abHeat[y] + random(50, 255); // Can roll over which actually looks good!
+          abHeat[y] = ::min((long)MaxSparkTemp, abHeat[y] + random(0, MaxSparkTemp)); 
         }
       }
     }
@@ -1119,16 +1123,19 @@ public:
             color = hsv;
         }
 
-        // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
-
         int j = (!bReversed || i > FAN_SIZE) ? i : LEDCount - 1 - i;
         uint x = GetFanPixelOrder(j, order);
         if (x < NUM_LEDS)
         {
-          FastLED[iChannel][x] = color;
-          if (bMirrored)
-            FastLED[iChannel][!bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i] = color;
+            FastLED[iChannel][x] = color;
+
+            if (bMirrored)
+            {
+                // Use bReversed here to match the reversal in the main index calculation
+                FastLED[iChannel][bReversed ? (2 * LEDCount - 1 - i) : LEDCount + i] = color;
+            }
         }
+
       }
     }
   }
@@ -1374,8 +1381,8 @@ public:
     // Draw four outer pixels in second ring outwards.  We draw 1.05 to take advantage of the non-linear red response in
     // the second pixels (when drawn at 5%, the red will show up more, depending on color correction).
 
-    float xRatio = map(centerX, 0.0f, maxDeviation, -1.0f, 1.0f);
-    float yRatio = map(centerY, 0.0f, maxDeviation, -1.0f, 1.0f);
+    float xRatio = ::map(centerX, 0.0f, maxDeviation, -1.0f, 1.0f);
+    float yRatio = ::map(centerY, 0.0f, maxDeviation, -1.0f, 1.0f);
 
     auto brightness = led_brightness(xRatio, yRatio);
     for (int i = 0; i < 8; i++)

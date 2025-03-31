@@ -33,6 +33,8 @@
 
 #if ENABLE_AUDIO
 
+#include <deque>
+
 class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
   protected:
@@ -45,7 +47,7 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
         fadeAllChannelsToBlackBy(min(255.0, g_Values.AppTime.LastFrameTime() * 1500.0));
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         while (_lit.size() >= NUM_FANS - 1)
             _lit.pop_front();
@@ -88,7 +90,7 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
         fadeAllChannelsToBlackBy(min(255.0, g_Values.AppTime.LastFrameTime() * 1500.0));
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span)
+    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         while (_lit.size() >= NUM_FANS - 1)
             _lit.pop_front();
