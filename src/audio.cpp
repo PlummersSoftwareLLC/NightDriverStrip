@@ -97,14 +97,13 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         constexpr auto kMaxFPS = 60;
         const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        auto duration = millis() - lastFrame;
-        delay(max(1.0f, targetDelay - duration));
+        delay(max(1.0f, targetDelay - millis() + lastFrame));
 
+        auto duration = millis() - lastFrame;
+        frameDurationSeconds = duration / 1000.0f;
         g_Analyzer._AudioFPS = FPS(duration);
 
         debugV("AudioFPS: %d\n", g_Analyzer._AudioFPS);
-
-        frameDurationSeconds = (millis() - lastFrame) / 1000.0f;
     }
 }
 
