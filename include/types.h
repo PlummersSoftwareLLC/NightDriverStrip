@@ -60,8 +60,6 @@ class CAppTime
 
     void NewFrame()
     {
-        timeval tv;
-        gettimeofday(&tv, nullptr);
         double current = CurrentTime();
         _deltaTime = current - _lastFrame;
 
@@ -256,7 +254,7 @@ inline void * PreferPSRAMAlloc(size_t s)
         {
             debugE("RAM Allocation failed for %u bytes\n", s);
             throw std::bad_alloc();
-        }   
+        }
         return p;
     }
 }

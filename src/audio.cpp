@@ -69,7 +69,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         // which is controlled by this constant
 
         if (g_Analyzer._VURatio > lastVU)
-            lastVU += (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND * VU_REACTIVITY_RATIO;
+            lastVU = g_Analyzer._VURatio;
         else
             lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
 
@@ -80,7 +80,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         // Instantaneous VURatio
 
         assert(g_Analyzer._PeakVU >= g_Analyzer._MinVU);
-        
+
         g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ?
                                 0.0 :
                                 (g_Analyzer._VU - g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
