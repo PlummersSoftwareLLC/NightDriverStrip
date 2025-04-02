@@ -378,9 +378,7 @@ public:
         jsonDoc["sds"] = stockServer;
         jsonDoc["tsl"] = tickerSymbols;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
 
@@ -463,11 +461,11 @@ public:
             // We have the high and low data in the stock, but let's not trust it and calculate it ourselves
             // If this works, Davepl wrote it.  If not, Robert made me do it!
 
-            auto [minpoint, maxpoint] = 
-                std::minmax_element(currentStock.points.begin(), currentStock.points.end(), [](const StockPoint& a, const StockPoint& b) 
-                { 
-                        return a.val < b.val; 
-                }); 
+            auto [minpoint, maxpoint] =
+                std::minmax_element(currentStock.points.begin(), currentStock.points.end(), [](const StockPoint& a, const StockPoint& b)
+                {
+                        return a.val < b.val;
+                });
 
             // We're comparing against the previous day's close, so make sure we include that in the range
             float min = std::min(minpoint->val, currentStock.previousClose);
@@ -559,10 +557,7 @@ public:
         jsonDoc[NAME_OF(stockServer)] = stockServer;
         jsonDoc[NAME_OF(tickerSymbols)] = tickerSymbols;
 
-        if (jsonDoc.overflowed())
-            debugE("JSON buffer overflow while serializing settings for PatternStocks - object incomplete!");
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     // Extension override to accept our settings on top of those known by LEDStripEffect

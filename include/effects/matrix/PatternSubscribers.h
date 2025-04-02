@@ -195,9 +195,7 @@ class PatternSubscribers : public LEDStripEffect
         jsonDoc["bgc"] = backgroundColor;
         jsonDoc["boc"] = borderColor;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     bool RequiresDoubleBuffering() const override
@@ -264,10 +262,7 @@ class PatternSubscribers : public LEDStripEffect
         jsonDoc[NAME_OF(backgroundColor)] = backgroundColor;
         jsonDoc[NAME_OF(borderColor)] = borderColor;
 
-        if (jsonDoc.overflowed())
-            debugE("JSON buffer overflow while serializing settings for PatternSubscribers - object incomplete!");
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     // Extension override to accept our settings on top of those known by LEDStripEffect

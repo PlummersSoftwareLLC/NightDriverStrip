@@ -77,9 +77,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
         jsonDoc[PTY_EVERYNTH] = _EveryNth;
         jsonDoc[PTY_SPEEDDIVISOR] = _SpeedDivisor;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Draw() override
@@ -127,9 +125,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         jsonDoc[PTY_SPEEDDIVISOR] = _speedDivisor;
         jsonDoc[PTY_DELTAHUE] = _deltaHue;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Draw() override
@@ -196,9 +192,7 @@ protected:
         jsonDoc[PTY_DELTAHUE] = _deltaHue;
         jsonDoc[PTY_MIRRORED] = _mirrored;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Draw() override
@@ -273,9 +267,7 @@ protected:
         jsonDoc[PTY_COLOR] = _color;
         jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Draw() override
@@ -385,9 +377,7 @@ class StatusEffect : public LEDStripEffect
         jsonDoc[PTY_EVERYNTH] = _everyNth;
         jsonDoc[PTY_COLOR] = _color;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Draw() override
@@ -464,9 +454,7 @@ class TwinkleEffect : public LEDStripEffect
         jsonDoc[PTY_FADE] = _fadeFactor;
         jsonDoc[PTY_SPEED] = _updateSpeed;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     const int Count = 99;
