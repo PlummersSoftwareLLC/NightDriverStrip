@@ -68,15 +68,14 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         // Get the elapsed time since the last frame. We'll calculate this at the right spot from the first loop onwards
         static auto frameDurationSeconds = (millis() - lastFrame) / 1000.0f;
 
-        // Fade out the VU ratio... The current peak goes up at 10x the rate it comes back down,
-        // which is controlled by VU_REACTIVITY_RATIO.
+        // Fade out the VU ratio
 
         if (g_Analyzer._VURatio > lastVU)
-            lastVU += frameDurationSeconds * VU_DECAY_PER_SECOND * VU_REACTIVITY_RATIO;
+            lastVU = g_Analyzer._VURatio;
         else
             lastVU -= frameDurationSeconds * VU_DECAY_PER_SECOND;
 
-        g_Analyzer._VURatioFade = std::clamp(lastVU, 0.0f, g_Analyzer._VURatio);
+        g_Analyzer._VURatioFade = std::clamp(lastVU, 0.0f, 2.0f);
 
         // Instantaneous VURatio
 
