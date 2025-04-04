@@ -138,8 +138,8 @@
 // NAME_OF with first character cut off - addresses underscore-prefixed (member) variables
 #define ACTUAL_NAME_OF(x)   ((#x) + 1)
 
-#define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0f / f)))    // Calculate period in microseconds (us) from frequency in Hz
-#define FREQ_FROM_PERIOD(p) (1.0f / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
+#define PERIOD_FROM_FREQ(f) (round(1000000 * (1.0 / f)))    // Calculate period in microseconds (us) from frequency in Hz
+#define FREQ_FROM_PERIOD(p) (1.0 / p * 1000000)             // Calculate frequency in Hz given the period in microseconds (us)
 
 // I've built and run this on the Heltec Wifi 32 module and the M5StickC.  The
 // main difference is pinout and the OLED/LCD screen.  The presence of absence
@@ -1360,7 +1360,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
     #endif
     #ifndef VU_REACTIVITY_RATIO
-        #define VU_REACTIVITY_RATIO 10.0f                // How much the VU meter reacts to the music going up vs down
+        #define VU_REACTIVITY_RATIO 10.0                // How much the VU meter reacts to the music going up vs down
     #endif
 #endif
 

@@ -96,7 +96,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         constexpr auto kMaxFPS = 60;
         const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(max(1.0f, targetDelay - (millis() - lastFrame)));
+        delay(max(1.0, targetDelay - (millis() - lastFrame)));
 
         auto duration = millis() - lastFrame;
         frameDurationSeconds = duration / 1000.0;
