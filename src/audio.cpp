@@ -63,10 +63,10 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         // VURatio with a fadeout
 
         static auto lastVU = 0.0f;
-        constexpr auto VU_DECAY_PER_SECOND = 1.25f;
+        constexpr auto VU_DECAY_PER_SECOND = 1.25;
 
         // Get the elapsed time since the last frame. We'll calculate this at the right spot from the first loop onwards
-        static auto frameDurationSeconds = (millis() - lastFrame) / 1000.0f;
+        static auto frameDurationSeconds = (millis() - lastFrame) / 1000.0;
 
         // Fade out the VU ratio
 
@@ -99,7 +99,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         delay(max(1.0f, targetDelay - (millis() - lastFrame)));
 
         auto duration = millis() - lastFrame;
-        frameDurationSeconds = duration / 1000.0f;
+        frameDurationSeconds = duration / 1000.0;
         g_Analyzer._AudioFPS = FPS(duration);
 
         debugV("AudioFPS: %d\n", g_Analyzer._AudioFPS);
