@@ -158,13 +158,13 @@ public:
         }
         case M5PLUS2:
         {
-            static constexpr std::array<float, 16> Scalars16  = {0.5, 1.0, 2.5, 2.2, 1.5, 2.0, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.0, 0.8, 1.0, 1.0}; 
+            static constexpr std::array<float, 16> Scalars16  = {0.5, 1.0, 2.5, 2.2, 1.5, 2.0, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.0, 0.8, 1.0, 1.0};
             float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
         default:
         {
-            static constexpr std::array<float, 16> Scalars16  = {0.5, .5, 0.8, 1.0, 1.5, 1.2, 1.5, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 2.5}; 
+            static constexpr std::array<float, 16> Scalars16  = {0.5, .5, 0.8, 1.0, 1.5, 1.2, 1.5, 1.6, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 2.5};
             float result = (NUM_BANDS == 16) ? Scalars16[i] : 1.0;
             return result;
         }
@@ -229,7 +229,7 @@ class SoundAnalyzer : public AudioVariables
     // GetBucketFrequency
     //
     // Given a bucket index, returns the frequency that bucket represents
-    
+
     float GetBucketFrequency(int bin_index)
     {
         float bin_width = SAMPLING_FREQUENCY / (MAX_SAMPLES / 2);
@@ -503,9 +503,9 @@ public:
         free(_vPeaks);
     }
 
-    // These functions allow access to the last-acquired sample buffer and its size so that 
+    // These functions allow access to the last-acquired sample buffer and its size so that
     // effects can draw the waveform or do other things with the raw audio data
-    
+
     const int16_t * GetSampleBuffer() const
     {
         return ptrSampleBuffer.get();
@@ -543,8 +543,8 @@ public:
         M5.Speaker.setVolume(255);
         M5.Speaker.end();
         M5.Mic.begin();
-        
-    #elif ELECROW 
+
+    #elif ELECROW
 
         const i2s_config_t i2s_config = {
                 .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
@@ -570,7 +570,7 @@ public:
             ESP_ERROR_CHECK( i2s_set_pin(I2S_NUM_0, &pin_config) );
             ESP_ERROR_CHECK( i2s_start(I2S_NUM_0) );
 
-    #elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT 
+    #elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
 
         i2s_config_t i2s_config;
         i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
@@ -657,7 +657,7 @@ public:
         {
             if (_Peaks[i] > _peak1Decay[i])
             {
-                const float maxIncrease = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate * VU_REACTIVITY_RATIO);  
+                const float maxIncrease = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate * VU_REACTIVITY_RATIO);
                 _peak1Decay[i] = std::min(_Peaks[i], _peak1Decay[i] + maxIncrease);
                 _lastPeak1Time[i] = millis();
             }
