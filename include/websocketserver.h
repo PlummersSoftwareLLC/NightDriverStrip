@@ -90,7 +90,7 @@ public:
         // We're almost certainly over-allocating because we reserve space for "count" times the maximum color number
         // length plus extras (pixel count and commas). We will only use that space if the hex RGB color code of each
         // LED is 0x989680 or higher, and no two sequential pixels have the same color.
-        colorDataMessage.reserve(sizeof(messageHead) + (count * (_maxColorNumberLen + 3)) + sizeof(messageTail) - 3); // -3 for head and message terminating \0 and absence of the last comma
+        colorDataMessage.reserve(sizeof(messageHead) + (count * (_maxColorNumberLen + 3)) + sizeof(messageTail) - 3); // -3 for head and tail terminating \0, and absence of the last comma
         colorDataMessage = messageHead;
         CRGB activeColor = leds[0];
         size_t activeCount = 1;
