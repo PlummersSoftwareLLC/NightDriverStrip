@@ -73,48 +73,13 @@ public:
         return _colorDataSocket.count() > 0;
     }
 
-    // Send the color data for an array of leds of indicated length. We do this "semi-manually" (i.e. using an std::string) to
-    // reduce memory allocations and avoid the overhead of using ArduinoJson.
+    // Send the color data for an array of leds of indicated length.
     void SendColorData(CRGB* leds, size_t count)
     {
         if (!HaveColorDataClients() || leds == nullptr || count == 0 || !_colorDataSocket.availableForWriteAll())
             return;
 
-        constexpr char messageHead[] = "{\"colorData\":[";
-        constexpr char messageTail[] = "]}";
-
-        char numberBuffer[_maxCountLen + _maxColorNumberLen + 2];  // Small buffer we ask snprintf to write the pixel counts and color numbers to
-        std::basic_string<char, std::char_traits<char>, psram_allocator<char>> colorDataMessage; // (std::string) buffer for the message
-
-        // Reserve space for message head, "count" sequential pixel counts and LED color numbers, and message tail.
-        // We're almost certainly over-allocating because we reserve space for "count" times the maximum color number
-        // length plus extras (pixel count and commas). We will only use that space if the hex RGB color code of each
-        // LED is 0x989680 or higher, and no two sequential pixels have the same color.
-        colorDataMessage.reserve(sizeof(messageHead) + (count * (_maxColorNumberLen + 3)) + sizeof(messageTail) - 3); // -3 for head and tail terminating \0, and absence of the last comma
-        colorDataMessage = messageHead;
-        CRGB activeColor = leds[0];
-        size_t activeCount = 1;
-
-        for (size_t i = 1; i < count; i++)
-        {
-            if (leds[i] != activeColor)
-            {
-                // New active color, add the data to the message and reset active and count
-                snprintf(numberBuffer, sizeof(numberBuffer), "%zu,%" PRIu32 ",", activeCount, toUint32(activeColor));
-                colorDataMessage += numberBuffer;
-                activeColor = leds[i];
-                activeCount = 1;
-            }
-            else
-                activeCount++;
-        }
-
-        // Add the last color block to the array
-        snprintf(numberBuffer, sizeof(numberBuffer), "%zu,%" PRIu32, activeCount, toUint32(activeColor));
-        colorDataMessage += numberBuffer;
-        colorDataMessage += messageTail;
-
-        _colorDataSocket.textAll(colorDataMessage.c_str());
+        _colorDataSocket.binaryAll((uint8_t *)leds, count * sizeof(CRGB));
     }
 
     void OnCurrentEffectChanged(size_t currentEffectIndex) override
