@@ -35,9 +35,7 @@
 
 extern const char timezones_start[] asm("_binary_config_timezones_json_start");
 
-DRAM_ATTR size_t g_DeviceConfigJSONBufferSize = 0;
-
-void DeviceConfig::SaveToJSON()
+void DeviceConfig::SaveToJSON() const
 {
     g_ptrSystem->JSONWriter().FlagWriter(writerIndex);
 }
@@ -45,16 +43,16 @@ void DeviceConfig::SaveToJSON()
 DeviceConfig::DeviceConfig()
 {
     writerIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        [this] { assert(SaveToJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, *this)); }
+        [this] { assert(SaveToJSONFile(DEVICE_CONFIG_FILE, *this)); }
     );
 
-    std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
+    auto jsonDoc = CreateJsonDocument();
 
-    if (LoadJSONFile(DEVICE_CONFIG_FILE, g_DeviceConfigJSONBufferSize, pJsonDoc))
+    if (LoadJSONFile(DEVICE_CONFIG_FILE, jsonDoc))
     {
         debugI("Loading DeviceConfig from JSON");
 
-        DeserializeFromJSON(pJsonDoc->as<JsonObjectConst>(), true);
+        DeserializeFromJSON(jsonDoc.as<JsonObjectConst>(), true);
     }
     else
     {
@@ -74,19 +72,19 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
     const char *start = strstr(timezones_start, quotedTZ.c_str());
 
     // If we can't find the new timezone as a timezone name, assume it's a literal value
-    if (start == NULL)
+    if (start == nullptr)
         setenv("TZ", newTimeZone.c_str(), 1);
     // We received a timezone name, so we extract and use its timezone value
     else
     {
         start += quotedTZ.length();
         start = strchr(start, '"');
-        if (start == NULL)      // Can't actually happen unless timezone file is malformed
+        if (start == nullptr)      // Can't actually happen unless timezone file is malformed
             return false;
 
         start++;
         const char *end = strchr(start, '"');
-        if (end == NULL)        // Can't actually happen unless timezone file is malformed
+        if (end == nullptr)        // Can't actually happen unless timezone file is malformed
             return false;
 
         size_t length = end - start;
@@ -125,11 +123,11 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
 
         case HTTP_CODE_UNAUTHORIZED:
         {
-            AllocatedJsonDocument jsonDoc(_jsonSize);
+            auto jsonDoc = CreateJsonDocument();
             deserializeJson(jsonDoc, http.getString());
 
             String message = "";
-            if (jsonDoc.containsKey("message"))
+            if (jsonDoc["message"].is<String>())
                 message = jsonDoc["message"].as<String>();
 
             http.end();

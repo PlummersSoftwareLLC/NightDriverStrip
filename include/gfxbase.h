@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//   Provides a Adafruit_GFX implementation for our RGB LED panel so that
+//   Provides an Adafruit_GFX implementation for our RGB LED panel so that
 //   we can use primitives such as lines and fills on it.  Incorporates
 //   the Effects class from Aurora (see below) so it's available as well.
 //
@@ -110,10 +110,29 @@ protected:
     size_t _width;
     size_t _height;
 
-    static const uint8_t gamma5[];
-    static const uint8_t gamma6[];
+    // 32 Entries in the 5-bit gamma table
+    static constexpr auto gamma5 = to_array<uint8_t, 32>
+    ({
+        0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b,
+        0x0e, 0x11, 0x14, 0x18, 0x1d, 0x22, 0x28, 0x2e,
+        0x36, 0x3d, 0x46, 0x4f, 0x59, 0x64, 0x6f, 0x7c,
+        0x89, 0x97, 0xa6, 0xb6, 0xc7, 0xd9, 0xeb, 0xff
+    });
 
-    static const int _paletteCount = 10;
+    // 64 Entries in the 6-bit gamma table
+    static constexpr auto gamma6 = to_array<uint8_t, 64>
+    ({
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
+        0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x10, 0x12, 0x13,
+        0x15, 0x17, 0x19, 0x1b, 0x1d, 0x20, 0x22, 0x25,
+        0x27, 0x2a, 0x2d, 0x30, 0x33, 0x37, 0x3a, 0x3e,
+        0x41, 0x45, 0x49, 0x4d, 0x52, 0x56, 0x5b, 0x5f,
+        0x64, 0x69, 0x6e, 0x74, 0x79, 0x7f, 0x85, 0x8b,
+        0x91, 0x97, 0x9d, 0xa4, 0xab, 0xb2, 0xb9, 0xc0,
+        0xc7, 0xcf, 0xd6, 0xde, 0xe6, 0xee, 0xf7, 0xff
+    });
+
+    static constexpr int _paletteCount = 10;
     int _paletteIndex = -1;
     uint _lastSecond = 99;
     bool _palettePaused = false;
@@ -127,8 +146,8 @@ protected:
         std::unique_ptr<Noise> _ptrNoise;
     #endif
 
-    static const int _heatColorsPaletteIndex = 6;
-    static const int _randomPaletteIndex = 9;
+    static constexpr int _heatColorsPaletteIndex = 6;
+    static constexpr int _randomPaletteIndex = 9;
 
 public:
     // Many of the Aurora effects need direct access to these from external classes
@@ -144,13 +163,13 @@ public:
     }
 
     #if USE_NOISE
-    Noise &GetNoise()
+    Noise &GetNoise() const
     {
         return *_ptrNoise;
     }
     #endif
 
-    CRGBPalette16 &GetCurrentPalette()
+    const CRGBPalette16 &GetCurrentPalette() const
     {
         return _currentPalette;
     }
@@ -232,7 +251,7 @@ public:
     }
 
     // Matrices that are built from individually addressable strips like WS2812b generally
-    // follow a boustrophodon layout as follows:
+    // follow a boustrophedon layout as follows:
     //
     //     0 >  1 >  2 >  3 >  4
     //                         |
@@ -242,7 +261,7 @@ public:
     //                         |
     //    19 < 18 < 17 < 16 < 15
     //     |
-    //    (etc)
+    //    (etc.)
     //
     // If your matrix uses a different approach, you can override this function and implement it
     // in the XY() function of your class
@@ -268,6 +287,8 @@ public:
 
     #if USE_HUB75
         #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
+    #elif HELMET
+        #define XY(x, y) xy(x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
     #else
         #define XY(x, y) xy(x, y)
     #endif
@@ -298,16 +319,12 @@ public:
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
-        else
-            debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
     void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
-        else
-            debugE("Invalid drawPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
@@ -328,7 +345,7 @@ public:
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    void setPixel(int16_t x, int16_t y, CRGB color)
+    virtual void setPixel(int16_t x, int16_t y, CRGB color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
@@ -408,7 +425,7 @@ public:
     //   We are now at pixel 5, frac2 = .75
     //   We fill pixel with .75 worth of color
 
-    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false)
+    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false) const
     {
         float frac1 = fPos - floor(fPos);                 // eg:   3.25 becomes 0.25
         float frac2 = fPos + count - floor(fPos + count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
@@ -433,7 +450,7 @@ public:
         c1 = c1.fadeToBlackBy(fade1);
         c2 = c2.fadeToBlackBy(fade2);
 
-        // These assignments use the + operator of CRGB to merge the colors when requested, and its pretty
+        // These assignments use the + operator of CRGB to merge the colors when requested, and it's pretty
         // naive, just saturating each color element at 255, so the operator could be improved or replaced
         // if needed...
 
@@ -594,20 +611,22 @@ public:
         loadPalette(_randomPaletteIndex);
     }
 
-    void fillRectangle(int x0, int y0, int x1, int y1, CRGB color)
+    virtual void fillRectangle(int x0, int y0, int x1, int y1, CRGB color)
     {
         for (int x = x0; x < x1; x++)
             for (int y = y0; y < y1; y++)
                 drawPixel(x, y, color);
     }
 
-    void setPalette(CRGBPalette16 palette)
+    void setPalette(const CRGBPalette16& palette)
     {
         _currentPalette = palette;
         _targetPalette = palette;
         _currentPaletteName = "Custom";
     }
 
+    // Note that this function may recurse without
+    // bound if your random() is very very dumb.
     void loadPalette(int index)
     {
         _paletteIndex = index;
@@ -668,33 +687,29 @@ public:
         _currentPalette = _targetPalette;
     }
 
-    void setPalette(String paletteName)
+    void setPalette(const String& paletteName)
     {
-        if (paletteName == "Rainbow")
-            loadPalette(0);
-        // else if (paletteName == "RainbowStripe")
-        //   loadPalette(1);
-        else if (paletteName == "Ocean")
-            loadPalette(1);
-        else if (paletteName == "Cloud")
-            loadPalette(2);
-        else if (paletteName == "Forest")
-            loadPalette(3);
-        else if (paletteName == "Party")
-            loadPalette(4);
-        else if (paletteName == "Grayscale")
-            loadPalette(5);
-        else if (paletteName == "Heat")
-            loadPalette(6);
-        else if (paletteName == "Lava")
-            loadPalette(7);
-        else if (paletteName == "Ice")
-            loadPalette(8);
-        else if (paletteName == "Random")
-            RandomPalette();
+        static const std::unordered_map<const char*, int> paletteMap = {
+            {"Rainbow", 0},
+            {"Ocean", 1},
+            {"Cloud", 2},
+            {"Forest", 3},
+            {"Party", 4},
+            {"Grayscale", 5},
+            {"Heat", 6},
+            {"Lava", 7},
+            {"Ice", 8}
+        };
+
+        auto it = paletteMap.find(paletteName.c_str());
+        if (it != paletteMap.end()) {
+            loadPalette(it->second);  // Found a matching palette, load it
+        } else if (paletteName == "Random") {
+            RandomPalette();  // Special case for "Random"
+        }
     }
 
-    void listPalettes() const
+    static void listPalettes()
     {
         Serial.println(F("{"));
         Serial.print(F("  \"count\": "));
@@ -702,9 +717,9 @@ public:
         Serial.println(",");
         Serial.println(F("  \"results\": ["));
 
-        String paletteNames[] = {
+        static constexpr auto paletteNames = to_array(
+        {
             "Rainbow",
-            // "RainbowStripe",
             "Ocean",
             "Cloud",
             "Forest",
@@ -713,7 +728,8 @@ public:
             "Heat",
             "Lava",
             "Ice",
-            "Random"};
+            "Random"
+        });
 
         for (int i = 0; i < _paletteCount; i++)
         {
@@ -770,12 +786,12 @@ public:
         memset(p, 0, sizeof(p));
     }
 
-    // All the caleidoscope functions work directly within the screenbuffer (leds array).
-    // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it arround.
+    // All the Caleidoscope functions work directly within the screenbuffer (leds array).
+    // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it around.
 
     // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
 
-    void Caleidoscope1()
+    void Caleidoscope1() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -789,7 +805,7 @@ public:
     }
 
     // mirror the first 16x16 quadrant 3 times onto a 32x32
-    void Caleidoscope2()
+    void Caleidoscope2() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -803,7 +819,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 16x16
-    void Caleidoscope3()
+    void Caleidoscope3() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -815,7 +831,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 16x16 (90 degrees rotated compared to Caleidoscope3)
-    void Caleidoscope4()
+    void Caleidoscope4() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
@@ -827,7 +843,7 @@ public:
     }
 
     // copy one diagonal triangle into the other one within a 8x8
-    void Caleidoscope5()
+    void Caleidoscope5() const
     {
         for (int x = 0; x < _width / 4; x++)
         {
@@ -846,7 +862,7 @@ public:
         }
     }
 
-    void Caleidoscope6()
+    void Caleidoscope6() const
     {
         for (int x = 1; x < ((_width + 1) / 2); x++)
         {
@@ -883,7 +899,7 @@ public:
     // create a square twister to the left or counter-clockwise
     // x and y for center, r for radius
 
-    void SpiralStream(int x, int y, int r, uint8_t dimm)
+    void SpiralStream(int x, int y, int r, uint8_t dimm) const
     {
         for (int d = r; d >= 0; d--)
         { // from the outside to the inside
@@ -1099,7 +1115,7 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
 
-    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) const
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1110,54 +1126,53 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
     {
-        int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int dx = abs(x1 - x0); // Delta in x direction
+        int dy = abs(y1 - y0); // Delta in y direction
+        int sx = (x0 < x1) ? 1 : -1; // Step in x direction
+        int sy = (y0 < y1) ? 1 : -1; // Step in y direction
 
-        int err = dx + dy;  // Error must be declared here
+        int err = dx - dy; // Initial error term
 
-        for (;;)
+        while (true)
         {
-            if (isValidPixel(x0, y0))
-                leds[XY(x0, y0)] = bMerge ? leds[XY(x0, y0)] + color : color;
+            int index = XY(x0, y0);
+            if (isValidPixel(index))
+            {
+                // Optimization opportunity: unswtitch bMerge into another function
+                leds[index] = bMerge ? leds[index] + color : color;
+            }
 
             if (x0 == x1 && y0 == y1)
-                break;
+                break; // Exit the loop once we've reached the destination
 
-            int e2 = 2 * err;
-            if (e2 >= dy)
+            int e2 = 2 * err; // Error term multiplied by 2 for efficiency. Saves second test for Y.
+            if (e2 > -dy) // Move in the x direction if needed
             {
-                err += dy;
+                err -= dy;
                 x0 += sx;
             }
-            // Recheck after x-axis update
-            if (x0 == x1 && y0 == y1)
-                break;
 
-            if (e2 <= dx)
+            if (e2 < dx) // Move in the y direction if needed
             {
                 err += dx;
                 y0 += sy;
             }
-            // Recheck after y-axis update
-            if (x0 == x1 && y0 == y1)
-                break;
         }
     }
 
-
-    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false) const
     {
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
 
-    void drawLine(int x0, int y0, int x1, int y1, CRGB color)
+    virtual void drawLine(int x0, int y0, int x1, int y1, CRGB color)
     {
         BresenhamLine(x0, y0, x1, y1, color);
     }
 
-    void DimAll(uint8_t value)
+    void DimAll(uint8_t value) const
     {
         for (int i = 0; i < NUM_LEDS; i++)
         {
@@ -1171,7 +1186,7 @@ public:
         return ColorFromPalette(_currentPalette, index, brightness, _currentBlendType);
     }
 
-    CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v) const
+    static CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
     {
         CHSV hsv = CHSV(h, s, v);
         CRGB rgb;
@@ -1254,7 +1269,7 @@ public:
 
     // MoveX - Shift the content on the matrix left or right
 
-    void MoveX(uint8_t delta)
+    void MoveX(uint8_t delta) const
     {
         for (int y = 0; y < _height; y++)
         {
@@ -1267,9 +1282,9 @@ public:
         }
     }
 
-    // MoveY - Shifts the content on the matix up or down
+    // MoveY - Shifts the content on the matrix up or down
 
-    void MoveY(uint8_t delta)
+    void MoveY(uint8_t delta) const
     {
         CRGB tmp = 0;
         for (int x = 0; x < _width; x++)

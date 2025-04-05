@@ -186,7 +186,7 @@ private:
 
     void construct()
     {
-        snakes = new Path[snakeCount];
+        snakes = (Path *) PreferPSRAMAlloc(snakeCount * sizeof(Path)); //
     }
 
 public:
@@ -202,7 +202,7 @@ public:
 
     ~PatternCircuit()
     {
-        delete[] snakes;
+        free(snakes);
     }
 
     unsigned long msStart;

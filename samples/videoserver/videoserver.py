@@ -15,12 +15,12 @@
 
 ## Note that you likely need to install the latest bits from pip for pytube
 ##
-## git clone git://github.com/pytube/pytube.git
-## cd pytube
+## git clone https://github.com/juanbindez/pytubefix
+## cd pytubefix
 ## python -m pip install .
 
 import cv2                      # python3 -m pip install opencv-python
-from pytube import YouTube      # python3 -m pip install pytube
+from pytubefix import YouTube   # python3 -m pip install pytubefix
 import sys
 import socket
 import time
@@ -54,7 +54,7 @@ if not cap.isOpened():
 
 # NightDriver ESP32 wifi address - update to your ESP32 WiFi
 
-client = '192.168.8.86'      
+client = '192.168.1.166'      
 sock = None
 
 # Get a timestamp slightly into the future for buffering
@@ -78,12 +78,11 @@ while True:
 
     # Read a frame
     ret, frame = cap.read()
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # If there are no more frames, break out of the loop
     if not ret:
         break
-
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     # Resize the frame match the matrix
     resized = cv2.resize(rgb_frame, (matrix_width, matrix_height))
     pixels = bytes(resized) 

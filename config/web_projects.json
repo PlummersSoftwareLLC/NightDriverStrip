@@ -17,16 +17,16 @@
             "name": "ESP32",
             "projects": [
                 {
+                    "tag": "atomlight",
+                    "name": "Atom Light"
+                },
+                {
                     "tag": "demo",
                     "name":"Demo"
                 },
                 {
                     "tag": "ledstriplite",
                     "name": "Ledstrip"
-                },
-                {
-                    "tag": "ttgo",
-                    "name": "TTGO"
                 },
                 {
                     "tag": "umbrella",
@@ -66,10 +66,6 @@
             "name": "Heltec Wifi Kit 32",
             "projects": [
                 {
-                    "tag": "atomlight",
-                    "name": "Atom Light"
-                },
-                {
                     "tag": "heltecdemo",
                     "name":"Demo"
                 },
@@ -86,6 +82,28 @@
             "projects": [
                 {
                     "tag": "heltecv2demo",
+                    "name":"Demo"
+                }
+            ]
+        },
+        {
+            "tag": "ttgo",
+            "chipfamily": "ESP32",
+            "name": "LilyGO TTGO",
+            "projects": [
+                {
+                    "tag": "ttgo",
+                    "name": "TTGO"
+                }
+            ]
+        },
+        {
+            "tag": "m5stack-core2",
+            "chipfamily": "ESP32",
+            "name": "M5Stack Core2",
+            "projects": [
+                {
+                    "tag": "m5stackdemo",
                     "name":"Demo"
                 }
             ]
@@ -127,6 +145,10 @@
                     "name": "Fan Set"
                 },
                 {
+                    "tag": "helmet",
+                    "name": "Helmet"
+                },
+                {
                     "tag": "insulators",
                     "name": "Insulators"
                 },
@@ -139,8 +161,27 @@
                     "name": "Spectrum"
                 },
                 {
+                    "tag": "spirallamp",
+                    "name": "Spiral Lamp"
+                },
+                {
                     "tag": "xmastrees",
                     "name": "X-mas Trees"
+                }
+            ]
+        },
+        {
+            "tag": "m5stick-c-plus2",
+            "chipfamily": "ESP32",
+            "name": "M5StickC Plus2",
+            "projects": [
+                {
+                    "tag": "pdpgrid",
+                    "name": "PDP Grid"
+                },
+                {
+                    "tag": "spectrum2",
+                    "name": "Spectrum"
                 }
             ]
         },

@@ -36,10 +36,10 @@
 
 bool BoolFromText(const String& text)
 {
-    return text == "true" || strtol(text.c_str(), NULL, 10);
+    return text == "true" || strtol(text.c_str(), nullptr, 10);
 }
 
-bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<AllocatedJsonDocument>& pJsonDoc)
+bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
 {
     bool jsonReadSuccessful = false;
 
@@ -51,34 +51,21 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
         {
             debugI("Attempting to read JSON file %s", fileName.c_str());
 
-            if (bufferSize == 0)
-                bufferSize = std::max((size_t)JSON_BUFFER_BASE_SIZE, file.size());
+            jsonDoc = CreateJsonDocument();
 
-            // Loop is here to deal with out-of-memory conditions
-            while(true)
+            DeserializationError error = deserializeJson(jsonDoc, file);
+
+            if (error == DeserializationError::NoMemory)
             {
-                pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
-
-                DeserializationError error = deserializeJson(*pJsonDoc, file);
-
-                if (error == DeserializationError::NoMemory)
-                {
-                    pJsonDoc.reset(nullptr);
-                    file.seek(0);
-                    bufferSize += JSON_BUFFER_INCREMENT;
-
-                    debugW("Out of memory reading JSON from file %s - increasing buffer to %zu bytes", fileName.c_str(), bufferSize);
-                }
-                else if (error == DeserializationError::Ok)
-                {
-                    jsonReadSuccessful = true;
-                    break;
-                }
-                else
-                {
-                    debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName.c_str());
-                    break;
-                }
+                debugW("Out of memory reading JSON from file %s", fileName.c_str());
+            }
+            else if (error == DeserializationError::Ok)
+            {
+                jsonReadSuccessful = true;
+            }
+            else
+            {
+                debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName.c_str());
             }
         }
 
@@ -88,44 +75,11 @@ bool LoadJSONFile(const String & fileName, size_t & bufferSize, std::unique_ptr<
     return jsonReadSuccessful;
 }
 
-bool SerializeWithBufferSize(std::unique_ptr<AllocatedJsonDocument>& pJsonDoc, size_t& bufferSize, std::function<bool(JsonObject&)> serializationFunction)
+bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 {
-    // Loop is here to deal with the serialization buffer being too small
-    while(true)
-    {
-        pJsonDoc.reset(new AllocatedJsonDocument(bufferSize));
-        if (pJsonDoc->capacity() == 0)
-        {
-            debugE("Allocation of buffer for JSON serialization failed!");
-            return false;
-        }
-
-        JsonObject jsonObject = pJsonDoc->to<JsonObject>();
-
-        if (serializationFunction(jsonObject))
-            break;
-
-        pJsonDoc.reset(nullptr);
-        bufferSize += JSON_BUFFER_INCREMENT;
-
-        debugW("Buffer memory too small for JSON serialization - increasing buffer to %zu bytes", bufferSize);
-    }
-
-    return true;
-}
-
-bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializable& object)
-{
-    if (bufferSize == 0)
-        bufferSize = JSON_BUFFER_BASE_SIZE;
-
-    std::unique_ptr<AllocatedJsonDocument> pJsonDoc(nullptr);
-
-    if (!SerializeWithBufferSize(pJsonDoc, bufferSize, [&object](JsonObject& jsonObject) { return object.SerializeToJSON(jsonObject); }))
-    {
-        debugE("JSON serialization failed - aborting write to file %s!", fileName.c_str());
-        return false;
-    }
+    auto jsonDoc = CreateJsonDocument();
+    auto jsonObject = jsonDoc.to<JsonObject>();
+    object.SerializeToJSON(jsonObject);
 
     SPIFFS.remove(fileName);
 
@@ -137,7 +91,7 @@ bool SaveToJSONFile(const String & fileName, size_t& bufferSize, IJSONSerializab
         return false;
     }
 
-    size_t bytesWritten = serializeJson(*pJsonDoc, file);
+    size_t bytesWritten = serializeJson(jsonDoc, file);
     debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), bytesWritten);
 
     file.flush();
@@ -158,7 +112,7 @@ bool RemoveJSONFile(const String & fileName)
     return SPIFFS.remove(fileName);
 }
 
-size_t JSONWriter::RegisterWriter(std::function<void()> writer)
+size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
 {
     // Add the writer with its flag unset
     writers.emplace_back(writer);

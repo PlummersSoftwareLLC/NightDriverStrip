@@ -46,14 +46,17 @@
 class PatternSubscribers : public LEDStripEffect
 {
   private:
+    // This requires a matching INIT_EFFECT_SETTING_SPECS() in effects.cpp or linker errors will ensue
+    DECLARE_EFFECT_SETTING_SPECS(mySettingSpecs);
+
     long subscribers                        = 0;
     String youtubeChannelGuid               = DEFAULT_CHANNEL_GUID;
     String youtubeChannelName               = DEFAULT_CHANNEL_NAME;
     CRGB backgroundColor                    = CRGB(0,16,64);
     CRGB borderColor                        = CRGB(160,160,255);
     bool guidUpdated                        = true;
-    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
-    size_t readerIndex                      = std::numeric_limits<size_t>::max();
+
+    size_t readerIndex                      = SIZE_MAX;
 
     unsigned long msLastCheck;
     bool succeededBefore                    = false;
@@ -128,15 +131,9 @@ class PatternSubscribers : public LEDStripEffect
 
   protected:
 
-    static constexpr int _jsonSize = LEDStripEffect::_jsonSize + 192;
-
-    // Add our own SettingSpec instances to the standard set
-    bool FillSettingSpecs() override
+    // Create our SettingSpec instances if needed, and return (a pointer to) them
+    EffectSettingSpecs* FillSettingSpecs() override
     {
-        // Don't continue if this instance's SettingSpec reference_wrapper vector is already filled
-        if (!LEDStripEffect::FillSettingSpecs())
-            return false;
-
         // Lazily load this class' SettingSpec instances if they haven't been already
         if (mySettingSpecs.size() == 0)
         {
@@ -159,10 +156,7 @@ class PatternSubscribers : public LEDStripEffect
                 .EmptyAllowed = true;
         }
 
-        // Add our SettingSpecs reference_wrappers to the base set provided by LEDStripEffect
-        _settingSpecs.insert(_settingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
-
-        return true;
+        return &mySettingSpecs;
     }
 
   public:
@@ -173,14 +167,14 @@ class PatternSubscribers : public LEDStripEffect
 
     PatternSubscribers(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
     {
-        if (jsonObject.containsKey("ycg"))
+        if (jsonObject["ycg"].is<String>())
             youtubeChannelGuid = jsonObject["ycg"].as<String>();
 
-        if (jsonObject.containsKey("ycn"))
+        if (jsonObject["ycn"].is<String>())
             youtubeChannelName = jsonObject["ycn"].as<String>();
-        if (jsonObject.containsKey("bgc"))
+        if (jsonObject["bgc"].is<CRGB>())
             backgroundColor = jsonObject["bgc"].as<CRGB>();
-        if (jsonObject.containsKey("boc"))
+        if (jsonObject["boc"].is<CRGB>())
             borderColor = jsonObject["boc"].as<CRGB>();
     }
 
@@ -191,7 +185,7 @@ class PatternSubscribers : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -260,7 +254,7 @@ class PatternSubscribers : public LEDStripEffect
     // Extension override to serialize our settings on top of those from LEDStripEffect
     bool SerializeSettingsToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeSettingsToJSON(root);

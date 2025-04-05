@@ -32,13 +32,9 @@
 
 #if USE_HUB75
 
-#include "effects/matrix/Boid.h"
-#include "effects/matrix/Vector.h"
 #include <SmartMatrix.h>
 #include "ledmatrixgfx.h"
 #include "systemcontainer.h"
-
-const rgb24 defaultBackgroundColor = {0x40, 0, 0};
 
 // The declarations create the "layers" that make up the matrix display
 
@@ -53,7 +49,7 @@ void LEDMatrixGFX::StartMatrix()
 
     // When the matrix starts, you can ask it to leave N bytes of memory free, and this amount must be tuned.  Too much free
     // will cause a dim panel with a low refresh, too little will starve other things.  We currently have enough RAM for
-    // use so begin() is not being called with a reserve paramter, but it can be if memory becomes scarce.
+    // use so begin() is not being called with a reserve parameter, but it can be if memory becomes scarce.
 
     matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
     matrix.setRefreshRate(MATRIX_REFRESH_RATE);
@@ -93,7 +89,7 @@ void LEDMatrixGFX::PrepareFrame()
         matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
-        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics());
+        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
         pMatrix->setLeds(GetMatrixBackBuffer());
 
         // We set ourselves to the lower of the fader value or the brightness value,
@@ -131,7 +127,7 @@ void LEDMatrixGFX::PrepareFrame()
             titleLayer.drawString(x, y, titleColor, szCaption);
 
             // We enable the chromakey overlay just for the strip of screen where it appears.  This support is only
-            // present in the private fork of SmartMatrix that is linked to the mesermizer project.
+            // present in the private fork of SmartMatrix that is linked to the mesmerizer project.
 
             titleLayer.swapBuffers(false);
             titleLayer.enableChromaKey(true, y, y + kCharHeight);
@@ -166,9 +162,9 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     const double kMaxPower = g_ptrSystem->DeviceConfig().GetPowerLimit();
     uint8_t scaledBrightness = std::clamp(kMaxPower / g_Values.MatrixPowerMilliwatts, 0.0, 1.0) * 255;
 
-    // If the target brightness is lower than current, we drop to it immediately, but if its higher, we ramp the brightness back in
+    // If the target brightness is lower than current, we drop to it immediately, but if it is higher, we ramp the brightness back in
     // somewhat slowly to avoid flicker.  We do this by using a weighted average of the current and former brightness.  To avoid
-    // an ansymptote near the max, we always increase by at least one step if we're lower than the target.
+    // an asymptote near the max, we always increase by at least one step if we're lower than the target.
 
     constexpr auto kWeightedAverageAmount = 10;
     if (scaledBrightness <= g_Values.MatrixScaledBrightness)
@@ -185,7 +181,7 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
     pMatrix->SetBrightness(targetBrightness);
 
-    MatrixSwapBuffers((wifiPixelsDrawn == 0) && (g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0));
+    MatrixSwapBuffers((wifiPixelsDrawn > 0) || g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0);
 
     FastLED.countFPS();
 }

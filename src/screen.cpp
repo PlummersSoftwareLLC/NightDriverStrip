@@ -28,7 +28,6 @@
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
 //---------------------------------------------------------------------------
 
-#include <algorithm>
 #include "globals.h"
 #include "systemcontainer.h"
 #include "soundanalyzer.h"
@@ -73,18 +72,17 @@ void BasicInfoSummary(bool bRedraw)
 
     #if USE_OLED
         const uint16_t bkgndColor = BLACK16;
+    #elif AMOLED_S3
+        const uint16_t bkgndColor  = Screen::to16bit(CRGB::Black);
+        const uint16_t borderColor = Screen::to16bit(CRGB::Red);
+        const uint16_t textColor   = Screen::to16bit(CRGB(100, 255, 20));
     #else
-        const uint16_t bkgndColor = Screen::to16bit(CRGB::DarkBlue);
+        const uint16_t bkgndColor  = Screen::to16bit(CRGB::Blue);
+        const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
+        const uint16_t textColor   = Screen::to16bit(CRGB::White);
     #endif
 
-    const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
-    const uint16_t textColor = Screen::to16bit(CRGB::White);
 
-    // Green Terminal Theme
-    //
-    // const uint16_t bkgndColor  = Screen::to16bit(CRGB::Black);
-    // const uint16_t borderColor = Screen::to16bit(CRGB::Red);
-    // const uint16_t textColor   = Screen::to16bit(CRGB(100, 255, 20));
 
     // bRedraw is set for full redraw, in which case we fill the screen
 
@@ -101,8 +99,13 @@ void BasicInfoSummary(bool bRedraw)
     char chStatus = szStatus[c2];
     cStatus++;
 
-    //display.setFont();
-    display.setTextSize(display.width() >= 240 ? 2 : 1);
+    if (display.width() > 240)
+        display.setTextSize(3);
+    else if (display.width() >= 160)
+        display.setTextSize(2);
+    else
+        display.setTextSize(1);
+
     #if USE_OLED
         display.setTextColor(WHITE16, BLACK16);
     #else
@@ -154,7 +157,7 @@ void BasicInfoSummary(bool bRedraw)
     time(&t);
     struct tm *tmp = localtime(&t);
     char szTime[16];
-    strftime(szTime, ARRAYSIZE(szTime), "%H:%M:%S", tmp);
+    strftime(szTime, std::size(szTime), "%H:%M:%S", tmp);
 
     display.setCursor(xMargin + 0, yMargin + lineHeight * 3);
     display.println(str_sprintf("CLCK:%s %04.3lf",
@@ -179,13 +182,7 @@ void BasicInfoSummary(bool bRedraw)
         display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
         display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
-
-    /* Old PSRAM code
-    display.setCursor(xMargin + 0, yMargin + lineHeight * 7);
-    display.println(str_sprintf("PRAM:%dK/%dK\n",
-                                ESP.getFreePsram() / 1024,
-                                ESP.getPsramSize() / 1024));
-    */
+        
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
     //             that conveys the overall status
@@ -228,9 +225,8 @@ void BasicInfoSummary(bool bRedraw)
         #endif
     }
 
-
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32
-    display.drawRect(0, 0, display.width(), display.height(), borderColor);
+    //display.drawRect(0, 0, display.width(), display.height(), borderColor);
 #endif
 }
 
@@ -243,10 +239,23 @@ void CurrentEffectSummary(bool bRedraw)
     auto& display = g_ptrSystem->Display();
     display.StartFrame();
 
+    // Force a full redraw if we've changed to a new display page
+    
+    static auto lastPage = g_InfoPage;
+    if (lastPage != g_InfoPage)
+    {
+        lastPage = g_InfoPage;
+        bRedraw = true;
+    }
+
     if (bRedraw)
         display.fillScreen(BLACK16);
 
-    uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
+    #if USE_SSD1306     // Set background color to black for monochrome SSD1306 OLED screen
+        uint16_t backColor = Screen::to16bit(CRGB(0, 0, 0));
+    #else
+        uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
+    #endif
 
     // We only draw after a page flip or if anything has changed about the information that will be
     // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
@@ -258,12 +267,19 @@ void CurrentEffectSummary(bool bRedraw)
     static auto lastFullDraw = 0;
     static auto lastAudio = 0;
     static auto lastSerial = 0;
+    static auto lastScreen = millis();
+    float screenFPS = 0;
     auto yh = 2; // Start at top of screen
 
     display.setTextSize(display.width() > 160 ? 2 : 1);
     const int topMargin = display.fontHeight() * 3 + 4;
 
-    if (lastFullDraw == 0 || millis() - lastFullDraw > 1000)
+    screenFPS = (millis() - lastScreen) / 1000.0f;
+    if (screenFPS != 0)
+        screenFPS = 1.0f / screenFPS;
+    lastScreen = millis();
+
+    if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
     {
         lastFullDraw = millis();
         if (bRedraw != false ||
@@ -281,7 +297,7 @@ void CurrentEffectSummary(bool bRedraw)
 
             //display.setFont();
             display.setTextColor(YELLOW16, backColor);
-            String sEffect = String("Current Effect: ") +
+            String sEffect = String("Effect: ") +
                              String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
                              String("/") +
                              String(g_ptrSystem->EffectManager().EffectCount());
@@ -314,7 +330,7 @@ void CurrentEffectSummary(bool bRedraw)
             display.setTextColor(YELLOW16, backColor);
             display.setTextSize(1);
             yh = display.height() - display.fontHeight();
-            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d ", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS);
+            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS, (int) screenFPS);
             auto w = display.textWidth(strOut);
             display.setCursor(display.width() / 2 - w / 2, yh);
             display.print(strOut);
@@ -345,8 +361,8 @@ void CurrentEffectSummary(bool bRedraw)
 
     // Draw the spectrum analyzer bars
 
-    int spectrumTop = topMargin + ySizeVU + 1; // Start at the bottom of the VU meter
-    int bandHeight = display.height() - spectrumTop - display.BottomMargin;
+    const int spectrumTop = topMargin + ySizeVU + 1; // Start at the bottom of the VU meter
+    const int bandHeight = display.height() - spectrumTop - display.BottomMargin;
 
     for (int iBand = 0; iBand < NUM_BANDS; iBand++)
     {
@@ -359,14 +375,14 @@ void CurrentEffectSummary(bool bRedraw)
         auto val = min(1.0f, g_Analyzer._peak2Decay[iBand]);
         assert(bandHeight * val <= bandHeight);
         display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
+        for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += display.width() / 40)
+            display.drawFastHLine(iBand * bandWidth, iLine, bandWidth, BLACK16);
     }
-
-    display.EndFrame();
 
     // Draw horizontal lines so the bars look like they are made of segments
 
-//    for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += display.height() / 25)
-//        display.drawLine(0, iLine, display.width()-1, iLine, BLACK16);
+    display.EndFrame();
+
 #endif
 }
 
@@ -434,52 +450,72 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
-#ifdef TOGGLE_BUTTON_1
-        static uint effectInterval;
+        #ifdef TOGGLE_BUTTON_1
+            static uint effectInterval;
 
-        Button1.update();
-        if (Button1.pressed())
-        {
-            std::lock_guard<std::mutex> guard(g_ptrSystem->Display()._screenMutex);
-
-            // When the button is pressed advance to the next information page on the little display
-
-            g_InfoPage = (g_InfoPage + 1) % g_InfoPageCount;
-
-            auto& effectManager = g_ptrSystem->EffectManager();
-
-            // We stop rotating the effects when we are on the debug info page, and resume when we are not
-            if (g_InfoPage == 0)
+            Button1.update();
+            if (Button1.pressed())
             {
-                effectInterval = effectManager.GetInterval();
-                effectManager.SetInterval(0, true);
+                std::lock_guard<std::mutex> guard(g_ptrSystem->Display()._screenMutex);
+
+                // When the button is pressed advance to the next information page on the little display
+
+                g_InfoPage = (g_InfoPage + 1) % g_InfoPageCount;
+
+                auto& effectManager = g_ptrSystem->EffectManager();
+
+                // We stop rotating the effects when we are on the debug info page, and resume when we are not
+                if (g_InfoPage == 0)
+                {
+                    effectInterval = effectManager.GetInterval();
+                    effectManager.SetInterval(0, true);
+                }
+                // Restore effect interval to the value we remembered, on the proviso that effect rotation is now indeed
+                // paused. Otherwise, the user may have chosen a different effect interval while we weren't looking and
+                // we don't want to mess with that.
+                else if (effectManager.GetInterval() == 0)
+                    effectManager.SetInterval(effectInterval, true);
+
+                bRedraw = true;
             }
-            // Restore effect interval to the value we remembered, on the proviso that effect rotation is now indeed
-            // paused. Otherwise, the user may have chosen a different effect interval while we weren't looking and
-            // we don't want to mess with that.
-            else if (effectManager.GetInterval() == 0)
-                effectManager.SetInterval(effectInterval, true);
+        #endif
 
-            bRedraw = true;
-        }
-#endif
-
-#ifdef TOGGLE_BUTTON_2
-        Button2.update();
-        if (Button2.pressed())
-        {
-            debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
-            g_ptrSystem->EffectManager().NextEffect();
-            bRedraw = true;
-        }
-#endif
+        #ifdef TOGGLE_BUTTON_2
+            Button2.update();
+            if (Button2.pressed())
+            {
+                if (g_InfoPage == 1)
+                {
+                    // If we're on the effect summary page, the button advances the effect
+                    debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
+                    g_ptrSystem->EffectManager().NextEffect();
+                    bRedraw = true;
+                }
+                else if (g_InfoPage == 0)
+                {
+                    // If we're on the debug page the button will reduce the brightness                    
+                    static int brightness = 255;
+                    brightness /= 2;
+                    if (brightness < 4)
+                        brightness = 255;
+                    auto &deviceConfig = g_ptrSystem->DeviceConfig();
+                    deviceConfig.SetBrightness(brightness);
+                }
+            }
+        #endif
 
         UpdateScreen(bRedraw);
         if (g_Values.UpdateStarted)
+        {
             delay(200);
+        }
         else
-            delay(50);
-
+        {
+            #if AMOLED_S3
+                lv_task_handler();
+            #endif
+            delay(1);
+        }
         bRedraw = false;
     }
 }

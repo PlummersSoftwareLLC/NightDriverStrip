@@ -82,6 +82,8 @@
 #define EFFECT_STRIP_TAPE_REEL                          36
 #define EFFECT_STRIP_FAN_BEAT                           37
 #define EFFECT_STRIP_SPLASH_LOGO                        38
+#define EFFECT_STRIP_VUMETER                            39
+#define EFFECT_STRIP_VUMETER_VERTICAL                   40
 
 // Matrix effects
 #define EFFECT_MATRIX_ALIEN_TEXT                       101
@@ -89,7 +91,7 @@
 #define EFFECT_MATRIX_CIRCUIT                          103
 #define EFFECT_MATRIX_CLOCK                            104
 #define EFFECT_MATRIX_CUBE                             105
-#define EFFECT_MATRIX_FLOW_FIELD                       106
+// Was #define EFFECT_MATRIX_FLOW_FIELD                106
 #define EFFECT_MATRIX_LIFE                             107
 #define EFFECT_MATRIX_MANDALA                          108
 #define EFFECT_MATRIX_SUNBURST                         109
@@ -107,7 +109,7 @@
 #define EFFECT_MATRIX_QR                               121
 #define EFFECT_MATRIX_RADAR                            122
 #define EFFECT_MATRIX_SERENDIPITY                      123
-#define EFFECT_MATRIX_SPARK                            124
+// Was #define EFFECT_MATRIX_SPARK                     124
 #define EFFECT_MATRIX_SPIN                             125
 #define EFFECT_MATRIX_SPIRO                            126
 #define EFFECT_MATRIX_SUBSCRIBERS                      127
@@ -143,6 +145,10 @@
 #define EFFECT_MATRIX_SMTWISTER                        156
 #define EFFECT_MATRIX_SMWALKING_MACHINE                157
 #define EFFECT_MATRIX_ANIMATEDGIF                      158
+#define EFFECT_MATRIX_STOCKS                           159
+#define EFFECT_MATRIX_SILON                            160
+#define EFFECT_MATRIX_PDPGRID                          161
+#define EFFECT_MATRIX_AUDIOSPIKE                       162
 
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201
@@ -179,6 +185,7 @@
 #define PTY_SPARKS          "spc"
 #define PTY_SPARKING        "spg"
 #define PTY_SPARKHEIGHT     "sph"
+#define PTY_SPARKTEMP       "spt"
 #define PTY_COOLING         "clg"
 #define PTY_PALETTE         "plt"
 #define PTY_ORDER           "ord"
@@ -190,6 +197,7 @@
 #define PTY_MAXSPEED        "mxs"
 #define PTY_SPEEDDIVISOR    "sdd"
 #define PTY_DELTAHUE        "dth"
+#define PTY_MIRRORED        "mrd"
 #define PTY_EVERYNTH        "ent"
 #define PTY_COLOR           "clr"
 #define PTY_BLEND           "bld"

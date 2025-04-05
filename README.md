@@ -1,11 +1,14 @@
 # NightDriverStrip <!-- omit in toc -->
 
-**DEVELOPERS WANTED!** We are searching for talented React and C++ developers to help out on this project.  Check out the code and if you're interested, contact <davepl@davepl.com>.
+- **Mesmerizer kits**, as demonstrated in [this video](https://youtu.be/COJnlehBcKw) and featured in the background of many other Dave's Garage videos, are now [available for sale on eBay](https://www.ebay.com/itm/335801442651)! (If that listing expires before we update the link, check out [Dave's listings](https://www.ebay.com/sch/i.html?_dkr=1&iconV2Request=true&_blrs=recall_filtering&_ssn=davepl&_oac=1); if the kits are available then the listing will be there.)
+- We are searching for **talented React and C++ developers** to help out on this project.  Check out the code and if you're interested, contact <davepl@davepl.com>.
 
-![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg)
+&nbsp;
+
+![CI](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/CI.yml/badge.svg) ![Release Web Installer build and deploy](https://github.com/PlummersSoftwareLLC/NightDriverStrip/actions/workflows/release.yml/badge.svg)
 
 <!-- markdownlint-disable MD033 /no-inline-html -->
-<img src="assets/NightDriverLogo-small.png" width="400" />
+<img src="assets/NightDriverLogo-small.png" width="400" alt="NightDriver logo" />
 
 <!-- markdownlint-disable-next-line MD036 /no-emphasis-as-heading -->
 _Davepl, 9/19/2021_
@@ -16,6 +19,8 @@ _Davepl, 9/19/2021_
 ## Table of Contents <!-- omit in toc -->
 
 - [What NightDriverStrip is](#what-nightdriverstrip-is)
+- [Project Overview](#project-overview)
+- [Key Features](#key-features)
 - [Using the Web Installer](#using-the-web-installer)
   - [Introduction](#introduction)
   - [(Re)flashing your device with the Web Installer](#reflashing-your-device-with-the-web-installer)
@@ -34,17 +39,39 @@ _Davepl, 9/19/2021_
   - [Build commands](#build-commands)
 - [File system](#file-system)
 - [Tools](#tools)
+- [COM port problems](#com-port-problems)
 - [Bonus exercise](#bonus-exercise)
 - [Super Bonus Exercise](#super-bonus-exercise)
 - [Sample parts (Plummer's Software LLC Amazon affiliate links)](#sample-parts-plummers-software-llc-amazon-affiliate-links)
 - [Contributing, and the BlinkenPerBit metric](#contributing-and-the-blinkenperbit-metric)
 - [Time it takes to build this project](#time-it-takes-to-build-this-project)
+- [Old Build times, no longer relevant with current platformio, just historical curiosity](#old-build-times-no-longer-relevant-with-current-platformio-just-historical-curiosity)
 
 ## What NightDriverStrip is
 
 NightDriverStrip is a source code package for building a flash program that you upload to the [ESP32 microcontroller](https://en.wikipedia.org/wiki/ESP32). It can drive up to 8 channels of WS2812B style LEDs connected to the chip pins and display fancy colors and patterns and designs on them. There are numerous effects built in that can be configured to be shown on the LED strip, including audio/music/beat-reactive effects for modules equipped with a microphone. It can also optionally receive color data for the LEDs in a simple LZ-compressed (or non-compressed) format over a TCP/IP socket that is opened by default on port 49152. The ESP32 keeps its clock in sync using NTP.
 
+NightDriver can drive both WS2812B style strips and HUB75 style matrices.
+
 More recently, a web installer has been added to the project with which most of the NightDriver projects can be flashed on supported devices, using nothing but a web browser. Please refer to the next section if this is how you'd like to get started.
+
+## Project Overview
+
+- It's an open-source project for controlling LED strips/matrices and doing cool effects on them
+- Uses WiFi for remote control and data reception.
+- Supports audio reactive effects.
+- Includes a web server and telnet debug server.
+
+## Key Features
+
+- Multiple LED control methods (WS2812B, HUB75, etc.)
+- WiFi connectivity for remote control and data
+- Audio analysis for sound-reactive effects
+- OTA (Over-The-Air) updates
+- Debug console accessible via telnet and serial
+- Display support (OLED, TFT, LCD) for status information
+- NTP time synchronization so effects can span multiple ESP32s in sync
+- Configurable via web interface that runs on the ESP32
 
 ## Using the Web Installer
 
@@ -222,17 +249,9 @@ The effects table is persisted to a JSON file on SPIFFS at regular intervals, to
 
 This makes that an override of `SerializeToJSON()` and a corresponding deserializing constructor must be provided for effects that need (or want) to persist more than the properties that are (de)serialized from/to JSON by `LEDStripEffect` by default.
 
-Throughout the project, the library used for JSON handling and (de)serialization is [ArduinoJson](https://arduinojson.org/). Among others, this means that:
+Throughout the project, the library used for JSON handling and (de)serialization is [ArduinoJson](https://arduinojson.org/). Among others, this means that `SerializeToJSON()` functions _must_ return `true` _except_ when an ArduinoJson function (like `JsonObject::set()`) returns `false` to indicate it ran out of buffer memory.
 
-- in line with the convention in ArduinoJson, `SerializeToJSON()` functions _must_ return `true` _except_ when an ArduinoJson function (like `JsonObject::set()`) returns `false` to indicate it ran out of buffer memory. Any `SerializeToJSON()` function returning `false` will trigger an increase in the overall serialization buffer and a restart of the serialization process.
-- the memory required for an individual class instance's (de)serialization operation needs to be reserved _beforehand_, by creating either:
-
-  - a `StaticJsonDocument<`_buffer size_`>()` that reserves memory on the stack. This can be used for small buffer sizes (smaller than 1024 bytes) only.
-  - an `AllocatedJsonDocument(`_buffer size_`)` that reserves memory on the heap.
-
-  How much memory is actually required depends on the number, type and contents of the (de)serialized properties, and is effectively a bit of a guessing game - which means the values you'll see throughout the codebase are educated guesses as well. When properties that are serialized last fail to show up in the JSON that is generated, it is reasonable to assume the serialization process ran out of buffer memory and that buffer memory thus needs to be increased.
-
-To get a better understanding of the specifics related to JSON (de)serialization, you could consider taking a look at the respective tutorials in the ["First contact" section](https://arduinojson.org/v6/doc/#first-contact) of the ArduinoJson documentation.
+To get a better understanding of the specifics related to JSON (de)serialization, you could consider taking a look at the respective tutorials in the ["First contact" section](https://arduinojson.org/v7/doc/#first-contact) of the ArduinoJson documentation.
 
 ## Resetting the effect list
 
@@ -250,7 +269,7 @@ Furthermore, it's also possible to "ignore" the persisted effect list altogether
 
 ## Fetching things from the Internet
 
-If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.
+If you develop an effect that requires data to be pulled in from the Internet then you can register a network reader function with the `NetworkReader` class, which is available via the `g_ptrSystem->NetworkReader()` global reference. You can use either the `PatternSubscribers` or `PatternWeather` effects as sources of inspiration.  PatternStocks pulls live (15-min delay) stock quotes from a private server.
 
 ## Build pointers
 
@@ -258,8 +277,13 @@ If you develop an effect that requires data to be pulled in from the Internet th
 
 The project can be built using [PlatformIO](https://platformio.org/). There's a [PlatformIO IDE](https://platformio.org/platformio-ide) available, which is built on top of Visual Studio Code. Included in it are the command-line [PlatformIO Core](https://platformio.org/install/cli) tools. They can also be installed on their own if you prefer not using the IDE.
 
-To compile the front-end application (which is part of every PlatformIO build) NPM is required. Documentation is available online concerning [NPM installation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
-The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2. For details on working with the frontend application see [site/README.md](./site/README.md).
+To compile the front-end application (which is part of every PlatformIO build) a recent version of NodeJS with NPM is required. They can be downloaded from the [NodeJS website](https://nodejs.org/en). Instructions for supported ways to install NodeJS are available there as well. Please do read and follow them.
+
+**Note** that installing NodeJS using your operating system's/distribution's default package manager is likely to leave you with a much older NodeJS version than you need.
+
+The application has been tested on node version 16.15.1 and 18.17.1 with NPM version 8.13.2; newer versions should also work in principle.
+
+For details on working with the frontend application see [site/README.md](./site/README.md).
 
 ### Build commands
 
@@ -302,6 +326,12 @@ Instead of:
 cd tools
 ./buddybuild.sh
 ```
+
+## COM port problems
+
+Specifically on the Windows platform, there have been cases where people have experienced problems communicating to the serial port that the ESP32 device is connected to from PlatformIO, usually in the shape of PlatformIO showing messages that the COM port in question doesn't exist where it absolutely did before. This tends to be caused by the COM port being used by another process within PlatformIO (the monitor function being a known cause), or some other application effectively blocking the COM port in question. A confirmed example of the latter is Malwarebytes.
+
+If you experience such difficulties accessing serial ports, the tools in the Sysinternals toolkit (particularly Process Explorer and Portmon, available [from Microsoft](https://learn.microsoft.com/en-us/sysinternals/)) may be helpful towards finding the culprit.
 
 ## Bonus exercise
 
@@ -352,16 +382,19 @@ Add whatever you want and/or need to make your LED dreams come true. Fix my blun
 
 To replicate, build the mesmerizer project.  Then delete pio/build_cache and build again, taking the time for the second build.
 
+- ASUS 7995WX [96-core, 192-thread]
+  -> [davepl, 02/11/2024] 20.73 seconds
+
 - HP Z6 G5A, 7995WX, 128GB [96-core, 192-thread]
   -> [davepl 11/29/2023] 25.270 seconds
 
 - 3970X, 128GB [32-core, 64-thread] Windows11+WSL2/Ubuntu02.04LTS
   -> [davepl 11/29/2023] 34.292 seconds
 
-- Mac M1 Ultra Studio [10-core, 20-thread] 
+- Mac M1 Ultra Studio [10-core, 20-thread]
   -> [davepl 11/29/2023] 48.368 seconds
 
-## Old Build times, no longer relevant with current platformio, just historical curiosity:
+## Old Build times, no longer relevant with current platformio, just historical curiosity
 
 Time to build the SPECTRUM config (`pio run -e spectrum`). Assumes a clean build after everything has been installed and downloaded.
 

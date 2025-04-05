@@ -151,7 +151,7 @@ class SystemContainer
         if (!!SC_MEMBER(BufferManagers))
             return *SC_MEMBER(BufferManagers);
 
-        if (!SC_MEMBER(Devices) || SC_MEMBER(Devices)->size() == 0)
+        if (!SC_MEMBER(Devices) || SC_MEMBER(Devices)->empty())
         {
             debugE("Can't setup BufferManagers without Devices!");
             delay(1000);

@@ -31,13 +31,33 @@
 #pragma once
 
 #include "effects.h"
-#include "jsonserializer.h"
-#include "types.h"
 #include "gfxbase.h"
+#include "jsonserializer.h"
 #include "ledmatrixgfx.h"
+#include "types.h"
+
 #include <memory>
 #include <list>
-#include <stdlib.h>
+#include <cstdlib>
+
+// Declarations related to effect settings, and their SettingSpecs. The definitions revolving around
+// SettingSpecs are mainly there because getting it right is a bit finicky due to the container type
+// used and the class static nature of the actual containers. Particularly adding an initializer for
+// a SettingSpec container is easy to overlook.
+
+// The type for effect SettingSpec containers
+using EffectSettingSpecs = std::vector<SettingSpec, psram_allocator<SettingSpec>>;
+
+// Declares a static class member variable that contains the SettingSpecs for an effect, if it has them.
+// If an effect uses this macro, it also needs a matching INIT_EFFECT_SETTING_SPECS invocation in
+// effects.cpp, or linker errors will ensue.
+#define DECLARE_EFFECT_SETTING_SPECS(memberName) \
+    static EffectSettingSpecs memberName
+
+// Initializes the effect setting specs member that's been added to an effect class. There must be one
+// use of this in effects.cpp for every use DECLARE_EFFECT_SETTING_SPECS, or the linker will balk.
+#define INIT_EFFECT_SETTING_SPECS(effectName, specsMember) \
+    EffectSettingSpecs effectName::specsMember = {}
 
 // This macro returns from the invoking function (which would usually be SetSetting())
 // if the settingName and propertyName passed to it match, and the "value" was thus
@@ -62,8 +82,49 @@ class LEDStripEffect : public IJSONSerializable
         All               = MaximumEffectTime   // | next one | one after that | etc.
     };
 
+    DECLARE_EFFECT_SETTING_SPECS(_baseSettingSpecs);
+    std::vector<std::reference_wrapper<SettingSpec>> _settingSpecReferences;
+
     bool   _coreEffect = false;
-    static std::vector<SettingSpec, psram_allocator<SettingSpec>> _baseSettingSpecs;
+
+    // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
+    // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecReferences
+    // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
+    // memory.
+    static void FillBaseSettingSpecs()
+    {
+        // If the base SettingSpec instances already exist, bail out...
+        if (!_baseSettingSpecs.empty())
+            return;
+
+        // ...otherwise, create and add them
+
+        _baseSettingSpecs.emplace_back(
+            ACTUAL_NAME_OF(_friendlyName),
+            "Friendly name",
+            "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
+            SettingSpec::SettingType::String
+        );
+        _baseSettingSpecs.emplace_back(
+            ACTUAL_NAME_OF(_maximumEffectTime),
+            "Maximum effect time",
+            "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
+            "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
+            SettingSpec::SettingType::PositiveBigInteger
+        );
+        _baseSettingSpecs.emplace_back(
+            "hasMaximumEffectTime",
+            "Has maximum effect time set",
+            "Indicates if the effect has a maximum effect time set.",
+            SettingSpec::SettingType::Boolean
+        ).Access = SettingSpec::SettingAccess::ReadOnly;
+        _baseSettingSpecs.emplace_back(
+            "clearMaximumEffectTime",
+            "Clear maximum effect time",
+            "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
+            SettingSpec::SettingType::Boolean
+        ).Access = SettingSpec::SettingAccess::WriteOnly;
+    }
 
   protected:
 
@@ -72,11 +133,6 @@ class LEDStripEffect : public IJSONSerializable
     String _friendlyName;
     bool   _enabled = true;
     size_t _maximumEffectTime = 0;
-    std::vector<std::reference_wrapper<SettingSpec>> _settingSpecs;
-
-    // JSON document size used for serializations of this class. Should probably be made bigger for effects (i.e. subclasses)
-    //   that serialize additional properties.
-    static constexpr int _jsonSize = 192;
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
 
@@ -90,37 +146,37 @@ class LEDStripEffect : public IJSONSerializable
 
     // Helper functions for known setting types, as defined in SettingSpec::SettingType
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toInt());
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), NULL, 10));
+        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), nullptr, 10));
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toFloat());
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, BoolFromText(value));
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, value);
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
     {
         if (settingName != propertyName)
             return false;
 
-        StaticJsonDocument<384> src;
+        auto src = CreateJsonDocument();
         deserializeJson(src, value);
         CRGB colors[16];
         int colorIndex = 0;
@@ -136,59 +192,16 @@ class LEDStripEffect : public IJSONSerializable
         return true;
     }
 
-    bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
     {
         SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
     }
 
-    // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
-    // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecs
-    // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
-    // memory.
-    //
-    // Overrides of this virtual function in effects that publish additional settings should first
-    // call this implementation (i.e. LEDStripEffect::FillSettingSpecs()) and only continue if it returns
-    // true.
-    virtual bool FillSettingSpecs()
+    // Overrides of this method should fill the respective effect's SettingSpec vector and return a pointer to it.
+    // Returning nullptr indicates the effect has no SettingSpec instances to add to the base set.
+    virtual EffectSettingSpecs* FillSettingSpecs()
     {
-        // Bail out if the SettingSpecs reference_wrapper vector is already filled
-        if (_settingSpecs.size() > 0)
-            return false;
-
-        // Lazily load the SettingSpec instances if they're not already there
-        if (_baseSettingSpecs.size() == 0)
-        {
-            _baseSettingSpecs.emplace_back(
-                ACTUAL_NAME_OF(_friendlyName),
-                "Friendly name",
-                "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
-                SettingSpec::SettingType::String
-            );
-            _baseSettingSpecs.emplace_back(
-                ACTUAL_NAME_OF(_maximumEffectTime),
-                "Maximum effect time",
-                "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-                "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
-                SettingSpec::SettingType::PositiveBigInteger
-            );
-            _baseSettingSpecs.emplace_back(
-                "hasMaximumEffectTime",
-                "Has maximum effect time set",
-                "Indicates if the effect has a maximum effect time set.",
-                SettingSpec::SettingType::Boolean
-            ).Access = SettingSpec::SettingAccess::ReadOnly;
-            _baseSettingSpecs.emplace_back(
-                "clearMaximumEffectTime",
-                "Clear maximum effect time",
-                "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
-                SettingSpec::SettingType::Boolean
-            ).Access = SettingSpec::SettingAccess::WriteOnly;
-        }
-
-        // Add reference_wrappers for the actual SettingSpecs instances to our effect instance's vector
-        _settingSpecs.insert(_settingSpecs.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
-
-        return true;
+        return nullptr;
     }
 
     static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max)
@@ -205,18 +218,18 @@ class LEDStripEffect : public IJSONSerializable
             _friendlyName = strName;
     }
 
-    LEDStripEffect(const JsonObjectConst&  jsonObject)
+    explicit LEDStripEffect(const JsonObjectConst&  jsonObject)
         : _effectNumber(jsonObject[PTY_EFFECTNR]),
           _friendlyName(jsonObject["fn"].as<String>())
     {
-        if (jsonObject.containsKey("es"))
+        if (jsonObject["es"].is<int>())
             _enabled = jsonObject["es"].as<int>() == 1;
-        if (jsonObject.containsKey("mt"))
+        if (jsonObject["mt"].is<size_t>())
             _maximumEffectTime = jsonObject["mt"];
 
         // Pull the migrations bitmap from the JSON object if it has one, otherwise default to "nothing set"
         uint performedMigrations = 0;
-        if (jsonObject.containsKey("mi"))
+        if (jsonObject["mi"].is<uint>())
             performedMigrations = jsonObject["mi"];
 
         // If we haven't migrated the "has no maximum effect time" yet, do so now
@@ -225,8 +238,7 @@ class LEDStripEffect : public IJSONSerializable
     }
 
     virtual ~LEDStripEffect()
-    {
-    }
+    = default;
 
     virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
@@ -303,7 +315,7 @@ class LEDStripEffect : public IJSONSerializable
     // RequiresDoubleBuffering
     //
     // If a matrix effect requires the state of the last buffer be preserved, then it requires double buffering.
-    // If, on the other hand, it renders from scratch every time, starting witha black fill, etc, then it does not,
+    // If, on the other hand, it renders from scratch every time, starting with a black fill, etc., then it does not,
     // and it can override this method and return false;
 
     virtual bool RequiresDoubleBuffering() const
@@ -327,7 +339,7 @@ class LEDStripEffect : public IJSONSerializable
                 CRGB::Indigo,
                 CRGB::Violet
             };
-        int randomColorIndex = random_range(0U, ARRAYSIZE(colors));
+        int randomColorIndex = random_range(0U, std::size(colors));
         return colors[randomColorIndex];
     }
 
@@ -365,7 +377,7 @@ class LEDStripEffect : public IJSONSerializable
             return ColorFraction(baseColor, temp * 3.0f);                                                   // Interpolate from black to baseColor
 
         if (temp < 0.66f)
-            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interoplate from baseColor to Yellow
+            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interpolate from baseColor to Yellow
 
         return CRGB::Yellow + ColorFraction(CRGB::Blue,  (temp - 0.66f) * 3.0f);                            // Interpolate from Yellow to White
     }
@@ -376,15 +388,18 @@ class LEDStripEffect : public IJSONSerializable
 
     void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0, uint everyN = 1)
     {
-        if (!_GFX[0])
-            throw std::runtime_error("Graphics not set up properly");
+        if (_GFX.size() == 0)
+        {
+            debugE("fillSolidOnAllChannels called with no GFX devices");
+            throw std::runtime_error("Graphics not set up properly, no GFX devices");
+        }
 
         if (numToFill == 0)
             numToFill = _cLEDs-iStart;
 
         if (iStart + numToFill > _cLEDs)
         {
-            printf("Boundary Exceeded in FillRainbow");
+            debugE("Boundary Exceeded in FillRainbow");
             return;
         }
 
@@ -395,6 +410,16 @@ class LEDStripEffect : public IJSONSerializable
         }
     }
 
+    // SetPixelsFOnAllChannels
+    //
+    // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
+
+    void setPixelsFOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false)
+    {
+        for (auto& device : _GFX)
+            device->setPixelsF(fPos, count, c, bMerge);
+    }
+    
     // ClearFrameOnAllChannels
     //
     // Clears ALL the channels
@@ -420,26 +445,28 @@ class LEDStripEffect : public IJSONSerializable
     //
     // Fill all channels with a progressive rainbow, using arbitrary start, length, step, and initial color and hue change rate
 
-    void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1)
+    void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1, bool bMirrored = false)
     {
-        if (iStart + numToFill > _cLEDs)
-        {
-            printf("Boundary Exceeded in FillRainbow");
-            return;
-        }
 
-        CHSV hsv;
-        hsv.hue = initialhue;
-        hsv.val = 255;
-        hsv.sat = 240;
         for (int i = 0; i < numToFill; i+=everyNth)
         {
+            CHSV hsv;
+            hsv.hue = initialhue + i * deltahue;
+            hsv.val = 255;
+            hsv.sat = 255;
             CRGB rgb;
             hsv2rgb_rainbow(hsv, rgb);
-            setPixelOnAllChannels(iStart + i, rgb);
-            hsv.hue += deltahue;
+            if (bMirrored)
+            {
+                setPixelOnAllChannels(iStart + i, rgb);
+                setPixelOnAllChannels(iStart + numToFill - i - 1, rgb);
+            }
+            else
+            {
+                setPixelOnAllChannels(iStart + i, rgb);
+            }
             for (int q = 1; q < everyNth; q++)
-                _GFX[q]->setPixel(iStart + i + q, CRGB::Black);
+                setPixelOnAllChannels(iStart + i + q, CRGB::Black);
         }
     }
 
@@ -480,6 +507,11 @@ class LEDStripEffect : public IJSONSerializable
             device->setPixel(i, c);
     }
 
+    void setPixelOnAllChannels(int x, int y, CRGB c)
+    {
+        for (auto& device : _GFX)
+            device->setPixel(x, y, c);
+    }
     // setPixelsOnAllChannels
     //
     // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
@@ -493,11 +525,11 @@ class LEDStripEffect : public IJSONSerializable
 
     // SerializeToJSON
     //
-    // Serialize this effects paramters to a JSON document
+    // Serialize this effects parameters to a JSON document
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         jsonDoc[PTY_EFFECTNR]       = _effectNumber;
         jsonDoc["fn"]               = _friendlyName;
@@ -542,9 +574,26 @@ class LEDStripEffect : public IJSONSerializable
     // returns a vector with reference_wrappers to them.
     virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
     {
-        FillSettingSpecs();
+        // If the SettingSpecs reference_wrapper vector is already filled, return that
+        if (!_settingSpecReferences.empty())
+            return _settingSpecReferences;
 
-        return _settingSpecs;
+        // Create the SettingSpec instances that are available for all effects
+        FillBaseSettingSpecs();
+
+        // Add reference_wrappers for the base SettingSpecs instances to the vector
+        _settingSpecReferences.insert(_settingSpecReferences.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
+
+        // Get any SettingSpec instances that our effect subclass has defined
+        auto pEffectSettingSpecs = FillSettingSpecs();
+
+        if (pEffectSettingSpecs)
+        {
+            // Add reference_wrappers for the effect SettingSpecs instances to the vector
+            _settingSpecReferences.insert(_settingSpecReferences.end(), pEffectSettingSpecs->begin(), pEffectSettingSpecs->end());
+        }
+
+        return _settingSpecReferences;
     }
 
     // Serialize the "known effect settings" for this effect to JSON. In principle, there
@@ -552,7 +601,7 @@ class LEDStripEffect : public IJSONSerializable
     // that's serialized by this function.
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
     {
-        StaticJsonDocument<_jsonSize> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         jsonDoc[ACTUAL_NAME_OF(_friendlyName)] = _friendlyName;
         jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;

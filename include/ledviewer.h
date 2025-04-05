@@ -133,7 +133,7 @@ public:
     int CheckForConnection()
     {
         int new_socket = -1;
-        // Accept a new incoming connnection
+        // Accept a new incoming connection
         int addrlen = sizeof(_address);
         struct timeval to;
         to.tv_sec = 1;

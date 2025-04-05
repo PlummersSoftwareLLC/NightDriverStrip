@@ -74,10 +74,22 @@ public:
             hueval = hueval + 48;
             hueval %= 256;
             hue[i] = hueval;
-            iPos[i] = (pGFX->GetLEDCount() / meteorCount) * i;
+            iPos[i] = meteorCount <= 1 ? 0 : (pGFX->GetLEDCount() / (meteorCount - 1) * i);
             speed[i] = random_range(meteorSpeedMin, meteorSpeedMax);
+            if (i % 1)
+                speed[i] *= -1;
             lastBeat[i] = g_Values.AppTime.FrameStartTime();
             bLeft[i] = i & 2;
+        }
+
+        // Special case 2-meteor to be red on both ends
+
+        if (meteorCount == 2)
+        {
+            hue[0] = HUE_RED;
+            hue[1] = HUE_RED;
+            iPos[0] = 0;
+            iPos[1] = pGFX->GetLEDCount() - 1;
         }
     }
 
@@ -90,7 +102,7 @@ public:
     {
         static CHSV hsv;
         hsv.val = 255;
-        hsv.sat = 240;
+        hsv.sat = 255;
 
         for (int j = 0; j<pGFX->GetLEDCount(); j++)                         // fade brightness all LEDs one step
         {
@@ -180,7 +192,7 @@ class MeteorEffect : public LEDStripEffect
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        StaticJsonDocument<LEDStripEffect::_jsonSize + 128> jsonDoc;
+        auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);

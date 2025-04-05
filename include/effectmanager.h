@@ -24,7 +24,7 @@
 // Description:
 //
 //    Based on my original ESP32LEDStick project this is the class that keeps
-//    track of internal efects, which one is active, rotating among them,
+//    track of internal effects, which one is active, rotating among them,
 //    and fading between them.
 //
 //
@@ -35,9 +35,6 @@
 
 #pragma once
 
-#include <sys/types.h>
-#include <errno.h>
-#include <iostream>
 #include <set>
 #include <algorithm>
 #include <functional>
@@ -114,8 +111,8 @@ class  EffectManager : public IJSONSerializable
     uint _effectStartTime;
     uint _effectInterval = 0;
     bool _bPlayAll;
-    bool _bShowVU = true;
     bool _clearTempEffectWhenExpired = false;
+    std::atomic_bool _newFrameAvailable = false;
     int _effectSetVersion = 1;
 
     std::vector<std::shared_ptr<GFXBase>> _gfx;
@@ -131,11 +128,14 @@ class  EffectManager : public IJSONSerializable
         {
             _clearTempEffectWhenExpired = true;
 
-            // This is a hacky way to ensure that we start the correct effect after the temporary one.
+            // This ensures that we start the correct effect after the temporary one.
             //   The switching to the next effect is taken care of by NextEffect(), which starts with
-            //   increasing _iCurrentEffect. We therefore need to decrease it here, to make sure that
-            //   the first effect after the temporary one is the one we want (either the then current
-            //   one when the chip was powered off, or the one at index 0).
+            //   increasing _iCurrentEffect. We therefore need to set it to the previous effect, to
+            //   make sure that the first effect after the temporary one is the one we want (either the
+            //   then current one when the chip was powered off, or the one at index 0).
+            if (_iCurrentEffect == 0)
+                _iCurrentEffect = EffectCount();
+
             _iCurrentEffect--;
         }
     }
@@ -154,8 +154,8 @@ class  EffectManager : public IJSONSerializable
     // Implementation is in effects.cpp
     void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
 
-    void SaveCurrentEffectIndex();
-    bool ReadCurrentEffectIndex(size_t& index);
+    static void SaveCurrentEffectIndex();
+    static bool ReadCurrentEffectIndex(size_t& index);
 
     void ClearEffects()
     {
@@ -166,7 +166,7 @@ public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(std::shared_ptr<LEDStripEffect> effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
+    EffectManager(const std::shared_ptr<LEDStripEffect>& effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
@@ -199,9 +199,19 @@ public:
         ClearEffects();
     }
 
-    std::shared_ptr<GFXBase> GetBaseGraphics()
+    // SetTempEffect - Sets a temporary effect to be played until remote changes it.
+    //                 The effect must have already had its Init() function called.
+
+    void SetTempEffect(std::shared_ptr<LEDStripEffect> effect)
     {
-        return _gfx[0];
+        _tempEffect = effect;
+    }
+
+    // GetBaseGraphics - Returns the vector of GFXBase objects that the effects use to draw
+
+    std::vector<std::shared_ptr<GFXBase>> & GetBaseGraphics()
+    {
+        return _gfx;
     }
 
     void ReportNewFrameAvailable()
@@ -262,18 +272,18 @@ public:
         }
 
         // Check if there's a persisted effect set version, and remember it if so
-        if (jsonObject.containsKey(PTY_EFFECTSETVER))
+        if (jsonObject[PTY_EFFECTSETVER].is<int>())
             _effectSetVersion = jsonObject[PTY_EFFECTSETVER];
 
         LoadJSONAndMissingEffects(effectsArray);
 
         // "eef" was the array of effect enabled flags. They have now been integrated in the effects themselves;
         //   this code is there to "migrate" users who already had a serialized effect config on their device
-        if (jsonObject.containsKey("eef"))
+        if (jsonObject["eef"].is<JsonArrayConst>())
         {
             // Try to load effect enabled state from JSON also, default to "enabled" otherwise
             JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
-            int enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
+            size_t enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
 
             for (int i = 0; i < _vEffects.size(); i++)
             {
@@ -285,10 +295,10 @@ public:
         }
 
         // "ivl" contains the effect interval in ms
-        SetInterval(jsonObject.containsKey("ivl") ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
+        SetInterval(jsonObject["ivl"].is<uint>() ? jsonObject["ivl"] : DEFAULT_EFFECT_INTERVAL, true);
 
         // Try to read the effectindex from its own file. If that fails, "cei" may contain the current effect index instead
-        if (!ReadCurrentEffectIndex(_iCurrentEffect) && jsonObject.containsKey("cei"))
+        if (!ReadCurrentEffectIndex(_iCurrentEffect) && jsonObject["cei"].is<size_t>())
             _iCurrentEffect = jsonObject["cei"];
 
         // Make sure that if we read an index, it's sane
@@ -309,11 +319,7 @@ public:
     // The function then sets the "ivl" and "cei" fields in the JSON object to the current effect interval
     // and the current effect index, respectively.
     //
-    // The function creates a nested array ("eef") in the JSON object to store the enabled state of each effect.
-    // It iterates through all effects, and for each effect, it adds a value of 1 to the array if the effect
-    // is enabled, and 0 if it is not.
-    //
-    // Next, the function creates another nested array ("efs") in the JSON object to store the effects themselves.
+    // Next, the function creates a nested array ("efs") in the JSON object to store the effects themselves.
     // It iterates through all effects, and for each effect, it creates a nested object in the effects array
     // and attempts to serialize the effect into this object. If serialization of any effect fails, the function
     // immediately returns false.
@@ -328,11 +334,11 @@ public:
         jsonObject[PTY_PROJECT] = PROJECT_NAME;
         jsonObject[PTY_EFFECTSETVER] = _effectSetVersion;
 
-        JsonArray effectsArray = jsonObject.createNestedArray("efs");
+        JsonArray effectsArray = jsonObject["efs"].to<JsonArray>();
 
         for (auto & effect : _vEffects)
         {
-            JsonObject effectObject = effectsArray.createNestedObject();
+            JsonObject effectObject = effectsArray.add<JsonObject>();
             if (!(effect->SerializeToJSON(effectObject)))
                 return false;
         }
@@ -346,7 +352,7 @@ public:
         return _gfx[iChannel];
     }
 
-    // ShowVU - Control whether VU meter should be draw.  Returns the previous state when set.
+    // ShowVU - Control whether VU meter should be drawn.  Returns the previous state when set.
     virtual bool ShowVU(bool bShow);
     virtual bool IsVUVisible() const;
 
@@ -355,8 +361,8 @@ public:
     // When a global color is set via the remote, we create a fill effect and assign it as the "remote effect"
     // which takes drawing precedence
 
-    void ApplyGlobalColor(CRGB color);
-    void ApplyGlobalPaletteColors();
+    void ApplyGlobalColor(CRGB color) const;
+    void ApplyGlobalPaletteColors() const;
 
     void ClearRemoteColor(bool retainRemoteEffect = false);
 
@@ -547,17 +553,17 @@ public:
         return _vEffects;
     }
 
-    const size_t EffectCount() const
+    size_t EffectCount() const
     {
         return _vEffects.size();
     }
 
-    const bool AreEffectsEnabled() const
+    bool AreEffectsEnabled() const
     {
         return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
     }
 
-    const size_t GetCurrentEffectIndex() const
+    size_t GetCurrentEffectIndex() const
     {
         return _iCurrentEffect;
     }
@@ -627,7 +633,7 @@ public:
 
     void CheckEffectTimerExpired()
     {
-        // If interval is zero, the current effect never expires unless it thas a max effect time set
+        // If interval is zero, the current effect never expires unless it has a max effect time set
 
         if (IsIntervalEternal() && !GetCurrentEffect().HasMaximumEffectTime())
             return;
@@ -652,7 +658,7 @@ public:
         g->CyclePalette(1);
     }
 
-    void PreviousPalette()
+    void PreviousPalette() const
     {
         g()->CyclePalette(-1);
     }

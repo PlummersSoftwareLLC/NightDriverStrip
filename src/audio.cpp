@@ -64,20 +64,30 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         static float lastVU = 0.0;
         constexpr auto VU_DECAY_PER_SECOND = 4.0;
+
+        // Fade out the VU ratio... The current peak goes up at 10x the rate it comes back down,
+        // which is controlled by this constant
+
         if (g_Analyzer._VURatio > lastVU)
-            lastVU = g_Analyzer._VURatio;
+            lastVU += (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND * VU_REACTIVITY_RATIO;
         else
             lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
+
         lastVU = std::max(lastVU, 0.0f);
         lastVU = std::min(lastVU, 2.0f);
         g_Analyzer._VURatioFade = lastVU;
 
         // Instantaneous VURatio
 
+        assert(g_Analyzer._PeakVU >= g_Analyzer._MinVU);
+        
         g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ?
                                 0.0 :
                                 (g_Analyzer._VU - g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
 
+        debugV("VU: %f\n", g_Analyzer._VU);
+        debugV("PeakVU: %f\n", g_Analyzer._PeakVU);
+        debugV("MinVU: %f\n", g_Analyzer._MinVU);
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
 
         // Delay enough time to yield 60fps max
@@ -255,7 +265,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         data.header[0] = ((3 << 4) + 15);
 
         // Change the 0-2 range of the VURatioFade to 0-16 for the PET
-        data.vu = (byte)((g_Analyzer._VURatioFade / 2.0f) * (float)MAXPET);
+        data.vu = (uint8_t)((g_Analyzer._VURatioFade / 2.0f) * (float)MAXPET);
 
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display

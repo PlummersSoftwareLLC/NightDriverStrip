@@ -39,8 +39,8 @@ struct Values
 {
     CAppTime AppTime;                                                       // Keeps track of frame times
     volatile double FreeDrawTime = 0.0;
-    float Brite;
-    uint32_t Watts;
+    float Brite = 0;
+    uint32_t Watts = 0;
     uint32_t FPS = 0;                                                       // Our global framerate
     bool UpdateStarted = false;                                             // Has an OTA update started?
     uint8_t Fader = 255;
@@ -50,4 +50,4 @@ struct Values
 #endif
 };
 
-extern DRAM_ATTR Values g_Values;
+extern Values g_Values;

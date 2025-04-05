@@ -22,11 +22,11 @@
 //
 // Description:
 //
-//   Web server that fulfills requests by serving them from statically
-//   files in flash.  Requires the espressif-esp32 WebServer class.
+//   Web server that fulfills requests by serving them from static
+//   files in flash.  Requires the Espressif-esp32 WebServer class.
 //
 //   This class contains an early attempt at exposing a REST api for
-//   adjusting effect paramters.  I'm in no way attached to it and it
+//   adjusting effect parameters.  I'm in no way attached to it and it
 //   should likely be redone!
 //
 //   Server also exposes basic RESTful API for querying variables etc.
@@ -39,27 +39,26 @@
 
 #pragma once
 
-#include <map>
-#include <WiFi.h>
-#include <FS.h>
-#include <SPIFFS.h>
+#include "deviceconfig.h"
+#include "network.h"
+
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <AsyncJson.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <Arduino.h>
-#include <AsyncJson.h>
-#include <ArduinoJson.h>
+#include <FS.h>
 #include <HTTPClient.h>
-#include "deviceconfig.h"
-#include "effects.h"
-#include "jsonbase.h"
-#include "network.h"
+#include <SPIFFS.h>
+#include <WiFi.h>
+#include <map>
 
 class CWebServer
 {
   private:
     // Template for param to value converter function, used by PushPostParamIfPresent()
     template<typename Tv>
-    using ParamValueGetter = std::function<Tv(AsyncWebParameter *param)>;
+    using ParamValueGetter = std::function<Tv(const AsyncWebParameter *param)>;
 
     // Template for value setting forwarding function, used by PushPostParamIfPresent()
     template<typename Tv>
@@ -106,25 +105,23 @@ class CWebServer
 
     // Convert param value to a specific type and forward it to a setter function that expects that type as an argument
     template<typename Tv>
-    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
+    static bool PushPostParamIfPresent(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter, ParamValueGetter<Tv> getter)
     {
         if (!pRequest->hasParam(paramName, true, false))
             return false;
 
         debugV("found %s", paramName.c_str());
 
-        AsyncWebParameter *param = pRequest->getParam(paramName, true, false);
-
         // Extract the value and pass it off to the setter
-        return setter(getter(param));
+        return setter(getter(pRequest->getParam(paramName, true, false)));
     }
 
     // Generic param value forwarder. The type argument must be implicitly convertable from String!
     //   Some specializations of this are included in the CPP file
     template<typename Tv>
-    static bool PushPostParamIfPresent(AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter)
+    static bool PushPostParamIfPresent(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter)
     {
-        return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](AsyncWebParameter * param) { return param->value(); });
+        return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](const AsyncWebParameter * param) { return param->value(); });
     }
 
     // AddCORSHeaderAndSend(OK)Response
@@ -152,6 +149,7 @@ class CWebServer
 
     // Straightforward support functions
 
+    static void SendBufferOverflowResponse(AsyncWebServerRequest * pRequest);
     static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
     static const std::vector<std::reference_wrapper<SettingSpec>> & LoadDeviceSettingSpecs();
     static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
@@ -182,7 +180,7 @@ class CWebServer
     static void PreviousEffect(AsyncWebServerRequest * pRequest);
 
     // Not static because it uses member _staticStats
-    void GetStatistics(AsyncWebServerRequest * pRequest);
+    void GetStatistics(AsyncWebServerRequest * pRequest) const;
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
     void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
@@ -190,7 +188,7 @@ class CWebServer
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {
             Serial.printf("GET for: %s\n", strUri);
-            AsyncWebServerResponse *response = request->beginResponse_P(200, file.type, file.contents, file.length);
+            AsyncWebServerResponse *response = request->beginResponse(200, file.type, file.contents, file.length);
             if (file.encoding)
             {
                 response->addHeader("Content-Encoding", file.encoding);
