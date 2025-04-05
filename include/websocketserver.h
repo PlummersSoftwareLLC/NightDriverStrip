@@ -78,9 +78,9 @@ public:
     {
         if (!HaveColorDataClients() || leds == nullptr || count == 0)
             return;
-
         const char messageHead[] = "{\"colorData\":[";
-        const char messageTail[] = "]}";
+        const char messageTail[] = "], \"c\":";
+        const char tempTail[] = "}";
 
         char numberBuffer[_maxColorNumberLen + 1];  // Small buffer we ask snprintf to write the color numbers to
         std::basic_string<char, std::char_traits<char>, psram_allocator<char>> colorDataMessage; // (std::string) buffer for the message
@@ -88,7 +88,7 @@ public:
         // Reserve space for message head, "count" LED color numbers with separating commas, and message tail. We're almost
         // certainly over-allocating because we reserve space for "count" times the maximum color number length, which we only
         // get if the hex RGB color code is 0x989680 or higher.
-        colorDataMessage.reserve((sizeof(messageHead) - 1) + (count * (_maxColorNumberLen + 1)) + (sizeof(messageTail) - 1));
+        colorDataMessage.reserve((sizeof(messageHead) - 1) + (sizeof(tempTail)-1) + 1 + (count * (_maxColorNumberLen + 1)) + (sizeof(messageTail) - 1));
         colorDataMessage = messageHead;
 
         snprintf(numberBuffer, sizeof(numberBuffer), "%" PRIu32, toUint32(leds[0]));
@@ -102,6 +102,10 @@ public:
         }
 
         colorDataMessage += messageTail;
+
+        snprintf(numberBuffer, sizeof(numberBuffer), "%" PRIu32, toUint32(_colorDataSocket.count()));
+        colorDataMessage += numberBuffer;
+        colorDataMessage += tempTail;
 
         _colorDataSocket.textAll(colorDataMessage.c_str());
     }

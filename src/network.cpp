@@ -45,6 +45,7 @@ static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 // Static initializers
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
+int wsCount = 0;
 
 #if ENABLE_ESPNOW
 
@@ -778,7 +779,13 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 }
 
                 #if COLORDATA_WEB_SOCKET_ENABLED
-                    webSocketServer.SendColorData(leds, NUM_LEDS);
+                    if(wsCount == 5) {
+                        webSocketServer.SendColorData(leds, NUM_LEDS);
+                        wsCount = 0;
+                    } else {
+                        wsCount++;
+                    }
+                    
                 #endif
             }
 
