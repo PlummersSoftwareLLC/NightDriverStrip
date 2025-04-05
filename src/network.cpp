@@ -779,13 +779,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 }
 
                 #if COLORDATA_WEB_SOCKET_ENABLED
-                    if(wsCount == 5) {
-                        webSocketServer.SendColorData(leds, NUM_LEDS);
-                        wsCount = 0;
-                    } else {
-                        wsCount++;
-                    }
-                    
+                    webSocketServer.SendColorData(leds, NUM_LEDS);    
                 #endif
             }
 

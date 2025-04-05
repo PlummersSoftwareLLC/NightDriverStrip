@@ -78,35 +78,42 @@ public:
     {
         if (!HaveColorDataClients() || leds == nullptr || count == 0)
             return;
+        if(!_colorDataSocket.availableForWriteAll()) {
+            return;
+        }
         const char messageHead[] = "{\"colorData\":[";
-        const char messageTail[] = "], \"c\":";
-        const char tempTail[] = "}";
-
-        char numberBuffer[_maxColorNumberLen + 1];  // Small buffer we ask snprintf to write the color numbers to
+        const char messageTail[] = "]}";
+        
+        char numberBuffer[sizeof(NAME_OF(count)) +_maxColorNumberLen + 1];  // Small buffer we ask snprintf to write the color numbers to
         std::basic_string<char, std::char_traits<char>, psram_allocator<char>> colorDataMessage; // (std::string) buffer for the message
 
         // Reserve space for message head, "count" LED color numbers with separating commas, and message tail. We're almost
         // certainly over-allocating because we reserve space for "count" times the maximum color number length, which we only
         // get if the hex RGB color code is 0x989680 or higher.
-        colorDataMessage.reserve((sizeof(messageHead) - 1) + (sizeof(tempTail)-1) + 1 + (count * (_maxColorNumberLen + 1)) + (sizeof(messageTail) - 1));
+        // worst case would be 1|_maxcolorNumberLen, * count
+        colorDataMessage.reserve((sizeof(messageHead) - 1) + (count * (_maxColorNumberLen +1+1 + 1)) + (sizeof(messageTail) - 1));
         colorDataMessage = messageHead;
-
-        snprintf(numberBuffer, sizeof(numberBuffer), "%" PRIu32, toUint32(leds[0]));
-        colorDataMessage += numberBuffer;
-
+        CRGB activeColor = leds[0];
+        int activeCount = 1;
+        
         for (size_t i = 1; i < count; i++)
         {
-            colorDataMessage += ',';
-            snprintf(numberBuffer, sizeof(numberBuffer), "%" PRIu32, toUint32(leds[i]));
-            colorDataMessage += numberBuffer;
+            if(leds[i] == activeColor) {
+                activeCount++;
+            } else {
+                // New active color, add the data to the message and reset active and count
+                snprintf(numberBuffer, sizeof(numberBuffer), "\"%d|%" PRIu32"\",", activeCount, toUint32(activeColor));
+                colorDataMessage += numberBuffer;
+                activeColor = leds[i];
+                activeCount = 1;    
+            }
         }
+        // Add the last color block to the array
+        snprintf(numberBuffer, sizeof(numberBuffer), "\"%d|%" PRIu32"\"", activeCount, toUint32(activeColor));
+        colorDataMessage += numberBuffer;
 
         colorDataMessage += messageTail;
-
-        snprintf(numberBuffer, sizeof(numberBuffer), "%" PRIu32, toUint32(_colorDataSocket.count()));
-        colorDataMessage += numberBuffer;
-        colorDataMessage += tempTail;
-
+        
         _colorDataSocket.textAll(colorDataMessage.c_str());
     }
 

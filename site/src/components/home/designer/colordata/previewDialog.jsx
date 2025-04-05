@@ -8,9 +8,8 @@ import Canvas from "../canvas";
 const PreviewDialog = ({ open, onClose }) => {
     const { matrixWidth, matrixHeight, framesSocket } = useContext(StatsContext);
 
-    let testFrame = new Array(64 * 32)
     const ws = useRef(null);
-    const [frame, setFrame] = useState(testFrame)
+    const [frame, setFrame] = useState([])
     const [reconnect, setReconnect] = useState(true); // flip boolean to trigger a reconnect, if undefined connection should be closed, don't reconnect. 
     // Setup Websocket reference once. 
     useEffect(() => {
@@ -53,17 +52,21 @@ const PreviewDialog = ({ open, onClose }) => {
             }
         }
     }, [open, reconnect])
-    const draw = (ctx, frameCount) => {
-        if (frame && matrixWidth && matrixHeight) {
+    const draw = (ctx, ) => {
+        if (frame.length > 0 && matrixWidth && matrixHeight) {
             const imageData = ctx.createImageData(matrixWidth, matrixHeight);
+            let pixel = 0;
             for (let i = 0; i < frame.length; i++) {
-                const start = i * 4;
-                const color = frame[i] ? intToRGB(frame[i]) : { r: 0, b: 0, g: 0 };
-                imageData.data[start] = color.r;
-                imageData.data[start + 1] = color.g;
-                imageData.data[start + 2] = color.b;
-                imageData.data[start + 3] = 255; // A in a RGBA notation, Could be replaced with a brightness value later. 
-
+                const [count, colorInt] = frame[i].split("|");
+                const color = colorInt ? intToRGB(+colorInt) : { r: 0, b: 0, g: 0 };
+                for(let j = 0; j < count; j++) {
+                    imageData.data[pixel] = color.r;
+                    imageData.data[pixel + 1] = color.g;
+                    imageData.data[pixel + 2] = color.b;
+                    imageData.data[pixel + 3] = 255; // A in a RGBA notation, Could be replaced with a brightness value later.            
+                    pixel += 4;
+                }
+                
             }
             const newCanvas = document.createElement("canvas");
             newCanvas.setAttribute('width', matrixWidth);
