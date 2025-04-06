@@ -10,6 +10,7 @@ import PropTypes from 'prop-types';
 import ConfigDialog from './config/configDialog';
 import {EffectsContext} from '../../context/effectsContext';
 import httpPrefix from "../../espaddr"
+import PreviewDialog from './designer/colordata/previewDialog';
 
 const resetEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/reset`
 
@@ -34,6 +35,7 @@ const AppPannel = (props) => {
     const [stats, setStats] = useState(config && config.stats !== undefined ? config.stats : true);
     const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
     const [settings, setSettings] = useState(false);
+    const [preview, setPreview] = useState(false);
     const [deviceControlOpen, setDeviceControlOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const {sync} = useContext(EffectsContext);
@@ -108,6 +110,14 @@ const AppPannel = (props) => {
                 </ListItemIcon>
                 <ListItemText primary="Settings"></ListItemText>
             </ListItem>
+            <ListItem>
+                <ListItemIcon>
+                    <IconButton onClick={() => setPreview(preview => !preview)}>
+                        <Icon>smart_display</Icon>
+                    </IconButton>
+                </ListItemIcon>
+                <ListItemText primary="Settings"></ListItemText>
+            </ListItem>
             <ListItem onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
                 <ListItemIcon>
                     <IconButton>
@@ -126,6 +136,7 @@ const AppPannel = (props) => {
             <DesignerPanel open={designer} addNotification={addNotification}/>
         </Box>
         {settings && <ConfigDialog heading={"Device Settings"} open={settings} setOpen={setSettings} saveCallback={sync}></ConfigDialog>}
+        {preview && <PreviewDialog open={preview} onClose={() => setPreview(false)}></PreviewDialog>}
         <Popper open={Boolean(deviceControlOpen)} placement='right' anchorEl={deviceControlOpen}>
             <Box sx={{display: 'flex', flexDirection: 'column', bgcolor: 'background.paper'}}>
                 <Button 
