@@ -63,7 +63,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         // VURatio with a fadeout
 
         static auto lastVU = 0.0f;
-        constexpr auto VU_DECAY_PER_SECOND = 1.25;
+        constexpr auto VU_DECAY_PER_SECOND = 3.00;
 
         // Get the elapsed time since the last frame. We'll calculate this at the right spot from the first loop onwards
         static auto frameDurationSeconds = (millis() - lastFrame) / 1000.0;
