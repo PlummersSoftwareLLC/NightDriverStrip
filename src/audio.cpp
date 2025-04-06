@@ -54,7 +54,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
     for (;;)
     {
-        uint64_t lastFrame = millis();
+        auto lastFrame = millis();
 
         g_Analyzer.RunSamplerPass();
         g_Analyzer.UpdatePeakData();
@@ -62,25 +62,25 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         // VURatio with a fadeout
 
-        static float lastVU = 0.0;
-        constexpr auto VU_DECAY_PER_SECOND = 4.0;
+        static auto lastVU = 0.0f;
+        constexpr auto VU_DECAY_PER_SECOND = 3.00;
 
-        // Fade out the VU ratio... The current peak goes up at 10x the rate it comes back down,
-        // which is controlled by this constant
+        // Get the elapsed time since the last frame. We'll calculate this at the right spot from the first loop onwards
+        static auto frameDurationSeconds = (millis() - lastFrame) / 1000.0;
+
+        // Fade out the VU ratio
 
         if (g_Analyzer._VURatio > lastVU)
-            lastVU += (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND * VU_REACTIVITY_RATIO;
+            lastVU = g_Analyzer._VURatio;
         else
-            lastVU -= (millis() - lastFrame) / 1000.0 * VU_DECAY_PER_SECOND;
+            lastVU -= frameDurationSeconds * VU_DECAY_PER_SECOND;
 
-        lastVU = std::max(lastVU, 0.0f);
-        lastVU = std::min(lastVU, 2.0f);
-        g_Analyzer._VURatioFade = lastVU;
+        g_Analyzer._VURatioFade = std::clamp(lastVU, 0.0f, 2.0f);
 
         // Instantaneous VURatio
 
         assert(g_Analyzer._PeakVU >= g_Analyzer._MinVU);
-        
+
         g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ?
                                 0.0 :
                                 (g_Analyzer._VU - g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
@@ -89,16 +89,20 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         debugV("PeakVU: %f\n", g_Analyzer._PeakVU);
         debugV("MinVU: %f\n", g_Analyzer._MinVU);
         debugV("VURatio: %f\n", g_Analyzer._VURatio);
+        debugV("VURatioFade: %f\n", g_Analyzer._VURatioFade);
 
         // Delay enough time to yield 60fps max
         // We wait a minimum even if busy so we don't Bogart the CPU
 
-        unsigned long elapsed = millis() - lastFrame;
         constexpr auto kMaxFPS = 60;
         const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(max(1.0, targetDelay - elapsed));
+        delay(max(1.0, targetDelay - (millis() - lastFrame)));
 
-        g_Analyzer._AudioFPS = FPS(lastFrame, millis());
+        auto duration = millis() - lastFrame;
+        frameDurationSeconds = duration / 1000.0;
+        g_Analyzer._AudioFPS = FPS(duration);
+
+        debugV("AudioFPS: %d\n", g_Analyzer._AudioFPS);
     }
 }
 
