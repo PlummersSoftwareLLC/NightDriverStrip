@@ -2,7 +2,6 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { wsPrefix } from "../../../../espaddr";
 import { StatsContext } from "../../../../context/statsContext";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
-import { intToRGB } from "../../../../util/color"
 import Canvas from "../canvas";
 
 const PreviewDialog = ({ open, onClose }) => {
@@ -14,7 +13,8 @@ const PreviewDialog = ({ open, onClose }) => {
     // Setup Websocket reference once. 
     useEffect(() => {
         ws.current = new WebSocket(`${wsPrefix}/frames`);
-
+        ws.current.binaryType = "arraybuffer";
+     
         ws.current.onopen = () => {
             console.debug('frames websocket connected');
         };
@@ -44,30 +44,28 @@ const PreviewDialog = ({ open, onClose }) => {
                 return;
             }
             try {
-                const { colorData } = JSON.parse(event.data);
-                setFrame(colorData)
+                const intBuff = new Uint8Array(event.data);
+                setFrame(intBuff);
             } catch (err) {
                 console.log('error proccessing ws message', err);
                 console.debug('data:', event.data)
             }
         }
-    }, [open, reconnect])
-    const draw = (ctx, ) => {
+    }, [open, reconnect]);
+
+    const draw = (ctx,) => {
         if (frame.length > 0 && matrixWidth && matrixHeight) {
             const imageData = ctx.createImageData(matrixWidth, matrixHeight);
-            let pixel = 0;
-            for (let i = 0; i < frame.length; i++) {
-                const [count, colorInt] = frame[i].split("|");
-                const color = colorInt ? intToRGB(+colorInt) : { r: 0, b: 0, g: 0 };
-                for(let j = 0; j < count; j++) {
-                    imageData.data[pixel] = color.r;
-                    imageData.data[pixel + 1] = color.g;
-                    imageData.data[pixel + 2] = color.b;
-                    imageData.data[pixel + 3] = 255; // A in a RGBA notation, Could be replaced with a brightness value later.            
-                    pixel += 4;
-                }
-                
+        
+            let pixel = 0
+            for(let i = 0; i < frame.length; i+=3) {
+                imageData.data[pixel] = frame[i]; 
+                imageData.data[pixel + 1] = frame[i + 1];
+                imageData.data[pixel + 2] = frame[i + 2];
+                imageData.data[pixel + 3] = 255; // A in a RGBA notation, Could be replaced with a brightness value later.            
+                pixel += 4;
             }
+
             const newCanvas = document.createElement("canvas");
             newCanvas.setAttribute('width', matrixWidth);
             newCanvas.setAttribute('height', matrixHeight);
