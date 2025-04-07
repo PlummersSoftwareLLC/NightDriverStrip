@@ -84,22 +84,26 @@ public:
 
     void OnCurrentEffectChanged(size_t currentEffectIndex) override
     {
-        _effectChangeSocket.textAll(str_sprintf("{\"currentEffectIndex\":%zu}", currentEffectIndex));
+        if (_effectChangeSocket.availableForWriteAll())
+            _effectChangeSocket.textAll(str_sprintf("{\"currentEffectIndex\":%zu}", currentEffectIndex));
     }
 
     void OnEffectListDirty() override
     {
-        _effectChangeSocket.textAll("{\"effectListDirty\":true}");
+        if (_effectChangeSocket.availableForWriteAll())
+            _effectChangeSocket.textAll("{\"effectListDirty\":true}");
     }
 
     void OnEffectEnabledStateChanged(size_t effectIndex, bool newState) override
     {
-        _effectChangeSocket.textAll(str_sprintf("{\"effectsEnabledState\":[{\"index\":%zu,\"enabled\":%s}]}", effectIndex, newState ? "true" : "false"));
+        if (_effectChangeSocket.availableForWriteAll())
+            _effectChangeSocket.textAll(str_sprintf("{\"effectsEnabledState\":[{\"index\":%zu,\"enabled\":%s}]}", effectIndex, newState ? "true" : "false"));
     }
 
     void OnIntervalChanged(uint interval) override
     {
-        _effectChangeSocket.textAll(str_sprintf("{\"interval\":%u}", interval));
+        if (_effectChangeSocket.availableForWriteAll())
+            _effectChangeSocket.textAll(str_sprintf("{\"interval\":%u}", interval));
     }
 };
 #endif // WEB_SOCKETS_ANY_ENABLED
