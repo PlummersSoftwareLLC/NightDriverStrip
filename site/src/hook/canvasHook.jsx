@@ -27,6 +27,7 @@ const useCanvas = (draw, scale = 1) => {
         const canvas = canvasRef.current
         const context = canvas.getContext('2d')
         context.scale(scale,scale);
+        context.imageSmoothingEnabled = false;
         const s = scale;
         return () => {
             context.scale(1/s, 1/s);
