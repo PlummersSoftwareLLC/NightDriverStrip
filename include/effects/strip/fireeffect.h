@@ -116,9 +116,7 @@ class FireEffect : public LEDStripEffect
         jsonDoc[PTY_REVERSED] = bReversed;
         jsonDoc[PTY_MIRORRED] = bMirrored;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     virtual ~FireEffect()
@@ -251,9 +249,7 @@ public:
         jsonDoc[PTY_PALETTE] = _palette;
         jsonDoc[PTY_IGNOREGLOBALCOLOR] = _ignoreGlobalColor;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     virtual CRGB GetBlackBodyHeatColor(float temp) const override
@@ -368,9 +364,7 @@ public:
         jsonDoc[PTY_REVERSED] = _Reversed;
         jsonDoc[PTY_COOLING] = _Cooling;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     void Draw() override
@@ -537,9 +531,8 @@ public:
         jsonDoc["trb"] = _Turbo;
         jsonDoc[PTY_MIRORRED] = _Mirrored;
 
-        assert(!jsonDoc.overflowed());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
 
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
     }
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
@@ -707,9 +700,7 @@ class BaseFireEffect : public LEDStripEffect
         jsonDoc[PTY_LEDCOUNT] = LEDCount;
         jsonDoc["clc"] = CellCount;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     virtual CRGB MapHeatToColor(uint8_t temperature)

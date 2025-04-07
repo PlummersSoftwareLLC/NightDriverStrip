@@ -484,9 +484,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         jsonDoc["msf"] = _musicFactor;
         jsonDoc[PTY_COLOR] = _skyColor;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     virtual float StarSize()
