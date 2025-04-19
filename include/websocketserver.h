@@ -85,6 +85,7 @@ public:
     void OnCurrentEffectChanged(size_t currentEffectIndex) override
     {
         if (_effectChangeSocket.availableForWriteAll())
+            // TODO: Ask @Rbergen about changing this key to currentEffect to match the gttp response
             _effectChangeSocket.textAll(str_sprintf("{\"currentEffectIndex\":%zu}", currentEffectIndex));
     }
 
