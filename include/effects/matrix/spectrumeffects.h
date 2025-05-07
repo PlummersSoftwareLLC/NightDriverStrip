@@ -396,11 +396,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                 float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
                 uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
                 colorHighlight.fadeToBlackBy(fadeAmount);
-                pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth, max(0, yOffset-1), colorHighlight);
+                pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
             }
             else
             {
-                pGFXChannel->drawLine(xOffset, max(0, yOffset2-1), xOffset + barWidth, max(0, yOffset2-1), colorHighlight);
+                pGFXChannel->drawLine(xOffset, max(0, yOffset2-1), xOffset + barWidth - 1, max(0, yOffset2-1), colorHighlight);
             }
         }
     }
