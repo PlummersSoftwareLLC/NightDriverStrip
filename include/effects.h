@@ -149,6 +149,7 @@
 #define EFFECT_MATRIX_SILON                            160
 #define EFFECT_MATRIX_PDPGRID                          161
 #define EFFECT_MATRIX_AUDIOSPIKE                       162
+#define EFFECT_MATRIX_CYCLIC_CA                        163
 
 // Hexagon Effects
 #define EFFECT_HEXAGON_OUTER_RING                      201
