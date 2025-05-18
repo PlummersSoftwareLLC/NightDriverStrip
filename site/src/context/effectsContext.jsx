@@ -85,11 +85,14 @@ const EffectsProvider = ({ children }) => {
             ws.current.onmessage = (event) => {
                 const update = JSON.parse(event.data);
                 if (update['currentEffectIndex'] !== undefined) {
+                    // Current effect is actually an index in http endpoint. Ws is newer
+                    // and therefore has a more accurate naming convention. 
                     setCurrentEffect(update['currentEffectIndex']);
                     setRemainingInterval(activeInterval);
                 }
                 if (update['interval'] !== undefined) {
                     const interval = update['interval'];
+                    // Only one interval in the context of a ws push, therefore interval == activeInterval
                     setActiveInterval(interval);
                     setRemainingInterval(interval - remainingInterval);
                     setPinnedEffect(interval === 0);
