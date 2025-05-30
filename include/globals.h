@@ -91,7 +91,6 @@
 #define FASTLED_ESP32_FLASH_LOCK 1
 #define FASTLED_INTERNAL 1               // Suppresses build banners
 #include <FastLED.h>
-using namespace fl;
 
 #include <RemoteDebug.h>
 
