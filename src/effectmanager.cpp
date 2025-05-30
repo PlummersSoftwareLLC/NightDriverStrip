@@ -222,7 +222,11 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
     auto jsonDoc = CreateJsonDocument();
     auto jsonObject = jsonDoc.to<JsonObject>();
 
-    assert(sourceEffect->SerializeToJSON(jsonObject));
+    if (!sourceEffect->SerializeToJSON(jsonObject))
+    {
+        debugE("Could not serialize effect %s to JSON", sourceEffect->FriendlyName().c_str());
+        return nullptr;
+    }
 
     auto copiedEffect = factoryEntry->second(jsonDoc.as<JsonObjectConst>());
 

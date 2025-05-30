@@ -566,7 +566,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
     // The mesmerizer mic isn't quite as sensitive as the M5 mic that the code was originally written for
     // so we adjust by a scalar to get the same effect.
-    
+
     #define AUDIO_MIC_SCALAR            1.5
 
     #define COLOR_ORDER                 EOrder::RGB
@@ -1061,7 +1061,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
 
     #define DEFAULT_EFFECT_INTERVAL         0   // Do not auto-advance unless the button is presssed
-  
+
     #ifndef LED_PIN0
         #define LED_PIN0                    26
     #endif
@@ -1359,9 +1359,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #ifndef SPECTRUMBARBEAT_ENHANCE
         #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
     #endif
-    #ifndef VU_REACTIVITY_RATIO 
+    #ifndef VU_REACTIVITY_RATIO
         #define VU_REACTIVITY_RATIO 10.0                // How much the VU meter reacts to the music going up vs down
-    #endif        
+    #endif
 #endif
 
 
@@ -1705,13 +1705,12 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 // Given a time value for when the last frame took place and the current timestamp returns the number of
 // frames per second, as low as 0.  Never exceeds 999 so you can make some width assumptions.
 
-inline int FPS(uint32_t start, uint32_t end, uint32_t perSecond = MILLIS_PER_SECOND)
+inline int FPS(unsigned long duration, uint32_t perSecond = MILLIS_PER_SECOND)
 {
-    uint32_t duration = end - start;
     if (duration == 0)
         return 999;
 
-    float fpsf = 1.0f / (duration / (float) perSecond);
+    float fpsf = 1.0f / (duration / (float)perSecond);
     int FPS = (int)fpsf;
     if (FPS > 999)
         FPS = 999;

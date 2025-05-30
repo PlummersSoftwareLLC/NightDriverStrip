@@ -51,8 +51,6 @@ bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
         {
             debugI("Attempting to read JSON file %s", fileName.c_str());
 
-            jsonDoc = CreateJsonDocument();
-
             DeserializationError error = deserializeJson(jsonDoc, file);
 
             if (error == DeserializationError::NoMemory)
@@ -79,7 +77,12 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 {
     auto jsonDoc = CreateJsonDocument();
     auto jsonObject = jsonDoc.to<JsonObject>();
-    object.SerializeToJSON(jsonObject);
+
+    if (!object.SerializeToJSON(jsonObject))
+    {
+        debugE("Could not serialize object to JSON, skipping write to %s!", fileName.c_str());
+        return false;
+    }
 
     SPIFFS.remove(fileName);
 

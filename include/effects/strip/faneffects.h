@@ -704,9 +704,7 @@ public:
     jsonDoc["rpm"] = _bReplaceMagenta;
     jsonDoc["sch"] = _sparkleChance;
 
-    assert(!jsonDoc.overflowed());
-
-    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
   }
 
   void Draw() override
@@ -780,9 +778,7 @@ public:
     jsonDoc[PTY_ORDER] = to_value(_order);
     jsonDoc["stp"] = _step;
 
-    assert(!jsonDoc.overflowed());
-
-    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
   }
 
   void Draw() override
@@ -1044,9 +1040,7 @@ public:
     jsonDoc[PTY_ORDER] = to_value(Order);
     jsonDoc[PTY_MULTICOLOR] = bMulticolor ? 1 : 0;
 
-    assert(!jsonDoc.overflowed());
-
-    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+    return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
   }
 
   CRGB GetBlackBodyHeatColorByte(uint8_t temp) const
@@ -1098,7 +1092,7 @@ public:
         if (random(255) < Sparking)
         {
           int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
-          abHeat[y] = ::min((long)MaxSparkTemp, abHeat[y] + random(0, MaxSparkTemp)); 
+          abHeat[y] = ::min((long)MaxSparkTemp, abHeat[y] + random(0, MaxSparkTemp));
         }
       }
     }

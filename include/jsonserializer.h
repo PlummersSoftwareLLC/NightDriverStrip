@@ -51,12 +51,12 @@ constexpr auto to_value(E e) noexcept
 
     struct JsonPsramAllocator : ArduinoJson::Allocator
     {
-        void* allocate(size_t size) override 
+        void* allocate(size_t size) override
         {
             return ps_malloc(size);
         }
 
-        void deallocate(void* pointer) override 
+        void deallocate(void* pointer) override
         {
             free(pointer);
         }
@@ -81,6 +81,21 @@ constexpr auto to_value(E e) noexcept
     }
 
 #endif
+
+inline bool SetIfNotOverflowed(JsonDocument& jsonDoc, JsonObject& jsonObject, const char* location = nullptr)
+{
+    if (jsonDoc.overflowed())
+    {
+        if (location)
+            debugE("JSON document overflowed at: %s", location);
+        else
+            debugE("JSON document overflowed");
+
+        return false;
+    }
+
+    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+}
 
 uint32_t toUint32(const CRGB& color);
 
@@ -109,7 +124,7 @@ namespace ArduinoJson
     {
         return Converter<CRGB>::checkJson(src);
     }
-    
+
     template <>
     struct Converter<CRGBPalette16>
     {

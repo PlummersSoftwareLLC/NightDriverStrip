@@ -101,9 +101,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
         jsonDoc[PTY_SIZE] = _defaultSize;
         jsonDoc[PTY_SPEED] = _defaultSpeed;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override

@@ -419,7 +419,7 @@ class LEDStripEffect : public IJSONSerializable
         for (auto& device : _GFX)
             device->setPixelsF(fPos, count, c, bMerge);
     }
-    
+
     // ClearFrameOnAllChannels
     //
     // Clears ALL the channels
@@ -545,9 +545,7 @@ class LEDStripEffect : public IJSONSerializable
         if (_coreEffect)
             jsonDoc[PTY_COREEFFECT] = 1;
 
-        assert(!jsonDoc.overflowed());
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     virtual bool IsEnabled() const
@@ -607,10 +605,7 @@ class LEDStripEffect : public IJSONSerializable
         jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;
         jsonDoc["hasMaximumEffectTime"] = HasMaximumEffectTime();
 
-        if (jsonDoc.overflowed())
-            debugE("JSON buffer overflow while serializing settings for LEDStripEffect - object incomplete!");
-
-        return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
     // Changes the value for one "known" effect setting. All setting values are passed to this
