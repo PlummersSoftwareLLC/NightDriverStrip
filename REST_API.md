@@ -14,6 +14,7 @@
   - [Copy effect](#copy-effect)
   - [Delete effect](#delete-effect)
   - [Get effect configuration information](#get-effect-configuration-information)
+  - [Get device statistics](#get-device-statistics)
   - [Get device setting specifications](#get-device-setting-specifications)
   - [Device settings](#device-settings)
   - [Set setting with validation](#set-setting-with-validation)
@@ -156,6 +157,37 @@ This endpoint returns a JSON document with information about the detailed config
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with detailed configuration information about the device's effects. |
+
+### Get device statistics
+
+This set of endpoints can be used to retrieve device statics from the device.
+
+#### Static values
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/statistics/static` |
+| Method | GET | |
+| Parameters | | |
+| Response | 200 (OK) | A JSON blob with those device statistics that don't change after device initialization. This includes things like the chip model and number of cores. |
+
+#### Dynamic values
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/statistics/dynamic` |
+| Method | GET | |
+| Parameters | | |
+| Response | 200 (OK) | A JSON blob with those device statistics that change as the device runs. This includes things like CPU load and memory usage. |
+
+#### All values
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/statistics` |
+| Method | GET | |
+| Parameters | | |
+| Response | 200 (OK) | A JSON blob with all device statistics, i.e. the combination of the static and dynamic ones. |
 
 ### Get device setting specifications
 
