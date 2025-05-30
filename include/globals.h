@@ -713,6 +713,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define INCOMING_WIFI_ENABLED   1              // Accepting incoming color data and commands
     #define WAIT_FOR_WIFI           0              // Hold in setup until we have WiFi - for strips without effects
     #define TIME_BEFORE_LOCAL       3              // How many seconds before the lamp times out and shows local content
+    #define ENABLE_OTA              0
 
     #define MAX_BUFFERS             30             // Times 4 channels, but they're only NUM_LEDS big
     #define NUM_CHANNELS            2              // One per spoke
