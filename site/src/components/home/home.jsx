@@ -1,6 +1,6 @@
 import {useState, useMemo, useEffect, useContext} from 'react';
 import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box, Popper, Button} from '@mui/material';
-import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText, Tooltip } from '@mui/material';
 import mainAppStyle from './style';
 import getTheme from '../../theme/theme';
 import NotificationPanel from './notifications/notifications';
@@ -11,6 +11,7 @@ import ConfigDialog from './config/configDialog';
 import {EffectsContext} from '../../context/effectsContext';
 import httpPrefix from "../../espaddr"
 import PreviewDialog from './designer/colordata/previewDialog';
+import { StatsContext } from '../../context/statsContext';
 
 const resetEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/reset`
 
@@ -39,7 +40,9 @@ const AppPannel = (props) => {
     const [deviceControlOpen, setDeviceControlOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const {sync} = useContext(EffectsContext);
+    const { framesSocket } = useContext(StatsContext);
     
+    console.log('framesSocket is', framesSocket);
     // save users state to storage so the page reloads where they left off. 
     useEffect(() => {
         localStorage.setItem('config', JSON.stringify({
@@ -95,37 +98,46 @@ const AppPannel = (props) => {
                     {caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
                     {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
                 ].map(item => 
-                    <ListItem key={item.icon}>
-                        <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
-                            <Icon color={item.flag ? "primary": "action"} >{item.icon}</Icon>
-                        </IconButton></ListItemIcon>
-                        <ListItemText primary={item.caption}/>
-                    </ListItem>)
+                    
+                    <Tooltip title={item.caption} placement="right">
+                        <ListItem key={item.icon}>
+                            <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
+                                <Icon color={item.flag ? "primary": "action"} >{item.icon}</Icon>
+                            </IconButton></ListItemIcon>
+                            <ListItemText primary={item.caption}/>
+                        </ListItem>
+                    </Tooltip>)
             }
-            <ListItem>
-                <ListItemIcon>
-                    <IconButton onClick={() => setSettings(settings => !settings)}>
-                        <Icon>settings</Icon>
-                    </IconButton>
-                </ListItemIcon>
-                <ListItemText primary="Settings"></ListItemText>
-            </ListItem>
-            <ListItem>
-                <ListItemIcon>
-                    <IconButton onClick={() => setPreview(preview => !preview)}>
-                        <Icon>smart_display</Icon>
-                    </IconButton>
-                </ListItemIcon>
-                <ListItemText primary="Settings"></ListItemText>
-            </ListItem>
-            <ListItem onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
-                <ListItemIcon>
-                    <IconButton>
-                        <Icon>settings_power</Icon>
-                    </IconButton>
-                </ListItemIcon>
-                <ListItemText primary="Device Control"></ListItemText>
-            </ListItem>
+            <Tooltip title="Settings" placement="right">
+                <ListItem>
+                    <ListItemIcon>
+                        <IconButton onClick={() => setSettings(settings => !settings)}>
+                            <Icon>settings</Icon>
+                        </IconButton>
+                    </ListItemIcon>
+                    <ListItemText primary="Settings"></ListItemText>
+                </ListItem>
+            </Tooltip>
+            <Tooltip title="Preview frames" placement="right">
+                <ListItem>
+                    <ListItemIcon>
+                        <IconButton disabled={!framesSocket} onClick={() => setPreview(preview => !preview)}>
+                            <Icon>smart_display</Icon>
+                        </IconButton>
+                    </ListItemIcon>
+                    <ListItemText primary="Preview frames"></ListItemText>
+                </ListItem>
+            </Tooltip>
+            <Tooltip title="Device control" placement="right">
+                <ListItem onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
+                    <ListItemIcon>
+                        <IconButton>
+                            <Icon>settings_power</Icon>
+                        </IconButton>
+                    </ListItemIcon>
+                    <ListItemText primary="Device Control"></ListItemText>
+                </ListItem>
+            </Tooltip>
             </List>
         </Drawer>
         <Box

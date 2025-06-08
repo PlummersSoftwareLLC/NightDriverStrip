@@ -39,6 +39,7 @@ const StatsProvider = ({ children }) => {
                 setMatrixWidth(statistics.MATRIX_WIDTH);
                 setProgSize(statistics.PROG_SIZE);
                 setPsRamSize(statistics.PSRAM_SIZE);
+                console.log('frames socket update', statistics.FRAMES_SOCKET);
 
             } catch (err) {
                 console.debug("Aborted Statistics update");
