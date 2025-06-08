@@ -193,6 +193,7 @@ Note: Some defines are board specific, this is noted below.
 | TIME_BEFORE_LOCAL     | How many seconds before the lamp times out and shows local content |
 | ENABLE_NTP            | Set the clock from the web                                         |
 | ENABLE_OTA            | Accept over the air flash updates                                  |
+| COLORDATA_SERVER_ENABLED | Turn on the internal color data server; allows TCP clients to receive updates on what's being displayed on the LEDs that the device is driving. |
 
 | Hardware Specific | Description                                         | Supported Boards             |
 | ----------------- | --------------------------------------------------- | ---------------------------- |
@@ -203,13 +204,22 @@ Note: Some defines are board specific, this is noted below.
 | ENABLE_AUDIO      | Listen for audio from the microphone and process it | M5Stick-C and M5Stick-C Plus |
 | ENABLE_REMOTE     | IR Remote Control                                   | Requires IR Hardware         |
 
-example in platformio.ini (prefix the flags with `-D`, e.g. `ENABLE_WIFI=1` becomes `-DENABLE_WIFI=1`)
+The webserver, which can be enabled using ENABLE_WEBSERVER as indicated, comes with a number of capabilities that can themselves be enabled or disabled individually. Each of them comes with a default enabled state that depends on the values of other defines. The defaults can be overridden by setting the defines explicitly. Do note that enabling a feature is only sensible if its prerequisites are met - those are the conditions that enable the feature by default.
+The following table discusses this.
+
+| Webserver feature | Description | Enabled by default if... |
+| - | - | - |
+| ENABLE_WEB_UI | Enable the on-board web UI | ENABLE_WEBSERVER is 1 |
+| COLORDATA_WEB_SOCKET_ENABLED | Enable the WebSocket for sending color data to connected web UI clients (browsers); required for the effect preview feature of the web UI | ENABLE_WIFI is 1 and ENABLE_WEBSERVER is 1 and COLORDATA_SERVER_ENABLED is 1 |
+| EFFECTS_WEB_SOCKET_ENABLED | Enable the WebSocket for pushing updates to connected web UI clients (browsers) about effects, both activation state and configuration. | ENABLE_WIFI is 1 and ENABLE_WEBSERVER is 1 |
+
+Example in platformio.ini (prefix the flags with `-D`, e.g. `ENABLE_WIFI=1` becomes `-DENABLE_WIFI=1`):
 
 ```INI
 build_flags = -DENABLE_WIFI=1
 ```
 
-example in globals.h:
+Example in globals.h:
 
 ```C++
 #define ENABLE_WIFI 1

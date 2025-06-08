@@ -22,6 +22,9 @@
   - [Effect settings](#effect-settings)
   - [Reset configuration and/or device](#reset-configuration-andor-device)
 - [Postman collection](#postman-collection)
+- [WebSockets](#websockets)
+  - [Effect events](#effect-events)
+  - [Color data](#color-data)
 
 ## Introduction
 
@@ -42,6 +45,8 @@ In the sections below:
 - Parameters for GET requests are query parameters
 - Parameters for POST requests are HTTP POST body key/value pairs
 - Boolean parameters are considered to be true if their value is the text `true` (lower-case only) or any whole number other than 0 (zero).
+
+Besides a REST-like API with endpoints that are to be called by the client, the webserver can also be configured to publish one or two WebSockets. These are discussed at the end of this document.
 
 ## Endpoints
 
@@ -306,3 +311,33 @@ Any parameters that are not provided are considered to be `false`.
 To aid in the use and testing of the endpoints discussed in this document - and particularly those not used by the NightDriverStrip web UI - a [Postman collection file](tools/NightDriverStrip.postman_collection.json) has been provided.
 
 It can be used with the Postman API Client, a free version of which can be [downloaded from the Postman website](https://www.postman.com/downloads/).
+
+## WebSockets
+
+### Effect events
+
+This WebSocket pushes events when certain updates to the effects list take place.
+
+The WebSocket endpoint is: `/ws/effects`
+
+The payload of the textual event message is a small JSON object with one property, which depends on the event.
+This is detailed in the following table.
+
+<!-- markdownlint-disable MD033 -->
+| Event | Property | Value |
+| - | - | - |
+| Current/active effect changed | `currentEffectIndex` | The zero-based index of the effect that is now active, with regards to the effect list returned by the [`/effects` endpoint](#get-effect-list-information). |
+| Effect list contents have changed | `effectListDirty` | The contents of the effects list as returned by the [`/effects` endpoint](#get-effect-list-information) have changed in a way that warrant a reload of that list. Acting on later webSocket events without reloading the effects list may lead to a misrepresentation of the actual status. |
+| Enabled state for an effect has changed | `effectsEnabledState` | The property will contain an array with one entry. That entry is a JSON object with two properties:<br>- `index`: the zero-based index of the effect of which the enabled state has changed<br>- `enabled`: boolean that indicates if the effect is enabled (`true`) or disabled (`false`) |
+| "Next effect" interval has changed | `interval` | The duration that an effect will be active before the device proceeds to the next enabled effect in the effects list, in seconds. |
+<!-- markdownlint-enable MD033 -->
+
+### Color data
+
+This WebSocket pushes color data (frame) packets when the active effect's LED display is updated. To be more precise, it pushes a packet every time the "regular"/TCP color data server pushes out a packet. To be _even_ more precise, it pushes a packet every time that happens, and the WebSocket is ready to process a new outgoing packet.
+In practice, this means a packet may be sent between a few times per second, up to a framerate that's close to that of the regular color data server.
+
+The WebSocket endpoint is: `/ws/effectframes`
+
+The payload of the binary event message is an array of RGB color value byte triples, one per LED in the matrix. It matches the `colors` member of the `ColorDataPacket` C++ class, as declared in ledviewer.h and used in the color data server implementation in network.cpp (the `ColorDataTaskEntry()` function, to be specific).
+Please refer to the source code files mentioned for more information.
