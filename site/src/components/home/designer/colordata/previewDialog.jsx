@@ -5,7 +5,7 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/
 import Canvas from "../canvas";
 
 const PreviewDialog = ({ open, onClose }) => {
-    const { matrixWidth, matrixHeight, framesSocket } = useContext(StatsContext);
+    const { matrixWidth, matrixHeight } = useContext(StatsContext);
 
     const ws = useRef(null);
     const [frame, setFrame] = useState([])
@@ -14,7 +14,7 @@ const PreviewDialog = ({ open, onClose }) => {
     useEffect(() => {
         ws.current = new WebSocket(`${wsPrefix}/frames`);
         ws.current.binaryType = "arraybuffer";
-     
+
         ws.current.onopen = () => {
             console.debug('frames websocket connected');
         };
@@ -56,10 +56,10 @@ const PreviewDialog = ({ open, onClose }) => {
     const draw = (ctx,) => {
         if (frame.length > 0 && matrixWidth && matrixHeight) {
             const imageData = ctx.createImageData(matrixWidth, matrixHeight);
-        
+
             let pixel = 0
-            for(let i = 0; i < frame.length; i+=3) {
-                imageData.data[pixel] = frame[i]; 
+            for (let i = 0; i < frame.length; i += 3) {
+                imageData.data[pixel] = frame[i];
                 imageData.data[pixel + 1] = frame[i + 1];
                 imageData.data[pixel + 2] = frame[i + 2];
                 imageData.data[pixel + 3] = 255; // A in a RGBA notation, Could be replaced with a brightness value later.            
