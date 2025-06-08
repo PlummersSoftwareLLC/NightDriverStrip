@@ -56,7 +56,7 @@ This endpoint returns a JSON document with basic information about the effects o
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/effects` |
+| URL | `/effects` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with information about the device's effect list. The zero-based effect indexes used in other endpoints correspond with the indexes in this list. |
@@ -111,7 +111,7 @@ With this endpoint a previously disabled effect can be enabled. From that moment
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/enableEffect` |
+| URL | `/enableEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect to enable in the device's effect list. |
 | Response | 200 (OK) | An empty OK response. |
@@ -122,7 +122,7 @@ With this endpoint an effect can be moved within the effect list, changing its p
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/moveEffect` |
+| URL | `/moveEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect to move in the device's effect list. |
 | | `newIndex` | The (zero-based) integer index of the place in the device's effect list the effect should be moved to. |
@@ -134,7 +134,7 @@ With this endpoint an effect in the effect list can be copied. The created copy 
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/copyEffect` |
+| URL | `/copyEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect of which a copy should be made. |
 | | | Zero, one or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications); also refer to the [Change effect settings endpoint](#change-effect-settings) for more information. |
@@ -146,7 +146,7 @@ With this endpoint an effect from the effect list can be deleted. Only effects t
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/deleteEffect` |
+| URL | `/deleteEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect that should be deleted from the effect list. |
 | Response | 200 (OK) | An empty OK response if the effect was successfully deleted or the `effectIndex` was out of bounds. |
@@ -158,7 +158,7 @@ This endpoint returns a JSON document with information about the detailed config
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/effectsConfig` |
+| URL | `/effectsConfig` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with detailed configuration information about the device's effects. |
@@ -171,7 +171,7 @@ This set of endpoints can be used to retrieve device statics from the device.
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/statistics/static` |
+| URL | `/statistics/static` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with those device statistics that don't change after device initialization. This includes things like the chip model and number of cores. |
@@ -180,7 +180,7 @@ This set of endpoints can be used to retrieve device statics from the device.
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/statistics/dynamic` |
+| URL | `/statistics/dynamic` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with those device statistics that change as the device runs. This includes things like CPU load and memory usage. |
@@ -189,7 +189,7 @@ This set of endpoints can be used to retrieve device statics from the device.
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/statistics` |
+| URL | `/statistics` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with all device statistics, i.e. the combination of the static and dynamic ones. |
@@ -200,7 +200,7 @@ This endpoint can be used to retrieve the list of known device configuration set
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/specs` |
+| URL | `/settings/specs` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON array with the known device configuration settings. The specifications include for each setting the name, description, type identifier, type name, if validation is available, and lower and upper value boundaries if applicable. |
@@ -221,7 +221,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings` |
+| URL | `/settings` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings. |
@@ -230,7 +230,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings` |
+| URL | `/settings` | |
 | Method | POST | |
 | Parameters | | One or more settings that have been returned by the [Get device setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings, after applying the values in the request's POST parameters. |
@@ -243,7 +243,7 @@ Note that validation is not implemented for all settings; the validation step is
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/validated` |
+| URL | `/settings/validated` | |
 | Method | POST | |
 | Parameters | | Exactly one setting that has been returned by the [Get dvice setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | Validation succeeded and the provided value has been set. |
@@ -255,7 +255,7 @@ This endpoint can be used to retrieve the list of known effect-specific configur
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/effect/specs` |
+| URL | `/settings/effect/specs` | |
 | Method | GET | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the setting specifications for. |
 | Response | 200 (OK) | A JSON array with the known effect-specific configuration settings for the effect with index `effectIndex`. The specifications include for each setting the name, description, type identifier, type name, if validation is available, and lower and upper value boundaries if applicable. |
@@ -276,7 +276,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/effect` |
+| URL | `/settings/effect` | |
 | Method | GET | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the settings for. |
 | Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings. |
@@ -285,7 +285,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/effect` |
+| URL | `/settings/effect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to change settings for. |
 | | | One or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications). |
@@ -299,7 +299,7 @@ Any parameters that are not provided are considered to be `false`.
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/reset` |
+| URL | `/reset` | |
 | Method | POST | |
 | Parameters | `deviceConfig` | A boolean value indicating if device settings should be reset to defaults (`true`/1) or not (`false`/0). |
 | | `effectsConfig` | A boolean value indicating if effect configuration information should be reset to defaults (`true`/1) or not (`false`/0). |
