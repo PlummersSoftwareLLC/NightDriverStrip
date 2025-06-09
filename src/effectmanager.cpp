@@ -107,6 +107,10 @@ void InitEffectsManager()
 
     // We won't need the default factories anymore, so swipe them from memory
     g_ptrEffectFactories->ClearDefaultFactories();
+
+    #if EFFECTS_WEB_SOCKET_ENABLED
+        g_ptrSystem->EffectManager().AddEffectEventListener(g_ptrSystem->WebSocketServer());
+    #endif
 }
 
 //

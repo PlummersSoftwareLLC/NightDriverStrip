@@ -37,6 +37,7 @@
 #include "deviceconfig.h"
 #include "screen.h"
 #include "socketserver.h"
+#include "websocketserver.h"
 #include "remotecontrol.h"
 #include "webserver.h"
 #include "types.h"
@@ -264,6 +265,14 @@ class SystemContainer
     #if INCOMING_WIFI_ENABLED
         SC_FORWARDING_PROPERTY(SocketServer, SocketServer)
     #endif
+
+    // -------------------------------------------------------------
+    // WebSocketServer
+
+    #if WEB_SOCKETS_ANY_ENABLED
+        SC_FORWARDING_PROPERTY(WebSocketServer, WebSocketServer)
+    #endif
+
 
     // -------------------------------------------------------------
     // RemoteControl

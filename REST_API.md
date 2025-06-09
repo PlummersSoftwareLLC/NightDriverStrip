@@ -14,6 +14,7 @@
   - [Copy effect](#copy-effect)
   - [Delete effect](#delete-effect)
   - [Get effect configuration information](#get-effect-configuration-information)
+  - [Get device statistics](#get-device-statistics)
   - [Get device setting specifications](#get-device-setting-specifications)
   - [Device settings](#device-settings)
   - [Set setting with validation](#set-setting-with-validation)
@@ -21,6 +22,9 @@
   - [Effect settings](#effect-settings)
   - [Reset configuration and/or device](#reset-configuration-andor-device)
 - [Postman collection](#postman-collection)
+- [WebSockets](#websockets)
+  - [Effect events](#effect-events)
+  - [Color data](#color-data)
 
 ## Introduction
 
@@ -42,6 +46,8 @@ In the sections below:
 - Parameters for POST requests are HTTP POST body key/value pairs
 - Boolean parameters are considered to be true if their value is the text `true` (lower-case only) or any whole number other than 0 (zero).
 
+Besides a REST-like API with endpoints that are to be called by the client, the webserver can also be configured to publish one or two WebSockets. These are discussed at the end of this document.
+
 ## Endpoints
 
 ### Get effect list information
@@ -50,7 +56,7 @@ This endpoint returns a JSON document with basic information about the effects o
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/effects` |
+| URL | `/effects` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with information about the device's effect list. The zero-based effect indexes used in other endpoints correspond with the indexes in this list. |
@@ -105,7 +111,7 @@ With this endpoint a previously disabled effect can be enabled. From that moment
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/enableEffect` |
+| URL | `/enableEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect to enable in the device's effect list. |
 | Response | 200 (OK) | An empty OK response. |
@@ -116,7 +122,7 @@ With this endpoint an effect can be moved within the effect list, changing its p
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/moveEffect` |
+| URL | `/moveEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect to move in the device's effect list. |
 | | `newIndex` | The (zero-based) integer index of the place in the device's effect list the effect should be moved to. |
@@ -128,7 +134,7 @@ With this endpoint an effect in the effect list can be copied. The created copy 
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/copyEffect` |
+| URL | `/copyEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect of which a copy should be made. |
 | | | Zero, one or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications); also refer to the [Change effect settings endpoint](#change-effect-settings) for more information. |
@@ -140,7 +146,7 @@ With this endpoint an effect from the effect list can be deleted. Only effects t
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/deleteEffect` |
+| URL | `/deleteEffect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index of the effect that should be deleted from the effect list. |
 | Response | 200 (OK) | An empty OK response if the effect was successfully deleted or the `effectIndex` was out of bounds. |
@@ -152,10 +158,41 @@ This endpoint returns a JSON document with information about the detailed config
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/effectsConfig` |
+| URL | `/effectsConfig` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with detailed configuration information about the device's effects. |
+
+### Get device statistics
+
+This set of endpoints can be used to retrieve device statistics from the device.
+
+#### Static values
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/statistics/static` | |
+| Method | GET | |
+| Parameters | | |
+| Response | 200 (OK) | A JSON blob with those device statistics that don't change after device initialization. This includes things like the chip model and number of cores. |
+
+#### Dynamic values
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/statistics/dynamic` | |
+| Method | GET | |
+| Parameters | | |
+| Response | 200 (OK) | A JSON blob with those device statistics that change as the device runs. This includes things like CPU load and memory usage. |
+
+#### All values
+
+| Property| Value | Explanation |
+|-|-|-|
+| URL | `/statistics` | |
+| Method | GET | |
+| Parameters | | |
+| Response | 200 (OK) | A JSON blob with all device statistics, i.e. the combination of the static and dynamic ones. |
 
 ### Get device setting specifications
 
@@ -163,7 +200,7 @@ This endpoint can be used to retrieve the list of known device configuration set
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/specs` |
+| URL | `/settings/specs` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON array with the known device configuration settings. The specifications include for each setting the name, description, type identifier, type name, if validation is available, and lower and upper value boundaries if applicable. |
@@ -184,7 +221,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings` |
+| URL | `/settings` | |
 | Method | GET | |
 | Parameters | | |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings. |
@@ -193,7 +230,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings` |
+| URL | `/settings` | |
 | Method | POST | |
 | Parameters | | One or more settings that have been returned by the [Get device setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings, after applying the values in the request's POST parameters. |
@@ -206,7 +243,7 @@ Note that validation is not implemented for all settings; the validation step is
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/validated` |
+| URL | `/settings/validated` | |
 | Method | POST | |
 | Parameters | | Exactly one setting that has been returned by the [Get dvice setting specifications endpoint](#get-device-setting-specifications). |
 | Response | 200 (OK) | Validation succeeded and the provided value has been set. |
@@ -218,7 +255,7 @@ This endpoint can be used to retrieve the list of known effect-specific configur
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/effect/specs` |
+| URL | `/settings/effect/specs` | |
 | Method | GET | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the setting specifications for. |
 | Response | 200 (OK) | A JSON array with the known effect-specific configuration settings for the effect with index `effectIndex`. The specifications include for each setting the name, description, type identifier, type name, if validation is available, and lower and upper value boundaries if applicable. |
@@ -239,7 +276,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/effect` |
+| URL | `/settings/effect` | |
 | Method | GET | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to retrieve the settings for. |
 | Response | 200 (OK) | A JSON blob with the current values for the effect's configuration settings. |
@@ -248,7 +285,7 @@ When changing settings:
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/settings/effect` |
+| URL | `/settings/effect` | |
 | Method | POST | |
 | Parameters | `effectIndex` | The (zero-based) integer index in the device's effect list of the effect to change settings for. |
 | | | One or more settings that have been returned by the [Get effect setting specifications endpoint](#get-effect-setting-specifications). |
@@ -262,7 +299,7 @@ Any parameters that are not provided are considered to be `false`.
 
 | Property| Value | Explanation |
 |-|-|-|
-| URL | `/reset` |
+| URL | `/reset` | |
 | Method | POST | |
 | Parameters | `deviceConfig` | A boolean value indicating if device settings should be reset to defaults (`true`/1) or not (`false`/0). |
 | | `effectsConfig` | A boolean value indicating if effect configuration information should be reset to defaults (`true`/1) or not (`false`/0). |
@@ -274,3 +311,33 @@ Any parameters that are not provided are considered to be `false`.
 To aid in the use and testing of the endpoints discussed in this document - and particularly those not used by the NightDriverStrip web UI - a [Postman collection file](tools/NightDriverStrip.postman_collection.json) has been provided.
 
 It can be used with the Postman API Client, a free version of which can be [downloaded from the Postman website](https://www.postman.com/downloads/).
+
+## WebSockets
+
+### Effect events
+
+This WebSocket pushes events when certain updates to the effects list take place. This facilitates a more accurate way of showing the current state of the effects set than by periodic polling of the effects endpoints. For one, changes to the active effect and/or the effect interval that are triggered by the IR remote control will be communicated to clients through WebSocket events, where these are invisible between polling calls to clients that rely solely on that.
+
+The WebSocket endpoint is: `/ws/effects`
+
+<!-- markdownlint-disable MD033 -->
+The payload of the textual event message is a small JSON object with one property, which depends on the event. <br>This is detailed in the following table.
+
+| Event | Property | Value |
+| - | - | - |
+| Current/active effect changed | `currentEffectIndex` | The zero-based index of the effect that is now active, with regards to the effect list returned by the [`/effects` endpoint](#get-effect-list-information). |
+| Effect list contents have changed | `effectListDirty` | The contents of the effects list as returned by the [`/effects` endpoint](#get-effect-list-information) have changed in a way that warrant a reload of that list. Acting on later webSocket events without reloading the effects list may lead to a misrepresentation of the actual status. |
+| Enabled state for an effect has changed | `effectsEnabledState` | The property will contain an array with one entry. That entry is a JSON object with two properties:<br>- `index`: the zero-based index of the effect of which the enabled state has changed<br>- `enabled`: boolean that indicates if the effect is enabled (`true`) or disabled (`false`) |
+| "Next effect" interval has changed | `interval` | The duration that an effect will be active before the device proceeds to the next enabled effect in the effects list, in seconds. |
+<!-- markdownlint-enable MD033 -->
+
+### Color data
+
+This WebSocket pushes color data (frame) packets when the active effect's LED display is updated. To be more precise, it pushes a packet every time the "regular"/TCP color data server pushes out a packet. To be _even_ more precise, it pushes a packet every time that happens, and the WebSocket is ready to process a new outgoing packet.
+In practice, this means a packet may be sent between a few times per second, up to a framerate that's close to that of the regular color data server.
+
+The WebSocket endpoint is: `/ws/effectframes`
+
+<!-- markdownlint-disable MD033 -->
+The payload of the binary event message is an array of RGB color value byte triples, one per LED in the matrix. It matches the `colors` member of the `ColorDataPacket` C++ class, as declared in ledviewer.h and used in the color data server implementation in network.cpp (the `ColorDataTaskEntry()` function, to be specific). <br>Please refer to the source code files mentioned for more information.
+<!-- markdownlint-enable MD033 -->

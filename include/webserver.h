@@ -55,6 +55,16 @@
 
 class CWebServer
 {
+  public:
+
+    enum class StatisticsType : uint8_t
+    {
+        None    = 0,
+        Static  = 1 << 0,
+        Dynamic = 1 << 1,
+        All     = Static | Dynamic
+    };
+
   private:
     // Template for param to value converter function, used by PushPostParamIfPresent()
     template<typename Tv>
@@ -180,7 +190,7 @@ class CWebServer
     static void PreviousEffect(AsyncWebServerRequest * pRequest);
 
     // Not static because it uses member _staticStats
-    void GetStatistics(AsyncWebServerRequest * pRequest) const;
+    void GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType statsType = StatisticsType::All) const;
 
     // This registers a handler for GET requests for one of the known files embedded in the firmware.
     void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
@@ -199,14 +209,29 @@ class CWebServer
     }
 
   public:
-
     CWebServer()
         : _server(NetworkPort::Webserver), _staticStats()
     {}
 
     // begin - register page load handlers and start serving pages
     void begin();
+
+    void AddWebSocket(AsyncWebSocket& webSocket)
+    {
+        _server.addHandler(&webSocket);
+    }
 };
+
+inline CWebServer::StatisticsType operator|(CWebServer::StatisticsType lhs, CWebServer::StatisticsType rhs)
+{
+    return static_cast<CWebServer::StatisticsType>(to_value(lhs) | to_value(rhs));
+}
+
+inline CWebServer::StatisticsType operator&(CWebServer::StatisticsType lhs, CWebServer::StatisticsType rhs)
+{
+    return static_cast<CWebServer::StatisticsType>(to_value(lhs) & to_value(rhs));
+}
+
 
 // Set value in lambda using a forwarding function. Always returns true
 #define SET_VALUE(functionCall) [&](auto value) { functionCall; return true; }

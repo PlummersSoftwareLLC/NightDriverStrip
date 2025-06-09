@@ -97,6 +97,8 @@ inline bool SetIfNotOverflowed(JsonDocument& jsonDoc, JsonObject& jsonObject, co
     return jsonObject.set(jsonDoc.as<JsonObjectConst>());
 }
 
+uint32_t toUint32(const CRGB& color);
+
 namespace ArduinoJson
 {
     template <>
@@ -104,7 +106,7 @@ namespace ArduinoJson
     {
         static bool toJson(const CRGB& color, JsonVariant dst)
         {
-            return dst.set((uint32_t)((color.r << 16) | (color.g << 8) | color.b));
+            return dst.set(toUint32(color));
         }
 
         static CRGB fromJson(JsonVariantConst src)
