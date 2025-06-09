@@ -321,8 +321,7 @@ This WebSocket pushes events when certain updates to the effects list take place
 The WebSocket endpoint is: `/ws/effects`
 
 <!-- markdownlint-disable MD033 -->
-The payload of the textual event message is a small JSON object with one property, which depends on the event.<br>
-This is detailed in the following table.
+The payload of the textual event message is a small JSON object with one property, which depends on the event. <br>This is detailed in the following table.
 
 | Event | Property | Value |
 | - | - | - |
@@ -340,6 +339,5 @@ In practice, this means a packet may be sent between a few times per second, up 
 The WebSocket endpoint is: `/ws/effectframes`
 
 <!-- markdownlint-disable MD033 -->
-The payload of the binary event message is an array of RGB color value byte triples, one per LED in the matrix. It matches the `colors` member of the `ColorDataPacket` C++ class, as declared in ledviewer.h and used in the color data server implementation in network.cpp (the `ColorDataTaskEntry()` function, to be specific).<br>
-Please refer to the source code files mentioned for more information.
+The payload of the binary event message is an array of RGB color value byte triples, one per LED in the matrix. It matches the `colors` member of the `ColorDataPacket` C++ class, as declared in ledviewer.h and used in the color data server implementation in network.cpp (the `ColorDataTaskEntry()` function, to be specific). <br>Please refer to the source code files mentioned for more information.
 <!-- markdownlint-enable MD033 -->

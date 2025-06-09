@@ -208,7 +208,6 @@ Note: Some defines are board specific, this is noted below.
 The webserver, which can be enabled using ENABLE_WEBSERVER as indicated, comes with a number of capabilities that can themselves be enabled or disabled individually. Each of them comes with a default enabled state that depends on the values of other defines. The defaults can be overridden by setting the defines explicitly. Do note that enabling a feature is only sensible if its prerequisites are met - those are the conditions that enable the feature by default.<br>The following table discusses this.
 <!-- markdownlint-enable MD033 -->
 
-
 | Webserver feature | Description | Enabled by default if... |
 | - | - | - |
 | ENABLE_WEB_UI | Enable the on-board web UI | ENABLE_WEBSERVER is 1 |
