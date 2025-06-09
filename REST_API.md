@@ -165,7 +165,7 @@ This endpoint returns a JSON document with information about the detailed config
 
 ### Get device statistics
 
-This set of endpoints can be used to retrieve device statics from the device.
+This set of endpoints can be used to retrieve device statistics from the device.
 
 #### Static values
 
@@ -316,14 +316,14 @@ It can be used with the Postman API Client, a free version of which can be [down
 
 ### Effect events
 
-This WebSocket pushes events when certain updates to the effects list take place.
+This WebSocket pushes events when certain updates to the effects list take place. This facilitates a more accurate way of showing the current state of the effects set than by periodic polling of the effects endpoints. For one, changes to the active effect and/or the effect interval that are triggered by the IR remote control will be communicated to clients through WebSocket events, where these are invisible between polling calls to clients that rely solely on that.
 
 The WebSocket endpoint is: `/ws/effects`
 
-The payload of the textual event message is a small JSON object with one property, which depends on the event.
+<!-- markdownlint-disable MD033 -->
+The payload of the textual event message is a small JSON object with one property, which depends on the event.<br>
 This is detailed in the following table.
 
-<!-- markdownlint-disable MD033 -->
 | Event | Property | Value |
 | - | - | - |
 | Current/active effect changed | `currentEffectIndex` | The zero-based index of the effect that is now active, with regards to the effect list returned by the [`/effects` endpoint](#get-effect-list-information). |
@@ -339,5 +339,7 @@ In practice, this means a packet may be sent between a few times per second, up 
 
 The WebSocket endpoint is: `/ws/effectframes`
 
-The payload of the binary event message is an array of RGB color value byte triples, one per LED in the matrix. It matches the `colors` member of the `ColorDataPacket` C++ class, as declared in ledviewer.h and used in the color data server implementation in network.cpp (the `ColorDataTaskEntry()` function, to be specific).
+<!-- markdownlint-disable MD033 -->
+The payload of the binary event message is an array of RGB color value byte triples, one per LED in the matrix. It matches the `colors` member of the `ColorDataPacket` C++ class, as declared in ledviewer.h and used in the color data server implementation in network.cpp (the `ColorDataTaskEntry()` function, to be specific).<br>
 Please refer to the source code files mentioned for more information.
+<!-- markdownlint-enable MD033 -->
