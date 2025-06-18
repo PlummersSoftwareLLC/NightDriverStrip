@@ -188,3 +188,8 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
         }
     }
 }
+
+uint32_t toUint32(const CRGB& color)
+{
+    return (uint32_t)((color.r << 16) | (color.g << 8) | color.b);
+}

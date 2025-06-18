@@ -721,6 +721,15 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
     {
         LEDViewer _viewer(NetworkPort::ColorServer);
         int socket = -1;
+        bool wsListenersPresent = false;
+        BaseFrameEventListener frameEventListener;
+
+        auto& effectManager = g_ptrSystem->EffectManager();
+        #if COLORDATA_WEB_SOCKET_ENABLED
+            auto& webSocketServer = g_ptrSystem->WebSocketServer();
+        #endif
+
+        effectManager.AddFrameEventListener(frameEventListener);
 
         for(;;)
         {
@@ -745,37 +754,42 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
             if (socket < 0)
                 socket = _viewer.CheckForConnection();
 
-            while (socket >= 0)
+            auto leds = effectManager.g()->leds;
+
+            if (frameEventListener.CheckAndClearNewFrameAvailable() && leds != nullptr)
             {
-                auto& effectManager = g_ptrSystem->EffectManager();
-
-                if (effectManager.IsNewFrameAvailable())
+                if (socket >= 0)
                 {
-                    effectManager.SetNewFrameAvailable(false);
-
                     debugV("Sending color data packet");
                     // Potentially too large for the stack, so we allocate it on the heap instead
                     std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
                     pPacket->header = COLOR_DATA_PACKET_HEADER;
                     pPacket->width  = effectManager.g()->width();
                     pPacket->height = effectManager.g()->height();
-                    if (effectManager.g()->leds != nullptr)
-                    {
-                        memcpy(pPacket->colors, effectManager.g()->leds, sizeof(CRGB) * NUM_LEDS);
+                    memcpy(pPacket->colors, leds, sizeof(CRGB) * NUM_LEDS);
 
-                        if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
-                        {
-                            // If anything goes wrong, we close the socket so it can accept new incoming attempts
-                            debugW("Error on color data socket, so closing");
-                            close(socket);
-                            socket = -1;
-                            break;
-                        }
+                    if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
+                    {
+                        // If anything goes wrong, we close the socket so it can accept new incoming attempts
+                        debugW("Error on color data socket, so closing");
+                        close(socket);
+                        socket = -1;
                     }
                 }
-                delay(10);
+
+                #if COLORDATA_WEB_SOCKET_ENABLED
+                    webSocketServer.SendColorData(leds, NUM_LEDS);
+                #endif
             }
-            delay(1000);
+
+            #if COLORDATA_WEB_SOCKET_ENABLED
+                wsListenersPresent = webSocketServer.HaveColorDataClients();
+            #endif
+
+            if (socket >= 0 || wsListenersPresent)
+                delay(10);
+            else
+                delay(1000);
         }
     }
 #endif // COLORDATA_SERVER_ENABLED
@@ -814,6 +828,11 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 if (connectResult == WiFiConnectResult::Connected)
                 {
                     millisAtLastConnected = millis();
+
+                    #if WEB_SOCKETS_ANY_ENABLED
+                        // It's recommended to clean up any stale web socket clients every second or so
+                        g_ptrSystem->WebSocketServer().CleanupClients();
+                    #endif
                 }
                 else
                 {
