@@ -35,6 +35,8 @@
 #include <sys/time.h>
 #include <optional>
 #include <WString.h>
+#include <memory>                      // for std::shared_ptr^
+
 
 #ifndef MICROS_PER_SECOND
     #define MICROS_PER_SECOND 1000000
