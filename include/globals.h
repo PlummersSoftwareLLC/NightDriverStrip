@@ -1686,6 +1686,24 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #define IR_REMOTE_PIN   25
 #endif
 
+// Set and use for I2S input.
+#ifdef USE_I2S_AUDIO_PINS
+  // Bit clock
+  #ifndef I2S_BCLK_PIN
+    #define I2S_BCLK_PIN   39
+  #endif
+
+  // Word select clock.
+  #ifndef I2S_WS_PIN
+    #define I2S_WS_PIN     38
+  #endif
+
+  #ifndef I2S_DATA_PIN
+    #define I2S_DATA_PIN     INPUT_PIN
+  #endif
+#endif
+
+
 
 // Custom WiFi Commands
 //

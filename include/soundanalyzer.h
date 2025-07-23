@@ -544,7 +544,7 @@ public:
         M5.Speaker.end();
         M5.Mic.begin();
 
-    #elif ELECROW
+    #elif ELECROW || USE_I2S_AUDIO
 
         const i2s_config_t i2s_config = {
                 .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX),
@@ -560,8 +560,8 @@ public:
 
             // i2s pin configuration
             const i2s_pin_config_t pin_config = {
-                .bck_io_num = 39,
-                .ws_io_num = 38,
+                .bck_io_num = I2S_BCLK_PIN,
+                .ws_io_num = I2S_WS_PIN,
                 .data_out_num = -1,  // not used
                 .data_in_num = INPUT_PIN
             };
@@ -570,33 +570,23 @@ public:
             ESP_ERROR_CHECK( i2s_set_pin(I2S_NUM_0, &pin_config) );
             ESP_ERROR_CHECK( i2s_start(I2S_NUM_0) );
 
-    #elif TTGO || MESMERIZER || SPECTRUM_WROVER_KIT
+    #else
 
+        // This block is  TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other I2S.
+        //
         i2s_config_t i2s_config;
-        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
+        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);
+        // Note: Post IDF4, I2S_MODE_ADC_BUILT_IN is no longer supported
+        // and it was never available on models after original ESP32-Nothing.
+        // See: https://github.com/espressif/arduino-esp32/issues/9564
+        #if defined(I2S_MODE_ADC_BUILT_IN)
+        i2s_config.mode |= I2S_MODE_ADC_BUILT_IN;
+        #endif
         i2s_config.sample_rate = SAMPLING_FREQUENCY;
         i2s_config.dma_buf_len = MAX_SAMPLES;
         i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
         i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
         i2s_config.use_apll = false;
-        i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
-        i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
-        i2s_config.dma_buf_count = 2;
-
-        ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
-        ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, nullptr));
-        ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
-
-    #else
-
-        i2s_config_t i2s_config;
-        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
-        i2s_config.sample_rate = SAMPLING_FREQUENCY;
-        i2s_config.dma_buf_len = MAX_SAMPLES;
-        i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
-        i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
-        i2s_config.use_apll = false,
         i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
         i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
         i2s_config.dma_buf_count = 2;
