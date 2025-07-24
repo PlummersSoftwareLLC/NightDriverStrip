@@ -1687,7 +1687,7 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #endif
 
 // Set and use for I2S input.
-#ifdef USE_I2S_AUDIO_PINS
+#if USE_I2S_AUDIO_PINS || ELECROW
   // Bit clock
   #ifndef I2S_BCLK_PIN
     #define I2S_BCLK_PIN   39
