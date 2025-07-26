@@ -28,6 +28,12 @@
 #pragma once
 
 #include <utility>
+// Retire this test once Arduino3 fully lands.
+#include <esp_arduino_version.h>
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+   #include_next <Network.h> // For wl_status_t, etc. (case matters)
+#endif
+#include "esp_mac.h"
 
 #include "types.h"
 
