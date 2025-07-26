@@ -32,7 +32,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>                      // for std::shared_ptr^
+#include <memory>                      // for std::shared_ptr
 #include <optional>
 #include <sys/time.h>
 #include <WString.h>
