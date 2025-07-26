@@ -32,8 +32,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <sys/time.h>
+#include <memory>                      // for std::shared_ptr^
 #include <optional>
+#include <sys/time.h>
 #include <WString.h>
 
 #ifndef MICROS_PER_SECOND
