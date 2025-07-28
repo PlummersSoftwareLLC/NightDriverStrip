@@ -101,6 +101,7 @@
     #include "effects/matrix/PatternNoiseSmearing.h"
     #include "effects/matrix/PatternQR.h"
     #include "effects/matrix/PatternAnimatedGIF.h"
+    #include "effects/matrix/PatternCyclicCA.h"
 
   #if ENABLE_WIFI
     #include "effects/matrix/PatternSubscribers.h"
@@ -117,6 +118,7 @@
 // Inform the linker which effects have setting specs, and in which class member
 
 INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
+// INIT_EFFECT_SETTING_SPECS(PatternCyclicCA, mySettingSpecs);
 
 #if USE_HUB75 && ENABLE_WIFI
     INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);
@@ -297,6 +299,7 @@ void LoadEffectFactories()
         ADD_EFFECT(EFFECT_MATRIX_MANDALA,           PatternMandala);
         ADD_EFFECT(EFFECT_MATRIX_MUNCH,             PatternMunch);
         ADD_EFFECT(EFFECT_MATRIX_MAZE,              PatternMaze);
+        ADD_EFFECT(EFFECT_MATRIX_CYCLIC_CA,         PatternCyclicCA);
 
     #elif UMBRELLA
 
