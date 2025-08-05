@@ -282,11 +282,17 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "M5Demo"
     #endif
 
-    #define MATRIX_WIDTH            144*5+38
-    #define MATRIX_HEIGHT           1
+    #ifdef PDPWOPR
+        #define MATRIX_WIDTH            16
+        #define MATRIX_HEIGHT           16
+    #else
+        #define MATRIX_WIDTH            144*5+38
+        #define MATRIX_HEIGHT           1
+    #endif
+
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
     #define NUM_CHANNELS            1
-    #define COLOR_ORDER             EOrder::RGB
+    #define COLOR_ORDER             EOrder::GRB
 
     #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
     #define ENABLE_WIFI                 1   // Connect to WiFi
