@@ -282,7 +282,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define PROJECT_NAME            "M5Demo"
     #endif
 
-    #ifdef PDPWOPR
+    #ifdef EFFECTS_PDPWOPR
         #define MATRIX_WIDTH            16
         #define MATRIX_HEIGHT           16
     #else
