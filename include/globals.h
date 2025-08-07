@@ -528,55 +528,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define LED_PIN0 32
     #endif
 
-#elif MESMERIZER
-
-    // This project uses a HUB75 matrix (standard 64 pixels wide and 32 high), to show a wide range of
-    // effects. Its primary target device is the Mesmerizer board designed by Dave Plummer, but has been
-    // known to work with at least one other type of device as well.
-
-    #ifndef PROJECT_NAME
-    #define PROJECT_NAME                "Mesmerizer"
-    #endif
-
-    #define SHOW_FPS_ON_MATRIX          0
-    #define ENABLE_AUDIOSERIAL          0   // Report peaks at 2400baud on serial port for PETRock consumption
-    #define ENABLE_WIFI                 1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED       1   // Accepting incoming color data and commands
-    #define WAIT_FOR_WIFI               0   // Hold in setup until we have WiFi - for strips without effects
-    #define TIME_BEFORE_LOCAL           2   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_WEBSERVER            1   // Turn on the internal webserver
-    #define ENABLE_NTP                  1   // Set the clock from the web
-    #define ENABLE_OTA                  1   // Accept over the air flash updates
-    #define ENABLE_REMOTE               1   // IR Remote Control
-    #define ENABLE_AUDIO                1   // Listen for audio from the microphone and process it
-    #define SCALE_AUDIO_EXPONENTIAL     0
-    #define EFFECT_PERSISTENCE_CRITICAL 1   // Require effects serialization to succeed
-
-    #define DEFAULT_EFFECT_INTERVAL     (MILLIS_PER_SECOND * 60 * 2)
-    #define MILLIS_PER_FRAME            0
-
-    #define NUM_CHANNELS                1
-    #define RING_SIZE_0                 24
-    #define BONUS_PIXELS                0
-    #define MATRIX_WIDTH                64
-    #define MATRIX_HEIGHT               32
-    #define NUM_FANS                    128
-    #define FAN_SIZE                    16
-    #define NUM_BANDS                   16
-    #define NUM_LEDS                    (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define IR_REMOTE_PIN               39
-    #define INPUT_PIN                   36
-    #define LED_FAN_OFFSET_BU           6
-
-    #define TOGGLE_BUTTON_1             0
-
-    // The mesmerizer mic isn't quite as sensitive as the M5 mic that the code was originally written for
-    // so we adjust by a scalar to get the same effect.
-
-    #define AUDIO_MIC_SCALAR            1.5
-
-    #define COLOR_ORDER                 EOrder::RGB
-
 #elif TTGO
 
     // Variant of Spectrum set up for a TTGO using a MAX4466 microphone on pin27
@@ -1248,32 +1199,74 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This is a simple demo configuration used when no other project is defined; it's only purpose is
     // to serve as a build to be run for [all-deps]
 
-    #define MATRIX_WIDTH            144
-    #define MATRIX_HEIGHT           8
-    #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
-    #define NUM_CHANNELS            8
-    #define NUM_RINGS               5
-    #define RING_SIZE_0             24
+    #ifndef MATRIX_WIDTH
+        #define MATRIX_WIDTH            144
+    #endif
+    #ifndef MATRIX_HEIGHT
+        #define MATRIX_HEIGHT           8
+    #endif
+    #ifndef NUM_LEDS
+        #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
+    #endif
+    #ifndef NUM_CHANNELS
+        #define NUM_CHANNELS            8
+    #endif
+    #ifndef NUM_RINGS
+        #define NUM_RINGS               5
+    #endif
+    #ifndef RING_SIZE_0
+        #define RING_SIZE_0             24
+    #endif
 
     // Once you have a working project, selectively enable various additional features by setting
     // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
-    #define ENABLE_AUDIO            1
-    #define ENABLE_WIFI             1   // Connect to WiFi
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
-    #define ENABLE_NTP              1   // Set the clock from the web
-    #define ENABLE_OTA              1
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #ifndef ENABLE_AUDIO
+        #define ENABLE_AUDIO            1
+    #endif
+    #ifndef ENABLE_WIFI
+        #define ENABLE_WIFI             1   // Connect to WiFi
+    #endif
+    #ifndef INCOMING_WIFI_ENABLED
+        #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #endif
+    #ifndef TIME_BEFORE_LOCAL
+        #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
+    #endif
+    #ifndef ENABLE_NTP
+        #define ENABLE_NTP              1   // Set the clock from the web
+    #endif
+    #ifndef ENABLE_OTA
+        #define ENABLE_OTA              1
+    #endif
+    #ifndef ENABLE_WEBSERVER
+        #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #endif
 
-    #define LED_PIN0         5
-    #define LED_PIN1        16
-    #define LED_PIN2        17
-    #define LED_PIN3        18
-    #define LED_PIN4        32
-    #define LED_PIN5        33
-    #define LED_PIN6        23
-    #define LED_PIN7        22
+    #ifndef LED_PIN0
+        #define LED_PIN0         5
+    #endif
+    #ifndef LED_PIN1
+        #define LED_PIN1        16
+    #endif
+    #ifndef LED_PIN2
+        #define LED_PIN2        17
+    #endif
+    #ifndef LED_PIN3
+        #define LED_PIN3        18
+    #endif
+    #ifndef LED_PIN4
+        #define LED_PIN4        32
+    #endif
+    #ifndef LED_PIN5
+        #define LED_PIN5        33
+    #endif
+    #ifndef LED_PIN6
+        #define LED_PIN6        23
+    #endif
+    #ifndef LED_PIN7
+        #define LED_PIN7        22
+    #endif
 #endif
 
 #ifndef PROJECT_NAME
