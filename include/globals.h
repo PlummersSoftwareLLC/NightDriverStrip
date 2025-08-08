@@ -251,7 +251,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
 #ifndef ENABLE_AUDIO
-    #define ENABLE_AUDIO            1
+    #define ENABLE_AUDIO            0
 #endif
 #ifndef ENABLE_WIFI
     #define ENABLE_WIFI             1   // Connect to WiFi

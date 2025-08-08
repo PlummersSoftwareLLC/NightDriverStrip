@@ -575,16 +575,14 @@ public:
         // This block is for TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other projects that
         // use an analog mic connected to the input pin.
         
+        static_assert(SOC_I2S_SUPPORTS_ADC, "This ESP32 model does not support ADC built-in mode");
+
         i2s_config_t i2s_config;
-        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);
-        if (SOC_I2S_SUPPORTS_ADC)
-            #if defined(I2S_MODE_ADC_BUILT_IN)
-                i2s_config.mode |= I2S_MODE_ADC_BUILT_IN; // Enable ADC built-in mode if supported    
-            #else
-                i2s_config.mode += I2S_MODE_ADC_BUILT_IN; // Enable ADC built-in mode if supported
-            #endif
-        else
-            debugE("ADC built-in mode not supported on this ESP32 model");
+        #if SOC_I2S_SUPPORTS_ADC
+            i2s_config.mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
+        #else
+            i2s_config.mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX);
+        #endif
 
         // Note: Post IDF4, I2S_MODE_ADC_BUILT_IN is no longer supported
         // and it was never available on models after original ESP32-Nothing.
