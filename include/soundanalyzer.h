@@ -572,16 +572,14 @@ public:
 
     #else
 
-        // This block is  TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other I2S.
-        //
+        // This block is for TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other projects that
+        // use an analog mic connected to the input pin.
+        
         i2s_config_t i2s_config;
-        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);
+        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
         // Note: Post IDF4, I2S_MODE_ADC_BUILT_IN is no longer supported
         // and it was never available on models after original ESP32-Nothing.
         // See: https://github.com/espressif/arduino-esp32/issues/9564
-        #if defined(I2S_MODE_ADC_BUILT_IN)
-        i2s_config.mode |= I2S_MODE_ADC_BUILT_IN;
-        #endif
         i2s_config.sample_rate = SAMPLING_FREQUENCY;
         i2s_config.dma_buf_len = MAX_SAMPLES;
         i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
@@ -594,9 +592,7 @@ public:
         ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
         ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
         ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
-        #if !defined(CONFIG_IDF_TARGET_ESP32S3)
         ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
-        #endif
 
     #endif
 
