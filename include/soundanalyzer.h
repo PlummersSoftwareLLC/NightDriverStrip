@@ -582,6 +582,7 @@ public:
                 i2s_config.mode |= I2S_MODE_ADC_BUILT_IN; // Enable ADC built-in mode if supported    
             #else
                 i2s_config.mode += I2S_MODE_ADC_BUILT_IN; // Enable ADC built-in mode if supported
+            #endif
         else
             debugE("ADC built-in mode not supported on this ESP32 model");
 
