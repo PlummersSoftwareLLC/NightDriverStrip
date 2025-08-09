@@ -113,7 +113,7 @@ static constexpr float NORM_NOISE_GATE          = 0.01f;    // Zero individual b
 class PeakData
 {
   public:
-    double _Level[NUM_BANDS];
+    float _Level[NUM_BANDS];
 
     typedef enum
     {
@@ -128,9 +128,9 @@ class PeakData
         for (auto &i : _Level)
             i = 0.0f;
     }
-    explicit PeakData(double *pDoubles)
+    explicit PeakData(const float *pFloats)
     {
-        SetData(pDoubles);
+        SetData(pFloats);
     }
     PeakData &operator=(const PeakData &other)
     {
@@ -141,10 +141,10 @@ class PeakData
         return *this;
     }
     float operator[](std::size_t n) const { return _Level[n]; }
-    void SetData(const double *pDoubles)
+    void SetData(const float *pFloats)
     {
         for (int i = 0; i < NUM_BANDS; i++)
-            _Level[i] = pDoubles[i];
+            _Level[i] = pFloats[i];
     }
 };
 
@@ -289,10 +289,17 @@ class SoundAnalyzer : public ISoundAnalyzer
         return (size_t)PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
     }
 
+    size_t _clipCount = 0;              // number of clipped samples seen
+    float  _dcOffsetEMA = 0.0f;         // exponential moving average of DC offset (abs)
+    float  _envEMA = 0.0f;              // EMA of _energyMaxEnv
+    size_t _frameGateHits = 0;          // frames gated by FRAME_SILENCE_GATE
+    size_t _bandGateHits = 0;           // total band gate hits
+    size_t _framesProcessed = 0;        // total processed frames
+
     float _oldVU;     // Old VU value for damping
     float _oldPeakVU; // Old peak VU value for damping
     float _oldMinVU;  // Old min VU value for damping
-    double *_vPeaks;  // Normalized band energies 0..1
+    float *_vPeaks;   // Normalized band energies 0..1
     int _bandBinStart[NUM_BANDS];
     int _bandBinEnd[NUM_BANDS];
     float _energyMaxEnv = 1.0f;         // adaptive envelope for autoscaling
@@ -314,8 +321,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     //
 
   private:
-    double *_vReal = nullptr;
-    double *_vImaginary = nullptr;
+    float *_vReal = nullptr;
+    float *_vImaginary = nullptr;
     std::unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
     PeakData _Peaks; // cached last normalized peaks (moved earlier for inline method visibility)
 
@@ -325,16 +332,16 @@ class SoundAnalyzer : public ISoundAnalyzer
             return;
         for (int i = 0; i < MAX_SAMPLES; i++)
         {
-            _vReal[i] = 0.0;
+            _vReal[i] = 0.0f;
             if (_vImaginary)
-                _vImaginary[i] = 0.0;
+                _vImaginary[i] = 0.0f;
         }
         for (int i = 0; i < NUM_BANDS; i++)
             _vPeaks[i] = 0.0f;
     }
     void FFT()
     {
-        ArduinoFFT<double> _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
+        ArduinoFFT<float> _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
         _FFT.dcRemoval();
         _FFT.windowing(FFTWindow::Hann, FFTDirection::Forward);
         _FFT.compute(FFTDirection::Forward);
@@ -358,8 +365,20 @@ class SoundAnalyzer : public ISoundAnalyzer
             debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
             return;
         }
+        int16_t smin = INT16_MAX, smax = INT16_MIN;
+        long sum = 0;
         for (int i = 0; i < MAX_SAMPLES; i++)
-            _vReal[i] = ptrSampleBuffer[i];
+        {
+            int16_t s = ptrSampleBuffer[i];
+            _vReal[i] = (float)s;
+            if (s < smin) smin = s;
+            if (s > smax) smax = s;
+            sum += s;
+        }
+        if (smin <= -32768 || smax >= 32767)
+            _clipCount++;
+        float dc = fabsf((float)sum / (float)MAX_SAMPLES);
+        _dcOffsetEMA = _dcOffsetEMA * 0.95f + dc * 0.05f; // slow EMA
     }
     void UpdateVU(float newval)
     {
@@ -412,6 +431,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     PeakData ProcessPeaksEnergy()
     {
         float frameMax = 0.0f;
+        _framesProcessed++;
+        const float binWidth = (float)SAMPLING_FREQUENCY / (MAX_SAMPLES / 2.0f);
         for (int b = 0; b < NUM_BANDS; b++)
         {
             int start = _bandBinStart[b];
@@ -421,19 +442,23 @@ class SoundAnalyzer : public ISoundAnalyzer
                 _vPeaks[b] = 0.0f;
                 continue;
             }
-            double sumPower = 0.0;
+            float sumPower = 0.0f;
             for (int k = start; k < end; k++)
             {
-                double mag = _vReal[k];
+                float mag = _vReal[k];
                 sumPower += mag * mag;
             }
             int widthBins = end - start;
-            double avgPower = (widthBins > 0) ? (sumPower / widthBins) : 0.0;
+            float avgPower = (widthBins > 0) ? (sumPower / (float)widthBins) : 0.0f;
             avgPower *= WINDOW_POWER_CORRECTION;
 
             // Apply frequency-dependent compensation
             float compensation = BAND_COMPENSATION_LOW + (BAND_COMPENSATION_HIGH - BAND_COMPENSATION_LOW) * ((float)b / (NUM_BANDS - 1));
             avgPower *= compensation;
+
+            // Optional perceptual weighting / pre-emphasis (identity)
+            // float fCenter = (0.5f * (start + end)) * binWidth; // reserved for future weighting
+            // avgPower *= (aWeightingLinear(fCenter) * preEmphasisLinear(fCenter));
 
             if (avgPower > _noiseFloor[b])
                 _noiseFloor[b] = _noiseFloor[b] * (1.0f - ENERGY_NOISE_ADAPT) + (float)avgPower * ENERGY_NOISE_ADAPT;
@@ -453,6 +478,8 @@ class SoundAnalyzer : public ISoundAnalyzer
         else
             _energyMaxEnv = std::max(ENERGY_MIN_ENV, _energyMaxEnv * ENERGY_ENV_DECAY);
 
+        _envEMA = _envEMA * 0.95f + _energyMaxEnv * 0.05f;
+
         float invEnv = 1.0f / _energyMaxEnv;
 
         // Frame-level silence gate on normalized values
@@ -465,6 +492,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         }
         if (vMaxNorm < FRAME_SILENCE_GATE)
         {
+            _frameGateHits++;
             for (int b = 0; b < NUM_BANDS; ++b)
             {
                 _vPeaks[b] = 0.0f;
@@ -474,14 +502,17 @@ class SoundAnalyzer : public ISoundAnalyzer
             return _Peaks;
         }
 
-        double sumNorm = 0.0;
+        float sumNorm = 0.0f;
         for (int b = 0; b < NUM_BANDS; b++)
         {
             float v = _vPeaks[b] * invEnv;
 
             // Per-band normalized noise gate
             if (v < NORM_NOISE_GATE)
+            {
                 v = 0.0f;
+                _bandGateHits++;
+            }
             else
                 v = std::sqrt(std::sqrt(std::max(0.0f, v))); // compression above the gate
 
@@ -567,10 +598,13 @@ class SoundAnalyzer : public ISoundAnalyzer
         ptrSampleBuffer.reset((int16_t *)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_8BIT));
         if (!ptrSampleBuffer)
             throw std::runtime_error("Failed to allocate sample buffer");
-        _vReal = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
-        _vImaginary = (double *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
-        _vPeaks = (double *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_vPeaks[0]));
+        _vReal = (float *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
+        _vImaginary = (float *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
+        _vPeaks = (float *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_vPeaks[0]));
+        if (!_vReal || !_vImaginary || !_vPeaks)
+            throw std::runtime_error("Failed to allocate FFT buffers");
         _oldVU = _oldPeakVU = _oldMinVU = 0.0f;
+        /* ValidateAudioConfig(); */
         ComputeBandLayout();
         Reset();
     }

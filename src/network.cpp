@@ -480,7 +480,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                     seconds,
                     micros);
 
-                PeakData peaks((double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
+                PeakData peaks((float *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
                 g_Analyzer.SetPeakData(peaks);
             #endif
             return true;
