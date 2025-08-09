@@ -176,21 +176,22 @@ void LoadEffectFactories()
 
     // #define EFFECT_SET_VERSION   0
 
+    // Include custom effects header if available - it overrides whatever the effect set flags
+    // would otherwise include.
     #if __has_include ("custom_effects.h")
       #include "custom_effects.h"
-    #endif
 
     // Fill effect factories using new effect set flags
 
     // === EFFECT SETS ===
     // These sections are shared by multiple projects
 
-    #if defined(EFFECTS_MINIMAL)
+    #elif defined(EFFECTS_MINIMAL)
         // Minimal effect set for projects with limited memory/space
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_STATUS, StatusEffect, CRGB::White);
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 6, 2);
 
@@ -199,7 +200,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  2
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true);
         ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect, 3, true, true, 1);
         ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 4, 4, 10, 2.0, 2.0);
@@ -282,7 +283,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_LASER_LINE, LaserLineEffect, 500, 20);
 
     #elif defined(EFFECTS_CHIEFTAIN)
@@ -290,7 +291,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_LANTERN, LanternEffect);
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 2.0f, 0.1, 0.0, 1.0, 0.0, LINEARBLEND, true, 1.0);
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 10, 32);
@@ -300,7 +301,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_MATRIX_PDPCMX, PDPCMXEffect);
         ADD_EFFECT(EFFECT_MATRIX_PDPGRID, PDPGridEffect);
 
@@ -309,7 +310,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true);
         // ADD_EFFECT(EFFECT_STRIP_LANTERN, LanternEffect);
 
@@ -433,7 +434,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", NUM_BANDS, spectrumAltColors, false, 0, 0, 0.5,  1.5);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24,        spectrumAltColors, false, 0, 0, 1.25, 1.25);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24,        spectrumAltColors, false, 0, 0, 0.25, 1.25);
@@ -452,7 +453,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_MATRIX_SILON, SilonEffect);
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", NUM_BANDS, spectrumAltColors, false, 0, 0, 0.5,  1.5);
 
@@ -461,7 +462,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Fade", 12, spectrumBasicColors, false, 50, 70, -1.0, 3.0);
 
     #elif defined(EFFECTS_WROVERKIT)
@@ -469,7 +470,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, rainbowPalette, 256 / 16, .2, 0);
 
     #elif defined(EFFECTS_XMASTREES)
@@ -477,7 +478,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_COLOR_BEAT_OVER_RED, ColorBeatOverRed, "ColorBeatOverRed");
         ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, BottomUp, 6);
         ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, BottomUp, 2);
@@ -494,7 +495,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, InsulatorSpectrumEffect, "Spectrum Effect", RainbowColors_p);
         ADD_EFFECT(EFFECT_STRIP_NEW_MOLTEN_GLASS_ON_VIOLET_BKGND, NewMoltenGlassOnVioletBkgnd, "Molten Glass", RainbowColors_p);
         ADD_STARRY_NIGHT_EFFECT(MusicStar, "RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0);
@@ -508,7 +509,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, rainbowPalette, 256 / 16, .2, 0);
         ADD_EFFECT(EFFECT_STRIP_SPARKLY_SPINNING_MUSIC, SparklySpinningMusicEffect, "SparklySpinningMusical", RainbowColors_p);
         ADD_EFFECT(EFFECT_STRIP_COLOR_BEAT_OVER_RED, ColorBeatOverRed, "ColorBeatOnRedBkgnd");
@@ -520,7 +521,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_TWINKLE, TwinkleEffect, NUM_LEDS / 4, 10);
 
     #elif defined(EFFECTS_MAGICMIRROR)
@@ -528,7 +529,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_STRIP_MOLTEN_GLASS_ON_VIOLET_BKGND, MoltenGlassOnVioletBkgnd, "MoltenGlass", RainbowColors_p);
 
     #elif defined(EFFECTS_ATOMLIGHT)
@@ -558,7 +559,7 @@ void LoadEffectFactories()
         // Plate cover effect set
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
-        #endif    
+        #endif
 
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, "Solid White", CRGB::White, 1);
         ADD_EFFECT(EFFECT_STRIP_COLOR_FILL, ColorFillEffect, "Solid Red",   CRGB::Red,   1);
@@ -602,7 +603,7 @@ void LoadEffectFactories()
         #ifndef EFFECT_SET_VERSION
             #define EFFECT_SET_VERSION  1
         #endif
-        
+
         ADD_EFFECT(EFFECT_HEXAGON_OUTER_RING, OuterHexRingEffect);
 
     #else
