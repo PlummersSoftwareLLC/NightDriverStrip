@@ -326,6 +326,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     std::unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
     PeakData _Peaks; // cached last normalized peaks (moved earlier for inline method visibility)
 
+    // Reset and clear the FFT buffers
+
     void Reset()
     {
         if (!_vReal)
@@ -339,6 +341,9 @@ class SoundAnalyzer : public ISoundAnalyzer
         for (int i = 0; i < NUM_BANDS; i++)
             _vPeaks[i] = 0.0f;
     }
+
+    // Perform the FFT 
+
     void FFT()
     {
         ArduinoFFT<float> _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
@@ -347,7 +352,10 @@ class SoundAnalyzer : public ISoundAnalyzer
         _FFT.compute(FFTDirection::Forward);
         _FFT.complexToMagnitude();
     }
-    void FillBufferI2S()
+
+    // Sample the audio
+
+    void SampleAudio()
     {
         constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
         size_t bytesRead = 0;
@@ -380,6 +388,9 @@ class SoundAnalyzer : public ISoundAnalyzer
         float dc = fabsf((float)sum / (float)MAX_SAMPLES);
         _dcOffsetEMA = _dcOffsetEMA * 0.95f + dc * 0.05f; // slow EMA
     }
+
+    // Update the VU and peak values based on the new sample
+
     void UpdateVU(float newval)
     {
         if (newval > _oldVU)
@@ -398,6 +409,13 @@ class SoundAnalyzer : public ISoundAnalyzer
             _MinVU = (_oldMinVU * VUDAMPENMIN + _VU) / (VUDAMPENMIN + 1);
         _oldMinVU = _MinVU;
     }
+
+    // Compute the band layout based on the sampling frequency and number of bands
+
+    // This computes the start and end bins for each band based on the sampling frequency,
+    // ensuring that the bands are spaced logarithmically or in Mel scale as configured.
+    // The results are stored in _bandBinStart and _bandBinEnd arrays.
+    
     void ComputeBandLayout()
     {
         const float fMin = 50.0f;
@@ -527,71 +545,138 @@ class SoundAnalyzer : public ISoundAnalyzer
     }
 
   public:
+    // Current beat/level ratio value used by visual effects.
+    // Typically maintained by higher-level audio logic.
+    // Range ~[0..something], consumer-specific.
+
     inline float VURatio() const override
     {
         return _VURatio;
     }
+
+    // Smoothed/decayed version of VURatio for more graceful visuals.
+    // Use when you want beat emphasis without sharp jumps.
+
     inline float VURatioFade() const override
     {
         return _VURatioFade;
     }
+
+    // Average normalized energy this frame (0..1 after gating/compression).
+    // Updated in ProcessPeaksEnergy()/SetPeakData via UpdateVU().
+
     inline float VU() const override
     {
         return _VU;
     }
+
+    // Highest recent VU observed (peak hold with damping).
+    // Useful for setting adaptive effect ceilings.
+
     inline float PeakVU() const override
     {
         return _PeakVU;
     }
+
+    // Lowest recent VU observed (floor with damping).
+    // Useful as denominator clamps for normalized ratios.
+
     inline float MinVU() const override
     {
         return _MinVU;
     }
+
+    // Measured audio processing frames-per-second.
+    // For diagnostics/telemetry; not critical to effects logic.
+
     inline int AudioFPS() const override
     {
         return _AudioFPS;
     }
+
+    // Measured serial streaming FPS (if enabled).
+    // For diagnostics; may be zero if not used.
+
     inline int SerialFPS() const override
     {
         return _serialFPS;
     }
+
+    // Indicates whether peaks came from local mic or remote source.
+    // Effects may choose to show status based on this.
+
     inline PeakData::MicrophoneType MicMode() const override
     {
         return _MicMode;
     }
+
+    // Returns the latest per-band normalized peaks (0..1).
+    // Pointer remains valid until next ProcessPeaksEnergy/SetPeakData.
+
     inline const PeakData &Peaks() const override
     {
         return _Peaks;
     }
+
+    // Returns the slower-decay overlay level for the given band (0..1).
+    // Used by some visuals to draw trailing bars/dots.
+
     inline float Peak2Decay(int band) const override
     {
         return (band >= 0 && band < NUM_BANDS) ? _peak2Decay[band] : 0.0f;
     }
+
+    // Direct access to the secondary (slower) decay array.
+    // Array length is NUM_BANDS.
+
     inline const float *Peak2DecayData() const override
     {
         return _peak2Decay;
     }
+
+    // Direct access to the primary (faster) decay array.
+    // Array length is NUM_BANDS.
+
     inline const float *Peak1DecayData() const override
     {
         return _peak1Decay;
     }
+
+    // Returns the faster-decay overlay level for the given band (0..1).
+    // Band index is clamped by caller; returns 0 on out-of-range.
+
     inline float Peak1Decay(int band) const override
     {
         return (band >= 0 && band < NUM_BANDS) ? _peak1Decay[band] : 0.0f;
     }
+
+    // Returns timestamps (ms) of last primary-peak rise per band.
+    // Useful for triggering time-based band effects.
+
     inline const unsigned long *Peak1Times() const override
     {
         return _lastPeak1Time;
     }
+
+    // Helper to read the last primary-peak time for a specific band.
+    // Returns 0 if band is out of range.
+
     inline unsigned long LastPeak1Time(int band) const override
     {
         return (band >= 0 && band < NUM_BANDS) ? _lastPeak1Time[band] : 0;
     }
+
+    // Configure how quickly the two decay overlays drop over time.
+    // r1 = fast track, r2 = slow track; higher = faster decay.
+
     inline void SetPeakDecayRates(float r1, float r2) override
     {
         _peak1DecayRate = r1;
         _peak2DecayRate = r2;
     }
+
+    // Construct analyzer, allocate buffers (PSRAM-preferred), set initial state.
+    // Throws std::runtime_error on allocation failure. Computes band layout once.
 
     SoundAnalyzer()
     {
@@ -609,6 +694,9 @@ class SoundAnalyzer : public ISoundAnalyzer
         Reset();
     }
 
+    // Free any heap/PSRAM buffers allocated by the constructor.
+    // Safe to call at shutdown/reset.
+
     ~SoundAnalyzer()
     {
         free(_vReal);
@@ -619,10 +707,16 @@ class SoundAnalyzer : public ISoundAnalyzer
     // These functions allow access to the last-acquired sample buffer and its size so that
     // effects can draw the waveform or do other things with the raw audio data
 
+    // Return pointer to last captured raw samples (int16).
+    // Valid until the next FillBufferI2S() call.
+
     const int16_t *GetSampleBuffer() const
     {
         return ptrSampleBuffer.get();
     }
+
+    // Return count of samples in the sample buffer (MAX_SAMPLES).
+    // Pairs with GetSampleBuffer() when drawing waveforms.
 
     const size_t GetSampleBufferSize() const
     {
@@ -636,12 +730,22 @@ class SoundAnalyzer : public ISoundAnalyzer
     // made up of the VURatioFade multiplier.  So passing a 0.75 is a lot of beat enhancement, whereas
     // 0.25 is a little bit.
 
+    // Compute a blend factor using VURatioFade to "pulse" visuals.
+    // amt in [0..1] controls how strongly the ratio influences the result.
+
     float BeatEnhance(float amt)
     {
         return ((1.0 - amt) + (_VURatioFade / 2.0) * amt);
     }
 
     // flash record size, for recording 5 second
+    // SampleBufferInitI2S
+    //
+    // install and start i2s driver
+
+    // Configure and start the I2S (or M5) input at SAMPLING_FREQUENCY.
+    // Board-specific branches set pins and ADC/I2S modes as needed.
+
     void SampleBufferInitI2S()
     {
         // install and start i2s driver
@@ -713,6 +817,9 @@ class SoundAnalyzer : public ISoundAnalyzer
     //
     // Every so many ms we decay the peaks by a given amount
 
+    // Apply time-based decay to the two peak overlay arrays.
+    // Called once per frame; uses AppTime.LastFrameTime() and configurable rates.
+
     inline void DecayPeaks()
     {
         float decayAmount1 = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate);
@@ -735,8 +842,8 @@ class SoundAnalyzer : public ISoundAnalyzer
 #endif
     }
 
-    // Update the local band peaks from the global sound data.  If we establish a new peak in any band,
-    // we reset the peak timestamp on that band
+    // Update the per-band decay overlays from the latest peaks.
+    // Rises are limited by VU_REACTIVITY_RATIO; records timestamps on new primary peaks.
 
     inline void UpdatePeakData()
     {
@@ -758,6 +865,9 @@ class SoundAnalyzer : public ISoundAnalyzer
         }
     }
 
+    // Accept externally provided peaks (e.g., over WiFi) and update internal state.
+    // Also recomputes VU from the new band values and records source time.
+
     inline void SetPeakData(const PeakData &peaks)
     {
         _msLastRemote = millis();
@@ -769,15 +879,26 @@ class SoundAnalyzer : public ISoundAnalyzer
             sum += _vPeaks[i];
         UpdateVU(sum / NUM_BANDS);
     }
+
+    // Expose computed band start indices (inclusive) for diagnostics.
+    // Length is NUM_BANDS; pairs with BandBinEnds().
+
     inline const int *BandBinStarts() const
     {
         return _bandBinStart;
     }
+
+    // Expose computed band end indices (exclusive) for diagnostics.
+    // Length is NUM_BANDS; pairs with BandBinStarts().
+
     inline const int *BandBinEnds() const
     {
         return _bandBinEnd;
     }
 #if ENABLE_AUDIO_DEBUG
+    // Print per-band [start-end] bin ranges over Serial for debugging.
+    // Useful to verify spacing and coverage with current config.
+
     void DumpBandLayout() const
     {
         Serial.println("Band layout (start-end):");
@@ -796,6 +917,9 @@ class SoundAnalyzer : public ISoundAnalyzer
     // RunSamplerPass
     //
 
+    // Perform one audio acquisition/processing step.
+    // Uses local mic if no recent remote peaks; otherwise trusts remote and only updates VU.
+
     inline void RunSamplerPass()
     {
         if (millis() - _msLastRemote > AUDIO_PEAK_REMOTE_TIMEOUT)
@@ -808,7 +932,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             _MicMode = PeakData::MESMERIZERMIC;
 #endif
             Reset();
-            FillBufferI2S();
+            SampleAudio();
             FFT();
             ProcessPeaksEnergy();
         }
