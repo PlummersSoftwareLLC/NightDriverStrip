@@ -46,20 +46,39 @@
 #endif
 #endif
 
-#ifndef NEW_SPECTRUM_ENERGY
-#define NEW_SPECTRUM_ENERGY 1
-#endif
+/*  SPECTRUM_BAND_SCALE_MEL switches the band layout from logarithmic Hz spacing to Mel-scale 
+    spacing in ComputeBandLayout().
+
+    What it does:
+
+    Off (0): bands are spaced geometrically between fMin and fMax (classic log-eq style).
+    On (1): bands are evenly spaced in Mel units (hz→mel→hz), approximating human pitch perception. 
+    This allocates more bands to lows/mids and fewer to the extreme highs.
+    When to enable:
+
+    If you want perceptually uniform bands (speech/vocals, general music listening).
+    If lows/mids should have finer resolution and highs can be coarser.
+    If you find the current log spacing still feels “bass heavy” or not human-centric.
+    When to leave off:
+
+    If you need more technical/log-frequency uniformity (e.g., octave-like spacing).
+    If you rely on the current band distribution or high-frequency detail.
+*/
+
 #ifndef SPECTRUM_BAND_SCALE_MEL
 #define SPECTRUM_BAND_SCALE_MEL 0
 #endif
-static constexpr float WINDOW_POWER_CORRECTION = 4.0f; // Hann window power correction
-static constexpr float ENERGY_NOISE_ADAPT   = 0.02f;
-static constexpr float ENERGY_NOISE_DECAY   = 0.98f;
-static constexpr float ENERGY_SMOOTH_ALPHA  = 0.25f;
-static constexpr float ENERGY_ENV_DECAY     = 0.50f;
-static constexpr float ENERGY_MIN_ENV       = 0.000001f;
-static constexpr float BAND_COMPENSATION_LOW = 1.0f; // Compensation for bass frequencies
-static constexpr float BAND_COMPENSATION_HIGH = 2.5f; // Compensation for treble frequencies
+
+static constexpr float WINDOW_POWER_CORRECTION  = 4.0f;     // Hann window power correction
+static constexpr float ENERGY_NOISE_ADAPT       = 0.02f;
+static constexpr float ENERGY_NOISE_DECAY       = 0.98f;
+static constexpr float ENERGY_SMOOTH_ALPHA      = 0.25f;
+static constexpr float ENERGY_ENV_DECAY         = 0.95f;
+static constexpr float ENERGY_MIN_ENV           = 0.000001f;
+static constexpr float BAND_COMPENSATION_LOW    = 0.25f;    // Compensation for bass frequencies
+static constexpr float BAND_COMPENSATION_HIGH   = 4.5f;     // Compensation for treble frequencies
+static constexpr float FRAME_SILENCE_GATE       = 0.05f;    // Zero whole frame if max normalized energy is below this
+static constexpr float NORM_NOISE_GATE          = 0.01f;    // Zero individual bands below this after normalization
 
 #ifndef MAX_SAMPLES
 #define MAX_SAMPLES 256
@@ -80,7 +99,7 @@ static constexpr float BAND_COMPENSATION_HIGH = 2.5f; // Compensation for treble
 // a consistent interface returning PeakData.
 
 #ifndef MIN_VU
-#define MIN_VU 2
+#define MIN_VU 0.05f
 #endif
 #ifndef GAINDAMPEN
 #define GAINDAMPEN 10
@@ -433,12 +452,39 @@ class SoundAnalyzer : public ISoundAnalyzer
             _energyMaxEnv = frameMax;
         else
             _energyMaxEnv = std::max(ENERGY_MIN_ENV, _energyMaxEnv * ENERGY_ENV_DECAY);
+
         float invEnv = 1.0f / _energyMaxEnv;
+
+        // Frame-level silence gate on normalized values
+        float vMaxNorm = 0.0f;
+        for (int b = 0; b < NUM_BANDS; ++b)
+        {
+            float vNorm = _vPeaks[b] * invEnv;
+            if (vNorm > vMaxNorm)
+                vMaxNorm = vNorm;
+        }
+        if (vMaxNorm < FRAME_SILENCE_GATE)
+        {
+            for (int b = 0; b < NUM_BANDS; ++b)
+            {
+                _vPeaks[b] = 0.0f;
+                _Peaks._Level[b] = 0.0f;
+            }
+            UpdateVU(0.0f);
+            return _Peaks;
+        }
+
         double sumNorm = 0.0;
         for (int b = 0; b < NUM_BANDS; b++)
         {
             float v = _vPeaks[b] * invEnv;
-            v = std::sqrt(std::sqrt(std::max(0.0f, v))); // Apply more sqrt for compression
+
+            // Per-band normalized noise gate
+            if (v < NORM_NOISE_GATE)
+                v = 0.0f;
+            else
+                v = std::sqrt(std::sqrt(std::max(0.0f, v))); // compression above the gate
+
             if (v > 1.0f)
                 v = 1.0f;
             _vPeaks[b] = v;
