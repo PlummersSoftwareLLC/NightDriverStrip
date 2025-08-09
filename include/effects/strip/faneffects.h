@@ -397,11 +397,11 @@ public:
 
   void OnBeat()
   {
-    int passes = g_Analyzer._VURatio;
+    int passes = (int)g_Analyzer.VURatio();
     for (int iPass = 0; iPass < passes; iPass++)
     {
       int iFan = random(0, NUM_FANS);
-      int passes = random(1, g_Analyzer._VURatio);
+      int passes = random(1, (int)g_Analyzer.VURatio());
       CRGB c = CHSV(random(0, 255), 255, 255);
 
       for (int iPass = 0; iPass < passes; iPass++)
@@ -424,21 +424,21 @@ public:
 
     if (latch)
     {
-      if (g_Analyzer._VURatio < minVUSeen)
-        minVUSeen = g_Analyzer._VURatio;
+      if (g_Analyzer.VURatio() < minVUSeen)
+        minVUSeen = g_Analyzer.VURatio();
     }
 
-    if (g_Analyzer._VURatio < 0.25f) // Crossing center going up
+    if (g_Analyzer.VURatio() < 0.25f) // Crossing center going up
     {
       latch = true;
-      minVUSeen = g_Analyzer._VURatio;
+      minVUSeen = g_Analyzer.VURatio();
     }
 
     if (latch)
     {
-      if (g_Analyzer._VURatio > 1.5f)
+      if (g_Analyzer.VURatio() > 1.5f)
       {
-        if (random_range(1.0f, 3.0f) < g_Analyzer._VURatio)
+        if (random_range(1.0f, 3.0f) < g_Analyzer.VURatio())
         {
           latch = false;
           OnBeat();
@@ -589,7 +589,7 @@ public:
     {
       for (int i = 0; i < NUM_FANS; i++)
       {
-        if (random(0, 100) < 50 * g_Analyzer._VURatio) // 40% Chance of attempting to do something
+        if (random(0, 100) < 50 * g_Analyzer.VURatio()) // 40% Chance of attempting to do something
         {
           int action = random(0, 3); // Generate a random outcome
           if (action == 0 || action == 3)
@@ -598,7 +598,7 @@ public:
           }
           else if (action == 1)
           {
-            if (g_Analyzer._VURatio > 0.5f)
+            if (g_Analyzer.VURatio() > 0.5f)
             {
               if (ReelDir[i] == 0)
               {
@@ -613,7 +613,7 @@ public:
           }
           else if (action == 2)
           {
-            if (g_Analyzer._VURatio > 0.5f)
+            if (g_Analyzer.VURatio() > 0.5f)
             {
               if (ReelDir[i] == 0) // 2 -> Spin Forwards, or accel if already doing so
               {
@@ -634,7 +634,7 @@ public:
     {
       for (int i = 0; i < NUM_FANS; i++)
       {
-        ReelPos[i] = (ReelPos[i] + ReelDir[i] * (2 + g_Analyzer._VURatio));
+        ReelPos[i] = (ReelPos[i] + ReelDir[i] * (2 + g_Analyzer.VURatio()));
         if (ReelPos[i] < 0)
           ReelPos[i] += FAN_SIZE;
         if (ReelPos[i] >= FAN_SIZE)

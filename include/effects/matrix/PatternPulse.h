@@ -185,7 +185,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
         const int maxNewStarsPerFrame = 8;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
-            if (random(4) < g_Analyzer._VURatio)
+            if (random(4) < g_Analyzer.VURatio())
                 g()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
 
 

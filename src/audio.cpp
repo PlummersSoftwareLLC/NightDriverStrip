@@ -85,11 +85,11 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
                                 0.0 :
                                 (g_Analyzer._VU - g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
 
-        debugV("VU: %f\n", g_Analyzer._VU);
-        debugV("PeakVU: %f\n", g_Analyzer._PeakVU);
-        debugV("MinVU: %f\n", g_Analyzer._MinVU);
-        debugV("VURatio: %f\n", g_Analyzer._VURatio);
-        debugV("VURatioFade: %f\n", g_Analyzer._VURatioFade);
+        debugV("VU: %f\n", g_Analyzer.VU());
+        debugV("PeakVU: %f\n", g_Analyzer.PeakVU());
+        debugV("MinVU: %f\n", g_Analyzer.MinVU());
+        debugV("VURatio: %f\n", g_Analyzer.VURatio());
+        debugV("VURatioFade: %f\n", g_Analyzer.VURatioFade());
 
         // Delay enough time to yield 60fps max
         // We wait a minimum even if busy so we don't Bogart the CPU
@@ -101,8 +101,7 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         auto duration = millis() - lastFrame;
         frameDurationSeconds = duration / 1000.0;
         g_Analyzer._AudioFPS = FPS(duration);
-
-        debugV("AudioFPS: %d\n", g_Analyzer._AudioFPS);
+        debugV("AudioFPS: %d\n", g_Analyzer.AudioFPS());
     }
 }
 

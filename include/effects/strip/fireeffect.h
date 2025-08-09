@@ -317,7 +317,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
         }
         else
         {
-            GenerateSparks(g_Analyzer._VURatio * 50);
+            GenerateSparks(g_Analyzer.VURatio() * 50);
         }
     }
 
@@ -570,7 +570,7 @@ public:
         {
             for (int k = _cLEDs - 1; k >= 3; k--)
             {
-                float amount = 0.2f + g_Analyzer._VURatio; // MIN(0.85f, _Drift * deltaTime);
+                float amount = 0.2f + g_Analyzer.VURatio(); // MIN(0.85f, _Drift * deltaTime);
                 float c0 = 1.0f - amount;
                 float c1 = amount * 0.33f;
                 float c2 = c1;
