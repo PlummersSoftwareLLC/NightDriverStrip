@@ -164,14 +164,14 @@ class VUMeter
             msPeakVU = millis();
             iPeakVUy = bars;
         }
-        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
+        else if (millis() - msPeakVU > MILLIS_PER_SECOND / 2)
         {
             iPeakVUy = 0;
         }
 
         if (iPeakVUy > 1)
         {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MILLIS_PER_SECOND * 2;
             DrawVUPixels(GFX, iPeakVUy,   yVU, fade);
             DrawVUPixels(GFX, iPeakVUy-1, yVU, fade);
         }
@@ -217,14 +217,14 @@ public:
             msPeakVU = millis();
             iPeakVUy = bars;
         }
-        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
+        else if (millis() - msPeakVU > MILLIS_PER_SECOND / 2)
         {
             iPeakVUy = 0;
         }
 
         if (iPeakVUy > 1)
         {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MILLIS_PER_SECOND * 2;
             DrawVUPixels(GFX, iPeakVUy,   yVU, fade);
             DrawVUPixels(GFX, iPeakVUy-1, yVU, fade);
         }
@@ -394,7 +394,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                 if (msPeakAge > PeakFadeTime_ms)
                     msPeakAge = PeakFadeTime_ms;
 
-                float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
+                float agePercent = (float) msPeakAge / (float) MILLIS_PER_SECOND;
                 uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
                 colorHighlight.fadeToBlackBy(fadeAmount);
                 pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
