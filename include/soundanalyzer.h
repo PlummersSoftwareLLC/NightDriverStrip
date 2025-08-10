@@ -101,7 +101,7 @@ static constexpr AudioInputParams kParamsMesmerizer{
     0.90f,     // energyEnvDecay
     0.000001f, // energyMinEnv
     0.25f,     // bandCompLow
-    6.5f,      // bandCompHigh
+    10.0f,     // bandCompHigh
     0.00f,     // frameSilenceGate
     0.00f,     // normNoiseGate
     3.0f,      // envFloorFromNoise (cap auto-gain at ~1/4 of pure-noise)
@@ -310,7 +310,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // I'm old enough I can only hear up to about 12000Hz, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 samples is 12000Hz
 
-    static constexpr size_t SAMPLING_FREQUENCY = 24000;
+    static constexpr size_t SAMPLING_FREQUENCY = 20000;
     static constexpr size_t LOWEST_FREQ = 100;
     static constexpr size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
@@ -449,8 +449,8 @@ class SoundAnalyzer : public ISoundAnalyzer
 
     void ComputeBandLayout()
     {
-        const float fMin = 50.0f;
-        const float fMax = std::min<float>(12000.0f, SAMPLING_FREQUENCY / 2.0f);
+        const float fMin = LOWEST_FREQ;
+        const float fMax = std::min<float>(HIGHEST_FREQ, SAMPLING_FREQUENCY / 2.0f);
         const float binWidth = (float)SAMPLING_FREQUENCY / (MAX_SAMPLES / 2.0f);
         int prevBin = 2;
 #if SPECTRUM_BAND_SCALE_MEL
@@ -614,6 +614,32 @@ class SoundAnalyzer : public ISoundAnalyzer
             _Peaks._Level[b] = v;
             sumNorm += v;
         }
+
+#if ENABLE_AUDIO_SMOOTHING
+        // Spatially smooth live spectrum peaks by blending with neighbors.
+        // This affects displayed bars (and VU after we recompute below).
+        {
+            float tmp[NUM_BANDS];
+            for (int b = 0; b < NUM_BANDS; ++b)
+            {
+                float v = _Peaks._Level[b];
+                float l = (b > 0) ? _Peaks._Level[b - 1] : v;
+                float r = (b < NUM_BANDS - 1) ? _Peaks._Level[b + 1] : v;
+                tmp[b] = (v * 2.0f + l + r) * 0.25f; // (2*center + left + right) / 4
+            }
+            for (int b = 0; b < NUM_BANDS; ++b)
+            {
+                float v = tmp[b];
+                if (v > 1.0f) v = 1.0f;
+                _vPeaks[b] = v;
+                _Peaks._Level[b] = v;
+            }
+            // Recompute VU from smoothed values
+            sumNorm = 0.0f;
+            for (int b = 0; b < NUM_BANDS; ++b)
+                sumNorm += _Peaks._Level[b];
+        }
+#endif
         UpdateVU((float)(sumNorm / NUM_BANDS));
         return _Peaks;
     }
@@ -912,15 +938,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             _peak2Decay[iBand] -= min(decayAmount2, _peak2Decay[iBand]);
         }
 
-        // Manual smoothing if desired
-
-#if ENABLE_AUDIO_SMOOTHING
-        for (int iBand = 1; iBand < NUM_BANDS - 1; iBand += 2)
-        {
-            _peak1Decay[iBand] = (_peak1Decay[iBand] * 2 + _peak1Decay[iBand - 1] + _peak1Decay[iBand + 1]) / 4;
-            _peak2Decay[iBand] = (_peak2Decay[iBand] * 2 + _peak2Decay[iBand - 1] + _peak2Decay[iBand + 1]) / 4;
-        }
-#endif
+        // Removed old smoothing of decay overlays; smoothing now applies to live peaks in ProcessPeaksEnergy()
     }
 
     // Update the per-band decay overlays from the latest peaks.
