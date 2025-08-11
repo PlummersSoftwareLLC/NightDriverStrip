@@ -150,8 +150,13 @@
     #define USE_M5 1
 #endif
 
+
 #if USE_M5
+// Disable the deprecated Atom messages
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "M5Unified.h"
+#pragma GCC diagnostic pop
 #undef min                                      // They define a min() on us
 #endif
 
