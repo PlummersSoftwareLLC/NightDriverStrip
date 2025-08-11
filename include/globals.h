@@ -79,7 +79,6 @@
 //              Jul-24-2023  v038       Davepl      NTP clock fix
 //              Jul-26-2023  v039       Davepl      NTP every minute, stack sizes
 //              Jul-26-2023  v040       Davepl      NTP every 5 minutes, Wifi delay code
-//              Aig-09-2025  v041       Davepl      New Audio Code
 //
 //---------------------------------------------------------------------------
 
@@ -110,7 +109,7 @@
 //
 // BUGBUG (davepl): If you know a cleaner way, please improve this!
 
-#define FLASH_VERSION          41   // Update ONLY this to increment the version number
+#define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
 #ifndef USE_HUB75                   // We support strips by default unless specifically defined out
     #ifndef USE_WS281X
@@ -384,7 +383,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
     #endif
     #ifndef ENABLE_AUDIO_SMOOTHING
-        #define ENABLE_AUDIO_SMOOTHING 0
+        #define ENABLE_AUDIO_SMOOTHING 1
     #endif
     #ifndef BARBEAT_ENHANCE
         #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
