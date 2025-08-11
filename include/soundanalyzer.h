@@ -86,10 +86,6 @@ struct AudioInputParams {
     float energyMinEnv;           // Min envelope to avoid div-by-zero
     float bandCompLow;            // Low-band compensation scalar
     float bandCompHigh;           // High-band compensation scalar
-    float frameSilenceGate;       // Gate entire frame if below this after norm
-    float normNoiseGate;          // Gate individual bands below this after norm
-    float envFloorFromNoise;      // Multiplier on mean noise floor to cap normalization
-    float frameSNRGate;           // Gate frame if raw SNR (max/noiseMax) is below this
 };
 
 // Mesmerizer (default) tuning
@@ -101,17 +97,33 @@ static constexpr AudioInputParams kParamsMesmerizer{
     0.90f,     // energyEnvDecay
     0.000001f, // energyMinEnv
     0.25f,     // bandCompLow
-    10.0f,     // bandCompHigh
-    0.00f,     // frameSilenceGate
-    0.00f,     // normNoiseGate
-    3.0f,      // envFloorFromNoise (cap auto-gain at ~1/4 of pure-noise)
-    0.0f       // frameSNRGate (require ~3:1 SNR to show frame)
+    10.0f      // bandCompHigh
 };
 
 // Copies for now; adjust per device as needed
 static constexpr AudioInputParams kParamsPCRemote = kParamsMesmerizer;
-static constexpr AudioInputParams kParamsM5       = kParamsMesmerizer;
-static constexpr AudioInputParams kParamsM5Plus2  = kParamsMesmerizer;
+
+static constexpr AudioInputParams kParamsM5 {
+    4.0f,      // windowPowerCorrection
+    0.02f,     // energyNoiseAdapt
+    0.98f,     // energyNoiseDecay
+    0.25f,     // energySmoothAlpha
+    0.90f,     // energyEnvDecay
+    0.000001f, // energyMinEnv
+    0.25f,     // bandCompLow
+    10.0f      // bandCompHigh
+};
+
+static constexpr AudioInputParams kParamsM5Plus2 {
+    4.0f,      // windowPowerCorrection
+    0.02f,     // energyNoiseAdapt
+    0.98f,     // energyNoiseDecay
+    0.25f,     // energySmoothAlpha
+    0.90f,     // energyEnvDecay
+    0.000001f, // energyMinEnv
+    0.25f,     // bandCompLow
+    10.0f      // bandCompHigh
+};
 
 // PeakData
 //
@@ -322,8 +334,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     size_t _clipCount = 0;              // number of clipped samples seen
     float  _dcOffsetEMA = 0.0f;         // exponential moving average of DC offset (abs)
     float  _envEMA = 0.0f;              // EMA of _energyMaxEnv
-    size_t _frameGateHits = 0;          // frames gated by params.frameSilenceGate
-    size_t _bandGateHits = 0;           // total band gate hits
+    size_t _frameGateHits = 0;          // frames gated by gate
+    size_t _bandGateHits = 0;           // total band gate hits (kept for telemetry)
     size_t _framesProcessed = 0;        // total processed frames
 
     float   _oldVU;                     // Old VU value for damping
@@ -345,6 +357,33 @@ class SoundAnalyzer : public ISoundAnalyzer
 
     PeakData::MicrophoneType _MicMode;
     AudioInputParams _params;                  // Active tuning params for current mic mode
+
+    // Gate envelope (absolute-level, hysteresis, with hold)
+    float _gateEnv = 1.0f;                     // 0..1 applied to bands and VU
+    uint32_t _gateHoldUntil = 0;               // ms timestamp until which gate stays closed
+    uint32_t _gateOpenHoldUntil = 0;           // ms timestamp until which gate stays open
+    float _frameSumEMA = 0.0f;                 // smoothed frame energy sum
+    float _vMaxRelEMA = 0.0f;                  // smoothed normalized max-band level
+
+    // Gate tuning constants
+    static constexpr float kGateEnterK = 0.60f;        // kept (unused by new gate but retained for debug)
+    static constexpr float kGateExitK  = 1.20f;        // kept (unused by new gate but retained for debug)
+    static constexpr float kGateAttackPerSec  = 20.0f; // ~50ms full open
+    static constexpr float kGateReleasePerSec = 2.0f;  // ~500ms full close
+    static constexpr uint32_t kGateHoldMs = 100;       // minimum close hold time
+    static constexpr uint32_t kGateOpenHoldMs = 150;   // minimum open hold time (reduced to avoid lingering on noise)
+    static constexpr float kGateEnterVMax = 0.035f;    // close if vMaxRelEMA <= this (raise to suppress ambient)
+    static constexpr float kGateExitVMax  = 0.090f;    // open if vMaxRelEMA >= this (raise to require stronger music)
+
+    // Limit auto-gain in silence: anchor normalization to a multiple of mean noise
+    static constexpr float kEnvNoiseFloorK = 37.0f;     // denominator >= noiseMean * K
+
+    // Post-gate display floor to suppress shimmer from tiny values
+    static constexpr float kBandFloorMin   = 0.015f;   // absolute min floor after gating
+    static constexpr float kBandFloorScale = 0.15f;    // floor scales with vMaxRelEMA (higher during music)
+
+    // Display gain (post-normalization, post-compression). Increase to use more vertical range.
+    static constexpr float kDisplayGain = 1.5f;
 
     // Energy spectrum processing (implemented inline below)
     //
@@ -369,6 +408,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             if (_vImaginary)
                 _vImaginary[i] = 0.0f;
         }
+        _cSamples = 0;
         for (int i = 0; i < NUM_BANDS; i++)
             _vPeaks[i] = 0.0f;
     }
@@ -481,9 +521,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     PeakData ProcessPeaksEnergy()
     {
         float frameMax = 0.0f;
-        float frameRawMax = 0.0f;    // max pre-subtraction band power (with compensation)
+        float frameSumRaw = 0.0f;    // sum of noise-subtracted, smoothed band power (pre-normalization)
         float noiseSum = 0.0f;       // accumulate noise floor for mean
-        float noiseMaxAll = 0.0f;    // track max noise floor across bands
         _framesProcessed++;
         const float binWidth = (float)SAMPLING_FREQUENCY / (MAX_SAMPLES / 2.0f);
         for (int b = 0; b < NUM_BANDS; b++)
@@ -505,33 +544,29 @@ class SoundAnalyzer : public ISoundAnalyzer
             float avgPower = (widthBins > 0) ? (sumPower / (float)widthBins) : 0.0f;
             avgPower *= _params.windowPowerCorrection;
 
-            // Apply frequency-dependent compensation
+            // Frequency-dependent compensation
             float compensation = _params.bandCompLow + (_params.bandCompHigh - _params.bandCompLow) * ((float)b / (NUM_BANDS - 1));
             avgPower *= compensation;
 
-            // Track pre-subtraction max for SNR gating
-            if (avgPower > frameRawMax)
-                frameRawMax = avgPower;
-
+            // Adaptive noise floor
             if (avgPower > _noiseFloor[b])
                 _noiseFloor[b] = _noiseFloor[b] * (1.0f - _params.energyNoiseAdapt) + (float)avgPower * _params.energyNoiseAdapt;
             else
                 _noiseFloor[b] *= _params.energyNoiseDecay;
 
-            // Accumulate noise stats
             noiseSum += _noiseFloor[b];
-            if (_noiseFloor[b] > noiseMaxAll)
-                noiseMaxAll = _noiseFloor[b];
 
             float signal = (float)avgPower - _noiseFloor[b];
-            if (signal < 0.0f)
-                signal = 0.0f;
+            if (signal < 0.0f) signal = 0.0f;
             float smoothed = _rawPrev[b] * (1.0f - _params.energySmoothAlpha) + signal * _params.energySmoothAlpha;
             _rawPrev[b] = smoothed;
-            _vPeaks[b] = smoothed;
+            _vPeaks[b] = smoothed;           // store pre-normalized, smoothed signal
+            frameSumRaw += smoothed;
             if (smoothed > frameMax)
                 frameMax = smoothed;
         }
+
+        // Update autoscale envelope
         if (frameMax > _energyMaxEnv)
             _energyMaxEnv = frameMax;
         else
@@ -539,107 +574,72 @@ class SoundAnalyzer : public ISoundAnalyzer
 
         _envEMA = _envEMA * 0.95f + _energyMaxEnv * 0.05f;
 
-        // Raw SNR-based frame gate (pre-normalization) to suppress steady HVAC and similar backgrounfd noises
+        // Timing and smoothing factors
+        const float dt = std::max(0.0f, (float)g_Values.AppTime.LastFrameTime());
 
-        float snrRaw = frameRawMax / (noiseMaxAll + 1e-9f);
-        if (snrRaw < _params.frameSNRGate)
-        {
+        // Optional: keep frame-sum EMA for diagnostics (not used for gating now)
+        const float emaAlphaFrame = std::clamp(dt * 5.0f, 0.0f, 1.0f); // ~200ms time constant
+        _frameSumEMA = _frameSumEMA * (1.0f - emaAlphaFrame) + frameSumRaw * emaAlphaFrame;
+
+        // Gate based on normalized max band value relative to adaptive envelope,
+        // with auto-gain capped by noise-anchored floor
+        const float noiseMean = noiseSum / (float)NUM_BANDS;
+        const float envFloor = std::max(_params.energyMinEnv, noiseMean * kEnvNoiseFloorK);
+        const float normDen = std::max(_energyMaxEnv, envFloor);
+        const float vMaxRel = frameMax / normDen;
+        const float emaAlphaV = std::clamp(dt * 6.0f, 0.0f, 1.0f); // ~167ms time constant
+        _vMaxRelEMA = _vMaxRelEMA * (1.0f - emaAlphaV) + vMaxRel * emaAlphaV;
+
+        const uint32_t now = millis();
+        bool targetOpen = _gateEnv > 0.0f;
+        if (_vMaxRelEMA <= kGateEnterVMax) {
+            targetOpen = false;
             _frameGateHits++;
-            for (int b = 0; b < NUM_BANDS; ++b)
-            {
-                _vPeaks[b] = 0.0f;
-                _Peaks._Level[b] = 0.0f;
-            }
-            UpdateVU(0.0f);
-            return _Peaks;
+            if (_gateHoldUntil < now + kGateHoldMs)
+                _gateHoldUntil = now + kGateHoldMs;
+        } else if (_vMaxRelEMA >= kGateExitVMax) {
+            targetOpen = true;
+            if (_gateOpenHoldUntil < now + kGateOpenHoldMs)
+                _gateOpenHoldUntil = now + kGateOpenHoldMs;
         }
 
-        // Anchor normalization to noise-derived floor to avoid auto-gain blow-up
-        float noiseMean = noiseSum / (float)NUM_BANDS;
-        float envFloor = std::max(_params.energyMinEnv, noiseMean * _params.envFloorFromNoise);
-        float normDen = std::max(_energyMaxEnv, envFloor);
-        float invEnv = 1.0f / normDen;
+        // Apply holds (closed-hold has priority to prevent flicker right after closing)
+        if (now < _gateHoldUntil)
+            targetOpen = false;
+        else if (now < _gateOpenHoldUntil)
+            targetOpen = true;
 
-        // Frame-level silence gate on normalized values
-        float vMaxNorm = 0.0f;
-        for (int b = 0; b < NUM_BANDS; ++b)
-        {
-            float vNorm = _vPeaks[b] * invEnv;
-            if (vNorm > vMaxNorm)
-                vMaxNorm = vNorm;
-        }
-        if (vMaxNorm < _params.frameSilenceGate)
-        {
-            _frameGateHits++;
-            for (int b = 0; b < NUM_BANDS; ++b)
-            {
-                _vPeaks[b] = 0.0f;
-                _Peaks._Level[b] = 0.0f;
-            }
-            UpdateVU(0.0f);
-            return _Peaks;
-        }
+        // Attack/release envelope on gate
+        if (targetOpen)
+            _gateEnv = std::min(1.0f, _gateEnv + dt * kGateAttackPerSec);
+        else
+            _gateEnv = std::max(0.0f, _gateEnv - dt * kGateReleasePerSec);
 
-#if ENABLE_AUDIO_DEBUG
-        // Debug HVAC issues: log when frame gate should trigger but doesn't
-        static uint32_t lastDebugMs = 0;
-        if (millis() - lastDebugMs > 1000) // once per second
-        {
-            Serial.printf("FrameGate: vMaxNorm=%.3f, gate=%.3f, envelope=%.1f, hits=%zu\n", 
-                         vMaxNorm, _params.frameSilenceGate, _energyMaxEnv, _frameGateHits);
-            lastDebugMs = millis();
-        }
-#endif
+        // Simple normalization using autoscale envelope with noise-anchored floor
+        const float invEnv = 1.0f / normDen;
 
         float sumNorm = 0.0f;
         for (int b = 0; b < NUM_BANDS; b++)
         {
             float v = _vPeaks[b] * invEnv;
+            // Soft compression for smooth visuals
+            v = cbrtf(std::max(0.0f, v));
+            if (v > 1.0f) v = 1.0f;
+            v *= _gateEnv; // apply gate envelope
 
-            // Per-band normalized noise gate
-            if (v < _params.normNoiseGate)
-            {
-                v = 0.0f;
-                _bandGateHits++;
-            }
-            else
-            {
-                // Cube root compression for smooth flattening without spikes
-                v = sqrt(cbrtf(std::max(0.0f, v)));
-            }
+            // Apply additional display gain and clamp
+            v *= kDisplayGain;
+            if (v > 1.0f) v = 1.0f;
 
-            if (v > 1.0f)
-                v = 1.0f;
+            // Apply display floor to remove tiny ambient shimmer
+            const float bandFloor = std::max(kBandFloorMin, kBandFloorScale * _vMaxRelEMA);
+            if (v < bandFloor) { v = 0.0f; _bandGateHits++; }
+
             _vPeaks[b] = v;
             _Peaks._Level[b] = v;
             sumNorm += v;
         }
 
-#if ENABLE_AUDIO_SMOOTHING
-        // Spatially smooth live spectrum peaks by blending with neighbors.
-        // This affects displayed bars (and VU after we recompute below).
-        {
-            float tmp[NUM_BANDS];
-            for (int b = 0; b < NUM_BANDS; ++b)
-            {
-                float v = _Peaks._Level[b];
-                float l = (b > 0) ? _Peaks._Level[b - 1] : v;
-                float r = (b < NUM_BANDS - 1) ? _Peaks._Level[b + 1] : v;
-                tmp[b] = (v * 2.0f + l + r) * 0.25f; // (2*center + left + right) / 4
-            }
-            for (int b = 0; b < NUM_BANDS; ++b)
-            {
-                float v = tmp[b];
-                if (v > 1.0f) v = 1.0f;
-                _vPeaks[b] = v;
-                _Peaks._Level[b] = v;
-            }
-            // Recompute VU from smoothed values
-            sumNorm = 0.0f;
-            for (int b = 0; b < NUM_BANDS; ++b)
-                sumNorm += _Peaks._Level[b];
-        }
-#endif
         UpdateVU((float)(sumNorm / NUM_BANDS));
         return _Peaks;
     }
