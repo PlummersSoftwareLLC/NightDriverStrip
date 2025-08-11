@@ -190,6 +190,7 @@ void LoadEffectFactories()
     // value of EFFECT_SET_VERSION differently for each set, which is not what we want.
     //
 
+
     #if __has_include ("custom_effects.h")
 
       #include "custom_effects.h"
