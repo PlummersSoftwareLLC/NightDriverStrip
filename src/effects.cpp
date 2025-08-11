@@ -178,6 +178,9 @@ void LoadEffectFactories()
 
     // Include custom effects header if available - it overrides whatever the effect set flags
     // would otherwise include.
+    //
+    // ONLY one of these may be defined at a time
+
     #if __has_include ("custom_effects.h")
       #include "custom_effects.h"
 
