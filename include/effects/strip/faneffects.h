@@ -404,17 +404,14 @@ public:
       int passes = random(1, (int)g_Analyzer.VURatio());
       CRGB c = CHSV(random(0, 255), 255, 255);
 
-      for (int iPass = 0; iPass < passes; iPass++)
-      {
-        DrawFanPixels(0, FAN_SIZE, c, Sequential, iFan++);
-      }
+      // REVIEW (davepl) Doesn't this just draw the same color multiple times?
+      for (int innerpass = 0; innerpass < passes; innerpass++)
+          DrawFanPixels(0, FAN_SIZE, c, Sequential, iFan++);
     }
 
     CRGB c = CHSV(random(0, 255), 255, 255);
     for (int i = NUM_FANS * FAN_SIZE; i < NUM_LEDS; i++)
-    {
       g()->setPixel(i, c);
-    }
   }
 
   void DrawEffect()
