@@ -891,16 +891,18 @@ class SoundAnalyzer : public ISoundAnalyzer
 
 #else
 
-        // This block is  TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other I2S.
-        //
+        // This block is for TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other projects that
+        // use an analog mic connected to the input pin.
+        
+        static_assert(SOC_I2S_SUPPORTS_ADC, "This ESP32 model does not support ADC built-in mode");
+
         i2s_config_t i2s_config;
-        i2s_config.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);
-// Note: Post IDF4, I2S_MODE_ADC_BUILT_IN is no longer supported
-// and it was never available on models after original ESP32-Nothing.
-// See: https://github.com/espressif/arduino-esp32/issues/9564
-#if defined(I2S_MODE_ADC_BUILT_IN)
-        i2s_config.mode |= I2S_MODE_ADC_BUILT_IN;
-#endif
+        #if SOC_I2S_SUPPORTS_ADC
+            i2s_config.mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
+        #else
+            i2s_config.mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX);
+        #endif
+
         i2s_config.sample_rate = SAMPLING_FREQUENCY;
         i2s_config.dma_buf_len = MAX_SAMPLES;
         i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
