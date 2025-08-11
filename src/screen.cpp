@@ -321,16 +321,16 @@ void CurrentEffectSummary(bool bRedraw)
         }
 
 #if ENABLE_AUDIO
-        if (SHOW_FPS && ((lastFPS != g_Values.FPS) || (lastAudio != g_Analyzer._AudioFPS) || (lastSerial != g_Analyzer._serialFPS)))
+        if (SHOW_FPS && ((lastFPS != g_Values.FPS) || (lastAudio != g_Analyzer.AudioFPS()) || (lastSerial != g_Analyzer.SerialFPS())))
         {
             lastFPS = g_Values.FPS;
-            lastSerial = g_Analyzer._serialFPS;
-            lastAudio = g_Analyzer._AudioFPS;
+            lastSerial = g_Analyzer.SerialFPS();
+            lastAudio = g_Analyzer.AudioFPS();
             display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
             display.setTextColor(YELLOW16, backColor);
             display.setTextSize(1);
             yh = display.height() - display.fontHeight();
-            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS, (int) screenFPS);
+            String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer.AudioFPS(), g_Analyzer.SerialFPS(), (int) screenFPS);
             auto w = display.textWidth(strOut);
             display.setCursor(display.width() / 2 - w / 2, yh);
             display.print(strOut);
@@ -350,7 +350,7 @@ void CurrentEffectSummary(bool bRedraw)
     float ySizeVU = display.height() / 16; // vu is 1/20th the screen height, height of each block
     int cPixels = 16;
     float xSize = xHalf / cPixels + 1;                          // xSize is count of pixels in each block
-    int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels; // litPixels is number that are lit
+    int litBlocks = (g_Analyzer.VURatioFade() / 2.0f) * cPixels; // litPixels is number that are lit
 
     for (int iPixel = 0; iPixel < cPixels; iPixel++) // For each pixel
     {
@@ -369,14 +369,14 @@ void CurrentEffectSummary(bool bRedraw)
         CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
         int bandWidth = display.width() / NUM_BANDS;
         auto color16 = display.to16bit(bandColor);
-        auto topSection = bandHeight - bandHeight * g_Analyzer._peak2Decay[iBand];
+        auto topSection = bandHeight - bandHeight * g_Analyzer.Peak2Decay(iBand);
         if (topSection > 0)
             display.fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
-        auto val = min(1.0f, g_Analyzer._peak2Decay[iBand]);
+        auto val = min(1.0f, g_Analyzer.Peak2Decay(iBand));
         assert(bandHeight * val <= bandHeight);
         display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
-        for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += display.width() / 40)
-            display.drawFastHLine(iBand * bandWidth, iLine, bandWidth, BLACK16);
+        //for (int iLine = spectrumTop; iLine <= spectrumTop + bandHeight; iLine += display.width() / 40)
+        //    display.drawFastHLine(iBand * bandWidth, iLine, bandWidth, BLACK16);
     }
 
     // Draw horizontal lines so the bars look like they are made of segments

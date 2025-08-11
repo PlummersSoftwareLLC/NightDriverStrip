@@ -602,11 +602,11 @@ void loop()
             #endif
 
             #if ENABLE_AUDIO
-                strOutput += str_sprintf("Audio FPS: %d, MinVU: %6.1f, PeakVU: %6.1f, VURatio: %3.1f ", g_Analyzer._AudioFPS, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
+                strOutput += str_sprintf("Audio FPS: %d, MinVU: %6.1f, PeakVU: %6.1f, VURatio: %3.1f ", g_Analyzer.AudioFPS(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
             #endif
 
             #if ENABLE_AUDIOSERIAL
-                strOutput += str_sprintf("Serial FPS: %d, ", g_Analyzer._serialFPS);
+                strOutput += str_sprintf("Serial FPS: %d, ", g_Analyzer.SerialFPS());
             #endif
 
             #if INCOMING_WIFI_ENABLED

@@ -78,7 +78,7 @@ struct SocketResponse
     uint32_t    watts;             // 4
 } __attribute__((packed));
 
-static_assert(sizeof(double) == 8);             // SocketResponse on wire uses 8 byte floats
+static_assert(sizeof(double) == 8);             // SocketResponse on wire uses 8 byte doubles
 static_assert(sizeof(float)  == 4);             // PeakData on wire uses 4 byte floats
 
 // Two things must be true for this to work and interop with the C# side:  floats must be 8 bytes, not the default

@@ -119,8 +119,8 @@ public:
             float spd = speed[i];
 
             #if ENABLE_AUDIO
-                if (g_Analyzer._VURatio > 1.0)
-                    spd *= g_Analyzer._VURatio;
+                if (g_Analyzer.VURatio() > 1.0f)
+                    spd *= g_Analyzer.VURatio();
             #endif
 
             iPos[i] = (bLeft[i]) ? iPos[i]-spd : iPos[i]+spd;

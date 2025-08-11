@@ -87,7 +87,9 @@ class BeatEffectBase
         debugV("BeatEffectBase2::Draw");
         double elapsed = SecondsSinceLastBeat();
 
-        auto basslevel = g_Analyzer.GetPeakData()._Level[0] * 2;  // Since VURatio was historically a 0-2 range, we do the same
+        // Access peaks via const reference to avoid copying
+        const PeakData & peaks = g_Analyzer.Peaks();
+        auto basslevel = peaks._Level[0] * 2;  // Scale to historical 0-2 range
 
         debugV("basslevel: %0.2f", basslevel);
         _samples.push_back(basslevel);
@@ -134,7 +136,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
     {
         ProcessAudio();
 
-        CRGB c = CRGB::Blue * g_Analyzer._VURatio * g_Values.AppTime.LastFrameTime() * 0.75;
+        CRGB c = CRGB::Blue * g_Analyzer.VURatio() * g_Values.AppTime.LastFrameTime() * 0.75;
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
         fadeAllChannelsToBlackBy(min(255.0,1000.0 * g_Values.AppTime.LastFrameTime()));

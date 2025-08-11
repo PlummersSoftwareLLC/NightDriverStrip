@@ -146,7 +146,7 @@ class VUInsulatorsEffect : public LEDStripEffect
         DrawVUPixels(iPeakVUy, fade, vu_gpGreen);
       }
 
-      int bars = ::map(g_Analyzer._VU, g_Analyzer._MinVU, 150.0, 1, _cLEDs - 1);
+      int bars = ::map(g_Analyzer.VU(), g_Analyzer.MinVU(), 150.0, 1, _cLEDs - 1);
       if (bars >= iPeakVUy)
       {
         msPeakVU = millis();

@@ -194,7 +194,7 @@ class MusicPulseStar : public Star
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 1.00f;  }
     virtual float FadeTime()        const { return 2.00f; }
-    virtual float GetStarSize()    const { return 1 + _objectSize * g_Analyzer._VURatio; }
+    virtual float GetStarSize()    const { return 1 + _objectSize * g_Analyzer.VURatio(); }
 };
 
 #endif
@@ -506,11 +506,11 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         {
             double prob = _newStarProbability;
 
-            prob = (prob / 100) + (g_Analyzer._VURatio - 1.0) * _musicFactor;
+            prob = (prob / 100) + (g_Analyzer.VURatio() - 1.0) * _musicFactor;
 
             constexpr auto kProbabilitySpan = 1.0;
 
-            if (g_Analyzer._VU > 0)
+            if (g_Analyzer.VU() > 0)
             {
                 if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
                 {
@@ -547,7 +547,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
         else
         {
             g()->blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blurFactor * 255);
-            fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer._VURatioFade));
+            fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer.VURatioFade()));
         }
 
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
