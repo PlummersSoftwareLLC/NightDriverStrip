@@ -401,10 +401,10 @@ public:
     for (int iPass = 0; iPass < passes; iPass++)
     {
       int iFan = random(0, NUM_FANS);
-      int passes = random(1, (int)g_Analyzer.VURatio());
+      int innerPasses = random(1, (int)g_Analyzer.VURatio());
       CRGB c = CHSV(random(0, 255), 255, 255);
 
-      for (int iPass = 0; iPass < passes; iPass++)
+      for (int iInnerPass = 0; iInnerPass < innerPasses; iInnerPass++)
       {
         DrawFanPixels(0, FAN_SIZE, c, Sequential, iFan++);
       }
