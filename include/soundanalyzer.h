@@ -605,7 +605,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             else
             {
                 // Cube root compression for smooth flattening without spikes
-                v = sqrt(cbrtf(std::max(0.0f, v)));
+                v = cbrtf(std::max(0.0f, v));
             }
 
             if (v > 1.0f)
