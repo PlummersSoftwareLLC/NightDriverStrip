@@ -27,7 +27,7 @@ export default defineConfig({
         }),
         viteCompression({
             deleteOriginFile: true,
-            filter: '/\.(js|mjs|json|css|html|ico)$/i'
+            filter: /\.(js|mjs|json|css|html|ico)$/i
         })
     ],
     server: {

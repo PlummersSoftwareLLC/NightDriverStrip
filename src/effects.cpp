@@ -179,9 +179,20 @@ void LoadEffectFactories()
     // Include custom effects header if available - it overrides whatever the effect set flags
     // would otherwise include.
     //
-    // ONLY one of these may be defined at a time
+    // REVIEW (davepl) This allows the user to define custom effects
+    // in a separate file, which is included here. This way, the user can add custom effects
+    // without having to modify the main effect factories code, which is useful for projects that
+    // are shared across multiple boards and/or projects.  But it replaces ALL effects.  If we
+    // want to allow custom effects to be added to the existing set, we need to change this
+    // not to have an else case after but rather an endif.
+
+    // REVIEW (davepl) If someone were to define multiple effects sets, it would overwrite the
+    // value of EFFECT_SET_VERSION differently for each set, which is not what we want.
+    //
+
 
     #if __has_include ("custom_effects.h")
+
       #include "custom_effects.h"
 
     // Fill effect factories using new effect set flags
