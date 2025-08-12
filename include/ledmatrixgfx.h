@@ -151,12 +151,20 @@ public:
         //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
         //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
 
-        memset((void *) backgroundLayer.backBuffer(), 0, sizeof(LEDMatrixGFX::SM_RGB) * _width * _height);
         if (color.g == color.r && color.r == color.b)
-            memset((void *) leds, color.r, sizeof(CRGB) * _width * _height);
-        else
-            for (int i = 0; i < NUM_LEDS; ++i) 
+        {
+            memset((void *) leds, color.r, sizeof(CRGB) * _ledcount);
+            memset((void *) backgroundLayer.backBuffer(), color.r, sizeof(LEDMatrixGFX::SM_RGB) * _ledcount);
+        }
+        else 
+        {
+            SM_RGB* buf = (SM_RGB*)backgroundLayer.backBuffer();
+            for (int i = 0; i < _ledcount; ++i) 
+            {
+                buf[i]  = rgb24(color.r, color.g, color.b);
                 leds[i] = color;
+            }
+        }
     }
 
     const String & GetCaption()

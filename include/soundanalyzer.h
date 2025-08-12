@@ -113,15 +113,17 @@ static constexpr AudioInputParams kParamsM5Plus2{
 // a consistent interface returning PeakData.
 
 #ifndef MIN_VU
-#define MIN_VU 0.05f
+  #define MIN_VU 0.05f
 #endif
+
 #ifndef VUDAMPEN
-#define VUDAMPEN 0
+  #define VUDAMPEN 0
 #endif
+
 #define VUDAMPENMIN 1
 #define VUDAMPENMAX 1
 
-//
+
 
 class PeakData
 {
