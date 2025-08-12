@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "ledstripeffect.h"
+
 class MeteorChannel
 {
     std::vector<float> hue;
@@ -98,19 +100,19 @@ public:
         bLeft[iMeteor] = !bLeft[iMeteor];
     }
 
-    virtual void Draw(std::shared_ptr<GFXBase> pGFX)
+    virtual void Draw(LEDStripEffect* owner)
     {
+        auto pGFX = owner->g(0);
         static CHSV hsv;
         hsv.val = 255;
         hsv.sat = 255;
 
-        for (int j = 0; j<pGFX->GetLEDCount(); j++)                         // fade brightness all LEDs one step
+        // Fade brightness on all channels
+        for (int j = 0; j < pGFX->GetLEDCount(); j++)
         {
-            if ((!meteorRandomDecay) || (random_range(0, 10)>2))            // BUGBUG Was 5 for everything before atomlight
+            if ((!meteorRandomDecay) || (random_range(0, 10) > 2))
             {
-                CRGB c = pGFX->getPixel(j);
-                c.fadeToBlackBy(meteorTrailDecay);
-                pGFX->setPixel(j, c);
+                owner->fadePixelToBlackOnAllChannelsBy(j, meteorTrailDecay);
             }
         }
 
@@ -123,8 +125,8 @@ public:
                     spd *= g_Analyzer.VURatio();
             #endif
 
-            iPos[i] = (bLeft[i]) ? iPos[i]-spd : iPos[i]+spd;
-            if (iPos[i]< meteorSize)
+            iPos[i] = (bLeft[i]) ? iPos[i] - spd : iPos[i] + spd;
+            if (iPos[i] < meteorSize)
             {
                 bLeft[i] = false;
                 iPos[i] = meteorSize;
@@ -132,23 +134,26 @@ public:
             if (iPos[i] >= pGFX->GetLEDCount())
             {
                 bLeft[i] = true;
-                iPos[i] = pGFX->GetLEDCount()-1;
+                iPos[i] = pGFX->GetLEDCount() - 1;
             }
 
-            for (int j = 0; j < meteorSize; j++)                    // Draw the meteor head
+            // Draw the meteor head across all channels
+            for (int j = 0; j < meteorSize; j++)
             {
-                int x = iPos[i] - j;
-                if ((x <= pGFX->GetLEDCount()) && (x >= 1))
+                int x = static_cast<int>(iPos[i]) - j;
+                if ((x <= static_cast<int>(pGFX->GetLEDCount())) && (x >= 1))
                 {
                     CRGB rgb;
                     hue[i] = hue[i] + 0.025f;
                     if (hue[i] > 255.0f)
                         hue[i] -= 255.0f;
-                    hsv.hue = hue[i];
+                    hsv.hue = static_cast<uint8_t>(hue[i]);
                     hsv2rgb_rainbow(hsv, rgb);
+
+                    // Blend with current pixel from primary device, then set on all channels
                     CRGB c = pGFX->getPixel(x);
-                    nblend(c, rgb , 75);
-                    pGFX->setPixel(x, c);
+                    nblend(c, rgb, 75);
+                    owner->setPixelOnAllChannels(x, c);
                 }
             }
         }
@@ -223,7 +228,8 @@ class MeteorEffect : public LEDStripEffect
 
     void Draw() override
     {
-        for (int i = 0; i < _Meteors.size(); i++)
-            _Meteors[i].Draw(_GFX[i]);
+        // Draw once using channel 0 state while writing to all channels
+        if (!_Meteors.empty())
+            _Meteors[0].Draw(this);
     }
 };

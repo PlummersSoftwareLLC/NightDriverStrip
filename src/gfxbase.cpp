@@ -251,7 +251,8 @@
 
 GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
                         _width(w),
-                        _height(h)
+                        _height(h),
+                        _ledcount(w*h)
 {
     #if USE_NOISE
         debugV("Allocating boids and noise");

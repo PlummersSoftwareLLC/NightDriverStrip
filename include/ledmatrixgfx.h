@@ -34,7 +34,7 @@
 
 #if USE_HUB75
 
-#include <SmartMatrix.h>
+#include "globals.h"
 
 //
 // Matrix Panel
@@ -119,7 +119,7 @@ public:
         return (int) totalPower;
     }
 
-    uint16_t xy(uint16_t x, uint16_t y) const override
+    __attribute__((always_inline)) uint16_t xy(uint16_t x, uint16_t y) const noexcept override
     {
         // Note the x,y are unsigned so can't be less than zero
         if (x < _width && y < _height)
@@ -151,19 +151,12 @@ public:
         //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
         //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
 
-        if (color == CRGB::Black)
-        {
-            memset((void *) backgroundLayer.backBuffer(), 0, sizeof(LEDMatrixGFX::SM_RGB) * _width * _height);
-            memset((void *) leds, 0, sizeof(CRGB) * _width * _height);
-        }
+        memset((void *) backgroundLayer.backBuffer(), 0, sizeof(LEDMatrixGFX::SM_RGB) * _width * _height);
+        if (color.g == color.r && color.r == color.b)
+            memset((void *) leds, color.r, sizeof(CRGB) * _width * _height);
         else
-        {
-            for (int i = 0; i < NUM_LEDS; i++)
-            {
-                backgroundLayer.backBuffer()[i] = rgb24(color.r, color.g, color.b);
+            for (int i = 0; i < NUM_LEDS; ++i) 
                 leds[i] = color;
-            }
-        }
     }
 
     const String & GetCaption()

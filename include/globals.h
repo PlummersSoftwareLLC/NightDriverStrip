@@ -152,9 +152,7 @@
 
 #if USE_M5
 #include "M5Unified.h"
-#undef min                                      // They define a min() on us
 #endif
-
 #define EFFECT_CROSS_FADE_TIME 1200.0    // How long for an effect to ramp brightness fader down and back during effect change
 
 // Thread priorities
@@ -275,27 +273,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #ifndef LED_PIN0
     #define LED_PIN0         5
 #endif
-#ifndef LED_PIN1
-    #define LED_PIN1        16
-#endif
-#ifndef LED_PIN2
-    #define LED_PIN2        17
-#endif
-#ifndef LED_PIN3
-    #define LED_PIN3        18
-#endif
-#ifndef LED_PIN4
-    #define LED_PIN4        32
-#endif
-#ifndef LED_PIN5
-    #define LED_PIN5        33
-#endif
-#ifndef LED_PIN6
-    #define LED_PIN6        23
-#endif
-#ifndef LED_PIN7
-    #define LED_PIN7        22
-#endif
 
 #ifndef PROJECT_NAME
 #define PROJECT_NAME        "Mesmerizer"
@@ -369,15 +346,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #if ENABLE_AUDIO
     #ifndef NUM_BANDS              // How many bands in the spectrum analyzer
         #define NUM_BANDS 16
-    #endif
-    #ifndef NOISE_FLOOR
-        #define NOISE_FLOOR 30
-    #endif
-    #ifndef NOISE_CUTOFF
-        #define NOISE_CUTOFF 10
-    #endif
-    #ifndef AUDIO_MIC_SCALAR
-        #define AUDIO_MIC_SCALAR 1.0
     #endif
     #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
         #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again

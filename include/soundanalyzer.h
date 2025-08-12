@@ -35,36 +35,11 @@
 
 #include "globals.h"
 #include <algorithm>
+#include <numeric>
 #include <arduinoFFT.h>
 #include <driver/adc.h>
 #include <driver/i2s.h>
 #include <memory>
-
-#if !ENABLE_AUDIO
-#ifndef NUM_BANDS
-#define NUM_BANDS 16 // Default value for projects without audio
-#endif
-#endif
-
-/*  SPECTRUM_BAND_SCALE_MEL switches the band layout from logarithmic Hz spacing to Mel-scale 
-    spacing in ComputeBandLayout().
-
-    What it does:
-
-    Off (0): bands are spaced geometrically between fMin and fMax (classic log-eq style).
-    On (1): bands are evenly spaced in Mel units (hz→mel→hz), approximating human pitch perception. 
-    This allocates more bands to lows/mids and fewer to the extreme highs.
-    When to enable:
-
-    If you want perceptually uniform bands (speech/vocals, general music listening).
-    If lows/mids should have finer resolution and highs can be coarser.
-    If you find the current log spacing still feels “bass heavy” or not human-centric.
-    When to leave off:
-
-    If you need more technical/log-frequency uniformity (e.g., octave-like spacing).
-    If you rely on the current band distribution or high-frequency detail.
-*/
-
 #ifndef SPECTRUM_BAND_SCALE_MEL
 #define SPECTRUM_BAND_SCALE_MEL 0
 #endif
@@ -77,6 +52,7 @@
 // Per-microphone analyzers can be tuned independently via this struct.
 // Defaults below start with Mesmerizer values; others can diverge over time.
 
+// You can adjust thea mount of compression (which makes the bar)
 struct AudioInputParams {
     float windowPowerCorrection;  // Windowing power correction (Hann ~4.0)
     float energyNoiseAdapt;       // Noise floor rise rate when signal present
@@ -90,6 +66,9 @@ struct AudioInputParams {
     float normNoiseGate;          // Gate individual bands below this after norm
     float envFloorFromNoise;      // Multiplier on mean noise floor to cap normalization
     float frameSNRGate;           // Gate frame if raw SNR (max/noiseMax) is below this
+    float postScale;              // Post-scale for normalized band values (applied before clamp)
+    float compressGamma;          // Exponent for compression on normalized v (e.g., 1/3=cuberoot, 1/6=sqrt(cuberoot))
+    float quietEnvFloorGate;      // Gate entire frame if envFloor (noiseMean*envFloorFromNoise) < this (0 disables)
 };
 
 // Mesmerizer (default) tuning
@@ -98,20 +77,33 @@ static constexpr AudioInputParams kParamsMesmerizer{
     0.02f,     // energyNoiseAdapt
     0.98f,     // energyNoiseDecay
     0.25f,     // energySmoothAlpha
-    0.90f,     // energyEnvDecay
+    0.99f,     // energyEnvDecay
     0.000001f, // energyMinEnv
     0.25f,     // bandCompLow
     10.0f,     // bandCompHigh
     0.00f,     // frameSilenceGate
     0.00f,     // normNoiseGate
     3.0f,      // envFloorFromNoise (cap auto-gain at ~1/4 of pure-noise)
-    0.0f       // frameSNRGate (require ~3:1 SNR to show frame)
+    0.0f,      // frameSNRGate (require ~3:1 SNR to show frame)
+    1.0f,      // postScale (Mesmerizer default)
+    0.333333f, // compressGamma (cube root)
+    30000000   // quietEnvFloorGate 
 };
 
-// Copies for now; adjust per device as needed
+// PC Remote uses Mesmerizer defaults
 static constexpr AudioInputParams kParamsPCRemote = kParamsMesmerizer;
-static constexpr AudioInputParams kParamsM5       = kParamsMesmerizer;
-static constexpr AudioInputParams kParamsM5Plus2  = kParamsMesmerizer;
+
+// M5 variants use a higher postScale by default
+static constexpr AudioInputParams kParamsM5{
+    4.0f, 0.02f, 0.98f, 0.25f, 0.99f, 0.000001f, 0.25f, 10.0f, 0.00f, 0.00f, 3.0f, 0.0f, 1.5f,
+    0.16666667f,
+    30000000.0f
+};
+static constexpr AudioInputParams kParamsM5Plus2{
+    4.0f, 0.02f, 0.98f, 0.25f, 0.99f, 0.000001f, 0.25f, 10.0f, 0.00f, 0.00f, 3.0f, 0.0f, 1.5f,
+    0.16666667f,
+    30000000.0f
+};
 
 // PeakData
 //
@@ -127,6 +119,8 @@ static constexpr AudioInputParams kParamsM5Plus2  = kParamsMesmerizer;
 #endif
 #define VUDAMPENMIN 1
 #define VUDAMPENMAX 1
+
+//
 
 class PeakData
 {
@@ -557,25 +551,39 @@ class SoundAnalyzer : public ISoundAnalyzer
         // Anchor normalization to noise-derived floor to avoid auto-gain blow-up
         float noiseMean = noiseSum / (float)NUM_BANDS;
         float envFloor = std::max(_params.energyMinEnv, noiseMean * _params.envFloorFromNoise);
+        // Quiet-room gate: if the environment floor (noise-derived) is below threshold, treat as silence
+        if (_params.quietEnvFloorGate > 0.0f && envFloor < _params.quietEnvFloorGate)
+        {
+            _frameGateHits++;
+            memset(_vPeaks, 0, sizeof(float) * NUM_BANDS);
+            memset(_Peaks._Level, 0, sizeof(float) * NUM_BANDS);
+            UpdateVU(0.0f);
+            EVERY_N_MILLISECONDS(100) {
+                debugW("AudioGateQuiet: envFloor=%.0f < gate=%.0f (noiseMean=%.0f, factor=%.2f)",
+                       envFloor, _params.quietEnvFloorGate, noiseMean, _params.envFloorFromNoise);
+            }
+            return _Peaks;
+        }
         float normDen = std::max(_energyMaxEnv, envFloor);
         float invEnv = 1.0f / normDen;
 
         // Frame-level silence gate on normalized values
-        float vMaxNorm = 0.0f;
-        for (int b = 0; b < NUM_BANDS; ++b)
+        // Since invEnv > 0, max(_vPeaks) scaled by invEnv is equivalent to max of normalized values
+        float vMaxNorm = invEnv * (*std::max_element(_vPeaks, _vPeaks + NUM_BANDS));
+
+        EVERY_N_MILLISECONDS(100) 
         {
-            float vNorm = _vPeaks[b] * invEnv;
-            if (vNorm > vMaxNorm)
-                vMaxNorm = vNorm;
+            // Debug: print effective amplification and related values at ~10 Hz
+            // gain ~ invEnv (pre-compression). Also report envelope, floor, SNR, max normalized, postScale and gamma.
+            debugV("AudioGain: gain=%.3f env=%.3f envFloor=%.3f snr=%.2f vMaxNorm=%.3f post=%.2f gamma=%.2f",
+                   invEnv, _energyMaxEnv, envFloor, snrRaw, vMaxNorm, _params.postScale, _params.compressGamma);
         }
+
         if (vMaxNorm < _params.frameSilenceGate)
         {
             _frameGateHits++;
-            for (int b = 0; b < NUM_BANDS; ++b)
-            {
-                _vPeaks[b] = 0.0f;
-                _Peaks._Level[b] = 0.0f;
-            }
+            memset(_vPeaks, 0, sizeof(float) * NUM_BANDS);
+            memset(_Peaks._Level, 0, sizeof(float) * NUM_BANDS);
             UpdateVU(0.0f);
             return _Peaks;
         }
@@ -608,6 +616,8 @@ class SoundAnalyzer : public ISoundAnalyzer
                 v = sqrt(cbrtf(std::max(0.0f, v)));
             }
 
+            // Apply post-scale to improve visible band intensity and clamp to [0,1]
+            v *= _params.postScale;
             if (v > 1.0f)
                 v = 1.0f;
             _vPeaks[b] = v;
@@ -635,9 +645,7 @@ class SoundAnalyzer : public ISoundAnalyzer
                 _Peaks._Level[b] = v;
             }
             // Recompute VU from smoothed values
-            sumNorm = 0.0f;
-            for (int b = 0; b < NUM_BANDS; ++b)
-                sumNorm += _Peaks._Level[b];
+            sumNorm = std::accumulate(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, 0.0f);
         }
 #endif
         UpdateVU((float)(sumNorm / NUM_BANDS));
@@ -975,9 +983,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         _Peaks = peaks;
         for (int i = 0; i < NUM_BANDS; i++)
             _vPeaks[i] = _Peaks._Level[i];
-        float sum = 0.0f;
-        for (int i = 0; i < NUM_BANDS; i++)
-            sum += _vPeaks[i];
+        float sum = std::accumulate(_vPeaks, _vPeaks + NUM_BANDS, 0.0f);
         UpdateVU(sum / NUM_BANDS);
     }
 
@@ -1040,9 +1046,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         }
         else
         {
-            float sum = 0.0f;
-            for (int i = 0; i < NUM_BANDS; i++)
-                sum += _Peaks._Level[i];
+            float sum = std::accumulate(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, 0.0f);
             _MicMode = PeakData::PCREMOTE;
             _params = ParamsFor(_MicMode);
             UpdateVU(sum / NUM_BANDS);

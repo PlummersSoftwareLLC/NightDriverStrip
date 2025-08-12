@@ -31,6 +31,7 @@
 //---------------------------------------------------------------------------
 
 #include "improv.h"
+#include <numeric>
 
 namespace improv
 {
@@ -56,11 +57,7 @@ namespace improv
         {
             uint8_t checksum = data[length - 1];
 
-            uint32_t calculated_checksum = 0;
-            for (uint8_t i = 0; i < length - 1; i++)
-            {
-                calculated_checksum += data[i];
-            }
+            uint32_t calculated_checksum = std::accumulate(data, data + (length - 1), 0u);
 
             if ((uint8_t)calculated_checksum != checksum)
             {
@@ -106,12 +103,7 @@ namespace improv
 
         if (add_checksum)
         {
-            uint32_t calculated_checksum = 0;
-
-            for (uint8_t byte : out)
-            {
-                calculated_checksum += byte;
-            }
+            uint32_t calculated_checksum = std::accumulate(out.begin(), out.end(), 0u);
             out.push_back(calculated_checksum);
         }
         return out;
