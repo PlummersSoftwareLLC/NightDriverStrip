@@ -123,7 +123,9 @@ static constexpr AudioInputParams kParamsM5Plus2{
 #define VUDAMPENMIN 1
 #define VUDAMPENMAX 1
 
-
+#ifndef NUM_BANDS
+#define NUM_BANDS 1
+#endif
 
 class PeakData
 {
