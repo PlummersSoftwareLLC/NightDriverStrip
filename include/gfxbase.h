@@ -65,6 +65,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <algorithm>
 #include "Adafruit_GFX.h"
 #include "pixeltypes.h"
 #include "effects/matrix/Boid.h"
@@ -787,8 +788,8 @@ public:
 
     void ResetOscillators()
     {
-        memset(osci, 0, sizeof(osci));
-        memset(p, 0, sizeof(p));
+        std::fill_n(osci, 6, 0);
+        std::fill_n(p, 6, 0);
     }
 
     // All the Caleidoscope functions work directly within the screenbuffer (leds array).

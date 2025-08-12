@@ -52,7 +52,7 @@
 // Per-microphone analyzers can be tuned independently via this struct.
 // Defaults below start with Mesmerizer values; others can diverge over time.
 
-// You can adjust thea mount of compression (which makes the bar)
+// You can adjust the amount of compression (which makes the bar)
 struct AudioInputParams {
     float windowPowerCorrection;  // Windowing power correction (Hann ~4.0)
     float energyNoiseAdapt;       // Noise floor rise rate when signal present
@@ -137,8 +137,7 @@ class PeakData
 
     PeakData()
     {
-        for (auto &i : _Level)
-            i = 0.0f;
+        std::fill_n(_Level, NUM_BANDS, 0.0f);
     }
     explicit PeakData(const float *pFloats)
     {
@@ -148,15 +147,13 @@ class PeakData
     {
         if (this == &other)
             return *this;
-        for (int i = 0; i < NUM_BANDS; i++)
-            _Level[i] = other._Level[i];
+        std::copy(other._Level, other._Level + NUM_BANDS, _Level);
         return *this;
     }
     float operator[](std::size_t n) const { return _Level[n]; }
     void SetData(const float *pFloats)
     {
-        for (int i = 0; i < NUM_BANDS; i++)
-            _Level[i] = pFloats[i];
+        std::copy(pFloats, pFloats + NUM_BANDS, _Level);
     }
 };
 
@@ -357,14 +354,10 @@ class SoundAnalyzer : public ISoundAnalyzer
     {
         if (!_vReal)
             return;
-        for (int i = 0; i < MAX_SAMPLES; i++)
-        {
-            _vReal[i] = 0.0f;
-            if (_vImaginary)
-                _vImaginary[i] = 0.0f;
-        }
-        for (int i = 0; i < NUM_BANDS; i++)
-            _vPeaks[i] = 0.0f;
+        std::fill_n(_vReal, MAX_SAMPLES, 0.0f);
+        if (_vImaginary)
+            std::fill_n(_vImaginary, MAX_SAMPLES, 0.0f);
+        std::fill_n(_vPeaks, NUM_BANDS, 0.0f);
     }
 
     // Perform the FFT 
@@ -555,8 +548,8 @@ class SoundAnalyzer : public ISoundAnalyzer
         if (_params.quietEnvFloorGate > 0.0f && envFloor < _params.quietEnvFloorGate)
         {
             _frameGateHits++;
-            memset(_vPeaks, 0, sizeof(float) * NUM_BANDS);
-            memset(_Peaks._Level, 0, sizeof(float) * NUM_BANDS);
+            std::fill_n(_vPeaks, NUM_BANDS, 0.0f);
+            std::fill_n(_Peaks._Level, NUM_BANDS, 0.0f);
             UpdateVU(0.0f);
             EVERY_N_MILLISECONDS(100) {
                 debugW("AudioGateQuiet: envFloor=%.0f < gate=%.0f (noiseMean=%.0f, factor=%.2f)",
@@ -582,8 +575,8 @@ class SoundAnalyzer : public ISoundAnalyzer
         if (vMaxNorm < _params.frameSilenceGate)
         {
             _frameGateHits++;
-            memset(_vPeaks, 0, sizeof(float) * NUM_BANDS);
-            memset(_Peaks._Level, 0, sizeof(float) * NUM_BANDS);
+            std::fill_n(_vPeaks, NUM_BANDS, 0.0f);
+            std::fill_n(_Peaks._Level, NUM_BANDS, 0.0f);
             UpdateVU(0.0f);
             return _Peaks;
         }
@@ -981,8 +974,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     {
         _msLastRemote = millis();
         _Peaks = peaks;
-        for (int i = 0; i < NUM_BANDS; i++)
-            _vPeaks[i] = _Peaks._Level[i];
+        std::copy(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, _vPeaks);
         float sum = std::accumulate(_vPeaks, _vPeaks + NUM_BANDS, 0.0f);
         UpdateVU(sum / NUM_BANDS);
     }
