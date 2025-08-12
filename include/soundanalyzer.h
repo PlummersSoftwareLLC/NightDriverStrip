@@ -593,7 +593,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             memset(_Peaks._Level, 0, sizeof(float) * NUM_BANDS);
             UpdateVU(0.0f);
             EVERY_N_MILLISECONDS(100) {
-                debugW("AudioGateQuiet: envFloor=%.0f < gate=%.0f (noiseMean=%.0f, factor=%.2f)",
+                debugV("AudioGateQuiet: envFloor=%.0f < gate=%.0f (noiseMean=%.0f, factor=%.2f)",
                        envFloor, _params.quietEnvFloorGate, noiseMean, _params.envFloorFromNoise);
             }
             return _Peaks;
