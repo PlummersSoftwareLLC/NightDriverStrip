@@ -301,7 +301,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // I'm old enough I can only hear up to about 12000Hz, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 samples is 12000Hz
 
-    static constexpr size_t SAMPLING_FREQUENCY = 20000;
+    static constexpr size_t SAMPLING_FREQUENCY = 24000;
     static constexpr size_t LOWEST_FREQ = 100;
     static constexpr size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
@@ -321,6 +321,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     float   _oldPeakVU;                 // Old peak VU value for damping
     float   _oldMinVU;                  // Old min VU value for damping
     float * _vPeaks;                    // Normalized band energies 0..1
+    float * _livePeaks;                 // Attack-limited display peaks per band
     int     _bandBinStart[NUM_BANDS];
     int     _bandBinEnd[NUM_BANDS];
     float   _energyMaxEnv = 1.0f;         // adaptive envelope for autoscaling
@@ -343,6 +344,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     //
 
   private:
+    static constexpr int kBandOffset = 1; // number of lowest source bands to skip in layout
     float *_vReal = nullptr;
     float *_vImaginary = nullptr;
     std::unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
@@ -448,7 +450,9 @@ class SoundAnalyzer : public ISoundAnalyzer
 #endif
         for (int b = 0; b < NUM_BANDS; b++)
         {
-            float fracHi = (float)(b + 1) / (float)NUM_BANDS;
+            // Shift the effective band index by kBandOffset so logical band 0 starts higher
+            const int logicalIdx = b + kBandOffset;
+            const float fracHi = (float)(logicalIdx + 1) / (float)(NUM_BANDS + kBandOffset);
 #if SPECTRUM_BAND_SCALE_MEL
             float edgeMel = melMin + (melMax - melMin) * fracHi;
             float edgeHiFreq = melToHz(edgeMel);
@@ -467,10 +471,31 @@ class SoundAnalyzer : public ISoundAnalyzer
     
     PeakData ProcessPeaksEnergy()
     {
-        float frameMax = 0.0f;
-        float frameRawMax = 0.0f;    // max pre-subtraction band power (with compensation)
-        float noiseSum = 0.0f;       // accumulate noise floor for mean
-        float noiseMaxAll = 0.0f;    // track max noise floor across bands
+        // Band offset handled in ComputeBandLayout so index 0 is the lowest VISIBLE band
+         float frameMax = 0.0f;
+         float frameSumRaw = 0.0f;
+         float noiseSum = 0.0f;
+         float noiseMaxAll = 0.0f; // Tracks max noise floor across bands
+         // Display gain and band floor constants
+         constexpr float kDisplayGain = 1.5f;
+         constexpr float kBandFloorMin = 0.01f;
+         constexpr float kBandFloorScale = 0.05f;
+
+        // Remember that a slower attack will yield a smoother display but a lower one, as it's always 
+        // below the actual for some amount of time
+
+        constexpr float kLiveAttackPerSec = 5.0f;
+
+        // Envelope gating factor and max relative EMA
+        float _gateEnv = 1.0f;
+        float _vMaxRelEMA = 1.0f;
+        // Delta time for attack limiting (replace with actual frame time if available)
+        float dt = 0.016f;
+        // Allocate _livePeaks if not already done
+        if (!_livePeaks) {
+            _livePeaks = (float *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_livePeaks[0]));
+            for (int i = 0; i < NUM_BANDS; ++i) _livePeaks[i] = 0.0f;
+        }
         _framesProcessed++;
         const float binWidth = (float)SAMPLING_FREQUENCY / (MAX_SAMPLES / 2.0f);
         for (int b = 0; b < NUM_BANDS; b++)
@@ -497,8 +522,8 @@ class SoundAnalyzer : public ISoundAnalyzer
             avgPower *= compensation;
 
             // Track pre-subtraction max for SNR gating
-            if (avgPower > frameRawMax)
-                frameRawMax = avgPower;
+            if (avgPower > frameSumRaw)
+                frameSumRaw = avgPower;
 
             if (avgPower > _noiseFloor[b])
                 _noiseFloor[b] = _noiseFloor[b] * (1.0f - _params.energyNoiseAdapt) + (float)avgPower * _params.energyNoiseAdapt;
@@ -513,11 +538,20 @@ class SoundAnalyzer : public ISoundAnalyzer
             float signal = (float)avgPower - _noiseFloor[b];
             if (signal < 0.0f)
                 signal = 0.0f;
-            float smoothed = _rawPrev[b] * (1.0f - _params.energySmoothAlpha) + signal * _params.energySmoothAlpha;
+#if ENABLE_AUDIO_SMOOTHING
+            // Weighted average: 0.25 * (2 * current + left + right)
+            float left = (b > 0) ? _rawPrev[b - 1] : signal;
+            float right = (b < NUM_BANDS - 1) ? _rawPrev[b + 1] : signal;
+            float smoothed = 0.125f * (6.0f * signal + left + right);
             _rawPrev[b] = smoothed;
             _vPeaks[b] = smoothed;
             if (smoothed > frameMax)
                 frameMax = smoothed;
+#else
+            _vPeaks[b] = signal;
+            if (signal > frameMax)
+                frameMax = signal;
+#endif
         }
         if (frameMax > _energyMaxEnv)
             _energyMaxEnv = frameMax;
@@ -528,7 +562,7 @@ class SoundAnalyzer : public ISoundAnalyzer
 
         // Raw SNR-based frame gate (pre-normalization) to suppress steady HVAC and similar backgrounfd noises
 
-        float snrRaw = frameRawMax / (noiseMaxAll + 1e-9f);
+        float snrRaw = frameSumRaw / (noiseMaxAll + 1e-9f);
         if (snrRaw < _params.frameSNRGate)
         {
             _frameGateHits++;
@@ -552,7 +586,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             std::fill_n(_Peaks._Level, NUM_BANDS, 0.0f);
             UpdateVU(0.0f);
             EVERY_N_MILLISECONDS(100) {
-                debugW("AudioGateQuiet: envFloor=%.0f < gate=%.0f (noiseMean=%.0f, factor=%.2f)",
+                debugV("AudioGateQuiet: envFloor=%.0f < gate=%.0f (noiseMean=%.0f, factor=%.2f)",
                        envFloor, _params.quietEnvFloorGate, noiseMean, _params.envFloorFromNoise);
             }
             return _Peaks;
@@ -592,22 +626,8 @@ class SoundAnalyzer : public ISoundAnalyzer
         }
 #endif
 
+        const float invEnv = 1.0f / normDen;
         float sumNorm = 0.0f;
-        for (int b = 0; b < NUM_BANDS; b++)
-        {
-            float v = _vPeaks[b] * invEnv;
-
-            // Per-band normalized noise gate
-            if (v < _params.normNoiseGate)
-            {
-                v = 0.0f;
-                _bandGateHits++;
-            }
-            else
-            {
-                // Cube root compression for smooth flattening without spikes
-                v = sqrt(cbrtf(std::max(0.0f, v)));
-            }
 
             // Apply post-scale to improve visible band intensity and clamp to [0,1]
             v *= _params.postScale;
@@ -621,15 +641,25 @@ class SoundAnalyzer : public ISoundAnalyzer
 #if ENABLE_AUDIO_SMOOTHING
         // Spatially smooth live spectrum peaks by blending with neighbors.
         // This affects displayed bars (and VU after we recompute below).
+        // Now that layout skips the lowest bins, emit all NUM_BANDS directly with no reindexing
+        for (int b = 0; b < NUM_BANDS; b++)
         {
-            float tmp[NUM_BANDS];
-            for (int b = 0; b < NUM_BANDS; ++b)
+            float vTarget = _vPeaks[b] * invEnv;
+            vTarget = cbrtf(std::max(0.0f, vTarget));
+            if (vTarget > 1.0f) vTarget = 1.0f;
+            vTarget *= _gateEnv;
+            vTarget *= kDisplayGain;
+            if (vTarget > 1.0f) vTarget = 1.0f;
+            const float bandFloor = std::max(kBandFloorMin, kBandFloorScale * _vMaxRelEMA);
+            if (vTarget < bandFloor) { vTarget = 0.0f; _bandGateHits++; }
+            float vCurr = _livePeaks[b];
+            float vNew = vTarget;
+            if (vTarget > vCurr)
             {
-                float v = _Peaks._Level[b];
-                float l = (b > 0) ? _Peaks._Level[b - 1] : v;
-                float r = (b < NUM_BANDS - 1) ? _Peaks._Level[b + 1] : v;
-                tmp[b] = (v * 2.0f + l + r) * 0.25f; // (2*center + left + right) / 4
+                const float maxRise = kLiveAttackPerSec * dt;
+                vNew = vCurr + std::min(vTarget - vCurr, maxRise);
             }
+
             for (int b = 0; b < NUM_BANDS; ++b)
             {
                 float v = tmp[b];
@@ -639,9 +669,14 @@ class SoundAnalyzer : public ISoundAnalyzer
             }
             // Recompute VU from smoothed values
             sumNorm = std::accumulate(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, 0.0f);
+            if (vNew > 1.0f) vNew = 1.0f;
+            if (vNew < 0.0f) vNew = 0.0f;
+            _livePeaks[b] = vNew;
+            _vPeaks[b] = vNew;
+            _Peaks._Level[b] = vNew;
+            sumNorm += vNew;
         }
-#endif
-        UpdateVU((float)(sumNorm / NUM_BANDS));
+        UpdateVU(sumNorm / (float)NUM_BANDS);
         return _Peaks;
     }
 
@@ -787,8 +822,10 @@ class SoundAnalyzer : public ISoundAnalyzer
         _vReal = (float *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
         _vImaginary = (float *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
         _vPeaks = (float *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_vPeaks[0]));
-        if (!_vReal || !_vImaginary || !_vPeaks)
+        _livePeaks = (float *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_livePeaks[0]));
+        if (!_vReal || !_vImaginary || !_vPeaks || !_livePeaks)
             throw std::runtime_error("Failed to allocate FFT buffers");
+        for (int i = 0; i < NUM_BANDS; ++i) _livePeaks[i] = 0.0f;
         _oldVU = _oldPeakVU = _oldMinVU = 0.0f;
         _MicMode = PeakData::MESMERIZERMIC;
         _params = ParamsFor(_MicMode);
@@ -805,6 +842,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         free(_vReal);
         free(_vImaginary);
         free(_vPeaks);
+        free(_livePeaks);
     }
 
     // These functions allow access to the last-acquired sample buffer and its size so that
