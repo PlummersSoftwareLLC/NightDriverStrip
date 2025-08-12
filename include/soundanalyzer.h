@@ -40,6 +40,7 @@
 #include <driver/adc.h>
 #include <driver/i2s.h>
 #include <memory>
+
 #ifndef SPECTRUM_BAND_SCALE_MEL
 #define SPECTRUM_BAND_SCALE_MEL 0
 #endif
@@ -578,69 +579,10 @@ class SoundAnalyzer : public ISoundAnalyzer
         // Anchor normalization to noise-derived floor to avoid auto-gain blow-up
         float noiseMean = noiseSum / (float)NUM_BANDS;
         float envFloor = std::max(_params.energyMinEnv, noiseMean * _params.envFloorFromNoise);
-        // Quiet-room gate: if the environment floor (noise-derived) is below threshold, treat as silence
-        if (_params.quietEnvFloorGate > 0.0f && envFloor < _params.quietEnvFloorGate)
-        {
-            _frameGateHits++;
-            std::fill_n(_vPeaks, NUM_BANDS, 0.0f);
-            std::fill_n(_Peaks._Level, NUM_BANDS, 0.0f);
-            UpdateVU(0.0f);
-            EVERY_N_MILLISECONDS(100) {
-                debugV("AudioGateQuiet: envFloor=%.0f < gate=%.0f (noiseMean=%.0f, factor=%.2f)",
-                       envFloor, _params.quietEnvFloorGate, noiseMean, _params.envFloorFromNoise);
-            }
-            return _Peaks;
-        }
         float normDen = std::max(_energyMaxEnv, envFloor);
-        float invEnv = 1.0f / normDen;
-
-        // Frame-level silence gate on normalized values
-        // Since invEnv > 0, max(_vPeaks) scaled by invEnv is equivalent to max of normalized values
-        float vMaxNorm = invEnv * (*std::max_element(_vPeaks, _vPeaks + NUM_BANDS));
-
-        EVERY_N_MILLISECONDS(100) 
-        {
-            // Debug: print effective amplification and related values at ~10 Hz
-            // gain ~ invEnv (pre-compression). Also report envelope, floor, SNR, max normalized, postScale and gamma.
-            debugV("AudioGain: gain=%.3f env=%.3f envFloor=%.3f snr=%.2f vMaxNorm=%.3f post=%.2f gamma=%.2f",
-                   invEnv, _energyMaxEnv, envFloor, snrRaw, vMaxNorm, _params.postScale, _params.compressGamma);
-        }
-
-        if (vMaxNorm < _params.frameSilenceGate)
-        {
-            _frameGateHits++;
-            std::fill_n(_vPeaks, NUM_BANDS, 0.0f);
-            std::fill_n(_Peaks._Level, NUM_BANDS, 0.0f);
-            UpdateVU(0.0f);
-            return _Peaks;
-        }
-
-#if ENABLE_AUDIO_DEBUG
-        // Debug HVAC issues: log when frame gate should trigger but doesn't
-        static uint32_t lastDebugMs = 0;
-        if (millis() - lastDebugMs > 1000) // once per second
-        {
-            Serial.printf("FrameGate: vMaxNorm=%.3f, gate=%.3f, envelope=%.1f, hits=%zu\n", 
-                         vMaxNorm, _params.frameSilenceGate, _energyMaxEnv, _frameGateHits);
-            lastDebugMs = millis();
-        }
-#endif
-
         const float invEnv = 1.0f / normDen;
         float sumNorm = 0.0f;
 
-            // Apply post-scale to improve visible band intensity and clamp to [0,1]
-            v *= _params.postScale;
-            if (v > 1.0f)
-                v = 1.0f;
-            _vPeaks[b] = v;
-            _Peaks._Level[b] = v;
-            sumNorm += v;
-        }
-
-#if ENABLE_AUDIO_SMOOTHING
-        // Spatially smooth live spectrum peaks by blending with neighbors.
-        // This affects displayed bars (and VU after we recompute below).
         // Now that layout skips the lowest bins, emit all NUM_BANDS directly with no reindexing
         for (int b = 0; b < NUM_BANDS; b++)
         {
@@ -659,16 +601,6 @@ class SoundAnalyzer : public ISoundAnalyzer
                 const float maxRise = kLiveAttackPerSec * dt;
                 vNew = vCurr + std::min(vTarget - vCurr, maxRise);
             }
-
-            for (int b = 0; b < NUM_BANDS; ++b)
-            {
-                float v = tmp[b];
-                if (v > 1.0f) v = 1.0f;
-                _vPeaks[b] = v;
-                _Peaks._Level[b] = v;
-            }
-            // Recompute VU from smoothed values
-            sumNorm = std::accumulate(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, 0.0f);
             if (vNew > 1.0f) vNew = 1.0f;
             if (vNew < 0.0f) vNew = 0.0f;
             _livePeaks[b] = vNew;
