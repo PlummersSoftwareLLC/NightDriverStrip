@@ -35,6 +35,7 @@
 #include "musiceffect.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
+#include <numeric>
 
 class FireEffect : public LEDStripEffect
 {
@@ -181,9 +182,9 @@ class FireEffect : public LEDStripEffect
 
         for (int i = 0; i < LEDCount; i++)
         {
-            auto sum = 0;
-            for (int j = 0; j < CellsPerLED; j++)
-                sum += heat[i*CellsPerLED + j];
+            auto begin = &heat[i * CellsPerLED];
+            auto end = begin + CellsPerLED;
+            int sum = std::accumulate(begin, end, 0);
             auto avg = sum / CellsPerLED;
 
             #if LANTERN
@@ -317,7 +318,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
         }
         else
         {
-            GenerateSparks(g_Analyzer._VURatio * 50);
+            GenerateSparks(g_Analyzer.VURatio() * 50);
         }
     }
 
@@ -570,7 +571,7 @@ public:
         {
             for (int k = _cLEDs - 1; k >= 3; k--)
             {
-                float amount = 0.2f + g_Analyzer._VURatio; // MIN(0.85f, _Drift * deltaTime);
+                float amount = 0.2f + g_Analyzer.VURatio(); // MIN(0.85f, _Drift * deltaTime);
                 float c0 = 1.0f - amount;
                 float c1 = amount * 0.33f;
                 float c2 = c1;
@@ -760,9 +761,9 @@ class BaseFireEffect : public LEDStripEffect
         int cellsPerLED = CellCount / LEDCount;
         for (int i = 0; i < LEDCount; i++)
         {
-            int sum = 0;
-            for (int iCell = 0; iCell < cellsPerLED; iCell++)
-              sum += heat[i * cellsPerLED + iCell];
+            auto begin = &heat[i * cellsPerLED];
+            auto end = begin + cellsPerLED;
+            int sum = std::accumulate(begin, end, 0);
             int avg = sum / cellsPerLED;
             CRGB color = MapHeatToColor(heat[avg]);
             int j = bReversed ? (LEDCount - 1 - i) : i;

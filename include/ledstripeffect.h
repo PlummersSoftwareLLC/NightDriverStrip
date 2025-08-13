@@ -17,7 +17,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Nightdriver.  It is normally found in copying.txt
+//    along with NightDriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
 //
 // Description:
@@ -476,18 +476,17 @@ class LEDStripEffect : public IJSONSerializable
 
     void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const
     {
-        for (auto& device : _GFX)
-        {
-            CRGB crgb = device->getPixel(pixel);
-            crgb.fadeToBlackBy(fadeValue);
-            device->setPixel(pixel, crgb);
-        }
+        if (pixel >= 0 && pixel < _cLEDs)
+            for (auto& device : _GFX)
+                device->fadePixelToBlackBy(pixel, fadeValue);
+        
     }
 
     void fadeAllChannelsToBlackBy(uint8_t fadeValue) const
     {
-        for (int i = 0; i < _cLEDs; i++)
-            fadePixelToBlackOnAllChannelsBy(i, fadeValue);
+        for (auto& device : _GFX)
+            for (int i = 0; i < _cLEDs; i++)
+                device->fadePixelToBlackBy(i, fadeValue);
     }
 
     void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const

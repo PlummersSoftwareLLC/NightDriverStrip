@@ -202,7 +202,7 @@ void ShowOnboardRGBLED()
 
     #if ONBOARD_LED_R
         #if ENABLE_AUDIO
-            CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer._VURatioFade / 2.0 * 255);
+            CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer.VURatioFade() / 2.0 * 255);
             ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
             ledcWrite(2, 255 - c.g);
             ledcWrite(3, 255 - c.b);

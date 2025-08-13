@@ -154,7 +154,7 @@ private:
     static void screenClearCallback(void)
     {
         auto& g = *(g_ptrSystem->EffectManager().g());
-        g.fillScreen(g.to16bit(g_gifDecoderState._bkColor));
+        g.Clear(g_gifDecoderState._bkColor);
     }
 
     // We decide when to update the screen, so this is a no-op

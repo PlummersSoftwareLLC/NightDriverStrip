@@ -297,8 +297,8 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType 
     if ((statsType & StatisticsType::Dynamic) != StatisticsType::None)
     {
         j["LED_FPS"]               = g_Values.FPS;
-        j["SERIAL_FPS"]            = g_Analyzer._serialFPS;
-        j["AUDIO_FPS"]             = g_Analyzer._AudioFPS;
+        j["SERIAL_FPS"]            = g_Analyzer.SerialFPS();
+        j["AUDIO_FPS"]             = g_Analyzer.AudioFPS();
         j["HEAP_FREE"]             = ESP.getFreeHeap();
         j["HEAP_MIN"]              = ESP.getMinFreeHeap();
         j["DMA_FREE"]              = heap_caps_get_free_size(MALLOC_CAP_DMA);

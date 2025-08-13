@@ -576,22 +576,125 @@ class PDPGridEffect : public LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 20;
+        return 5;
+    }
+
+    bool RequiresDoubleBuffering() const override
+    {
+        return false;
+    }
+
+    virtual void Start() override
+    {
+        g()->Clear();
+    }    
+
+    virtual void Draw() override
+    {
+        fadeAllChannelsToBlackBy(60);
+        g()->MoveY(1);
+        for (int x = 0; x < MATRIX_WIDTH; x++)
+        {
+            // Pick a color, CRGB::Red 90% of the time, CRGB::Green 10% of the time
+            CRGB color = random(0, 100) > 20 ? CRGB::Black : CRGB(random(0, 100) < 90) ? CRGB::Red : CRGB::Orange;
+            setPixelOnAllChannels(x, MATRIX_HEIGHT-1, color);
+        }
+    }
+};
+
+// PDPCMXEffect
+//
+// Connection Machine 5 LED simulation for the PDP-11/34 CMX display
+
+class PDPCMXEffect : public LEDStripEffect
+{
+  private:
+    static constexpr int GROUP_HEIGHT = 5; // Height of each logical group
+    static constexpr float LED_PROBABILITY = 0.30f; // 30% chance of LED being on
+    
+    void scrollGroup(int groupStartY, bool scrollLeft)
+    {
+        // Scroll existing LEDs in the group
+        for (int y = groupStartY; y < groupStartY + GROUP_HEIGHT && y < MATRIX_HEIGHT; y++)
+        {
+            if (scrollLeft)
+            {
+                // Scroll left: move all pixels one position left
+                for (int x = 0; x < MATRIX_WIDTH - 1; x++)
+                {
+                    CRGB color = _GFX[0]->getPixel(x + 1, y);
+                    setPixelOnAllChannels(x, y, color);
+                }
+                // Clear the rightmost pixel (will be populated with new random data)
+                setPixelOnAllChannels(MATRIX_WIDTH - 1, y, CRGB::Black);
+            }
+            else
+            {
+                // Scroll right: move all pixels one position right
+                for (int x = MATRIX_WIDTH - 1; x > 0; x--)
+                {
+                    CRGB color = _GFX[0]->getPixel(x - 1, y);
+                    setPixelOnAllChannels(x, y, color);
+                }
+                // Clear the leftmost pixel (will be populated with new random data)
+                setPixelOnAllChannels(0, y, CRGB::Black);
+            }
+        }
+        
+        // Add new random LEDs on the appropriate edge
+        for (int y = groupStartY; y < groupStartY + GROUP_HEIGHT && y < MATRIX_HEIGHT; y++)
+        {
+            if (random(100) < (LED_PROBABILITY * 100))
+            {
+                CRGB color = CRGB::Red;
+                if (scrollLeft)
+                    setPixelOnAllChannels(MATRIX_WIDTH - 1, y, color);
+                else
+                    setPixelOnAllChannels(0, y, color);
+            }
+        }
+    }
+
+  public:
+
+    PDPCMXEffect() : LEDStripEffect(EFFECT_MATRIX_PDPCMX, "PDPCMXEffect")
+    {
+    }
+
+    PDPCMXEffect(const JsonObjectConst& jsonObject)
+      : LEDStripEffect(jsonObject)
+    {
+    }
+
+    virtual size_t DesiredFramesPerSecond() const
+    {
+        return 30; // Moderate speed for scrolling effect
+    }
+
+    virtual bool CanDisplayVUMeter() const override
+    {
+        return false;
+    }
+
+    virtual void Start() override
+    {
+        g()->Clear();
     }
 
     virtual void Draw() override
     {
-        fadeAllChannelsToBlackBy(255 * g_Values.AppTime.LastFrameTime());
-
+        // Process each logical group
+        int numGroups = (MATRIX_HEIGHT + GROUP_HEIGHT - 1) / GROUP_HEIGHT; // Ceiling division
+        
+        fadeAllChannelsToBlackBy(5);
         EVERY_N_MILLISECONDS(200)
         {
-          g()->MoveY(1);
-          for (int x = 0; x < MATRIX_WIDTH; x++)
+          for (int group = 0; group < numGroups; group++)
           {
-              if (random(0, 100) < 20)
-                  setPixelOnAllChannels(x, MATRIX_HEIGHT-1, CRGB::Red);
-              else
-                  setPixelOnAllChannels(x, MATRIX_HEIGHT-1, CRGB::Black);
+              int groupStartY = group * GROUP_HEIGHT;
+              bool scrollLeft = (group % 2 == 0); // Alternate direction: even groups scroll left, odd scroll right
+              
+              scrollGroup(groupStartY, scrollLeft);
           }
         }
     }

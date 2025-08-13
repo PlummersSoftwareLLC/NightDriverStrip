@@ -219,7 +219,7 @@ class HexagonGFX : public LEDStripGFX
     // the Xth pixel in row Y.  It's up to you not to overrun the width of that row, but
     // it will just blend into the next row if you do.
 
-    virtual uint16_t xy(uint16_t x, uint16_t y) const override
+    __attribute__((always_inline)) virtual uint16_t xy(uint16_t x, uint16_t y) const noexcept override
     {
         auto start = getStartIndexOfRow(y);
         if (y & 0x01)

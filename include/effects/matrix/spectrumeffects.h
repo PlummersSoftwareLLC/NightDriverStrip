@@ -77,13 +77,14 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
 
     virtual void Draw() override
     {
-        auto peaks = g_Analyzer.GetPeakData();
+        // Use const reference to avoid copying PeakData
+        const PeakData & peaks = g_Analyzer.Peaks();
 
         for (int band = 0; band < min(NUM_BANDS, NUM_FANS); band++)
         {
             CRGB color = ColorFromPalette(_Palette, ::map(band, 0, min(NUM_BANDS, NUM_FANS), 0, 255) + beatsin8(1) );
             color = color.fadeToBlackBy(255 - 255 * peaks[band]);
-            color = color.fadeToBlackBy((2.0 - g_Analyzer._VURatio) * 228);
+            color = color.fadeToBlackBy((2.0 - g_Analyzer.VURatio()) * 228);
             DrawRingPixels(0, FAN_SIZE * peaks[band], color, NUM_FANS-1-band, 0);
         }
 
@@ -104,7 +105,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
 
 
         // REVIEW(davepl) This might look interesting if it didn't erase...
-        bool bFlash = g_Analyzer._VURatio > 1.99 && span > 1.9 && elapsed > 0.25;
+        bool bFlash = g_Analyzer.VURatio() > 1.99 && span > 1.9 && elapsed > 0.25;
 
         _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 256.0/FAN_SIZE, 4, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, bFlash ? max(0.12f, elapsed/8) : 0));
     }
@@ -116,7 +117,7 @@ class VUMeter
 
     // DrawVUPixels
     //
-    // Draw i-th pixel in row y
+    // Draw i-th pixel in row yVU
 
     virtual void DrawVUPixels(std::vector<std::shared_ptr<GFXBase>> & GFX, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
     {
@@ -153,7 +154,7 @@ class VUMeter
         const int MAX_FADE = 256;
 
         int xHalf = GFX[0]->width()/2-1;
-        int bars  = g_Analyzer._VURatioFade / 2.0 * xHalf;
+        int bars  = g_Analyzer.VURatioFade() / 2.0 * xHalf;
         bars = min(bars, xHalf);
 
         EraseVUMeter(GFX, bars, yVU);
@@ -163,14 +164,14 @@ class VUMeter
             msPeakVU = millis();
             iPeakVUy = bars;
         }
-        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
+        else if (millis() - msPeakVU > MILLIS_PER_SECOND / 2)
         {
             iPeakVUy = 0;
         }
 
         if (iPeakVUy > 1)
         {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MILLIS_PER_SECOND * 2;
             DrawVUPixels(GFX, iPeakVUy,   yVU, fade);
             DrawVUPixels(GFX, iPeakVUy-1, yVU, fade);
         }
@@ -206,7 +207,7 @@ public:
         const int MAX_FADE = 256;
 
         int size = GFX[0]->width();
-        int bars  = g_Analyzer._VURatioFade / 2.0 * size;
+        int bars  = g_Analyzer.VURatioFade() / 2.0 * size;
         bars = min(bars, size);
 
         EraseVUMeter(GFX, bars, yVU);
@@ -216,14 +217,14 @@ public:
             msPeakVU = millis();
             iPeakVUy = bars;
         }
-        else if (millis() - msPeakVU > MS_PER_SECOND / 2)
+        else if (millis() - msPeakVU > MILLIS_PER_SECOND / 2)
         {
             iPeakVUy = 0;
         }
 
         if (iPeakVUy > 1)
         {
-            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MS_PER_SECOND * 2;
+            int fade = MAX_FADE * (millis() - msPeakVU) / (float) MILLIS_PER_SECOND * 2;
             DrawVUPixels(GFX, iPeakVUy,   yVU, fade);
             DrawVUPixels(GFX, iPeakVUy-1, yVU, fade);
         }
@@ -333,18 +334,18 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
             // bar 16, for example, it will take all of bar 4 and none of bar 5.  For bar 17, it will take 3/4 of bar 4 and 1/4 of bar 5.
 
             int ib = iBar % barsPerBand;
-            value  = (g_Analyzer._peak1Decay[iBand] * (barsPerBand - ib) + g_Analyzer._peak1Decay[iNextBand] * (ib) ) / barsPerBand * (pGFXChannel->height() - 1);
-            value2 = (g_Analyzer._peak2Decay[iBand] * (barsPerBand - ib) + g_Analyzer._peak2Decay[iNextBand] * (ib) ) / barsPerBand *  pGFXChannel->height();
+            value  = (g_Analyzer.Peak2Decay(iBand) * (barsPerBand - ib) + g_Analyzer.Peak2Decay(iNextBand) * (ib) ) / barsPerBand * (pGFXChannel->height() - 1);
+            value2 = (g_Analyzer.Peak2Decay(iBand) * (barsPerBand - ib) + g_Analyzer.Peak2Decay(iNextBand) * (ib) ) / barsPerBand *  pGFXChannel->height();
         }
         else
         {
             // One to one case, just use the actual band value we mapped to
 
-            value  = g_Analyzer._peak1Decay[iBand] * (pGFXChannel->height() - 1);
-            value2 = g_Analyzer._peak2Decay[iBand] *  pGFXChannel->height();
+            value  = g_Analyzer.Peak2Decay(iBand) * (pGFXChannel->height() - 1);
+            value2 = g_Analyzer.Peak2Decay(iBand) *  pGFXChannel->height();
         }
 
-        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer._peak1Decay[iBar] );
+        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer.Peak2Decay(iBar) );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
@@ -389,11 +390,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
             {
                 const int PeakFadeTime_ms = 1000;
 
-                unsigned long msPeakAge = millis() - g_Analyzer._lastPeak1Time[iBand];
+                unsigned long msPeakAge = millis() - g_Analyzer.LastPeak1Time(iBand);
                 if (msPeakAge > PeakFadeTime_ms)
                     msPeakAge = PeakFadeTime_ms;
 
-                float agePercent = (float) msPeakAge / (float) MS_PER_SECOND;
+                float agePercent = (float) msPeakAge / (float) MILLIS_PER_SECOND;
                 uint8_t fadeAmount = std::min(255.0f, agePercent * 256);
                 colorHighlight.fadeToBlackBy(fadeAmount);
                 pGFXChannel->drawLine(xOffset, max(0, yOffset-1), xOffset + barWidth - 1, max(0, yOffset-1), colorHighlight);
@@ -487,8 +488,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
     {
         // The peaks and their decay rates are global, so we load up our values every time we display so they're current
 
-        g_Analyzer._peak1DecayRate = _peak1DecayRate;
-        g_Analyzer._peak2DecayRate = _peak2DecayRate;
+        // Load decay rates into analyzer
+        g_Analyzer.SetPeakDecayRates(_peak1DecayRate, _peak2DecayRate);
     }
 
     virtual void Draw() override
@@ -628,8 +629,8 @@ class WaveformEffect : public LEDStripEffect
     {
         int top = g_ptrSystem->EffectManager().IsVUVisible() ? 1 : 0;
         g()->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
-        DrawSpike(MATRIX_WIDTH-1, g_Analyzer._VURatio/2.0);
-        DrawSpike(0, g_Analyzer._VURatio/2.0);
+        DrawSpike(MATRIX_WIDTH-1, g_Analyzer.VURatio()/2.0);
+        DrawSpike(0, g_Analyzer.VURatio()/2.0);
     }
 };
 
@@ -704,7 +705,7 @@ class GhostWave : public WaveformEffect
 
         // VURatio is too fast, VURatioFade looks too slow, but averaged between them is just right
 
-        float audioLevel = (g_Analyzer._VURatioFade + g_Analyzer._VURatio) / 2;
+        float audioLevel = (g_Analyzer.VURatioFade() + g_Analyzer.VURatio()) / 2;
 
         // Offsetting by 0.25, which is a very low ratio, helps keep the line thin when sound is low
         //audioLevel = (audioLevel - 0.25) / 1.75;
@@ -800,7 +801,7 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
         {
             // Draw the spike
 
-            auto value =  g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE) * g_Analyzer._peak1Decay[iBand];
+            auto value =  g_Analyzer.BeatEnhance(SPECTRUMBARBEAT_ENHANCE) * g_Analyzer.Peak2Decay(iBand);
             auto top    = std::max(0.0f, halfHeight - value * halfHeight);
             auto bottom = std::min(MATRIX_HEIGHT-1.0f, halfHeight + value * halfHeight + 1);
             auto x1     = halfWidth - ((iBand * 2 + offset) % halfWidth);
@@ -826,8 +827,7 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 
         // Set the peak decay rates to something that looks good for this effect
 
-        g_Analyzer._peak1DecayRate = kPeakDecaySpectrumBar;
-        g_Analyzer._peak2DecayRate = kPeakDecaySpectrumBar;
+        g_Analyzer.SetPeakDecayRates(kPeakDecaySpectrumBar, kPeakDecaySpectrumBar);
 
         // This effect doesn't clear during drawing, so we need to clear to start the frame
 
