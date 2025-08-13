@@ -145,7 +145,7 @@ public:
         memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
     }
 
-    void Clear(CRGB color = CRGB::Black) override
+    void Clear(CRGB color = CRGB::Black) noexcept override
     {
         // NB: We directly clear the backbuffer because otherwise effects would start with a snapshot of the effect
         //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
@@ -199,35 +199,31 @@ public:
         captionStartTime = millis();
     }
 
-    void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
+    void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) noexcept override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
-        // out in order to do the scroll.  We should technically use memmove instead
-        // of memcpy since the regions are overlapping but this is faster and seems
-        // to work!
+        // out in order to do the scroll. 
 
         for (int y = startY; y <= endY; y++)
         {
             auto pLinemem = leds + y * MATRIX_WIDTH;
             auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
-            memcpy(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-            memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memmove(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2) - 1);
+            memmove(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2) - 1);
         }
     }
 
-    void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) override
+    void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) noexcept override
     {
         // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
-        // out in order to do the scroll.  We should technically use memmove instead
-        // of memcpy since the regions are overlapping but this is faster and seems
-        // to work!
+        // out in order to do the scroll. 
 
         for (int y = startY; y <= endY; y++)
         {
             auto pLinemem = leds + y * MATRIX_WIDTH;
             auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
-            memcpy(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-            memcpy(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+            memmove(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2) - 1);
+            memmove(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2) - 1);
         }
     }
 
@@ -235,13 +231,13 @@ public:
     //
     // Gets the matrix ready for the effect or wifi to render into
 
-    void PrepareFrame() override;
+    void PrepareFrame() noexcept;
 
     // PostProcessFrame
     //
     // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
 
-    void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
+    void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) noexcept override;
 
     // Matrix interop
 

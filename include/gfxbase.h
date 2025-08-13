@@ -165,23 +165,23 @@ public:
     }
 
     #if USE_NOISE
-    Noise &GetNoise() const
+    Noise &GetNoise() const noexcept
     {
         return *_ptrNoise;
     }
     #endif
 
-    const CRGBPalette16 &GetCurrentPalette() const
+    const CRGBPalette16 &GetCurrentPalette() const noexcept
     {
         return _currentPalette;
     }
 
-    virtual size_t GetLEDCount() const
+    virtual size_t GetLEDCount() const noexcept
     {
         return _ledcount;
     }
 
-    static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
+    static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0) noexcept
     {
         uint8_t beat = beat8(beats_per_minute, timebase);
         uint8_t beatCos = cos8(beat + phase_offset);
@@ -191,7 +191,7 @@ public:
         return result;
     }
 
-    static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
+    static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) noexcept
     {
         uint8_t beatSin = sin8(theta);
         uint8_t rangeWidth = highest - lowest;
@@ -200,7 +200,7 @@ public:
         return result;
     }
 
-    static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
+    static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) noexcept
     {
         uint8_t beatCos = cos8(theta);
         uint8_t rangeWidth = highest - lowest;
@@ -209,7 +209,7 @@ public:
         return result;
     }
 
-    static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
+    static CRGB from16Bit(uint16_t color) noexcept // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
     {
         uint8_t r = gamma5[color >> 11];
         uint8_t g = gamma6[(color >> 5) & 0x3F];
@@ -218,22 +218,22 @@ public:
         return CRGB(r, g, b);
     }
 
-    static uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) // Convert RGB -> 16bit 5:6:5
+    static uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) noexcept // Convert RGB -> 16bit 5:6:5
     {
         return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
     }
 
-    static uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
+    static uint16_t to16bit(const CRGB rgb) noexcept // Convert CRGB -> 16 bit 5:6:5
     {
         return ((rgb.r / 8) << 11) | ((rgb.g / 4) << 5) | (rgb.b / 8);
     }
 
-    static uint16_t to16bit(CRGB::HTMLColorCode code) // Convert HtmlColorCode -> 16 bit 5:6:5
+    static uint16_t to16bit(CRGB::HTMLColorCode code) noexcept // Convert HtmlColorCode -> 16 bit 5:6:5
     {
         return to16bit(CRGB(code));
     }
 
-    virtual void Clear(CRGB color = CRGB::Black)
+    virtual void Clear(CRGB color = CRGB::Black) noexcept
     {
         if (color == CRGB::Black)
             memset(leds, 0, sizeof(CRGB) * _width * _height);
@@ -315,13 +315,13 @@ public:
             throw std::runtime_error(str_sprintf("Invalid index in getPixel: i=%d, NUM_LEDS=%d", i, NUM_LEDS).c_str());
     }
 
-    __attribute__((always_inline)) virtual void addColor(int16_t i, CRGB c)
+    __attribute__((always_inline)) virtual void addColor(int16_t i, CRGB c) noexcept
     {
         if (isValidPixel(i))
             leds[i] += c;
     }
 
-    __attribute__((always_inline)) virtual void drawPixel(int16_t x, int16_t y, CRGB color)
+    __attribute__((always_inline)) virtual void drawPixel(int16_t x, int16_t y, CRGB color) noexcept
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
@@ -343,7 +343,7 @@ public:
                 setPixel(x, y, pLEDs[y * _width + x]);
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, uint16_t color)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, uint16_t color) noexcept
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
@@ -351,7 +351,7 @@ public:
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, CRGB color)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, CRGB color) noexcept
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
@@ -359,7 +359,7 @@ public:
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int16_t x, int r, int g, int b)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x, int r, int g, int b) noexcept
     {
         if (isValidPixel(x))
             setPixel(x, CRGB(r, g, b));
@@ -454,7 +454,7 @@ public:
     //   We are now at pixel 5, frac2 = .75
     //   We fill pixel with .75 worth of color
 
-    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false) const
+    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false) const noexcept
     {
         float frac1 = fPos - floor(fPos);                 // eg:   3.25 becomes 0.25
         float frac2 = fPos + count - floor(fPos + count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
@@ -506,7 +506,7 @@ public:
                 leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
-    void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
+    void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount) noexcept
     {
         // blur rows same as columns, for irregular matrix
         uint8_t keep = 255 - blur_amount;
@@ -530,7 +530,7 @@ public:
     }
 
     // blurColumns: perform a blur1d on each column of a rectangular matrix
-    void blurColumns(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
+    void blurColumns(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount) noexcept
     {
         // blur columns
         uint8_t keep = 255 - blur_amount;
@@ -553,24 +553,24 @@ public:
         }
     }
 
-    void blur2d(CRGB *leds, uint16_t width, uint16_t firstColumn, uint16_t height, uint16_t firstRow, fract8 blur_amount)
+    void blur2d(CRGB *leds, uint16_t width, uint16_t firstColumn, uint16_t height, uint16_t firstRow, fract8 blur_amount) noexcept
     {
         blurRows(leds, width, height, firstColumn, blur_amount);
         blurColumns(leds, width, height, firstRow, blur_amount);
     }
 
-    void BlurFrame(int amount)
+    void BlurFrame(int amount) noexcept
     {
         // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
         blur2d(leds, _width, 0, _height, 1, amount);
     }
 
-    void CyclePalette(int offset = 1)
+    void CyclePalette(int offset = 1) noexcept
     {
         loadPalette(_paletteIndex + offset);
     }
 
-    void ChangePalettePeriodically()
+    void ChangePalettePeriodically() noexcept
     {
         if (_palettePaused)
             return;
@@ -617,7 +617,7 @@ public:
     //   - meaningful values are 1-48.  1=very very slow, 48=quickest
     //   - "0" means do not change the currentPalette at all; freeze
 
-    void PausePalette(bool bPaused)
+    void PausePalette(bool bPaused) noexcept
     {
         _palettePaused = bPaused;
     }
@@ -627,7 +627,7 @@ public:
         return _palettePaused;
     }
 
-    void UpdatePaletteCycle()
+    void UpdatePaletteCycle() noexcept
     {
 
         ChangePalettePeriodically();
@@ -635,19 +635,19 @@ public:
         nblendPaletteTowardPalette(_currentPalette, _targetPalette, maxChanges);
     }
 
-    void RandomPalette()
+    void RandomPalette() noexcept
     {
         loadPalette(_randomPaletteIndex);
     }
 
-    virtual void fillRectangle(int x0, int y0, int x1, int y1, CRGB color)
+    virtual void fillRectangle(int x0, int y0, int x1, int y1, CRGB color) noexcept
     {
         for (int x = x0; x < x1; x++)
             for (int y = y0; y < y1; y++)
                 drawPixel(x, y, color);
     }
 
-    void setPalette(const CRGBPalette16& palette)
+    void setPalette(const CRGBPalette16& palette) noexcept
     {
         _currentPalette = palette;
         _targetPalette = palette;
@@ -656,7 +656,7 @@ public:
 
     // Note that this function may recurse without
     // bound if your random() is very very dumb.
-    void loadPalette(int index)
+    void loadPalette(int index) noexcept
     {
         _paletteIndex = index;
 
@@ -738,7 +738,7 @@ public:
         }
     }
 
-    static void listPalettes()
+    static void listPalettes() noexcept
     {
         Serial.println(F("{"));
         Serial.print(F("  \"count\": "));
@@ -774,12 +774,12 @@ public:
         Serial.println("}");
     }
 
-    void setupGrayscalePalette()
+    void setupGrayscalePalette() noexcept
     {
         _targetPalette = CRGBPalette16(CRGB::Black, CRGB::White);
     }
 
-    void setupIcePalette()
+    void setupIcePalette() noexcept
     {
         _targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White);
     }
@@ -794,7 +794,7 @@ public:
 
     // set the speeds (and by that ratios) of the oscillators here
 
-    void MoveOscillators()
+    void MoveOscillators() noexcept
     {
         osci[0] = osci[0] + 5;
         osci[1] = osci[1] + 2;
@@ -809,7 +809,7 @@ public:
         }
     }
 
-    void ResetOscillators()
+    void ResetOscillators() noexcept
     {
         std::fill_n(osci, 6, 0);
         std::fill_n(p, 6, 0);
@@ -1018,7 +1018,7 @@ public:
     }
 
     // give it a linear tail to the right
-    void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT) noexcept
     {
         for (int x = fromX + 1; x < toX; x++)
         {
@@ -1033,7 +1033,7 @@ public:
     }
 
     // give it a linear tail to the left
-    void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT) noexcept
     {
         for (int x = toX; x < fromX; x++)
         {
@@ -1048,7 +1048,7 @@ public:
     }
 
     // give it a linear tail downwards
-    void StreamDown(uint8_t scale)
+    void StreamDown(uint8_t scale) noexcept
     {
         for (int x = 0; x < _width; x++)
         {
@@ -1063,7 +1063,7 @@ public:
     }
 
     // give it a linear tail upwards
-    void StreamUp(uint8_t scale)
+    void StreamUp(uint8_t scale) noexcept
     {
         for (int x = 0; x < _width; x++)
         {
@@ -1078,7 +1078,7 @@ public:
     }
 
     // give it a linear tail up and to the left
-    void StreamUpAndLeft(uint8_t scale)
+    void StreamUpAndLeft(uint8_t scale) noexcept
     {
         for (int x = 0; x < _width - 1; x++)
         {
@@ -1096,7 +1096,7 @@ public:
 
     // give it a linear tail up and to the right
 
-    void StreamUpAndRight(uint8_t scale)
+    void StreamUpAndRight(uint8_t scale) noexcept
     {
         for (int x = 0; x < _width - 1; x++)
         {
@@ -1196,12 +1196,12 @@ public:
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
 
-    virtual void drawLine(int x0, int y0, int x1, int y1, CRGB color)
+    virtual void drawLine(int x0, int y0, int x1, int y1, CRGB color) noexcept
     {
         BresenhamLine(x0, y0, x1, y1, color);
     }
 
-    void DimAll(uint8_t value)
+    void DimAll(uint8_t value) noexcept
     {
         for (int i = 0; i < NUM_LEDS; i++)
             fadePixelToBlackBy(i, 255 - value);
@@ -1259,7 +1259,7 @@ public:
         // The default approach for all functions is determined by the value of _defaultNoiseApproach,
         // which is defined earlier in this class.
         template<NoiseApproach = _defaultNoiseApproach>
-        void FillGetNoise();
+        void FillGetNoise() noexcept;
 
         template<NoiseApproach = _defaultNoiseApproach>
         void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
@@ -1269,7 +1269,7 @@ public:
 
     #endif
 
-    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1) noexcept
     {
         for (int y = startY; y <= endY; y++)
         {
@@ -1281,7 +1281,7 @@ public:
         }
     }
 
-    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1) noexcept
     {
         for (int y = startY; y <= endY; y++)
         {
@@ -1327,11 +1327,11 @@ public:
         } // end column loop
     }     /// MoveY
 
-    virtual void PrepareFrame()
+    virtual void PrepareFrame() noexcept
     {
     }
 
-    virtual void PostProcessFrame(uint16_t, uint16_t)
+    virtual void PostProcessFrame(uint16_t, uint16_t) noexcept
     {
     }
 };

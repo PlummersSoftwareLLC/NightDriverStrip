@@ -135,7 +135,7 @@ public:
     //
     // PostProcessFrame sends the data to the LED strip.  If it's fewer than the size of the strip, we only send that many.
 
-    void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
+    void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) noexcept override;
 };
 
 #if HEXAGON

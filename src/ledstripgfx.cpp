@@ -32,7 +32,7 @@
 #include "ledstripgfx.h"
 #include "systemcontainer.h"
 
-void LEDStripGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+void LEDStripGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) noexcept
 {
     auto pixelsDrawn = wifiPixelsDrawn > 0 ? wifiPixelsDrawn : localPixelsDrawn;
 

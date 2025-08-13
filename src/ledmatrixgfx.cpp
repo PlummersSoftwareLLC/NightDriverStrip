@@ -67,7 +67,7 @@ void LEDMatrixGFX::StartMatrix()
     matrix.setBrightness(255);
 }
 
-void LEDMatrixGFX::PrepareFrame()
+void LEDMatrixGFX::PrepareFrame() noexcept
 {
     // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
     // both 24-bits RGB triplets.  Or at least the same size!
@@ -148,7 +148,7 @@ void LEDMatrixGFX::PrepareFrame()
 //
 // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
 
-void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) noexcept
 {
     // If we drew no pixels, there's nothing to post process
     if ((localPixelsDrawn + wifiPixelsDrawn) == 0)

@@ -38,7 +38,7 @@
     // templates declared in gfxbase.h.
 
     template<>
-    void GFXBase::FillGetNoise<NoiseApproach::One>()
+    void GFXBase::FillGetNoise<NoiseApproach::One>() noexcept
     {
         for (uint16_t i = 0; i < _width; i++)
         {
@@ -60,7 +60,7 @@
     }
 
     template<>
-    void GFXBase::FillGetNoise<NoiseApproach::Two>()
+    void GFXBase::FillGetNoise<NoiseApproach::Two>() noexcept
     {
         for (uint8_t i = 0; i < WIDTH; i++)
         {
