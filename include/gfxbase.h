@@ -368,7 +368,30 @@ public:
 
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int x, CRGB color)
+    // Fast per-pixel fade toward black by 'fadeValue' (0..255).
+    // Applies scale = 255 - fadeValue to the pixel's RGB in-place.
+    __attribute__((always_inline)) void fadePixelToBlackBy(int16_t x, int16_t y, uint8_t fadeValue) noexcept
+    {
+        CRGB &px = leds[XY(x, y)];
+        const uint8_t scale = 255 - fadeValue;
+        const uint16_t scale_fixed = (uint16_t)scale + 1;
+        px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
+        px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
+        px.b = (uint8_t)((((uint16_t)px.b) * scale_fixed) >> 8);
+    }
+
+    // Linear-index overload
+    __attribute__((always_inline)) void fadePixelToBlackBy(int16_t i, uint8_t fadeValue) noexcept
+    {
+        CRGB &px = leds[i];
+        const uint8_t scale = 255 - fadeValue;
+        const uint16_t scale_fixed = (uint16_t)scale + 1;
+        px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
+        px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
+        px.b = (uint8_t)((((uint16_t)px.b) * scale_fixed) >> 8);
+    }
+
+    __attribute__((always_inline)) virtual void setPixel(int x, CRGB color) noexcept
     {
         if (isValidPixel(x))
             leds[x] = color;
@@ -383,7 +406,7 @@ public:
     // are partially off the matrix.  This is important for the pulsar effect.   Note that
     // the Adafruit versions do no bounds checking
 
-    virtual void DrawSafeCircle(int centerX, int centerY, int radius, CRGB color)
+    virtual void DrawSafeCircle(int centerX, int centerY, int radius, CRGB color) noexcept
     {
         int x = radius;
         int y = 0;
@@ -1121,7 +1144,7 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
 
-    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) const
+    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1132,7 +1155,7 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
     {
         int dx = abs(x1 - x0); // Delta in x direction
         int dy = abs(y1 - y0); // Delta in y direction
@@ -1168,7 +1191,7 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false) const
+    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
     {
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
@@ -1178,13 +1201,10 @@ public:
         BresenhamLine(x0, y0, x1, y1, color);
     }
 
-    void DimAll(uint8_t value) const
+    void DimAll(uint8_t value)
     {
         for (int i = 0; i < NUM_LEDS; i++)
-        {
-            // if ((leds[i].r != 255) || (leds[i].g != 255) || (leds[i].b != 255))           // Don't dim pure white
-            leds[i].nscale8(value);
-        }
+            fadePixelToBlackBy(i, 255 - value);
     }
 
     CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
