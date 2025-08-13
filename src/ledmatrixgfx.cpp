@@ -108,7 +108,6 @@ void LEDMatrixGFX::PrepareFrame()
 
             titleLayer.setChromaKeyColor(chromaKeyColor);
             titleLayer.setFont(font6x10);
-            titleLayer.fillScreen(chromaKeyColor);
 
             const size_t kCharWidth = 6;
             const size_t kCharHeight = 10;
@@ -118,6 +117,10 @@ void LEDMatrixGFX::PrepareFrame()
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
             int w = caption.length() * kCharWidth;
             int x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
+
+            // Generic fill that's way faster than the rectangle base impl
+            for (int i = y * _width; i < (y + 1 + kCharHeight) * _width; ++i) 
+                titleLayer.backBuffer()[i] = chromaKeyColor;
 
             auto szCaption = caption.c_str();
             titleLayer.drawString(x - 1, y, shadowColor, szCaption);
@@ -191,7 +194,7 @@ CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
     for (auto& device : g_ptrSystem->Devices())
         device->UpdatePaletteCycle();
 
-    return (CRGB *)backgroundLayer.getRealBackBuffer();
+    return (CRGB *)backgroundLayer.backBuffer();
 }
 
 void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground)

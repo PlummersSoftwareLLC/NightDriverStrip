@@ -36,6 +36,7 @@
 #include "network.h"
 #include "hexdump.h"
 #include "globals.h"
+#include <numeric>
 
 #define IMPROV_LOG_FILE             "/improv.log"
 
@@ -225,9 +226,7 @@ protected:
 
         if (at == 8 + data_len + 1)
         {
-            uint8_t checksum = 0x00;
-            for (uint8_t i = 0; i < at; i++)
-                checksum += raw[i];
+            uint8_t checksum = std::accumulate(raw, raw + at, static_cast<uint8_t>(0));
 
             if (checksum != byte)
             {
@@ -368,9 +367,7 @@ protected:
 
         log_write("..Sending current state response for state: 0x%02hhX", state);
 
-        uint8_t checksum = 0x00;
-        for (uint8_t d : data)
-            checksum += d;
+        uint8_t checksum = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0));
         data[10] = checksum;
 
         this->write_data_(data);
@@ -389,9 +386,7 @@ protected:
 
         log_write("..Sending error response for error: 0x%02hhX", error);
 
-        uint8_t checksum = 0x00;
-        for (uint8_t d : data)
-            checksum += d;
+        uint8_t checksum = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0));
         data[10] = checksum;
         this->write_data_(data);
     }
@@ -407,9 +402,7 @@ protected:
 
         log_write("..Sending RPC response with %zu bytes of data", response.size());
 
-        uint8_t checksum = 0x00;
-        for (uint8_t d : data)
-            checksum += d;
+        uint8_t checksum = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0));
         data.push_back(checksum);
 
         this->write_data_(data);

@@ -65,6 +65,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <algorithm>
 #include "Adafruit_GFX.h"
 #include "pixeltypes.h"
 #include "effects/matrix/Boid.h"
@@ -109,6 +110,7 @@ private:
 protected:
     size_t _width;
     size_t _height;
+    size_t _ledcount;
 
     // 32 Entries in the 5-bit gamma table
     static constexpr auto gamma5 = to_array<uint8_t, 32>
@@ -176,34 +178,34 @@ public:
 
     virtual size_t GetLEDCount() const
     {
-        return _width * _height;
+        return _ledcount;
     }
 
     static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
     {
         uint8_t beat = beat8(beats_per_minute, timebase);
-        uint8_t beatcos = cos8(beat + phase_offset);
-        uint8_t rangewidth = highest - lowest;
-        uint8_t scaledbeat = scale8(beatcos, rangewidth);
-        uint8_t result = lowest + scaledbeat;
+        uint8_t beatCos = cos8(beat + phase_offset);
+        uint8_t rangeWidth = highest - lowest;
+        uint8_t scaledBeat = scale8(beatCos, rangeWidth);
+        uint8_t result = lowest + scaledBeat;
         return result;
     }
 
     static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
     {
-        uint8_t beatsin = sin8(theta);
-        uint8_t rangewidth = highest - lowest;
-        uint8_t scaledbeat = scale8(beatsin, rangewidth);
-        uint8_t result = lowest + scaledbeat;
+        uint8_t beatSin = sin8(theta);
+        uint8_t rangeWidth = highest - lowest;
+        uint8_t scaledBeat = scale8(beatSin, rangeWidth);
+        uint8_t result = lowest + scaledBeat;
         return result;
     }
 
     static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
     {
-        uint8_t beatcos = cos8(theta);
-        uint8_t rangewidth = highest - lowest;
-        uint8_t scaledbeat = scale8(beatcos, rangewidth);
-        uint8_t result = lowest + scaledbeat;
+        uint8_t beatCos = cos8(theta);
+        uint8_t rangeWidth = highest - lowest;
+        uint8_t scaledBeat = scale8(beatCos, rangeWidth);
+        uint8_t result = lowest + scaledBeat;
         return result;
     }
 
@@ -238,16 +240,19 @@ public:
         else
             fill_solid(leds, _width * _height, color);
     }
-    virtual bool isValidPixel(uint x, uint y) const
+    
+    __attribute__((always_inline))
+    virtual bool isValidPixel(uint x, uint y) const noexcept
     {
         // Check that the pixel location is within the matrix's bounds
         return x < _width && y < _height;
     }
 
-    virtual bool isValidPixel(uint n) const
+    __attribute__((always_inline))
+    virtual bool isValidPixel(uint n) const noexcept
     {
         // Check that the pixel location is within the matrix's bounds
-        return n < _width * _height;
+        return n < _ledcount;
     }
 
     // Matrices that are built from individually addressable strips like WS2812b generally
@@ -266,7 +271,8 @@ public:
     // If your matrix uses a different approach, you can override this function and implement it
     // in the XY() function of your class
 
-    virtual uint16_t xy(uint16_t x, uint16_t y) const
+    __attribute__((always_inline))
+    inline virtual uint16_t xy(uint16_t x, uint16_t y) const noexcept
     {
         if (x & 0x01)
         {
@@ -293,7 +299,7 @@ public:
         #define XY(x, y) xy(x, y)
     #endif
 
-    virtual CRGB getPixel(int16_t x, int16_t y) const
+    __attribute__((always_inline)) virtual CRGB getPixel(int16_t x, int16_t y) const
     {
         if (isValidPixel(x, y))
             return leds[XY(x, y)];
@@ -301,7 +307,7 @@ public:
             throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 
-    virtual CRGB getPixel(int16_t i) const
+    __attribute__((always_inline)) virtual CRGB getPixel(int16_t i) const
     {
         if (isValidPixel(i))
             return leds[i];
@@ -309,19 +315,19 @@ public:
             throw std::runtime_error(str_sprintf("Invalid index in getPixel: i=%d, NUM_LEDS=%d", i, NUM_LEDS).c_str());
     }
 
-    virtual void addColor(int16_t i, CRGB c)
+    __attribute__((always_inline)) virtual void addColor(int16_t i, CRGB c)
     {
         if (isValidPixel(i))
             leds[i] += c;
     }
 
-    virtual void drawPixel(int16_t x, int16_t y, CRGB color)
+    __attribute__((always_inline)) virtual void drawPixel(int16_t x, int16_t y, CRGB color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
     }
 
-    void drawPixel(int16_t x, int16_t y, uint16_t color) override
+    __attribute__((always_inline)) void drawPixel(int16_t x, int16_t y, uint16_t color) override
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
@@ -337,7 +343,7 @@ public:
                 setPixel(x, y, pLEDs[y * _width + x]);
     }
 
-    virtual void setPixel(int16_t x, int16_t y, uint16_t color)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, uint16_t color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
@@ -345,7 +351,7 @@ public:
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    virtual void setPixel(int16_t x, int16_t y, CRGB color)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, CRGB color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
@@ -353,7 +359,7 @@ public:
             debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
     }
 
-    virtual void setPixel(int16_t x, int r, int g, int b)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x, int r, int g, int b)
     {
         if (isValidPixel(x))
             setPixel(x, CRGB(r, g, b));
@@ -362,7 +368,30 @@ public:
 
     }
 
-    virtual void setPixel(int x, CRGB color)
+    // Fast per-pixel fade toward black by 'fadeValue' (0..255).
+    // Applies scale = 255 - fadeValue to the pixel's RGB in-place.
+    __attribute__((always_inline)) void fadePixelToBlackBy(int16_t x, int16_t y, uint8_t fadeValue) noexcept
+    {
+        CRGB &px = leds[XY(x, y)];
+        const uint8_t scale = 255 - fadeValue;
+        const uint16_t scale_fixed = (uint16_t)scale + 1;
+        px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
+        px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
+        px.b = (uint8_t)((((uint16_t)px.b) * scale_fixed) >> 8);
+    }
+
+    // Linear-index overload
+    __attribute__((always_inline)) void fadePixelToBlackBy(int16_t i, uint8_t fadeValue) noexcept
+    {
+        CRGB &px = leds[i];
+        const uint8_t scale = 255 - fadeValue;
+        const uint16_t scale_fixed = (uint16_t)scale + 1;
+        px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
+        px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
+        px.b = (uint8_t)((((uint16_t)px.b) * scale_fixed) >> 8);
+    }
+
+    __attribute__((always_inline)) virtual void setPixel(int x, CRGB color) noexcept
     {
         if (isValidPixel(x))
             leds[x] = color;
@@ -377,7 +406,7 @@ public:
     // are partially off the matrix.  This is important for the pulsar effect.   Note that
     // the Adafruit versions do no bounds checking
 
-    virtual void DrawSafeCircle(int centerX, int centerY, int radius, CRGB color)
+    virtual void DrawSafeCircle(int centerX, int centerY, int radius, CRGB color) noexcept
     {
         int x = radius;
         int y = 0;
@@ -579,13 +608,13 @@ public:
         }
     }
 
-    // Crossfade current palette slowly toward the target palette
+    // Cross-fade current palette slowly toward the target palette
     //
     // Each time that nblendPaletteTowardPalette is called, small changes
     // are made to currentPalette to bring it closer to matching targetPalette.
     // You can control how many changes are made in each call:
     //   - the default of 24 is a good balance
-    //   - meaningful values are 1-48.  1=veeeeeeeery slow, 48=quickest
+    //   - meaningful values are 1-48.  1=very very slow, 48=quickest
     //   - "0" means do not change the currentPalette at all; freeze
 
     void PausePalette(bool bPaused)
@@ -782,8 +811,8 @@ public:
 
     void ResetOscillators()
     {
-        memset(osci, 0, sizeof(osci));
-        memset(p, 0, sizeof(p));
+        std::fill_n(osci, 6, 0);
+        std::fill_n(p, 6, 0);
     }
 
     // All the Caleidoscope functions work directly within the screenbuffer (leds array).
@@ -1115,7 +1144,7 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
 
-    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) const
+    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1126,7 +1155,7 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false) const
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
     {
         int dx = abs(x1 - x0); // Delta in x direction
         int dy = abs(y1 - y0); // Delta in y direction
@@ -1162,7 +1191,7 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false) const
+    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
     {
         BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
     }
@@ -1172,13 +1201,10 @@ public:
         BresenhamLine(x0, y0, x1, y1, color);
     }
 
-    void DimAll(uint8_t value) const
+    void DimAll(uint8_t value)
     {
         for (int i = 0; i < NUM_LEDS; i++)
-        {
-            // if ((leds[i].r != 255) || (leds[i].g != 255) || (leds[i].b != 255))           // Don't dim pure white
-            leds[i].nscale8(value);
-        }
+            fadePixelToBlackBy(i, 255 - value);
     }
 
     CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
@@ -1301,7 +1327,11 @@ public:
         } // end column loop
     }     /// MoveY
 
-    virtual void PrepareFrame() {}
+    virtual void PrepareFrame()
+    {
+    }
 
-    virtual void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) {}
+    virtual void PostProcessFrame(uint16_t, uint16_t)
+    {
+    }
 };
