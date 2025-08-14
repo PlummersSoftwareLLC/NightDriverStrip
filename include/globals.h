@@ -917,6 +917,9 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
 
 #if USE_TFTSPI
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
+    #if TTGO
+        #include <User_Setups/Setup25_TTGO_T_Display.h>
+    #endif
     #include <TFT_eSPI.h>
     #include <SPI.h>
 #endif
