@@ -106,6 +106,25 @@ static constexpr AudioInputParams kParamsM5Plus2{
     30000000.0f
 };
 
+// I2S External microphones (INMP441, etc.) use higher postScale and less aggressive gating
+static constexpr AudioInputParams kParamsI2SExternal{
+    4.0f,      // windowPowerCorrection
+    0.02f,     // energyNoiseAdapt
+    0.98f,     // energyNoiseDecay
+    0.25f,     // energySmoothAlpha
+    0.99f,     // energyEnvDecay
+    0.000001f, // energyMinEnv
+    0.25f,     // bandCompLow
+    10.0f,     // bandCompHigh
+    0.00f,     // frameSilenceGate
+    0.00f,     // normNoiseGate
+    3.0f,      // envFloorFromNoise
+    0.0f,      // frameSNRGate (disable SNR gating for external mics)
+    4.0f,      // postScale (higher gain for external I2S mics)
+    0.16667f, // compressGamma (cube root)
+    20000000.0f       // quietEnvFloorGate (disable for external mics)
+};
+
 // PeakData
 //
 // Simple data class that holds the music peaks for up to NUM_BANDS bands. Moved above
@@ -137,7 +156,8 @@ class PeakData
         MESMERIZERMIC,
         PCREMOTE,
         M5,
-        M5PLUS2
+        M5PLUS2,
+        I2S_EXTERNAL
     } MicrophoneType;
 
     PeakData()
@@ -167,11 +187,12 @@ static inline const AudioInputParams &ParamsFor(PeakData::MicrophoneType t)
 {
     switch (t)
     {
-        case PeakData::PCREMOTE:  return kParamsPCRemote;
-        case PeakData::M5:        return kParamsM5;
-        case PeakData::M5PLUS2:   return kParamsM5Plus2;
+        case PeakData::PCREMOTE:     return kParamsPCRemote;
+        case PeakData::M5:           return kParamsM5;
+        case PeakData::M5PLUS2:      return kParamsM5Plus2;
+        case PeakData::I2S_EXTERNAL: return kParamsI2SExternal;
         case PeakData::MESMERIZERMIC:
-        default:                  return kParamsMesmerizer;
+        default:                     return kParamsMesmerizer;
     }
 }
 
@@ -382,22 +403,72 @@ class SoundAnalyzer : public ISoundAnalyzer
 
     void SampleAudio()
     {
-        constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
         size_t bytesRead = 0;
 #if USE_M5
+        // M5 path unchanged; fills ptrSampleBuffer with int16 samples
+        constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
         if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
             bytesRead = bytesExpected;
-#else
-        ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
-        ESP_ERROR_CHECK(
-            i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected, &bytesRead, 100 / portTICK_PERIOD_MS));
-        ESP_ERROR_CHECK(i2s_stop(I2S_NUM_0));
-#endif
         if (bytesRead != bytesExpected)
         {
             debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
             return;
         }
+#else
+#if ELECROW || USE_I2S_AUDIO
+        // External I2S microphones like INMP441 produce 24-bit samples in 32-bit words.
+        // Read stereo frames (RIGHT_LEFT) and auto-select whichever channel carries the mic.
+        {
+            constexpr int kChannels = 2; // RIGHT + LEFT
+            constexpr auto wordsToRead = MAX_SAMPLES * kChannels;
+            constexpr auto bytesExpected32 = wordsToRead * sizeof(int32_t);
+            static int32_t raw32[wordsToRead];
+            ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
+            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)raw32, bytesExpected32, &bytesRead, 100 / portTICK_PERIOD_MS));
+            ESP_ERROR_CHECK(i2s_stop(I2S_NUM_0));
+            if (bytesRead != bytesExpected32)
+            {
+                debugW("Only read %u of %u bytes from I2S\n", bytesRead, bytesExpected32);
+                return;
+            }
+            // Decide which channel has signal (0 or 1 within each frame)
+            static int s_chanIndex = -1;
+            if (s_chanIndex < 0)
+            {
+                long long sumAbs[2] = {0, 0};
+                for (int i = 0; i < MAX_SAMPLES; ++i)
+                {
+                    int32_t r0 = raw32[i * kChannels + 0];
+                    int32_t r1 = raw32[i * kChannels + 1];
+                    sumAbs[0] += llabs((long long)r0);
+                    sumAbs[1] += llabs((long long)r1);
+                }
+                s_chanIndex = (sumAbs[1] > sumAbs[0]) ? 1 : 0;
+            }
+            // Downconvert 24-bit left-justified samples from the chosen channel to signed 16-bit
+            for (int i = 0; i < MAX_SAMPLES; i++)
+            {
+                int32_t v = raw32[i * kChannels + s_chanIndex];
+                ptrSampleBuffer[i] = (int16_t)(v >> 8);
+            }
+        }
+#else
+        // ADC or generic 16-bit I2S sources
+        {
+            constexpr auto bytesExpected16 = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+            ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
+            ESP_ERROR_CHECK(
+                i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected16, &bytesRead, 100 / portTICK_PERIOD_MS));
+            ESP_ERROR_CHECK(i2s_stop(I2S_NUM_0));
+            if (bytesRead != bytesExpected16)
+            {
+                debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected16);
+                return;
+            }
+        }
+#endif
+#endif
+        // Compute stats and copy into FFT input buffer
         int16_t smin = INT16_MAX, smax = INT16_MIN;
         long sum = 0;
         for (int i = 0; i < MAX_SAMPLES; i++)
@@ -846,9 +917,9 @@ class SoundAnalyzer : public ISoundAnalyzer
 
         const i2s_config_t i2s_config = {.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
                                          .sample_rate = SAMPLING_FREQUENCY,
-                                         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-                                         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-                                         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+                                         .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
+                                         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+                                         .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
                                          .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
                                          .dma_buf_count = 4,  // Increased from 2 for better buffering
                                          .dma_buf_len = (int)MAX_SAMPLES,
@@ -1010,6 +1081,8 @@ class SoundAnalyzer : public ISoundAnalyzer
             _MicMode = PeakData::M5PLUS2;
 #elif USE_M5
             _MicMode = PeakData::M5;
+#elif USE_I2S_AUDIO
+            _MicMode = PeakData::I2S_EXTERNAL;
 #else
             _MicMode = PeakData::MESMERIZERMIC;
 #endif
