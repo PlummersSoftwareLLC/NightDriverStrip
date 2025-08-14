@@ -528,7 +528,9 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             #endif
         }
 
-        constexpr float kMaxFPS = 10.0f;
+        // Throttle screen updates to no more than kMaxFPS
+        
+        constexpr float kMaxFPS = 60.0f;
         const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
         delay(max(1.0, targetDelay - (millis() - lastFrame)));
 
