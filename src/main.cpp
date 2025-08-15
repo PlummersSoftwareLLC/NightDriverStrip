@@ -180,7 +180,6 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
 
 std::unique_ptr<SystemContainer> g_ptrSystem;
 Values g_Values;
-SoundAnalyzer g_Analyzer;
 RemoteDebug Debug;                                                        // Instance of our telnet debug server
 std::mutex g_buffer_mutex;
 

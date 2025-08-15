@@ -91,10 +91,10 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
         debugV("VURatio: %f\n", g_Analyzer.VURatio());
         debugV("VURatioFade: %f\n", g_Analyzer.VURatioFade());
 
-        // Delay enough time to yield 45fps max
+        // Delay enough time to yield 60fps max
         // We wait a minimum even if busy so we don't Bogart the CPU
 
-        constexpr auto kMaxFPS = 45;
+        constexpr auto kMaxFPS = 60;
         const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
         delay(max(1.0, targetDelay - (millis() - lastFrame)));
 

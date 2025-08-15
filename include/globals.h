@@ -917,7 +917,10 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
 
 #if USE_TFTSPI
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
-    #if TTGO
+    // If the project provides its own TFT_eSPI setup via USER_SETUP_LOADED
+    // and build_flags, do not include the TTGO default user setup to avoid
+    // macro redefinition warnings.
+    #if TTGO && !defined(USER_SETUP_LOADED)
         #include <User_Setups/Setup25_TTGO_T_Display.h>
     #endif
     #include <TFT_eSPI.h>

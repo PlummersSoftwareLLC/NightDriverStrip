@@ -109,7 +109,7 @@ void BasicInfoSummary(bool bRedraw)
     char chStatus = szStatus[c2];
     cStatus++;
 
-    if (display.width() > 240)
+    if (display.width() > 320)
         display.setTextSize(3);
     else if (display.width() >= 160)
         display.setTextSize(2);
