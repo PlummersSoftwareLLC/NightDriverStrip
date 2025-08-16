@@ -36,6 +36,7 @@
 #include "globals.h"
 #include <algorithm>
 #include <numeric>
+#include <array>
 #include <arduinoFFT.h>
 #include <driver/adc.h>
 #include <driver/i2s.h>
@@ -348,8 +349,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     float   _oldVU;                     // Old VU value for damping
     float   _oldPeakVU;                 // Old peak VU value for damping
     float   _oldMinVU;                  // Old min VU value for damping
-    float * _vPeaks;                    // Normalized band energies 0..1
-    float * _livePeaks;                 // Attack-limited display peaks per band
+    std::array<float, NUM_BANDS> _vPeaks{};    // Normalized band energies 0..1
+    std::array<float, NUM_BANDS> _livePeaks{}; // Attack-limited display peaks per band
     int     _bandBinStart[NUM_BANDS];
     int     _bandBinEnd[NUM_BANDS];
     float   _energyMaxEnv = 0.01f;        // adaptive envelope for autoscaling (start low for fast adaptation)
@@ -373,8 +374,8 @@ class SoundAnalyzer : public ISoundAnalyzer
 
   private:
     static constexpr int kBandOffset = 2; // number of lowest source bands to skip in layout (skip bins 0,1,2)
-    float *_vReal = nullptr;
-    float *_vImaginary = nullptr;
+    std::array<float, MAX_SAMPLES> _vReal{};
+    std::array<float, MAX_SAMPLES> _vImaginary{};
     std::unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
     PeakData _Peaks; // cached last normalized peaks (moved earlier for inline method visibility)
 
@@ -382,19 +383,16 @@ class SoundAnalyzer : public ISoundAnalyzer
 
     void Reset()
     {
-        if (!_vReal)
-            return;
-        std::fill_n(_vReal, MAX_SAMPLES, 0.0f);
-        if (_vImaginary)
-            std::fill_n(_vImaginary, MAX_SAMPLES, 0.0f);
-        std::fill_n(_vPeaks, NUM_BANDS, 0.0f);
+        _vReal.fill(0.0f);
+        _vImaginary.fill(0.0f);
+        _vPeaks.fill(0.0f);
     }
 
     // Perform the FFT 
 
     void FFT()
     {
-        ArduinoFFT<float> _FFT(_vReal, _vImaginary, MAX_SAMPLES, SAMPLING_FREQUENCY);
+        ArduinoFFT<float> _FFT(_vReal.data(), _vImaginary.data(), MAX_SAMPLES, SAMPLING_FREQUENCY);
         _FFT.dcRemoval();
         _FFT.windowing(FFTWindow::Hann, FFTDirection::Forward);
         _FFT.compute(FFTDirection::Forward);
@@ -572,12 +570,8 @@ class SoundAnalyzer : public ISoundAnalyzer
         // Use reciprocal of AudioFPS for frame-rate independent attack limiting
         float dt = (_AudioFPS > 0) ? (1.0f / (float)_AudioFPS) : 0.016f;
         // Fallback to reasonable default if FPS is invalid
-        if (dt <= 0.0f || dt > 0.1f) dt = 0.016f;
-        // Allocate _livePeaks if not already done
-        if (!_livePeaks) {
-            _livePeaks = (float *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_livePeaks[0]));
-            for (int i = 0; i < NUM_BANDS; ++i) _livePeaks[i] = 0.0f;
-        }
+        if (dt <= 0.0f || dt > 0.1f) 
+            dt = 0.016f;
         _framesProcessed++;
         const float binWidth = (float)SAMPLING_FREQUENCY / (MAX_SAMPLES / 2.0f);
         for (int b = 0; b < NUM_BANDS; b++)
@@ -862,13 +856,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         ptrSampleBuffer.reset((int16_t *)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_8BIT));
         if (!ptrSampleBuffer)
             throw std::runtime_error("Failed to allocate sample buffer");
-        _vReal = (float *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vReal[0]));
-        _vImaginary = (float *)PreferPSRAMAlloc(MAX_SAMPLES * sizeof(_vImaginary[0]));
-        _vPeaks = (float *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_vPeaks[0]));
-        _livePeaks = (float *)PreferPSRAMAlloc(NUM_BANDS * sizeof(_livePeaks[0]));
-        if (!_vReal || !_vImaginary || !_vPeaks || !_livePeaks)
-            throw std::runtime_error("Failed to allocate FFT buffers");
-        for (int i = 0; i < NUM_BANDS; ++i) _livePeaks[i] = 0.0f;
+    // No dynamic allocations needed for FFT/peak arrays
         _oldVU = _oldPeakVU = _oldMinVU = 0.0f;
         // No runtime parameter initialization needed - all compile-time now
         ComputeBandLayout();
@@ -885,10 +873,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         i2s_stop(I2S_NUM_0);
         i2s_driver_uninstall(I2S_NUM_0);
 #endif
-        free(_vReal);
-        free(_vImaginary);
-        free(_vPeaks);
-        free(_livePeaks);
+    // No heap frees required for std::array members
     }
 
     // These functions allow access to the last-acquired sample buffer and its size so that
@@ -1071,8 +1056,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     {
         _msLastRemoteAudio = millis();
         _Peaks = peaks;
-        std::copy(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, _vPeaks);
-        float sum = std::accumulate(_vPeaks, _vPeaks + NUM_BANDS, 0.0f);
+        std::copy(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, _vPeaks.data());
+        float sum = std::accumulate(_vPeaks.begin(), _vPeaks.end(), 0.0f);
         UpdateVU(sum / NUM_BANDS);
     }
 
