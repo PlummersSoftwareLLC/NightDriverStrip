@@ -109,8 +109,8 @@ inline constexpr AudioInputParams kParamsM5{
     3.0f,      // envFloorFromNoise
     0.0f,      // frameSNRGate
     1.0f,      // postScale
-    (1.0/3.0), // compressGamma (cube root)
-    1500000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    (1.0/8.0), // compressGamma (cube root)
+    1000000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
 };
 inline constexpr AudioInputParams kParamsM5Plus2{
     4.0f,      // windowPowerCorrection
@@ -119,7 +119,7 @@ inline constexpr AudioInputParams kParamsM5Plus2{
     0.25f,     // energySmoothAlpha
     0.95f,     // energyEnvDecay (faster decay for quicker adaptation)
     0.01f,     // energyMinEnv (higher floor for faster startup)
-    1.0f,      // bandCompLow (10% = 90% attenuation for bass bands)
+    1.0f,      // bandCompLow (10% = 90% attenuation for bass bands)*
     1.0f,      // bandCompHigh (no attenuation for high bands)
     0.00f,     // frameSilenceGate
     0.00f,     // normNoiseGate
@@ -700,7 +700,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         for (int b = 0; b < NUM_BANDS; b++)
         {
             float vTarget = _vPeaks[b] * invEnv;
-            vTarget = cbrtf(std::max(0.0f, vTarget));
+            vTarget = powf(std::max(0.0f, vTarget), _params.compressGamma);
             if (vTarget > 1.0f) vTarget = 1.0f;
             vTarget *= _gateEnv;
             vTarget *= kDisplayGain;
