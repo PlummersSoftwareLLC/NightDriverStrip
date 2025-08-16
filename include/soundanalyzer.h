@@ -42,7 +42,7 @@
 #include <memory>
 
 #ifndef SPECTRUM_BAND_SCALE_MEL
-#define SPECTRUM_BAND_SCALE_MEL 0
+#define SPECTRUM_BAND_SCALE_MEL 1
 #endif
 
 // Default FFT size if not provided by build flags or elsewhere
@@ -74,21 +74,21 @@ struct AudioInputParams {
 
 // Mesmerizer (default) tuning
 inline constexpr AudioInputParams kParamsMesmerizer{
-    4.0f,     // windowPowerCorrection
+    4.0f,      // windowPowerCorrection
     0.02f,     // energyNoiseAdapt
     0.98f,     // energyNoiseDecay
     0.25f,     // energySmoothAlpha
     0.99f,     // energyEnvDecay
     0.000001f, // energyMinEnv
-    1.0f,     // bandCompLow
-    1.0f,     // bandCompHigh
+    1.0f,      // bandCompLow
+    1.0f,      // bandCompHigh
     0.00f,     // frameSilenceGate
     0.00f,     // normNoiseGate
     3.0f,      // envFloorFromNoise (cap auto-gain at ~1/4 of pure-noise)
     0.0f,      // frameSNRGate (require ~3:1 SNR to show frame)
     1.0f,      // postScale (Mesmerizer default)
-    0.333333f, // compressGamma (cube root)
-    30000000   // quietEnvFloorGate 
+    (1.0/3.0), // compressGamma (cube root)
+    1500000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
 };
 
 // PC Remote uses Mesmerizer defaults
@@ -102,15 +102,15 @@ inline constexpr AudioInputParams kParamsM5{
     0.25f,     // energySmoothAlpha
     0.95f,     // energyEnvDecay (faster decay for quicker adaptation)
     0.01f,     // energyMinEnv (higher floor for faster startup)
-    1.0f,      // bandCompLow (1% = 99% attenuation for bass bands)
-    1.0f,      // bandCompHigh (no attenuation for high bands)
+    1.0f,      // bandCompLow (reserved in current curve)
+    1.5f,      // bandCompHigh (boost upper bands for M5)
     0.00f,     // frameSilenceGate
     0.00f,     // normNoiseGate
     3.0f,      // envFloorFromNoise
     0.0f,      // frameSNRGate
     1.0f,      // postScale
-    (1.0f/8.0f), // compressGamma
-    30000000.0f  // quietEnvFloorGate
+    (1.0/3.0), // compressGamma (cube root)
+    1500000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
 };
 inline constexpr AudioInputParams kParamsM5Plus2{
     4.0f,      // windowPowerCorrection
@@ -126,15 +126,15 @@ inline constexpr AudioInputParams kParamsM5Plus2{
     3.0f,      // envFloorFromNoise
     0.0f,      // frameSNRGate
     1.0f,      // postScale
-    (1.0f/8.0f), // compressGamma
-    30000000.0f  // quietEnvFloorGate
+    (1.0/3.0), // compressGamma (cube root)
+    1500000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
 };
 
 // I2S External microphones (INMP441, etc.) use higher postScale and less aggressive gating
 inline constexpr AudioInputParams kParamsI2SExternal{
     4.0f,           // windowPowerCorrection (increased from 4.0f for more gain)
     0.02f,          // energyNoiseAdapt (slower noise adaptation)
-    0.98f,         // energyNoiseDecay (slower noise floor decay)
+    0.98f,          // energyNoiseDecay (slower noise floor decay)
     0.25f,          // energySmoothAlpha (more smoothing between frames)
     0.95f,          // energyEnvDecay (slower envelope decay)
     0.01f,          // energyMinEnv (higher floor to prevent over-normalization with quiet I2S mics)
@@ -146,7 +146,7 @@ inline constexpr AudioInputParams kParamsI2SExternal{
     0.0f,           // frameSNRGate (disable SNR gating for external mics)
     1.5f,           // postScale (much higher gain for external I2S mics - was 4.0f)
     (1.0/3.0),      // compressGamma (cube root)
-    30000000.0f     // quietEnvFloorGate
+    1500000         // quietEnvFloorGate (cutoff gates all ssound when below this level)
 };
 
 // AudioInputParams instances for different microphone types - used directly as template parameters
@@ -176,15 +176,6 @@ class PeakData
 {
   public:
     float _Level[NUM_BANDS];
-
-    typedef enum
-    {
-        MESMERIZERMIC,
-        PCREMOTE,
-        M5,
-        M5PLUS2,
-        I2S_EXTERNAL
-    } MicrophoneType;
 
     PeakData()
     {
@@ -220,7 +211,8 @@ class ISoundAnalyzer
     virtual float MinVU() const = 0;
     virtual int AudioFPS() const = 0;
     virtual int SerialFPS() const = 0;
-    virtual PeakData::MicrophoneType MicMode() const = 0;
+    // True when peaks are coming from a recent remote source (SetPeakData)
+    virtual bool IsRemoteAudioActive() const = 0;
     virtual const PeakData &Peaks() const = 0;
     virtual float Peak2Decay(int band) const = 0;
     virtual const float *Peak2DecayData() const = 0;
@@ -269,10 +261,7 @@ class SoundAnalyzer : public ISoundAnalyzer // Non-audio case stub
     {
         return 0;
     }
-    PeakData::MicrophoneType MicMode() const override
-    {
-        return PeakData::MESMERIZERMIC;
-    }
+    bool IsRemoteAudioActive() const override { return false; }
     const PeakData &Peaks() const override
     {
         return _emptyPeaks;
@@ -335,7 +324,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     unsigned long _cSamples = 0U;
     int _AudioFPS = 0;
     int _serialFPS = 0;
-    uint _msLastRemote = 0;
+    uint _msLastRemoteAudio = 0;
 
     // I'm old enough I can only hear up to about 12000Hz, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 samples is 12000Hz
@@ -474,8 +463,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         {
             constexpr auto bytesExpected16 = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
             // I2S is already running continuously; just read from DMA buffers
-            ESP_ERROR_CHECK(
-                i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected16, &bytesRead, 100 / portTICK_PERIOD_MS));
+            ESP_ERROR_CHECK(                i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected16, &bytesRead, 100 / portTICK_PERIOD_MS));
             if (bytesRead != bytesExpected16)
             {
                 debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected16);
@@ -689,7 +677,21 @@ class SoundAnalyzer : public ISoundAnalyzer
 
         // Anchor normalization to noise-derived floor to avoid auto-gain blow-up
         float noiseMean = noiseSum / (float)NUM_BANDS;
-        float envFloor = std::max(_params.energyMinEnv, noiseMean * _params.envFloorFromNoise);
+        float envFloorRaw = noiseMean * _params.envFloorFromNoise; // raw (unclamped) env floor
+        // Quiet environment gate: if the derived env floor is below a configured threshold, suppress the whole frame
+        if (_params.quietEnvFloorGate > 0.0f && envFloorRaw < _params.quietEnvFloorGate)
+        {
+            _frameGateHits++;
+            for (int b = 0; b < NUM_BANDS; ++b)
+            {
+                _vPeaks[b] = 0.0f;
+                _Peaks._Level[b] = 0.0f;
+            }
+            UpdateVU(0.0f);
+            return _Peaks;
+        }
+
+        float envFloor = std::max(_params.energyMinEnv, envFloorRaw);
         float normDen = std::max(_energyMaxEnv, envFloor);
         const float invEnv = 1.0f / normDen;
         float sumNorm = 0.0f;
@@ -784,17 +786,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Indicates whether peaks came from local mic or remote source.
     // Effects may choose to show status based on this.
 
-    // Indicates microphone type - determined at compile time based on parameters
-    inline PeakData::MicrophoneType MicMode() const override
-    {
-        // Use address comparison to identify parameter sets at compile time
-        if constexpr (&Params == &kParamsMesmerizer) return PeakData::MESMERIZERMIC;
-        else if constexpr (&Params == &kParamsPCRemote) return PeakData::PCREMOTE;
-        else if constexpr (&Params == &kParamsM5) return PeakData::M5;
-        else if constexpr (&Params == &kParamsM5Plus2) return PeakData::M5PLUS2;
-        else if constexpr (&Params == &kParamsI2SExternal) return PeakData::I2S_EXTERNAL;
-        else return PeakData::MESMERIZERMIC; // fallback
-    }
+    // True if we used remote peaks recently
+    inline bool IsRemoteAudioActive() const override { return millis() - _msLastRemoteAudio <= AUDIO_PEAK_REMOTE_TIMEOUT; }
 
     // Returns the latest per-band normalized peaks (0..1).
     // Pointer remains valid until next ProcessPeaksEnergy/SetPeakData.
@@ -1076,7 +1069,7 @@ class SoundAnalyzer : public ISoundAnalyzer
 
     inline void SetPeakData(const PeakData &peaks)
     {
-        _msLastRemote = millis();
+        _msLastRemoteAudio = millis();
         _Peaks = peaks;
         std::copy(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, _vPeaks);
         float sum = std::accumulate(_vPeaks, _vPeaks + NUM_BANDS, 0.0f);
@@ -1128,7 +1121,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Simplified - no runtime microphone switching needed
     inline void RunSamplerPass()
     {
-        if (millis() - _msLastRemote > AUDIO_PEAK_REMOTE_TIMEOUT)
+        if (millis() - _msLastRemoteAudio > AUDIO_PEAK_REMOTE_TIMEOUT)
         {
             // Use local microphone - type determined at compile time
             Reset();

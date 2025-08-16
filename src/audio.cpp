@@ -29,12 +29,13 @@
 //
 //---------------------------------------------------------------------------
 
+#include <esp_task_wdt.h>
 #include "globals.h"
+#include "soundanalyzer.h"
+
+ProjectSoundAnalyzer g_Analyzer;
 
 #if ENABLE_AUDIO
-
-#include <esp_task_wdt.h>
-#include "soundanalyzer.h"
 
 #if ENABLE_VICE_SERVER
 #include "network.h"
