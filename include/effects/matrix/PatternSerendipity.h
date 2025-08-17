@@ -94,7 +94,9 @@ private:
     }
 
 public:
-    PatternSerendipity() : LEDStripEffect(idMatrixSerendipity, "Serendipiti")
+    static constexpr EffectId kId = idMatrixSerendipity;
+
+    PatternSerendipity() : LEDStripEffect(kId, "Serendipiti")
     {
     }
 

@@ -43,7 +43,9 @@ class PatternSMStarDeep : public LEDStripEffect
     const int spirocenterY = CENTER_Y_MINOR;
 
   public:
-    PatternSMStarDeep() : LEDStripEffect(idMatrixSMStarDeep, "Star Deep")
+    static constexpr EffectId kId = idMatrixSMStarDeep;
+
+    PatternSMStarDeep() : LEDStripEffect(kId, "Star Deep")
     {
     }
 

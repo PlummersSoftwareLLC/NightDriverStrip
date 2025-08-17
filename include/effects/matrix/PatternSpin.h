@@ -57,7 +57,9 @@
 class PatternSpin : public LEDStripEffect
 {
 public:
-    PatternSpin() : LEDStripEffect(idMatrixSpin, "Spin")
+    static constexpr EffectId kId = idMatrixSpin;
+
+    PatternSpin() : LEDStripEffect(kId, "Spin")
     {
     }
 

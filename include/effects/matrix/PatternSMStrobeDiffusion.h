@@ -34,12 +34,14 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #endif
 
   public:
+    static constexpr EffectId kId = idMatrixSMStrobeDiffusion;
+
     PatternSMStrobeDiffusion()
         :
 #if ENABLE_AUDIO
           BeatEffectBase(1.50, 0.05),
 #endif
-          LEDStripEffect(idMatrixSMStrobeDiffusion, "Diffusion")
+          LEDStripEffect(kId, "Diffusion")
     {
     }
 

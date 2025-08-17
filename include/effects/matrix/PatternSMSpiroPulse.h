@@ -60,6 +60,8 @@ class PatternSMSpiroPulse : public LEDStripEffect
     }
 
   public:
+    static constexpr EffectId kId = idMatrixSMSpiroPulse;
+
     PatternSMSpiroPulse() : LEDStripEffect(idMatrixSMSpiroPulse, "Spiro")
     {
     }

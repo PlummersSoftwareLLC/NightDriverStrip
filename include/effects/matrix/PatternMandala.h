@@ -93,7 +93,9 @@ private:
     int16_t dsy;
 
 public:
-    PatternMandala() : LEDStripEffect(idMatrixMandala, "MRI")
+    static constexpr EffectId kId = idMatrixMandala;
+
+    PatternMandala() : LEDStripEffect(kId, "MRI")
     {
     }
 

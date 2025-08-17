@@ -26,6 +26,7 @@
 //    Defines for effect (sub)types numbers and common JSON property names
 //
 // History:     Apr-05-2023         Rbergen      Created for NightDriverStrip
+//              Aug-17-2025         Davepl       Converted to enums
 //
 //---------------------------------------------------------------------------
 #pragma once
@@ -87,6 +88,17 @@ enum EffectId
 	idStripSplashLogo                       = 38,
 	idStripVUMeter                          = 39,
 	idStripVUMeterVertical                  = 40,
+	idStripVUInsulators                     = 41,
+	idStripCount                            = 42,
+	idStripColorCycleBottomUp               = 43,
+	idStripColorCycleTopDown                = 44,
+	idStripColorCycleSequential             = 45,
+	idStripColorCycleRightLeft              = 46,
+	idStripColorCycleLeftRight              = 47,
+	idStripFireFanBlue                      = 48,
+	idStripFireFanGreen                     = 49,
+	idStripRGBRollAround                    = 50,
+	idStripHueTest                          = 51,
 
 	// Matrix effects
 	idMatrixAlienText                       = 101,

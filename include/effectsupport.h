@@ -193,10 +193,11 @@ extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 // Adds a default and JSON effect factory for a specific effect number and type.
 // All parameters beyond effectNumber and effect type are forwarded to the default constructor.
 template<typename TEffect, typename... Args>
-inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, int effectNumber, Args&&... args)
+inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, Args&&... args)
 {
+    static_assert(std::is_enum_v<decltype(TEffect::kId)>, "TEffect must have static constexpr kId");
     return factories.AddEffect(
-        effectNumber,
+        TEffect::kId,
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
         [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); }
     );
@@ -204,9 +205,9 @@ inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, i
 
 // Adds a default and JSON effect factory, but the default effect will be disabled upon creation.
 template<typename TEffect, typename... Args>
-inline EffectFactories::NumberedFactory& AddEffectDisabled(EffectFactories& factories, int effectNumber, Args&&... args)
+inline EffectFactories::NumberedFactory& AddEffectDisabled(EffectFactories& factories, Args&&... args)
 {
-    auto& nf = AddEffect<TEffect>(factories, effectNumber, std::forward<Args>(args)...);
+    auto& nf = AddEffect<TEffect>(factories, std::forward<Args>(args)...);
     nf.LoadDisabled = true;
     return nf;
 }
@@ -246,12 +247,12 @@ inline void RegisterAll(EffectFactories& factories, Adders&&... adders)
 }
 
 // Builder for a single effect entry used with RegisterAll
-template<int EffectNumber, typename TEffect, typename... Args>
+template<typename TEffect, typename... Args>
 inline auto Effect(Args&&... args)
 {
     return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
     {
-        return AddEffect<TEffect>(factories, EffectNumber, args...);
+        return AddEffect<TEffect>(factories, args...);
     };
 }
 

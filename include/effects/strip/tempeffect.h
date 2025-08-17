@@ -37,6 +37,8 @@
 
 class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
+  public:
+    static constexpr EffectId kId = idStripSimpleInsulatorBeat;
   protected:
 
     std::deque<int> _lit;
@@ -80,6 +82,8 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 
 class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 {
+  public:
+    static constexpr EffectId kId = idStripSimpleInsulatorBeat2;
   protected:
 
     std::deque<int> _lit;
@@ -120,6 +124,8 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 
 class VUInsulatorsEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripVUInsulators;
     int _last = 1;
 
     using LEDStripEffect::LEDStripEffect;

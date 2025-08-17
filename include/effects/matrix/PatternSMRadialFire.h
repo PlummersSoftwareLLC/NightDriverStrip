@@ -6,22 +6,18 @@
 
 class PatternSMRadialFire : public LEDStripEffect
 {
-  private:
+  public:
+    static constexpr EffectId kId = idMatrixSMRadialFire;
 
+    PatternSMRadialFire() : LEDStripEffect(idMatrixSMRadialFire, "RadialFire") {}
+    PatternSMRadialFire(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
+
+  private:
     static auto constexpr C_X = (MATRIX_WIDTH / 2);
     static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
     // BUGBUG: should probably be dynamically allocated into non-DMAable RAM.
     uint8_t XY_angle[MATRIX_WIDTH][MATRIX_HEIGHT];
     uint8_t XY_radius[MATRIX_WIDTH][MATRIX_HEIGHT];
-
-  public:
-    PatternSMRadialFire() : LEDStripEffect(idMatrixSMRadialFire, "RadialFire")
-    {
-    }
-
-    PatternSMRadialFire(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
 
     void Start() override
     {
@@ -58,9 +54,21 @@ class PatternSMRadialFire : public LEDStripEffect
                     Bri = 256 - (Bri * 0.2);
 
                 // If the palette is paused, we use it to color the fire, otherwise we just use red
-                CRGB color = (GetBlackBodyHeatColor(Col/255.0f, g()->IsPalettePaused() ? 
-                                    g()->ColorFromCurrentPalette(Col) 
-                                  : CRGB::Red).fadeToBlackBy(255-Bri));
+                // Step 1: Calculate normalized color value
+                float normalizedCol = Col / 255.0f;
+
+                // Step 2: Choose base color depending on palette state
+                CRGB baseColor;
+                if (g()->IsPalettePaused()) 
+                    baseColor = g()->ColorFromCurrentPalette(Col);
+                else 
+                    baseColor = CRGB::Red;
+
+                // Step 3: Get black body heat color
+                CRGB heatColor = GetBlackBodyHeatColor(normalizedCol, baseColor);
+
+                // Step 4: Fade color based on brightness
+                CRGB color = heatColor.fadeToBlackBy(255 - Bri);
                 nblend(g()->leds[XY(x, y)], color, speed);
             }
         }

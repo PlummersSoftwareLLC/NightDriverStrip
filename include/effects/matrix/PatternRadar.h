@@ -61,7 +61,9 @@ private:
   uint8_t hueoffset = 0;
 
 public:
-  PatternRadar() : LEDStripEffect(idMatrixRadar, "Radar")
+  static constexpr EffectId kId = idMatrixRadar;
+
+  PatternRadar() : LEDStripEffect(kId, "Radar")
   {
   }
 

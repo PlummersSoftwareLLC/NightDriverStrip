@@ -60,6 +60,9 @@
 
 class PatternWave : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idMatrixWave;
+
 private:
     uint8_t thetaUpdate = 4;
     uint8_t thetaUpdateFrequency = 0;

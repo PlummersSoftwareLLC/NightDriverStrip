@@ -6,6 +6,9 @@
 
 class PatternSMSmoke : public LEDStripEffect
 {
+  public:
+  static constexpr EffectId kId = idMatrixSMSmoke;
+
 private:
   static constexpr uint8_t Scale = 50; // 1-100. Setting
 

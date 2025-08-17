@@ -59,6 +59,9 @@
 
 class PatternSwirl : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idMatrixSwirl;
+
 private:
     const uint8_t borderWidth = 2;
 

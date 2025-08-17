@@ -84,7 +84,9 @@ class PatternSMAmberRain : public LEDStripEffect
     }
 
   public:
-    PatternSMAmberRain() : LEDStripEffect(idMatrixSMAmberRain, "Color Rain")
+    static constexpr EffectId kId = idMatrixSMAmberRain;
+
+    PatternSMAmberRain() : LEDStripEffect(kId, "Color Rain")
     {
     }
 

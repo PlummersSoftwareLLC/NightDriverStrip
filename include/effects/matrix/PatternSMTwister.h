@@ -32,7 +32,9 @@ class PatternSMTwister : public LEDStripEffect
     }
 
   public:
-    PatternSMTwister() : LEDStripEffect(idMatrixSMTwister, "Twister")
+    static constexpr EffectId kId = idMatrixSMTwister;
+
+    PatternSMTwister() : LEDStripEffect(kId, "Twister")
     {
     }
 

@@ -49,6 +49,8 @@ static constexpr auto ballColors = to_array(
 
 class BouncingBallEffect : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripBouncingBall;
 private:
 
     size_t  _iOffset;

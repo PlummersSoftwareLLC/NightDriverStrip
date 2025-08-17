@@ -284,9 +284,11 @@ public:
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
 // matrix is 48x16 using LED Channel 0 only.   Has a VU meter up top and 16 bands.
 
-class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
-{
-  protected:
+class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter {
+    public:
+        static constexpr EffectId kId = idMatrixSpectrumAnalyzer;
+
+    protected:
 
     uint8_t   _numBars;
     uint8_t   _colorOffset;
@@ -549,9 +551,11 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 //
 // Draws a colorful scrolling waveform driven by instantaneous VU as it scrolls
 
-class WaveformEffect : public LEDStripEffect
-{
-  protected:
+class WaveformEffect : public LEDStripEffect {
+    public:
+        static constexpr EffectId kId = idMatrixWaveform;
+
+    protected:
     uint8_t                      _iColorOffset = 0;
     uint8_t                      _increment = 0;
     float                        _iPeakVUy = 0;
@@ -636,11 +640,14 @@ class WaveformEffect : public LEDStripEffect
 
 class GhostWave : public WaveformEffect
 {
-    uint8_t                   _blur     = 0;
-    bool                      _erase    = true;
-    int                       _fade     = 0;
+    public:
+        static constexpr EffectId kId = idMatrixGhostWave;
 
-    void construct()
+        uint8_t                   _blur     = 0;
+        bool                      _erase    = true;
+        int                       _fade     = 0;
+
+        void construct()
     {
     _effectNumber = idMatrixGhostWave;
     }
@@ -724,11 +731,14 @@ class GhostWave : public WaveformEffect
 
 class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 {
-    uint8_t _hueIncrement = 0;
-    uint8_t _scrollIncrement = 0;
-    uint8_t _hueStep = 0;
+    public:
+        static constexpr EffectId kId = idMatrixSpectrumBar;
 
-    void construct()
+        uint8_t _hueIncrement = 0;
+        uint8_t _scrollIncrement = 0;
+        uint8_t _hueStep = 0;
+
+        void construct()
     {
     _effectNumber = idMatrixSpectrumBar;
     }

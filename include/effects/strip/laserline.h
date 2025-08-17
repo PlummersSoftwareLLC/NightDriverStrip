@@ -67,6 +67,8 @@ public:
 
 class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripLaserLine;
   private:
     std::vector<LaserShot>      _shots;
     std::shared_ptr<GFXBase>    _gfx;

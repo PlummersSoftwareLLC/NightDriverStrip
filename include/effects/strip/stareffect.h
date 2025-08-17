@@ -588,6 +588,8 @@ template <typename StarType> class BlurStarEffect : public StarryNightEffect<Sta
 
 class TwinkleStarEffect : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripTwinkleStar;
     #define NUM_TWINKLES 100
     int buffer[NUM_TWINKLES];
 

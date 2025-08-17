@@ -8,9 +8,11 @@
 //@stepko
 // Merry Christmas and Happy New Year
 
-class PatternSMHolidayLights : public LEDStripEffect
-{
-  private:
+class PatternSMHolidayLights : public LEDStripEffect {
+    public:
+        static constexpr EffectId kId = idMatrixSMHolidayLights;
+
+    private:
 
     static constexpr int speed = (200 / (MATRIX_HEIGHT - 4));
     uint8_t hue {0};

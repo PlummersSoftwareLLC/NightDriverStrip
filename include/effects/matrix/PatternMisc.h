@@ -62,7 +62,9 @@ class PatternSunburst : public LEDStripEffect
 {
   public:
 
-    PatternSunburst() : LEDStripEffect(idMatrixSunburst, "Sunburst")
+    static constexpr EffectId kId = idMatrixSunburst;
+
+    PatternSunburst() : LEDStripEffect(kId, "Sunburst")
     {
     }
 
@@ -103,7 +105,9 @@ class PatternRose : public LEDStripEffect
 {
   public:
 
-    PatternRose() : LEDStripEffect(idMatrixRose, "Rose")
+    static constexpr EffectId kId = idMatrixRose;
+
+    PatternRose() : LEDStripEffect(kId, "Rose")
     {
     }
 
@@ -157,7 +161,9 @@ class PatternPinwheel : public LEDStripEffect
 {
   public:
 
-    PatternPinwheel() : LEDStripEffect(idMatrixPinwheel, "Pinwheel")
+    static constexpr EffectId kId = idMatrixPinwheel;
+
+    PatternPinwheel() : LEDStripEffect(kId, "Pinwheel")
     {
     }
 
@@ -201,7 +207,9 @@ class PatternInfinity : public LEDStripEffect
 {
 public:
 
-    PatternInfinity() : LEDStripEffect(idMatrixInfinity, "Infinity")
+    static constexpr EffectId kId = idMatrixInfinity;
+
+    PatternInfinity() : LEDStripEffect(kId, "Infinity")
     {
     }
 
@@ -266,7 +274,9 @@ private:
     uint8_t generation = 0;
 
 public:
-    PatternMunch() : LEDStripEffect(idMatrixMunch, "Munch")
+    static constexpr EffectId kId = idMatrixMunch;
+
+    PatternMunch() : LEDStripEffect(kId, "Munch")
     {
     }
 

@@ -34,6 +34,8 @@
 
 class PaletteEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripPalette;
   private:
 
     float _startIndex;

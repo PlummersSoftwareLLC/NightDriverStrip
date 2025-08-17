@@ -6,7 +6,10 @@
 
 class PatternSMWalkingMachine : public LEDStripEffect
 {
-  private:
+    public:
+        static constexpr EffectId kId = idMatrixSMWalkingMachine;
+
+    private:
     // Walking machine
     // St3p40 aka Stepko
     // 11.04.23

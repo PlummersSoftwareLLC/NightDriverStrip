@@ -190,20 +190,11 @@ private:
     }
 
 public:
-    PatternCircuit() : LEDStripEffect(idMatrixCircuit, "Circuit")
-    {
-        construct();
-    }
+    static constexpr EffectId kId = idMatrixCircuit;
 
-    PatternCircuit(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-        construct();
-    }
-
-    ~PatternCircuit()
-    {
-        free(snakes);
-    }
+    PatternCircuit() : LEDStripEffect(idMatrixCircuit, "Circuit") { construct(); }
+    PatternCircuit(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject) { construct(); }
+    ~PatternCircuit() { free(snakes); }
 
     unsigned long msStart;
 

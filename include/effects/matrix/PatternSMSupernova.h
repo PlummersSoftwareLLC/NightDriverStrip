@@ -8,14 +8,10 @@
 class PatternSMSupernova : public LEDStripEffect
 {
 public:
+    static constexpr EffectId kId = idMatrixSMSupernova;
 
-    PatternSMSupernova() : LEDStripEffect(idMatrixSMSupernova, "Supernova"), hue(0), hue2(0), step(0)
-    {
-    }
-
-    PatternSMSupernova(const JsonObjectConst &jsonDebrisItem) : LEDStripEffect(jsonDebrisItem)
-    {
-    }
+    PatternSMSupernova() : LEDStripEffect(idMatrixSMSupernova, "Supernova"), hue(0), hue2(0), step(0) {}
+    PatternSMSupernova(const JsonObjectConst &jsonDebrisItem) : LEDStripEffect(jsonDebrisItem) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {

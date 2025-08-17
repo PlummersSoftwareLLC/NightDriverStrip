@@ -48,7 +48,9 @@ class PatternClock : public LEDStripEffect
 
   public:
 
-    PatternClock() : LEDStripEffect(idMatrixClock, "Clock")
+    static constexpr EffectId kId = idMatrixClock;
+
+    PatternClock() : LEDStripEffect(kId, "Clock")
     {
     }
 

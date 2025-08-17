@@ -6,7 +6,10 @@
 
 class PatternSMFire2021 : public LEDStripEffect
 {
-  private:
+    public:
+        static constexpr EffectId kId = idMatrixSMFire2021;
+
+    private:
     uint8_t Speed = 150; // 1-252 ...why is not 255?! // Setting
     uint8_t Scale = 9;   // 1-99 is palette and scale // Setting
 

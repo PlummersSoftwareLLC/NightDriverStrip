@@ -36,6 +36,8 @@
 
 class SnakeEffect : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripSnake;
     void construct()
     {
         lastLEDIndex = LEDCount - 1;

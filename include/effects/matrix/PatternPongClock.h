@@ -74,9 +74,11 @@
 #define SPEEDUP 1.15
 #define MAXSPEED 4.0f
 
-class PatternPongClock : public LEDStripEffect
-{
-  private:
+class PatternPongClock : public LEDStripEffect {
+    public:
+        static constexpr EffectId kId = idMatrixPongClock;
+
+    private:
     float ballpos_x, ballpos_y;
     uint8_t erase_x = 10; // holds ball old pos so we can erase it, set to blank area of screen initially.
     uint8_t erase_y = 10;

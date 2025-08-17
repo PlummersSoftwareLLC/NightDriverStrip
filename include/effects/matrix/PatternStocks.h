@@ -351,7 +351,9 @@ private:
 
 public:
 
-    PatternStocks() : LEDStripEffect(idMatrixStocks, "Stocks")
+    static constexpr EffectId kId = idMatrixStocks;
+
+    PatternStocks() : LEDStripEffect(kId, "Stocks")
     {
     }
 

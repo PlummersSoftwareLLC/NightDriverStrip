@@ -7,15 +7,13 @@
 
 class PatternSMGamma : public LEDStripEffect
 {
-  private:
   public:
-    PatternSMGamma() : LEDStripEffect(idMatrixSMGamma, "Gamma")
-    {
-    }
+    static constexpr EffectId kId = idMatrixSMGamma;
 
-    PatternSMGamma(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMGamma() : LEDStripEffect(idMatrixSMGamma, "Gamma") {}
+    PatternSMGamma(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
+
+  private:
 
     void Start() override
     {

@@ -161,7 +161,9 @@ class PatternSubscribers : public LEDStripEffect
 
   public:
 
-    PatternSubscribers() : LEDStripEffect(idMatrixSubscribers, "Subs")
+    static constexpr EffectId kId = idMatrixSubscribers;
+
+    PatternSubscribers() : LEDStripEffect(kId, "Subs")
     {
     }
 

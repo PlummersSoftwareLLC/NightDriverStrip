@@ -18,7 +18,9 @@ class PatternSMHypnosis : public LEDStripEffect
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMHypnosis() : LEDStripEffect(idMatrixSMHypnosis, "Hypnosis")
+    static constexpr EffectId kId = idMatrixSMHypnosis;
+
+    PatternSMHypnosis() : LEDStripEffect(kId, "Hypnosis")
     {
     }
 

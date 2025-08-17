@@ -73,6 +73,9 @@
 
 class PatternAlienText : public LEDStripEffect
 {
+  public:
+  static constexpr EffectId kId = idMatrixAlienText;
+
 private:
   const int charWidth = 6;
   const int charHeight = 6;

@@ -39,6 +39,8 @@
 
 class FireEffect : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripFire;
     void construct()
     {
         heat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
@@ -205,6 +207,8 @@ class FireEffect : public LEDStripEffect
 
 class PaletteFlameEffect : public FireEffect
 {
+    public:
+        static constexpr EffectId kId = idStripPaletteFlame;
     CRGBPalette16 _palette;
     bool _ignoreGlobalColor;
 
@@ -274,6 +278,8 @@ public:
 #if ENABLE_AUDIO
 class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
+    public:
+        static constexpr EffectId kId = idStripMusicalPaletteFire;
     void construct()
     {
     _effectNumber = idStripMusicalPaletteFire;
@@ -332,6 +338,8 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
 class ClassicFireEffect : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripClassicFire;
     bool _Mirrored;
     bool _Reversed;
     int  _Cooling;
@@ -464,6 +472,8 @@ public:
 
 class SmoothFireEffect : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripSmoothFire;
 private:
     bool _Reversed;
     float _Cooling;
@@ -622,6 +632,8 @@ public:
 
 class BaseFireEffect : public LEDStripEffect
 {
+    public:
+        static constexpr EffectId kId = idStripBaseFire;
     void construct()
     {
         heat = std::make_unique<uint8_t []>(CellCount);
@@ -653,7 +665,7 @@ class BaseFireEffect : public LEDStripEffect
   public:
 
     BaseFireEffect(int ledCount, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4, bool breversed = false, bool bmirrored = false)
-    : LEDStripEffect(idStripBaseFire, "BaseFireEffect"),
+        : LEDStripEffect(idStripBaseFire, "BaseFireEffect"),
           Cooling(cooling),
           Sparks(sparks),
           SparkHeight(sparkHeight),

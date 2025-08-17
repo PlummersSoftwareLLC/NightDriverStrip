@@ -81,7 +81,9 @@ private:
     PVector gravity = PVector(0, 0.0125);
 
 public:
-    PatternBounce() : LEDStripEffect(idMatrixBounce, "Bounce")
+    static constexpr EffectId kId = idMatrixBounce;
+
+    PatternBounce() : LEDStripEffect(kId, "Bounce")
     {
     }
 

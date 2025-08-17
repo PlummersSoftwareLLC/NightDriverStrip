@@ -34,6 +34,8 @@
 
 class DoublePaletteEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripDoublePalette;
   private:
 
     PaletteEffect   _PaletteEffect1;
