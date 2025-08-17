@@ -95,7 +95,7 @@ class EffectFactories
       public:
         bool LoadDisabled = false;
 
-  NumberedFactory(int effectNumber, const DefaultEffectFactory& factory)
+        NumberedFactory(int effectNumber, const DefaultEffectFactory& factory)
           : effectNumber(effectNumber),
             factory(factory)
         {}

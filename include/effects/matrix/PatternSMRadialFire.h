@@ -6,7 +6,7 @@
 
 class PatternSMRadialFire : public LEDStripEffect
 {
-  public:
+public:
     static constexpr EffectId kId = idMatrixSMRadialFire;
 
     PatternSMRadialFire() : LEDStripEffect(idMatrixSMRadialFire, "RadialFire") {}

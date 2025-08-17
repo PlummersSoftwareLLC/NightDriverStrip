@@ -48,7 +48,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
   public:
 
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) :
-    LEDStripEffect(idMatrixInsulatorSpectrum, strName),
+        LEDStripEffect(idMatrixInsulatorSpectrum, strName),
         BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -284,7 +284,8 @@ public:
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
 // matrix is 48x16 using LED Channel 0 only.   Has a VU meter up top and 16 bands.
 
-class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter {
+class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter 
+{
     public:
         static constexpr EffectId kId = idMatrixSpectrumAnalyzer;
 
@@ -649,7 +650,7 @@ class GhostWave : public WaveformEffect
 
         void construct()
     {
-    _effectNumber = idMatrixGhostWave;
+        _effectNumber = idMatrixGhostWave;
     }
   public:
 
@@ -740,13 +741,13 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 
         void construct()
     {
-    _effectNumber = idMatrixSpectrumBar;
+        _effectNumber = idMatrixSpectrumBar;
     }
 
     public:
 
     SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
-    :LEDStripEffect(idMatrixSpectrumBar, pszFriendlyName),
+      : LEDStripEffect(idMatrixSpectrumBar, pszFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
         _hueStep(hueStep)

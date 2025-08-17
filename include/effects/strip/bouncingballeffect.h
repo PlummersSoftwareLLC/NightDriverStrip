@@ -49,9 +49,7 @@ static constexpr auto ballColors = to_array(
 
 class BouncingBallEffect : public LEDStripEffect
 {
-    public:
-        static constexpr EffectId kId = idStripBouncingBall;
-private:
+  private:
 
     size_t  _iOffset;
     size_t  _cLength;
@@ -75,8 +73,10 @@ private:
 
   public:
 
+    static constexpr EffectId kId = idStripBouncingBall;
+
     BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
-    : LEDStripEffect(idStripBouncingBall, "Bouncing Balls"),
+        : LEDStripEffect(idStripBouncingBall, "Bouncing Balls"),
           _cBalls(ballCount),
           _cBallSize(ballSize),
           _bMirrored(bMirrored),

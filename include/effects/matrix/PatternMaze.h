@@ -86,8 +86,8 @@
 
 
 class PatternMaze : public LEDStripEffect {
-    public:
-        static constexpr EffectId kId = idMatrixMaze;
+public:
+    static constexpr EffectId kId = idMatrixMaze;
 
 private:
     enum Directions {

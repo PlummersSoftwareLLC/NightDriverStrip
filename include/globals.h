@@ -896,16 +896,14 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
 
 // Provide a single-parameter std::accumulate overload for ranges/containers
 // This allows: auto total = std::accumulate(container);
-namespace std {
-    template <typename Range>
-    inline auto accumulate(const Range& r)
-        -> std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>
-    {
-        using T = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>;
-        T total{};
-        for (const auto& v : r) total += v;
-        return total;
-    }
+template <typename Range>
+inline auto accumulate(const Range& r)
+    -> std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>
+{
+    using T = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>;
+    T total{};
+    for (const auto& v : r) total += v;
+    return total;
 }
 
 // 16-bit (5:6:5) color definitions for common colors

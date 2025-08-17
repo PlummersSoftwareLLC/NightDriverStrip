@@ -6,7 +6,7 @@
 
 class PatternSMSmoke : public LEDStripEffect
 {
-  public:
+public:
   static constexpr EffectId kId = idMatrixSMSmoke;
 
 private:

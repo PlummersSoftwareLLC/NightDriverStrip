@@ -73,7 +73,7 @@
 
 class PatternAlienText : public LEDStripEffect
 {
-  public:
+public:
   static constexpr EffectId kId = idMatrixAlienText;
 
 private:
