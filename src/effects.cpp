@@ -229,7 +229,6 @@ void LoadEffectFactories()
 
         ADD_EFFECT(EFFECT_MATRIX_PDPCMX, PDPCMXEffect);
         ADD_EFFECT(EFFECT_MATRIX_PDPGRID, PDPGridEffect);
-        #define DEFAULT_EFFECT_INTERVAL  0
 
     #elif defined(EFFECTS_DEMO)
         // Demo effect set for M5 demos and similar

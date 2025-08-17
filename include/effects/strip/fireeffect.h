@@ -184,7 +184,7 @@ class FireEffect : public LEDStripEffect
         {
             auto begin = &heat[i * CellsPerLED];
             auto end = begin + CellsPerLED;
-            int sum = std::accumulate(begin, end, 0);
+            int sum = std::sum(begin, end);
             auto avg = sum / CellsPerLED;
 
             #if LANTERN
@@ -763,7 +763,7 @@ class BaseFireEffect : public LEDStripEffect
         {
             auto begin = &heat[i * cellsPerLED];
             auto end = begin + cellsPerLED;
-            int sum = std::accumulate(begin, end, 0);
+            int sum = std::sum(begin, end, 0);
             int avg = sum / cellsPerLED;
             CRGB color = MapHeatToColor(heat[avg]);
             int j = bReversed ? (LEDCount - 1 - i) : i;

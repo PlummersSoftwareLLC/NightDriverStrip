@@ -928,7 +928,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         _msLastRemoteAudio = millis();
         _Peaks = peaks;
         _vPeaks = _Peaks;
-        float sum = std::accumulate(_vPeaks.begin(), _vPeaks.end(), 0.0f);
+        float sum = std::sum(_vPeaks);
         UpdateVU(sum / NUM_BANDS);
     }
 
@@ -988,7 +988,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         else
         {
             // Using remote data - just update VU from existing peaks
-            float sum = std::accumulate(_Peaks.begin(), _Peaks.end(), 0.0f);
+            float sum = std::sum(_Peaks);
             UpdateVU(sum / NUM_BANDS);
         }
     }
