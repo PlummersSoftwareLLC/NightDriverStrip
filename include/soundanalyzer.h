@@ -28,6 +28,7 @@
 //
 // History:     Sep-12-2018         Davepl      Commented
 //              Apr-20-2019         Davepl      Adapted from Spectrum Analyzer
+//              Aug-09-2025         Davepl      Substantively rewritten to use C++20 features
 //
 //---------------------------------------------------------------------------
 
@@ -59,13 +60,9 @@ struct AudioInputParams {
     float windowPowerCorrection;  // Windowing power correction (Hann ~4.0)
     float energyNoiseAdapt;       // Noise floor rise rate when signal present
     float energyNoiseDecay;       // Noise floor decay factor when below floor
-    float energySmoothAlpha;      // One-pole smoother for per-band signal
     float energyEnvDecay;         // Envelope fall (autoscale) per frame
     float energyMinEnv;           // Min envelope to avoid div-by-zero
-    float bandCompLow;            // Low-band compensation scalar
     float bandCompHigh;           // High-band compensation scalar
-    float frameSilenceGate;       // Gate entire frame if below this after norm
-    float normNoiseGate;          // Gate individual bands below this after norm
     float envFloorFromNoise;      // Multiplier on mean noise floor to cap normalization
     float frameSNRGate;           // Gate frame if raw SNR (max/noiseMax) is below this
     float postScale;              // Post-scale for normalized band values (applied before clamp)
@@ -78,13 +75,9 @@ inline constexpr AudioInputParams kParamsMesmerizer{
     4.0f,      // windowPowerCorrection
     0.02f,     // energyNoiseAdapt
     0.98f,     // energyNoiseDecay
-    0.25f,     // energySmoothAlpha
     0.99f,     // energyEnvDecay
     0.000001f, // energyMinEnv
-    1.0f,      // bandCompLow
     1.0f,      // bandCompHigh
-    0.00f,     // frameSilenceGate
-    0.00f,     // normNoiseGate
     3.0f,      // envFloorFromNoise (cap auto-gain at ~1/4 of pure-noise)
     0.0f,      // frameSNRGate (require ~3:1 SNR to show frame)
     1.0f,      // postScale (Mesmerizer default)
@@ -100,13 +93,9 @@ inline constexpr AudioInputParams kParamsM5{
     4.0f,      // windowPowerCorrection
     0.02f,     // energyNoiseAdapt
     0.98f,     // energyNoiseDecay
-    0.25f,     // energySmoothAlpha
     0.95f,     // energyEnvDecay (faster decay for quicker adaptation)
     0.01f,     // energyMinEnv (higher floor for faster startup)
-    1.0f,      // bandCompLow (reserved in current curve)
     1.5f,      // bandCompHigh (boost upper bands for M5)
-    0.00f,     // frameSilenceGate
-    0.00f,     // normNoiseGate
     3.0f,      // envFloorFromNoise
     0.0f,      // frameSNRGate
     1.0f,      // postScale
@@ -117,13 +106,9 @@ inline constexpr AudioInputParams kParamsM5Plus2{
     4.0f,      // windowPowerCorrection
     0.02f,     // energyNoiseAdapt
     0.98f,     // energyNoiseDecay
-    0.25f,     // energySmoothAlpha
     0.95f,     // energyEnvDecay (faster decay for quicker adaptation)
     0.01f,     // energyMinEnv (higher floor for faster startup)
-    1.0f,      // bandCompLow (10% = 90% attenuation for bass bands)*
     1.0f,      // bandCompHigh (no attenuation for high bands)
-    0.00f,     // frameSilenceGate
-    0.00f,     // normNoiseGate
     3.0f,      // envFloorFromNoise
     0.0f,      // frameSNRGate
     1.0f,      // postScale
@@ -136,13 +121,9 @@ inline constexpr AudioInputParams kParamsI2SExternal{
     4.0f,           // windowPowerCorrection (increased from 4.0f for more gain)
     0.02f,          // energyNoiseAdapt (slower noise adaptation)
     0.98f,          // energyNoiseDecay (slower noise floor decay)
-    0.25f,          // energySmoothAlpha (more smoothing between frames)
     0.95f,          // energyEnvDecay (slower envelope decay)
     0.01f,          // energyMinEnv (higher floor to prevent over-normalization with quiet I2S mics)
-    1.0f,           // bandCompLow (10% = 90% attenuation for bass bands)
     1.0f,           // bandCompHigh (no attenuation for high bands)
-    0.00f,          // frameSilenceGate
-    0.00f,          // normNoiseGate
     3.0f,           // envFloorFromNoise
     0.0f,           // frameSNRGate (disable SNR gating for external mics)
     1.5f,           // postScale (much higher gain for external I2S mics - was 4.0f)
@@ -173,32 +154,8 @@ inline constexpr AudioInputParams kParamsI2SExternal{
 #define NUM_BANDS 1
 #endif
 
-class PeakData
-{
-  public:
-    float _Level[NUM_BANDS];
-
-    PeakData()
-    {
-        std::fill_n(_Level, NUM_BANDS, 0.0f);
-    }
-    explicit PeakData(const float *pFloats)
-    {
-        SetData(pFloats);
-    }
-    PeakData &operator=(const PeakData &other)
-    {
-        if (this == &other)
-            return *this;
-        std::copy(other._Level, other._Level + NUM_BANDS, _Level);
-        return *this;
-    }
-    float operator[](std::size_t n) const { return _Level[n]; }
-    void SetData(const float *pFloats)
-    {
-        std::copy(pFloats, pFloats + NUM_BANDS, _Level);
-    }
-};
+// Replace previous PeakData class with a direct alias to std::array
+using PeakData = std::array<float, NUM_BANDS>;
 
 // Interface for SoundAnalyzer (audio and non-audio variants)
 class ISoundAnalyzer
@@ -212,14 +169,10 @@ class ISoundAnalyzer
     virtual float MinVU() const = 0;
     virtual int AudioFPS() const = 0;
     virtual int SerialFPS() const = 0;
-    // True when peaks are coming from a recent remote source (SetPeakData)
     virtual bool IsRemoteAudioActive() const = 0;
-    virtual const PeakData &Peaks() const = 0;
+    virtual const PeakData & Peaks() const = 0;
     virtual float Peak2Decay(int band) const = 0;
-    virtual const float *Peak2DecayData() const = 0;
-    virtual const float *Peak1DecayData() const = 0;
     virtual float Peak1Decay(int band) const = 0;
-    virtual const unsigned long *Peak1Times() const = 0;
     virtual unsigned long LastPeak1Time(int band) const = 0;
     virtual void SetPeakDecayRates(float r1, float r2) = 0;
 };
@@ -271,24 +224,9 @@ class SoundAnalyzer : public ISoundAnalyzer // Non-audio case stub
     {
         return 0.0f;
     }
-    const float *Peak2DecayData() const override
-    {
-        static float zeros[NUM_BANDS] = {0};
-        return zeros;
-    }
-    const float *Peak1DecayData() const override
-    {
-        static float zeros[NUM_BANDS] = {0};
-        return zeros;
-    }
     float Peak1Decay(int) const override
     {
         return 0.0f;
-    }
-    const unsigned long *Peak1Times() const override
-    {
-        static unsigned long zeros[NUM_BANDS] = {0};
-        return zeros;
     }
     unsigned long LastPeak1Time(int) const override
     {
@@ -322,7 +260,6 @@ class SoundAnalyzer : public ISoundAnalyzer
     float _VU = 0.0f;
     float _PeakVU = 0.0f;
     float _MinVU = 0.0f;
-    unsigned long _cSamples = 0U;
     int _AudioFPS = 0;
     int _serialFPS = 0;
     uint _msLastRemoteAudio = 0;
@@ -334,33 +271,21 @@ class SoundAnalyzer : public ISoundAnalyzer
     static constexpr size_t LOWEST_FREQ = 100;
     static constexpr size_t HIGHEST_FREQ = SAMPLING_FREQUENCY / 2;
 
-    static inline size_t SamplingPeriodMicros()
-    {
-        return (size_t)PERIOD_FROM_FREQ(SAMPLING_FREQUENCY);
-    }
-
-    size_t _clipCount = 0;              // number of clipped samples seen
-    float  _dcOffsetEMA = 0.0f;         // exponential moving average of DC offset (abs)
-    float  _envEMA = 0.0f;              // EMA of _energyMaxEnv
-    size_t _frameGateHits = 0;          // frames gated by params.frameSilenceGate
-    size_t _bandGateHits = 0;           // total band gate hits
-    size_t _framesProcessed = 0;        // total processed frames
-
     float   _oldVU;                     // Old VU value for damping
     float   _oldPeakVU;                 // Old peak VU value for damping
     float   _oldMinVU;                  // Old min VU value for damping
-    std::array<float, NUM_BANDS> _vPeaks{};    // Normalized band energies 0..1
-    std::array<float, NUM_BANDS> _livePeaks{}; // Attack-limited display peaks per band
-    int     _bandBinStart[NUM_BANDS];
-    int     _bandBinEnd[NUM_BANDS];
+    PeakData _vPeaks{};    // Normalized band energies 0..1
+    PeakData _livePeaks{}; // Attack-limited display peaks per band
+    std::array<int, NUM_BANDS> _bandBinStart{};
+    std::array<int, NUM_BANDS> _bandBinEnd{};
     float   _energyMaxEnv = 0.01f;        // adaptive envelope for autoscaling (start low for fast adaptation)
-    float   _noiseFloor[NUM_BANDS] = {0}; // adaptive per-band noise floor
-    float   _rawPrev[NUM_BANDS] = {0};    // previous raw (noise-subtracted) power for smoothing
+    std::array<float, NUM_BANDS> _noiseFloor{}; // adaptive per-band noise floor
+    std::array<float, NUM_BANDS> _rawPrev{};    // previous raw (noise-subtracted) power for smoothing
 
     // Peak decay internals (private)
-    unsigned long _lastPeak1Time[NUM_BANDS] = {0};
-    float _peak1Decay[NUM_BANDS] = {0};
-    float _peak2Decay[NUM_BANDS] = {0};
+    std::array<unsigned long, NUM_BANDS> _lastPeak1Time{};
+    std::array<float, NUM_BANDS> _peak1Decay{};
+    std::array<float, NUM_BANDS> _peak2Decay{};
     float _peak1DecayRate = 1.25f;
     float _peak2DecayRate = 1.25f;
 
@@ -404,87 +329,78 @@ class SoundAnalyzer : public ISoundAnalyzer
     void SampleAudio()
     {
         size_t bytesRead = 0;
-#if USE_M5
-        // M5 path unchanged; fills ptrSampleBuffer with int16 samples
-        constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
-        if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
-            bytesRead = bytesExpected;
-        if (bytesRead != bytesExpected)
-        {
-            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
-            return;
-        }
-#else
-#if ELECROW || USE_I2S_AUDIO
-        // External I2S microphones like INMP441 produce 24-bit samples in 32-bit words.
-        // Read stereo frames (RIGHT_LEFT) and auto-select whichever channel carries the mic.
-        {
-            constexpr int kChannels = 2; // RIGHT + LEFT
-            constexpr auto wordsToRead = MAX_SAMPLES * kChannels;
-            constexpr auto bytesExpected32 = wordsToRead * sizeof(int32_t);
-            static int32_t raw32[wordsToRead];
-            // I2S is already running continuously; just read from DMA buffers
-            ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)raw32, bytesExpected32, &bytesRead, 100 / portTICK_PERIOD_MS));
-            if (bytesRead != bytesExpected32)
+        #if USE_M5
+            // M5 path unchanged; fills ptrSampleBuffer with int16 samples
+            constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+            if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
+                bytesRead = bytesExpected;
+            if (bytesRead != bytesExpected)
             {
-                debugW("Only read %u of %u bytes from I2S\n", bytesRead, bytesExpected32);
+                debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
                 return;
             }
-            // Decide which channel has signal (0 or 1 within each frame)
-            static int s_chanIndex = -1;
-            if (s_chanIndex < 0)
-            {
-                long long sumAbs[2] = {0, 0};
-                for (int i = 0; i < MAX_SAMPLES; ++i)
+        #elif ELECROW || USE_I2S_AUDIO
+                // External I2S microphones like INMP441 produce 24-bit samples in 32-bit words.
+                // Read stereo frames (RIGHT_LEFT) and auto-select whichever channel carries the mic.
                 {
-                    int32_t r0 = raw32[i * kChannels + 0];
-                    int32_t r1 = raw32[i * kChannels + 1];
-                    sumAbs[0] += llabs((long long)r0);
-                    sumAbs[1] += llabs((long long)r1);
+                    constexpr int kChannels = 2; // RIGHT + LEFT
+                    constexpr auto wordsToRead = MAX_SAMPLES * kChannels;
+                    constexpr auto bytesExpected32 = wordsToRead * sizeof(int32_t);
+                    static int32_t raw32[wordsToRead];
+                    // I2S is already running continuously; just read from DMA buffers
+                    ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)raw32, bytesExpected32, &bytesRead, 100 / portTICK_PERIOD_MS));
+                    if (bytesRead != bytesExpected32)
+                    {
+                        debugW("Only read %u of %u bytes from I2S\n", bytesRead, bytesExpected32);
+                        return;
+                    }
+                    // Decide which channel has signal (0 or 1 within each frame)
+                    static int s_chanIndex = -1;
+                    if (s_chanIndex < 0)
+                    {
+                        long long sumAbs[2] = {0, 0};
+                        for (int i = 0; i < MAX_SAMPLES; ++i)
+                        {
+                            int32_t r0 = raw32[i * kChannels + 0];
+                            int32_t r1 = raw32[i * kChannels + 1];
+                            sumAbs[0] += llabs((long long)r0);
+                            sumAbs[1] += llabs((long long)r1);
+                        }
+                        s_chanIndex = (sumAbs[1] > sumAbs[0]) ? 1 : 0;
+                    }
+                    // Downconvert 24-bit left-justified samples from the chosen channel to signed 16-bit
+                    // INMP441 produces 24-bit samples left-justified in 32-bit words (bits [31:8])
+                    // For better dynamic range, we shift by 16 to get the top 16 bits of the 24-bit sample
+                    // Apply additional scaling since INMP441 may have lower sensitivity than expected
+                    for (int i = 0; i < MAX_SAMPLES; i++)
+                    {
+                        int32_t v = raw32[i * kChannels + s_chanIndex];
+                        // Take top 16 bits and apply 2x scaling for INMP441 sensitivity compensation
+                        int32_t scaled = (v >> 15);  // Shift by 15 instead of 16 for 2x gain
+                        ptrSampleBuffer[i] = (int16_t)std::clamp(scaled, (int32_t)INT16_MIN, (int32_t)INT16_MAX);
+                    }
                 }
-                s_chanIndex = (sumAbs[1] > sumAbs[0]) ? 1 : 0;
-            }
-            // Downconvert 24-bit left-justified samples from the chosen channel to signed 16-bit
-            // INMP441 produces 24-bit samples left-justified in 32-bit words (bits [31:8])
-            // For better dynamic range, we shift by 16 to get the top 16 bits of the 24-bit sample
-            // Apply additional scaling since INMP441 may have lower sensitivity than expected
-            for (int i = 0; i < MAX_SAMPLES; i++)
+        #else
+            // ADC or generic 16-bit I2S sources
             {
-                int32_t v = raw32[i * kChannels + s_chanIndex];
-                // Take top 16 bits and apply 2x scaling for INMP441 sensitivity compensation
-                int32_t scaled = (v >> 15);  // Shift by 15 instead of 16 for 2x gain
-                ptrSampleBuffer[i] = (int16_t)std::clamp(scaled, (int32_t)INT16_MIN, (int32_t)INT16_MAX);
+                constexpr auto bytesExpected16 = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+                // I2S is already running continuously; just read from DMA buffers
+                ESP_ERROR_CHECK(                i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected16, &bytesRead, 100 / portTICK_PERIOD_MS));
+                if (bytesRead != bytesExpected16)
+                {
+                    debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected16);
+                    return;
+                }
             }
-        }
-#else
-        // ADC or generic 16-bit I2S sources
-        {
-            constexpr auto bytesExpected16 = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
-            // I2S is already running continuously; just read from DMA buffers
-            ESP_ERROR_CHECK(                i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected16, &bytesRead, 100 / portTICK_PERIOD_MS));
-            if (bytesRead != bytesExpected16)
-            {
-                debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected16);
-                return;
-            }
-        }
-#endif
-#endif
+        
+        #endif
+        
         // Compute stats and copy into FFT input buffer
-        int16_t smin = INT16_MAX, smax = INT16_MIN;
-        long sum = 0;
         for (int i = 0; i < MAX_SAMPLES; i++)
         {
             int16_t s = ptrSampleBuffer[i];
             _vReal[i] = (float)s;
-            if (s < smin) smin = s;
-            if (s > smax) smax = s;
-            sum += s;
         }
-        if (smin <= -32768 || smax >= 32767)
-            _clipCount++;
-        float dc = fabsf((float)sum / (float)MAX_SAMPLES);
-        _dcOffsetEMA = _dcOffsetEMA * 0.95f + dc * 0.05f; // slow EMA
     }
 
     // Update the VU and peak values based on the new sample
@@ -559,21 +475,13 @@ class SoundAnalyzer : public ISoundAnalyzer
          constexpr float kBandFloorMin = 0.01f;
          constexpr float kBandFloorScale = 0.05f;
 
-        // Remember that a slower attack will yield a smoother display but a lower one, as it's always 
-        // below the actual for some amount of time
-
         // Adjust attack rate based on microphone type - compile-time optimized
         float kLiveAttackPerSec = 1000.0f;  // Very fast attack (effectively no limiting)
-        // Envelope gating factor and max relative EMA
-        float _gateEnv = 1.0f;
-        float _vMaxRelEMA = 1.0f;
         // Use reciprocal of AudioFPS for frame-rate independent attack limiting
         float dt = (_AudioFPS > 0) ? (1.0f / (float)_AudioFPS) : 0.016f;
         // Fallback to reasonable default if FPS is invalid
         if (dt <= 0.0f || dt > 0.1f) 
             dt = 0.016f;
-        _framesProcessed++;
-        const float binWidth = (float)SAMPLING_FREQUENCY / (MAX_SAMPLES / 2.0f);
         for (int b = 0; b < NUM_BANDS; b++)
         {
             int start = _bandBinStart[b];
@@ -629,20 +537,21 @@ class SoundAnalyzer : public ISoundAnalyzer
             float signal = (float)avgPower - _noiseFloor[b];
             if (signal < 0.0f)
                 signal = 0.0f;
-#if ENABLE_AUDIO_SMOOTHING
-            // Weighted average: 0.25 * (2 * current + left + right)
-            float left = (b > 0) ? _rawPrev[b - 1] : signal;
-            float right = (b < NUM_BANDS - 1) ? _rawPrev[b + 1] : signal;
-            float smoothed = 0.25f * (2.0f * signal + left + right);
-            _rawPrev[b] = smoothed;
-            _vPeaks[b] = smoothed;
-            if (smoothed > frameMax)
-                frameMax = smoothed;
-#else
-            _vPeaks[b] = signal;
-            if (signal > frameMax)
-                frameMax = signal;
-#endif
+            
+            #if ENABLE_AUDIO_SMOOTHING
+                // Weighted average: 0.25 * (2 * current + left + right)
+                float left = (b > 0) ? _rawPrev[b - 1] : signal;
+                float right = (b < NUM_BANDS - 1) ? _rawPrev[b + 1] : signal;
+                float smoothed = 0.25f * (2.0f * signal + left + right);
+                _rawPrev[b] = smoothed;
+                _vPeaks[b] = smoothed;
+                if (smoothed > frameMax)
+                    frameMax = smoothed;
+            #else
+                _vPeaks[b] = signal;
+                if (signal > frameMax)
+                    frameMax = signal;
+            #endif
         }
 
         // Manually clamp back the bass bands, as they are vastly over-represented
@@ -652,18 +561,15 @@ class SoundAnalyzer : public ISoundAnalyzer
         else
             _energyMaxEnv = std::max(_params.energyMinEnv, _energyMaxEnv * _params.energyEnvDecay);
 
-        _envEMA = _envEMA * 0.95f + _energyMaxEnv * 0.05f;
-
         // Raw SNR-based frame gate (pre-normalization) to suppress steady HVAC and similar backgrounfd noises
 
         float snrRaw = frameSumRaw / (noiseMaxAll + 1e-9f);
         if (snrRaw < _params.frameSNRGate)
         {
-            _frameGateHits++;
             for (int b = 0; b < NUM_BANDS; ++b)
             {
                 _vPeaks[b] = 0.0f;
-                _Peaks._Level[b] = 0.0f;
+                _Peaks[b] = 0.0f;
             }
             UpdateVU(0.0f);
             return _Peaks;
@@ -675,11 +581,10 @@ class SoundAnalyzer : public ISoundAnalyzer
         // Quiet environment gate: if the derived env floor is below a configured threshold, suppress the whole frame
         if (_params.quietEnvFloorGate > 0.0f && envFloorRaw < _params.quietEnvFloorGate)
         {
-            _frameGateHits++;
             for (int b = 0; b < NUM_BANDS; ++b)
             {
                 _vPeaks[b] = 0.0f;
-                _Peaks._Level[b] = 0.0f;
+                _Peaks[b] = 0.0f;
             }
             UpdateVU(0.0f);
             return _Peaks;
@@ -696,11 +601,10 @@ class SoundAnalyzer : public ISoundAnalyzer
             float vTarget = _vPeaks[b] * invEnv;
             vTarget = powf(std::max(0.0f, vTarget), _params.compressGamma);
             if (vTarget > 1.0f) vTarget = 1.0f;
-            vTarget *= _gateEnv;
             vTarget *= kDisplayGain;
             if (vTarget > 1.0f) vTarget = 1.0f;
-            const float bandFloor = std::max(kBandFloorMin, kBandFloorScale * _vMaxRelEMA);
-            if (vTarget < bandFloor) { vTarget = 0.0f; _bandGateHits++; }
+            const float bandFloor = std::max(kBandFloorMin, kBandFloorScale);
+            if (vTarget < bandFloor) { vTarget = 0.0f; }
             float vCurr = _livePeaks[b];
             float vNew = vTarget;
             if (vTarget > vCurr)
@@ -712,7 +616,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             if (vNew < 0.0f) vNew = 0.0f;
             _livePeaks[b] = vNew;
             _vPeaks[b] = vNew;
-            _Peaks._Level[b] = vNew;
+            _Peaks[b] = vNew;
             sumNorm += vNew;
         }
         UpdateVU(sumNorm / (float)NUM_BANDS);
@@ -738,7 +642,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     }
 
     // Average normalized energy this frame (0..1 after gating/compression).
-    // Updated in ProcessPeaksEnergy()/SetPeakData via UpdateVU().
+    // Updated in ProcessPeaksEnergy()/SetPeakDataFromRemote via UpdateVU().
 
     inline float VU() const override
     {
@@ -784,7 +688,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     inline bool IsRemoteAudioActive() const override { return millis() - _msLastRemoteAudio <= AUDIO_PEAK_REMOTE_TIMEOUT; }
 
     // Returns the latest per-band normalized peaks (0..1).
-    // Pointer remains valid until next ProcessPeaksEnergy/SetPeakData.
+    // Pointer remains valid until next ProcessPeaksEnergy/SetPeakDataFromRemote.
 
     inline const PeakData &Peaks() const override
     {
@@ -799,40 +703,10 @@ class SoundAnalyzer : public ISoundAnalyzer
         return (band >= 0 && band < NUM_BANDS) ? _peak2Decay[band] : 0.0f;
     }
 
-    // Direct access to the secondary (slower) decay array.
-    // Array length is NUM_BANDS.
-
-    inline const float *Peak2DecayData() const override
-    {
-        return _peak2Decay;
-    }
-
-    // Direct access to the primary (faster) decay array.
-    // Array length is NUM_BANDS.
-
-    inline const float *Peak1DecayData() const override
-    {
-        return _peak1Decay;
-    }
-
-    // Returns the faster-decay overlay level for the given band (0..1).
-    // Band index is clamped by caller; returns 0 on out-of-range.
-
     inline float Peak1Decay(int band) const override
     {
         return (band >= 0 && band < NUM_BANDS) ? _peak1Decay[band] : 0.0f;
     }
-
-    // Returns timestamps (ms) of last primary-peak rise per band.
-    // Useful for triggering time-based band effects.
-
-    inline const unsigned long *Peak1Times() const override
-    {
-        return _lastPeak1Time;
-    }
-
-    // Helper to read the last primary-peak time for a specific band.
-    // Returns 0 if band is out of range.
 
     inline unsigned long LastPeak1Time(int band) const override
     {
@@ -856,9 +730,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         ptrSampleBuffer.reset((int16_t *)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_8BIT));
         if (!ptrSampleBuffer)
             throw std::runtime_error("Failed to allocate sample buffer");
-    // No dynamic allocations needed for FFT/peak arrays
         _oldVU = _oldPeakVU = _oldMinVU = 0.0f;
-        // No runtime parameter initialization needed - all compile-time now
         ComputeBandLayout();
         Reset();
     }
@@ -869,11 +741,10 @@ class SoundAnalyzer : public ISoundAnalyzer
     ~SoundAnalyzer()
     {
         // Stop I2S if it was started
-#if !USE_M5 && (ELECROW || USE_I2S_AUDIO || !defined(USE_I2S_AUDIO))
-        i2s_stop(I2S_NUM_0);
-        i2s_driver_uninstall(I2S_NUM_0);
-#endif
-    // No heap frees required for std::array members
+        #if !USE_M5 && (ELECROW || USE_I2S_AUDIO || !defined(USE_I2S_AUDIO))
+            i2s_stop(I2S_NUM_0);
+            i2s_driver_uninstall(I2S_NUM_0);
+        #endif
     }
 
     // These functions allow access to the last-acquired sample buffer and its size so that
@@ -899,7 +770,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     //
     // Looks like pure voodoo, but it returns the multiplier by which to scale a value to enhance it
     // by the current VURatioFade amount.  The amt amount is the amount of your factor that should be
-    // made up of the VURatioFade multiplier.  So passing a 0.75 is a lot of beat enhancement, whereas
+    // made up of the VURatioFade multiplier. So passing a 0.75 is a lot of beat enhancement, whereas
     // 0.25 is a little bit.
 
     // Compute a blend factor using VURatioFade to "pulse" visuals.
@@ -1052,11 +923,11 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Accept externally provided peaks (e.g., over WiFi) and update internal state.
     // Also recomputes VU from the new band values and records source time.
 
-    inline void SetPeakData(const PeakData &peaks)
+    inline void SetPeakDataFromRemote(const PeakData &peaks)
     {
         _msLastRemoteAudio = millis();
         _Peaks = peaks;
-        std::copy(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, _vPeaks.data());
+        _vPeaks = _Peaks;
         float sum = std::accumulate(_vPeaks.begin(), _vPeaks.end(), 0.0f);
         UpdateVU(sum / NUM_BANDS);
     }
@@ -1066,7 +937,7 @@ class SoundAnalyzer : public ISoundAnalyzer
 
     inline const int *BandBinStarts() const
     {
-        return _bandBinStart;
+        return _bandBinStart.data();
     }
 
     // Expose computed band end indices (exclusive) for diagnostics.
@@ -1074,7 +945,7 @@ class SoundAnalyzer : public ISoundAnalyzer
 
     inline const int * BandBinEnds() const
     {
-        return _bandBinEnd;
+        return _bandBinEnd.data();
     }
 
 #if ENABLE_AUDIO_DEBUG
@@ -1117,7 +988,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         else
         {
             // Using remote data - just update VU from existing peaks
-            float sum = std::accumulate(&_Peaks._Level[0], &_Peaks._Level[0] + NUM_BANDS, 0.0f);
+            float sum = std::accumulate(_Peaks.begin(), _Peaks.end(), 0.0f);
             UpdateVU(sum / NUM_BANDS);
         }
     }

@@ -89,7 +89,7 @@ class BeatEffectBase
 
         // Access peaks via const reference to avoid copying
         const PeakData & peaks = g_Analyzer.Peaks();
-        auto basslevel = peaks._Level[0] * 2;  // Scale to historical 0-2 range
+        auto basslevel = peaks[0] * 2;  // Scale to historical 0-2 range
 
         debugV("basslevel: %0.2f", basslevel);
         _samples.push_back(basslevel);
