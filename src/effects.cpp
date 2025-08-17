@@ -37,7 +37,7 @@
 #include "effects/strip/doublepaletteeffect.h"  // double palette effect
 #include "effects/strip/meteoreffect.h"         // meteor blend effect
 #include "effects/strip/stareffect.h"           // star effects
-#include "effects/strip/bouncingballeffect.h"   // bouncing ball effectsenable+
+#include "effects/strip/bouncingballeffect.h"   // bouncing ball effects
 #include "effects/strip/tempeffect.h"
 #include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
@@ -206,7 +206,7 @@ void LoadEffectFactories()
             Effect<FireEffect>("Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true),
             Effect<BouncingBallEffect>(3, true, true, 1),
             Effect<MeteorEffect>(4, 4, 10, 2.0, 2.0),
-            Starry<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
+            Starry<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
             Effect<PaletteEffect>(RainbowColors_p)
         );
     #endif
@@ -227,27 +227,19 @@ void LoadEffectFactories()
             Effect<BouncingBallEffect>(8, true, true, 1),
             Effect<MeteorEffect>(4, 4, 10, 2.0, 2.0),
             Effect<MeteorEffect>(2, 4, 10, 2.0, 2.0),
-            Starry<QuietStar>("Red Twinkle Stars",    RedColors_p,   1.0, 1, LINEARBLEND, 2.0),
-            Starry<QuietStar>("Green Twinkle Stars",  GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<Star>("Blue Sparkle Stars",        BlueColors_p,  STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR)
-        );
-
-        #if ENABLE_AUDIO
-        RegisterAll(*g_ptrEffectFactories,
-            Starry<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.2, 1, NOBLEND, 5.0, 0.1, 2.0)
-        );
-        #endif
-
-        RegisterAll(*g_ptrEffectFactories,
+            Starry<QuietStar>("Red Twinkle Stars", RedColors_p,   1.0, 1, LINEARBLEND, 2.0),
+            Starry<QuietStar>("Green Twinkle Stars", GreenColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<Star>("Blue Sparkle Stars", BlueColors_p,  kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
             Effect<TwinkleEffect>(NUM_LEDS / 2, 20, 50),
             Effect<PaletteEffect>(RainbowColors_p, .25, 1, 0, 1.0, 0.0, LINEARBLEND, true, 1.0),
             Effect<PaletteEffect>(RainbowColors_p)
         );
-        
+
         #if ENABLE_AUDIO
         RegisterAll(*g_ptrEffectFactories,
-            Starry<MusicStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 0.0, 0.0, STARRYNIGHT_MUSICFACTOR)
+            Starry<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.2, 1, NOBLEND, 5.0, 0.1, 2.0),
+            Starry<MusicStar>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 0.0, 0.0, kStarryNightMusicFactor)
         );
         #endif
     #endif
@@ -411,14 +403,14 @@ void LoadEffectFactories()
             Effect<MeteorEffect>(10, 1, 20, 1.5, 1.5),
             Effect<MeteorEffect>(25, 1, 40, 1.0, 1.0),
             Effect<MeteorEffect>(50, 1, 50, 0.5, 0.5),
-            Starry<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
+            Starry<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
             Starry<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),
             Starry<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0),
-            Starry<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<QuietStar>("Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<Star>("Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
+            Starry<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, kStarryNightProbability, 4, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<QuietStar>("Green Twinkle Stars", GreenColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<Star>("Blue Sparkle Stars", BlueColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
             Starry<QuietStar>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),
-            Starry<Star>("Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
+            Starry<Star>("Lava Stars", LavaColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
             Effect<PaletteEffect>(RainbowColors_p),
             Effect<PaletteEffect>(RainbowColors_p, 1.0, 1.0),
             Effect<PaletteEffect>(RainbowColors_p, .25)
@@ -568,14 +560,14 @@ void LoadEffectFactories()
             Effect<RainbowFillEffect>(120, 0),
             Effect<PaletteEffect>(RainbowColors_p, 4, 0.1, 0.0, 1.0, 0.0),
             Effect<BouncingBallEffect>(3, true, true, 8),
-            Starry<MusicStar>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 0.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<Star>("Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<Star>("Red Sparkle Stars",     RedColors_p,   STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<MusicStar>("Red Stars",        RedColors_p,   STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<Star>("Blue Sparkle Stars",    BlueColors_p,  STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<MusicStar>("Blue Stars",       BlueColors_p,  STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<Star>("Green Sparkle Stars",   GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
-            Starry<MusicStar>("Green Stars",      GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR),
+            Starry<MusicStar>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 0.0, 0.0, kStarryNightMusicFactor),
+            Starry<Star>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<Star>("Red Sparkle Stars", RedColors_p,   kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<MusicStar>("Red Stars", RedColors_p,   kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<Star>("Blue Sparkle Stars", BlueColors_p,  kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<MusicStar>("Blue Stars", BlueColors_p,  kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<Star>("Green Sparkle Stars", GreenColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
+            Starry<MusicStar>("Green Stars", GreenColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
             Effect<TwinkleEffect>(NUM_LEDS / 2, 20, 50),
             Effect<PaletteEffect>(RainbowColors_p, .25, 1, 0, 1.0, 0.0, LINEARBLEND, true, 1.0),
             Effect<PaletteEffect>(RainbowColors_p)

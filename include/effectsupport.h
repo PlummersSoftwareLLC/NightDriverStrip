@@ -280,5 +280,5 @@ inline auto Disabled(F adder)
 
 // Defines used by some StarryNightEffect instances
 
-#define STARRYNIGHT_PROBABILITY 1.0
-#define STARRYNIGHT_MUSICFACTOR 1.0
+constexpr float kStarryNightProbability = 1.0f;
+constexpr float kStarryNightMusicFactor = 1.0f;
