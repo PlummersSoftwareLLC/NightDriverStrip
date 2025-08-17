@@ -78,7 +78,7 @@
     template<>
     void GFXBase::MoveFractionalNoiseX<NoiseApproach::One>(uint8_t amt, uint8_t shift)
     {
-        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram_array<CRGB>(NUM_LEDS);
+        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(NUM_LEDS);
 
         // move delta pixelwise
         for (int y = 0; y < _height; y++)
@@ -161,7 +161,7 @@
     template<>
     void GFXBase::MoveFractionalNoiseY<NoiseApproach::One>(uint8_t amt, uint8_t shift)
     {
-        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram_array<CRGB>(NUM_LEDS);
+    std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(NUM_LEDS);
 
         // move delta pixelwise
         for (int x = 0; x < _width; x++)
