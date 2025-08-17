@@ -86,7 +86,7 @@ private:
 
 
 public:
-    PatternWave() : LEDStripEffect(EFFECT_MATRIX_WAVE, "Wave")
+    PatternWave() : LEDStripEffect(idMatrixWave, "Wave")
     {
         construct();
     }

@@ -193,7 +193,7 @@ class PatternSMBlurringColors : public LEDStripEffect
     }
 
   public:
-    PatternSMBlurringColors() : LEDStripEffect(EFFECT_MATRIX_SMBLURRING_COLORS, "Powder")
+    PatternSMBlurringColors() : LEDStripEffect(idMatrixSMBlurringColors, "Powder")
     {
     }
 

@@ -48,7 +48,7 @@ class PatternClock : public LEDStripEffect
 
   public:
 
-    PatternClock() : LEDStripEffect(EFFECT_MATRIX_CLOCK, "Clock")
+    PatternClock() : LEDStripEffect(idMatrixClock, "Clock")
     {
     }
 

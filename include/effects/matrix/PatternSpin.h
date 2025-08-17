@@ -57,11 +57,11 @@
 class PatternSpin : public LEDStripEffect
 {
 public:
-    PatternSpin() : LEDStripEffect(EFFECT_MATRIX_SPIN, "Spin")
+    PatternSpin() : LEDStripEffect(idMatrixSpin, "Spin")
     {
     }
 
-    PatternSpin(const char   * pszFriendlyName) : LEDStripEffect(EFFECT_MATRIX_SPIN, pszFriendlyName)
+    PatternSpin(const char   * pszFriendlyName) : LEDStripEffect(idMatrixSpin, pszFriendlyName)
     {
     }
 

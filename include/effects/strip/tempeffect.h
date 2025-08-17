@@ -67,7 +67,7 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
     using BeatEffectBase::BeatEffectBase;
 
     SimpleInsulatorBeatEffect(const String & strName)
-      : LEDStripEffect(EFFECT_STRIP_SIMPLE_INSULATOR_BEAT, strName), BeatEffectBase(0.5, 0.01)
+  : LEDStripEffect(idStripSimpleInsulatorBeat, strName), BeatEffectBase(0.5, 0.01)
     {
     }
 
@@ -108,7 +108,7 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
   public:
 
     SimpleInsulatorBeatEffect2(const String & strName)
-      : LEDStripEffect(EFFECT_STRIP_SIMPLE_INSULATOR_BEAT2, strName), BeatEffectBase()
+  : LEDStripEffect(idStripSimpleInsulatorBeat2, strName), BeatEffectBase()
     {
     }
 

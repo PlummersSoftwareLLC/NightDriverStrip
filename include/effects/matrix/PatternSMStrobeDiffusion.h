@@ -39,7 +39,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #if ENABLE_AUDIO
           BeatEffectBase(1.50, 0.05),
 #endif
-          LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Diffusion")
+          LEDStripEffect(idMatrixSMStrobeDiffusion, "Diffusion")
     {
     }
 

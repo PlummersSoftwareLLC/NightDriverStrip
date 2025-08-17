@@ -78,7 +78,7 @@ class PatternSMFlowFields : public LEDStripEffect
     uint16_t scale = 30;
 
   public:
-    PatternSMFlowFields() : LEDStripEffect(EFFECT_MATRIX_SMFLOW_FIELDS, "Liquidflow")
+    PatternSMFlowFields() : LEDStripEffect(idMatrixSMFlowFields, "Liquidflow")
     {
     }
 

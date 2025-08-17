@@ -161,7 +161,7 @@ class PatternSubscribers : public LEDStripEffect
 
   public:
 
-    PatternSubscribers() : LEDStripEffect(EFFECT_MATRIX_SUBSCRIBERS, "Subs")
+    PatternSubscribers() : LEDStripEffect(idMatrixSubscribers, "Subs")
     {
     }
 

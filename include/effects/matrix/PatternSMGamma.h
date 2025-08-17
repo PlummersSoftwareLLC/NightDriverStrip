@@ -9,7 +9,7 @@ class PatternSMGamma : public LEDStripEffect
 {
   private:
   public:
-    PatternSMGamma() : LEDStripEffect(EFFECT_MATRIX_SMGAMMA, "Gamma")
+    PatternSMGamma() : LEDStripEffect(idMatrixSMGamma, "Gamma")
     {
     }
 

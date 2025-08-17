@@ -21,7 +21,7 @@ class PatternSM2DDPR : public LEDStripEffect
     //   byte effect = 1;
 
   public:
-    PatternSM2DDPR() : LEDStripEffect(EFFECT_MATRIX_SM2DDPR, "Crystallize")
+    PatternSM2DDPR() : LEDStripEffect(idMatrixSM2DDPR, "Crystallize")
     {
     }
 

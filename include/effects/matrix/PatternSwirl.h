@@ -63,7 +63,7 @@ private:
     const uint8_t borderWidth = 2;
 
 public:
-    PatternSwirl() : LEDStripEffect(EFFECT_MATRIX_SWIRL, "Swirl")
+    PatternSwirl() : LEDStripEffect(idMatrixSwirl, "Swirl")
     {
     }
 

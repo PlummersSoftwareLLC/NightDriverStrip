@@ -90,7 +90,7 @@ class PatternSMWalkingMachine : public LEDStripEffect
     } dot[7];
 
   public:
-    PatternSMWalkingMachine() : LEDStripEffect(EFFECT_MATRIX_SMWALKING_MACHINE, "Machine")
+    PatternSMWalkingMachine() : LEDStripEffect(idMatrixSMWalkingMachine, "Machine")
     {
     }
 

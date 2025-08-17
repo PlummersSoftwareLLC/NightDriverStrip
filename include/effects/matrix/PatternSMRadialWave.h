@@ -24,7 +24,7 @@ class PatternSMRadialWave : public LEDStripEffect
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMRadialWave() : LEDStripEffect(EFFECT_MATRIX_SMRADIAL_WAVE, "RadialWave")
+    PatternSMRadialWave() : LEDStripEffect(idMatrixSMRadialWave, "RadialWave")
     {
     }
 

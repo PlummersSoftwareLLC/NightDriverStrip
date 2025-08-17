@@ -18,7 +18,7 @@ class PatternSMFire2021 : public LEDStripEffect
     const TProgmemRGBPalette16 *curPalette;
 
   public:
-    PatternSMFire2021() : LEDStripEffect(EFFECT_MATRIX_SMFIRE2021, "Fireplace")
+    PatternSMFire2021() : LEDStripEffect(idMatrixSMFire2021, "Fireplace")
     {
     }
 

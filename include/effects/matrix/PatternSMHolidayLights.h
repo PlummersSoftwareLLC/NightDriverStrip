@@ -129,7 +129,7 @@ void spruce()
 
 
   public:
-    PatternSMHolidayLights() : LEDStripEffect(EFFECT_MATRIX_SMHOLIDAY_LIGHTS, "Tannenbaum")
+    PatternSMHolidayLights() : LEDStripEffect(idMatrixSMHolidayLights, "Tannenbaum")
     {
     }
 

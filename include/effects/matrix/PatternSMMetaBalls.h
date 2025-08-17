@@ -25,7 +25,7 @@ class PatternSMMetaBalls : public LEDStripEffect
     }
 
   public:
-    PatternSMMetaBalls() : LEDStripEffect(EFFECT_MATRIX_SMMETA_BALLS, "MetaBalls")
+    PatternSMMetaBalls() : LEDStripEffect(idMatrixSMMetaBalls, "MetaBalls")
     {
     }
 

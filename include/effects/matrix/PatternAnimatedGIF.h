@@ -207,7 +207,7 @@ private:
 public:
 
     PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black) :
-        LEDStripEffect(EFFECT_MATRIX_ANIMATEDGIF, friendlyName),
+    LEDStripEffect(idMatrixAnimatedGIF, friendlyName),
         _preClear(preClear),
         _gifIndex(gifIndex),
         _bkColor(bkColor)

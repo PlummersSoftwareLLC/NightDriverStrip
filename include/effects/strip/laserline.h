@@ -77,7 +77,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 
     LaserLineEffect(float speed, float size)
         : BeatEffectBase(1.50, 0.00),
-          LEDStripEffect(EFFECT_STRIP_LASER_LINE, "LaserLine"),
+          LEDStripEffect(idStripLaserLine, "LaserLine"),
           _defaultSize(size),
           _defaultSpeed(speed)
     {

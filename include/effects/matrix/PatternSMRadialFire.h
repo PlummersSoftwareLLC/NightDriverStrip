@@ -15,7 +15,7 @@ class PatternSMRadialFire : public LEDStripEffect
     uint8_t XY_radius[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMRadialFire() : LEDStripEffect(EFFECT_MATRIX_SMRADIAL_FIRE, "RadialFire")
+    PatternSMRadialFire() : LEDStripEffect(idMatrixSMRadialFire, "RadialFire")
     {
     }
 

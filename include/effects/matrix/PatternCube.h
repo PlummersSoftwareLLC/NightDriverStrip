@@ -214,7 +214,7 @@ class PatternCube : public LEDStripEffect
     }
 
   public:
-    PatternCube() : LEDStripEffect(EFFECT_MATRIX_CUBE, "Cubes")
+  PatternCube() : LEDStripEffect(idMatrixCube, "Cubes")
     {
       construct();
     }

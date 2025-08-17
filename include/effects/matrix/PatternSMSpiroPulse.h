@@ -60,7 +60,7 @@ class PatternSMSpiroPulse : public LEDStripEffect
     }
 
   public:
-    PatternSMSpiroPulse() : LEDStripEffect(EFFECT_MATRIX_SMSPIRO_PULSE, "Spiro")
+    PatternSMSpiroPulse() : LEDStripEffect(idMatrixSMSpiroPulse, "Spiro")
     {
     }
 

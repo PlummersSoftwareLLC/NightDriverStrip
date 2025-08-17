@@ -18,7 +18,7 @@ private:
 
 public:
   PatternSMSmoke()
-      : LEDStripEffect(EFFECT_MATRIX_SMSMOKE, "Smoke")
+  : LEDStripEffect(idMatrixSMSmoke, "Smoke")
   {
   }
 

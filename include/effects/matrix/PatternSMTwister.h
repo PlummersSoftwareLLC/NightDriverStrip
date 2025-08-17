@@ -32,7 +32,7 @@ class PatternSMTwister : public LEDStripEffect
     }
 
   public:
-    PatternSMTwister() : LEDStripEffect(EFFECT_MATRIX_SMTWISTER, "Twister")
+    PatternSMTwister() : LEDStripEffect(idMatrixSMTwister, "Twister")
     {
     }
 

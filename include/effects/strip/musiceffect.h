@@ -189,7 +189,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
   public:
 
     SimpleColorBeat(const String & strName)
-      : BeatEffectBase(0.5, 0.25), LEDStripEffect(EFFECT_STRIP_SIMPLE_COLOR_BEAT, strName)
+        : BeatEffectBase(0.5, 0.25), LEDStripEffect(idStripSimpleColorBeat, strName)
     {
     }
 

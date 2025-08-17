@@ -439,7 +439,7 @@ public:
      * @brief Construct a new Pattern Weather object
      *
      */
-    PatternWeather() : LEDStripEffect(EFFECT_MATRIX_WEATHER, "Weather")
+    PatternWeather() : LEDStripEffect(idMatrixWeather, "Weather")
     {
     }
 

@@ -380,7 +380,7 @@ class FanBeatEffect : public LEDStripEffect
 {
 public:
 
-  FanBeatEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_FAN_BEAT, strName)
+  FanBeatEffect(const String & strName) : LEDStripEffect(idStripFanBeat, strName)
   {
   }
 
@@ -486,7 +486,7 @@ private:
   float ReelDir[NUM_FANS] = {0};
 
 public:
-  TapeReelEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_TAPE_REEL, strName)
+  TapeReelEffect(const String & strName) : LEDStripEffect(idStripTapeReel, strName)
   {
   }
 
@@ -573,7 +573,7 @@ private:
   int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteReelEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_PALETTE_REEL, strName)
+  PaletteReelEffect(const String & strName) : LEDStripEffect(idStripPaletteReel, strName)
   {
   }
 
@@ -676,7 +676,7 @@ private:
 
 public:
   PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
-      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName),
+  : LEDStripEffect(idStripPaletteSpin, strName),
         _Palette(palette),
         _bReplaceMagenta(bReplace),
         _sparkleChance(sparkleChance)
@@ -753,7 +753,7 @@ public:
   using LEDStripEffect::LEDStripEffect;
 
   ColorCycleEffect(PixelOrder order = Sequential, int step = 8)
-    : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"),
+  : LEDStripEffect(idStripColorCycle, "ColorCylceEffect"),
       _order(order),
       _step(step)
   {
@@ -981,7 +981,7 @@ public:
                 bool bmirrored = false,
                 bool bmulticolor = false,
                 uint8_t maxSparkTemp = 255)
-      : LEDStripEffect(EFFECT_STRIP_FIRE_FAN, "FireFanEffect"),
+  : LEDStripEffect(idStripFireFan, "FireFanEffect"),
         Palette(palette),
         LEDCount(ledCount),
         CellsPerLED(cellsPerLED),
@@ -1212,7 +1212,7 @@ class RingTestEffect : public LEDStripEffect
 {
 private:
 public:
-  RingTestEffect() : LEDStripEffect(EFFECT_STRIP_RING_TEST, "Ring Test")
+  RingTestEffect() : LEDStripEffect(idStripRingTest, "Ring Test")
   {
   }
 
@@ -1402,7 +1402,7 @@ private:
   LanternParticle _particles[_maxParticles];
 
 public:
-  LanternEffect() : LEDStripEffect(EFFECT_STRIP_LANTERN, "LanternEffect")
+  LanternEffect() : LEDStripEffect(idStripLantern, "LanternEffect")
   {
   }
 

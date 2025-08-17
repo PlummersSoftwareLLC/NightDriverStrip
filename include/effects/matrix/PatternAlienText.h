@@ -83,7 +83,7 @@ private:
 
 public:
 
-  PatternAlienText() : LEDStripEffect(EFFECT_MATRIX_ALIEN_TEXT, "AlienText")
+  PatternAlienText() : LEDStripEffect(idMatrixAlienText, "AlienText")
   {
   }
 

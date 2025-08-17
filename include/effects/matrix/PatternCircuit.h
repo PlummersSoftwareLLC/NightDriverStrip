@@ -190,7 +190,7 @@ private:
     }
 
 public:
-    PatternCircuit() : LEDStripEffect(EFFECT_MATRIX_CIRCUIT, "Circuit")
+    PatternCircuit() : LEDStripEffect(idMatrixCircuit, "Circuit")
     {
         construct();
     }

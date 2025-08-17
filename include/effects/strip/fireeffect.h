@@ -71,7 +71,7 @@ class FireEffect : public LEDStripEffect
   public:
 
     FireEffect(const String & strName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
-        : LEDStripEffect(EFFECT_STRIP_FIRE, strName),
+    : LEDStripEffect(idStripFire, strName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
           Cooling(cooling),
@@ -210,7 +210,7 @@ class PaletteFlameEffect : public FireEffect
 
     void construct()
     {
-        _effectNumber = EFFECT_STRIP_PALETTE_FLAME;
+    _effectNumber = idStripPaletteFlame;
     }
 
 public:
@@ -276,7 +276,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
     void construct()
     {
-        _effectNumber = EFFECT_STRIP_MUSICAL_PALETTE_FIRE;
+    _effectNumber = idStripMusicalPaletteFire;
     }
 
   public:
@@ -339,7 +339,7 @@ class ClassicFireEffect : public LEDStripEffect
 public:
 
     ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5)
-        : LEDStripEffect(EFFECT_STRIP_CLASSIC_FIRE, "Classic Fire"),
+    : LEDStripEffect(idStripClassicFire, "Classic Fire"),
           _Mirrored(mirrored),
           _Reversed(reversed),
           _Cooling(cooling)
@@ -491,7 +491,7 @@ public:
                      bool turbo = false,
                      bool mirrored = false)
 
-        : LEDStripEffect(EFFECT_STRIP_SMOOTH_FIRE, "Fire Sound Effect v2"),
+    : LEDStripEffect(idStripSmoothFire, "Fire Sound Effect v2"),
           _Reversed(reversed),
           _Cooling(cooling),
           _Sparks(sparks),
@@ -653,7 +653,7 @@ class BaseFireEffect : public LEDStripEffect
   public:
 
     BaseFireEffect(int ledCount, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4, bool breversed = false, bool bmirrored = false)
-        : LEDStripEffect(EFFECT_STRIP_BASE_FIRE, "BaseFireEffect"),
+    : LEDStripEffect(idStripBaseFire, "BaseFireEffect"),
           Cooling(cooling),
           Sparks(sparks),
           SparkHeight(sparkHeight),

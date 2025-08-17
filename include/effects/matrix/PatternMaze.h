@@ -276,7 +276,7 @@ private:
 
 public:
 
-    PatternMaze() : LEDStripEffect(EFFECT_MATRIX_MAZE, "Maze")
+    PatternMaze() : LEDStripEffect(idMatrixMaze, "Maze")
     {
     }
 

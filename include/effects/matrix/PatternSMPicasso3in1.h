@@ -152,13 +152,13 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
   public:
     PatternSMPicasso3in1()
-      : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso"),
+    : LEDStripEffect(idMatrixSMPicasso3in1, "Picasso"),
         _scale(-1)
     {
     }
 
     PatternSMPicasso3in1(const String& name, int scale)
-      : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, name),
+    : LEDStripEffect(idMatrixSMPicasso3in1, name),
         _scale(scale)
     {
     }

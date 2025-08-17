@@ -95,7 +95,7 @@ class PatternPongClock : public LEDStripEffect
 
   public:
 
-    PatternPongClock() : LEDStripEffect(EFFECT_MATRIX_PONG_CLOCK, "PongClock")
+    PatternPongClock() : LEDStripEffect(idMatrixPongClock, "PongClock")
     {
     }
 

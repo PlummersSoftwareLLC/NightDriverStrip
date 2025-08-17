@@ -23,7 +23,7 @@ class PatternSMRainbowTunnel : public LEDStripEffect
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMRainbowTunnel() : LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Colorspin")
+    PatternSMRainbowTunnel() : LEDStripEffect(idMatrixSMRainbowTunnel, "Colorspin")
     {
     }
 

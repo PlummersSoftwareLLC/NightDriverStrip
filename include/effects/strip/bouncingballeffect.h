@@ -74,7 +74,7 @@ private:
   public:
 
     BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
-        : LEDStripEffect(EFFECT_STRIP_BOUNCING_BALL, "Bouncing Balls"),
+    : LEDStripEffect(idStripBouncingBall, "Bouncing Balls"),
           _cBalls(ballCount),
           _cBallSize(ballSize),
           _bMirrored(bMirrored),

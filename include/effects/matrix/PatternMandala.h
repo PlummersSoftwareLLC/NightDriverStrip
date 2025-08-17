@@ -93,7 +93,7 @@ private:
     int16_t dsy;
 
 public:
-    PatternMandala() : LEDStripEffect(EFFECT_MATRIX_MANDALA, "MRI")
+    PatternMandala() : LEDStripEffect(idMatrixMandala, "MRI")
     {
     }
 

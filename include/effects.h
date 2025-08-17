@@ -43,130 +43,140 @@
 // to a mismatch between effect JSON blobs for the "old" effect and the "new" effect
 // class.
 
-// Strip effects
-#define EFFECT_STRIP_BOUNCING_BALL                       1
-#define EFFECT_STRIP_DOUBLE_PALETTE                      2
-#define EFFECT_STRIP_PALETTE_SPIN                        3
-#define EFFECT_STRIP_COLOR_CYCLE                         4
-#define EFFECT_STRIP_FIRE_FAN                            5
-#define EFFECT_STRIP_RING_TEST                           6
-#define EFFECT_STRIP_LANTERN                             7
-#define EFFECT_STRIP_FIRE                                8
-#define EFFECT_STRIP_CLASSIC_FIRE                        9
-#define EFFECT_STRIP_SMOOTH_FIRE                        10
-#define EFFECT_STRIP_BASE_FIRE                          11
-#define EFFECT_STRIP_LASER_LINE                         12
-#define EFFECT_STRIP_METEOR                             13
-#define EFFECT_STRIP_SIMPLE_RAINBOW_TEST                14
-#define EFFECT_STRIP_RAINBOW_TWINKLE                    15
-#define EFFECT_STRIP_RAINBOW_FILL                       16
-#define EFFECT_STRIP_COLOR_FILL                         17
-#define EFFECT_STRIP_STATUS                             18
-#define EFFECT_STRIP_TWINKLE                            19
-#define EFFECT_STRIP_SIMPLE_COLOR_BEAT                  20
-#define EFFECT_STRIP_PALETTE                            21
-#define EFFECT_STRIP_COLOR_BEAT_WITH_FLASH              22
-#define EFFECT_STRIP_COLOR_BEAT_OVER_RED                23
-#define EFFECT_STRIP_MOLTEN_GLASS_ON_VIOLET_BKGND       24
-#define EFFECT_STRIP_NEW_MOLTEN_GLASS_ON_VIOLET_BKGND   25
-#define EFFECT_STRIP_SPARKLY_SPINNING_MUSIC             26
-#define EFFECT_STRIP_MUSICAL_HOT_WHITE_INSULATOR        27
-#define EFFECT_STRIP_SNAKE                              28
-#define EFFECT_STRIP_PALETTE_FLAME                      29
-#define EFFECT_STRIP_MUSICAL_PALETTE_FIRE               30
-#define EFFECT_STRIP_STARRY_NIGHT                       31
-#define EFFECT_STRIP_TWINKLE_STAR                       32
-#define EFFECT_STRIP_SIMPLE_INSULATOR_BEAT              33
-#define EFFECT_STRIP_SIMPLE_INSULATOR_BEAT2             34
-#define EFFECT_STRIP_PALETTE_REEL                       35
-#define EFFECT_STRIP_TAPE_REEL                          36
-#define EFFECT_STRIP_FAN_BEAT                           37
-#define EFFECT_STRIP_SPLASH_LOGO                        38
-#define EFFECT_STRIP_VUMETER                            39
-#define EFFECT_STRIP_VUMETER_VERTICAL                   40
+// Effect identifiers (preserve existing numeric values for JSON compatibility)
+enum EffectId
+{
+	// Strip effects
+	idStripBouncingBall                     = 1,
+	idStripDoublePalette                    = 2,
+	idStripPaletteSpin                      = 3,
+	idStripColorCycle                       = 4,
+	idStripFireFan                          = 5,
+	idStripRingTest                         = 6,
+	idStripLantern                          = 7,
+	idStripFire                             = 8,
+	idStripClassicFire                      = 9,
+	idStripSmoothFire                       = 10,
+	idStripBaseFire                         = 11,
+	idStripLaserLine                        = 12,
+	idStripMeteor                           = 13,
+	idStripSimpleRainbowTest                = 14,
+	idStripRainbowTwinkle                   = 15,
+	idStripRainbowFill                      = 16,
+	idStripColorFill                        = 17,
+	idStripStatus                           = 18,
+	idStripTwinkle                          = 19,
+	idStripSimpleColorBeat                  = 20,
+	idStripPalette                          = 21,
+	idStripColorBeatWithFlash               = 22,
+	idStripColorBeatOverRed                 = 23,
+	idStripMoltenGlassOnVioletBkgnd         = 24,
+	idStripNewMoltenGlassOnVioletBkgnd      = 25,
+	idStripSparklySpinningMusic             = 26,
+	idStripMusicalHotWhiteInsulator         = 27,
+	idStripSnake                            = 28,
+	idStripPaletteFlame                     = 29,
+	idStripMusicalPaletteFire               = 30,
+	idStripStarryNight                      = 31,
+	idStripTwinkleStar                      = 32,
+	idStripSimpleInsulatorBeat              = 33,
+	idStripSimpleInsulatorBeat2             = 34,
+	idStripPaletteReel                      = 35,
+	idStripTapeReel                         = 36,
+	idStripFanBeat                          = 37,
+	idStripSplashLogo                       = 38,
+	idStripVUMeter                          = 39,
+	idStripVUMeterVertical                  = 40,
 
-// Matrix effects
-#define EFFECT_MATRIX_ALIEN_TEXT                       101
-#define EFFECT_MATRIX_BOUNCE                           102
-#define EFFECT_MATRIX_CIRCUIT                          103
-#define EFFECT_MATRIX_CLOCK                            104
-#define EFFECT_MATRIX_CUBE                             105
-// Was #define EFFECT_MATRIX_FLOW_FIELD                106
-#define EFFECT_MATRIX_LIFE                             107
-#define EFFECT_MATRIX_MANDALA                          108
-#define EFFECT_MATRIX_SUNBURST                         109
-#define EFFECT_MATRIX_ROSE                             110
-#define EFFECT_MATRIX_PINWHEEL                         111
-#define EFFECT_MATRIX_INFINITY                         112
-#define EFFECT_MATRIX_MUNCH                            113
-// Was EFFECT_MATRIX_CURTAIN                           114
-// Was EFFECT_MATRIX_GRID_LIGHTS                       115
-// Was EFFECT_MATRIX_PALETTE_SMEAR                     116
-#define EFFECT_MATRIX_RAINBOW_FLAG                     117
-#define EFFECT_MATRIX_PONG_CLOCK                       118
-#define EFFECT_MATRIX_PULSE                            119
-#define EFFECT_MATRIX_PULSAR                           120
-#define EFFECT_MATRIX_QR                               121
-#define EFFECT_MATRIX_RADAR                            122
-#define EFFECT_MATRIX_SERENDIPITY                      123
-// Was #define EFFECT_MATRIX_SPARK                     124
-#define EFFECT_MATRIX_SPIN                             125
-#define EFFECT_MATRIX_SPIRO                            126
-#define EFFECT_MATRIX_SUBSCRIBERS                      127
-#define EFFECT_MATRIX_SWIRL                            128
-#define EFFECT_MATRIX_WAVE                             129
-#define EFFECT_MATRIX_WEATHER                          130
-#define EFFECT_MATRIX_INSULATOR_SPECTRUM               131
-#define EFFECT_MATRIX_SPECTRUM_ANALYZER                132
-#define EFFECT_MATRIX_WAVEFORM                         133
-#define EFFECT_MATRIX_GHOST_WAVE                       134
-#define EFFECT_MATRIX_MAZE                             135
-#define EFFECT_MATRIX_SPECTRUMBAR                      136
+	// Matrix effects
+	idMatrixAlienText                       = 101,
+	idMatrixBounce                          = 102,
+	idMatrixCircuit                         = 103,
+	idMatrixClock                           = 104,
+	idMatrixCube                            = 105,
+	// 106 was Flow Field (unused)
+	idMatrixLife                            = 107,
+	idMatrixMandala                         = 108,
+	idMatrixSunburst                        = 109,
+	idMatrixRose                            = 110,
+	idMatrixPinwheel                        = 111,
+	idMatrixInfinity                        = 112,
+	idMatrixMunch                           = 113,
+	// 114 was Curtain (unused)
+	// 115 was Grid Lights (unused)
+	// 116 was Palette Smear (unused)
+	idMatrixRainbowFlag                     = 117,
+	idMatrixPongClock                       = 118,
+	idMatrixPulse                           = 119,
+	idMatrixPulsar                          = 120,
+	idMatrixQR                              = 121,
+	idMatrixRadar                           = 122,
+	idMatrixSerendipity                     = 123,
+	// 124 was Spark (unused)
+	idMatrixSpin                            = 125,
+	idMatrixSpiro                           = 126,
+	idMatrixSubscribers                     = 127,
+	idMatrixSwirl                           = 128,
+	idMatrixWave                            = 129,
+	idMatrixWeather                         = 130,
+	idMatrixInsulatorSpectrum               = 131,
+	idMatrixSpectrumAnalyzer                = 132,
+	idMatrixWaveform                        = 133,
+	idMatrixGhostWave                       = 134,
+	idMatrixMaze                            = 135,
+	idMatrixSpectrumBar                     = 136,
 
-#define EFFECT_MATRIX_SM2DDPR                          137
-#define EFFECT_MATRIX_SMAMBERRAIN                      138
-#define EFFECT_MATRIX_SMBLURRING_COLORS                139
-#define EFFECT_MATRIX_SMFIRE2021                       140
-#define EFFECT_MATRIX_SMFLOW_FIELDS                    141
-#define EFFECT_MATRIX_SMGAMMA                          142
-#define EFFECT_MATRIX_SMHOLIDAY_LIGHTS                 143
-#define EFFECT_MATRIX_SMHYPNOSIS                       144
-#define EFFECT_MATRIX_SMMETA_BALLS                     145
-#define EFFECT_MATRIX_SMNOISE                          146
-#define EFFECT_MATRIX_SMPICASSO3IN1                    147
-#define EFFECT_MATRIX_SMRADIAL_FIRE                    148
-#define EFFECT_MATRIX_SMRADIAL_WAVE                    149
-#define EFFECT_MATRIX_SMRAINBOW_TUNNEL                 150
-#define EFFECT_MATRIX_SMSMOKE                          151
-#define EFFECT_MATRIX_SMSPIRO_PULSE                    152
-#define EFFECT_MATRIX_SMSTARDEEP                       153
-#define EFFECT_MATRIX_SMSTROBE_DIFFUSION               154
-#define EFFECT_MATRIX_SMSUPERNOVA                      155
-#define EFFECT_MATRIX_SMTWISTER                        156
-#define EFFECT_MATRIX_SMWALKING_MACHINE                157
-#define EFFECT_MATRIX_ANIMATEDGIF                      158
-#define EFFECT_MATRIX_STOCKS                           159
-#define EFFECT_MATRIX_SILON                            160
-#define EFFECT_MATRIX_PDPGRID                          161
-#define EFFECT_MATRIX_AUDIOSPIKE                       162
-#define EFFECT_MATRIX_PDPCMX                           163     
-// Hexagon Effects
-#define EFFECT_HEXAGON_OUTER_RING                      201
+	idMatrixSM2DDPR                         = 137,
+	idMatrixSMAmberRain                     = 138,
+	idMatrixSMBlurringColors                = 139,
+	idMatrixSMFire2021                      = 140,
+	idMatrixSMFlowFields                    = 141,
+	idMatrixSMGamma                         = 142,
+	idMatrixSMHolidayLights                 = 143,
+	idMatrixSMHypnosis                      = 144,
+	idMatrixSMMetaBalls                     = 145,
+	idMatrixSMNoise                         = 146,
+	idMatrixSMPicasso3in1                   = 147,
+	idMatrixSMRadialFire                    = 148,
+	idMatrixSMRadialWave                    = 149,
+	idMatrixSMRainbowTunnel                 = 150,
+	idMatrixSMSmoke                         = 151,
+	idMatrixSMSpiroPulse                    = 152,
+	idMatrixSMStarDeep                      = 153,
+	idMatrixSMStrobeDiffusion               = 154,
+	idMatrixSMSupernova                     = 155,
+	idMatrixSMTwister                       = 156,
+	idMatrixSMWalkingMachine                = 157,
+	idMatrixAnimatedGIF                     = 158,
+	idMatrixStocks                          = 159,
+	idMatrixSilon                           = 160,
+	idMatrixPDPGrid                         = 161,
+	idMatrixAudioSpike                      = 162,
+	idMatrixPDPCMX                          = 163,
+
+	// Hexagon effects
+	idHexagonOuterRing                      = 201
+};
 
 // Starry Night star variations
-#define EFFECT_STAR                                      1
-#define EFFECT_STAR_RANDOM_PALETTE_COLOR                 2
-#define EFFECT_STAR_LONG_LIFE_SPARKLE                    3
-#define EFFECT_STAR_COLOR                                4
-#define EFFECT_STAR_MUSIC                                5
-#define EFFECT_STAR_MUSIC_PULSE                          6
-#define EFFECT_STAR_QUIET                                7
-#define EFFECT_STAR_BUBBLY                               8
-#define EFFECT_STAR_FLASH                                9
-#define EFFECT_STAR_COLOR_CYCLE                         10
-#define EFFECT_STAR_MULTI_COLOR                         11
-#define EFFECT_STAR_CHRISTMAS                           12
-#define EFFECT_STAR_HOT_WHITE                           13
+enum StarId
+{
+	idStar                                  = 1,
+	idStarRandomPaletteColor                = 2,
+	idStarLongLifeSparkle                   = 3,
+	idStarColor                             = 4,
+	idStarMusic                             = 5,
+	idStarMusicPulse                        = 6,
+	idStarQuiet                             = 7,
+	idStarBubbly                            = 8,
+	idStarFlash                             = 9,
+	idStarColorCycle                        = 10,
+	idStarMultiColor                        = 11,
+	idStarChristmas                         = 12,
+	idStarHotWhite                          = 13
+};
+
+// Legacy EFFECT_* macro aliases were removed after migration to enum-based ids.
 
 // Some common JSON properties to prevent typos. By project convention JSON properties
 // at the LEDStripEffect level have a length of 2 characters, and JSON properties

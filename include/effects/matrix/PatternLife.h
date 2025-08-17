@@ -235,7 +235,7 @@ private:
 
 public:
 
-    PatternLife() : LEDStripEffect(EFFECT_MATRIX_LIFE, "Life")
+    PatternLife() : LEDStripEffect(idMatrixLife, "Life")
     {
     }
 

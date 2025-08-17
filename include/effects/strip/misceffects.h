@@ -52,7 +52,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
   public:
 
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
-      : LEDStripEffect(EFFECT_STRIP_SIMPLE_RAINBOW_TEST, "Simple Rainbow"),
+  : LEDStripEffect(idStripSimpleRainbowTest, "Simple Rainbow"),
           _EveryNth(everyNthPixel),
           _SpeedDivisor(speedDivisor)
     {
@@ -100,7 +100,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
   public:
 
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : LEDStripEffect(EFFECT_STRIP_RAINBOW_TWINKLE, "Rainbow Twinkle"),
+  : LEDStripEffect(idStripRainbowTwinkle, "Rainbow Twinkle"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
@@ -164,7 +164,7 @@ protected:
   public:
 
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14, bool mirrored = false)
-      : LEDStripEffect(EFFECT_STRIP_RAINBOW_FILL, "RainbowFill Rainbow"),
+  : LEDStripEffect(idStripRainbowFill, "RainbowFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue),
         _mirrored(mirrored)
@@ -230,7 +230,7 @@ protected:
   public:
 
     ColorFillEffect(const String &name, CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-      : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, name),
+  : LEDStripEffect(idStripColorFill, name),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
@@ -239,7 +239,7 @@ protected:
     }
 
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-      : LEDStripEffect(EFFECT_STRIP_COLOR_FILL, "Color Fill"),
+  : LEDStripEffect(idStripColorFill, "Color Fill"),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
@@ -298,7 +298,7 @@ class SplashLogoEffect : public LEDStripEffect
   public:
 
     SplashLogoEffect()
-      : LEDStripEffect(EFFECT_STRIP_SPLASH_LOGO, "Mesmerizer"),
+  : LEDStripEffect(idStripSplashLogo, "Mesmerizer"),
         logo(logo_start, logo_end)
     {
         debugV("Splash logo constructor");
@@ -352,7 +352,7 @@ class StatusEffect : public LEDStripEffect
   public:
 
     StatusEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
-      : LEDStripEffect(EFFECT_STRIP_STATUS, "Status Fill"),
+  : LEDStripEffect(idStripStatus, "Status Fill"),
         _everyNth(everyNth),
         _color(color)
     {
@@ -428,7 +428,7 @@ class TwinkleEffect : public LEDStripEffect
   public:
 
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
-      : LEDStripEffect(EFFECT_STRIP_TWINKLE, "Twinkle"),
+  : LEDStripEffect(idStripTwinkle, "Twinkle"),
         _countToDraw(countToDraw),
         _fadeFactor(fadeFactor),
         _updateSpeed(updateSpeed)
@@ -514,7 +514,7 @@ class SilonEffect : public LEDStripEffect
 {
   public:
 
-    SilonEffect() : LEDStripEffect(EFFECT_MATRIX_SILON, "SilonEffect")
+  SilonEffect() : LEDStripEffect(idMatrixSilon, "SilonEffect")
     {
     }
 
@@ -562,7 +562,7 @@ class PDPGridEffect : public LEDStripEffect
 {
   public:
 
-    PDPGridEffect() : LEDStripEffect(EFFECT_MATRIX_PDPGRID, "PDPGridEffect")
+  PDPGridEffect() : LEDStripEffect(idMatrixPDPGrid, "PDPGridEffect")
     {
     }
 
@@ -657,7 +657,7 @@ class PDPCMXEffect : public LEDStripEffect
 
   public:
 
-    PDPCMXEffect() : LEDStripEffect(EFFECT_MATRIX_PDPCMX, "PDPCMXEffect")
+  PDPCMXEffect() : LEDStripEffect(idMatrixPDPCMX, "PDPCMXEffect")
     {
     }
 
@@ -709,7 +709,7 @@ class OuterHexRingEffect : public LEDStripEffect
 {
   public:
 
-    OuterHexRingEffect() : LEDStripEffect(EFFECT_HEXAGON_OUTER_RING, "OuterRingHexEffect")
+  OuterHexRingEffect() : LEDStripEffect(idHexagonOuterRing, "OuterRingHexEffect")
     {
     }
 

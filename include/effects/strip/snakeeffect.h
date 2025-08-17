@@ -65,7 +65,7 @@ class SnakeEffect : public LEDStripEffect
   public:
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : LEDStripEffect(EFFECT_STRIP_SNAKE, strName),
+    : LEDStripEffect(idStripSnake, strName),
           LEDCount(ledCount),
           SnakeSpeed(snakeSpeed)
     {

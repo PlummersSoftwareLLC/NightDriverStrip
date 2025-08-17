@@ -9,7 +9,7 @@ class PatternSMSupernova : public LEDStripEffect
 {
 public:
 
-    PatternSMSupernova() : LEDStripEffect(EFFECT_MATRIX_SMSUPERNOVA, "Supernova"), hue(0), hue2(0), step(0)
+    PatternSMSupernova() : LEDStripEffect(idMatrixSMSupernova, "Supernova"), hue(0), hue2(0), step(0)
     {
     }
 

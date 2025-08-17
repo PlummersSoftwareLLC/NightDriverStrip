@@ -351,7 +351,7 @@ private:
 
 public:
 
-    PatternStocks() : LEDStripEffect(EFFECT_MATRIX_STOCKS, "Stocks")
+    PatternStocks() : LEDStripEffect(idMatrixStocks, "Stocks")
     {
     }
 

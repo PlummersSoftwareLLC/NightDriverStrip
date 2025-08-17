@@ -48,7 +48,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
   public:
 
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) :
-        LEDStripEffect(EFFECT_MATRIX_INSULATOR_SPECTRUM, strName),
+    LEDStripEffect(idMatrixInsulatorSpectrum, strName),
         BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -242,7 +242,7 @@ public:
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterEffect() : LEDStripEffect(EFFECT_STRIP_VUMETER, "VUMeter")
+    VUMeterEffect() : LEDStripEffect(idStripVUMeter, "VUMeter")
     {
     }
 
@@ -265,7 +265,7 @@ public:
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterVerticalEffect() : LEDStripEffect(EFFECT_STRIP_VUMETER_VERTICAL, "Vertical VUMeter")
+    VUMeterVerticalEffect() : LEDStripEffect(idStripVUMeterVertical, "Vertical VUMeter")
     {
     }
 
@@ -417,7 +417,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0,
                            bool              bScrollBars  = false)
-        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName),
+    : LEDStripEffect(idMatrixSpectrumAnalyzer, pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(scrollSpeed),
@@ -437,7 +437,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                            float            peak1DecayRate = 1.0,
                            float            peak2DecayRate = 1.0,
                            bool                bScrollBars = false)
-        : LEDStripEffect(EFFECT_MATRIX_SPECTRUM_ANALYZER, pszFriendlyName),
+    : LEDStripEffect(idMatrixSpectrumAnalyzer, pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(0),
@@ -560,7 +560,7 @@ class WaveformEffect : public LEDStripEffect
   public:
 
     WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
-        : LEDStripEffect(EFFECT_MATRIX_WAVEFORM, pszFriendlyName),
+    : LEDStripEffect(idMatrixWaveform, pszFriendlyName),
           _increment(increment)
     {
     }
@@ -642,7 +642,7 @@ class GhostWave : public WaveformEffect
 
     void construct()
     {
-        _effectNumber = EFFECT_MATRIX_GHOST_WAVE;
+    _effectNumber = idMatrixGhostWave;
     }
   public:
 
@@ -730,13 +730,13 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 
     void construct()
     {
-        _effectNumber = EFFECT_MATRIX_SPECTRUMBAR;
+    _effectNumber = idMatrixSpectrumBar;
     }
 
     public:
 
     SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
-        :LEDStripEffect(EFFECT_MATRIX_SPECTRUMBAR, pszFriendlyName),
+    :LEDStripEffect(idMatrixSpectrumBar, pszFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
         _hueStep(hueStep)
@@ -855,7 +855,7 @@ class AudioSpikeEffect : public LEDStripEffect
   public:
 
     AudioSpikeEffect(const String & pszFriendlyName)
-        : LEDStripEffect(EFFECT_MATRIX_AUDIOSPIKE, pszFriendlyName)
+    : LEDStripEffect(idMatrixAudioSpike, pszFriendlyName)
     {
     }
 

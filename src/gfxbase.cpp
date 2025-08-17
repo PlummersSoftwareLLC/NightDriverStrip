@@ -47,13 +47,11 @@
             for (uint16_t j = 0; j < _height; j++)
             {
                 uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
+                uint16_t data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+                uint8_t  olddata = _ptrNoise->noise[i][j];
+                uint8_t  newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
 
-                uint16_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
-
-                uint8_t olddata = _ptrNoise->noise[i][j];
-                uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
                 data = newdata;
-
                 _ptrNoise->noise[i][j] = data;
             }
         }
@@ -68,9 +66,9 @@
             for (uint8_t j = 0; j < HEIGHT; j++)
             {
                 int32_t joffset = _ptrNoise->noise_scale_y * (j - CENTER_Y_MINOR);
-                int8_t data = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
-                int8_t olddata = _ptrNoise->noise[i][j];
-                int8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 255 - _ptrNoise->noisesmoothing);
+                int8_t  data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+                int8_t  olddata = _ptrNoise->noise[i][j];
+                int8_t  newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 255 - _ptrNoise->noisesmoothing);
                 data = newdata;
                 _ptrNoise->noise[i][j] = data;
             }
@@ -276,6 +274,7 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
 // Dirty hack to support FastLED, which calls out of band to get the pixel index for "the" array, without
 // any indication of which array or who's asking, so we assume the first matrix. If you have trouble with
 // more than one matrix and some FastLED functions like blur2d, this would be why.
+
 uint16_t XY(uint8_t x, uint8_t y)
 {
     static auto& g = *(g_ptrSystem->EffectManager().g());

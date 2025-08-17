@@ -364,13 +364,13 @@ class PatternSMNoise : public LEDStripEffect
     };
 
     PatternSMNoise(const String& name, EffectType effect)
-      : LEDStripEffect(EFFECT_MATRIX_SMNOISE, name),
+    : LEDStripEffect(idMatrixSMNoise, name),
         _effect(effect)
     {
     }
 
     PatternSMNoise()
-      : LEDStripEffect(EFFECT_MATRIX_SMNOISE, "Lava Lamp"),
+    : LEDStripEffect(idMatrixSMNoise, "Lava Lamp"),
         _effect(EffectType::Unknown)
     {
     }

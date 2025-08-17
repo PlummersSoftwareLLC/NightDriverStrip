@@ -42,7 +42,7 @@ class DoublePaletteEffect : public LEDStripEffect
   public:
 
     DoublePaletteEffect()
-     :  LEDStripEffect(EFFECT_STRIP_DOUBLE_PALETTE, "Double Palette"),
+  :  LEDStripEffect(idStripDoublePalette, "Double Palette"),
         _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
         _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
     {

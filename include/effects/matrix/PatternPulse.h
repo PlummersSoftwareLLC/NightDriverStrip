@@ -72,7 +72,7 @@ class PatternPulse : public LEDStripEffect
 
   public:
 
-    PatternPulse() : LEDStripEffect(EFFECT_MATRIX_PULSE, "Pulse")
+    PatternPulse() : LEDStripEffect(idMatrixPulse, "Pulse")
     {
     }
 
@@ -145,7 +145,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
     PatternPulsar() :
         BeatEffectBase(1.5, 0.25 ),
-        LEDStripEffect(EFFECT_MATRIX_PULSAR, "Pulsars")
+    LEDStripEffect(idMatrixPulsar, "Pulsars")
     {
     }
 

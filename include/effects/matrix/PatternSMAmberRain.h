@@ -84,7 +84,7 @@ class PatternSMAmberRain : public LEDStripEffect
     }
 
   public:
-    PatternSMAmberRain() : LEDStripEffect(EFFECT_MATRIX_SMAMBERRAIN, "Color Rain")
+    PatternSMAmberRain() : LEDStripEffect(idMatrixSMAmberRain, "Color Rain")
     {
     }
 
