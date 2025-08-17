@@ -68,6 +68,7 @@ struct AudioInputParams {
     float postScale;              // Post-scale for normalized band values (applied before clamp)
     float compressGamma;          // Exponent for compression on normalized v (e.g., 1/3=cuberoot, 1/6=sqrt(cuberoot))
     float quietEnvFloorGate;      // Gate entire frame if envFloor (noiseMean*envFloorFromNoise) < this (0 disables)
+    float liveAttackPerSec;       // Max rise per second for live peaks (frame-rate independent attack limit)
 };
 
 // Mesmerizer (default) tuning
@@ -82,7 +83,8 @@ inline constexpr AudioInputParams kParamsMesmerizer{
     0.0f,      // frameSNRGate (require ~3:1 SNR to show frame)
     1.0f,      // postScale (Mesmerizer default)
     (1.0/3.0), // compressGamma (cube root)
-    1500000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1500000,   // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1000.0f    // liveAttackPerSec (very fast attack)
 };
 
 // PC Remote uses Mesmerizer defaults
@@ -100,7 +102,8 @@ inline constexpr AudioInputParams kParamsM5{
     0.0f,      // frameSNRGate
     1.0f,      // postScale
     (1.0/8.0), // compressGamma (cube root)
-    1000000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1000000,   // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1000.0f    // liveAttackPerSec
 };
 inline constexpr AudioInputParams kParamsM5Plus2{
     4.0f,      // windowPowerCorrection
@@ -113,7 +116,8 @@ inline constexpr AudioInputParams kParamsM5Plus2{
     0.0f,      // frameSNRGate
     1.0f,      // postScale
     (1.0/3.0), // compressGamma (cube root)
-    1500000    // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1500000,   // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1000.0f    // liveAttackPerSec
 };
 
 // I2S External microphones (INMP441, etc.) use higher postScale and less aggressive gating
@@ -128,7 +132,8 @@ inline constexpr AudioInputParams kParamsI2SExternal{
     0.0f,           // frameSNRGate (disable SNR gating for external mics)
     1.5f,           // postScale (much higher gain for external I2S mics - was 4.0f)
     (1.0/3.0),      // compressGamma (cube root)
-    1500000         // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1500000,        // quietEnvFloorGate (cutoff gates all ssound when below this level)
+    1000.0f         // liveAttackPerSec
 };
 
 // AudioInputParams instances for different microphone types - used directly as template parameters
@@ -475,8 +480,8 @@ class SoundAnalyzer : public ISoundAnalyzer
          constexpr float kBandFloorMin = 0.01f;
          constexpr float kBandFloorScale = 0.05f;
 
-        // Adjust attack rate based on microphone type - compile-time optimized
-        float kLiveAttackPerSec = 1000.0f;  // Very fast attack (effectively no limiting)
+        // Attack rate from mic params (frame-rate independent)
+        const float kLiveAttackPerSec = _params.liveAttackPerSec;
         // Use reciprocal of AudioFPS for frame-rate independent attack limiting
         float dt = (_AudioFPS > 0) ? (1.0f / (float)_AudioFPS) : 0.016f;
         // Fallback to reasonable default if FPS is invalid
@@ -928,7 +933,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         _msLastRemoteAudio = millis();
         _Peaks = peaks;
         _vPeaks = _Peaks;
-        float sum = std::sum(_vPeaks);
+        float sum = std::accumulate(_vPeaks);
         UpdateVU(sum / NUM_BANDS);
     }
 
@@ -988,7 +993,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         else
         {
             // Using remote data - just update VU from existing peaks
-            float sum = std::sum(_Peaks);
+            float sum = std::accumulate(_Peaks);
             UpdateVU(sum / NUM_BANDS);
         }
     }

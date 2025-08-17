@@ -121,7 +121,7 @@ class VUMeter
 
     virtual void DrawVUPixels(std::vector<std::shared_ptr<GFXBase>> & GFX, int i, int yVU, int fadeBy = 0, const CRGBPalette16 * pPalette = nullptr)
     {
-    if (g_Analyzer.IsRemoteAudioActive())
+        if (g_Analyzer.IsRemoteAudioActive())
             pPalette = &vuPaletteBlue;
 
         int xHalf = GFX[0]->width()/2;

@@ -894,46 +894,17 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
     return result;
 }
 
-// sum helper
-// Provides std::sum for containers/ranges and iterator pairs.
-// Note: Adding to namespace std is a deliberate convenience for this project.
+// Provide a single-parameter std::accumulate overload for ranges/containers
+// This allows: auto total = std::accumulate(container);
 namespace std {
-    // Sum over any range supporting std::begin/std::end
     template <typename Range>
-    inline auto sum(const Range& r)
+    inline auto accumulate(const Range& r)
         -> std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>
     {
         using T = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>;
         T total{};
         for (const auto& v : r) total += v;
         return total;
-    }
-
-    // Sum over a range with an explicit initial value (controls accumulation type)
-    template <typename Range, typename T>
-    inline T sum(const Range& r, T init)
-    {
-        for (const auto& v : r) init += static_cast<T>(v);
-        return init;
-    }
-
-    // Sum over an iterator pair
-    template <typename It>
-    inline auto sum(It first, It last)
-        -> std::remove_cv_t<std::remove_reference_t<decltype(*first)>>
-    {
-        using T = std::remove_cv_t<std::remove_reference_t<decltype(*first)>>;
-        T total{};
-        for (auto it = first; it != last; ++it) total += *it;
-        return total;
-    }
-
-    // Iterator pair with explicit initial value
-    template <typename It, typename T>
-    inline T sum(It first, It last, T init)
-    {
-        for (auto it = first; it != last; ++it) init += static_cast<T>(*it);
-        return init;
     }
 }
 
