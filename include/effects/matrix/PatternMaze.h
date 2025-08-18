@@ -88,7 +88,8 @@
 class PatternMaze : public LEDStripEffect {
 public:
     static constexpr EffectId kId = idMatrixMaze;
-
+    EffectId effectId() const override { return kId; }
+    
 private:
     enum Directions {
         None = 0,

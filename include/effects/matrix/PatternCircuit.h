@@ -191,7 +191,8 @@ private:
 
 public:
     static constexpr EffectId kId = idMatrixCircuit;
-
+    EffectId effectId() const override { return kId; }
+    
     PatternCircuit() : LEDStripEffect(idMatrixCircuit, "Circuit") { construct(); }
     PatternCircuit(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject) { construct(); }
     ~PatternCircuit() { free(snakes); }

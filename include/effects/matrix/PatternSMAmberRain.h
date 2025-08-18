@@ -85,7 +85,8 @@ class PatternSMAmberRain : public LEDStripEffect
 
   public:
     static constexpr EffectId kId = idMatrixSMAmberRain;
-
+    EffectId effectId() const override { return kId; }
+    
     PatternSMAmberRain() : LEDStripEffect(kId, "Color Rain")
     {
     }

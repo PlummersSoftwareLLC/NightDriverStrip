@@ -8,6 +8,7 @@ class PatternSMRadialFire : public LEDStripEffect
 {
 public:
     static constexpr EffectId kId = idMatrixSMRadialFire;
+    EffectId effectId() const override { return kId; }
 
     PatternSMRadialFire() : LEDStripEffect(idMatrixSMRadialFire, "RadialFire") {}
     PatternSMRadialFire(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}

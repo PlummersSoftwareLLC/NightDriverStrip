@@ -79,7 +79,8 @@ class PatternSMFlowFields : public LEDStripEffect
 
   public:
     static constexpr EffectId kId = idMatrixSMFlowFields;
-
+    EffectId effectId() const override { return kId; }
+    
     PatternSMFlowFields() : LEDStripEffect(idMatrixSMFlowFields, "Liquidflow")
     {
     }

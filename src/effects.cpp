@@ -497,13 +497,6 @@ void LoadEffectFactories()
         );
     #endif
 
-    #if defined(EFFECTS_BELT)
-        // LED belt effect set
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<TwinkleEffect>(NUM_LEDS / 4, 10)
-        );
-    #endif
-
     #if defined(EFFECTS_MAGICMIRROR)
         // Magic mirror effect set
         RegisterAll(*g_ptrEffectFactories,

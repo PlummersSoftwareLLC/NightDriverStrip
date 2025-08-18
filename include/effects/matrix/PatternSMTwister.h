@@ -33,7 +33,8 @@ class PatternSMTwister : public LEDStripEffect
 
   public:
     static constexpr EffectId kId = idMatrixSMTwister;
-
+    EffectId effectId() const override { return kId; }
+    
     PatternSMTwister() : LEDStripEffect(kId, "Twister")
     {
     }

@@ -124,7 +124,8 @@ class PatternPulse : public LEDStripEffect
 class PatternPulsar : public BeatEffectBase, public LEDStripEffect {
     public:
         static constexpr EffectId kId = idMatrixPulsar;
-
+        EffectId effectId() const override { return kId; }
+        
     private:
 
     struct PulsePop

@@ -46,9 +46,11 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     CRGB _baseColor = CRGB::Black;
 
   public:
+    static constexpr EffectId kId = idMatrixInsulatorSpectrum;
+    EffectId effectId() const override { return kId; }
 
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) :
-        LEDStripEffect(idMatrixInsulatorSpectrum, strName),
+        LEDStripEffect(strName),
         BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -237,12 +239,14 @@ public:
 class VUMeterEffect : virtual public VUMeter, public LEDStripEffect
 {
 public:
+    static constexpr EffectId kId = idStripVUMeter;
+    EffectId effectId() const override { return kId; }
     virtual void Draw() override
     {
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterEffect() : LEDStripEffect(idStripVUMeter, "VUMeter")
+    VUMeterEffect() : LEDStripEffect("VUMeter")
     {
     }
 
@@ -260,12 +264,14 @@ public:
 class VUMeterVerticalEffect : virtual public VUMeterVertical, public LEDStripEffect
 {
 public:
+    static constexpr EffectId kId = idStripVUMeterVertical;
+    EffectId effectId() const override { return kId; }
     virtual void Draw() override
     {
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterVerticalEffect() : LEDStripEffect(idStripVUMeterVertical, "Vertical VUMeter")
+    VUMeterVerticalEffect() : LEDStripEffect("Vertical VUMeter")
     {
     }
 
@@ -286,10 +292,12 @@ public:
 
 class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter 
 {
-    public:
-        static constexpr EffectId kId = idMatrixSpectrumAnalyzer;
+  public:
+  
+    static constexpr EffectId kId = idMatrixSpectrumAnalyzer;
+    EffectId effectId() const override { return kId; }
 
-    protected:
+  protected:
 
     uint8_t   _numBars;
     uint8_t   _colorOffset;
@@ -348,7 +356,6 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
             value2 = g_Analyzer.Peak2Decay(iBand) *  pGFXChannel->height();
         }
 
-        debugV("Band: %d, Value: %f\n", iBar, g_Analyzer.Peak2Decay(iBar) );
 
         if (value > pGFXChannel->height())
             value = pGFXChannel->height();
@@ -420,7 +427,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0,
                            bool              bScrollBars  = false)
-    : LEDStripEffect(idMatrixSpectrumAnalyzer, pszFriendlyName),
+    : LEDStripEffect(pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(scrollSpeed),
@@ -440,7 +447,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                            float            peak1DecayRate = 1.0,
                            float            peak2DecayRate = 1.0,
                            bool                bScrollBars = false)
-    : LEDStripEffect(idMatrixSpectrumAnalyzer, pszFriendlyName),
+    : LEDStripEffect(pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(0),
@@ -552,39 +559,38 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 //
 // Draws a colorful scrolling waveform driven by instantaneous VU as it scrolls
 
-class WaveformEffect : public LEDStripEffect {
+class WaveformEffect : public LEDStripEffect 
+{
     public:
+ 
         static constexpr EffectId kId = idMatrixWaveform;
+        EffectId effectId() const override { return kId; }
 
     protected:
-    uint8_t                      _iColorOffset = 0;
-    uint8_t                      _increment = 0;
-    float                        _iPeakVUy = 0;
-    unsigned long                _msPeakVU = 0;
+        uint8_t                      _iColorOffset = 0;
+        uint8_t                      _increment = 0;
+        float                        _iPeakVUy = 0;
+        unsigned long                _msPeakVU = 0;
 
-  public:
+    public:
+        WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
+            : LEDStripEffect(pszFriendlyName),
+                    _increment(increment)
+        {
+        }
 
-    WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
-    : LEDStripEffect(idMatrixWaveform, pszFriendlyName),
-          _increment(increment)
-    {
-    }
-
-    WaveformEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
-          _increment(jsonObject["inc"])
-    {
-    }
+        WaveformEffect(const JsonObjectConst& jsonObject)
+            : LEDStripEffect(jsonObject),
+                    _increment(jsonObject["inc"])
+        {
+        }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {
         auto jsonDoc = CreateJsonDocument();
-
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
-
         jsonDoc["inc"] = _increment;
-
         return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
@@ -641,18 +647,14 @@ class WaveformEffect : public LEDStripEffect {
 
 class GhostWave : public WaveformEffect
 {
-    public:
-        static constexpr EffectId kId = idMatrixGhostWave;
-
-        uint8_t                   _blur     = 0;
-        bool                      _erase    = true;
-        int                       _fade     = 0;
-
-        void construct()
-    {
-        _effectNumber = idMatrixGhostWave;
-    }
   public:
+    static constexpr EffectId kId = idMatrixGhostWave;
+    
+    EffectId effectId() const override { return kId; }
+    
+    uint8_t                   _blur     = 0;
+    bool                      _erase    = true;
+    int                       _fade     = 0;
 
     GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 0)
         : WaveformEffect(pszFriendlyName, increment),
@@ -660,7 +662,6 @@ class GhostWave : public WaveformEffect
           _erase(erase),
           _fade(fade)
     {
-        construct();
     }
 
     GhostWave(const JsonObjectConst& jsonObject)
@@ -669,7 +670,6 @@ class GhostWave : public WaveformEffect
           _erase(jsonObject[PTY_ERASE]),
           _fade(jsonObject[PTY_FADE])
     {
-        construct();
     }
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
@@ -732,22 +732,16 @@ class GhostWave : public WaveformEffect
 
 class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 {
-    public:
-        static constexpr EffectId kId = idMatrixSpectrumBar;
+  public:
+    static constexpr EffectId kId = idMatrixSpectrumBar;
+    EffectId effectId() const override { return kId; }
 
-        uint8_t _hueIncrement = 0;
-        uint8_t _scrollIncrement = 0;
-        uint8_t _hueStep = 0;
-
-        void construct()
-    {
-        _effectNumber = idMatrixSpectrumBar;
-    }
-
-    public:
+    uint8_t _hueIncrement = 0;
+    uint8_t _scrollIncrement = 0;
+    uint8_t _hueStep = 0;
 
     SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
-      : LEDStripEffect(idMatrixSpectrumBar, pszFriendlyName),
+    : LEDStripEffect(pszFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
         _hueStep(hueStep)
@@ -861,12 +855,12 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 
 class AudioSpikeEffect : public LEDStripEffect
 {
-  protected:
-
   public:
+    static constexpr EffectId kId = idMatrixAudioSpike;
+    EffectId effectId() const override { return kId; }
 
     AudioSpikeEffect(const String & pszFriendlyName)
-    : LEDStripEffect(idMatrixAudioSpike, pszFriendlyName)
+    : LEDStripEffect(pszFriendlyName)
     {
     }
 

@@ -49,7 +49,8 @@ class PatternClock : public LEDStripEffect
   public:
 
     static constexpr EffectId kId = idMatrixClock;
-
+    EffectId effectId() const override { return kId; }
+    
     PatternClock() : LEDStripEffect(kId, "Clock")
     {
     }

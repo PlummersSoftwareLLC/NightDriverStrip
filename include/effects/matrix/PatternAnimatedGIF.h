@@ -136,11 +136,13 @@ const std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> g_ptrGI
 //
 // Draws a cycling animated GIF on the LED matrix.  Use GifDecoder to do the heavy lifting behind the scenes.
 
-class PatternAnimatedGIF : public LEDStripEffect {
-    public:
-        static constexpr EffectId kId = idMatrixAnimatedGIF;
+class PatternAnimatedGIF : public LEDStripEffect 
+{
+  public:
+    static constexpr EffectId kId = idMatrixAnimatedGIF;
+    EffectId effectId() const override { return kId; }
 
-private:
+  private:
 
     GIFIdentifier _gifIndex  = GIFIdentifier::INVALID;
     CRGB _bkColor            = BLACK16;

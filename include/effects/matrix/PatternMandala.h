@@ -94,7 +94,8 @@ private:
 
 public:
     static constexpr EffectId kId = idMatrixMandala;
-
+    EffectId effectId() const override { return kId; }
+    
     PatternMandala() : LEDStripEffect(kId, "MRI")
     {
     }

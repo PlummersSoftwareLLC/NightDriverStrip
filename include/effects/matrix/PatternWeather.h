@@ -123,10 +123,11 @@ static std::map<const String, EmbeddedFile, std::less<const String>, psram_alloc
  */
 class PatternWeather : public LEDStripEffect
 {
-    public:
-        static constexpr EffectId kId = idMatrixWeather;
+  public:
+    static constexpr EffectId kId = idMatrixWeather;
+    EffectId effectId() const override { return kId; }
 
-private:
+  private:
 
     String strLocationName    = "";
     String strLocation        = "";

@@ -74,6 +74,7 @@ class BouncingBallEffect : public LEDStripEffect
   public:
 
     static constexpr EffectId kId = idStripBouncingBall;
+    EffectId effectId() const override { return kId; }
 
     BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
         : LEDStripEffect(idStripBouncingBall, "Bouncing Balls"),

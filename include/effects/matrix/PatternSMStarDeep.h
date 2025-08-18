@@ -44,7 +44,8 @@ class PatternSMStarDeep : public LEDStripEffect
 
   public:
     static constexpr EffectId kId = idMatrixSMStarDeep;
-
+    EffectId effectId() const override { return kId; }
+    
     PatternSMStarDeep() : LEDStripEffect(kId, "Star Deep")
     {
     }

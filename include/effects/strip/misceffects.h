@@ -59,6 +59,7 @@ class SimpleRainbowTestEffect : public LEDStripEffect
         debugV("SimpleRainbowTestEffect constructor");
     }
     static constexpr EffectId kId = idStripSimpleRainbowTest;
+    EffectId effectId() const override { return kId; }
 
     SimpleRainbowTestEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
@@ -108,6 +109,7 @@ class RainbowTwinkleEffect : public LEDStripEffect
         debugV("RainbowFill constructor");
     }
     static constexpr EffectId kId = idStripRainbowTwinkle;
+    EffectId effectId() const override { return kId; }
 
     RainbowTwinkleEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
@@ -157,9 +159,9 @@ class RainbowFillEffect : public LEDStripEffect
 {
   public:
     static constexpr EffectId kId = idStripRainbowFill;
-  private:
-
-protected:
+    EffectId effectId() const override { return kId; }
+  
+    protected:
 
     float _speedDivisor;
     int   _deltaHue;
@@ -242,6 +244,7 @@ protected:
         debugV("Color Fill constructor");
     }
     static constexpr EffectId kId = idStripColorFill;
+    EffectId effectId() const override { return kId; }
 
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
   : LEDStripEffect(idStripColorFill, "Color Fill"),
@@ -309,6 +312,7 @@ class SplashLogoEffect : public LEDStripEffect
         debugV("Splash logo constructor");
     }
     static constexpr EffectId kId = idStripSplashLogo;
+    EffectId effectId() const override { return kId; }
 
     SplashLogoEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
@@ -365,6 +369,7 @@ class StatusEffect : public LEDStripEffect
         debugV("Status Fill constructor");
     }
     static constexpr EffectId kId = idStripStatus;
+    EffectId effectId() const override { return kId; }
 
     StatusEffect(const JsonObjectConst& jsonObject)     // Warmer: CRGB(246,200,160)
       : LEDStripEffect(jsonObject),
@@ -442,6 +447,7 @@ class TwinkleEffect : public LEDStripEffect
     {
     }
     static constexpr EffectId kId = idStripTwinkle;
+    EffectId effectId() const override { return kId; }
 
     TwinkleEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject),
@@ -526,6 +532,7 @@ class SilonEffect : public LEDStripEffect
     {
     }
     static constexpr EffectId kId = idMatrixSilon;
+    EffectId effectId() const override { return kId; }
 
     SilonEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject)
@@ -575,6 +582,7 @@ class PDPGridEffect : public LEDStripEffect
     {
     }
     static constexpr EffectId kId = idMatrixPDPGrid;
+    EffectId effectId() const override { return kId; }
 
     PDPGridEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject)
@@ -671,6 +679,7 @@ class PDPCMXEffect : public LEDStripEffect
     {
     }
     static constexpr EffectId kId = idMatrixPDPCMX;
+    EffectId effectId() const override { return kId; }
 
     PDPCMXEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject)
@@ -724,6 +733,7 @@ class OuterHexRingEffect : public LEDStripEffect
     {
     }
     static constexpr EffectId kId = idHexagonOuterRing;
+    EffectId effectId() const override { return kId; }
 
     OuterHexRingEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject)

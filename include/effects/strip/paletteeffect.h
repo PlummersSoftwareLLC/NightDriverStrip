@@ -36,6 +36,8 @@ class PaletteEffect : public LEDStripEffect
 {
   public:
     static constexpr EffectId kId = idStripPalette;
+    EffectId effectId() const override { return kId; }
+    
   private:
 
     float _startIndex;
@@ -61,7 +63,7 @@ class PaletteEffect : public LEDStripEffect
                   TBlendType blend = LINEARBLEND,
                   bool  bErase = true,
                   float brightness = 1.0)
-  : LEDStripEffect(idStripPalette, "Palette Effect"),
+  : LEDStripEffect("Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),

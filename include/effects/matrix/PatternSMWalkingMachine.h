@@ -6,10 +6,11 @@
 
 class PatternSMWalkingMachine : public LEDStripEffect
 {
-    public:
-        static constexpr EffectId kId = idMatrixSMWalkingMachine;
-
-    private:
+public:
+    static constexpr EffectId kId = idMatrixSMWalkingMachine;
+    EffectId effectId() const override { return kId; }
+    
+  private:
     // Walking machine
     // St3p40 aka Stepko
     // 11.04.23

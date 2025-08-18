@@ -59,10 +59,11 @@
 
 class PatternSwirl : public LEDStripEffect
 {
-    public:
-        static constexpr EffectId kId = idMatrixSwirl;
+  public:
+    static constexpr EffectId kId = idMatrixSwirl;
+    EffectId effectId() const override { return kId; }
 
-private:
+  private:
     const uint8_t borderWidth = 2;
 
 public:

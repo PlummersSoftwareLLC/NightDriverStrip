@@ -192,11 +192,13 @@ class PatternSMBlurringColors : public LEDStripEffect
         powder_item._is_shift = true; // particle->isAlive
     }
 
-    public:
-        static constexpr EffectId kId = idMatrixSMBlurringColors;
+  public:
 
-        PatternSMBlurringColors() : LEDStripEffect(idMatrixSMBlurringColors, "Powder") {}
-        PatternSMBlurringColors(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
+    static constexpr EffectId kId = idMatrixSMBlurringColors;
+    EffectId effectId() const override { return kId; }
+    
+    PatternSMBlurringColors() : LEDStripEffect(idMatrixSMBlurringColors, "Powder") {}
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
 
     void Start() override
     {

@@ -214,9 +214,10 @@ class PatternCube : public LEDStripEffect
     }
 
   public:
-  static constexpr EffectId kId = idMatrixCube;
-
-  PatternCube() : LEDStripEffect(kId, "Cubes")
+    static constexpr EffectId kId = idMatrixCube;
+    EffectId effectId() const override { return kId; }
+    
+    PatternCube() : LEDStripEffect(kId, "Cubes")
     {
       construct();
     }

@@ -39,6 +39,8 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
 {
   public:
     static constexpr EffectId kId = idStripSimpleInsulatorBeat;
+    EffectId effectId() const override { return kId; }
+
   protected:
 
     std::deque<int> _lit;
@@ -84,6 +86,8 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
 {
   public:
     static constexpr EffectId kId = idStripSimpleInsulatorBeat2;
+    EffectId effectId() const override { return kId; }
+
   protected:
 
     std::deque<int> _lit;
@@ -126,6 +130,8 @@ class VUInsulatorsEffect : public LEDStripEffect
 {
   public:
     static constexpr EffectId kId = idStripVUInsulators;
+    EffectId effectId() const override { return kId; }
+    
     int _last = 1;
 
     using LEDStripEffect::LEDStripEffect;

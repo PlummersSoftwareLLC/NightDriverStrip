@@ -128,6 +128,10 @@ class BeatEffectBase
 
 class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripSimpleColorBeat;
+    EffectId effectId() const override { return kId; }
+
   protected:
 
     int _iLastInsulator = -1;
@@ -189,7 +193,7 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
   public:
 
     SimpleColorBeat(const String & strName)
-        : BeatEffectBase(0.5, 0.25), LEDStripEffect(idStripSimpleColorBeat, strName)
+  : BeatEffectBase(0.5, 0.25), LEDStripEffect(strName)
     {
     }
 

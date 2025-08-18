@@ -9,7 +9,8 @@
 class PatternSM2DDPR : public LEDStripEffect {
     public:
         static constexpr EffectId kId = idMatrixSM2DDPR;
-
+        EffectId effectId() const override { return kId; }
+        
     private:
     uint8_t ZVoffset = 0;
 

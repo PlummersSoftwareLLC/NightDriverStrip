@@ -82,6 +82,7 @@ private:
 
 public:
     static constexpr EffectId kId = idMatrixBounce;
+    EffectId effectId() const override { return kId; }
 
     PatternBounce() : LEDStripEffect(kId, "Bounce")
     {

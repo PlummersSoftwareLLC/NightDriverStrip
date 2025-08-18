@@ -364,15 +364,16 @@ class PatternSMNoise : public LEDStripEffect
     };
 
     static constexpr EffectId kId = idMatrixSMNoise;
+    EffectId effectId() const override { return kId; }
 
     PatternSMNoise(const String& name, EffectType effect)
-    : LEDStripEffect(kId, name),
+      : LEDStripEffect(kId, name),
         _effect(effect)
     {
     }
 
     PatternSMNoise()
-    : LEDStripEffect(kId, "Lava Lamp"),
+      : LEDStripEffect(kId, "Lava Lamp"),
         _effect(EffectType::Unknown)
     {
     }
