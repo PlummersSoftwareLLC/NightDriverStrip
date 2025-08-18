@@ -31,7 +31,7 @@ public:
                 XY_radius_buf[idx] = hypot(x, y); // thanks Sutaburosu
             }
         }
-        return true;
+        return LEDStripEffect::Init(gfx);
     }
 
     void Start() override
