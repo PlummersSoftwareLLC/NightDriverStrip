@@ -56,6 +56,7 @@
 
 #include "Vector.h"
 #include "Boid.h"
+#include "ledstripeffect.h"
 
 // Description: This file defines the PatternBounce class, a subclass of LEDStripEffect.
 //              The class creates a bouncing effect on an LED matrix, where multiple points
@@ -81,13 +82,9 @@ private:
     PVector gravity = PVector(0, 0.0125);
 
 public:
-    PatternBounce() : EffectWithId<idMatrixBounce>("Bounce")
-    {
-    }
+    PatternBounce() : EffectWithId<idMatrixBounce>("Bounce") {}
 
-    PatternBounce(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixBounce>(jsonObject)
-    {
-    }
+    PatternBounce(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixBounce>(jsonObject) {}
 
     bool RequiresDoubleBuffering() const override
     {

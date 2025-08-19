@@ -46,15 +46,11 @@ class PatternClock : public EffectWithId<idMatrixClock>
 
     float    radius;
 
-    public:
+  public:
 
-        PatternClock() : EffectWithId<idMatrixClock>("Clock")
-    {
-    }
+    PatternClock() : EffectWithId<idMatrixClock>("Clock") {}
 
-        PatternClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixClock>(jsonObject)
-    {
-    }
+    PatternClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixClock>(jsonObject) {}
 
     bool RequiresDoubleBuffering() const override
     {

@@ -95,13 +95,9 @@ class PatternPongClock : public EffectWithId<idMatrixPongClock>
 
   public:
 
-    PatternPongClock() : EffectWithId<idMatrixPongClock>("PongClock")
-    {
-    }
+    PatternPongClock() : EffectWithId<idMatrixPongClock>("PongClock") {}
 
-    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPongClock>(jsonObject)
-    {
-    }
+    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPongClock>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {

@@ -275,13 +275,9 @@ private:
 
 public:
 
-    PatternMaze() : EffectWithId<idMatrixMaze>("Maze")
-    {
-    }
+    PatternMaze() : EffectWithId<idMatrixMaze>("Maze") {}
 
-    PatternMaze(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMaze>(jsonObject)
-    {
-    }
+    PatternMaze(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMaze>(jsonObject) {}
 
     void Draw() override
     {

@@ -52,7 +52,7 @@ class SimpleRainbowTestEffect : public EffectWithId<idStripSimpleRainbowTest>
   public:
 
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
-  : EffectWithId<idStripSimpleRainbowTest>("Simple Rainbow"),
+        : EffectWithId<idStripSimpleRainbowTest>("Simple Rainbow"),
           _EveryNth(everyNthPixel),
           _SpeedDivisor(speedDivisor)
     {
@@ -60,7 +60,7 @@ class SimpleRainbowTestEffect : public EffectWithId<idStripSimpleRainbowTest>
     }
 
     SimpleRainbowTestEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripSimpleRainbowTest>(jsonObject),
+        : EffectWithId<idStripSimpleRainbowTest>(jsonObject),
           _EveryNth(jsonObject[PTY_EVERYNTH]),
           _SpeedDivisor(jsonObject[PTY_SPEEDDIVISOR])
     {
@@ -100,7 +100,7 @@ class RainbowTwinkleEffect : public EffectWithId<idStripRainbowTwinkle>
   public:
 
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-  : EffectWithId<idStripRainbowTwinkle>("Rainbow Twinkle"),
+      : EffectWithId<idStripRainbowTwinkle>("Rainbow Twinkle"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
@@ -220,9 +220,7 @@ class RainbowFillEffect : public EffectWithId<idStripRainbowFill>
 
 class ColorFillEffect : public EffectWithId<idStripColorFill>
 {
-  private:
-
-protected:
+  protected:
 
     int _everyNth;
     CRGB _color;
@@ -299,7 +297,7 @@ class SplashLogoEffect : public EffectWithId<idStripSplashLogo>
   public:
 
     SplashLogoEffect()
-  : EffectWithId<idStripSplashLogo>("Mesmerizer"),
+      : EffectWithId<idStripSplashLogo>("Mesmerizer"),
         logo(logo_start, logo_end)
     {
         debugV("Splash logo constructor");
@@ -353,7 +351,7 @@ class StatusEffect : public EffectWithId<idStripStatus>
   public:
 
     StatusEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
-  : EffectWithId<idStripStatus>("Status Fill"),
+      : EffectWithId<idStripStatus>("Status Fill"),
         _everyNth(everyNth),
         _color(color)
     {
@@ -513,20 +511,15 @@ class TwinkleEffect : public EffectWithId<idStripTwinkle>
 
 class SilonEffect : public EffectWithId<idMatrixSilon>
 {
-  public:
-
-  SilonEffect() : EffectWithId<idMatrixSilon>("SilonEffect")
-    {
-    }
-
-
-    SilonEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idMatrixSilon>(jsonObject)
-    {
-    }
-
+  private:
     int _offset = 0;
     int _direction = 1;
+
+  public:
+
+    SilonEffect() : EffectWithId<idMatrixSilon>("SilonEffect") {}
+
+    SilonEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSilon>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -562,20 +555,16 @@ class SilonEffect : public EffectWithId<idMatrixSilon>
 
 class PDPGridEffect : public EffectWithId<idMatrixPDPGrid>
 {
-  public:
-
-  PDPGridEffect() : EffectWithId<idMatrixPDPGrid>("PDPGridEffect")
-    {
-    }
-
-
-    PDPGridEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idMatrixPDPGrid>(jsonObject)
-    {
-    }
+  private:
 
     int _offset = 0;
     int _direction = 1;
+
+  public:
+
+    PDPGridEffect() : EffectWithId<idMatrixPDPGrid>("PDPGridEffect") {}
+
+    PDPGridEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPDPGrid>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -660,15 +649,9 @@ class PDPCMXEffect : public EffectWithId<idMatrixPDPCMX>
 
   public:
 
-  PDPCMXEffect() : EffectWithId<idMatrixPDPCMX>("PDPCMXEffect")
-    {
-    }
+    PDPCMXEffect() : EffectWithId<idMatrixPDPCMX>("PDPCMXEffect") {}
 
-
-    PDPCMXEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idMatrixPDPCMX>(jsonObject)
-    {
-    }
+    PDPCMXEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPDPCMX>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -713,15 +696,9 @@ class OuterHexRingEffect : public EffectWithId<idHexagonOuterRing>
 {
   public:
 
-  OuterHexRingEffect() : EffectWithId<idHexagonOuterRing>("OuterRingHexEffect")
-    {
-    }
+    OuterHexRingEffect() : EffectWithId<idHexagonOuterRing>("OuterRingHexEffect") {}
 
-
-    OuterHexRingEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idHexagonOuterRing>(jsonObject)
-    {
-    }
+    OuterHexRingEffect(const JsonObjectConst& jsonObject) : EffectWithId<idHexagonOuterRing>(jsonObject) {}
 
     virtual void Draw() override
     {

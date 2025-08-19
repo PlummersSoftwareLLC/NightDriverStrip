@@ -34,20 +34,20 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #endif
   public:
     PatternSMStrobeDiffusion()
-        :
+      :
 #if ENABLE_AUDIO
-          BeatEffectBase(1.50, 0.05),
+        BeatEffectBase(1.50, 0.05),
 #endif
-          EffectWithId<idMatrixSMStrobeDiffusion>("Diffusion")
+        EffectWithId<idMatrixSMStrobeDiffusion>("Diffusion")
     {
     }
 
     PatternSMStrobeDiffusion(const JsonObjectConst &jsonObject)
-        :
+      :
 #if ENABLE_AUDIO
-          BeatEffectBase(1.50, 0.05),
+        BeatEffectBase(1.50, 0.05),
 #endif
-          EffectWithId<idMatrixSMStrobeDiffusion>(jsonObject)
+        EffectWithId<idMatrixSMStrobeDiffusion>(jsonObject)
     {
     }
 

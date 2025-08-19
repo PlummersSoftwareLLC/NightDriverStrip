@@ -93,13 +93,9 @@ private:
     int16_t dsy;
 
 public:
-    PatternMandala() : EffectWithId<idMatrixMandala>("MRI")
-    {
-    }
+    PatternMandala() : EffectWithId<idMatrixMandala>("MRI") {}
 
-    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMandala>(jsonObject)
-    {
-    }
+    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMandala>(jsonObject) {}
 
     /// Generate an 8-bit random number
 

@@ -111,11 +111,11 @@ class BeatEffectBase
             }
             else
             {
-              debugV("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
+                debugV("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
 
-              HandleBeat(false, elapsed, maximum - minimum);
-              _lastBeat = g_Values.AppTime.CurrentTime();
-              _samples.clear();
+                HandleBeat(false, elapsed, maximum - minimum);
+                _lastBeat = g_Values.AppTime.CurrentTime();
+                _samples.clear();
             }
         }
     }
@@ -189,7 +189,7 @@ class SimpleColorBeat : public BeatEffectBase, public EffectWithId<idStripSimple
   public:
 
     SimpleColorBeat(const String & strName)
-  : BeatEffectBase(0.5, 0.25), EffectWithId<idStripSimpleColorBeat>(strName) {}
+      : BeatEffectBase(0.5, 0.25), EffectWithId<idStripSimpleColorBeat>(strName) {}
 
     SimpleColorBeat(const JsonObjectConst& jsonObject)
       : BeatEffectBase(0.5, 0.25), EffectWithId<idStripSimpleColorBeat>(jsonObject) {}

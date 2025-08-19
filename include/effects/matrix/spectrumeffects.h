@@ -241,14 +241,9 @@ public:
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterEffect() : EffectWithId<idStripVUMeter>("VUMeter")
-    {
-    }
+    VUMeterEffect() : EffectWithId<idStripVUMeter>("VUMeter") {}
 
-        VUMeterEffect(const JsonObjectConst& jsonObject)
-             : EffectWithId<idStripVUMeter>(jsonObject)
-    {
-    }
+    VUMeterEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripVUMeter>(jsonObject) {}
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
@@ -264,14 +259,9 @@ public:
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterVerticalEffect() : EffectWithId<idStripVUMeterVertical>("Vertical VUMeter")
-    {
-    }
+    VUMeterVerticalEffect() : EffectWithId<idStripVUMeterVertical>("Vertical VUMeter") {}
 
-        VUMeterVerticalEffect(const JsonObjectConst& jsonObject)
-                : EffectWithId<idStripVUMeterVertical>(jsonObject)
-    {
-    }
+    VUMeterVerticalEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripVUMeterVertical>(jsonObject) {}
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
@@ -418,8 +408,8 @@ class SpectrumAnalyzerEffect : public EffectWithId<idMatrixSpectrumAnalyzer>, vi
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0,
                            bool              bScrollBars  = false)
-    : EffectWithId<idMatrixSpectrumAnalyzer>(pszFriendlyName),
-              _numBars(cNumBars),
+        : EffectWithId<idMatrixSpectrumAnalyzer>(pszFriendlyName),
+          _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(scrollSpeed),
           _fadeRate(fadeRate),
@@ -438,7 +428,7 @@ class SpectrumAnalyzerEffect : public EffectWithId<idMatrixSpectrumAnalyzer>, vi
                            float            peak1DecayRate = 1.0,
                            float            peak2DecayRate = 1.0,
                            bool                bScrollBars = false)
-    : EffectWithId<idMatrixSpectrumAnalyzer>(pszFriendlyName),
+        : EffectWithId<idMatrixSpectrumAnalyzer>(pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(0),
@@ -552,8 +542,6 @@ class SpectrumAnalyzerEffect : public EffectWithId<idMatrixSpectrumAnalyzer>, vi
 
 class WaveformEffect : public EffectWithId<idMatrixWaveform>
 {
-    public:
-
     protected:
         uint8_t                      _iColorOffset = 0;
         uint8_t                      _increment = 0;
@@ -563,13 +551,13 @@ class WaveformEffect : public EffectWithId<idMatrixWaveform>
     public:
         WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
             : EffectWithId<idMatrixWaveform>(pszFriendlyName),
-                    _increment(increment)
+              _increment(increment)
         {
         }
 
         WaveformEffect(const JsonObjectConst& jsonObject)
             : EffectWithId<idMatrixWaveform>(jsonObject),
-                    _increment(jsonObject["inc"])
+              _increment(jsonObject["inc"])
         {
         }
 
@@ -635,14 +623,13 @@ class WaveformEffect : public EffectWithId<idMatrixWaveform>
 
 class GhostWave : public WaveformEffect
 {
-  public:
-    static constexpr EffectId kId = idMatrixGhostWave;
-
-    EffectId effectId() const override { return kId; }
+  private:
 
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;
+
+  public:
 
     GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 0)
         : WaveformEffect(pszFriendlyName, increment),
@@ -720,15 +707,16 @@ class GhostWave : public WaveformEffect
 
 class SpectrumBarEffect : public EffectWithId<idMatrixSpectrumBar>, public BeatEffectBase
 {
-  public:
-
+  private:
 
     uint8_t _hueIncrement = 0;
     uint8_t _scrollIncrement = 0;
     uint8_t _hueStep = 0;
 
+  public:
+
     SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
-    : EffectWithId<idMatrixSpectrumBar>(pszFriendlyName),
+      : EffectWithId<idMatrixSpectrumBar>(pszFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
         _hueStep(hueStep)
@@ -843,15 +831,9 @@ class SpectrumBarEffect : public EffectWithId<idMatrixSpectrumBar>, public BeatE
 class AudioSpikeEffect : public EffectWithId<idMatrixAudioSpike>
 {
   public:
-    AudioSpikeEffect(const String & pszFriendlyName)
-    : EffectWithId<idMatrixAudioSpike>(pszFriendlyName)
-    {
-    }
+    AudioSpikeEffect(const String & pszFriendlyName) : EffectWithId<idMatrixAudioSpike>(pszFriendlyName) {}
 
-    AudioSpikeEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<idMatrixAudioSpike>(jsonObject)
-    {
-    }
+    AudioSpikeEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixAudioSpike>(jsonObject) {}
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override
     {

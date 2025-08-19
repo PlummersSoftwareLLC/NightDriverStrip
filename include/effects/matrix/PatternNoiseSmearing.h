@@ -61,13 +61,9 @@
 class PatternRainbowFlag : public EffectWithId<idMatrixRainbowFlag>
 {
 public:
-  PatternRainbowFlag() : EffectWithId<idMatrixRainbowFlag>("RainbowFlag")
-  {
-  }
+  PatternRainbowFlag() : EffectWithId<idMatrixRainbowFlag>("RainbowFlag") {}
 
-  PatternRainbowFlag(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRainbowFlag>(jsonObject)
-  {
-  }
+  PatternRainbowFlag(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRainbowFlag>(jsonObject) {}
 
   void Draw() override
   {

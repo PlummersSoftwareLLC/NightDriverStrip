@@ -207,14 +207,11 @@ class FireEffect : public EffectWithId<idStripFire>
 
 class PaletteFlameEffect : public FireEffect
 {
-    public:
-        static constexpr EffectId kId = idStripPaletteFlame;
-        EffectId effectId() const override { return kId; }
+  private:
+    CRGBPalette16 _palette;
+    bool _ignoreGlobalColor;
 
-        CRGBPalette16 _palette;
-        bool _ignoreGlobalColor;
-
-public:
+  public:
     PaletteFlameEffect(const String & strName,
                        const CRGBPalette16 &palette,
                        bool ignoreGlobalColor = false,
@@ -273,10 +270,6 @@ public:
 #if ENABLE_AUDIO
 class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
-    public:
-        static constexpr EffectId kId = idStripMusicalPaletteFire;
-    EffectId effectId() const override { return kId; }
-
   public:
 
     MusicalPaletteFire(const String & strName,
@@ -292,15 +285,12 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        bool mirrored = false)
         : PaletteFlameEffect(strName, palette, ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           BeatEffectBase(1.00, 0.01)
-
-
     {
     }
 
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
         : PaletteFlameEffect(jsonObject),
           BeatEffectBase(1.00, 0.01)
-
     {
     }
 
@@ -336,7 +326,7 @@ private:
 public:
 
     ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5)
-    : EffectWithId<idStripClassicFire>("Classic Fire"),
+        : EffectWithId<idStripClassicFire>("Classic Fire"),
           _Mirrored(mirrored),
           _Reversed(reversed),
           _Cooling(cooling)
@@ -488,7 +478,7 @@ public:
                      bool turbo = false,
                      bool mirrored = false)
 
-    : EffectWithId<idStripSmoothFire>("Fire Sound Effect v2"),
+        : EffectWithId<idStripSmoothFire>("Fire Sound Effect v2"),
           _Reversed(reversed),
           _Cooling(cooling),
           _Sparks(sparks),

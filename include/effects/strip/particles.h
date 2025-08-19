@@ -154,10 +154,7 @@ class FadingCountDownObject : public FadingObject
 
   public:
 
-    FadingCountDownObject(unsigned long maxvalue)
-      : _maxValue(maxvalue)
-    {
-    }
+    FadingCountDownObject(unsigned long maxvalue) : _maxValue(maxvalue) {}
 
     virtual unsigned long CurrentCountdown()
     {
@@ -177,10 +174,7 @@ class FadingColoredObject : public FadingObject
 
   public:
 
-    FadingColoredObject(CRGB baseColor)
-      : _baseColor(baseColor)
-    {
-    }
+    FadingColoredObject(CRGB baseColor) : _baseColor(baseColor) {}
 
     virtual CRGB ObjectColor() const
     {
@@ -312,9 +306,7 @@ template <typename Type = DrawableParticle> class ParticleSystem
 
   public:
 
-    ParticleSystem<Type>()
-    {
-    }
+    ParticleSystem<Type>() {}
 
     virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _gfx)
     {
@@ -384,18 +376,24 @@ class RingParticle : public FadingColoredObject
 
 
 #if ENABLE_AUDIO
-class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingParticle>, EffectWithId<idStripColorBeatWithFlash>
+class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingParticle>, public EffectWithId<idStripColorBeatWithFlash>
 {
     int _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
-    ColorBeatWithFlash(const String & strName) : BeatEffectBase(), ParticleSystem<RingParticle>(), EffectWithId<idStripColorBeatWithFlash>(strName)
+    ColorBeatWithFlash(const String & strName)
+      : BeatEffectBase(),
+        ParticleSystem<RingParticle>(),
+        EffectWithId<idStripColorBeatWithFlash>(strName)
     {
     }
 
-    ColorBeatWithFlash(const JsonObjectConst& jsonObject) : BeatEffectBase(), ParticleSystem<RingParticle>(), EffectWithId<idStripColorBeatWithFlash>(jsonObject)
+    ColorBeatWithFlash(const JsonObjectConst& jsonObject)
+      : BeatEffectBase(),
+        ParticleSystem<RingParticle>(),
+        EffectWithId<idStripColorBeatWithFlash>(jsonObject)
     {
     }
 

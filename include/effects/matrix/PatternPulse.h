@@ -117,7 +117,7 @@ class PatternPulse : public EffectWithId<idMatrixPulse>
     }
 };
 class PatternPulsar : public BeatEffectBase, public EffectWithId<idMatrixPulsar> {
-    private:
+  private:
 
     struct PulsePop
     {
