@@ -206,7 +206,6 @@ constexpr EffectId effect_id_of_type() {
 template<typename TEffect, typename... Args>
 inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, Args&&... args)
 {
-    static_assert(std::is_enum_v<decltype(TEffect::kId)>, "TEffect must have static constexpr kId");
     return factories.AddEffect(
         effect_id_of_type<TEffect>(),
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
