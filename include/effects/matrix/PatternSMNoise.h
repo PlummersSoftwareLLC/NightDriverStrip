@@ -352,7 +352,7 @@ DEFINE_GRADIENT_PALETTE(shikon_23_gp){
     2,   32,  205, 2,   2,   2,   216, 2,   2,   2,   217, 217, 47,  0,   228, 217, 47,  0,   228, 2,   2,
     2,   242, 2,   2,   2,   243, 26,  0,   219, 250, 26,  0,   219, 255, 2,   2,   2};
 
-class PatternSMNoise : public LEDStripEffect
+class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
 {
   public:
     enum /* class */EffectType {
@@ -363,23 +363,20 @@ class PatternSMNoise : public LEDStripEffect
         ColorCube_t
     };
 
-    static constexpr EffectId kId = idMatrixSMNoise;
-    EffectId effectId() const override { return kId; }
-
     PatternSMNoise(const String& name, EffectType effect)
-      : LEDStripEffect(kId, name),
+      : EffectWithId<idMatrixSMNoise>(name),
         _effect(effect)
     {
     }
 
     PatternSMNoise()
-      : LEDStripEffect(kId, "Lava Lamp"),
+      : EffectWithId<idMatrixSMNoise>("Lava Lamp"),
         _effect(EffectType::Unknown)
     {
     }
 
     PatternSMNoise(const JsonObjectConst &jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idMatrixSMNoise>(jsonObject),
         _effect(static_cast<EffectType>(jsonObject[PTY_EFFECT]))
     {
     }

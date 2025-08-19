@@ -64,9 +64,9 @@
 
 // Description:
 // This file defines the PatternCube class, a subclass of LEDStripEffect.
-// The class implements a 3D rotating cube effect on an LED matrix. It 
-// features customizable parameters for cube dimensions, rotation angles, 
-// focal length of the camera, and positioning. The cube is constructed, 
+// The class implements a 3D rotating cube effect on an LED matrix. It
+// features customizable parameters for cube dimensions, rotation angles,
+// focal length of the camera, and positioning. The cube is constructed,
 // rotated, and projected onto a 2D plane for display.
 //
 // Key Features:
@@ -77,7 +77,7 @@
 //
 // On displays that are 2X as wide as tall, two cubes will be drawn
 
-class PatternCube : public LEDStripEffect
+class PatternCube : public EffectWithId<idMatrixCube>
 {
   private:
     float focal = 30; // Focal of the camera
@@ -214,15 +214,12 @@ class PatternCube : public LEDStripEffect
     }
 
   public:
-    static constexpr EffectId kId = idMatrixCube;
-    EffectId effectId() const override { return kId; }
-    
-    PatternCube() : LEDStripEffect(kId, "Cubes")
+    PatternCube() : EffectWithId<idMatrixCube>("Cubes")
     {
       construct();
     }
 
-    PatternCube(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternCube(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixCube>(jsonObject)
     {
       construct();
     }
@@ -255,7 +252,7 @@ class PatternCube : public LEDStripEffect
         for (i = 0; i < 12; i++)
         {
           e = edge + i;
-          if (!e->visible) 
+          if (!e->visible)
               g()->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
         }
 

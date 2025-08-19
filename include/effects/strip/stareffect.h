@@ -417,7 +417,7 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
 //
 // Generates up to
 
-template <typename StarType> class StarryNightEffect : public LEDStripEffect
+template <typename StarType> class StarryNightEffect : public EffectWithId<idStripStarryNight>
 {
   protected:
     std::deque<StarType>         _allParticles;
@@ -432,11 +432,6 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
   public:
 
-        // All StarryNight variants share the same EffectId; star type is encoded separately
-        static constexpr EffectId kId = idStripStarryNight;
-        EffectId effectId() const override { return kId; }
-
-
     StarryNightEffect<StarType>(const String & strName,
                                 const CRGBPalette16& palette,
                                 float probability = 1.0,
@@ -446,7 +441,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
                                 float blurFactor = 0.0,
                                 float musicFactor = 1.0,
                                 CRGB skyColor = CRGB::Black)
-    : LEDStripEffect(strName),
+      : EffectWithId<idStripStarryNight>(strName),
         _palette(palette),
         _newStarProbability(probability),
         _starSize(starSize),
@@ -459,7 +454,7 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
     }
 
     StarryNightEffect<StarType>(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripStarryNight>(jsonObject),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         _newStarProbability(jsonObject["spb"]),
         _starSize(jsonObject[PTY_SIZE]),
@@ -566,8 +561,6 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
 template <typename StarType> class BlurStarEffect : public StarryNightEffect<StarType>
 {
-  private:
-
   public:
 
     BlurStarEffect<StarType>(const CRGBPalette16 & palette, float probability = 0.2, size_t starSize = 1, TBlendType blendType = LINEARBLEND, float maxSpeed = 20.0)
@@ -590,25 +583,17 @@ template <typename StarType> class BlurStarEffect : public StarryNightEffect<Sta
 //
 // Twinkles random colored dots on and off
 
-class TwinkleStarEffect : public LEDStripEffect
+class TwinkleStarEffect : public EffectWithId<idStripTwinkleStar>
 {
-  public:
-
-    static constexpr EffectId kId = idStripTwinkleStar;
-    EffectId effectId() const override { return kId; }
-  
+  private:
     #define NUM_TWINKLES 100
     int buffer[NUM_TWINKLES];
 
-public:
+  public:
 
-    TwinkleStarEffect() : LEDStripEffect("Twinkle Star")
-    {
-    }
+    TwinkleStarEffect() : EffectWithId<idStripTwinkleStar>("Twinkle Star") {}
 
-    TwinkleStarEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    TwinkleStarEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripTwinkleStar>(jsonObject) {}
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {

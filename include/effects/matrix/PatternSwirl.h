@@ -57,23 +57,15 @@
 
 #ifndef PatternSwirl_H
 
-class PatternSwirl : public LEDStripEffect
+class PatternSwirl : public EffectWithId<idMatrixSwirl>
 {
-  public:
-    static constexpr EffectId kId = idMatrixSwirl;
-    EffectId effectId() const override { return kId; }
-
   private:
     const uint8_t borderWidth = 2;
 
 public:
-    PatternSwirl() : LEDStripEffect(idMatrixSwirl, "Swirl")
-    {
-    }
+    PatternSwirl() : EffectWithId<idMatrixSwirl>("Swirl") {}
 
-    PatternSwirl(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSwirl(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSwirl>(jsonObject) {}
 
     void drawAt(int i, int j, CRGB color)
     {

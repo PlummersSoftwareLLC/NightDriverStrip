@@ -34,13 +34,10 @@
 #include "effects.h"
 #include "globals.h"
 
-class SnakeEffect : public LEDStripEffect
+class SnakeEffect : public EffectWithId<idStripSnake>
 {
-  public:
-  
-    static constexpr EffectId kId = idStripSnake;
-    EffectId effectId() const override { return kId; }
-    
+  private:
+
     void construct()
     {
         lastLEDIndex = LEDCount - 1;
@@ -70,7 +67,7 @@ class SnakeEffect : public LEDStripEffect
   public:
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-    : LEDStripEffect(idStripSnake, strName),
+        : EffectWithId<idStripSnake>(strName),
           LEDCount(ledCount),
           SnakeSpeed(snakeSpeed)
     {
@@ -78,7 +75,7 @@ class SnakeEffect : public LEDStripEffect
     }
 
     SnakeEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idStripSnake>(jsonObject),
           LEDCount(jsonObject[PTY_LEDCOUNT]),
           SnakeSpeed(jsonObject[PTY_SPEED])
     {

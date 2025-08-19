@@ -13,9 +13,9 @@
 // magic for blur2d().
 
 #if ENABLE_AUDIO
-class PatternSMStrobeDiffusion : public BeatEffectBase, public LEDStripEffect
+class PatternSMStrobeDiffusion : public BeatEffectBase, public EffectWithId<idMatrixSMStrobeDiffusion>
 #else
-class PatternSMStrobeDiffusion : public LEDStripEffect
+class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #endif
 {
   private:
@@ -32,17 +32,13 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #else
     const int top_line_offset = 0;
 #endif
-
   public:
-    static constexpr EffectId kId = idMatrixSMStrobeDiffusion;
-    EffectId effectId() const override { return kId; }
-    
     PatternSMStrobeDiffusion()
         :
 #if ENABLE_AUDIO
           BeatEffectBase(1.50, 0.05),
 #endif
-          LEDStripEffect(kId, "Diffusion")
+          EffectWithId<idMatrixSMStrobeDiffusion>("Diffusion")
     {
     }
 
@@ -51,7 +47,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #if ENABLE_AUDIO
           BeatEffectBase(1.50, 0.05),
 #endif
-          LEDStripEffect(jsonObject)
+          EffectWithId<idMatrixSMStrobeDiffusion>(jsonObject)
     {
     }
 

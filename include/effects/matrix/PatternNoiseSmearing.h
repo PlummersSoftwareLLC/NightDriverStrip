@@ -58,14 +58,14 @@
 #ifndef PatternNoiseSmearing_H
 #define PatternNoiseSmearing_H
 
-class PatternRainbowFlag : public LEDStripEffect
+class PatternRainbowFlag : public EffectWithId<idMatrixRainbowFlag>
 {
 public:
-  PatternRainbowFlag() : LEDStripEffect(idMatrixRainbowFlag, "RainbowFlag")
+  PatternRainbowFlag() : EffectWithId<idMatrixRainbowFlag>("RainbowFlag")
   {
   }
 
-  PatternRainbowFlag(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  PatternRainbowFlag(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRainbowFlag>(jsonObject)
   {
   }
 

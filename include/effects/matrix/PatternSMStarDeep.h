@@ -6,7 +6,7 @@
 // The original has a bunch of Palette management stuff we just didn't
 // implement.
 
-class PatternSMStarDeep : public LEDStripEffect
+class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 {
   private:
 // Why are these named "bballs"? Probably reused effect innards.
@@ -43,16 +43,9 @@ class PatternSMStarDeep : public LEDStripEffect
     const int spirocenterY = CENTER_Y_MINOR;
 
   public:
-    static constexpr EffectId kId = idMatrixSMStarDeep;
-    EffectId effectId() const override { return kId; }
-    
-    PatternSMStarDeep() : LEDStripEffect(kId, "Star Deep")
-    {
-    }
+    PatternSMStarDeep() : EffectWithId<idMatrixSMStarDeep>("Star Deep") {}
 
-    PatternSMStarDeep(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMStarDeep>(jsonObject) {}
 
     void Start() override
     {

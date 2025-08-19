@@ -39,7 +39,7 @@ class Circle
 
 const int NUMBER_OF_CIRCLES = 20;
 
-class PatternSMAmberRain : public LEDStripEffect
+class PatternSMAmberRain : public EffectWithId<idMatrixSMAmberRain>
 {
   private:
     Circle circles[NUMBER_OF_CIRCLES] = {};
@@ -86,14 +86,10 @@ class PatternSMAmberRain : public LEDStripEffect
   public:
     static constexpr EffectId kId = idMatrixSMAmberRain;
     EffectId effectId() const override { return kId; }
-    
-    PatternSMAmberRain() : LEDStripEffect(kId, "Color Rain")
-    {
-    }
 
-    PatternSMAmberRain(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMAmberRain() : EffectWithId<idMatrixSMAmberRain>("Color Rain") {}
+
+    PatternSMAmberRain(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMAmberRain>(jsonObject) {}
 
     void Start() override
     {

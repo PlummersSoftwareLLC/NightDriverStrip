@@ -39,18 +39,15 @@
 
 #if ENABLE_AUDIO
 
-class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
+class InsulatorSpectrumEffect : public EffectWithId<idMatrixInsulatorSpectrum>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
-    static constexpr EffectId kId = idMatrixInsulatorSpectrum;
-    EffectId effectId() const override { return kId; }
-
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) :
-        LEDStripEffect(strName),
+        EffectWithId<idMatrixInsulatorSpectrum>(strName),
         BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -58,7 +55,7 @@ class InsulatorSpectrumEffect : public LEDStripEffect, public BeatEffectBase, pu
     }
 
     InsulatorSpectrumEffect(const JsonObjectConst& jsonObject) :
-        LEDStripEffect(jsonObject),
+        EffectWithId<idMatrixInsulatorSpectrum>(jsonObject),
         BeatEffectBase(1.50, 0.25),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
@@ -236,22 +233,20 @@ public:
     }
 };
 
-class VUMeterEffect : virtual public VUMeter, public LEDStripEffect
+class VUMeterEffect : virtual public VUMeter, public EffectWithId<idStripVUMeter>
 {
 public:
-    static constexpr EffectId kId = idStripVUMeter;
-    EffectId effectId() const override { return kId; }
     virtual void Draw() override
     {
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterEffect() : LEDStripEffect("VUMeter")
+    VUMeterEffect() : EffectWithId<idStripVUMeter>("VUMeter")
     {
     }
 
-    VUMeterEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject)
+        VUMeterEffect(const JsonObjectConst& jsonObject)
+             : EffectWithId<idStripVUMeter>(jsonObject)
     {
     }
 
@@ -261,22 +256,20 @@ public:
     }
 };
 
-class VUMeterVerticalEffect : virtual public VUMeterVertical, public LEDStripEffect
+class VUMeterVerticalEffect : virtual public VUMeterVertical, public EffectWithId<idStripVUMeterVertical>
 {
 public:
-    static constexpr EffectId kId = idStripVUMeterVertical;
-    EffectId effectId() const override { return kId; }
     virtual void Draw() override
     {
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
     }
 
-    VUMeterVerticalEffect() : LEDStripEffect("Vertical VUMeter")
+    VUMeterVerticalEffect() : EffectWithId<idStripVUMeterVertical>("Vertical VUMeter")
     {
     }
 
-    VUMeterVerticalEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject)
+        VUMeterVerticalEffect(const JsonObjectConst& jsonObject)
+                : EffectWithId<idStripVUMeterVertical>(jsonObject)
     {
     }
 
@@ -290,12 +283,10 @@ public:
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
 // matrix is 48x16 using LED Channel 0 only.   Has a VU meter up top and 16 bands.
 
-class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter 
+class SpectrumAnalyzerEffect : public EffectWithId<idMatrixSpectrumAnalyzer>, virtual public VUMeter
 {
   public:
-  
-    static constexpr EffectId kId = idMatrixSpectrumAnalyzer;
-    EffectId effectId() const override { return kId; }
+
 
   protected:
 
@@ -427,8 +418,8 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                            float           peak1DecayRate = 1.0,
                            float           peak2DecayRate = 1.0,
                            bool              bScrollBars  = false)
-    : LEDStripEffect(pszFriendlyName),
-          _numBars(cNumBars),
+    : EffectWithId<idMatrixSpectrumAnalyzer>(pszFriendlyName),
+              _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(scrollSpeed),
           _fadeRate(fadeRate),
@@ -447,7 +438,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
                            float            peak1DecayRate = 1.0,
                            float            peak2DecayRate = 1.0,
                            bool                bScrollBars = false)
-    : LEDStripEffect(pszFriendlyName),
+    : EffectWithId<idMatrixSpectrumAnalyzer>(pszFriendlyName),
           _numBars(cNumBars),
           _colorOffset(0),
           _colorScrollSpeed(0),
@@ -462,7 +453,7 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
     }
 
     SpectrumAnalyzerEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idMatrixSpectrumAnalyzer>(jsonObject),
           _numBars(jsonObject["nmb"]),
           _colorOffset(0),
           _colorScrollSpeed(jsonObject[PTY_SPEED]),
@@ -559,12 +550,9 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 //
 // Draws a colorful scrolling waveform driven by instantaneous VU as it scrolls
 
-class WaveformEffect : public LEDStripEffect 
+class WaveformEffect : public EffectWithId<idMatrixWaveform>
 {
     public:
- 
-        static constexpr EffectId kId = idMatrixWaveform;
-        EffectId effectId() const override { return kId; }
 
     protected:
         uint8_t                      _iColorOffset = 0;
@@ -574,13 +562,13 @@ class WaveformEffect : public LEDStripEffect
 
     public:
         WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
-            : LEDStripEffect(pszFriendlyName),
+            : EffectWithId<idMatrixWaveform>(pszFriendlyName),
                     _increment(increment)
         {
         }
 
         WaveformEffect(const JsonObjectConst& jsonObject)
-            : LEDStripEffect(jsonObject),
+            : EffectWithId<idMatrixWaveform>(jsonObject),
                     _increment(jsonObject["inc"])
         {
         }
@@ -649,9 +637,9 @@ class GhostWave : public WaveformEffect
 {
   public:
     static constexpr EffectId kId = idMatrixGhostWave;
-    
+
     EffectId effectId() const override { return kId; }
-    
+
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;
@@ -730,18 +718,17 @@ class GhostWave : public WaveformEffect
 //
 // Draws an approximation of the waveform by mirroring the spectrum analyzer bars in four quadrants
 
-class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
+class SpectrumBarEffect : public EffectWithId<idMatrixSpectrumBar>, public BeatEffectBase
 {
   public:
-    static constexpr EffectId kId = idMatrixSpectrumBar;
-    EffectId effectId() const override { return kId; }
+
 
     uint8_t _hueIncrement = 0;
     uint8_t _scrollIncrement = 0;
     uint8_t _hueStep = 0;
 
     SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
-    : LEDStripEffect(pszFriendlyName),
+    : EffectWithId<idMatrixSpectrumBar>(pszFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
         _hueStep(hueStep)
@@ -749,7 +736,7 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
     }
 
     SpectrumBarEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idMatrixSpectrumBar>(jsonObject),
           _hueIncrement(jsonObject[PTY_DELTAHUE]),
           _scrollIncrement(jsonObject[PTY_SPEED]),
           _hueStep(jsonObject[PTY_HUESTEP])
@@ -853,19 +840,16 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
 //
 // Simply displays the raw audio sample buffer as a waveform
 
-class AudioSpikeEffect : public LEDStripEffect
+class AudioSpikeEffect : public EffectWithId<idMatrixAudioSpike>
 {
   public:
-    static constexpr EffectId kId = idMatrixAudioSpike;
-    EffectId effectId() const override { return kId; }
-
     AudioSpikeEffect(const String & pszFriendlyName)
-    : LEDStripEffect(pszFriendlyName)
+    : EffectWithId<idMatrixAudioSpike>(pszFriendlyName)
     {
     }
 
     AudioSpikeEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject)
+        : EffectWithId<idMatrixAudioSpike>(jsonObject)
     {
     }
 

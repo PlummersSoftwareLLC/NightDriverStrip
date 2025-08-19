@@ -7,7 +7,7 @@
 //
 // This is one of relatively few that would look better at a higher refresh.
 
-class PatternSMSpiroPulse : public LEDStripEffect
+class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
 {
   private:
     static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
@@ -60,16 +60,9 @@ class PatternSMSpiroPulse : public LEDStripEffect
     }
 
   public:
-    static constexpr EffectId kId = idMatrixSMSpiroPulse;
-    EffectId effectId() const override { return kId; }
-    
-    PatternSMSpiroPulse() : LEDStripEffect(idMatrixSMSpiroPulse, "Spiro")
-    {
-    }
+    PatternSMSpiroPulse() : EffectWithId<idMatrixSMSpiroPulse>("Spiro") {}
 
-    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMSpiroPulse>(jsonObject) {}
 
     void Start() override
     {

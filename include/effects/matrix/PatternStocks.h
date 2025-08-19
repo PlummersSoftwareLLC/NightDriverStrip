@@ -179,7 +179,7 @@ public:
 //
 // Retrieves stock quotes from private server and displays them
 
-class PatternStocks : public LEDStripEffect
+class PatternStocks : public EffectWithId<idMatrixStocks>
 {
     AnimatedText textSymbol = AnimatedText("STOCK",  CRGB::White, &Apple5x7,  1.0f, MATRIX_WIDTH, 0,  0, 0);
     AnimatedText textPrice  = AnimatedText("PRICE",  CRGB::Grey,  &Apple5x7,  1.0f, MATRIX_WIDTH, 8,  0, 8);
@@ -351,14 +351,9 @@ private:
 
 public:
 
-    static constexpr EffectId kId = idMatrixStocks;
-    EffectId effectId() const override { return kId; }
-    
-    PatternStocks() : LEDStripEffect(kId, "Stocks")
-    {
-    }
+    PatternStocks() : EffectWithId<idMatrixStocks>("Stocks") {}
 
-    PatternStocks(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject)
+    PatternStocks(const JsonObjectConst&  jsonObject) : EffectWithId<idMatrixStocks>(jsonObject)
     {
         if (jsonObject["sds"].is<String>())
             stockServer = jsonObject["sds"].as<String>();

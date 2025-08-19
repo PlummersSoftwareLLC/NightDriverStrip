@@ -160,12 +160,8 @@ public:
     }
 };
 
-class MeteorEffect : public LEDStripEffect
+class MeteorEffect : public EffectWithId<idStripMeteor>
 {
-  public:
-    static constexpr EffectId kId = idStripMeteor;
-    EffectId effectId() const override { return kId; }
-  
   private:
     std::vector<MeteorChannel> _Meteors;
 
@@ -178,7 +174,7 @@ class MeteorEffect : public LEDStripEffect
   public:
 
     MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2)
-    : LEDStripEffect(idStripMeteor, "Color Meteors"),
+    : EffectWithId<idStripMeteor>("Color Meteors"),
           _Meteors(),
           _cMeteors(cMeteors),
           _meteorSize(size),
@@ -189,7 +185,7 @@ class MeteorEffect : public LEDStripEffect
     }
 
     MeteorEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idStripMeteor>(jsonObject),
           _Meteors(),
           _cMeteors(jsonObject["mto"]),
           _meteorSize(jsonObject[PTY_SIZE]),

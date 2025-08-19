@@ -58,18 +58,15 @@
 
 #include "Geometry.h"
 
-class PatternSunburst : public LEDStripEffect
+class PatternSunburst : public EffectWithId<idMatrixSunburst>
 {
   public:
 
-    static constexpr EffectId kId = idMatrixSunburst;
-    EffectId effectId() const override { return kId; }
-
-    PatternSunburst() : LEDStripEffect(kId, "Sunburst")
+    PatternSunburst() : EffectWithId<idMatrixSunburst>("Sunburst")
     {
     }
 
-    PatternSunburst(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternSunburst(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSunburst>(jsonObject)
     {
     }
 
@@ -102,18 +99,15 @@ class PatternSunburst : public LEDStripEffect
     }
 };
 
-class PatternRose : public LEDStripEffect
+class PatternRose : public EffectWithId<idMatrixRose>
 {
   public:
 
-    static constexpr EffectId kId = idMatrixRose;
-    EffectId effectId() const override { return kId; }
-    
-    PatternRose() : LEDStripEffect(kId, "Rose")
+    PatternRose() : EffectWithId<idMatrixRose>("Rose")
     {
     }
 
-    PatternRose(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternRose(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRose>(jsonObject)
     {
     }
 
@@ -159,18 +153,15 @@ class PatternRose : public LEDStripEffect
     }
 };
 
-class PatternPinwheel : public LEDStripEffect
+class PatternPinwheel : public EffectWithId<idMatrixPinwheel>
 {
   public:
 
-    static constexpr EffectId kId = idMatrixPinwheel;
-    EffectId effectId() const override { return kId; }
-
-    PatternPinwheel() : LEDStripEffect(kId, "Pinwheel")
+    PatternPinwheel() : EffectWithId<idMatrixPinwheel>("Pinwheel")
     {
     }
 
-    PatternPinwheel(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternPinwheel(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPinwheel>(jsonObject)
     {
     }
 
@@ -206,18 +197,15 @@ class PatternPinwheel : public LEDStripEffect
     }
 };
 
-class PatternInfinity : public LEDStripEffect
+class PatternInfinity : public EffectWithId<idMatrixInfinity>
 {
 public:
 
-    static constexpr EffectId kId = idMatrixInfinity;
-    EffectId effectId() const override { return kId; }
-
-    PatternInfinity() : LEDStripEffect(kId, "Infinity")
+    PatternInfinity() : EffectWithId<idMatrixInfinity>("Infinity")
     {
     }
 
-    PatternInfinity(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternInfinity(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixInfinity>(jsonObject)
     {
     }
 
@@ -269,7 +257,7 @@ public:
 };
 
 
-class PatternMunch : public LEDStripEffect
+class PatternMunch : public EffectWithId<idMatrixMunch>
 {
 private:
     uint8_t count = 0;
@@ -278,14 +266,11 @@ private:
     uint8_t generation = 0;
 
 public:
-    static constexpr EffectId kId = idMatrixMunch;
-    EffectId effectId() const override { return kId; }
-    
-    PatternMunch() : LEDStripEffect(kId, "Munch")
+    PatternMunch() : EffectWithId<idMatrixMunch>("Munch")
     {
     }
 
-    PatternMunch(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternMunch(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMunch>(jsonObject)
     {
     }
 

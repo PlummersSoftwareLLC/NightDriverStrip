@@ -7,7 +7,7 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/2128-bluringcolors
 
-class PatternSMBlurringColors : public LEDStripEffect
+class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
 {
   private:
     // A more cache-friendly version of the 7 independent arrays that were
@@ -77,7 +77,7 @@ class PatternSMBlurringColors : public LEDStripEffect
     void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
         y = MATRIX_HEIGHT - 1 - y;
-        if (g()->isValidPixel(x, y)) 
+        if (g()->isValidPixel(x, y))
             g()->leds[XY(x, y)] = color;
     }
 
@@ -194,11 +194,8 @@ class PatternSMBlurringColors : public LEDStripEffect
 
   public:
 
-    static constexpr EffectId kId = idMatrixSMBlurringColors;
-    EffectId effectId() const override { return kId; }
-    
-    PatternSMBlurringColors() : LEDStripEffect(idMatrixSMBlurringColors, "Powder") {}
-    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
+        PatternSMBlurringColors() : EffectWithId<idMatrixSMBlurringColors>("Powder") {}
+        PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMBlurringColors>(jsonObject) {}
 
     void Start() override
     {

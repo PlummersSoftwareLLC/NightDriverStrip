@@ -43,7 +43,7 @@
 #define DEFAULT_CHANNEL_GUID "9558daa1-eae8-482f-8066-17fa787bc0e4"
 #define DEFAULT_CHANNEL_NAME "Daves Garage"
 
-class PatternSubscribers : public LEDStripEffect
+class PatternSubscribers : public EffectWithId<idMatrixSubscribers>
 {
   private:
     // This requires a matching INIT_EFFECT_SETTING_SPECS() in effects.cpp or linker errors will ensue
@@ -161,14 +161,9 @@ class PatternSubscribers : public LEDStripEffect
 
   public:
 
-    static constexpr EffectId kId = idMatrixSubscribers;
-    EffectId effectId() const override { return kId; }
-    
-    PatternSubscribers() : LEDStripEffect(kId, "Subs")
-    {
-    }
+    PatternSubscribers() : EffectWithId<idMatrixSubscribers>("Subs") {}
 
-    PatternSubscribers(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternSubscribers(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSubscribers>(jsonObject)
     {
         if (jsonObject["ycg"].is<String>())
             youtubeChannelGuid = jsonObject["ycg"].as<String>();

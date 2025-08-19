@@ -32,12 +32,8 @@
 
 #include "effects.h"
 
-class PaletteEffect : public LEDStripEffect
+class PaletteEffect : public EffectWithId<idStripPalette>
 {
-  public:
-    static constexpr EffectId kId = idStripPalette;
-    EffectId effectId() const override { return kId; }
-    
   private:
 
     float _startIndex;
@@ -63,7 +59,7 @@ class PaletteEffect : public LEDStripEffect
                   TBlendType blend = LINEARBLEND,
                   bool  bErase = true,
                   float brightness = 1.0)
-  : LEDStripEffect("Palette Effect"),
+  : EffectWithId<idStripPalette>("Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),
@@ -78,7 +74,7 @@ class PaletteEffect : public LEDStripEffect
     {
     }
 
-    PaletteEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject),
+    PaletteEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripPalette>(jsonObject),
       _startIndex(0.0f),
       _paletteIndex(0.0f),
       _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),

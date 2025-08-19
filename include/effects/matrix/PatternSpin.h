@@ -54,23 +54,16 @@
 #ifndef PatternSpin_H
 #define PatternSpin_H
 
-class PatternSpin : public LEDStripEffect
+class PatternSpin : public EffectWithId<idMatrixSpin>
 {
 public:
-    static constexpr EffectId kId = idMatrixSpin;
-    EffectId effectId() const override { return kId; }
-    
-    PatternSpin() : LEDStripEffect(kId, "Spin")
-    {
-    }
+    // ID provided by EffectWithId
 
-    PatternSpin(const char   * pszFriendlyName) : LEDStripEffect(idMatrixSpin, pszFriendlyName)
-    {
-    }
+    PatternSpin() : EffectWithId<idMatrixSpin>("Spin") {}
 
-    PatternSpin(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSpin(String friendlyName) : EffectWithId<idMatrixSpin>(friendlyName) {}
+
+    PatternSpin(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSpin>(jsonObject) {}
 
     float degrees = 0;
     float radius = 16;

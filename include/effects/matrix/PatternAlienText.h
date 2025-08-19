@@ -57,26 +57,24 @@
 #ifndef PatternAlienText_H
 #define PatternAlienText_H
 
-// Description: This file contains the implementation of the PatternAlienText class, 
-//              which is a subclass of LEDStripEffect. The class is designed to create 
-//              an effect that simulates alien text on an LED matrix. 
-// 
-//              The PatternAlienText class utilizes two main properties, charWidth and charHeight, 
-//              to define the dimensions of each 'character' in the alien text. It also uses leftMargin 
+// Description: This file contains the implementation of the PatternAlienText class,
+//              which is a subclass of LEDStripEffect. The class is designed to create
+//              an effect that simulates alien text on an LED matrix.
+//
+//              The PatternAlienText class utilizes two main properties, charWidth and charHeight,
+//              to define the dimensions of each 'character' in the alien text. It also uses leftMargin
 //              and topMargin to define the starting position of the text on the LED matrix.
-// 
-//              The Draw() method is the core function where the alien text is generated. It uses 
-//              randomization to light up LEDs in a way that mimics the appearance of a foreign script. 
-//              The color of the text is randomly chosen, and the arrangement of lit LEDs creates 
-//              the illusion of alien characters. This process repeats, moving across and then down 
+//
+//              The Draw() method is the core function where the alien text is generated. It uses
+//              randomization to light up LEDs in a way that mimics the appearance of a foreign script.
+//              The color of the text is randomly chosen, and the arrangement of lit LEDs creates
+//              the illusion of alien characters. This process repeats, moving across and then down
 //              the matrix, simulating scrolling text.
 
-class PatternAlienText : public LEDStripEffect
+class PatternAlienText : public EffectWithId<idMatrixAlienText>
 {
-public:
-  static constexpr EffectId kId = idMatrixAlienText;
-  EffectId effectId() const override { return kId; }
-  
+
+
 private:
   const int charWidth = 6;
   const int charHeight = 6;
@@ -87,11 +85,11 @@ private:
 
 public:
 
-  PatternAlienText() : LEDStripEffect(idMatrixAlienText, "AlienText")
+  PatternAlienText() : EffectWithId<idMatrixAlienText>("AlienText")
   {
   }
 
-  PatternAlienText(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+  PatternAlienText(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixAlienText>(jsonObject)
   {
   }
 
