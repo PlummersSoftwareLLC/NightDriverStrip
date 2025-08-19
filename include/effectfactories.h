@@ -37,6 +37,8 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include <algorithm>
+#include <cstdint>
 #include <ArduinoJson.h>
 #include <esp_attr.h>
 #include "ledstripeffect.h"
@@ -86,18 +88,20 @@ using JSONEffectFactory = std::function<std::shared_ptr<LEDStripEffect>(const Js
 class EffectFactories
 {
   public:
-
     class NumberedFactory
     {
         int effectNumber;
         DefaultEffectFactory factory;
+        uint64_t factoryId { 0 };
 
       public:
         bool LoadDisabled = false;
 
-        NumberedFactory(int effectNumber, const DefaultEffectFactory& factory)
+
+        NumberedFactory(int effectNumber, const DefaultEffectFactory& factory, uint64_t id)
           : effectNumber(effectNumber),
-            factory(factory)
+            factory(factory),
+            factoryId(id)
         {}
 
         int EffectNumber() const
@@ -115,12 +119,18 @@ class EffectFactories
 
             return pEffect;
         }
+
+        uint64_t Id() const
+        {
+            return factoryId;
+        }
     };
 
   private:
 
     std::vector<NumberedFactory, psram_allocator<NumberedFactory>> defaultFactories;
     std::map<int, JSONEffectFactory, std::less<int>, psram_allocator<std::pair<const int, JSONEffectFactory>>> jsonFactories;
+    String hashString;
 
   public:
 
@@ -134,9 +144,9 @@ class EffectFactories
         return jsonFactories;
     }
 
-    NumberedFactory& AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
+    NumberedFactory& AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory, uint64_t factoryId = 0)
     {
-        auto& numberedFactory = defaultFactories.emplace_back(effectNumber, defaultFactory);
+        auto& numberedFactory = defaultFactories.emplace_back(effectNumber, defaultFactory, factoryId);
         jsonFactories.try_emplace(effectNumber, jsonFactory);
 
         return numberedFactory;
@@ -150,5 +160,34 @@ class EffectFactories
     void ClearDefaultFactories()
     {
         defaultFactories.clear();
+        hashString.clear();
+    }
+
+    // Return the list of stored factory IDs (callers can hash/order as needed)
+    std::vector<uint64_t> FactoryIDs() const
+    {
+        std::vector<uint64_t> ids;
+        ids.reserve(defaultFactories.size());
+        for (const auto& nf : defaultFactories)
+            ids.push_back(nf.Id());
+
+        return ids;
+    }
+
+    String& HashString()
+    {
+        if (hashString.isEmpty())
+            throw std::runtime_error("Attempt to retrieve unset hash string");
+
+        return hashString;
+    }
+
+    String& HashString(const String& str)
+    {
+        // Accept value if length is 16 or empty
+        if (str.length() == 16 || str.isEmpty())
+            hashString = str;
+
+        return hashString;
     }
 };

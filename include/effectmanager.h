@@ -113,7 +113,7 @@ class  EffectManager : public IJSONSerializable
     bool _bPlayAll;
     bool _clearTempEffectWhenExpired = false;
     std::atomic_bool _newFrameAvailable = false;
-    int _effectSetVersion = 1;
+    String _effectSetHashString = "";
 
     std::vector<std::shared_ptr<GFXBase>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
@@ -152,7 +152,7 @@ class  EffectManager : public IJSONSerializable
     }
 
     // Implementation is in effects.cpp
-    void LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray);
+    void LoadJSONEffects(const JsonArrayConst& effectsArray);
 
     static void SaveCurrentEffectIndex();
     static bool ReadCurrentEffectIndex(size_t& index);
@@ -272,10 +272,10 @@ public:
         }
 
         // Check if there's a persisted effect set version, and remember it if so
-        if (jsonObject[PTY_EFFECTSETVER].is<int>())
-            _effectSetVersion = jsonObject[PTY_EFFECTSETVER];
+        if (jsonObject[PTY_EFFECTSETVER].is<String>())
+            _effectSetHashString = jsonObject[PTY_EFFECTSETVER].as<String>();
 
-        LoadJSONAndMissingEffects(effectsArray);
+        LoadJSONEffects(effectsArray);
 
         // "eef" was the array of effect enabled flags. They have now been integrated in the effects themselves;
         //   this code is there to "migrate" users who already had a serialized effect config on their device
@@ -332,7 +332,7 @@ public:
         jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
         jsonObject["ivl"] = _effectInterval;
         jsonObject[PTY_PROJECT] = PROJECT_NAME;
-        jsonObject[PTY_EFFECTSETVER] = _effectSetVersion;
+        jsonObject[PTY_EFFECTSETVER] = _effectSetHashString;
 
         JsonArray effectsArray = jsonObject["efs"].to<JsonArray>();
 

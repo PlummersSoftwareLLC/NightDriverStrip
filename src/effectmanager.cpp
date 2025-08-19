@@ -150,7 +150,7 @@ bool EffectManager::ReadCurrentEffectIndex(size_t& index)
     return readIndex;
 }
 
-void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
+void EffectManager::LoadJSONEffects(const JsonArrayConst& effectsArray)
 {
     std::set<int> loadedEffectNumbers;
 
@@ -174,32 +174,6 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
             _vEffects.push_back(pEffect);
             loadedEffectNumbers.insert(effectNumber);
         }
-    }
-
-    // Now add missing effects from the default factory list
-    auto &defaultFactories = g_ptrEffectFactories->GetDefaultFactories();
-
-    // We iterate manually, so we can use where we are as the starting point for a later inner loop
-    for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
-    {
-        int effectNumber = iter->EffectNumber();
-
-        // If we've already loaded this effect (number) from JSON, we can move on to check the next one
-        if (loadedEffectNumbers.count(effectNumber))
-            continue;
-
-        // We found an effect (number) in the default list that we have not yet loaded from JSON.
-        //   So, we go through the rest of the default factory list to create and add to our effects
-        //   list all instances of this effect.
-        std::for_each(iter, defaultFactories.end(), [&](const EffectFactories::NumberedFactory& numberedFactory)
-            {
-                if (numberedFactory.EffectNumber() == effectNumber)
-                    ProduceAndLoadDefaultEffect(numberedFactory);
-            }
-        );
-
-        // Register that we added this effect number, so we don't add the respective effects more than once
-        loadedEffectNumbers.insert(effectNumber);
     }
 }
 

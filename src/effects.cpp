@@ -114,10 +114,6 @@
     #include "ledstripgfx.h"
 #endif
 
-// Global effect set version
-
-#define EFFECT_SET_VERSION 6
-
 // Inform the linker which effects have setting specs, and in which class member
 
 INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
@@ -199,7 +195,7 @@ void LoadEffectFactories()
             Effect<RainbowFillEffect>(6, 2)
         );
     #endif
-    
+
     #if defined(EFFECTS_SIMPLE)
         // Simple effect set for basic LED strip projects
         RegisterAll(*g_ptrEffectFactories,
@@ -589,13 +585,20 @@ void LoadEffectFactories()
     // one effect even if it's the Status effect.
 
     assert(!g_ptrEffectFactories->IsEmpty());
+
+    auto factoriesHashString = EffectFactoryIdSupport::HashString(g_ptrEffectFactories->FactoryIDs());
+    g_ptrEffectFactories->HashString(factoriesHashString);
 }
+
+#ifndef NO_EFFECT_PERSISTENCE
+    #define NO_EFFECT_PERSISTENCE 0
+#endif
 
 // Load the effects JSON file and check if it's appropriate to use
 std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
 {
-    // If the effect set version is defined to 0, we ignore whatever is persisted
-    if (EFFECT_SET_VERSION == 0)
+    // If ordered to do so, we ignore whatever is persisted
+    if (NO_EFFECT_PERSISTENCE)
         return {};
 
     if (!LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
@@ -610,12 +613,14 @@ std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
         return {};
     }
 
-    // Default to 1 if no effect set version was persisted
-    int jsonVersion = jsonObject[PTY_EFFECTSETVER].is<int>() ? jsonObject[PTY_EFFECTSETVER] : 1;
+    auto jsonVersion = jsonObject[PTY_EFFECTSETVER];
 
     // Only return the JSON object if the persistent version matches the current one
-    if (jsonVersion == EFFECT_SET_VERSION)
+    if (jsonVersion.is<String>()
+        && g_ptrEffectFactories->HashString() == jsonVersion.as<String>())
+    {
         return jsonObject;
+    }
 
     return {};
 }
@@ -623,7 +628,7 @@ std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
 // Load the default effect set. It's defined here because it uses EFFECT_SET_VERSION.
 void EffectManager::LoadDefaultEffects()
 {
-    _effectSetVersion = EFFECT_SET_VERSION;
+    _effectSetHashString = g_ptrEffectFactories->HashString();
 
     for (const auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
         ProduceAndLoadDefaultEffect(numberedFactory);

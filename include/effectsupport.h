@@ -33,6 +33,12 @@
 #pragma once
 
 #include "globals.h"
+#include <type_traits>
+#include <string_view>
+#include <cstdint>
+#include <algorithm>
+#include <vector>
+#include <utility>
 // Needed for StarryNightEffect used by helpers below
 #include "effects/strip/stareffect.h"
 
@@ -188,6 +194,193 @@ const CRGBPalette16 rainbowPalette(RainbowColors_p);
 
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
+// ------------------------------------------------------------
+// Support for building stable factory IDs and combining them
+// ------------------------------------------------------------
+
+namespace
+{
+    // Map star template parameter to a stable integer id used for hashing
+    template<typename TStar>
+    struct StarTypeId;
+
+    template<>
+    struct StarTypeId<Star> { static constexpr int value = idStar; };
+
+    template<>
+    struct StarTypeId<BubblyStar> { static constexpr int value = idStarBubbly; };
+
+    template<>
+    struct StarTypeId<HotWhiteStar> { static constexpr int value = idStarHotWhite; };
+
+    template<>
+    struct StarTypeId<LongLifeSparkleStar> { static constexpr int value = idStarLongLifeSparkle; };
+
+    #if ENABLE_AUDIO
+    template<>
+    struct StarTypeId<MusicStar> { static constexpr int value = idStarMusic; };
+    #endif
+
+    template<>
+    struct StarTypeId<QuietStar> { static constexpr int value = idStarQuiet; };
+}
+
+// Actual hash support class
+class EffectFactoryIdSupport
+{
+  public:
+    // Build a stable 64-bit ID for a factory based on effect type and ctor args
+    template<typename TEffect, typename... Args>
+    static inline uint64_t MakeFactoryId(const Args&... args)
+    {
+        static_assert(std::is_enum_v<decltype(TEffect::kId)>, "TEffect must have static constexpr kId enum");
+        uint64_t h = FNV_OFFSET;
+        hash_append(h, std::string_view{"effect"});
+        hash_append(h, TEffect::kId);
+        hash_pack(h, args...);
+        return h;
+    }
+
+    // Build a stable 64-bit ID for StarryNight factories (includes star type)
+    template<typename TStar, typename... Args>
+    static inline uint64_t MakeStarryFactoryId(int starryEffectNumber, const Args&... args)
+    {
+        uint64_t h = FNV_OFFSET;
+        hash_append(h, std::string_view{"starry"});
+        hash_append(h, starryEffectNumber); // e.g., idStripStarryNight
+        hash_append(h, static_cast<int>(StarTypeId<TStar>::value));
+        hash_pack(h, args...);
+        return h;
+    }
+
+    // Order-sensitive hash of a list of 64-bit ids
+    static inline uint64_t Hash(std::vector<uint64_t>&& ids)
+    {
+        const unsigned char* bytes = reinterpret_cast<const unsigned char*>(ids.data());
+        const size_t len = ids.size() * sizeof(uint64_t);
+        return fnv1a64_bytes(bytes, len, FNV_OFFSET);
+    }
+
+    static inline auto HashToString(uint64_t hash)
+    {
+        return String(hash, 16);
+    }
+
+    static inline auto HashString(std::vector<uint64_t>&& ids)
+    {
+        return HashToString(Hash(std::move(ids)));
+    }
+
+  private:
+    // FNV-1a 64-bit constants
+    static constexpr uint64_t FNV_OFFSET = 1469598103934665603ull;
+    static constexpr uint64_t FNV_PRIME  = 1099511628211ull;
+
+    // Computes a 64-bit FNV-1a hash over a raw byte sequence.
+    //
+    // FNV-1a iterates over the input one byte at a time. For each byte, it:
+    // 1) XORs the current hash with the byte, then
+    // 2) Multiplies the result by the FNV prime, with 64-bit wraparound (mod 2^64).
+    // Starting from an offset basis (seed), this yields a fast, well-distributed,
+    // non-cryptographic hash suitable for hash tables and identifiers.
+    //
+    // Note: Requires FNV_OFFSET (offset basis) and FNV_PRIME (prime multiplier)
+    // to be defined as the standard 64-bit FNV-1a constants. The algorithm
+    // is byte-oriented and endianness-agnostic. This is not suitable for
+    // cryptographic purposes.
+    static inline uint64_t fnv1a64_bytes(const void* data, size_t len, uint64_t seed = FNV_OFFSET)
+    {
+        uint64_t h = seed;
+        const auto* p = static_cast<const unsigned char*>(data);
+
+        for (size_t i = 0; i < len; ++i)
+        {
+            h ^= p[i];
+            h *= FNV_PRIME;
+        }
+
+        return h;
+    }
+
+    // Append a string_view's bytes to the running FNV-1a hash 'h'.
+    static inline void hash_append(uint64_t& h, std::string_view sv)
+    {
+        h = fnv1a64_bytes(sv.data(), sv.size(), h);
+    }
+
+    template<typename T>
+    // Append any arithmetic value (integers/floats/bool) by value bytes.
+    static inline std::enable_if_t<std::is_arithmetic_v<T>, void>
+    hash_append(uint64_t& h, T v)
+    {
+        h = fnv1a64_bytes(&v, sizeof(v), h);
+    }
+
+    template<typename T>
+    // Append an enum by hashing its underlying integral value.
+    static inline std::enable_if_t<std::is_enum_v<T>, void>
+    hash_append(uint64_t& h, T v)
+    {
+        using U = std::underlying_type_t<T>;
+        U u = static_cast<U>(v);
+
+        h = fnv1a64_bytes(&u, sizeof(u), h);
+    }
+
+    // Append a C-string; null is treated as an empty string.
+    static inline void hash_append(uint64_t& h, const char* s)
+    {
+        if (s)
+            hash_append(h, std::string_view{s});
+    }
+
+    template<size_t N>
+    // Append a fixed-size char array, excluding the trailing NUL.
+    static inline void hash_append(uint64_t& h, const char (&s)[N])
+    {
+        // Exclude trailing NUL
+        hash_append(h, std::string_view{s, N ? (N - 1) : 0});
+    }
+
+    // Arduino String
+    static inline void hash_append(uint64_t& h, const String& s)
+    {
+        hash_append(h, std::string_view{s.c_str()});
+    }
+
+    // CRGB and CRGBPalette16 content
+    // Append a CRGB color by hashing its raw bytes.
+    static inline void hash_append(uint64_t& h, const CRGB& c)
+    {
+        h = fnv1a64_bytes(&c, sizeof(c), h);
+    }
+
+    // Append a CRGBPalette16 by hashing each CRGB entry in order.
+    static inline void hash_append(uint64_t& h, const CRGBPalette16& p)
+    {
+        for (int i = 0; i < 16; ++i)
+            hash_append(h, p[i]);
+    }
+
+    template<typename T>
+    // Append a trivially-copyable non-pointer, non-arithmetic, non-enum type by raw bytes.
+    static inline std::enable_if_t<!std::is_pointer_v<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T>, void>
+    hash_append(uint64_t& h, const T& v)
+    {
+        if constexpr (std::is_trivially_copyable_v<T>)
+            h = fnv1a64_bytes(&v, sizeof(v), h);
+        else
+            static_assert(sizeof(T) == 0, "Unsupported argument type for factory-id hashing");
+    }
+
+    template<typename... As>
+    // Append a pack of values to the running hash 'h' in order.
+    static inline void hash_pack(uint64_t& h, As&&... as)
+    {
+        (hash_append(h, std::forward<As>(as)), ...);
+    }
+};
+
 // --- Macro-free helpers for concise, type-safe effect registration ---
 
 // Adds a default and JSON effect factory for a specific effect number and type.
@@ -196,10 +389,13 @@ template<typename TEffect, typename... Args>
 inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, Args&&... args)
 {
     static_assert(std::is_enum_v<decltype(TEffect::kId)>, "TEffect must have static constexpr kId");
+    // Build a stable ID from effect type and ctor args
+    const uint64_t id = EffectFactoryIdSupport::MakeFactoryId<TEffect>(args...);
     return factories.AddEffect(
         TEffect::kId,
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
-        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); }
+        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); },
+        id
     );
 }
 
@@ -219,10 +415,12 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 template<typename TStar, typename... Args>
 inline EffectFactories::NumberedFactory& AddStarryNightEffect(EffectFactories& factories, Args&&... args)
 {
+    const uint64_t id = EffectFactoryIdSupport::MakeStarryFactoryId<TStar>(idStripStarryNight, args...);
     return factories.AddEffect(
-    idStripStarryNight,
+        idStripStarryNight,
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<TStar>>(args...); },
-        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); }
+        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); },
+        id
     );
 }
 
