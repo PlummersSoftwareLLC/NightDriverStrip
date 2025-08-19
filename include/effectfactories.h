@@ -174,7 +174,7 @@ class EffectFactories
         return ids;
     }
 
-    String& HashString()
+    String HashString() const
     {
         if (hashString.isEmpty())
             throw std::runtime_error("Attempt to retrieve unset hash string");
@@ -182,7 +182,7 @@ class EffectFactories
         return hashString;
     }
 
-    String& HashString(const String& str)
+    String HashString(const String& str)
     {
         // Accept value if length is 16 or empty
         if (str.length() == 16 || str.isEmpty())

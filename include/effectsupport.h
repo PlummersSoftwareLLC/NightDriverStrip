@@ -256,7 +256,7 @@ class EffectFactoryIdSupport
     // Order-sensitive hash of a list of 64-bit ids
     static inline uint64_t Hash(std::vector<uint64_t>&& ids)
     {
-        const unsigned char* bytes = reinterpret_cast<const unsigned char*>(ids.data());
+        auto bytes = reinterpret_cast<const unsigned char*>(ids.data());
         const size_t len = ids.size() * sizeof(uint64_t);
         return fnv1a64_bytes(bytes, len, FNV_OFFSET);
     }
