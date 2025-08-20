@@ -7,6 +7,7 @@
 class PatternSMFire2021 : public EffectWithId<idMatrixSMFire2021>
 {
   private:
+
     uint8_t Speed = 150; // 1-252 ...why is not 255?! // Setting
     uint8_t Scale = 9;   // 1-99 is palette and scale // Setting
 
@@ -18,8 +19,8 @@ class PatternSMFire2021 : public EffectWithId<idMatrixSMFire2021>
     const TProgmemRGBPalette16 *curPalette;
 
   public:
-    PatternSMFire2021() : EffectWithId<idMatrixSMFire2021>("Fireplace") {}
 
+    PatternSMFire2021() : EffectWithId<idMatrixSMFire2021>("Fireplace") {}
     PatternSMFire2021(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMFire2021>(jsonObject) {}
 
     void Start() override

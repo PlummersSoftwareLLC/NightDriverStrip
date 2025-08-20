@@ -78,12 +78,13 @@
 class PatternBounce : public EffectWithId<idMatrixBounce>
 {
 private:
+
     static const int count = MATRIX_WIDTH;
     PVector gravity = PVector(0, 0.0125);
 
 public:
-    PatternBounce() : EffectWithId<idMatrixBounce>("Bounce") {}
 
+    PatternBounce() : EffectWithId<idMatrixBounce>("Bounce") {}
     PatternBounce(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixBounce>(jsonObject) {}
 
     bool RequiresDoubleBuffering() const override

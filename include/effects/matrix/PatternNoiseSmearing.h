@@ -61,8 +61,8 @@
 class PatternRainbowFlag : public EffectWithId<idMatrixRainbowFlag>
 {
 public:
-  PatternRainbowFlag() : EffectWithId<idMatrixRainbowFlag>("RainbowFlag") {}
 
+  PatternRainbowFlag() : EffectWithId<idMatrixRainbowFlag>("RainbowFlag") {}
   PatternRainbowFlag(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRainbowFlag>(jsonObject) {}
 
   void Draw() override
@@ -102,8 +102,6 @@ public:
 
     g()->MoveY(3);
     g()->MoveFractionalNoiseX<NoiseApproach::One>(4);
-
-
   }
 };
 #endif

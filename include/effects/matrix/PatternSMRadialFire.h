@@ -6,11 +6,13 @@
 
 class PatternSMRadialFire : public EffectWithId<idMatrixSMRadialFire>
 {
-public:
+  public:
+
     PatternSMRadialFire() : EffectWithId<idMatrixSMRadialFire>("RadialFire") {}
     PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialFire>(jsonObject) {}
 
   private:
+
     static auto constexpr C_X = (MATRIX_WIDTH / 2);
     static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
 

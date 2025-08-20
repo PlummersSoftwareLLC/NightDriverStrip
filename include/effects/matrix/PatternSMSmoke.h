@@ -7,6 +7,7 @@
 class PatternSMSmoke : public EffectWithId<idMatrixSMSmoke>
 {
 private:
+
   static constexpr uint8_t Scale = 50; // 1-100. Setting
 
   static constexpr int WIDTH = MATRIX_WIDTH;
@@ -17,6 +18,7 @@ private:
   uint8_t deltaHue {0}, deltaHue2 {0};
 
 public:
+
   PatternSMSmoke()
     : EffectWithId<idMatrixSMSmoke>("Smoke") {}
 

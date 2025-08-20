@@ -90,6 +90,7 @@
 class PatternCircuit : public EffectWithId<idMatrixCircuit>
 {
 private:
+
     static const uint8_t SNAKE_LENGTH = 64;
 
     CRGB colors[SNAKE_LENGTH];
@@ -190,6 +191,7 @@ private:
     }
 
 public:
+
     PatternCircuit() : EffectWithId<idMatrixCircuit>("Circuit") { construct(); }
     PatternCircuit(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixCircuit>(jsonObject) { construct(); }
     ~PatternCircuit() { free(snakes); }

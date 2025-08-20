@@ -378,6 +378,8 @@ class RingParticle : public FadingColoredObject
 #if ENABLE_AUDIO
 class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingParticle>, public EffectWithId<idStripColorBeatWithFlash>
 {
+  private:
+
     int _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
 
@@ -439,20 +441,22 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
 
 class ColorBeatOverRed : public EffectWithId<idStripColorBeatOverRed>, public BeatEffectBase, public ParticleSystem<RingParticle>
 {
+  private:
+
     int  _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
     ColorBeatOverRed(const String & strName)
-  : EffectWithId<idStripColorBeatOverRed>(strName),
+      : EffectWithId<idStripColorBeatOverRed>(strName),
         BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
     }
 
     ColorBeatOverRed(const JsonObjectConst& jsonObject)
-  : EffectWithId<idStripColorBeatOverRed>(jsonObject),
+      : EffectWithId<idStripColorBeatOverRed>(jsonObject),
         BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
@@ -699,6 +703,8 @@ class HotWhiteRingParticle : public FadingObject
 
 class MoltenGlassOnVioletBkgnd : public EffectWithId<idStripMoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
+  private:
+
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
@@ -789,6 +795,8 @@ class MoltenGlassOnVioletBkgnd : public EffectWithId<idStripMoltenGlassOnVioletB
 
 class NewMoltenGlassOnVioletBkgnd : public EffectWithId<idStripNewMoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
+  private:
+
     int  _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
@@ -878,6 +886,8 @@ class NewMoltenGlassOnVioletBkgnd : public EffectWithId<idStripNewMoltenGlassOnV
 
 class SparklySpinningMusicEffect : public EffectWithId<idStripSparklySpinningMusic>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
+  private:
+  
     int  _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;

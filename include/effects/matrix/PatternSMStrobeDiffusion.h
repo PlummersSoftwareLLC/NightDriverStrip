@@ -19,6 +19,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #endif
 {
   private:
+
     uint8_t hue, hue2; // gradual hue shift or some other cyclic counter
     uint8_t step { 0 }; // some counter of frames or sequences of operations
     std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT> noise3d[MATRIX_WIDTH * MATRIX_HEIGHT]; // Locations of snowflakes.
@@ -32,7 +33,9 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #else
     const int top_line_offset = 0;
 #endif
+
   public:
+  
     PatternSMStrobeDiffusion()
       :
 #if ENABLE_AUDIO

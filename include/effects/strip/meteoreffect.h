@@ -35,13 +35,15 @@
 
 class MeteorChannel
 {
+  private:
+
     std::vector<float> hue;
     std::vector<float> iPos;
     std::vector<bool>  bLeft;
     std::vector<float> speed;
     std::vector<float> lastBeat;
 
-public:
+  public:
 
     size_t        meteorCount;
     uint8_t       meteorSize;
@@ -51,10 +53,7 @@ public:
     bool          meteorRandomDecay = true;
     const float  minTimeBetweenBeats = 0.6;
 
-    MeteorChannel()
-    {
-
-    }
+    MeteorChannel() {}
 
     virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, int size = 4, int decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
     {
@@ -163,6 +162,7 @@ public:
 class MeteorEffect : public EffectWithId<idStripMeteor>
 {
   private:
+
     std::vector<MeteorChannel> _Meteors;
 
     int                        _cMeteors;

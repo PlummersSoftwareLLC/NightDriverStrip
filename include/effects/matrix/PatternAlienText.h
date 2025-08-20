@@ -73,10 +73,9 @@
 
 class PatternAlienText : public EffectWithId<idMatrixAlienText>
 {
-
-
 private:
-  const int charWidth = 6;
+
+const int charWidth = 6;
   const int charHeight = 6;
   const int leftMargin = 2;
   const int topMargin = 2;
@@ -85,13 +84,8 @@ private:
 
 public:
 
-  PatternAlienText() : EffectWithId<idMatrixAlienText>("AlienText")
-  {
-  }
-
-  PatternAlienText(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixAlienText>(jsonObject)
-  {
-  }
+  PatternAlienText() : EffectWithId<idMatrixAlienText>("AlienText") {}
+  PatternAlienText(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixAlienText>(jsonObject) {}
 
   void Start() override
   {

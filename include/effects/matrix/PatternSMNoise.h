@@ -355,7 +355,8 @@ DEFINE_GRADIENT_PALETTE(shikon_23_gp){
 class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
 {
   public:
-    enum /* class */EffectType {
+
+    enum EffectType {
         Unknown,
         LavaLampRainbow_t,
         LavaLampRainbowStripe_t,
@@ -438,6 +439,7 @@ class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
     }
 
   private:
+  
     int mode{EffectType::Unknown}; // Which of the 17 effects(!) are we showing?
     EffectType _effect;
 

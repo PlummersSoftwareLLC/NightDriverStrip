@@ -8,6 +8,7 @@
 class PatternSMHypnosis : public EffectWithId<idMatrixSMHypnosis>
 {
   private:
+
     const uint8_t C_X = MATRIX_WIDTH / 2;
     const uint8_t C_Y = MATRIX_HEIGHT / 2;
     const uint8_t mapp = 255 / MATRIX_WIDTH;
@@ -18,8 +19,8 @@ class PatternSMHypnosis : public EffectWithId<idMatrixSMHypnosis>
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMHypnosis() : EffectWithId<idMatrixSMHypnosis>("Hypnosis") {}
 
+    PatternSMHypnosis() : EffectWithId<idMatrixSMHypnosis>("Hypnosis") {}
     PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMHypnosis>(jsonObject) {}
 
     size_t DesiredFramesPerSecond() const override

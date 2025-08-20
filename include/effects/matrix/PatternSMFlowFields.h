@@ -10,6 +10,7 @@
 class PatternSMFlowFields : public EffectWithId<idMatrixSMFlowFields>
 {
   private:
+
     const int WIDTH = MATRIX_WIDTH;
     const int HEIGHT = MATRIX_HEIGHT;
     const int COLS = MATRIX_WIDTH;
@@ -78,8 +79,8 @@ class PatternSMFlowFields : public EffectWithId<idMatrixSMFlowFields>
     uint16_t scale = 30;
 
   public:
-    PatternSMFlowFields() : EffectWithId<idMatrixSMFlowFields>("Liquidflow") {}
 
+    PatternSMFlowFields() : EffectWithId<idMatrixSMFlowFields>("Liquidflow") {}
     PatternSMFlowFields(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMFlowFields>(jsonObject) {}
 
     void Start() override

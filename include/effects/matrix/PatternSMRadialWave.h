@@ -24,6 +24,7 @@ class PatternSMRadialWave : public EffectWithId<idMatrixSMRadialWave>
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
+  
     PatternSMRadialWave() : EffectWithId<idMatrixSMRadialWave>("RadialWave") {}
     PatternSMRadialWave(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialWave>(jsonObject) {}
 

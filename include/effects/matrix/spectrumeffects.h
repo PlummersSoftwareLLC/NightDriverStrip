@@ -41,11 +41,14 @@
 
 class InsulatorSpectrumEffect : public EffectWithId<idMatrixInsulatorSpectrum>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
+  private:
+
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
+
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) :
         EffectWithId<idMatrixInsulatorSpectrum>(strName),
         BeatEffectBase(1.50, 0.25),
@@ -182,7 +185,8 @@ class VUMeter
 
 class VUMeterVertical : public VUMeter
 {
-private:
+  private:
+
     virtual inline void EraseVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int start, int yVU) const
     {
         for (int i = start; i <= GFX[0]->width(); i++)
@@ -200,7 +204,8 @@ private:
             device->setPixel(i, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*256/GFX[0]->width()).fadeToBlackBy(fadeBy));
     }
 
-public:
+  public:
+
     void DrawVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int yVU = 0, const CRGBPalette16 * pPalette = nullptr)
     {
         const int MAX_FADE = 256;
@@ -236,6 +241,7 @@ public:
 class VUMeterEffect : virtual public VUMeter, public EffectWithId<idStripVUMeter>
 {
 public:
+
     virtual void Draw() override
     {
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
@@ -254,6 +260,7 @@ public:
 class VUMeterVerticalEffect : virtual public VUMeterVertical, public EffectWithId<idStripVUMeterVertical>
 {
 public:
+
     virtual void Draw() override
     {
         DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
@@ -275,9 +282,6 @@ public:
 
 class SpectrumAnalyzerEffect : public EffectWithId<idMatrixSpectrumAnalyzer>, virtual public VUMeter
 {
-  public:
-
-
   protected:
 
     uint8_t   _numBars;
@@ -535,7 +539,6 @@ class SpectrumAnalyzerEffect : public EffectWithId<idMatrixSpectrumAnalyzer>, vi
     }
 };
 
-
 // WaveformEffect [MATRIX EFFECT]
 //
 // Draws a colorful scrolling waveform driven by instantaneous VU as it scrolls
@@ -543,12 +546,14 @@ class SpectrumAnalyzerEffect : public EffectWithId<idMatrixSpectrumAnalyzer>, vi
 class WaveformEffect : public EffectWithId<idMatrixWaveform>
 {
     protected:
+
         uint8_t                      _iColorOffset = 0;
         uint8_t                      _increment = 0;
         float                        _iPeakVUy = 0;
         unsigned long                _msPeakVU = 0;
 
     public:
+
         WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
             : EffectWithId<idMatrixWaveform>(pszFriendlyName),
               _increment(increment)
@@ -831,8 +836,8 @@ class SpectrumBarEffect : public EffectWithId<idMatrixSpectrumBar>, public BeatE
 class AudioSpikeEffect : public EffectWithId<idMatrixAudioSpike>
 {
   public:
-    AudioSpikeEffect(const String & pszFriendlyName) : EffectWithId<idMatrixAudioSpike>(pszFriendlyName) {}
 
+    AudioSpikeEffect(const String & pszFriendlyName) : EffectWithId<idMatrixAudioSpike>(pszFriendlyName) {}
     AudioSpikeEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixAudioSpike>(jsonObject) {}
 
     virtual bool SerializeToJSON(JsonObject& jsonObject) override

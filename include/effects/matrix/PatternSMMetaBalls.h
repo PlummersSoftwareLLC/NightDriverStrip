@@ -9,6 +9,7 @@
 class PatternSMMetaBalls : public EffectWithId<idMatrixSMMetaBalls>
 {
   private:
+
     uint8_t bx[5];
     uint8_t by[5];
 
@@ -25,8 +26,8 @@ class PatternSMMetaBalls : public EffectWithId<idMatrixSMMetaBalls>
     }
 
   public:
-    PatternSMMetaBalls() : EffectWithId<idMatrixSMMetaBalls>("MetaBalls") {}
 
+    PatternSMMetaBalls() : EffectWithId<idMatrixSMMetaBalls>("MetaBalls") {}
     PatternSMMetaBalls(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMMetaBalls>(jsonObject) {}
 
     void Start() override

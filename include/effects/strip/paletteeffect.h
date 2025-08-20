@@ -110,10 +110,6 @@ class PaletteEffect : public EffectWithId<idStripPalette>
         return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
-    ~PaletteEffect()
-    {
-    }
-
     void Draw() override
     {
         if (_bErase)

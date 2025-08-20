@@ -51,6 +51,7 @@
 class BeatEffectBase
 {
   protected:
+
     const int _maxSamples = 60;
     std::deque<float> _samples;
     double _lastBeat = 0;

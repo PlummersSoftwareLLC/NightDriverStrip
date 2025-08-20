@@ -130,8 +130,8 @@ void spruce()
 
 
   public:
-    PatternSMHolidayLights() : EffectWithId<idMatrixSMHolidayLights>("Tannenbaum") {}
 
+    PatternSMHolidayLights() : EffectWithId<idMatrixSMHolidayLights>("Tannenbaum") {}
     PatternSMHolidayLights(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMHolidayLights>(jsonObject) {}
 
     void Start() override

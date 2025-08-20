@@ -299,13 +299,9 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         if (elapsed > 1)
-        {
             GenerateSparks(100);
-        }
         else
-        {
             GenerateSparks(g_Analyzer.VURatio() * 50);
-        }
     }
 
     virtual void Draw() override
@@ -318,12 +314,13 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
 class ClassicFireEffect : public EffectWithId<idStripClassicFire>
 {
-private:
+  private:
+
     bool _Mirrored;
     bool _Reversed;
     int  _Cooling;
 
-public:
+  public:
 
     ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5)
         : EffectWithId<idStripClassicFire>("Classic Fire"),
@@ -451,7 +448,8 @@ public:
 
 class SmoothFireEffect : public EffectWithId<idStripSmoothFire>
 {
-private:
+  private:
+
     bool _Reversed;
     float _Cooling;
     int _Sparks;
@@ -463,7 +461,7 @@ private:
 
     float * _Temperatures = nullptr;
 
-public:
+  public:
     // Parameter:   Cooling   Sparks    driftPasses  drift sparkHeight   Turbo
     // Calm Fire:     0.75f        2         1         64       8          F
     // Full Red:      0.75f        8         1        128      16          F
@@ -617,6 +615,7 @@ class BaseFireEffect : public EffectWithId<idStripBaseFire>
     }
 
   protected:
+  
     int     Cooling;            // Rate at which the pixels cool off
     int     Sparks;             // How many sparks will be attempted each frame
     int     SparkHeight;        // If created, max height for a spark

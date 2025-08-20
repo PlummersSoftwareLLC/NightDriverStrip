@@ -9,7 +9,8 @@
 class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 {
   private:
-// Why are these named "bballs"? Probably reused effect innards.
+
+   // Why are these named "bballs"? Probably reused effect innards.
    static constexpr int bballsMaxNUM = 100U; // the maximum number of tracked
                                   // objects (very affects memory consumption)
     uint8_t bballsCOLOR[bballsMaxNUM]; // star color (reusing the Balls effect array)
@@ -43,8 +44,8 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
     const int spirocenterY = CENTER_Y_MINOR;
 
   public:
-    PatternSMStarDeep() : EffectWithId<idMatrixSMStarDeep>("Star Deep") {}
 
+    PatternSMStarDeep() : EffectWithId<idMatrixSMStarDeep>("Star Deep") {}
     PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMStarDeep>(jsonObject) {}
 
     void Start() override

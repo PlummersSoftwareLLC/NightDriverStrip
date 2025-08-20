@@ -4,9 +4,8 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/2007-amber-rain
 
-class Circle
+struct Circle
 {
-  public:
     float thickness = 3.0;
     long startTime;
     uint16_t offset;
@@ -42,6 +41,7 @@ const int NUMBER_OF_CIRCLES = 20;
 class PatternSMAmberRain : public EffectWithId<idMatrixSMAmberRain>
 {
   private:
+
     Circle circles[NUMBER_OF_CIRCLES] = {};
 
     void drawCircle(Circle circle)
@@ -84,11 +84,8 @@ class PatternSMAmberRain : public EffectWithId<idMatrixSMAmberRain>
     }
 
   public:
-    static constexpr EffectId kId = idMatrixSMAmberRain;
-    EffectId effectId() const override { return kId; }
 
     PatternSMAmberRain() : EffectWithId<idMatrixSMAmberRain>("Color Rain") {}
-
     PatternSMAmberRain(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMAmberRain>(jsonObject) {}
 
     void Start() override

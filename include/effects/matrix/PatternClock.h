@@ -41,15 +41,15 @@
 
 class PatternClock : public EffectWithId<idMatrixClock>
 {
+  private:
+
     // Radius is the lesser of the height and width so that the round clock can fit
     // on rectangular display
-
     float    radius;
 
   public:
 
     PatternClock() : EffectWithId<idMatrixClock>("Clock") {}
-
     PatternClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixClock>(jsonObject) {}
 
     bool RequiresDoubleBuffering() const override

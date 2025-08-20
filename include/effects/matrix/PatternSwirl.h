@@ -60,11 +60,12 @@
 class PatternSwirl : public EffectWithId<idMatrixSwirl>
 {
   private:
+
     const uint8_t borderWidth = 2;
 
-public:
-    PatternSwirl() : EffectWithId<idMatrixSwirl>("Swirl") {}
+  public:
 
+    PatternSwirl() : EffectWithId<idMatrixSwirl>("Swirl") {}
     PatternSwirl(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSwirl>(jsonObject) {}
 
     void drawAt(int i, int j, CRGB color)

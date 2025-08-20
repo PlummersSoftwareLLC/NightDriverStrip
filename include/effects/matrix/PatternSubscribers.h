@@ -46,6 +46,7 @@
 class PatternSubscribers : public EffectWithId<idMatrixSubscribers>
 {
   private:
+
     // This requires a matching INIT_EFFECT_SETTING_SPECS() in effects.cpp or linker errors will ensue
     DECLARE_EFFECT_SETTING_SPECS(mySettingSpecs);
 
@@ -162,7 +163,6 @@ class PatternSubscribers : public EffectWithId<idMatrixSubscribers>
   public:
 
     PatternSubscribers() : EffectWithId<idMatrixSubscribers>("Subs") {}
-
     PatternSubscribers(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSubscribers>(jsonObject)
     {
         if (jsonObject["ycg"].is<String>())

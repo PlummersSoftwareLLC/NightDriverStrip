@@ -61,6 +61,7 @@
 class PatternWave : public EffectWithId<idMatrixWave>
 {
   private:
+
     uint8_t thetaUpdate = 4;
     uint8_t thetaUpdateFrequency = 0;
     uint8_t theta = 0;
@@ -84,8 +85,8 @@ class PatternWave : public EffectWithId<idMatrixWave>
         waveCount = random(1, 3);
     }
 
-
 public:
+
     PatternWave() : EffectWithId<idMatrixWave>("Wave")
     {
         construct();

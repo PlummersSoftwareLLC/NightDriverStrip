@@ -69,10 +69,10 @@ class PatternPulse : public EffectWithId<idMatrixPulse>
     int maxSteps = min(MATRIX_HEIGHT, MATRIX_WIDTH);
     float fadeRate = 0.90;
     int diff;
+
   public:
 
     PatternPulse() : EffectWithId<idMatrixPulse>("Pulse") {}
-
     PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPulse>(jsonObject) {}
 
     void Draw() override
@@ -118,7 +118,6 @@ class PatternPulse : public EffectWithId<idMatrixPulse>
 };
 class PatternPulsar : public BeatEffectBase, public EffectWithId<idMatrixPulsar> {
   private:
-
     struct PulsePop
     {
       public:

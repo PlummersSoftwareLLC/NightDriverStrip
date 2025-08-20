@@ -236,7 +236,6 @@ private:
 public:
 
     PatternLife() : EffectWithId<idMatrixLife>("Life") {}
-
     PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixLife>(jsonObject) {}
 
     void Reset()

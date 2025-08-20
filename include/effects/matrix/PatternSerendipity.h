@@ -60,7 +60,8 @@
 
 class PatternSerendipity : public EffectWithId<idMatrixSerendipity>
 {
-private:
+  private:
+
     // Timer stuff (Oszillators)
     struct timer
     {
@@ -93,9 +94,9 @@ private:
         }
     }
 
-public:
-    PatternSerendipity() : EffectWithId<idMatrixSerendipity>("Serendipity") {}
+  public:
 
+    PatternSerendipity() : EffectWithId<idMatrixSerendipity>("Serendipity") {}
     PatternSerendipity(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSerendipity>(jsonObject) {}
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override

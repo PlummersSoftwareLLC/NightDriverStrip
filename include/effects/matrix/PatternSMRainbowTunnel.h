@@ -23,6 +23,7 @@ class PatternSMRainbowTunnel : public EffectWithId<idMatrixSMRainbowTunnel>
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
+  
     PatternSMRainbowTunnel() : EffectWithId<idMatrixSMRainbowTunnel>("Colorspin") {}
     PatternSMRainbowTunnel(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRainbowTunnel>(jsonObject) {}
 

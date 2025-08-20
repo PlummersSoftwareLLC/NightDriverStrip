@@ -57,14 +57,13 @@
 class PatternRadar : public EffectWithId<idMatrixRadar>
 {
 private:
+
   uint8_t theta = 0;
   uint8_t hueoffset = 0;
 
 public:
-  // ID provided by EffectWithId
 
   PatternRadar() : EffectWithId<idMatrixRadar>("Radar") {}
-
   PatternRadar(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRadar>(jsonObject) {}
 
   void Draw() override

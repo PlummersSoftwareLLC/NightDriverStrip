@@ -34,12 +34,14 @@
 
 class LaserShot
 {
+  private:
+
     float         _position = 0.0;
     float         _speed    = 10.0;
     float         _size     = 10.0;
     uint8_t       _hue      = 0;
 
-public:
+  public:
 
     LaserShot(float position, float speed, float size, uint8_t hue)
     {
@@ -68,7 +70,7 @@ public:
 class LaserLineEffect : public BeatEffectBase, public EffectWithId<idStripLaserLine>
 {
   private:
-  
+
     std::vector<LaserShot>      _shots;
     std::shared_ptr<GFXBase>    _gfx;
     float                      _defaultSize;

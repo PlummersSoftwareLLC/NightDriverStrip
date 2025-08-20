@@ -8,6 +8,7 @@
 class PatternSMSupernova : public EffectWithId<idMatrixSMSupernova>
 {
 public:
+
     PatternSMSupernova() : EffectWithId<idMatrixSMSupernova>("Supernova"), hue(0), hue2(0), step(0) {}
     PatternSMSupernova(const JsonObjectConst &jsonDebrisItem) : EffectWithId<idMatrixSMSupernova>(jsonDebrisItem) {}
 

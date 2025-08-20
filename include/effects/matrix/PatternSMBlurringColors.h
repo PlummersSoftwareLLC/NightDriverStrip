@@ -17,9 +17,8 @@ class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
     class PowderItem
     {
       public:
-        PowderItem()
-        {
-        }
+
+        PowderItem() {}
 
         void Clear()
         {
@@ -194,8 +193,8 @@ class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
 
   public:
 
-        PatternSMBlurringColors() : EffectWithId<idMatrixSMBlurringColors>("Powder") {}
-        PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMBlurringColors>(jsonObject) {}
+    PatternSMBlurringColors() : EffectWithId<idMatrixSMBlurringColors>("Powder") {}
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMBlurringColors>(jsonObject) {}
 
     void Start() override
     {

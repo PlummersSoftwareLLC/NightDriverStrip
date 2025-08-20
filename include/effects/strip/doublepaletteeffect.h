@@ -42,7 +42,7 @@ class DoublePaletteEffect : public EffectWithId<idStripDoublePalette>
   public:
 
     DoublePaletteEffect()
-  :  EffectWithId<idStripDoublePalette>("Double Palette"),
+     :  EffectWithId<idStripDoublePalette>("Double Palette"),
         _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
         _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
     {

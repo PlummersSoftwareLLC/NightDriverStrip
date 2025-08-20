@@ -71,6 +71,7 @@ using namespace std::chrono_literals;
 class AnimatedText
 {
   private:
+
     int startX;
     int startY;
     int endX;
@@ -85,6 +86,7 @@ class AnimatedText
 
 
   public:
+  
     AnimatedText(String text, CRGB color, const GFXfont * pfont, float animationTime, int startX, int startY, int endX, int endY)
     {
         startTime = system_clock::now();

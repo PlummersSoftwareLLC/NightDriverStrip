@@ -10,6 +10,7 @@
 class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
 {
   private:
+
     static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
     static constexpr int CenterY = ((MATRIX_HEIGHT / 2) - 0.5);
     bool incenter {false};
@@ -60,8 +61,8 @@ class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
     }
 
   public:
-    PatternSMSpiroPulse() : EffectWithId<idMatrixSMSpiroPulse>("Spiro") {}
 
+    PatternSMSpiroPulse() : EffectWithId<idMatrixSMSpiroPulse>("Spiro") {}
     PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMSpiroPulse>(jsonObject) {}
 
     void Start() override

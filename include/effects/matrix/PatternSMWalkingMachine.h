@@ -90,8 +90,8 @@ class PatternSMWalkingMachine : public EffectWithId<idMatrixSMWalkingMachine>
     } dot[7];
 
   public:
-    PatternSMWalkingMachine() : EffectWithId<idMatrixSMWalkingMachine>("Machine") {}
 
+    PatternSMWalkingMachine() : EffectWithId<idMatrixSMWalkingMachine>("Machine") {}
     PatternSMWalkingMachine(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMWalkingMachine>(jsonObject) {}
 
     virtual bool RequiresDoubleBuffering() const

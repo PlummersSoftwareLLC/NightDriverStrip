@@ -481,12 +481,13 @@ public:
 class TapeReelEffect : public EffectWithId<idStripTapeReel>
 {
 private:
+
   float ReelPos[NUM_FANS] = {0};
   float ReelDir[NUM_FANS] = {0};
 
 public:
-  TapeReelEffect(const String & strName) : EffectWithId<idStripTapeReel>(strName) {}
 
+  TapeReelEffect(const String & strName) : EffectWithId<idStripTapeReel>(strName) {}
   TapeReelEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripTapeReel>(jsonObject) {}
 
   void Draw() override

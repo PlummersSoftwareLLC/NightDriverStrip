@@ -46,6 +46,7 @@
 class SimpleRainbowTestEffect : public EffectWithId<idStripSimpleRainbowTest>
 {
   private:
+
     uint8_t     _EveryNth;
     uint8_t     _SpeedDivisor;
 
@@ -94,6 +95,7 @@ class SimpleRainbowTestEffect : public EffectWithId<idStripSimpleRainbowTest>
 class RainbowTwinkleEffect : public EffectWithId<idStripRainbowTwinkle>
 {
   private:
+
     float _speedDivisor;
     int   _deltaHue;
 
@@ -153,10 +155,7 @@ class RainbowTwinkleEffect : public EffectWithId<idStripRainbowTwinkle>
 
 class RainbowFillEffect : public EffectWithId<idStripRainbowFill>
 {
-  public:
-
-
-    protected:
+  protected:
 
     float _speedDivisor;
     int   _deltaHue;
@@ -292,6 +291,7 @@ extern const uint8_t logo_end[]   asm("_binary_assets_bmp_lowreslogo_jpg_end");
 class SplashLogoEffect : public EffectWithId<idStripSplashLogo>
 {
   private:
+
     EmbeddedFile logo;
 
   public:
@@ -512,13 +512,13 @@ class TwinkleEffect : public EffectWithId<idStripTwinkle>
 class SilonEffect : public EffectWithId<idMatrixSilon>
 {
   private:
+
     int _offset = 0;
     int _direction = 1;
 
   public:
 
     SilonEffect() : EffectWithId<idMatrixSilon>("SilonEffect") {}
-
     SilonEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSilon>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
@@ -563,7 +563,6 @@ class PDPGridEffect : public EffectWithId<idMatrixPDPGrid>
   public:
 
     PDPGridEffect() : EffectWithId<idMatrixPDPGrid>("PDPGridEffect") {}
-
     PDPGridEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPDPGrid>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
@@ -601,6 +600,7 @@ class PDPGridEffect : public EffectWithId<idMatrixPDPGrid>
 class PDPCMXEffect : public EffectWithId<idMatrixPDPCMX>
 {
   private:
+
     static constexpr int GROUP_HEIGHT = 5; // Height of each logical group
     static constexpr float LED_PROBABILITY = 0.30f; // 30% chance of LED being on
 
@@ -650,7 +650,6 @@ class PDPCMXEffect : public EffectWithId<idMatrixPDPCMX>
   public:
 
     PDPCMXEffect() : EffectWithId<idMatrixPDPCMX>("PDPCMXEffect") {}
-
     PDPCMXEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPDPCMX>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
@@ -697,7 +696,6 @@ class OuterHexRingEffect : public EffectWithId<idHexagonOuterRing>
   public:
 
     OuterHexRingEffect() : EffectWithId<idHexagonOuterRing>("OuterRingHexEffect") {}
-
     OuterHexRingEffect(const JsonObjectConst& jsonObject) : EffectWithId<idHexagonOuterRing>(jsonObject) {}
 
     virtual void Draw() override

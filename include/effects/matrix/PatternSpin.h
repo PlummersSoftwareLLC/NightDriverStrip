@@ -56,14 +56,7 @@
 
 class PatternSpin : public EffectWithId<idMatrixSpin>
 {
-public:
-    // ID provided by EffectWithId
-
-    PatternSpin() : EffectWithId<idMatrixSpin>("Spin") {}
-
-    PatternSpin(String friendlyName) : EffectWithId<idMatrixSpin>(friendlyName) {}
-
-    PatternSpin(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSpin>(jsonObject) {}
+  private:
 
     float degrees = 0;
     float radius = 16;
@@ -75,6 +68,13 @@ public:
 
     float speed = speedStart;
     float velocity = velocityStart;
+
+
+  public:
+
+    PatternSpin() : EffectWithId<idMatrixSpin>("Spin") {}
+    PatternSpin(String friendlyName) : EffectWithId<idMatrixSpin>(friendlyName) {}
+    PatternSpin(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSpin>(jsonObject) {}
 
     void Start() override
     {
