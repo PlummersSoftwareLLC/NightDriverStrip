@@ -305,7 +305,7 @@ template <typename Type = DrawableParticle> class ParticleSystem
 
   public:
 
-    ParticleSystem<Type>()
+    ParticleSystem()
     {
     }
 
