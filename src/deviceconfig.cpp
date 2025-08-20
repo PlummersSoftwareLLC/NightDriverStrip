@@ -194,7 +194,9 @@ void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::o
 
         SaveToJSON();
     }
-    // ...otherwise, apply the "set global color" logic if we were asked to do so
     else if (forceApplyGlobalColor)
+    {
+        // ...otherwise, apply the "set global color" logic if we were asked to do so
         g_ptrSystem->EffectManager().ApplyGlobalColor(finalGlobalColor);
+    }
 }

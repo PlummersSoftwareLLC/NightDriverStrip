@@ -31,6 +31,7 @@
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <ESPmDNS.h>
 #include <nvs.h>
+#include <algorithm>
 
 #include "globals.h"
 #include "ledviewer.h"                          // For the LEDViewer task and object
@@ -480,8 +481,10 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                     seconds,
                     micros);
 
-                PeakData peaks((float *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
-                g_Analyzer.SetPeakData(peaks);
+                const float* pFloats = reinterpret_cast<const float*>(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
+                PeakData peaks{};
+                std::copy_n(pFloats, NUM_BANDS, peaks.begin());
+                g_Analyzer.SetPeakDataFromRemote(peaks);
             #endif
             return true;
         }

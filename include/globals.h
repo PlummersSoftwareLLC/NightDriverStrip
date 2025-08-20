@@ -777,6 +777,7 @@ inline String str_sprintf(const char *fmt, ...)
 
 #include <random>
 #include <type_traits>
+#include <iterator>
 
 template <typename T>
 inline static T random_range(T lower, T upper)
@@ -893,6 +894,20 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
     return result;
 }
 
+// Provide a single-parameter std::accumulate overload for ranges/containers
+// This allows: auto total = std::accumulate(container);
+namespace std {
+    template <typename Range>
+    inline auto accumulate(const Range& r)
+        -> std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>
+    {
+        using T = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>;
+        T total{};
+        for (const auto& v : r) total += v;
+        return total;
+    }
+}
+
 // 16-bit (5:6:5) color definitions for common colors
 
 #define BLACK16     0x0000
@@ -917,6 +932,12 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
 
 #if USE_TFTSPI
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
+    // If the project provides its own TFT_eSPI setup via USER_SETUP_LOADED
+    // and build_flags, do not include the TTGO default user setup to avoid
+    // macro redefinition warnings.
+    #if TTGO && !defined(USER_SETUP_LOADED)
+        #include <User_Setups/Setup25_TTGO_T_Display.h>
+    #endif
     #include <TFT_eSPI.h>
     #include <SPI.h>
 #endif

@@ -150,8 +150,12 @@ public:
 #endif
 
 #if USE_TFTSPI
+    #if TTGO
+        #include <User_Setups/Setup25_TTGO_T_Display.h>
+    #endif
     #include <TFT_eSPI.h>
     #include <SPI.h>
+    
 
     // TFTScreen
     //

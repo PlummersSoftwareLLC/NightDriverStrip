@@ -48,10 +48,20 @@
 DRAM_ATTR std::mutex Screen::_screenMutex;              // The storage for the mutex of the screen class
 
 // How many screen pages do we have
-constexpr uint8_t g_InfoPageCount = std::clamp(NUM_INFO_PAGES, 1, 2);
+
+#ifndef NUM_INFO_PAGES
+#define NUM_INFO_PAGES 2
+#endif
+
+constexpr uint8_t g_InfoPageCount = NUM_INFO_PAGES;
 
 // What page of screen we are showing
-DRAM_ATTR uint8_t g_InfoPage = g_InfoPageCount - 1;      // Default to last page
+
+#ifndef DEFAULT_INFO_PAGE
+#define DEFAULT_INFO_PAGE 0
+#endif
+
+DRAM_ATTR uint8_t g_InfoPage = DEFAULT_INFO_PAGE;
 
 // BasicInfoSummary
 //
@@ -99,7 +109,7 @@ void BasicInfoSummary(bool bRedraw)
     char chStatus = szStatus[c2];
     cStatus++;
 
-    if (display.width() > 240)
+    if (display.width() > 320)
         display.setTextSize(3);
     else if (display.width() >= 160)
         display.setTextSize(2);
@@ -271,7 +281,7 @@ void CurrentEffectSummary(bool bRedraw)
     float screenFPS = 0;
     auto yh = 2; // Start at top of screen
 
-    display.setTextSize(display.width() > 160 ? 2 : 1);
+    display.setTextSize(display.width() > 240 ? 2 : 1);
     const int topMargin = display.fontHeight() * 3 + 4;
 
     screenFPS = (millis() - lastScreen) / 1000.0f;
@@ -447,6 +457,8 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
     bool bRedraw = true;
     for (;;)
     {
+        auto lastFrame = millis();
+
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
@@ -514,8 +526,14 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             #if AMOLED_S3
                 lv_task_handler();
             #endif
-            delay(1);
         }
+
+        // Throttle screen updates to no more than kMaxFPS
+        
+        constexpr float kMaxFPS = 60.0f;
+        const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
+        delay((unsigned long)max(1.0, targetDelay - (millis() - lastFrame)));
+
         bRedraw = false;
     }
 }
