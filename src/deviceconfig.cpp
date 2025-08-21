@@ -89,7 +89,7 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
 
         size_t length = end - start;
 
-        std::unique_ptr<char[]> value = make_unique_psram_array<char>(length + 1);
+        std::unique_ptr<char[]> value = make_unique_psram<char[]>(length + 1);
         strncpy(value.get(), start, length);
         value[length] = 0;
 

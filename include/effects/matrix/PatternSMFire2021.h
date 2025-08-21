@@ -6,6 +6,10 @@
 
 class PatternSMFire2021 : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idMatrixSMFire2021;
+    EffectId effectId() const override { return kId; }
+
   private:
     uint8_t Speed = 150; // 1-252 ...why is not 255?! // Setting
     uint8_t Scale = 9;   // 1-99 is palette and scale // Setting
@@ -18,7 +22,7 @@ class PatternSMFire2021 : public LEDStripEffect
     const TProgmemRGBPalette16 *curPalette;
 
   public:
-    PatternSMFire2021() : LEDStripEffect(EFFECT_MATRIX_SMFIRE2021, "Fireplace")
+    PatternSMFire2021() : LEDStripEffect(idMatrixSMFire2021, "Fireplace")
     {
     }
 

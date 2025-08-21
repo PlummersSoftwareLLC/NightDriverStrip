@@ -67,7 +67,11 @@ public:
 
 class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 {
-  private:
+  public:
+    static constexpr EffectId kId = idStripLaserLine;
+    EffectId effectId() const override { return kId; }
+
+    private:
     std::vector<LaserShot>      _shots;
     std::shared_ptr<GFXBase>    _gfx;
     float                      _defaultSize;
@@ -77,7 +81,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 
     LaserLineEffect(float speed, float size)
         : BeatEffectBase(1.50, 0.00),
-          LEDStripEffect(EFFECT_STRIP_LASER_LINE, "LaserLine"),
+          LEDStripEffect(idStripLaserLine, "LaserLine"),
           _defaultSize(size),
           _defaultSpeed(speed)
     {

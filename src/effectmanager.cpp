@@ -214,7 +214,7 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
     auto& sourceEffect = _vEffects[index];
 
     auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
-    auto factoryEntry = jsonEffectFactories.find(sourceEffect->EffectNumber());
+    auto factoryEntry = jsonEffectFactories.find(static_cast<int>(sourceEffect->effectId()));
 
     if (factoryEntry == jsonEffectFactories.end())
         return nullptr;

@@ -72,7 +72,7 @@ class PatternPulse : public LEDStripEffect
 
   public:
 
-    PatternPulse() : LEDStripEffect(EFFECT_MATRIX_PULSE, "Pulse")
+    PatternPulse() : LEDStripEffect(idMatrixPulse, "Pulse")
     {
     }
 
@@ -121,9 +121,12 @@ class PatternPulse : public LEDStripEffect
         // effects.standardNoiseSmearing();
     }
 };
-class PatternPulsar : public BeatEffectBase, public LEDStripEffect
-{
-  private:
+class PatternPulsar : public BeatEffectBase, public LEDStripEffect {
+    public:
+        static constexpr EffectId kId = idMatrixPulsar;
+        EffectId effectId() const override { return kId; }
+        
+    private:
 
     struct PulsePop
     {
@@ -145,7 +148,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
     PatternPulsar() :
         BeatEffectBase(1.5, 0.25 ),
-        LEDStripEffect(EFFECT_MATRIX_PULSAR, "Pulsars")
+    LEDStripEffect(idMatrixPulsar, "Pulsars")
     {
     }
 
