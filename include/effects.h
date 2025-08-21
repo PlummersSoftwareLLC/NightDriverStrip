@@ -31,6 +31,8 @@
 //---------------------------------------------------------------------------
 #pragma once
 
+#include <cstdint>
+
 // Each effect class needs to have exactly one associated effect number defined in
 // the below list. The effect numbers and their respective classes are linked in the
 // effect factory definitions that are created in the LoadEffectFactories()
@@ -44,8 +46,13 @@
 // to a mismatch between effect JSON blobs for the "old" effect and the "new" effect
 // class.
 
-// Effect identifiers (preserve existing numeric values for JSON compatibility)
-enum EffectId
+// New effect identifier type: pointer-sized integer to support type-token based IDs
+using EffectId = uintptr_t;
+
+// Legacy enumerators kept for compile-time constants and existing code paths.
+// The underlying values are preserved for compatibility; enumerators remain in
+// global scope so existing uses like idStripFoo continue to compile.
+enum LegacyEffectId
 {
 	// Strip effects
 	idStripBouncingBall                     = 1,
@@ -187,8 +194,6 @@ enum StarId
 	idStarChristmas                         = 12,
 	idStarHotWhite                          = 13
 };
-
-// Legacy EFFECT_* macro aliases were removed after migration to enum-based ids.
 
 // Some common JSON properties to prevent typos. By project convention JSON properties
 // at the LEDStripEffect level have a length of 2 characters, and JSON properties

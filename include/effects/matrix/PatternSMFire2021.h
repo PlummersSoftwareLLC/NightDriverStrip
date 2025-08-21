@@ -4,7 +4,7 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/388-fire2021
 
-class PatternSMFire2021 : public EffectWithId<idMatrixSMFire2021>
+class PatternSMFire2021 : public EffectWithId<PatternSMFire2021>
 {
   private:
 
@@ -18,10 +18,10 @@ class PatternSMFire2021 : public EffectWithId<idMatrixSMFire2021>
 
     const TProgmemRGBPalette16 *curPalette;
 
-  public:
+    public:
 
-    PatternSMFire2021() : EffectWithId<idMatrixSMFire2021>("Fireplace") {}
-    PatternSMFire2021(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMFire2021>(jsonObject) {}
+        PatternSMFire2021() : EffectWithId<PatternSMFire2021>("Fireplace") {}
+        PatternSMFire2021(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMFire2021>(jsonObject) {}
 
     void Start() override
     {

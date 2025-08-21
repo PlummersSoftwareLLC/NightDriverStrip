@@ -13,9 +13,9 @@
 // magic for blur2d().
 
 #if ENABLE_AUDIO
-class PatternSMStrobeDiffusion : public BeatEffectBase, public EffectWithId<idMatrixSMStrobeDiffusion>
+class PatternSMStrobeDiffusion : public BeatEffectBase, public EffectWithId<PatternSMStrobeDiffusion>
 #else
-class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
+class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
 #endif
 {
   private:
@@ -41,7 +41,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        EffectWithId<idMatrixSMStrobeDiffusion>("Diffusion")
+        EffectWithId<PatternSMStrobeDiffusion>("Diffusion")
     {
     }
 
@@ -50,7 +50,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
-        EffectWithId<idMatrixSMStrobeDiffusion>(jsonObject)
+        EffectWithId<PatternSMStrobeDiffusion>(jsonObject)
     {
     }
 

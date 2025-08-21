@@ -402,7 +402,7 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
     {
         ObjectType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
         // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-        newstar._iPos = (int) random_range(0, _cLEDs-1-starWidth);
+  newstar._iPos = (int) random_range(0, this->_cLEDs-1-starWidth);
         _allParticles.push_back(newstar);
 
     }
@@ -419,7 +419,7 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
 //
 // Generates up to
 
-template <typename StarType> class StarryNightEffect : public EffectWithId<idStripStarryNight>
+template <typename StarType> class StarryNightEffect : public EffectWithId<StarryNightEffect<StarType>>
 {
   protected:
 
@@ -444,7 +444,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<idStr
                                 float blurFactor = 0.0,
                                 float musicFactor = 1.0,
                                 CRGB skyColor = CRGB::Black)
-      : EffectWithId<idStripStarryNight>(strName),
+      : EffectWithId<StarryNightEffect<StarType>>(strName),
         _palette(palette),
         _newStarProbability(probability),
         _starSize(starSize),
@@ -457,7 +457,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<idStr
     }
 
     StarryNightEffect<StarType>(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripStarryNight>(jsonObject),
+      : EffectWithId<StarryNightEffect<StarType>>(jsonObject),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         _newStarProbability(jsonObject["spb"]),
         _starSize(jsonObject[PTY_SIZE]),
@@ -518,7 +518,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<idStr
                 {
                     StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                     // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                    newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
+                    newstar._iPos = (int) random_range(0U, this->_cLEDs-1-starWidth);
                     _allParticles.push_back(newstar);
                 }
             }
@@ -548,8 +548,8 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<idStr
         }
         else
         {
-            g()->blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blurFactor * 255);
-            fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer.VURatioFade()));
+            this->g()->blurRows(this->g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blurFactor * 255);
+            this->fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer.VURatioFade()));
         }
 
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
@@ -557,7 +557,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<idStr
             i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            setPixelsFOnAllChannels(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
+            this->setPixelsFOnAllChannels(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
         }
     }
 };
@@ -586,7 +586,7 @@ template <typename StarType> class BlurStarEffect : public StarryNightEffect<Sta
 //
 // Twinkles random colored dots on and off
 
-class TwinkleStarEffect : public EffectWithId<idStripTwinkleStar>
+class TwinkleStarEffect : public EffectWithId<TwinkleStarEffect>
 {
   private:
 
@@ -595,8 +595,8 @@ class TwinkleStarEffect : public EffectWithId<idStripTwinkleStar>
 
   public:
 
-    TwinkleStarEffect() : EffectWithId<idStripTwinkleStar>("Twinkle Star") {}
-    TwinkleStarEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripTwinkleStar>(jsonObject) {}
+    TwinkleStarEffect() : EffectWithId("Twinkle Star") {}
+    TwinkleStarEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {

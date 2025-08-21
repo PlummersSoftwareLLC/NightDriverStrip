@@ -39,6 +39,7 @@
 #include <memory>
 #include <list>
 #include <cstdlib>
+#include <cstdint>
 
 // Declarations related to effect settings, and their SettingSpecs. The definitions revolving around
 // SettingSpecs are mainly there because getting it right is a bit finicky due to the container type
@@ -532,7 +533,8 @@ class LEDStripEffect : public IJSONSerializable
     {
         auto jsonDoc = CreateJsonDocument();
 
-        jsonDoc[PTY_EFFECTNR]       = static_cast<int>(effectId());
+        // Store the effect ID using pointer-sized integer width to support type-token based IDs
+        jsonDoc[PTY_EFFECTNR]       = static_cast<uintptr_t>(effectId());
         jsonDoc["fn"]               = _friendlyName;
         jsonDoc["es"]               = _enabled ? 1 : 0;
 
@@ -631,12 +633,36 @@ class LEDStripEffect : public IJSONSerializable
     }
 };
 
-template<EffectId EId>
+// Internal helpers for token-based type IDs
+namespace _effect_id_detail {
+    // 32-bit FNV-1a hash for compile-time friendly hashing
+    constexpr uint32_t fnv1a32(const char* str) {
+        uint32_t hash = 2166136261u;
+        while (*str) {
+            hash ^= static_cast<uint8_t>(*str++);
+            hash *= 16777619u;
+        }
+        return hash;
+    }
+
+    template <typename T>
+    constexpr EffectId token_id_for_type() {
+        // Use compiler-provided pretty function string that includes the type name
+        // This yields a stable token as long as the type's name doesn't change.
+        #if defined(__GNUC__) || defined(__clang__)
+            return static_cast<EffectId>(fnv1a32(__PRETTY_FUNCTION__));
+        #else
+            return static_cast<EffectId>(fnv1a32(__func__));
+        #endif
+    }
+}
+
+// CRTP helper: derive as EffectWithId<Derived> to auto-provide a unique, stable ID per type
+template<typename TDerived>
 class EffectWithId : public LEDStripEffect
 {
   public:
-
-    static constexpr EffectId ID = EId;
+    static constexpr EffectId ID = _effect_id_detail::token_id_for_type<TDerived>();
 
     explicit EffectWithId(const String & strName)
         : LEDStripEffect(strName)
@@ -646,9 +672,8 @@ class EffectWithId : public LEDStripEffect
         : LEDStripEffect(jsonObject)
     {}
 
-    // Override to return the effect id for this effect
     EffectId effectId() const override
     {
-        return EId;
+        return ID;
     }
 };

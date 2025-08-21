@@ -54,7 +54,7 @@
 #ifndef PatternRadar_H
 #define PatternRadar_H
 
-class PatternRadar : public EffectWithId<idMatrixRadar>
+class PatternRadar : public EffectWithId<PatternRadar>
 {
 private:
 
@@ -63,8 +63,8 @@ private:
 
 public:
 
-  PatternRadar() : EffectWithId<idMatrixRadar>("Radar") {}
-  PatternRadar(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRadar>(jsonObject) {}
+  PatternRadar() : EffectWithId<PatternRadar>("Radar") {}
+  PatternRadar(const JsonObjectConst& jsonObject) : EffectWithId<PatternRadar>(jsonObject) {}
 
   void Draw() override
   {

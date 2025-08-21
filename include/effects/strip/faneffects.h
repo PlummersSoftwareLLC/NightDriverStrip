@@ -376,13 +376,13 @@ class EmptyEffect : public LEDStripEffect
   }
 };
 
-class FanBeatEffect : public EffectWithId<idStripFanBeat>
+class FanBeatEffect : public EffectWithId<FanBeatEffect>
 {
   public:
 
-  FanBeatEffect(const String & strName) : EffectWithId<idStripFanBeat>(strName) {}
+  FanBeatEffect(const String & strName) : EffectWithId(strName) {}
 
-  FanBeatEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripFanBeat>(jsonObject) {}
+  FanBeatEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
   void Draw() override
   {
@@ -442,7 +442,7 @@ class FanBeatEffect : public EffectWithId<idStripFanBeat>
   }
 };
 
-class CountEffect : public EffectWithId<idStripCount>
+class CountEffect : public EffectWithId<CountEffect>
 {
 
 private:
@@ -478,7 +478,7 @@ public:
   }
 };
 
-class TapeReelEffect : public EffectWithId<idStripTapeReel>
+class TapeReelEffect : public EffectWithId<TapeReelEffect>
 {
 private:
 
@@ -487,8 +487,8 @@ private:
 
 public:
 
-  TapeReelEffect(const String & strName) : EffectWithId<idStripTapeReel>(strName) {}
-  TapeReelEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripTapeReel>(jsonObject) {}
+  TapeReelEffect(const String & strName) : EffectWithId(strName) {}
+  TapeReelEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
   void Draw() override
   {
@@ -561,7 +561,7 @@ public:
   }
 };
 
-class PaletteReelEffect : public EffectWithId<idStripPaletteReel>
+class PaletteReelEffect : public EffectWithId<PaletteReelEffect>
 {
 private:
   float ReelPos[NUM_FANS] = {0};
@@ -569,9 +569,9 @@ private:
   int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteReelEffect(const String & strName) : EffectWithId<idStripPaletteReel>(strName) {}
+  PaletteReelEffect(const String & strName) : EffectWithId(strName) {}
 
-  PaletteReelEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripPaletteReel>(jsonObject) {}
+  PaletteReelEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
   void Draw() override
   {
@@ -656,7 +656,7 @@ public:
   }
 };
 
-class PaletteSpinEffect : public EffectWithId<idStripPaletteSpin>
+class PaletteSpinEffect : public EffectWithId<PaletteSpinEffect>
 {
 private:
     const CRGBPalette16 _Palette;
@@ -667,7 +667,7 @@ private:
 
 public:
   PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
-  : EffectWithId<idStripPaletteSpin>(strName),
+    : EffectWithId(strName),
         _Palette(palette),
         _bReplaceMagenta(bReplace),
         _sparkleChance(sparkleChance)
@@ -675,7 +675,7 @@ public:
   }
 
   PaletteSpinEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripPaletteSpin>(jsonObject),
+        : EffectWithId(jsonObject),
         _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         _bReplaceMagenta(jsonObject["rpm"]),
         _sparkleChance(jsonObject["sch"])
@@ -735,7 +735,7 @@ public:
     }
   }
 };
-class ColorCycleEffect : public EffectWithId<idStripColorCycle>
+class ColorCycleEffect : public EffectWithId<ColorCycleEffect>
 {
 private:
   PixelOrder _order;
@@ -743,14 +743,14 @@ private:
 
 public:
   ColorCycleEffect(PixelOrder order = Sequential, int step = 8)
-  : EffectWithId<idStripColorCycle>("ColorCylceEffect"),
+    : EffectWithId("ColorCylceEffect"),
       _order(order),
       _step(step)
   {
   }
 
   ColorCycleEffect(const JsonObjectConst& jsonObject)
-    : EffectWithId<idStripColorCycle>(jsonObject),
+      : EffectWithId(jsonObject),
       _order((PixelOrder)jsonObject[PTY_ORDER]),
       _step(jsonObject["stp"])
   {
@@ -788,10 +788,10 @@ public:
   }
 };
 
-class ColorCycleEffectBottomUp : public EffectWithId<idStripColorCycleBottomUp>
+class ColorCycleEffectBottomUp : public EffectWithId<ColorCycleEffectBottomUp>
 {
 public:
-  using EffectWithId<idStripColorCycleBottomUp>::EffectWithId;
+  using EffectWithId<ColorCycleEffectBottomUp>::EffectWithId;
 
   void Draw() override
   {
@@ -812,10 +812,10 @@ public:
   }
 };
 
-class ColorCycleEffectTopDown : public EffectWithId<idStripColorCycleTopDown>
+class ColorCycleEffectTopDown : public EffectWithId<ColorCycleEffectTopDown>
 {
 public:
-  using EffectWithId<idStripColorCycleTopDown>::EffectWithId;
+  using EffectWithId<ColorCycleEffectTopDown>::EffectWithId;
 
   void Draw() override
   {
@@ -836,10 +836,10 @@ public:
   }
 };
 
-class ColorCycleEffectSequential : public EffectWithId<idStripColorCycleSequential>
+class ColorCycleEffectSequential : public EffectWithId<ColorCycleEffectSequential>
 {
 public:
-  using EffectWithId<idStripColorCycleSequential>::EffectWithId;
+  using EffectWithId<ColorCycleEffectSequential>::EffectWithId;
 
   void Draw() override
   {
@@ -868,9 +868,6 @@ private:
 
 public:
 
-  static constexpr EffectId ID = idStripPaletteSpin;
-  EffectId effectId() const override { return ID; }
-
   using PaletteEffect::PaletteEffect;
 
   void Draw() override
@@ -889,11 +886,11 @@ public:
   }
 };
 
-class ColorCycleEffectRightLeft : public EffectWithId<idStripColorCycleRightLeft>
+class ColorCycleEffectRightLeft : public EffectWithId<ColorCycleEffectRightLeft>
 {
 public:
 
-  using EffectWithId<idStripColorCycleRightLeft>::EffectWithId;
+  using EffectWithId<ColorCycleEffectRightLeft>::EffectWithId;
 
   void Draw() override
   {
@@ -912,11 +909,11 @@ public:
   }
 };
 
-class ColorCycleEffectLeftRight : public EffectWithId<idStripColorCycleLeftRight>
+class ColorCycleEffectLeftRight : public EffectWithId<ColorCycleEffectLeftRight>
 {
 public:
 
-  using EffectWithId<idStripColorCycleLeftRight>::EffectWithId;
+  using EffectWithId<ColorCycleEffectLeftRight>::EffectWithId;
 
   void Draw() override
   {
@@ -935,7 +932,7 @@ public:
   }
 };
 
-class FireFanEffect : public EffectWithId<idStripFireFan>
+class FireFanEffect : public EffectWithId<FireFanEffect>
 {
 protected:
   CRGBPalette16 Palette;
@@ -980,7 +977,7 @@ public:
                 bool bmirrored = false,
                 bool bmulticolor = false,
                 uint8_t maxSparkTemp = 255)
-  : EffectWithId<idStripFireFan>("FireFanEffect"),
+    : EffectWithId("FireFanEffect"),
         Palette(palette),
         LEDCount(ledCount),
         CellsPerLED(cellsPerLED),
@@ -1000,7 +997,7 @@ public:
   }
 
   FireFanEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripFireFan>(jsonObject),
+        : EffectWithId(jsonObject),
         Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         LEDCount(jsonObject[PTY_LEDCOUNT]),
         CellsPerLED(jsonObject[PTY_CELLSPERLED]),
@@ -1136,8 +1133,6 @@ class BlueFireFanEffect : public FireFanEffect
 {
 public:
   using FireFanEffect::FireFanEffect;
-  static constexpr EffectId ID = idStripFireFanBlue;
-  EffectId effectId() const override { return ID; }
 
   virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
   {
@@ -1156,8 +1151,6 @@ class GreenFireFanEffect : public FireFanEffect
 {
 public:
   using FireFanEffect::FireFanEffect;
-  static constexpr EffectId ID = idStripFireFanGreen;
-  EffectId effectId() const override { return ID; }
   virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
   {
     uint8_t t192 = round((temperature / 255.0) * 191);
@@ -1171,13 +1164,13 @@ public:
   }
 };
 
-class RGBRollAround : public EffectWithId<idStripRGBRollAround>
+class RGBRollAround : public EffectWithId<RGBRollAround>
 {
 private:
     int iRotate = 0;
 
 public:
-  using EffectWithId<idStripRGBRollAround>::EffectWithId;
+  using EffectWithId<RGBRollAround>::EffectWithId;
 
   virtual void DrawColor(CRGB color, int phase)
   {
@@ -1195,14 +1188,14 @@ public:
   }
 };
 
-class HueTest : public EffectWithId<idStripHueTest>
+class HueTest : public EffectWithId<HueTest>
 {
 private:
 
     int iRotate = 0;
 
 public:
-  using EffectWithId<idStripHueTest>::EffectWithId;
+  using EffectWithId<HueTest>::EffectWithId;
 
   void Draw() override
   {
@@ -1215,14 +1208,14 @@ public:
   }
 };
 
-class RingTestEffect : public EffectWithId<idStripRingTest>
+class RingTestEffect : public EffectWithId<RingTestEffect>
 {
   public:
   // ID provided by EffectWithId
 
-    RingTestEffect() : EffectWithId<idStripRingTest>("Ring Test") {}
+  RingTestEffect() : EffectWithId("Ring Test") {}
 
-    RingTestEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripRingTest>(jsonObject) {}
+  RingTestEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
     void Draw() override
     {
@@ -1398,16 +1391,16 @@ public:
   }
 };
 
-class LanternEffect : public EffectWithId<idStripLantern>
+class LanternEffect : public EffectWithId<LanternEffect>
 {
 private:
   static const int _maxParticles = 1;
   LanternParticle _particles[_maxParticles];
 
 public:
-  LanternEffect() : EffectWithId<idStripLantern>("LanternEffect") {}
+  LanternEffect() : EffectWithId("LanternEffect") {}
 
-  LanternEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripLantern>(jsonObject) {}
+  LanternEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
   size_t DesiredFramesPerSecond() const override
   {

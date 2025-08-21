@@ -5,7 +5,7 @@
 // Inspired by https://editor.soulmatelights.com/gallery/1620-rainbow-tunel
 // Like Hypnosis, a swirling radial rainbow, but entering a black hole.
 
-class PatternSMRainbowTunnel : public EffectWithId<idMatrixSMRainbowTunnel>
+class PatternSMRainbowTunnel : public EffectWithId<PatternSMRainbowTunnel>
 {
   private:
     // RadialRainbow
@@ -24,8 +24,8 @@ class PatternSMRainbowTunnel : public EffectWithId<idMatrixSMRainbowTunnel>
 
   public:
   
-    PatternSMRainbowTunnel() : EffectWithId<idMatrixSMRainbowTunnel>("Colorspin") {}
-    PatternSMRainbowTunnel(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRainbowTunnel>(jsonObject) {}
+    PatternSMRainbowTunnel() : EffectWithId<PatternSMRainbowTunnel>("Colorspin") {}
+    PatternSMRainbowTunnel(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRainbowTunnel>(jsonObject) {}
 
     void Start() override
     {

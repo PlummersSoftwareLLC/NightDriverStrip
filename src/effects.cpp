@@ -116,7 +116,7 @@
 
 // Global effect set version
 
-#define EFFECT_SET_VERSION 6
+#define EFFECT_SET_VERSION 7
 
 // Inform the linker which effects have setting specs, and in which class member
 
@@ -128,23 +128,23 @@ INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 #endif
 
 // Effect factories for the StarryNightEffect - one per star type
-std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories =
+std::map<EffectId, JSONEffectFactory> g_JsonStarryNightEffectFactories =
 {
-    { idStar,
+    { static_cast<EffectId>(idStar),
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<Star>>(jsonObject); } },
-    { idStarBubbly,
+    { static_cast<EffectId>(idStarBubbly),
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<BubblyStar>>(jsonObject); } },
-    { idStarHotWhite,
+    { static_cast<EffectId>(idStarHotWhite),
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<HotWhiteStar>>(jsonObject); } },
-    { idStarLongLifeSparkle,
+    { static_cast<EffectId>(idStarLongLifeSparkle),
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<LongLifeSparkleStar>>(jsonObject); } },
 
 #if ENABLE_AUDIO
-    { idStarMusic,
+    { static_cast<EffectId>(idStarMusic),
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<MusicStar>>(jsonObject); } },
 #endif
 
-    { idStarQuiet,
+    { static_cast<EffectId>(idStarQuiet),
         [](const JsonObjectConst& jsonObject)->std::shared_ptr<LEDStripEffect>  { return make_shared_psram<StarryNightEffect<QuietStar>>(jsonObject); } },
 };
 

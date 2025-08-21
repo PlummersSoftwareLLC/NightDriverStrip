@@ -35,7 +35,7 @@
 
 #include <deque>
 
-class SimpleInsulatorBeatEffect : public EffectWithId<idStripSimpleInsulatorBeat>, public BeatEffectBase
+class SimpleInsulatorBeatEffect : public EffectWithId<SimpleInsulatorBeatEffect>, public BeatEffectBase
 {
   protected:
 
@@ -67,13 +67,13 @@ class SimpleInsulatorBeatEffect : public EffectWithId<idStripSimpleInsulatorBeat
     using BeatEffectBase::BeatEffectBase;
 
     SimpleInsulatorBeatEffect(const String & strName)
-      : EffectWithId<idStripSimpleInsulatorBeat>(strName), BeatEffectBase(0.5, 0.01) {}
+    : EffectWithId(strName), BeatEffectBase(0.5, 0.01) {}
 
     SimpleInsulatorBeatEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripSimpleInsulatorBeat>(jsonObject), BeatEffectBase(0.5, 0.01) {}
+    : EffectWithId(jsonObject), BeatEffectBase(0.5, 0.01) {}
 };
 
-class SimpleInsulatorBeatEffect2 : public EffectWithId<idStripSimpleInsulatorBeat2>, public BeatEffectBase
+class SimpleInsulatorBeatEffect2 : public EffectWithId<SimpleInsulatorBeatEffect2>, public BeatEffectBase
 {
   protected:
 
@@ -103,13 +103,13 @@ class SimpleInsulatorBeatEffect2 : public EffectWithId<idStripSimpleInsulatorBea
   public:
 
     SimpleInsulatorBeatEffect2(const String & strName)
-      : EffectWithId<idStripSimpleInsulatorBeat2>(strName), BeatEffectBase() {}
+    : EffectWithId(strName), BeatEffectBase() {}
 
     SimpleInsulatorBeatEffect2(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripSimpleInsulatorBeat2>(jsonObject), BeatEffectBase() {}
+    : EffectWithId(jsonObject), BeatEffectBase() {}
 };
 
-class VUInsulatorsEffect : public EffectWithId<idStripVUInsulators>
+class VUInsulatorsEffect : public EffectWithId<VUInsulatorsEffect>
 {
   private:
 
@@ -117,7 +117,7 @@ class VUInsulatorsEffect : public EffectWithId<idStripVUInsulators>
 
   public:
 
-    using EffectWithId<idStripVUInsulators>::EffectWithId;
+  using EffectWithId::EffectWithId;
 
     void DrawVUPixels(int i, int fadeBy, const CRGBPalette16 & palette)
     {

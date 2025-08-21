@@ -32,7 +32,7 @@
 
 #include "effects.h"
 
-class DoublePaletteEffect : public EffectWithId<idStripDoublePalette>
+class DoublePaletteEffect : public EffectWithId<DoublePaletteEffect>
 {
   private:
 
@@ -42,14 +42,14 @@ class DoublePaletteEffect : public EffectWithId<idStripDoublePalette>
   public:
 
     DoublePaletteEffect()
-     :  EffectWithId<idStripDoublePalette>("Double Palette"),
+     :  EffectWithId("Double Palette"),
         _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
         _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
     {
     }
 
     DoublePaletteEffect(const JsonObjectConst&  jsonObject)
-      : EffectWithId<idStripDoublePalette>(jsonObject),
+        : EffectWithId(jsonObject),
         _PaletteEffect1(jsonObject["pt1"].as<JsonObjectConst>()),
         _PaletteEffect2(jsonObject["pt2"].as<JsonObjectConst>())
     {

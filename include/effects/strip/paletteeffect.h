@@ -32,7 +32,7 @@
 
 #include "effects.h"
 
-class PaletteEffect : public EffectWithId<idStripPalette>
+class PaletteEffect : public EffectWithId<PaletteEffect>
 {
   private:
 
@@ -59,7 +59,7 @@ class PaletteEffect : public EffectWithId<idStripPalette>
                   TBlendType blend = LINEARBLEND,
                   bool  bErase = true,
                   float brightness = 1.0)
-      : EffectWithId<idStripPalette>("Palette Effect"),
+    : EffectWithId("Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),
@@ -75,7 +75,7 @@ class PaletteEffect : public EffectWithId<idStripPalette>
     }
 
     PaletteEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripPalette>(jsonObject),
+        : EffectWithId(jsonObject),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),

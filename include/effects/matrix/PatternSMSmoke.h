@@ -4,7 +4,7 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1116-smoke
 
-class PatternSMSmoke : public EffectWithId<idMatrixSMSmoke>
+class PatternSMSmoke : public EffectWithId<PatternSMSmoke>
 {
 private:
 
@@ -20,10 +20,10 @@ private:
 public:
 
   PatternSMSmoke()
-    : EffectWithId<idMatrixSMSmoke>("Smoke") {}
+      : EffectWithId<PatternSMSmoke>("Smoke") {}
 
   PatternSMSmoke(const JsonObjectConst &jsonObject)
-    : EffectWithId<idMatrixSMSmoke>(jsonObject) {}
+      : EffectWithId<PatternSMSmoke>(jsonObject) {}
 
   virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
   {

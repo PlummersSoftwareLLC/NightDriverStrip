@@ -38,7 +38,7 @@
 // Variables we need further down
 
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
-extern std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories;
+extern std::map<EffectId, JSONEffectFactory> g_JsonStarryNightEffectFactories;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
 static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
@@ -152,15 +152,16 @@ bool EffectManager::ReadCurrentEffectIndex(size_t& index)
 
 void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray)
 {
-    std::set<int> loadedEffectNumbers;
+    std::set<EffectId> loadedEffectNumbers;
 
     // Create effects from JSON objects, using the respective factories in g_EffectFactories
     auto& jsonFactories = g_ptrEffectFactories->GetJSONFactories();
 
     for (auto effectObject : effectsArray)
     {
-        int effectNumber = effectObject[PTY_EFFECTNR];
-        auto factoryEntry = jsonFactories.find(effectNumber);
+        // Read effect number as uintptr_t (wide enough for pointer-sized IDs), then cast to int for map lookup
+    EffectId effectNumberWide = effectObject[PTY_EFFECTNR].as<EffectId>();
+    auto factoryEntry = jsonFactories.find(effectNumberWide);
 
         if (factoryEntry == jsonFactories.end())
             continue;
@@ -172,7 +173,7 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
                 pEffect->MarkAsCoreEffect();
 
             _vEffects.push_back(pEffect);
-            loadedEffectNumbers.insert(effectNumber);
+            loadedEffectNumbers.insert(effectNumberWide);
         }
     }
 
@@ -182,10 +183,10 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
     // We iterate manually, so we can use where we are as the starting point for a later inner loop
     for (auto iter = defaultFactories.begin(); iter != defaultFactories.end(); iter++)
     {
-        int effectNumber = iter->EffectNumber();
+    EffectId effectNumber = iter->EffectNumber();
 
         // If we've already loaded this effect (number) from JSON, we can move on to check the next one
-        if (loadedEffectNumbers.count(effectNumber))
+    if (loadedEffectNumbers.count(effectNumber))
             continue;
 
         // We found an effect (number) in the default list that we have not yet loaded from JSON.
@@ -199,7 +200,7 @@ void EffectManager::LoadJSONAndMissingEffects(const JsonArrayConst& effectsArray
         );
 
         // Register that we added this effect number, so we don't add the respective effects more than once
-        loadedEffectNumbers.insert(effectNumber);
+    loadedEffectNumbers.insert(effectNumber);
     }
 }
 
@@ -214,7 +215,7 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
     auto& sourceEffect = _vEffects[index];
 
     auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
-    auto factoryEntry = jsonEffectFactories.find(static_cast<int>(sourceEffect->effectId()));
+    auto factoryEntry = jsonEffectFactories.find(sourceEffect->effectId());
 
     if (factoryEntry == jsonEffectFactories.end())
         return nullptr;
@@ -285,7 +286,7 @@ void WriteCurrentEffectIndexFile()
 //   It picks the actual effect factory from g_JsonStarryNightEffectFactories based on the star type number in the JSON blob.
 std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
 {
-    auto entry = g_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
+    auto entry = g_JsonStarryNightEffectFactories.find(static_cast<EffectId>(jsonObject[PTY_STARTYPENR].as<int>()));
 
     return entry != g_JsonStarryNightEffectFactories.end()
         ? entry->second(jsonObject)

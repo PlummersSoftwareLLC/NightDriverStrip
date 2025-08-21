@@ -87,20 +87,20 @@ class EffectFactories
 {
   public:
 
-    class NumberedFactory
+  class NumberedFactory
     {
-        int effectNumber;
+    EffectId effectNumber;
         DefaultEffectFactory factory;
 
       public:
         bool LoadDisabled = false;
 
-        NumberedFactory(int effectNumber, const DefaultEffectFactory& factory)
+  NumberedFactory(EffectId effectNumber, const DefaultEffectFactory& factory)
           : effectNumber(effectNumber),
             factory(factory)
         {}
 
-        int EffectNumber() const
+  EffectId EffectNumber() const
         {
             return effectNumber;
         }
@@ -119,8 +119,8 @@ class EffectFactories
 
   private:
 
-    std::vector<NumberedFactory, psram_allocator<NumberedFactory>> defaultFactories;
-    std::map<int, JSONEffectFactory, std::less<int>, psram_allocator<std::pair<const int, JSONEffectFactory>>> jsonFactories;
+  std::vector<NumberedFactory, psram_allocator<NumberedFactory>> defaultFactories;
+  std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>> jsonFactories;
 
   public:
 
@@ -129,12 +129,12 @@ class EffectFactories
         return defaultFactories;
     }
 
-    const std::map<int, JSONEffectFactory, std::less<int>, psram_allocator<std::pair<const int, JSONEffectFactory>>>& GetJSONFactories()
+  const std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>& GetJSONFactories()
     {
         return jsonFactories;
     }
 
-    NumberedFactory& AddEffect(int effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
+  NumberedFactory& AddEffect(EffectId effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
     {
         auto& numberedFactory = defaultFactories.emplace_back(effectNumber, defaultFactory);
         jsonFactories.try_emplace(effectNumber, jsonFactory);

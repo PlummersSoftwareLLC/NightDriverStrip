@@ -34,7 +34,7 @@
 #include "effects.h"
 #include "globals.h"
 
-class SnakeEffect : public EffectWithId<idStripSnake>
+class SnakeEffect : public EffectWithId<SnakeEffect>
 {
   private:
 
@@ -68,7 +68,7 @@ class SnakeEffect : public EffectWithId<idStripSnake>
   public:
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : EffectWithId<idStripSnake>(strName),
+        : EffectWithId(strName),
           LEDCount(ledCount),
           SnakeSpeed(snakeSpeed)
     {
@@ -76,7 +76,7 @@ class SnakeEffect : public EffectWithId<idStripSnake>
     }
 
     SnakeEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<idStripSnake>(jsonObject),
+        : EffectWithId(jsonObject),
           LEDCount(jsonObject[PTY_LEDCOUNT]),
           SnakeSpeed(jsonObject[PTY_SPEED])
     {

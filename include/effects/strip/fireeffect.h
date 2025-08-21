@@ -37,7 +37,7 @@
 #include "systemcontainer.h"
 #include <numeric>
 
-class FireEffect : public EffectWithId<idStripFire>
+class FireEffect : public EffectWithId<FireEffect>
 {
   private:
 
@@ -73,7 +73,7 @@ class FireEffect : public EffectWithId<idStripFire>
   public:
 
     FireEffect(const String & strName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
-    : EffectWithId<idStripFire>(strName),
+      : EffectWithId(strName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
           Cooling(cooling),
@@ -90,7 +90,7 @@ class FireEffect : public EffectWithId<idStripFire>
     }
 
     FireEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<idStripFire>(jsonObject),
+          : EffectWithId(jsonObject),
           LEDCount(jsonObject[PTY_LEDCOUNT]),
           CellsPerLED(jsonObject[PTY_CELLSPERLED]),
           Cooling(jsonObject[PTY_COOLING]),
@@ -312,7 +312,7 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 };
 #endif
 
-class ClassicFireEffect : public EffectWithId<idStripClassicFire>
+class ClassicFireEffect : public EffectWithId<ClassicFireEffect>
 {
   private:
 
@@ -323,7 +323,7 @@ class ClassicFireEffect : public EffectWithId<idStripClassicFire>
   public:
 
     ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5)
-        : EffectWithId<idStripClassicFire>("Classic Fire"),
+          : EffectWithId("Classic Fire"),
           _Mirrored(mirrored),
           _Reversed(reversed),
           _Cooling(cooling)
@@ -331,7 +331,7 @@ class ClassicFireEffect : public EffectWithId<idStripClassicFire>
     }
 
     ClassicFireEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<idStripClassicFire>(jsonObject),
+          : EffectWithId(jsonObject),
           _Mirrored(jsonObject[PTY_MIRORRED]),
           _Reversed(jsonObject[PTY_REVERSED]),
           _Cooling(jsonObject[PTY_COOLING])
@@ -446,7 +446,7 @@ class ClassicFireEffect : public EffectWithId<idStripClassicFire>
 
 };
 
-class SmoothFireEffect : public EffectWithId<idStripSmoothFire>
+class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
 {
   private:
 
@@ -476,7 +476,7 @@ class SmoothFireEffect : public EffectWithId<idStripSmoothFire>
                      bool turbo = false,
                      bool mirrored = false)
 
-        : EffectWithId<idStripSmoothFire>("Fire Sound Effect v2"),
+      : EffectWithId("Fire Sound Effect v2"),
           _Reversed(reversed),
           _Cooling(cooling),
           _Sparks(sparks),
@@ -489,7 +489,7 @@ class SmoothFireEffect : public EffectWithId<idStripSmoothFire>
     }
 
     SmoothFireEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<idStripSmoothFire>(jsonObject),
+      : EffectWithId(jsonObject),
           _Reversed(jsonObject[PTY_REVERSED]),
           _Cooling(jsonObject[PTY_COOLING]),
           _Sparks(jsonObject[PTY_SPARKS]),
@@ -605,7 +605,7 @@ class SmoothFireEffect : public EffectWithId<idStripSmoothFire>
 
 };
 
-class BaseFireEffect : public EffectWithId<idStripBaseFire>
+class BaseFireEffect : public EffectWithId<BaseFireEffect>
 {
   private:
 
@@ -641,7 +641,7 @@ class BaseFireEffect : public EffectWithId<idStripBaseFire>
   public:
 
     BaseFireEffect(int ledCount, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4, bool breversed = false, bool bmirrored = false)
-        : EffectWithId<idStripBaseFire>("BaseFireEffect"),
+          : EffectWithId("BaseFireEffect"),
           Cooling(cooling),
           Sparks(sparks),
           SparkHeight(sparkHeight),
@@ -656,7 +656,7 @@ class BaseFireEffect : public EffectWithId<idStripBaseFire>
     }
 
     BaseFireEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<idStripBaseFire>(jsonObject),
+          : EffectWithId(jsonObject),
           Cooling(jsonObject[PTY_COOLING]),
           Sparks(jsonObject[PTY_SPARKS]),
           SparkHeight(jsonObject[PTY_SPARKHEIGHT]),

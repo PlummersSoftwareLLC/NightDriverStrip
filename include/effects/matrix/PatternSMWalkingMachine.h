@@ -4,7 +4,7 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1990-walking-machine
 
-class PatternSMWalkingMachine : public EffectWithId<idMatrixSMWalkingMachine>
+ class PatternSMWalkingMachine : public EffectWithId<PatternSMWalkingMachine>
 {
   private:
     // Walking machine
@@ -91,8 +91,8 @@ class PatternSMWalkingMachine : public EffectWithId<idMatrixSMWalkingMachine>
 
   public:
 
-    PatternSMWalkingMachine() : EffectWithId<idMatrixSMWalkingMachine>("Machine") {}
-    PatternSMWalkingMachine(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMWalkingMachine>(jsonObject) {}
+    PatternSMWalkingMachine() : EffectWithId<PatternSMWalkingMachine>("Machine") {}
+    PatternSMWalkingMachine(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMWalkingMachine>(jsonObject) {}
 
     virtual bool RequiresDoubleBuffering() const
     {
