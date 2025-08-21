@@ -4,12 +4,8 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1990-walking-machine
 
-class PatternSMWalkingMachine : public LEDStripEffect
+class PatternSMWalkingMachine : public EffectWithId<idMatrixSMWalkingMachine>
 {
-public:
-    static constexpr EffectId kId = idMatrixSMWalkingMachine;
-    EffectId effectId() const override { return kId; }
-
   private:
     // Walking machine
     // St3p40 aka Stepko
@@ -94,13 +90,9 @@ public:
     } dot[7];
 
   public:
-    PatternSMWalkingMachine() : LEDStripEffect(idMatrixSMWalkingMachine, "Machine")
-    {
-    }
 
-    PatternSMWalkingMachine(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMWalkingMachine() : EffectWithId<idMatrixSMWalkingMachine>("Machine") {}
+    PatternSMWalkingMachine(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMWalkingMachine>(jsonObject) {}
 
     virtual bool RequiresDoubleBuffering() const
     {

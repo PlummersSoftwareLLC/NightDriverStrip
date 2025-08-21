@@ -58,18 +58,12 @@
 #ifndef PatternNoiseSmearing_H
 #define PatternNoiseSmearing_H
 
-class PatternRainbowFlag : public LEDStripEffect
+class PatternRainbowFlag : public EffectWithId<idMatrixRainbowFlag>
 {
 public:
-  static constexpr EffectId kId = idMatrixRainbowFlag;
-  EffectId effectId() const override { return kId; }
-  PatternRainbowFlag() : LEDStripEffect(idMatrixRainbowFlag, "RainbowFlag")
-  {
-  }
 
-  PatternRainbowFlag(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-  {
-  }
+  PatternRainbowFlag() : EffectWithId<idMatrixRainbowFlag>("RainbowFlag") {}
+  PatternRainbowFlag(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRainbowFlag>(jsonObject) {}
 
   void Draw() override
   {
@@ -108,8 +102,6 @@ public:
 
     g()->MoveY(3);
     g()->MoveFractionalNoiseX<NoiseApproach::One>(4);
-
-
   }
 };
 #endif

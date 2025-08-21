@@ -4,16 +4,15 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1570-radialfire
 
-class PatternSMRadialFire : public LEDStripEffect
+class PatternSMRadialFire : public EffectWithId<idMatrixSMRadialFire>
 {
-public:
-    static constexpr EffectId kId = idMatrixSMRadialFire;
-    EffectId effectId() const override { return kId; }
+  public:
 
-    PatternSMRadialFire() : LEDStripEffect(idMatrixSMRadialFire, "RadialFire") {}
-    PatternSMRadialFire(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
+    PatternSMRadialFire() : EffectWithId<idMatrixSMRadialFire>("RadialFire") {}
+    PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialFire>(jsonObject) {}
 
   private:
+
     static auto constexpr C_X = (MATRIX_WIDTH / 2);
     static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
 

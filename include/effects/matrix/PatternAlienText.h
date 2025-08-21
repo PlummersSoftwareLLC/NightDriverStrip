@@ -71,13 +71,10 @@
 //              the illusion of alien characters. This process repeats, moving across and then down
 //              the matrix, simulating scrolling text.
 
-class PatternAlienText : public LEDStripEffect
+class PatternAlienText : public EffectWithId<idMatrixAlienText>
 {
-public:
-  static constexpr EffectId kId = idMatrixAlienText;
-  EffectId effectId() const override { return kId; }
-
 private:
+
   const int charWidth = 6;
   const int charHeight = 6;
   const int leftMargin = 2;
@@ -87,13 +84,8 @@ private:
 
 public:
 
-  PatternAlienText() : LEDStripEffect(idMatrixAlienText, "AlienText")
-  {
-  }
-
-  PatternAlienText(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-  {
-  }
+  PatternAlienText() : EffectWithId<idMatrixAlienText>("AlienText") {}
+  PatternAlienText(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixAlienText>(jsonObject) {}
 
   void Start() override
   {

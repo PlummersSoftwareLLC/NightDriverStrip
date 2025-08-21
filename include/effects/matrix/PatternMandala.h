@@ -79,7 +79,7 @@
 //   coordinates and scaling, controlling the movement and zoom level of the noise pattern.
 // - `NUM_LAYERS`: A macro defining the number of noise layers used in the pattern.
 
-class PatternMandala : public LEDStripEffect
+class PatternMandala : public EffectWithId<idMatrixMandala>
 {
 private:
     // The coordinates for 16-bit noise spaces.
@@ -93,18 +93,9 @@ private:
     int16_t dsy;
 
 public:
-    static constexpr EffectId kId = idMatrixMandala;
-    EffectId effectId() const override { return kId; }
 
-    PatternMandala() : LEDStripEffect(kId, "MRI")
-    {
-    }
-
-    PatternMandala(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
-
-    /// Generate an 8-bit random number
+    PatternMandala() : EffectWithId<idMatrixMandala>("MRI") {}
+    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMandala>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {

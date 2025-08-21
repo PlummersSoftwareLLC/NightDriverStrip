@@ -77,9 +77,10 @@
 //
 // On displays that are 2X as wide as tall, two cubes will be drawn
 
-class PatternCube : public LEDStripEffect
+class PatternCube : public EffectWithId<idMatrixCube>
 {
   private:
+
     float focal = 30; // Focal of the camera
     int cubeWidth = 28; // Cube size
     float Angx = 20.0, AngxSpeed = 0.05; // rotation (angle+speed) around X-axis
@@ -214,15 +215,13 @@ class PatternCube : public LEDStripEffect
     }
 
   public:
-    static constexpr EffectId kId = idMatrixCube;
-    EffectId effectId() const override { return kId; }
 
-    PatternCube() : LEDStripEffect(kId, "Cubes")
+    PatternCube() : EffectWithId<idMatrixCube>("Cubes")
     {
       construct();
     }
 
-    PatternCube(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternCube(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixCube>(jsonObject)
     {
       construct();
     }

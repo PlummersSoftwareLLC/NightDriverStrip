@@ -5,14 +5,12 @@
 // Inspired by https://editor.soulmatelights.com/gallery/1923-supernova
 
 
-class PatternSMSupernova : public LEDStripEffect
+class PatternSMSupernova : public EffectWithId<idMatrixSMSupernova>
 {
 public:
-    static constexpr EffectId kId = idMatrixSMSupernova;
-    EffectId effectId() const override { return kId; }
 
-    PatternSMSupernova() : LEDStripEffect(idMatrixSMSupernova, "Supernova"), hue(0), hue2(0), step(0) {}
-    PatternSMSupernova(const JsonObjectConst &jsonDebrisItem) : LEDStripEffect(jsonDebrisItem) {}
+    PatternSMSupernova() : EffectWithId<idMatrixSMSupernova>("Supernova"), hue(0), hue2(0), step(0) {}
+    PatternSMSupernova(const JsonObjectConst &jsonDebrisItem) : EffectWithId<idMatrixSMSupernova>(jsonDebrisItem) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {

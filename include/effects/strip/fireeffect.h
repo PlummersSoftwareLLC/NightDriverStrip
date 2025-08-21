@@ -37,11 +37,9 @@
 #include "systemcontainer.h"
 #include <numeric>
 
-class FireEffect : public LEDStripEffect
+class FireEffect : public EffectWithId<idStripFire>
 {
-  public:
-    static constexpr EffectId kId = idStripFire;
-    EffectId effectId() const override { return kId; }
+  private:
 
     void construct()
     {
@@ -75,7 +73,7 @@ class FireEffect : public LEDStripEffect
   public:
 
     FireEffect(const String & strName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
-    : LEDStripEffect(strName),
+    : EffectWithId<idStripFire>(strName),
           LEDCount(ledCount),
           CellsPerLED(cellsPerLED),
           Cooling(cooling),
@@ -92,7 +90,7 @@ class FireEffect : public LEDStripEffect
     }
 
     FireEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idStripFire>(jsonObject),
           LEDCount(jsonObject[PTY_LEDCOUNT]),
           CellsPerLED(jsonObject[PTY_CELLSPERLED]),
           Cooling(jsonObject[PTY_COOLING]),
@@ -209,14 +207,11 @@ class FireEffect : public LEDStripEffect
 
 class PaletteFlameEffect : public FireEffect
 {
-    public:
-        static constexpr EffectId kId = idStripPaletteFlame;
-        EffectId effectId() const override { return kId; }
+  private:
+    CRGBPalette16 _palette;
+    bool _ignoreGlobalColor;
 
-        CRGBPalette16 _palette;
-        bool _ignoreGlobalColor;
-
-public:
+  public:
     PaletteFlameEffect(const String & strName,
                        const CRGBPalette16 &palette,
                        bool ignoreGlobalColor = false,
@@ -275,10 +270,6 @@ public:
 #if ENABLE_AUDIO
 class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
-    public:
-        static constexpr EffectId kId = idStripMusicalPaletteFire;
-    EffectId effectId() const override { return kId; }
-
   public:
 
     MusicalPaletteFire(const String & strName,
@@ -294,15 +285,12 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
                        bool mirrored = false)
         : PaletteFlameEffect(strName, palette, ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
           BeatEffectBase(1.00, 0.01)
-
-
     {
     }
 
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
         : PaletteFlameEffect(jsonObject),
           BeatEffectBase(1.00, 0.01)
-
     {
     }
 
@@ -311,13 +299,9 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
         if (elapsed > 1)
-        {
             GenerateSparks(100);
-        }
         else
-        {
             GenerateSparks(g_Analyzer.VURatio() * 50);
-        }
     }
 
     virtual void Draw() override
@@ -328,19 +312,18 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 };
 #endif
 
-class ClassicFireEffect : public LEDStripEffect
+class ClassicFireEffect : public EffectWithId<idStripClassicFire>
 {
-  public:
-    static constexpr EffectId kId = idStripClassicFire;
-    EffectId effectId() const override { return kId; }
+  private:
+
     bool _Mirrored;
     bool _Reversed;
     int  _Cooling;
 
-public:
+  public:
 
     ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5)
-    : LEDStripEffect("Classic Fire"),
+        : EffectWithId<idStripClassicFire>("Classic Fire"),
           _Mirrored(mirrored),
           _Reversed(reversed),
           _Cooling(cooling)
@@ -348,7 +331,7 @@ public:
     }
 
     ClassicFireEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idStripClassicFire>(jsonObject),
           _Mirrored(jsonObject[PTY_MIRORRED]),
           _Reversed(jsonObject[PTY_REVERSED]),
           _Cooling(jsonObject[PTY_COOLING])
@@ -463,13 +446,10 @@ public:
 
 };
 
-class SmoothFireEffect : public LEDStripEffect
+class SmoothFireEffect : public EffectWithId<idStripSmoothFire>
 {
-  public:
-    static constexpr EffectId kId = idStripSmoothFire;
-    EffectId effectId() const override { return kId; }
+  private:
 
-private:
     bool _Reversed;
     float _Cooling;
     int _Sparks;
@@ -481,7 +461,7 @@ private:
 
     float * _Temperatures = nullptr;
 
-public:
+  public:
     // Parameter:   Cooling   Sparks    driftPasses  drift sparkHeight   Turbo
     // Calm Fire:     0.75f        2         1         64       8          F
     // Full Red:      0.75f        8         1        128      16          F
@@ -496,7 +476,7 @@ public:
                      bool turbo = false,
                      bool mirrored = false)
 
-    : LEDStripEffect(idStripSmoothFire, "Fire Sound Effect v2"),
+        : EffectWithId<idStripSmoothFire>("Fire Sound Effect v2"),
           _Reversed(reversed),
           _Cooling(cooling),
           _Sparks(sparks),
@@ -509,7 +489,7 @@ public:
     }
 
     SmoothFireEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idStripSmoothFire>(jsonObject),
           _Reversed(jsonObject[PTY_REVERSED]),
           _Cooling(jsonObject[PTY_COOLING]),
           _Sparks(jsonObject[PTY_SPARKS]),
@@ -625,11 +605,9 @@ public:
 
 };
 
-class BaseFireEffect : public LEDStripEffect
+class BaseFireEffect : public EffectWithId<idStripBaseFire>
 {
-  public:
-    static constexpr EffectId kId = idStripBaseFire;
-    EffectId effectId() const override { return kId; }
+  private:
 
     void construct()
     {
@@ -637,6 +615,7 @@ class BaseFireEffect : public LEDStripEffect
     }
 
   protected:
+
     int     Cooling;            // Rate at which the pixels cool off
     int     Sparks;             // How many sparks will be attempted each frame
     int     SparkHeight;        // If created, max height for a spark
@@ -662,7 +641,7 @@ class BaseFireEffect : public LEDStripEffect
   public:
 
     BaseFireEffect(int ledCount, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4, bool breversed = false, bool bmirrored = false)
-        : LEDStripEffect(idStripBaseFire, "BaseFireEffect"),
+        : EffectWithId<idStripBaseFire>("BaseFireEffect"),
           Cooling(cooling),
           Sparks(sparks),
           SparkHeight(sparkHeight),
@@ -677,7 +656,7 @@ class BaseFireEffect : public LEDStripEffect
     }
 
     BaseFireEffect(const JsonObjectConst& jsonObject)
-        : LEDStripEffect(jsonObject),
+        : EffectWithId<idStripBaseFire>(jsonObject),
           Cooling(jsonObject[PTY_COOLING]),
           Sparks(jsonObject[PTY_SPARKS]),
           SparkHeight(jsonObject[PTY_SPARKHEIGHT]),

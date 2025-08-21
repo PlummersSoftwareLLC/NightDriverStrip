@@ -5,9 +5,10 @@
 // Inspired by https://editor.soulmatelights.com/gallery/2272-hypnosis
 // Spiraling swirls of rotating colors.
 
-class PatternSMHypnosis : public LEDStripEffect
+class PatternSMHypnosis : public EffectWithId<idMatrixSMHypnosis>
 {
   private:
+
     const uint8_t C_X = MATRIX_WIDTH / 2;
     const uint8_t C_Y = MATRIX_HEIGHT / 2;
     const uint8_t mapp = 255 / MATRIX_WIDTH;
@@ -18,16 +19,9 @@ class PatternSMHypnosis : public LEDStripEffect
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    static constexpr EffectId kId = idMatrixSMHypnosis;
-    EffectId effectId() const override { return kId; }
 
-    PatternSMHypnosis() : LEDStripEffect(kId, "Hypnosis")
-    {
-    }
-
-    PatternSMHypnosis(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMHypnosis() : EffectWithId<idMatrixSMHypnosis>("Hypnosis") {}
+    PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMHypnosis>(jsonObject) {}
 
     size_t DesiredFramesPerSecond() const override
     {

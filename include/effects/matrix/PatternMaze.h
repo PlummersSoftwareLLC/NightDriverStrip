@@ -85,11 +85,7 @@
 //   grid, and managing cell progression.
 
 
-class PatternMaze : public LEDStripEffect {
-public:
-    static constexpr EffectId kId = idMatrixMaze;
-    EffectId effectId() const override { return kId; }
-
+class PatternMaze : public EffectWithId<idMatrixMaze> {
 private:
     enum Directions {
         None = 0,
@@ -279,13 +275,8 @@ private:
 
 public:
 
-    PatternMaze() : LEDStripEffect(idMatrixMaze, "Maze")
-    {
-    }
-
-    PatternMaze(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternMaze() : EffectWithId<idMatrixMaze>("Maze") {}
+    PatternMaze(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMaze>(jsonObject) {}
 
     void Draw() override
     {

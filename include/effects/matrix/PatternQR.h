@@ -34,7 +34,7 @@
 
 #include "qrcode.h"
 
-class PatternQR : public LEDStripEffect
+class PatternQR : public EffectWithId<idMatrixQR>
 {
     void construct()
     {
@@ -53,12 +53,12 @@ public:
     static constexpr EffectId kId = idMatrixQR;
     EffectId effectId() const override { return kId; }
 
-    PatternQR() : LEDStripEffect(idMatrixQR, "QR")
+    PatternQR() : EffectWithId<idMatrixQR>("QR")
     {
         construct();
     }
 
-    PatternQR(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternQR(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixQR>(jsonObject)
     {
         construct();
     }

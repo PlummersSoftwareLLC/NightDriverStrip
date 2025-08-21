@@ -13,12 +13,13 @@
 // magic for blur2d().
 
 #if ENABLE_AUDIO
-class PatternSMStrobeDiffusion : public BeatEffectBase, public LEDStripEffect
+class PatternSMStrobeDiffusion : public BeatEffectBase, public EffectWithId<idMatrixSMStrobeDiffusion>
 #else
-class PatternSMStrobeDiffusion : public LEDStripEffect
+class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #endif
 {
   private:
+
     uint8_t hue, hue2; // gradual hue shift or some other cyclic counter
     uint8_t step { 0 }; // some counter of frames or sequences of operations
     std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT> noise3d[MATRIX_WIDTH * MATRIX_HEIGHT]; // Locations of snowflakes.
@@ -34,24 +35,22 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #endif
 
   public:
-    static constexpr EffectId kId = idMatrixSMStrobeDiffusion;
-    EffectId effectId() const override { return kId; }
-
+  
     PatternSMStrobeDiffusion()
-        :
+      :
 #if ENABLE_AUDIO
-          BeatEffectBase(1.50, 0.05),
+        BeatEffectBase(1.50, 0.05),
 #endif
-          LEDStripEffect(kId, "Diffusion")
+        EffectWithId<idMatrixSMStrobeDiffusion>("Diffusion")
     {
     }
 
     PatternSMStrobeDiffusion(const JsonObjectConst &jsonObject)
-        :
+      :
 #if ENABLE_AUDIO
-          BeatEffectBase(1.50, 0.05),
+        BeatEffectBase(1.50, 0.05),
 #endif
-          LEDStripEffect(jsonObject)
+        EffectWithId<idMatrixSMStrobeDiffusion>(jsonObject)
     {
     }
 

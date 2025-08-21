@@ -39,25 +39,18 @@
 // hands, along with tick marks for each hour. The clock's appearance and
 // behavior are customizable through various methods.
 
-class PatternClock : public LEDStripEffect
+class PatternClock : public EffectWithId<idMatrixClock>
 {
+  private:
+
     // Radius is the lesser of the height and width so that the round clock can fit
     // on rectangular display
-
     float    radius;
 
   public:
 
-    static constexpr EffectId kId = idMatrixClock;
-    EffectId effectId() const override { return kId; }
-
-    PatternClock() : LEDStripEffect(kId, "Clock")
-    {
-    }
-
-    PatternClock(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternClock() : EffectWithId<idMatrixClock>("Clock") {}
+    PatternClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixClock>(jsonObject) {}
 
     bool RequiresDoubleBuffering() const override
     {

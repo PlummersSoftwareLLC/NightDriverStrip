@@ -6,9 +6,10 @@
 // High color barber-pole with varying Y-height stripes.
 // Quite hypnotic.
 
-class PatternSMTwister : public LEDStripEffect
+class PatternSMTwister : public EffectWithId<idMatrixSMTwister>
 {
   private:
+
     void mydrawLine(uint8_t x, uint8_t x1, uint8_t y, CHSV color, bool dot, bool grad, uint8_t numline, uint8_t side, uint8_t sinOff,
                     uint16_t a)
     { // my ugly hori line draw function )))
@@ -32,16 +33,9 @@ class PatternSMTwister : public LEDStripEffect
     }
 
   public:
-    static constexpr EffectId kId = idMatrixSMTwister;
-    EffectId effectId() const override { return kId; }
 
-    PatternSMTwister() : LEDStripEffect(kId, "Twister")
-    {
-    }
-
-    PatternSMTwister(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMTwister() : EffectWithId<idMatrixSMTwister>("Twister") {}
+    PatternSMTwister(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMTwister>(jsonObject) {}
 
     void Start() override
     {

@@ -222,17 +222,6 @@ class LEDStripEffect : public IJSONSerializable
             _friendlyName = strName;
     }
 
-    // Transitional ctor: accept an id but ignore it. This allows existing call sites
-    // to compile while we migrate them to the name-only constructor.
-    explicit LEDStripEffect(EffectId /*ignoredId*/, const String & strName)
-        : LEDStripEffect(strName)
-    {}
-
-    // Some call sites may pass a raw int; accept and ignore it as well.
-    explicit LEDStripEffect(int /*ignoredId*/, const String & strName)
-        : LEDStripEffect(strName)
-    {}
-
     explicit LEDStripEffect(const JsonObjectConst&  jsonObject)
         : _friendlyName(jsonObject["fn"].as<String>())
     {
@@ -642,3 +631,24 @@ class LEDStripEffect : public IJSONSerializable
     }
 };
 
+template<EffectId EId>
+class EffectWithId : public LEDStripEffect
+{
+  public:
+
+    static constexpr EffectId ID = EId;
+
+    explicit EffectWithId(const String & strName)
+        : LEDStripEffect(strName)
+    {}
+
+    explicit EffectWithId(const JsonObjectConst&  jsonObject)
+        : LEDStripEffect(jsonObject)
+    {}
+
+    // Override to return the effect id for this effect
+    EffectId effectId() const override
+    {
+        return EId;
+    }
+};

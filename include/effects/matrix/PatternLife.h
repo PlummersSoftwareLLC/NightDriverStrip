@@ -128,7 +128,7 @@ public:
 
 constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 
-class PatternLife : public LEDStripEffect
+class PatternLife : public EffectWithId<idMatrixLife>
 {
 private:
     std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
@@ -235,16 +235,8 @@ private:
 
 public:
 
-    static constexpr EffectId kId = idMatrixLife;
-    EffectId effectId() const override { return kId; }
-
-    PatternLife() : LEDStripEffect(kId, "Life")
-    {
-    }
-
-    PatternLife(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternLife() : EffectWithId<idMatrixLife>("Life") {}
+    PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixLife>(jsonObject) {}
 
     void Reset()
     {

@@ -35,12 +35,8 @@
 
 #include <deque>
 
-class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
+class SimpleInsulatorBeatEffect : public EffectWithId<idStripSimpleInsulatorBeat>, public BeatEffectBase
 {
-  public:
-    static constexpr EffectId kId = idStripSimpleInsulatorBeat;
-    EffectId effectId() const override { return kId; }
-
   protected:
 
     std::deque<int> _lit;
@@ -71,23 +67,14 @@ class SimpleInsulatorBeatEffect : public LEDStripEffect, public BeatEffectBase
     using BeatEffectBase::BeatEffectBase;
 
     SimpleInsulatorBeatEffect(const String & strName)
-  : LEDStripEffect(idStripSimpleInsulatorBeat, strName), BeatEffectBase(0.5, 0.01)
-    {
-    }
+      : EffectWithId<idStripSimpleInsulatorBeat>(strName), BeatEffectBase(0.5, 0.01) {}
 
     SimpleInsulatorBeatEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject), BeatEffectBase(0.5, 0.01)
-    {
-    }
-
+      : EffectWithId<idStripSimpleInsulatorBeat>(jsonObject), BeatEffectBase(0.5, 0.01) {}
 };
 
-class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
+class SimpleInsulatorBeatEffect2 : public EffectWithId<idStripSimpleInsulatorBeat2>, public BeatEffectBase
 {
-  public:
-    static constexpr EffectId kId = idStripSimpleInsulatorBeat2;
-    EffectId effectId() const override { return kId; }
-
   protected:
 
     std::deque<int> _lit;
@@ -116,25 +103,21 @@ class SimpleInsulatorBeatEffect2 : public LEDStripEffect, public BeatEffectBase
   public:
 
     SimpleInsulatorBeatEffect2(const String & strName)
-  : LEDStripEffect(idStripSimpleInsulatorBeat2, strName), BeatEffectBase()
-    {
-    }
+      : EffectWithId<idStripSimpleInsulatorBeat2>(strName), BeatEffectBase() {}
 
     SimpleInsulatorBeatEffect2(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject), BeatEffectBase()
-    {
-    }
+      : EffectWithId<idStripSimpleInsulatorBeat2>(jsonObject), BeatEffectBase() {}
 };
 
-class VUInsulatorsEffect : public LEDStripEffect
+class VUInsulatorsEffect : public EffectWithId<idStripVUInsulators>
 {
-  public:
-    static constexpr EffectId kId = idStripVUInsulators;
-    EffectId effectId() const override { return kId; }
+  private:
 
     int _last = 1;
 
-    using LEDStripEffect::LEDStripEffect;
+  public:
+
+    using EffectWithId<idStripVUInsulators>::EffectWithId;
 
     void DrawVUPixels(int i, int fadeBy, const CRGBPalette16 & palette)
     {

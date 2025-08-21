@@ -87,9 +87,10 @@
 //              responsible for rendering the snake on the LED matrix, using a palette of colors
 //              to create a gradient effect along the length of the snake.
 
-class PatternCircuit : public LEDStripEffect
+class PatternCircuit : public EffectWithId<idMatrixCircuit>
 {
 private:
+
     static const uint8_t SNAKE_LENGTH = 64;
 
     CRGB colors[SNAKE_LENGTH];
@@ -190,11 +191,9 @@ private:
     }
 
 public:
-    static constexpr EffectId kId = idMatrixCircuit;
-    EffectId effectId() const override { return kId; }
 
-    PatternCircuit() : LEDStripEffect(idMatrixCircuit, "Circuit") { construct(); }
-    PatternCircuit(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject) { construct(); }
+    PatternCircuit() : EffectWithId<idMatrixCircuit>("Circuit") { construct(); }
+    PatternCircuit(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixCircuit>(jsonObject) { construct(); }
     ~PatternCircuit() { free(snakes); }
 
     unsigned long msStart;
