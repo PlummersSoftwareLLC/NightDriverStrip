@@ -635,6 +635,9 @@ class GhostWave : public WaveformEffect
     int                       _fade     = 0;
 
   public:
+    // Provide distinct ID separate from WaveformEffect
+    static constexpr EffectId ID = idMatrixGhostWave;
+    EffectId effectId() const override { return ID; }
 
     GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 0)
         : WaveformEffect(pszFriendlyName, increment),

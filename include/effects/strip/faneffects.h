@@ -1121,6 +1121,9 @@ public:
 class BlueFireFanEffect : public FireFanEffect
 {
 public:
+  using FireFanEffect::FireFanEffect;
+  static constexpr EffectId ID = idStripFireFanBlue;
+  EffectId effectId() const override { return ID; }
 
   virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
   {
@@ -1138,6 +1141,9 @@ public:
 class GreenFireFanEffect : public FireFanEffect
 {
 public:
+  using FireFanEffect::FireFanEffect;
+  static constexpr EffectId ID = idStripFireFanGreen;
+  EffectId effectId() const override { return ID; }
   virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
   {
     uint8_t t192 = round((temperature / 255.0) * 191);
@@ -1157,6 +1163,7 @@ private:
     int iRotate = 0;
 
 public:
+  using EffectWithId<idStripRGBRollAround>::EffectWithId;
 
   virtual void DrawColor(CRGB color, int phase)
   {
@@ -1181,7 +1188,7 @@ private:
     int iRotate = 0;
 
 public:
-  using EffectWithId::EffectWithId;
+  using EffectWithId<idStripHueTest>::EffectWithId;
 
   void Draw() override
   {

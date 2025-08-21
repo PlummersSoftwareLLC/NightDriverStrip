@@ -112,10 +112,12 @@ class SimpleInsulatorBeatEffect2 : public EffectWithId<idStripSimpleInsulatorBea
 class VUInsulatorsEffect : public EffectWithId<idStripVUInsulators>
 {
   private:
-  
+
     int _last = 1;
 
   public:
+    
+    using EffectWithId<idStripVUInsulators>::EffectWithId;
 
     void DrawVUPixels(int i, int fadeBy, const CRGBPalette16 & palette)
     {
