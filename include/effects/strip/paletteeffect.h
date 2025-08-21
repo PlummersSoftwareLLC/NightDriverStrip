@@ -37,7 +37,7 @@ class PaletteEffect : public LEDStripEffect
   public:
     static constexpr EffectId kId = idStripPalette;
     EffectId effectId() const override { return kId; }
-    
+
   private:
 
     float _startIndex;

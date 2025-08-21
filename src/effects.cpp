@@ -199,7 +199,7 @@ void LoadEffectFactories()
             Effect<RainbowFillEffect>(6, 2)
         );
     #endif
-    
+
     #if defined(EFFECTS_SIMPLE)
         // Simple effect set for basic LED strip projects
         RegisterAll(*g_ptrEffectFactories,

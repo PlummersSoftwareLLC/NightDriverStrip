@@ -212,7 +212,7 @@ class PaletteFlameEffect : public FireEffect
     public:
         static constexpr EffectId kId = idStripPaletteFlame;
         EffectId effectId() const override { return kId; }
-    
+
         CRGBPalette16 _palette;
         bool _ignoreGlobalColor;
 

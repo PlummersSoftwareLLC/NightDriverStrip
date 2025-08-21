@@ -198,7 +198,7 @@ void BasicInfoSummary(bool bRedraw)
         display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
         display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
-        
+
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
     //             that conveys the overall status
@@ -256,7 +256,7 @@ void CurrentEffectSummary(bool bRedraw)
     display.StartFrame();
 
     // Force a full redraw if we've changed to a new display page
-    
+
     static auto lastPage = g_InfoPage;
     if (lastPage != g_InfoPage)
     {
@@ -511,7 +511,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
                 }
                 else if (g_InfoPage == PAGE_ID_DEBUG)
                 {
-                    // If we're on the debug page the button will reduce the brightness                    
+                    // If we're on the debug page the button will reduce the brightness
                     static int brightness = 255;
                     brightness /= 2;
                     if (brightness < 4)

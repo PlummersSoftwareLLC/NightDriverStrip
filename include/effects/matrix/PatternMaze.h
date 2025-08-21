@@ -58,30 +58,30 @@
 
 // The `PatternMaze` class, inheriting from `LEDStripEffect`, is designed to create
 // dynamic maze patterns on an LED matrix. It showcases an intricate combination of
-// object-oriented programming and LED display manipulation in C++. This class is 
-// particularly useful for LED projects that require visually engaging, algorithmically 
+// object-oriented programming and LED display manipulation in C++. This class is
+// particularly useful for LED projects that require visually engaging, algorithmically
 // generated patterns, such as interactive art installations or creative lighting designs.
 //
 // Key Components:
-// - `Directions` Enum: Enumerates possible movement directions within the maze (Up, Down, 
+// - `Directions` Enum: Enumerates possible movement directions within the maze (Up, Down,
 //   Left, Right), providing a clear, manageable way to handle direction-based logic.
-// - `Point` Structure: Central to maze generation, it represents coordinates on the LED 
-//   matrix and includes methods to create new points and move existing ones in specified 
-//   directions. It also features a method to find the opposite of a given direction, 
+// - `Point` Structure: Central to maze generation, it represents coordinates on the LED
+//   matrix and includes methods to create new points and move existing ones in specified
+//   directions. It also features a method to find the opposite of a given direction,
 //   crucial for maze path tracing.
 //
 // Class Variables:
-// - `width` and `height`: Define the dimensions of the maze, dynamically set based on 
+// - `width` and `height`: Define the dimensions of the maze, dynamically set based on
 //   the matrix size.
 // - `grid`: A two-dimensional array representing the maze structure on the LED matrix.
-// - Maze generation tools: Including `Point` objects, an array for cell tracking, and 
+// - Maze generation tools: Including `Point` objects, an array for cell tracking, and
 //   variables for algorithm management and color selection.
 //
 // Maze Generation Logic:
-// - Utilizes a combination of different maze generation algorithms, such as recursive 
-//   backtracking and Prim's algorithm. This flexibility allows for a variety of maze 
+// - Utilizes a combination of different maze generation algorithms, such as recursive
+//   backtracking and Prim's algorithm. This flexibility allows for a variety of maze
 //   patterns.
-// - `drawNextCell`: The core function for drawing each cell of the maze, updating the 
+// - `drawNextCell`: The core function for drawing each cell of the maze, updating the
 //   grid, and managing cell progression.
 
 
@@ -89,7 +89,7 @@ class PatternMaze : public LEDStripEffect {
 public:
     static constexpr EffectId kId = idMatrixMaze;
     EffectId effectId() const override { return kId; }
-    
+
 private:
     enum Directions {
         None = 0,

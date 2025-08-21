@@ -156,10 +156,10 @@ public:
             memset((void *) leds, color.r, sizeof(CRGB) * _ledcount);
             memset((void *) backgroundLayer.backBuffer(), color.r, sizeof(LEDMatrixGFX::SM_RGB) * _ledcount);
         }
-        else 
+        else
         {
             SM_RGB* buf = (SM_RGB*)backgroundLayer.backBuffer();
-            for (int i = 0; i < _ledcount; ++i) 
+            for (int i = 0; i < _ledcount; ++i)
             {
                 buf[i]  = rgb24(color.r, color.g, color.b);
                 leds[i] = color;

@@ -302,7 +302,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // Runtime effect id. Subclasses must override to return their EffectId
 
-       
+
     virtual EffectId effectId() const = 0;
 
     virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
@@ -492,7 +492,7 @@ class LEDStripEffect : public IJSONSerializable
         if (pixel >= 0 && pixel < _cLEDs)
             for (auto& device : _GFX)
                 device->fadePixelToBlackBy(pixel, fadeValue);
-        
+
     }
 
     void fadeAllChannelsToBlackBy(uint8_t fadeValue) const

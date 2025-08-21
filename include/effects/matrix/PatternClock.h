@@ -34,9 +34,9 @@
 // Description:
 //
 // This file defines the PatternClock class, a subclass of LEDStripEffect.
-// The class is designed to render a clock effect on an LED matrix. It 
-// includes functionality to display time with hour, minute, and second 
-// hands, along with tick marks for each hour. The clock's appearance and 
+// The class is designed to render a clock effect on an LED matrix. It
+// includes functionality to display time with hour, minute, and second
+// hands, along with tick marks for each hour. The clock's appearance and
 // behavior are customizable through various methods.
 
 class PatternClock : public LEDStripEffect
@@ -50,7 +50,7 @@ class PatternClock : public LEDStripEffect
 
     static constexpr EffectId kId = idMatrixClock;
     EffectId effectId() const override { return kId; }
-    
+
     PatternClock() : LEDStripEffect(kId, "Clock")
     {
     }

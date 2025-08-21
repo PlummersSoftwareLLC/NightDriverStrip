@@ -27,7 +27,7 @@ class PatternSMMetaBalls : public LEDStripEffect
   public:
     static constexpr EffectId kId = idMatrixSMMetaBalls;
     EffectId effectId() const override { return kId; }
-    
+
     PatternSMMetaBalls() : LEDStripEffect(kId, "MetaBalls")
     {
     }

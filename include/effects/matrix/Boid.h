@@ -79,15 +79,15 @@
 // 3. **Cohesion**: Steer towards the average position of neighbors (long range attraction).
 //
 // Additional behaviors like obstacle repulsion and border wrapping/avoidance are implemented for realistic movement.
-// The `Boid` constructor initializes the boid with random velocity and acceleration, and methods like `run`, 
-// `update`, and `applyForce` are used for updating the boid's state. 
-// There are methods for computing the forces applied to each boid (`flock`, `separate`, `align`, `cohesion`, 
+// The `Boid` constructor initializes the boid with random velocity and acceleration, and methods like `run`,
+// `update`, and `applyForce` are used for updating the boid's state.
+// There are methods for computing the forces applied to each boid (`flock`, `separate`, `align`, `cohesion`,
 // `seek`, `arrive`), and for handling border behavior (`wrapAroundBorders`, `avoidBorders`).
 //
 // The boid's properties and behaviors make it suitable for creating simulations of flocking behavior in a 2D space.
 //
 
-class Boid 
+class Boid
 {
   public:
 

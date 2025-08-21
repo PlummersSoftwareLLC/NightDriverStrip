@@ -318,7 +318,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         _vPeaks.fill(0.0f);
     }
 
-    // Perform the FFT 
+    // Perform the FFT
 
     void FFT()
     {
@@ -397,9 +397,9 @@ class SoundAnalyzer : public ISoundAnalyzer
                     return;
                 }
             }
-        
+
         #endif
-        
+
         // Compute stats and copy into FFT input buffer
         for (int i = 0; i < MAX_SAMPLES; i++)
         {
@@ -467,7 +467,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         }
         _bandBinEnd[NUM_BANDS - 1] = (MAX_SAMPLES / 2 - 1);
     }
-    
+
     PeakData ProcessPeaksEnergy()
     {
         // Band offset handled in ComputeBandLayout so index 0 is the lowest VISIBLE band
@@ -485,7 +485,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         // Use reciprocal of AudioFPS for frame-rate independent attack limiting
         float dt = (_AudioFPS > 0) ? (1.0f / (float)_AudioFPS) : 0.016f;
         // Fallback to reasonable default if FPS is invalid
-        if (dt <= 0.0f || dt > 0.1f) 
+        if (dt <= 0.0f || dt > 0.1f)
             dt = 0.016f;
         for (int b = 0; b < NUM_BANDS; b++)
         {
@@ -508,7 +508,7 @@ class SoundAnalyzer : public ISoundAnalyzer
 
             // Apply aggressive logarithmic bass suppression with steeper initial curve
             float bandRatio = (float)b / (NUM_BANDS - 1);  // 0.0 to 1.0 across all bands
-            
+
             // Two-stage suppression: moderate suppression on first few bands, then quick recovery
             float suppression;
             if (bandRatio < 0.1f) {  // First 10% of bands get moderate suppression
@@ -542,7 +542,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             float signal = (float)avgPower - _noiseFloor[b];
             if (signal < 0.0f)
                 signal = 0.0f;
-            
+
             #if ENABLE_AUDIO_SMOOTHING
                 // Weighted average: 0.25 * (2 * current + left + right)
                 float left = (b > 0) ? _rawPrev[b - 1] : signal;
@@ -829,9 +829,9 @@ class SoundAnalyzer : public ISoundAnalyzer
 
         // i2s pin configuration - explicitly set pin modes
         pinMode(I2S_BCLK_PIN, OUTPUT);  // Bit clock is output from ESP32
-        pinMode(I2S_WS_PIN, OUTPUT);    // Word select is output from ESP32  
+        pinMode(I2S_WS_PIN, OUTPUT);    // Word select is output from ESP32
         pinMode(INPUT_PIN, INPUT);      // Data input from microphone
-        
+
         const i2s_pin_config_t pin_config = {.bck_io_num = I2S_BCLK_PIN,
                                              .ws_io_num = I2S_WS_PIN,
                                              .data_out_num = I2S_PIN_NO_CHANGE, // not used
@@ -839,7 +839,7 @@ class SoundAnalyzer : public ISoundAnalyzer
 
         ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
         ESP_ERROR_CHECK(i2s_set_pin(I2S_NUM_0, &pin_config));
-        
+
         // Clear any existing data and start I2S running continuously
         ESP_ERROR_CHECK(i2s_zero_dma_buffer(I2S_NUM_0));
         ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
@@ -848,7 +848,7 @@ class SoundAnalyzer : public ISoundAnalyzer
 
         // This block is for TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other projects that
         // use an analog mic connected to the input pin.
-        
+
         static_assert(SOC_I2S_SUPPORTS_ADC, "This ESP32 model does not support ADC built-in mode");
 
         i2s_config_t i2s_config;
@@ -889,7 +889,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         // Use reciprocal of AudioFPS for frame-rate independent decay timing
         float audioFrameTime = (_AudioFPS > 0) ? (1.0f / (float)_AudioFPS) : 0.016f;
         if (audioFrameTime <= 0.0f || audioFrameTime > 0.1f) audioFrameTime = 0.016f;
-        
+
         float decayAmount1 = std::max(0.0f, audioFrameTime * _peak1DecayRate);
         float decayAmount2 = std::max(0.0f, audioFrameTime * _peak2DecayRate);
 

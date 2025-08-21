@@ -165,7 +165,7 @@ class MeteorEffect : public LEDStripEffect
   public:
     static constexpr EffectId kId = idStripMeteor;
     EffectId effectId() const override { return kId; }
-  
+
   private:
     std::vector<MeteorChannel> _Meteors;
 

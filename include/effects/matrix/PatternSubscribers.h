@@ -163,7 +163,7 @@ class PatternSubscribers : public LEDStripEffect
 
     static constexpr EffectId kId = idMatrixSubscribers;
     EffectId effectId() const override { return kId; }
-    
+
     PatternSubscribers() : LEDStripEffect(kId, "Subs")
     {
     }

@@ -47,7 +47,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
         return false;
     }
 
-    if (_pBuffer == nullptr) 
+    if (_pBuffer == nullptr)
     {
         debugE("Buffer not allocated!");
         close(new_socket);
@@ -125,7 +125,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             bSendResponsePacket = true;
         }
         else
-        {     
+        {
             // Read the rest of the data
             uint16_t command16   = WORDFromMemory(&_pBuffer.get()[0]);
 

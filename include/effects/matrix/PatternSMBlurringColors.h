@@ -77,7 +77,7 @@ class PatternSMBlurringColors : public LEDStripEffect
     void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
     {
         y = MATRIX_HEIGHT - 1 - y;
-        if (g()->isValidPixel(x, y)) 
+        if (g()->isValidPixel(x, y))
             g()->leds[XY(x, y)] = color;
     }
 
@@ -196,7 +196,7 @@ class PatternSMBlurringColors : public LEDStripEffect
 
     static constexpr EffectId kId = idMatrixSMBlurringColors;
     EffectId effectId() const override { return kId; }
-    
+
     PatternSMBlurringColors() : LEDStripEffect(idMatrixSMBlurringColors, "Powder") {}
     PatternSMBlurringColors(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
 

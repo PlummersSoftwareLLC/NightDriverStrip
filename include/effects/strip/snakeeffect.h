@@ -37,10 +37,10 @@
 class SnakeEffect : public LEDStripEffect
 {
   public:
-  
+
     static constexpr EffectId kId = idStripSnake;
     EffectId effectId() const override { return kId; }
-    
+
     void construct()
     {
         lastLEDIndex = LEDCount - 1;

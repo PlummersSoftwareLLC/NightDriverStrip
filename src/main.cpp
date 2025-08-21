@@ -330,7 +330,7 @@ void setup()
     #if ENABLE_ESPNOW
         WiFi.mode(WIFI_STA);  // or WIFI_AP if applicable
 
-        if (esp_now_init() != ESP_OK) 
+        if (esp_now_init() != ESP_OK)
             throw std::runtime_error("Error initializing ESP-NOW");
         // Register receive callback function
         esp_now_register_recv_cb(onReceiveESPNOW);

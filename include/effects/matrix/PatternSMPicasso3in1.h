@@ -4,13 +4,13 @@
 
 // Inspired by https://editor.soulmatelights.com/gallery/1177-picasso-3in1
 
-class PatternSMPicasso3in1 : public LEDStripEffect 
+class PatternSMPicasso3in1 : public LEDStripEffect
 {
   public:
-  
+
     static constexpr EffectId kId = idMatrixSMPicasso3in1;
     EffectId effectId() const override { return kId; }
-    
+
   private:
 
     // Suggested values for Mesmerizer w/ 1/2 HUB75 panel: 10, 36, 70
@@ -226,11 +226,11 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
 	    Scale = _scale;
 
-        if (Scale < 34U) 
+        if (Scale < 34U)
             PicassoRoutine1();  // Scale is less than 34
-        else if (Scale > 67U) 
+        else if (Scale > 67U)
             PicassoRoutine3();  // Scale is greater than 67
-        else 
+        else
             PicassoRoutine2();  // Scale is between 34 and 67
     }
 };

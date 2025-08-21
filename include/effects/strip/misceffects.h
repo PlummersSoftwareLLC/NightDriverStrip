@@ -160,7 +160,7 @@ class RainbowFillEffect : public LEDStripEffect
   public:
     static constexpr EffectId kId = idStripRainbowFill;
     EffectId effectId() const override { return kId; }
-  
+
     protected:
 
     float _speedDivisor;
@@ -605,7 +605,7 @@ class PDPGridEffect : public LEDStripEffect
     virtual void Start() override
     {
         g()->Clear();
-    }    
+    }
 
     virtual void Draw() override
     {
@@ -629,7 +629,7 @@ class PDPCMXEffect : public LEDStripEffect
   private:
     static constexpr int GROUP_HEIGHT = 4; // Height of each logical group
     static constexpr float LED_PROBABILITY = 0.30f; // 30% chance of LED being on
-    
+
   void scrollGroup(int groupStartY, bool scrollLeft)
     {
         // Scroll existing LEDs in the group
@@ -658,7 +658,7 @@ class PDPCMXEffect : public LEDStripEffect
                 setPixelOnAllChannels(0, y, CRGB::Black);
             }
         }
-        
+
     // Add new random LEDs on the appropriate edge
     // Color by band parity: even bands = red, odd bands = amber
         const int groupIndex = groupStartY / GROUP_HEIGHT;
@@ -710,13 +710,13 @@ class PDPCMXEffect : public LEDStripEffect
     {
         // Process each logical group
         int numGroups = (MATRIX_HEIGHT + GROUP_HEIGHT - 1) / GROUP_HEIGHT; // Ceiling division
-        
+
         fadeAllChannelsToBlackBy(3);
         for (int group = 0; group < numGroups; group++)
         {
             int groupStartY = group * GROUP_HEIGHT;
             bool scrollLeft = (group % 2 == 0); // Alternate direction: even groups scroll left, odd scroll right
-            
+
             scrollGroup(groupStartY, scrollLeft);
         }
     }

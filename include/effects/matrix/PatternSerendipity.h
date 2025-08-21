@@ -96,7 +96,7 @@ private:
 public:
     static constexpr EffectId kId = idMatrixSerendipity;
     EffectId effectId() const override { return kId; }
-    
+
     PatternSerendipity() : LEDStripEffect(kId, "Serendipiti")
     {
     }

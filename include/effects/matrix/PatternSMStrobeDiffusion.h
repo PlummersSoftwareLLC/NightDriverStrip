@@ -36,7 +36,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
   public:
     static constexpr EffectId kId = idMatrixSMStrobeDiffusion;
     EffectId effectId() const override { return kId; }
-    
+
     PatternSMStrobeDiffusion()
         :
 #if ENABLE_AUDIO

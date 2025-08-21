@@ -16,7 +16,7 @@ public:
   private:
     static auto constexpr C_X = (MATRIX_WIDTH / 2);
     static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
-    
+
     std::unique_ptr<uint8_t[]> XY_angle_buf;
     std::unique_ptr<uint8_t[]> XY_radius_buf;
 
@@ -54,7 +54,7 @@ public:
                 uint8_t radius = XY_radius_buf[idx];
                 int16_t Bri = inoise8(angle * scaleX, (radius * scaleY) - t) - radius * (255 / MATRIX_HEIGHT);
                 uint8_t Col = Bri;
-                
+
                 if (Bri < 0)
                     Bri = 0;
                 if (Bri != 0)
@@ -67,9 +67,9 @@ public:
 
                 // Step 2: Choose base color depending on palette state
                 CRGB baseColor;
-                if (g()->IsPalettePaused()) 
+                if (g()->IsPalettePaused())
                     baseColor = g()->ColorFromCurrentPalette(Col);
-                else 
+                else
                     baseColor = CRGB::Red;
 
                 // Step 3: Get black body heat color

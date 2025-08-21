@@ -353,7 +353,7 @@ public:
 
     static constexpr EffectId kId = idMatrixStocks;
     EffectId effectId() const override { return kId; }
-    
+
     PatternStocks() : LEDStripEffect(kId, "Stocks")
     {
     }

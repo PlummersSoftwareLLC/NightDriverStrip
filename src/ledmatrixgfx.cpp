@@ -112,7 +112,7 @@ void LEDMatrixGFX::PrepareFrame()
             int x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
 
             // Generic fill that's way faster than the rectangle base impl
-            for (int i = y * _width; i < (y + 1 + kCharHeight) * _width; ++i) 
+            for (int i = y * _width; i < (y + 1 + kCharHeight) * _width; ++i)
                 titleLayer.backBuffer()[i] = chromaKeyColor;
 
             auto szCaption = caption.c_str();
@@ -188,7 +188,7 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
         output = "CP0: " + String((int)taskManager.GetCPUUsagePercent(0)) + " CP1: " + String((int)taskManager.GetCPUUsagePercent(1));
         backgroundLayer.drawString(2, MATRIX_HEIGHT  - 6, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
     #endif
-    
+
     MatrixSwapBuffers((wifiPixelsDrawn > 0) || g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0);
 
     FastLED.countFPS();

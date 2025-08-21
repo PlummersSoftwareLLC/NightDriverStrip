@@ -53,7 +53,7 @@ class PatternSMRainbowTunnel : public LEDStripEffect
         static constexpr uint8_t scaleX = 4;
         static constexpr uint8_t scaleY = 4;
         static constexpr uint8_t speed = 2;
-        
+
         static uint16_t t;
 
         t += speed;

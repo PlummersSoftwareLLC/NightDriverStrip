@@ -1228,7 +1228,7 @@ class RGBRollAround : public LEDStripEffect
   public:
     static constexpr EffectId kId = idStripRGBRollAround;
     EffectId effectId() const override { return kId; }
-  
+
     int iRotate = 0;
 
 public:
@@ -1465,7 +1465,7 @@ class LanternEffect : public LEDStripEffect
   public:
     static constexpr EffectId kId = idStripLantern;
     EffectId effectId() const override { return kId; }
-    
+
     static const int _maxParticles = 1;
 
 private:

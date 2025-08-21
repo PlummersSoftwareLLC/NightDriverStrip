@@ -63,7 +63,7 @@ private:
 public:
   static constexpr EffectId kId = idMatrixRadar;
   EffectId effectId() const override { return kId; }
-  
+
   PatternRadar() : LEDStripEffect(kId, "Radar")
   {
   }

@@ -131,7 +131,7 @@ class VUInsulatorsEffect : public LEDStripEffect
   public:
     static constexpr EffectId kId = idStripVUInsulators;
     EffectId effectId() const override { return kId; }
-    
+
     int _last = 1;
 
     using LEDStripEffect::LEDStripEffect;

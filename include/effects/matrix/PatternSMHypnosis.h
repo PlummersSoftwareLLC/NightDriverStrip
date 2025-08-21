@@ -20,7 +20,7 @@ class PatternSMHypnosis : public LEDStripEffect
   public:
     static constexpr EffectId kId = idMatrixSMHypnosis;
     EffectId effectId() const override { return kId; }
-    
+
     PatternSMHypnosis() : LEDStripEffect(kId, "Hypnosis")
     {
     }

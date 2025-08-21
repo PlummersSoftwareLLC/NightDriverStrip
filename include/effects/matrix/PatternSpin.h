@@ -59,7 +59,7 @@ class PatternSpin : public LEDStripEffect
 public:
     static constexpr EffectId kId = idMatrixSpin;
     EffectId effectId() const override { return kId; }
-    
+
     PatternSpin() : LEDStripEffect(kId, "Spin")
     {
     }

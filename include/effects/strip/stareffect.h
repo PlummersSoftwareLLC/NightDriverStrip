@@ -596,7 +596,7 @@ class TwinkleStarEffect : public LEDStripEffect
 
     static constexpr EffectId kId = idStripTwinkleStar;
     EffectId effectId() const override { return kId; }
-  
+
     #define NUM_TWINKLES 100
     int buffer[NUM_TWINKLES];
 

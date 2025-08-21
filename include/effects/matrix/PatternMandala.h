@@ -64,13 +64,13 @@
 // -------------
 // This file contains the implementation of the `PatternMandala` class, a sophisticated
 // effect for LED strip displays. It utilizes a noise-based algorithm to create
-// intricate, continuously evolving mandala patterns. This effect is part of a larger 
+// intricate, continuously evolving mandala patterns. This effect is part of a larger
 // system that drives LED strip animations.
 //
 // Class Overview:
 // ---------------
-// `PatternMandala` is derived from `LEDStripEffect`, indicating its purpose as a specific 
-// visual effect for LED strips. It is designed to generate mandala-like patterns using 
+// `PatternMandala` is derived from `LEDStripEffect`, indicating its purpose as a specific
+// visual effect for LED strips. It is designed to generate mandala-like patterns using
 // noise and random number generation to achieve a dynamic, ever-changing display.
 //
 // Key Variables:
@@ -95,7 +95,7 @@ private:
 public:
     static constexpr EffectId kId = idMatrixMandala;
     EffectId effectId() const override { return kId; }
-    
+
     PatternMandala() : LEDStripEffect(kId, "MRI")
     {
     }

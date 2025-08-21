@@ -290,10 +290,10 @@ public:
 // An effect that draws an audio spectrum analyzer on a matrix.  It is assumed that the
 // matrix is 48x16 using LED Channel 0 only.   Has a VU meter up top and 16 bands.
 
-class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter 
+class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 {
   public:
-  
+
     static constexpr EffectId kId = idMatrixSpectrumAnalyzer;
     EffectId effectId() const override { return kId; }
 
@@ -559,10 +559,10 @@ class SpectrumAnalyzerEffect : public LEDStripEffect, virtual public VUMeter
 //
 // Draws a colorful scrolling waveform driven by instantaneous VU as it scrolls
 
-class WaveformEffect : public LEDStripEffect 
+class WaveformEffect : public LEDStripEffect
 {
     public:
- 
+
         static constexpr EffectId kId = idMatrixWaveform;
         EffectId effectId() const override { return kId; }
 
@@ -650,7 +650,7 @@ class GhostWave : public WaveformEffect
   public:
     static constexpr EffectId kId = idMatrixGhostWave;
     EffectId effectId() const override { return kId; }
-    
+
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;

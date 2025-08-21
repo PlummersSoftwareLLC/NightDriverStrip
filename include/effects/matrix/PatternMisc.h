@@ -108,7 +108,7 @@ class PatternRose : public LEDStripEffect
 
     static constexpr EffectId kId = idMatrixRose;
     EffectId effectId() const override { return kId; }
-    
+
     PatternRose() : LEDStripEffect(kId, "Rose")
     {
     }
@@ -280,7 +280,7 @@ private:
 public:
     static constexpr EffectId kId = idMatrixMunch;
     EffectId effectId() const override { return kId; }
-    
+
     PatternMunch() : LEDStripEffect(kId, "Munch")
     {
     }
