@@ -591,7 +591,7 @@ class PatternSMNoise : public LEDStripEffect
                 CRGB color = ColorFromPalette(palette, index, bri);
                 uint16_t n = XY(i, j);
 
-                g()->leds[n] = color;
+                g()->drawPixelXY_Set(i, j, color);
             }
         }
         ihue += 1;

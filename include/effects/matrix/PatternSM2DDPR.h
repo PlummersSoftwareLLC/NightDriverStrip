@@ -76,7 +76,7 @@ class PatternSM2DDPR : public LEDStripEffect
                 }
 
                 int hue = ::map(dist, radius, -3, 125, 255);
-                g()->leds[XY(x, y)] = CHSV(hue, 255, brightness);
+                g()->drawPixelXY_Set(x, y, CHSV(hue, 255, brightness));
             }
         }
     }

@@ -253,7 +253,7 @@ class PatternCube : public LEDStripEffect
         {
           e = edge + i;
           if (!e->visible) 
-              g()->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
+              g()->drawLineF(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color, color);
         }
 
         color = g()->ColorFromCurrentPalette(hue + 128 + xOffset);
@@ -263,7 +263,7 @@ class PatternCube : public LEDStripEffect
         {
           e = edge + i;
           if (e->visible)
-              g()->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
+              g()->drawLineF(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color, color);
         }
 
         step++;

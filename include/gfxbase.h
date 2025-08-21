@@ -233,6 +233,13 @@ public:
         return to16bit(CRGB(code));
     }
 
+    // Helper function for Wu's anti-aliasing algorithm.
+    // This function calculates a weighted intensity for blending pixels,
+    // optimizing the multiplication and division by 255.
+    __attribute__((always_inline)) static uint8_t WU_WEIGHT(uint8_t a, uint8_t b) {
+        return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
+    }
+
     virtual void Clear(CRGB color = CRGB::Black)
     {
         if (color == CRGB::Black)
@@ -397,6 +404,109 @@ public:
             leds[x] = color;
         else
             debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
+    }
+
+    // Sets the color of a pixel at the specified (x, y) coordinates.
+    // This function directly assigns the given CRGB color to the pixel,
+    // performing bounds checking to ensure the coordinates are valid.
+    __attribute__((always_inline)) void drawPixelXY_Set(uint8_t x, uint8_t y, CRGB color) {
+        if (isValidPixel(x, y)) {
+            leds[XY(x, y)] = color;
+        }
+    }
+
+    // Blends the given color with the existing color of a pixel at (x, y) coordinates.
+    // The new color is additively combined with the current pixel color,
+    // performing bounds checking to ensure the coordinates are valid.
+    __attribute__((always_inline)) void drawPixelXY_Blend(uint8_t x, uint8_t y, CRGB color) {
+        if (isValidPixel(x, y)) {
+            leds[XY(x, y)] += color;
+        }
+    }
+
+    // Draws an anti-aliased pixel at floating-point coordinates (x, y) using Wu's algorithm.
+    // This function blends the given color with the surrounding pixels based on the
+    // fractional parts of the coordinates, creating a smoother appearance.
+    __attribute__((always_inline)) void drawPixelXYF_Wu(float x, float y, CRGB color) {
+        // Extract the fractional parts and derive their inverses.
+        uint8_t xx = (x - (int)x) * 255;
+        uint8_t yy = (y - (int)y) * 255;
+        uint8_t ix = 255 - xx;
+        uint8_t iy = 255 - yy;
+
+        // Calculate the intensities for each affected pixel.
+        uint8_t wu[4] = {
+            WU_WEIGHT(ix, iy), // (x_int, y_int)
+            WU_WEIGHT(xx, iy), // (x_int + 1, y_int)
+            WU_WEIGHT(ix, yy), // (x_int, y_int + 1)
+            WU_WEIGHT(xx, yy)  // (x_int + 1, y_int + 1)
+        };
+
+        // Multiply the intensities by the colour, and saturating-add them to the pixels.
+        for (uint8_t i = 0; i < 4; i++) {
+            int16_t xn = floor(x) + (i & 1);
+            int16_t yn = floor(y) + ((i >> 1) & 1);
+
+            if (isValidPixel(xn, yn)) {
+                CRGB clr = leds[XY(xn, yn)];
+                clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+                clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+                clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+                leds[XY(xn, yn)] = clr;
+            }
+        }
+    }
+
+    // Draws an anti-aliased line between two floating-point coordinates (x1, y1) and (x2, y2).
+    // The line can have a color gradient from col1 to col2. This function uses Wu's algorithm
+    // for smooth blending of pixels along the line path.
+    __attribute__((always_inline)) void drawLineF(float x1, float y1, float x2, float y2, const CRGB &col1, const CRGB &col2) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+
+        if (abs(dx) > abs(dy)) { // Iterate along X-axis
+            if (x1 > x2) { // Swap points if x1 > x2
+                std::swap(x1, x2);
+                std::swap(y1, y2);
+            }
+            float gradient = dy / dx;
+            float y = y1 + gradient * (floor(x1) + 0.5 - x1);
+
+            for (int x = floor(x1); x <= floor(x2); x++) {
+                CRGB interpolatedColor = blend(col1, col2, (x - x1) / (x2 - x1) * 255);
+                drawPixelXYF_Wu(x, y, interpolatedColor);
+                y += gradient;
+            }
+        } else { // Iterate along Y-axis
+            if (y1 > y2) {
+                std::swap(x1, x2);
+                std::swap(y1, y2);
+            }
+            float gradient = dx / dy;
+            float x = x1 + gradient * (floor(y1) + 0.5 - y1);
+
+            for (int y = floor(y1); y <= floor(y2); y++) {
+                CRGB interpolatedColor = blend(col1, col2, (y - y1) / (y2 - y1) / 255);
+                drawPixelXYF_Wu(x, y, interpolatedColor);
+                x += gradient;
+            }
+        }
+    }
+
+    // Draws an anti-aliased circle at floating-point coordinates (cx, cy) with a given radius.
+    // This function fills the circular area by iterating through a bounding box and checking
+    // if each point is within the circle's radius, then blending the color using Wu's algorithm.
+    __attribute__((always_inline)) void drawCircleF(float cx, float cy, float radius, CRGB col)
+    {
+        uint8_t rad = radius;
+        for (int8_t y = -radius; y < radius; y += 1)
+        {
+            for (int8_t x = -radius; x < radius; x += 1)
+            {
+                if (x * x + y * y < radius * radius)
+                    drawPixelXYF_Wu(cx + x, cy + y, col);
+            }
+        }
     }
 
     // DrawSafeCircle

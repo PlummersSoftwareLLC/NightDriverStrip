@@ -43,7 +43,7 @@ class PatternSMRadialWave : public LEDStripEffect
             {
                 uint8_t angle = rMap[x][y].angle;
                 uint8_t radius = rMap[x][y].scaled_radius;
-                g()->leds[XY(x, y)] = CHSV(t + radius, 255, sin8(t * 4 + sin8(t * 4 - radius) + angle * 3));
+                g()->drawPixelXY_Set(x, y, CHSV(t + radius, 255, sin8(t * 4 + sin8(t * 4 - radius) + angle * 3)));
             }
         }
     }

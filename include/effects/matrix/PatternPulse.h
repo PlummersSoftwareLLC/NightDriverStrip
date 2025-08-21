@@ -96,7 +96,7 @@ class PatternPulse : public LEDStripEffect
 
         if (step == 0)
         {
-            graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(graphics->ColorFromCurrentPalette(hue)));
+            graphics->drawCircleF(centerX, centerY, step, graphics->ColorFromCurrentPalette(hue));
             step++;
         }
         else
@@ -104,12 +104,12 @@ class PatternPulse : public LEDStripEffect
             if (step < maxSteps)
             {
                 // initial pulse
-                graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                graphics->drawCircleF(centerX, centerY, step, ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255));
 
                 // secondary pulse
                 if (step > 5)
                 {
-                    graphics->DrawSafeCircle(centerX, centerY, step - 3, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                    graphics->drawCircleF(centerX, centerY, step - 3, ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255));
                 }
                 step++;
             }
@@ -186,7 +186,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
         const int maxNewStarsPerFrame = 8;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
             if (random(4) < g_Analyzer.VURatio())
-                g()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
+                g()->drawPixelXY_Set(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
 
 
         for (auto pop = _pops.begin(); pop != _pops.end();)
@@ -201,7 +201,7 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
 
             if (pop->step == 0)
             {
-                g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
+                g()->drawCircleF(pop->centerX, pop->centerY, pop->step, g()->ColorFromCurrentPalette(pop->hue));
                 pop->step++;
                 pop++;
             }
@@ -210,11 +210,11 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect
                 if (pop->step < pop->maxSteps)
                 {
                     // initial pulse
-                    g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
+                    g()->drawCircleF(pop->centerX, pop->centerY, pop->step, g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255));
 
                     // secondary pulse
                     if (pop->step > 3)
-                        g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step - 3, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                        g()->drawCircleF(pop->centerX, pop->centerY, pop->step - 3, g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255));
 
                     // This looks like PDP-11 code to me.  double post-inc for the win!
                     pop++->step++;

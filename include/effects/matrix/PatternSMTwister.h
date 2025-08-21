@@ -19,15 +19,15 @@ class PatternSMTwister : public LEDStripEffect
         {
             uint8_t dx = lerp8by8(x1, x, i * 255 / steps);
             uint16_t index = XY(dx, y);
-            g()->leds[index] = color;
+            g()->drawPixelXY_Set(dx, y, color);
             if (grad)
                 g()->leds[index] %=
                     (sin8(numline * 8 + side * 64 + a + sinOff) + i * 255 / steps) / 2; // for draw gradient line
         }
         if (dot)
         { // add white point at the ends of line
-            g()->leds[XY(x, y)] = CRGB::Black;
-            g()->leds[XY(x1, y)] = CRGB::Black;
+            g()->drawPixelXY_Set(x, y, CRGB::Black);
+            g()->drawPixelXY_Set(x1, y, CRGB::Black);
         }
     }
 

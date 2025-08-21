@@ -262,9 +262,9 @@ public:
         for (int i = 0; i < MATRIX_WIDTH; i++) {
             for (int j = 0; j < MATRIX_HEIGHT; j++) {
                 if (world[i][j].brightness > 0)
-                    g()->leds[XY(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
+                    g()->drawPixelXY_Blend(i, j, g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness));
                 else
-                    g()->leds[XY(i, j)] = CRGB::Black;
+                    g()->drawPixelXY_Set(i, j, CRGB::Black);
             }
         }
 

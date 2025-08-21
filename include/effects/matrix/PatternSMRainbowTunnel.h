@@ -43,8 +43,8 @@ class PatternSMRainbowTunnel : public LEDStripEffect
             {
                 uint8_t angle = rMap[x][y].angle;
                 uint8_t radius = rMap[x][y].scaled_radius;
-                g()->leds[XY(x, y)] =
-                    CHSV((angle * scaleX) - t + (radius * scaleY), 255, constrain(radius * 3, 0, 255));
+                g()->drawPixelXY_Set(x, y,
+                    CHSV((angle * scaleX) - t + (radius * scaleY), 255, constrain(radius * 3, 0, 255)));
             }
         }
     }

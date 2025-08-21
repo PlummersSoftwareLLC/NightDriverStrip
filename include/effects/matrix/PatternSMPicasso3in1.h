@@ -104,8 +104,8 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 2U; i += 2)
         {
-            g()->drawLine(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i + 1U],
-                     trackingObjectPosY[i + 1U], CHSV(trackingObjectHue[i], 255U, 255U));
+            g()->drawLineF(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i + 1U],
+                     trackingObjectPosY[i + 1U], CHSV(trackingObjectHue[i], 255U, 255U), CHSV(trackingObjectHue[i], 255U, 255U));
             // DrawLine(trackingObjectPosX[i], trackingObjectPosY[i],
             // trackingObjectPosX[i+1U], trackingObjectPosY[i+1U],
             // ColorFromPalette(*curPalette, trackingObjectHue[i]));
@@ -122,8 +122,8 @@ class PatternSMPicasso3in1 : public LEDStripEffect
         g()->DimAll(180);
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 1U; i++)
-            g()->drawLine(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i + 1U],
-                      trackingObjectPosY[i + 1U], CHSV(trackingObjectHue[i], 255U, 255U));
+            g()->drawLineF(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i + 1U],
+                      trackingObjectPosY[i + 1U], CHSV(trackingObjectHue[i], 255U, 255U), CHSV(trackingObjectHue[i], 255U, 255U));
 
         EVERY_N_MILLIS(20000)
         {
@@ -139,7 +139,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
         g()->DimAll(180);
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 2U; i += 2)
-            g()->DrawSafeCircle(fabs(trackingObjectPosX[i] - trackingObjectPosX[i + 1U]),
+            g()->drawCircleF(fabs(trackingObjectPosX[i] - trackingObjectPosX[i + 1U]),
                        fabs(trackingObjectPosY[i] - trackingObjectPosX[i + 1U]),
                        fabs(trackingObjectPosX[i] - trackingObjectPosY[i]), CHSV(trackingObjectHue[i], 255U, 255U));
 

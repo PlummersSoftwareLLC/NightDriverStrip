@@ -81,7 +81,7 @@ public:
       uint8_t x = graphics->mapcos8(theta, offset, (MATRIX_WIDTH - 1) - offset);
       uint8_t y = graphics->mapsin8(theta, offset, (MATRIX_HEIGHT - 1) - offset);
       uint16_t xzy = graphics->xy(x, y);
-      graphics->leds[xzy] = color;
+      graphics->drawPixelXY_Set(x, y, color);
 
       EVERY_N_MILLIS(25)
       {

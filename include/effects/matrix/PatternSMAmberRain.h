@@ -78,7 +78,7 @@ class PatternSMAmberRain : public LEDStripEffect
                 }
 
                 if (g()->isValidPixel(index))
-                    g()->leds[index] += CHSV(hue, 255, brightness);
+                    g()->drawPixelXY_Blend(x, y, CHSV(hue, 255, brightness));
             }
         }
     }

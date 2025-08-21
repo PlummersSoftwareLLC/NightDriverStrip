@@ -75,12 +75,12 @@ public:
     {
         auto graphics = g();
 
-        graphics->leds[graphics->xy(i, j - 1)] += color;
-        graphics->leds[graphics->xy(i, j + 1)] += color;
-        graphics->leds[graphics->xy(i - 1, j)] += color;
-        graphics->leds[graphics->xy(i + 1, j)] += color;
+        graphics->drawPixelXY_Blend(i, j - 1, color);
+        graphics->drawPixelXY_Blend(i, j + 1, color);
+        graphics->drawPixelXY_Blend(i - 1, j, color);
+        graphics->drawPixelXY_Blend(i + 1, j, color);
         color.maximizeBrightness();
-        graphics->leds[XY(i, j)] += color;
+        graphics->drawPixelXY_Set(i, j, color);
     }
 
     void Draw() override

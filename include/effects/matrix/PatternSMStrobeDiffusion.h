@@ -80,7 +80,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
                 noise3d[x][y] = noise3d[x][y - 1];
                 if (noise3d[x][y] > 0)
                 {
-                    g()->drawPixel(x, y, CHSV(170, 5U, 127 + random8(128)));
+                    g()->drawPixelXY_Set(x, y, CHSV(170, 5U, 127 + random8(128)));
                 }
             }
         }
@@ -99,11 +99,7 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
     }
 
     // функция получения цвета пикселя в матрице по его координатам
-    [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
-    {
-        // Just don't think about what this does to prefetch and prediction...
-        return g()->leds[XY(x, y)];
-    }
+    
 
     void Draw() override
     {
@@ -166,22 +162,22 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
             {
                 if ((step % STEP) == 0)
                 { // small layers
-                    g()->drawPixel(MATRIX_WIDTH - 1, y * 3 + DELTA, CHSV(step, 255U, 255U));
+                    g()->drawPixelXY_Set(MATRIX_WIDTH - 1, y * 3 + DELTA, CHSV(step, 255U, 255U));
                 }
                 else
                 {
-                    g()->drawPixel(MATRIX_WIDTH - 1, y * 3 + DELTA, CHSV(170U, 255U, 1U));
+                    g()->drawPixelXY_Set(MATRIX_WIDTH - 1, y * 3 + DELTA, CHSV(170U, 255U, 1U));
                 }
             }
             else
             {
                 if ((step % STEP) == 0)
                 { // big layers
-                    g()->drawPixel(0, y * 3 + DELTA, CHSV((step + deltaHue), 255U, 255U));
+                    g()->drawPixelXY_Set(0, y * 3 + DELTA, CHSV((step + deltaHue), 255U, 255U));
                 }
                 else
                 {
-                    g()->drawPixel(0, y * 3 + DELTA, CHSV(0U, 255U, 0U));
+                    g()->drawPixelXY_Set(0, y * 3 + DELTA, CHSV(0U, 255U, 0U));
                 }
             }
 
@@ -190,11 +186,11 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
             {
                 if (dir)
                 { // <==
-                    g()->drawPixel(x, y * 3 + DELTA, getPixColorXY(x, y * 3 + DELTA));
+                    g()->drawPixelXY_Set(x, y * 3 + DELTA, g()->getPixel(x, y * 3 + DELTA));
                 }
                 else
                 { // ==>
-                    g()->drawPixel(MATRIX_WIDTH - x, y * 3 + DELTA, getPixColorXY(MATRIX_WIDTH - x, y * 3 + DELTA));
+                    g()->drawPixelXY_Set(MATRIX_WIDTH - x, y * 3 + DELTA, g()->getPixel(MATRIX_WIDTH - x, y * 3 + DELTA));
                 }
             }
             dir = !dir;

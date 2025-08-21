@@ -108,9 +108,9 @@ public:
                     n = quadwave8(x * 2 + theta) / scale;
                     if (n < MATRIX_HEIGHT)
                     {
-                        graphics->setPixel(x, n, graphics->ColorFromCurrentPalette(x + hue));
+                        graphics->drawPixelXY_Set(x, n, graphics->ColorFromCurrentPalette(x + hue));
                         if (waveCount == 2)
-                            graphics->setPixel(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
+                            graphics->drawPixelXY_Set(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
                     }
                 }
                 break;
@@ -120,9 +120,9 @@ public:
                     n = quadwave8(y * 2 + theta) / scale;
                     if (n < MATRIX_WIDTH)
                     {
-                        graphics->setPixel(n, y, graphics->ColorFromCurrentPalette(y + hue));
+                        graphics->drawPixelXY_Set(n, y, graphics->ColorFromCurrentPalette(y + hue));
                         if (waveCount == 2)
-                            graphics->setPixel(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
+                            graphics->drawPixelXY_Set(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
                     }
                 }
                 break;
@@ -132,9 +132,9 @@ public:
                     n = quadwave8(x * 2 - theta) / scale;
                     if (n < MATRIX_HEIGHT)
                     {
-                        graphics->setPixel(x, n, graphics->ColorFromCurrentPalette(x + hue));
+                        graphics->drawPixelXY_Set(x, n, graphics->ColorFromCurrentPalette(x + hue));
                         if (waveCount == 2)
-                            graphics->setPixel(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
+                            graphics->drawPixelXY_Set(x, maxY - n, graphics->ColorFromCurrentPalette(x + hue));
                     }
                 }
                 break;
@@ -144,9 +144,9 @@ public:
                     n = quadwave8(y * 2 - theta) / scale;
                     if (n < MATRIX_WIDTH)
                     {
-                        graphics->setPixel(n, y, graphics->ColorFromCurrentPalette(y + hue));
+                        graphics->drawPixelXY_Set(n, y, graphics->ColorFromCurrentPalette(y + hue));
                         if (waveCount == 2)
-                            graphics->setPixel(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
+                            graphics->drawPixelXY_Set(maxX - n, y, graphics->ColorFromCurrentPalette(y + hue));
                     }
                 }
                 break;

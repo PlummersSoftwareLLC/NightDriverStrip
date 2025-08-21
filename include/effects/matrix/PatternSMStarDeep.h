@@ -83,100 +83,9 @@ class PatternSMStarDeep : public LEDStripEffect
     // places, which clobbers memory and brings down the app. Use our clamped
     // versions instead.
 
-    // функция отрисовки точки по координатам X Y
-    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
-    {
-        if (!g()->isValidPixel(x, HEIGHT - 1 - y))
-            return;
-        // Mesmerizer flips the Y axis here.
-        uint32_t thisPixel = XY(x, HEIGHT - 1 - y);
-        g()->leds[thisPixel] = color;
-    }
+    
 
-    // Дополнительная функция построения линий
-    void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
-    {
-        int tmp;
-        int x, y;
-        int dx, dy;
-        int err;
-        int ystep;
-
-        uint8_t swapxy = 0;
-
-        if (x1 > x2)
-            dx = x1 - x2;
-        else
-            dx = x2 - x1;
-        if (y1 > y2)
-            dy = y1 - y2;
-        else
-            dy = y2 - y1;
-
-        if (dy > dx)
-        {
-            swapxy = 1;
-            tmp = dx;
-            dx = dy;
-            dy = tmp;
-            tmp = x1;
-            x1 = y1;
-            y1 = tmp;
-            tmp = x2;
-            x2 = y2;
-            y2 = tmp;
-        }
-        if (x1 > x2)
-        {
-            tmp = x1;
-            x1 = x2;
-            x2 = tmp;
-            tmp = y1;
-            y1 = y2;
-            y2 = tmp;
-        }
-        err = dx >> 1;
-        if (y2 > y1)
-            ystep = 1;
-        else
-            ystep = -1;
-        y = y1;
-
-        for (x = x1; x <= x2; x++)
-        {
-            if (swapxy == 0)
-                drawPixelXY(x, y, color);
-            else
-                drawPixelXY(y, x, color);
-            err -= (uint8_t)dy;
-            if (err < 0)
-            {
-                y += ystep;
-                err += dx;
-            }
-        }
-    }
-
-    void Drawstar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle,
-                  uint8_t koler) // random multipoint star
-    {
-        auto radius2 = 255 / points;
-        for (int i = 0; i < points; i++)
-        {
-            // две строчки выше - рисуют звезду просто по оттенку, а две строчки ниже
-            // - берут цвет из текущей палитры
-            DrawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
-                     ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
-                     xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
-                     ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
-            DrawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
-                     ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
-                     xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
-                     ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
-        }
-    }
+    
 
     void Draw() override
     {
@@ -227,8 +136,31 @@ class PatternSMStarDeep : public LEDStripEffect
                 { //(counter - ringdelay <= WIDTH + 5) {
                     // drawstar(driftx  , drifty, 2 * (counter - ringdelay), (counter -
                     // ringdelay), pointy, blender + h, h * 2 + 85);
-                    Drawstar(driftx, drifty, 2 * starSize, starSize, bballsX[num], STAR_BLENDER + bballsCOLOR[num],
-                             bballsCOLOR[num] * 2); //, h * 2 + 85);// что, бл, за 85?!
+                    // Inlined Drawstar logic
+                    auto xlocl = driftx;
+                    auto ylocl = drifty;
+                    auto biggy = 2 * starSize;
+                    auto little = starSize;
+                    auto points = bballsX[num];
+                    auto dangle = STAR_BLENDER + bballsCOLOR[num];
+                    auto koler = bballsCOLOR[num] * 2;
+
+                    auto radius2 = 255 / points;
+                    for (int i = 0; i < points; i++)
+                    {
+                        g()->drawLineF(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
+                                 ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
+                                 xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
+                                 ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
+                                 g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler),
+                                 g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
+                        g()->drawLineF(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
+                                 ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
+                                 xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
+                                 ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
+                                 g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler),
+                                 g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
+                    }
                     bballsCOLOR[num]++;
                 }
                 else

@@ -71,10 +71,10 @@ public:
     // sky-written trailer of color.
     for (uint8_t y = 0; y < HEIGHT; y++)
     {
-      g()->leds[XY((deltaHue + y + 1U) % WIDTH, HEIGHT - 1U - y)] += color;
-      g()->leds[XY((deltaHue + y) % WIDTH, HEIGHT - 1U - y)] += color2; // color2
-      g()->leds[XY((deltaHue2 + y) % WIDTH, y)] += color;
-      g()->leds[XY((deltaHue2 + y + 1U) % WIDTH, y)] += color2; // color2
+      g()->drawPixelXY_Blend((deltaHue + y + 1U) % WIDTH, HEIGHT - 1U - y, color);
+      g()->drawPixelXY_Blend((deltaHue + y) % WIDTH, HEIGHT - 1U - y, color2); // color2
+      g()->drawPixelXY_Blend((deltaHue2 + y) % WIDTH, y, color);
+      g()->drawPixelXY_Blend((deltaHue2 + y + 1U) % WIDTH, y, color2); // color2
     }
 
     EVERY_N_MILLISECONDS(100)

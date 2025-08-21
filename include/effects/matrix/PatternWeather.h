@@ -555,8 +555,8 @@ public:
 
         y+=1;
 
-        g()->drawLine(0, y, MATRIX_WIDTH-1, y, CRGB(0,0,128));
-        g()->drawLine(xHalf, y, xHalf, MATRIX_HEIGHT-1, CRGB(0,0,128));
+        g()->drawLineF(0, y, MATRIX_WIDTH-1, y, CRGB(0,0,128), CRGB(0,0,128));
+        g()->drawLineF(xHalf, y, xHalf, MATRIX_HEIGHT-1, CRGB(0,0,128), CRGB(0,0,128));
         y+=2 + fontHeight;
 
         // Figure out which day of the week it is

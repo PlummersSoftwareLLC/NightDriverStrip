@@ -111,7 +111,7 @@ public:
       uint8_t y2 = graphics->mapcos8(theta2 + i * spirooffset, y - radiusy, y + radiusy);
 
       CRGB color = graphics->ColorFromCurrentPalette(hueoffset + i * spirooffset, 128);
-      graphics->leds[graphics->xy(x2, y2)] += color;
+      graphics->drawPixelXY_Blend(x2, y2, color);
 
       if (x2 == MATRIX_CENTER_X && y2 == MATRIX_CENTER_Y)
         change = true;

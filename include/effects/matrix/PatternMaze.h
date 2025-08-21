@@ -238,8 +238,8 @@ private:
         shuffleDirections();
 
         CRGB color = chooseColor(index);
-        g()->drawPixel(imagePoint.x, imagePoint.y, color);
-        g()->drawPixel(MATRIX_WIDTH - 1 - imagePoint.x, imagePoint.y, color);
+        g()->drawPixelXY_Set(imagePoint.x, imagePoint.y, color);
+        g()->drawPixelXY_Set(MATRIX_WIDTH - 1 - imagePoint.x, imagePoint.y, color);
 
         for (int i = 0; i < 4; i++)
         {
@@ -253,8 +253,8 @@ private:
 
                 Point newImagePoint = imagePoint.Move(direction);
 
-                g()->drawPixel(newImagePoint.x, newImagePoint.y, color);
-                g()->drawPixel(MATRIX_WIDTH - 1 - newImagePoint.x, newImagePoint.y, color);
+                g()->drawPixelXY_Set(newImagePoint.x, newImagePoint.y, color);
+                g()->drawPixelXY_Set(MATRIX_WIDTH - 1 - newImagePoint.x, newImagePoint.y, color);
 
                 cellCount++;
                 cells[cellCount - 1] = newPoint;
@@ -267,8 +267,8 @@ private:
         if (index > -1) {
             Point finishedPoint = cells[index];
             imagePoint = createPoint(finishedPoint.x * 2, finishedPoint.y * 2);
-            g()->drawPixel(imagePoint.x, imagePoint.y, color);
-            g()->drawPixel(MATRIX_WIDTH - 1 - imagePoint.x, imagePoint.y, color);
+            g()->drawPixelXY_Set(imagePoint.x, imagePoint.y, color);
+            g()->drawPixelXY_Set(MATRIX_WIDTH - 1 - imagePoint.x, imagePoint.y, color);
 
             removeCell(index);
         }

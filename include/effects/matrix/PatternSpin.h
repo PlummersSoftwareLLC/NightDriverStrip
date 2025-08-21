@@ -110,8 +110,8 @@ public:
             x = (int) (MATRIX_CENTER_X + radius * cos(radians));
             y = (int) (MATRIX_CENTER_Y - radius * sin(radians));
 
-            g()->drawPixel(x, y, color);
-            g()->drawPixel(y, x, color);
+            g()->drawPixelXY_Set(x, y, color);
+            g()->drawPixelXY_Set(y, x, color);
 
             tempDegrees += 1;
             if (tempDegrees >= 360)

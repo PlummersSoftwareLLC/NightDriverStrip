@@ -177,7 +177,7 @@ public:
                 // assign a color depending on the actual palette
                 CRGB pixel = ColorFromPalette(g()->GetCurrentPalette(), colorrepeat * (color + colorshift), bri);
 
-                g()->leds[XY(i, j)] = pixel;
+                g()->drawPixelXY_Set(i, j, pixel);
             }
         }
     }

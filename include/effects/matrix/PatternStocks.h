@@ -488,9 +488,9 @@ public:
                     // Now draw from bottom up to breakeven in red, and from breakeven to top in green
 
                     if (currentStock.points[i].val < breakeven)
-                        g()->drawLine(x0, breakevenY, x1, y1, CRGB::Red);
+                        g()->drawLineF(x0, breakevenY, x1, y1, CRGB::Red, CRGB::Red);
                     else
-                        g()->drawLine(x0, y0, x1, breakevenY, CRGB::Green);
+                        g()->drawLineF(x0, y0, x1, breakevenY, CRGB::Green, CRGB::Green);
                 }
             }
         }
