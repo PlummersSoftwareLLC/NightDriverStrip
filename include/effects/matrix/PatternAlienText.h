@@ -75,7 +75,7 @@ class PatternAlienText : public EffectWithId<idMatrixAlienText>
 {
 private:
 
-const int charWidth = 6;
+  const int charWidth = 6;
   const int charHeight = 6;
   const int leftMargin = 2;
   const int topMargin = 2;
