@@ -221,7 +221,7 @@ template<typename TStar, typename... Args>
 inline EffectFactories::NumberedFactory& AddStarryNightEffect(EffectFactories& factories, Args&&... args)
 {
     return factories.AddEffect(
-        idStripStarryNight,
+    effect_id_of_type<StarryNightEffect<TStar>>(),
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<TStar>>(args...); },
         [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); }
     );
