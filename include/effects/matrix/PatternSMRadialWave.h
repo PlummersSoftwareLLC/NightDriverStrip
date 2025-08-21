@@ -5,12 +5,8 @@
 // Derived from https://editor.soulmatelights.com/gallery/1090-radialwave
 // A three-veined swirl rotates and changes direction, looking like an exhaust.
 
-class PatternSMRadialWave : public LEDStripEffect
+class PatternSMRadialWave : public EffectWithId<idMatrixSMRadialWave>
 {
-  public:
-    static constexpr EffectId kId = idMatrixSMRadialWave;
-    EffectId effectId() const override { return kId; }
-  
   private:
     // RadialWave
     // Stepko and Sutaburosu
@@ -28,13 +24,9 @@ class PatternSMRadialWave : public LEDStripEffect
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMRadialWave() : LEDStripEffect(idMatrixSMRadialWave, "RadialWave")
-    {
-    }
-
-    PatternSMRadialWave(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+  
+    PatternSMRadialWave() : EffectWithId<idMatrixSMRadialWave>("RadialWave") {}
+    PatternSMRadialWave(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialWave>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
     {

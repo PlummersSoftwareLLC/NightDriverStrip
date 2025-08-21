@@ -34,12 +34,14 @@
 
 class LaserShot
 {
+  private:
+
     float         _position = 0.0;
     float         _speed    = 10.0;
     float         _size     = 10.0;
     uint8_t       _hue      = 0;
 
-public:
+  public:
 
     LaserShot(float position, float speed, float size, uint8_t hue)
     {
@@ -65,13 +67,10 @@ public:
     }
 };
 
-class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
+class LaserLineEffect : public BeatEffectBase, public EffectWithId<idStripLaserLine>
 {
-  public:
-    static constexpr EffectId kId = idStripLaserLine;
-    EffectId effectId() const override { return kId; }
+  private:
 
-    private:
     std::vector<LaserShot>      _shots;
     std::shared_ptr<GFXBase>    _gfx;
     float                      _defaultSize;
@@ -81,7 +80,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 
     LaserLineEffect(float speed, float size)
         : BeatEffectBase(1.50, 0.00),
-          LEDStripEffect(idStripLaserLine, "LaserLine"),
+          EffectWithId<idStripLaserLine>("LaserLine"),
           _defaultSize(size),
           _defaultSpeed(speed)
     {
@@ -89,7 +88,7 @@ class LaserLineEffect : public BeatEffectBase, public LEDStripEffect
 
     LaserLineEffect(const JsonObjectConst& jsonObject)
         : BeatEffectBase(1.50, 0.00),
-          LEDStripEffect(jsonObject),
+          EffectWithId<idStripLaserLine>(jsonObject),
           _defaultSize(jsonObject[PTY_SIZE]),
           _defaultSpeed(jsonObject[PTY_SPEED])
     {

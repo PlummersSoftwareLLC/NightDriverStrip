@@ -58,7 +58,7 @@
 #ifndef PatternPulse_H
 #define PatternPulse_H
 
-class PatternPulse : public LEDStripEffect
+class PatternPulse : public EffectWithId<idMatrixPulse>
 {
   private:
 
@@ -72,13 +72,8 @@ class PatternPulse : public LEDStripEffect
 
   public:
 
-    PatternPulse() : LEDStripEffect(idMatrixPulse, "Pulse")
-    {
-    }
-
-    PatternPulse(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternPulse() : EffectWithId<idMatrixPulse>("Pulse") {}
+    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPulse>(jsonObject) {}
 
     void Draw() override
     {
@@ -121,13 +116,8 @@ class PatternPulse : public LEDStripEffect
         // effects.standardNoiseSmearing();
     }
 };
-class PatternPulsar : public BeatEffectBase, public LEDStripEffect {
-    public:
-        static constexpr EffectId kId = idMatrixPulsar;
-        EffectId effectId() const override { return kId; }
-        
-    private:
-
+class PatternPulsar : public BeatEffectBase, public EffectWithId<idMatrixPulsar> {
+  private:
     struct PulsePop
     {
       public:
@@ -145,16 +135,15 @@ class PatternPulsar : public BeatEffectBase, public LEDStripEffect {
     int diff;
 
   public:
-
     PatternPulsar() :
         BeatEffectBase(1.5, 0.25 ),
-    LEDStripEffect(idMatrixPulsar, "Pulsars")
+        EffectWithId<idMatrixPulsar>("Pulsars")
     {
     }
 
     PatternPulsar(const JsonObjectConst& jsonObject) :
         BeatEffectBase(1.5, 0.25 ),
-        LEDStripEffect(jsonObject)
+        EffectWithId<idMatrixPulsar>(jsonObject)
     {
     }
 
