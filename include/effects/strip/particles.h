@@ -306,7 +306,7 @@ template <typename Type = DrawableParticle> class ParticleSystem
 
   public:
 
-    ParticleSystem<Type>() {}
+    ParticleSystem() {}
 
     virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _gfx)
     {
@@ -887,7 +887,7 @@ class NewMoltenGlassOnVioletBkgnd : public EffectWithId<idStripNewMoltenGlassOnV
 class SparklySpinningMusicEffect : public EffectWithId<idStripSparklySpinningMusic>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
   private:
-  
+
     int  _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
