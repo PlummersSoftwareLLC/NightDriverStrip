@@ -573,8 +573,8 @@ class WaveformEffect : public LEDStripEffect
         unsigned long                _msPeakVU = 0;
 
     public:
-        WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
-            : LEDStripEffect(pszFriendlyName),
+        WaveformEffect(const String & sFriendlyName, uint8_t increment = 0)
+            : LEDStripEffect(sFriendlyName),
                     _increment(increment)
         {
         }
@@ -649,15 +649,14 @@ class GhostWave : public WaveformEffect
 {
   public:
     static constexpr EffectId kId = idMatrixGhostWave;
-    
     EffectId effectId() const override { return kId; }
     
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;
 
-    GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 0)
-        : WaveformEffect(pszFriendlyName, increment),
+    GhostWave(const String & sFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 0)
+        : WaveformEffect(sFriendlyName, increment),
           _blur(blur),
           _erase(erase),
           _fade(fade)
@@ -740,8 +739,8 @@ class SpectrumBarEffect : public LEDStripEffect, public BeatEffectBase
     uint8_t _scrollIncrement = 0;
     uint8_t _hueStep = 0;
 
-    SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
-    : LEDStripEffect(pszFriendlyName),
+    SpectrumBarEffect(const char   * sFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
+      : LEDStripEffect(sFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
         _hueStep(hueStep)
@@ -859,8 +858,8 @@ class AudioSpikeEffect : public LEDStripEffect
     static constexpr EffectId kId = idMatrixAudioSpike;
     EffectId effectId() const override { return kId; }
 
-    AudioSpikeEffect(const String & pszFriendlyName)
-    : LEDStripEffect(pszFriendlyName)
+    AudioSpikeEffect(const String & sFriendlyName)
+    : LEDStripEffect(sFriendlyName)
     {
     }
 

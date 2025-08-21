@@ -35,6 +35,7 @@
 #include <SmartMatrix.h>
 #include "ledmatrixgfx.h"
 #include "systemcontainer.h"
+#include "soundanalyzer.h"
 
 // The declarations create the "layers" that make up the matrix display
 
@@ -76,14 +77,6 @@ void LEDMatrixGFX::PrepareFrame()
 
     EVERY_N_MILLIS(MILLIS_PER_FRAME)
     {
-
-        #if SHOW_FPS_ON_MATRIX
-            backgroundLayer.setFont(gohufont11);
-            // 3 is half char width at curret font size, 5 is half the height.
-            string output = "FPS: " + std::to_string(g_Values.FPS);
-            backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
-        #endif
-
         auto graphics = g_ptrSystem->EffectManager().g();
 
         matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
@@ -141,6 +134,8 @@ void LEDMatrixGFX::PrepareFrame()
             titleLayer.enableChromaKey(false);
             titleLayer.setBrightness(0);
         }
+
+
     }
 }
 
@@ -184,6 +179,16 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
     pMatrix->SetBrightness(targetBrightness);
 
+    #if SHOW_FPS_ON_MATRIX
+        // Display status on bottom of matrix in format FPS: 00 CPU0: 000 CPU1: 000 Aud: 00
+        backgroundLayer.setFont(font3x5);
+        auto& taskManager = g_ptrSystem->TaskManager();
+        String output = "LED: " + String(g_Values.FPS) + " AUD: " + String(g_Analyzer.AudioFPS());
+        backgroundLayer.drawString(2, MATRIX_HEIGHT  - 12, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
+        output = "CP0: " + String((int)taskManager.GetCPUUsagePercent(0)) + " CP1: " + String((int)taskManager.GetCPUUsagePercent(1));
+        backgroundLayer.drawString(2, MATRIX_HEIGHT  - 6, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
+    #endif
+    
     MatrixSwapBuffers((wifiPixelsDrawn > 0) || g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0);
 
     FastLED.countFPS();

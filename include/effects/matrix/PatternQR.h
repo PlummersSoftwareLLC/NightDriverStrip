@@ -50,6 +50,8 @@ protected:
     const int qrVersion = 2;
 
 public:
+    static constexpr EffectId kId = idMatrixQR;
+    EffectId effectId() const override { return kId; }
 
     PatternQR() : LEDStripEffect(idMatrixQR, "QR")
     {

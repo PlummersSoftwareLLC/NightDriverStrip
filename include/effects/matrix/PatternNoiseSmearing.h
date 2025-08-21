@@ -61,6 +61,8 @@
 class PatternRainbowFlag : public LEDStripEffect
 {
 public:
+  static constexpr EffectId kId = idMatrixRainbowFlag;
+  EffectId effectId() const override { return kId; }
   PatternRainbowFlag() : LEDStripEffect(idMatrixRainbowFlag, "RainbowFlag")
   {
   }

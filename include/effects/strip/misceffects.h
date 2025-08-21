@@ -170,7 +170,7 @@ class RainbowFillEffect : public LEDStripEffect
   public:
 
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14, bool mirrored = false)
-  : LEDStripEffect(idStripRainbowFill, "RainbowFill Rainbow"),
+     : LEDStripEffect(idStripRainbowFill, "RainbowFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue),
         _mirrored(mirrored)
@@ -236,7 +236,7 @@ protected:
   public:
 
     ColorFillEffect(const String &name, CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-  : LEDStripEffect(idStripColorFill, name),
+     : LEDStripEffect(idStripColorFill, name),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
@@ -247,7 +247,7 @@ protected:
     EffectId effectId() const override { return kId; }
 
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-  : LEDStripEffect(idStripColorFill, "Color Fill"),
+      : LEDStripEffect(idStripColorFill, "Color Fill"),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
@@ -306,7 +306,7 @@ class SplashLogoEffect : public LEDStripEffect
   public:
 
     SplashLogoEffect()
-  : LEDStripEffect(idStripSplashLogo, "Mesmerizer"),
+      : LEDStripEffect(idStripSplashLogo, "Mesmerizer"),
         logo(logo_start, logo_end)
     {
         debugV("Splash logo constructor");
@@ -440,7 +440,7 @@ class TwinkleEffect : public LEDStripEffect
   public:
 
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
-  : LEDStripEffect(idStripTwinkle, "Twinkle"),
+      : LEDStripEffect(idStripTwinkle, "Twinkle"),
         _countToDraw(countToDraw),
         _fadeFactor(fadeFactor),
         _updateSpeed(updateSpeed)
@@ -627,10 +627,10 @@ class PDPGridEffect : public LEDStripEffect
 class PDPCMXEffect : public LEDStripEffect
 {
   private:
-    static constexpr int GROUP_HEIGHT = 5; // Height of each logical group
+    static constexpr int GROUP_HEIGHT = 4; // Height of each logical group
     static constexpr float LED_PROBABILITY = 0.30f; // 30% chance of LED being on
     
-    void scrollGroup(int groupStartY, bool scrollLeft)
+  void scrollGroup(int groupStartY, bool scrollLeft)
     {
         // Scroll existing LEDs in the group
         for (int y = groupStartY; y < groupStartY + GROUP_HEIGHT && y < MATRIX_HEIGHT; y++)
@@ -659,27 +659,32 @@ class PDPCMXEffect : public LEDStripEffect
             }
         }
         
-        // Add new random LEDs on the appropriate edge
+    // Add new random LEDs on the appropriate edge
+    // Color by band parity: even bands = red, odd bands = amber
+        const int groupIndex = groupStartY / GROUP_HEIGHT;
+        const bool isEvenGroup = (groupIndex % 2) == 0;
+        const CRGB bandColor = isEvenGroup ? CRGB::Red : CRGB::Orange;
+
         for (int y = groupStartY; y < groupStartY + GROUP_HEIGHT && y < MATRIX_HEIGHT; y++)
         {
             if (random(100) < (LED_PROBABILITY * 100))
             {
-                CRGB color = CRGB::Red;
-                if (scrollLeft)
-                    setPixelOnAllChannels(MATRIX_WIDTH - 1, y, color);
-                else
-                    setPixelOnAllChannels(0, y, color);
+              if (scrollLeft)
+                setPixelOnAllChannels(MATRIX_WIDTH - 1, y, bandColor);
+              else
+                setPixelOnAllChannels(0, y, bandColor);
             }
         }
     }
 
   public:
 
-  PDPCMXEffect() : LEDStripEffect(idMatrixPDPCMX, "PDPCMXEffect")
-    {
-    }
     static constexpr EffectId kId = idMatrixPDPCMX;
     EffectId effectId() const override { return kId; }
+
+    PDPCMXEffect() : LEDStripEffect(kId, "PDPCMXEffect")
+    {
+    }
 
     PDPCMXEffect(const JsonObjectConst& jsonObject)
       : LEDStripEffect(jsonObject)
@@ -688,7 +693,7 @@ class PDPCMXEffect : public LEDStripEffect
 
     virtual size_t DesiredFramesPerSecond() const
     {
-        return 30; // Moderate speed for scrolling effect
+        return 10; // Moderate speed for scrolling effect
     }
 
     virtual bool CanDisplayVUMeter() const override
@@ -706,16 +711,13 @@ class PDPCMXEffect : public LEDStripEffect
         // Process each logical group
         int numGroups = (MATRIX_HEIGHT + GROUP_HEIGHT - 1) / GROUP_HEIGHT; // Ceiling division
         
-        fadeAllChannelsToBlackBy(5);
-        EVERY_N_MILLISECONDS(200)
+        fadeAllChannelsToBlackBy(3);
+        for (int group = 0; group < numGroups; group++)
         {
-          for (int group = 0; group < numGroups; group++)
-          {
-              int groupStartY = group * GROUP_HEIGHT;
-              bool scrollLeft = (group % 2 == 0); // Alternate direction: even groups scroll left, odd scroll right
-              
-              scrollGroup(groupStartY, scrollLeft);
-          }
+            int groupStartY = group * GROUP_HEIGHT;
+            bool scrollLeft = (group % 2 == 0); // Alternate direction: even groups scroll left, odd scroll right
+            
+            scrollGroup(groupStartY, scrollLeft);
         }
     }
 };

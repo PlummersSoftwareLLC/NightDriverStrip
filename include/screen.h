@@ -171,7 +171,7 @@ public:
             tft.begin();
 
             #ifdef TFT_BL
-                pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
+                pinMode(TFT_BL, OUTPUT);               
                 digitalWrite(TFT_BL, 128);
             #endif
 

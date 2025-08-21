@@ -292,14 +292,6 @@ void LoadEffectFactories()
         );
     #endif
 
-    #if defined(EFFECTS_PDPGRID)
-        // PDP grid matrix effect set
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<PDPCMXEffect>(),
-            Effect<PDPGridEffect>()
-        );
-    #endif
-
     #if defined(EFFECTS_LANTERN)
         // Lantern effect set
         RegisterAll(*g_ptrEffectFactories,

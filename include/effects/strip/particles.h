@@ -391,6 +391,9 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
 
   public:
 
+    static constexpr EffectId kId = idStripColorBeatWithFlash;
+    EffectId effectId() const override { return kId; }
+
     ColorBeatWithFlash(const String & strName) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(idStripColorBeatWithFlash, strName)
     {
     }
@@ -446,8 +449,11 @@ class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public Pa
 
   public:
 
+  static constexpr EffectId kId = idStripColorBeatOverRed;
+  EffectId effectId() const override { return kId; }
+
     ColorBeatOverRed(const String & strName)
-  : LEDStripEffect(idStripColorBeatOverRed, strName),
+      : LEDStripEffect(idStripColorBeatOverRed, strName),
         BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
@@ -707,6 +713,9 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
 
   public:
 
+  static constexpr EffectId kId = idStripMoltenGlassOnVioletBkgnd;
+  EffectId effectId() const override { return kId; }
+
     MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
   : LEDStripEffect(idStripMoltenGlassOnVioletBkgnd, strName),
         BeatEffectBase(1.50, 0.05),
@@ -797,6 +806,9 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
 
   public:
 
+  static constexpr EffectId kId = idStripNewMoltenGlassOnVioletBkgnd;
+  EffectId effectId() const override { return kId; }
+
     NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
   : LEDStripEffect(idStripNewMoltenGlassOnVioletBkgnd, strName),
         BeatEffectBase(1.0, 0.25 ),
@@ -886,6 +898,9 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
 
   public:
 
+  static constexpr EffectId kId = idStripSparklySpinningMusic;
+  EffectId effectId() const override { return kId; }
+
     SparklySpinningMusicEffect(const String & strName, const CRGBPalette16 & Palette)
   : LEDStripEffect(idStripSparklySpinningMusic, strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
     {
@@ -947,6 +962,9 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
     CRGB _baseColor      = CRGB::Black;
 
   public:
+
+  static constexpr EffectId kId = idStripMusicalHotWhiteInsulator;
+  EffectId effectId() const override { return kId; }
 
   MusicalHotWhiteInsulatorEffect(const String & strName) : LEDStripEffect(idStripMusicalHotWhiteInsulator, strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
     {
