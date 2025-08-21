@@ -7,17 +7,8 @@
 class PatternSMRadialFire : public EffectWithId<idMatrixSMRadialFire>
 {
   public:
-
     PatternSMRadialFire() : EffectWithId<idMatrixSMRadialFire>("RadialFire") {}
     PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialFire>(jsonObject) {}
-
-  private:
-
-    static auto constexpr C_X = (MATRIX_WIDTH / 2);
-    static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
-
-    std::unique_ptr<uint8_t[]> XY_angle_buf;
-    std::unique_ptr<uint8_t[]> XY_radius_buf;
 
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
@@ -42,15 +33,26 @@ class PatternSMRadialFire : public EffectWithId<idMatrixSMRadialFire>
     {
         static uint8_t scaleX = 16;
         static uint8_t scaleY = 1;
-
         static uint8_t speed = 24;
         static uint32_t t;
         t += speed;
+<<<<<<< HEAD
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
             for (uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
                 int idx = x + MATRIX_WIDTH * y;
                 uint8_t angle = XY_angle_buf[idx];
                 uint8_t radius = XY_radius_buf[idx];
+=======
+
+        const auto& rMap = LEDMatrixGFX::getPolarMap();
+
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
+        {
+            for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
+            {
+                uint8_t angle = rMap[x][y].angle;
+                uint8_t radius = rMap[x][y].unscaled_radius; // Use the unscaled radius
+>>>>>>> 4b639e53 (Refactor: Centralize polar coordinate calculations for radial effects)
                 int16_t Bri = inoise8(angle * scaleX, (radius * scaleY) - t) - radius * (255 / MATRIX_HEIGHT);
                 uint8_t Col = Bri;
 
