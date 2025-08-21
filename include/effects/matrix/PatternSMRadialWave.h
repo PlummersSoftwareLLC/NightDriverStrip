@@ -7,6 +7,10 @@
 
 class PatternSMRadialWave : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idMatrixSMRadialWave;
+    EffectId effectId() const override { return kId; }
+  
   private:
     // RadialWave
     // Stepko and Sutaburosu
@@ -24,7 +28,7 @@ class PatternSMRadialWave : public LEDStripEffect
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMRadialWave() : LEDStripEffect(EFFECT_MATRIX_SMRADIAL_WAVE, "RadialWave")
+    PatternSMRadialWave() : LEDStripEffect(idMatrixSMRadialWave, "RadialWave")
     {
     }
 

@@ -62,7 +62,10 @@ class PatternSunburst : public LEDStripEffect
 {
   public:
 
-    PatternSunburst() : LEDStripEffect(EFFECT_MATRIX_SUNBURST, "Sunburst")
+    static constexpr EffectId kId = idMatrixSunburst;
+    EffectId effectId() const override { return kId; }
+
+    PatternSunburst() : LEDStripEffect(kId, "Sunburst")
     {
     }
 
@@ -103,7 +106,10 @@ class PatternRose : public LEDStripEffect
 {
   public:
 
-    PatternRose() : LEDStripEffect(EFFECT_MATRIX_ROSE, "Rose")
+    static constexpr EffectId kId = idMatrixRose;
+    EffectId effectId() const override { return kId; }
+    
+    PatternRose() : LEDStripEffect(kId, "Rose")
     {
     }
 
@@ -157,7 +163,10 @@ class PatternPinwheel : public LEDStripEffect
 {
   public:
 
-    PatternPinwheel() : LEDStripEffect(EFFECT_MATRIX_PINWHEEL, "Pinwheel")
+    static constexpr EffectId kId = idMatrixPinwheel;
+    EffectId effectId() const override { return kId; }
+
+    PatternPinwheel() : LEDStripEffect(kId, "Pinwheel")
     {
     }
 
@@ -201,7 +210,10 @@ class PatternInfinity : public LEDStripEffect
 {
 public:
 
-    PatternInfinity() : LEDStripEffect(EFFECT_MATRIX_INFINITY, "Infinity")
+    static constexpr EffectId kId = idMatrixInfinity;
+    EffectId effectId() const override { return kId; }
+
+    PatternInfinity() : LEDStripEffect(kId, "Infinity")
     {
     }
 
@@ -266,7 +278,10 @@ private:
     uint8_t generation = 0;
 
 public:
-    PatternMunch() : LEDStripEffect(EFFECT_MATRIX_MUNCH, "Munch")
+    static constexpr EffectId kId = idMatrixMunch;
+    EffectId effectId() const override { return kId; }
+    
+    PatternMunch() : LEDStripEffect(kId, "Munch")
     {
     }
 

@@ -73,6 +73,10 @@
 
 class PatternAlienText : public LEDStripEffect
 {
+public:
+  static constexpr EffectId kId = idMatrixAlienText;
+  EffectId effectId() const override { return kId; }
+  
 private:
   const int charWidth = 6;
   const int charHeight = 6;
@@ -83,7 +87,7 @@ private:
 
 public:
 
-  PatternAlienText() : LEDStripEffect(EFFECT_MATRIX_ALIEN_TEXT, "AlienText")
+  PatternAlienText() : LEDStripEffect(idMatrixAlienText, "AlienText")
   {
   }
 

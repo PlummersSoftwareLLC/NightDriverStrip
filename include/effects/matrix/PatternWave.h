@@ -60,7 +60,11 @@
 
 class PatternWave : public LEDStripEffect
 {
-private:
+  public:
+    static constexpr EffectId kId = idMatrixWave;
+    EffectId effectId() const override { return kId; }
+
+  private:
     uint8_t thetaUpdate = 4;
     uint8_t thetaUpdateFrequency = 0;
     uint8_t theta = 0;
@@ -86,7 +90,7 @@ private:
 
 
 public:
-    PatternWave() : LEDStripEffect(EFFECT_MATRIX_WAVE, "Wave")
+    PatternWave() : LEDStripEffect(idMatrixWave, "Wave")
     {
         construct();
     }

@@ -34,12 +34,15 @@ class PatternSMStrobeDiffusion : public LEDStripEffect
 #endif
 
   public:
+    static constexpr EffectId kId = idMatrixSMStrobeDiffusion;
+    EffectId effectId() const override { return kId; }
+    
     PatternSMStrobeDiffusion()
         :
 #if ENABLE_AUDIO
           BeatEffectBase(1.50, 0.05),
 #endif
-          LEDStripEffect(EFFECT_MATRIX_SMSTROBE_DIFFUSION, "Diffusion")
+          LEDStripEffect(kId, "Diffusion")
     {
     }
 

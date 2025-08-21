@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>                      // for std::shared_ptr
+#include <type_traits>
 #include <optional>
 #include <sys/time.h>
 #include <WString.h>
@@ -338,8 +339,10 @@ struct psram_deleter
 // a deleter, because we know that PSRAM can be freed with the regular free() call and does not require
 // special handling.
 
+// Overload for single objects (non-array types)
 template<typename T, typename... Args>
-std::unique_ptr<T> make_unique_psram(Args&&... args)
+std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+make_unique_psram(Args&&... args)
 {
     psram_allocator<T> allocator;
     T* ptr = allocator.allocate(1);
@@ -347,13 +350,15 @@ std::unique_ptr<T> make_unique_psram(Args&&... args)
     return std::unique_ptr<T>(ptr);
 }
 
+// Overload for unknown-bound arrays: make_unique_psram<U[]>(n)
 template<typename T>
-std::unique_ptr<T[]> make_unique_psram_array(size_t size)
+std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+make_unique_psram(size_t size)
 {
-    psram_allocator<T> allocator;
-    T* ptr = allocator.allocate(size);
-    // No need to call construct since arrays don't have constructors
-    return std::unique_ptr<T[]>(ptr);
+    using U = typename std::remove_extent<T>::type; // element type
+    psram_allocator<U> allocator;
+    U* ptr = allocator.allocate(size);
+    return std::unique_ptr<T>(ptr);
 }
 
 // make_shared_psram

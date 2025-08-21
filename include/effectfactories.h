@@ -41,8 +41,9 @@
 #include <esp_attr.h>
 #include "ledstripeffect.h"
 
-using DefaultEffectFactory = std::shared_ptr<LEDStripEffect>(*)();
-using JSONEffectFactory = std::shared_ptr<LEDStripEffect>(*)(const JsonObjectConst&);
+// Use std::function so factories can be capturing lambdas (needed for macro-free registration)
+using DefaultEffectFactory = std::function<std::shared_ptr<LEDStripEffect>()>;
+using JSONEffectFactory = std::function<std::shared_ptr<LEDStripEffect>(const JsonObjectConst&)>;
 
 // -----------------------------------------------------------------------------
 // Class: EffectFactories

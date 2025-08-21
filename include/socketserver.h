@@ -29,31 +29,32 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <memory>
-#include <iostream>
 
 #include "ledbuffer.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <memory>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 extern "C"
 {
     #include "uzlib/src/uzlib.h"
 }
 
-#define STANDARD_DATA_HEADER_SIZE   24                                              // Size of the header for expanded data
-#define COMPRESSED_HEADER_SIZE      16                                              // Size of the header for compressed data
-#define LED_DATA_SIZE               sizeof(CRGB)                                    // Data size of an LED (24 bits or 3 bytes)
+#define STANDARD_DATA_HEADER_SIZE   24                                             // Size of the header for expanded data
+#define COMPRESSED_HEADER_SIZE      16                                             // Size of the header for compressed data
+#define LED_DATA_SIZE               sizeof(CRGB)                                   // Data size of an LED (24 bits or 3 bytes)
 
-// We allocate whatever the max packet is, and use it to validate incoming packets, so right now it's set to the maxiumum
+// We allocate whatever the max packet is, and use it to validate incoming packets, so right now it's set to the maximum
 // LED data packet you could have (header plus 3 RGBs per NUM_LED)
 
 #define MAXIMUM_PACKET_SIZE (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS) // Header plus 24 bits per actual LED
-#define COMPRESSED_HEADER (0x44415645)                                              // asci "DAVE" as header
+#define COMPRESSED_HEADER (0x44415645)                                             // ASCII "DAVE" as header
 
 bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
 
@@ -61,7 +62,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
 // SocketResponse
 //
-// Response data sent back to server ever time we receive a packet
+// Response data sent back to server every time we receive a packet
 struct SocketResponse
 {
     uint32_t    size;              // 4
@@ -140,7 +141,7 @@ public:
             return false;
         }
 
-        // When an error occurs and we close and reopen the port, we need to specify reuse flags
+        // When an error occurs, and we close and reopen the port, we need to specify reuse flags
         // or it might be too soon to use the port again, since close doesn't actually close it
         // until the socket is no longer in use.
 
@@ -207,7 +208,7 @@ public:
             // Read data from the socket until we have _bcNeeded bytes in the buffer
 
             int cbRead = 0;
-            do 
+            do
             {
                 cbRead = read(socket, (uint8_t *) _pBuffer.get() + _cbReceived, cbNeeded - _cbReceived);
             } while (cbRead < 0 && errno == EINTR);
@@ -238,12 +239,12 @@ public:
     //
     // Use unzlib to decompress a memory buffer
 
-    bool DecompressBuffer(const uint8_t * pBuffer, size_t cBuffer, uint8_t * pOutput, size_t expectedOutputSize) const
+    static bool DecompressBuffer(const uint8_t * pBuffer, size_t cBuffer, uint8_t * pOutput, size_t expectedOutputSize)
     {
         debugV("Compressed Data: %02X %02X %02X %02X...", pBuffer[0], pBuffer[1], pBuffer[2], pBuffer[3]);
 
         struct uzlib_uncomp d = { 0 };
-        uzlib_uncompress_init(&d, NULL, 0);
+        uzlib_uncompress_init(&d, nullptr, 0);
 
         d.source         = pBuffer;
         d.source_limit   = pBuffer + cBuffer;

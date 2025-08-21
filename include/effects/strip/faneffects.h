@@ -378,9 +378,13 @@ class EmptyEffect : public LEDStripEffect
 
 class FanBeatEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripFanBeat;
+    EffectId effectId() const override { return kId; }
+
 public:
 
-  FanBeatEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_FAN_BEAT, strName)
+  FanBeatEffect(const String & strName) : LEDStripEffect(idStripFanBeat, strName)
   {
   }
 
@@ -448,6 +452,10 @@ public:
 
 class CountEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripCount;
+    EffectId effectId() const override { return kId; }
+
   using LEDStripEffect::LEDStripEffect;
 
   const int DRAW_LEN = 16;
@@ -481,12 +489,16 @@ class CountEffect : public LEDStripEffect
 
 class TapeReelEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripTapeReel;
+    EffectId effectId() const override { return kId; }
+
 private:
   float ReelPos[NUM_FANS] = {0};
   float ReelDir[NUM_FANS] = {0};
 
 public:
-  TapeReelEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_TAPE_REEL, strName)
+  TapeReelEffect(const String & strName) : LEDStripEffect(idStripTapeReel, strName)
   {
   }
 
@@ -567,13 +579,17 @@ public:
 
 class PaletteReelEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripPaletteReel;
+    EffectId effectId() const override { return kId; }
+
 private:
   float ReelPos[NUM_FANS] = {0};
   float ReelDir[NUM_FANS] = {0};
   int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteReelEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_PALETTE_REEL, strName)
+  PaletteReelEffect(const String & strName) : LEDStripEffect(idStripPaletteReel, strName)
   {
   }
 
@@ -666,17 +682,21 @@ public:
 
 class PaletteSpinEffect : public LEDStripEffect
 {
-  const CRGBPalette16 _Palette;
-  bool _bReplaceMagenta;
-  float _sparkleChance;
+  public:
+    static constexpr EffectId kId = idStripPaletteSpin;
+    EffectId effectId() const override { return kId; }
+
+    const CRGBPalette16 _Palette;
+    bool _bReplaceMagenta;
+    float _sparkleChance;
 
 private:
-  float ReelPos[NUM_FANS] = {0};
-  int ColorOffset[NUM_FANS] = {0};
+    float ReelPos[NUM_FANS] = {0};
+    int ColorOffset[NUM_FANS] = {0};
 
 public:
   PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
-      : LEDStripEffect(EFFECT_STRIP_PALETTE_SPIN, strName),
+  : LEDStripEffect(idStripPaletteSpin, strName),
         _Palette(palette),
         _bReplaceMagenta(bReplace),
         _sparkleChance(sparkleChance)
@@ -746,6 +766,10 @@ public:
 };
 class ColorCycleEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripColorCycle;
+    EffectId effectId() const override { return kId; }
+
   PixelOrder _order;
   int _step;
 
@@ -753,7 +777,7 @@ public:
   using LEDStripEffect::LEDStripEffect;
 
   ColorCycleEffect(PixelOrder order = Sequential, int step = 8)
-    : LEDStripEffect(EFFECT_STRIP_COLOR_CYCLE, "ColorCylceEffect"),
+  : LEDStripEffect(idStripColorCycle, "ColorCylceEffect"),
       _order(order),
       _step(step)
   {
@@ -800,6 +824,10 @@ public:
 
 class ColorCycleEffectBottomUp : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripColorCycleBottomUp;
+    EffectId effectId() const override { return kId; }
+
 public:
   using LEDStripEffect::LEDStripEffect;
 
@@ -824,6 +852,10 @@ public:
 
 class ColorCycleEffectTopDown : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripColorCycleTopDown;
+    EffectId effectId() const override { return kId; }
+
 public:
   using LEDStripEffect::LEDStripEffect;
 
@@ -848,6 +880,10 @@ public:
 
 class ColorCycleEffectSequential : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripColorCycleSequential;
+    EffectId effectId() const override { return kId; }
+
 public:
   using LEDStripEffect::LEDStripEffect;
 
@@ -895,6 +931,10 @@ public:
 
 class ColorCycleEffectRightLeft : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripColorCycleRightLeft;
+    EffectId effectId() const override { return kId; }
+
 public:
   using LEDStripEffect::LEDStripEffect;
 
@@ -917,6 +957,10 @@ public:
 
 class ColorCycleEffectLeftRight : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripColorCycleLeftRight;
+    EffectId effectId() const override { return kId; }
+
 public:
   using LEDStripEffect::LEDStripEffect;
 
@@ -939,6 +983,10 @@ public:
 
 class FireFanEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripFireFan;
+    EffectId effectId() const override { return kId; }
+
 protected:
   CRGBPalette16 Palette;
   int LEDCount; // Number of LEDs total
@@ -981,7 +1029,7 @@ public:
                 bool bmirrored = false,
                 bool bmulticolor = false,
                 uint8_t maxSparkTemp = 255)
-      : LEDStripEffect(EFFECT_STRIP_FIRE_FAN, "FireFanEffect"),
+  : LEDStripEffect(idStripFireFan, "FireFanEffect"),
         Palette(palette),
         LEDCount(ledCount),
         CellsPerLED(cellsPerLED),
@@ -1135,6 +1183,10 @@ public:
 
 class BlueFireFanEffect : public FireFanEffect
 {
+  public:
+    static constexpr EffectId kId = idStripFireFanBlue;
+    EffectId effectId() const override { return kId; }
+
   using FireFanEffect::FireFanEffect;
 
   virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
@@ -1152,6 +1204,10 @@ class BlueFireFanEffect : public FireFanEffect
 
 class GreenFireFanEffect : public FireFanEffect
 {
+  public:
+    static constexpr EffectId kId = idStripFireFanGreen;
+    EffectId effectId() const override { return kId; }
+
   using FireFanEffect::FireFanEffect;
 
   virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
@@ -1169,7 +1225,11 @@ class GreenFireFanEffect : public FireFanEffect
 
 class RGBRollAround : public LEDStripEffect
 {
-  int iRotate = 0;
+  public:
+    static constexpr EffectId kId = idStripRGBRollAround;
+    EffectId effectId() const override { return kId; }
+  
+    int iRotate = 0;
 
 public:
   using LEDStripEffect::LEDStripEffect;
@@ -1192,7 +1252,11 @@ public:
 
 class HueTest : public LEDStripEffect
 {
-  int iRotate = 0;
+  public:
+    static constexpr EffectId kId = idStripHueTest;
+    EffectId effectId() const override { return kId; }
+
+    int iRotate = 0;
 
 public:
   using LEDStripEffect::LEDStripEffect;
@@ -1210,26 +1274,28 @@ public:
 
 class RingTestEffect : public LEDStripEffect
 {
-private:
-public:
-  RingTestEffect() : LEDStripEffect(EFFECT_STRIP_RING_TEST, "Ring Test")
-  {
-  }
+  public:
+    static constexpr EffectId kId = idStripRingTest;
+    EffectId effectId() const override { return kId; }
 
-  RingTestEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-  {
-  }
-
-  void Draw() override
-  {
-    for (int i = 0; i < NUM_FANS; i++)
+    RingTestEffect() : LEDStripEffect(idStripRingTest, "Ring Test")
     {
-      for (int c = 0; c < NUM_RINGS; c++)
+    }
+
+    RingTestEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    {
+    }
+
+    void Draw() override
+    {
+      for (int i = 0; i < NUM_FANS; i++)
       {
-        FillRingPixels(CRGB(CHSV(c * 16, 255, 255)), i, c);
+        for (int c = 0; c < NUM_RINGS; c++)
+        {
+          FillRingPixels(CRGB(CHSV(c * 16, 255, 255)), i, c);
+        }
       }
     }
-  }
 };
 
 /*
@@ -1396,13 +1462,17 @@ public:
 
 class LanternEffect : public LEDStripEffect
 {
-  static const int _maxParticles = 1;
+  public:
+    static constexpr EffectId kId = idStripLantern;
+    EffectId effectId() const override { return kId; }
+    
+    static const int _maxParticles = 1;
 
 private:
   LanternParticle _particles[_maxParticles];
 
 public:
-  LanternEffect() : LEDStripEffect(EFFECT_STRIP_LANTERN, "LanternEffect")
+  LanternEffect() : LEDStripEffect(idStripLantern, "LanternEffect")
   {
   }
 
