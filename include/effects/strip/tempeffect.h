@@ -116,7 +116,7 @@ class VUInsulatorsEffect : public EffectWithId<idStripVUInsulators>
     int _last = 1;
 
   public:
-    
+
     using EffectWithId<idStripVUInsulators>::EffectWithId;
 
     void DrawVUPixels(int i, int fadeBy, const CRGBPalette16 & palette)

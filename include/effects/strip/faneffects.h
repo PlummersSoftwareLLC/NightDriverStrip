@@ -791,6 +791,7 @@ public:
 class ColorCycleEffectBottomUp : public EffectWithId<idStripColorCycleBottomUp>
 {
 public:
+  using EffectWithId<idStripColorCycleBottomUp>::EffectWithId;
 
   void Draw() override
   {
@@ -814,6 +815,7 @@ public:
 class ColorCycleEffectTopDown : public EffectWithId<idStripColorCycleTopDown>
 {
 public:
+  using EffectWithId<idStripColorCycleTopDown>::EffectWithId;
 
   void Draw() override
   {
@@ -837,6 +839,7 @@ public:
 class ColorCycleEffectSequential : public EffectWithId<idStripColorCycleSequential>
 {
 public:
+  using EffectWithId<idStripColorCycleSequential>::EffectWithId;
 
   void Draw() override
   {
@@ -859,9 +862,15 @@ public:
 
 class SpinningPaletteEffect : public PaletteEffect
 {
+private:
+
   int iRotate = 0;
 
 public:
+
+  static constexpr EffectId ID = idStripPaletteSpin;
+  EffectId effectId() const override { return ID; }
+
   using PaletteEffect::PaletteEffect;
 
   void Draw() override
@@ -884,6 +893,8 @@ class ColorCycleEffectRightLeft : public EffectWithId<idStripColorCycleRightLeft
 {
 public:
 
+  using EffectWithId<idStripColorCycleRightLeft>::EffectWithId;
+
   void Draw() override
   {
     FastLED.clear(false);
@@ -904,6 +915,8 @@ public:
 class ColorCycleEffectLeftRight : public EffectWithId<idStripColorCycleLeftRight>
 {
 public:
+
+  using EffectWithId<idStripColorCycleLeftRight>::EffectWithId;
 
   void Draw() override
   {
@@ -954,6 +967,7 @@ protected:
   int CellCount() const { return LEDCount * CellsPerLED; }
 
 public:
+
   FireFanEffect(CRGBPalette16 palette,
                 int ledCount,
                 int cellsPerLED = 1,
