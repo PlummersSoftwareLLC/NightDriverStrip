@@ -43,26 +43,25 @@
 //
 // Fills the spokes with a rainbow palette, skipping dots as specified
 
-class SimpleRainbowTestEffect : public LEDStripEffect
+class SimpleRainbowTestEffect : public EffectWithId<idStripSimpleRainbowTest>
 {
   private:
+
     uint8_t     _EveryNth;
     uint8_t     _SpeedDivisor;
 
   public:
 
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
-  : LEDStripEffect(idStripSimpleRainbowTest, "Simple Rainbow"),
+        : EffectWithId<idStripSimpleRainbowTest>("Simple Rainbow"),
           _EveryNth(everyNthPixel),
           _SpeedDivisor(speedDivisor)
     {
         debugV("SimpleRainbowTestEffect constructor");
     }
-    static constexpr EffectId kId = idStripSimpleRainbowTest;
-    EffectId effectId() const override { return kId; }
 
     SimpleRainbowTestEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+        : EffectWithId<idStripSimpleRainbowTest>(jsonObject),
           _EveryNth(jsonObject[PTY_EVERYNTH]),
           _SpeedDivisor(jsonObject[PTY_SPEEDDIVISOR])
     {
@@ -93,26 +92,25 @@ class SimpleRainbowTestEffect : public LEDStripEffect
 //
 // Fills the spokes with a rainbow palette, skipping dots as specified
 
-class RainbowTwinkleEffect : public LEDStripEffect
+class RainbowTwinkleEffect : public EffectWithId<idStripRainbowTwinkle>
 {
   private:
+
     float _speedDivisor;
     int   _deltaHue;
 
   public:
 
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-  : LEDStripEffect(idStripRainbowTwinkle, "Rainbow Twinkle"),
+      : EffectWithId<idStripRainbowTwinkle>("Rainbow Twinkle"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
         debugV("RainbowFill constructor");
     }
-    static constexpr EffectId kId = idStripRainbowTwinkle;
-    EffectId effectId() const override { return kId; }
 
     RainbowTwinkleEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripRainbowTwinkle>(jsonObject),
         _speedDivisor(jsonObject[PTY_SPEEDDIVISOR]),
         _deltaHue(jsonObject[PTY_DELTAHUE])
     {
@@ -155,13 +153,9 @@ class RainbowTwinkleEffect : public LEDStripEffect
 // Fills the spokes with a rainbow palette
 
 
-class RainbowFillEffect : public LEDStripEffect
+class RainbowFillEffect : public EffectWithId<idStripRainbowFill>
 {
-  public:
-    static constexpr EffectId kId = idStripRainbowFill;
-    EffectId effectId() const override { return kId; }
-  
-    protected:
+  protected:
 
     float _speedDivisor;
     int   _deltaHue;
@@ -170,7 +164,7 @@ class RainbowFillEffect : public LEDStripEffect
   public:
 
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14, bool mirrored = false)
-  : LEDStripEffect(idStripRainbowFill, "RainbowFill Rainbow"),
+  : EffectWithId<idStripRainbowFill>("RainbowFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue),
         _mirrored(mirrored)
@@ -179,7 +173,7 @@ class RainbowFillEffect : public LEDStripEffect
     }
 
     RainbowFillEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripRainbowFill>(jsonObject),
         _speedDivisor(jsonObject[PTY_SPEEDDIVISOR]),
         _deltaHue(jsonObject[PTY_DELTAHUE]),
         _mirrored(jsonObject[PTY_MIRRORED])
@@ -223,11 +217,9 @@ class RainbowFillEffect : public LEDStripEffect
 // Unless a user chooses to ignore the global color, the global color will be used instead when
 // DeviceConfig().ApplyGlobalColors() returns true.
 
-class ColorFillEffect : public LEDStripEffect
+class ColorFillEffect : public EffectWithId<idStripColorFill>
 {
-  private:
-
-protected:
+  protected:
 
     int _everyNth;
     CRGB _color;
@@ -236,18 +228,16 @@ protected:
   public:
 
     ColorFillEffect(const String &name, CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-  : LEDStripEffect(idStripColorFill, name),
+  : EffectWithId<idStripColorFill>(name),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
     {
         debugV("Color Fill constructor");
     }
-    static constexpr EffectId kId = idStripColorFill;
-    EffectId effectId() const override { return kId; }
 
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-  : LEDStripEffect(idStripColorFill, "Color Fill"),
+  : EffectWithId<idStripColorFill>("Color Fill"),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
@@ -256,7 +246,7 @@ protected:
     }
 
     ColorFillEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripColorFill>(jsonObject),
         _everyNth(jsonObject[PTY_EVERYNTH]),
         _color(jsonObject[PTY_COLOR].as<CRGB>()),
         _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
@@ -298,24 +288,23 @@ protected:
 extern const uint8_t logo_start[] asm("_binary_assets_bmp_lowreslogo_jpg_start");
 extern const uint8_t logo_end[]   asm("_binary_assets_bmp_lowreslogo_jpg_end");
 
-class SplashLogoEffect : public LEDStripEffect
+class SplashLogoEffect : public EffectWithId<idStripSplashLogo>
 {
   private:
+
     EmbeddedFile logo;
 
   public:
 
     SplashLogoEffect()
-  : LEDStripEffect(idStripSplashLogo, "Mesmerizer"),
+      : EffectWithId<idStripSplashLogo>("Mesmerizer"),
         logo(logo_start, logo_end)
     {
         debugV("Splash logo constructor");
     }
-    static constexpr EffectId kId = idStripSplashLogo;
-    EffectId effectId() const override { return kId; }
 
     SplashLogoEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripSplashLogo>(jsonObject),
         logo(logo_start, logo_end)
     {
         debugV("Splash logo JSON constructor");
@@ -352,7 +341,7 @@ class SplashLogoEffect : public LEDStripEffect
 // Green     WiFi working but no clock yet
 // White     Ready!
 
-class StatusEffect : public LEDStripEffect
+class StatusEffect : public EffectWithId<idStripStatus>
 {
   protected:
 
@@ -362,17 +351,15 @@ class StatusEffect : public LEDStripEffect
   public:
 
     StatusEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
-  : LEDStripEffect(idStripStatus, "Status Fill"),
+      : EffectWithId<idStripStatus>("Status Fill"),
         _everyNth(everyNth),
         _color(color)
     {
         debugV("Status Fill constructor");
     }
-    static constexpr EffectId kId = idStripStatus;
-    EffectId effectId() const override { return kId; }
 
     StatusEffect(const JsonObjectConst& jsonObject)     // Warmer: CRGB(246,200,160)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripStatus>(jsonObject),
         _everyNth(jsonObject[PTY_EVERYNTH]),
         _color(jsonObject[PTY_COLOR].as<CRGB>())
     {
@@ -429,7 +416,7 @@ static constexpr auto TwinkleColors =  to_array(
 });
 #endif
 
-class TwinkleEffect : public LEDStripEffect
+class TwinkleEffect : public EffectWithId<idStripTwinkle>
 {
   protected:
 
@@ -440,17 +427,15 @@ class TwinkleEffect : public LEDStripEffect
   public:
 
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
-  : LEDStripEffect(idStripTwinkle, "Twinkle"),
+      : EffectWithId<idStripTwinkle>("Twinkle"),
         _countToDraw(countToDraw),
         _fadeFactor(fadeFactor),
         _updateSpeed(updateSpeed)
     {
     }
-    static constexpr EffectId kId = idStripTwinkle;
-    EffectId effectId() const override { return kId; }
 
     TwinkleEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripTwinkle>(jsonObject),
         _countToDraw(jsonObject["ctd"]),
         _fadeFactor(jsonObject[PTY_FADE]),
         _updateSpeed(jsonObject[PTY_SPEED])
@@ -524,23 +509,17 @@ class TwinkleEffect : public LEDStripEffect
 //
 // A Battlestar Galactica inspired effect that moves red and green bars back and forth
 
-class SilonEffect : public LEDStripEffect
+class SilonEffect : public EffectWithId<idMatrixSilon>
 {
-  public:
-
-  SilonEffect() : LEDStripEffect(idMatrixSilon, "SilonEffect")
-    {
-    }
-    static constexpr EffectId kId = idMatrixSilon;
-    EffectId effectId() const override { return kId; }
-
-    SilonEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject)
-    {
-    }
+  private:
 
     int _offset = 0;
     int _direction = 1;
+
+  public:
+
+    SilonEffect() : EffectWithId<idMatrixSilon>("SilonEffect") {}
+    SilonEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSilon>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -574,23 +553,17 @@ class SilonEffect : public LEDStripEffect
 //
 // A Display for the front of the PDP-11/34
 
-class PDPGridEffect : public LEDStripEffect
+class PDPGridEffect : public EffectWithId<idMatrixPDPGrid>
 {
-  public:
-
-  PDPGridEffect() : LEDStripEffect(idMatrixPDPGrid, "PDPGridEffect")
-    {
-    }
-    static constexpr EffectId kId = idMatrixPDPGrid;
-    EffectId effectId() const override { return kId; }
-
-    PDPGridEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject)
-    {
-    }
+  private:
 
     int _offset = 0;
     int _direction = 1;
+
+  public:
+
+    PDPGridEffect() : EffectWithId<idMatrixPDPGrid>("PDPGridEffect") {}
+    PDPGridEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPDPGrid>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -605,7 +578,7 @@ class PDPGridEffect : public LEDStripEffect
     virtual void Start() override
     {
         g()->Clear();
-    }    
+    }
 
     virtual void Draw() override
     {
@@ -624,12 +597,13 @@ class PDPGridEffect : public LEDStripEffect
 //
 // Connection Machine 5 LED simulation for the PDP-11/34 CMX display
 
-class PDPCMXEffect : public LEDStripEffect
+class PDPCMXEffect : public EffectWithId<idMatrixPDPCMX>
 {
   private:
+
     static constexpr int GROUP_HEIGHT = 5; // Height of each logical group
     static constexpr float LED_PROBABILITY = 0.30f; // 30% chance of LED being on
-    
+
     void scrollGroup(int groupStartY, bool scrollLeft)
     {
         // Scroll existing LEDs in the group
@@ -658,7 +632,7 @@ class PDPCMXEffect : public LEDStripEffect
                 setPixelOnAllChannels(0, y, CRGB::Black);
             }
         }
-        
+
         // Add new random LEDs on the appropriate edge
         for (int y = groupStartY; y < groupStartY + GROUP_HEIGHT && y < MATRIX_HEIGHT; y++)
         {
@@ -675,16 +649,8 @@ class PDPCMXEffect : public LEDStripEffect
 
   public:
 
-  PDPCMXEffect() : LEDStripEffect(idMatrixPDPCMX, "PDPCMXEffect")
-    {
-    }
-    static constexpr EffectId kId = idMatrixPDPCMX;
-    EffectId effectId() const override { return kId; }
-
-    PDPCMXEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject)
-    {
-    }
+    PDPCMXEffect() : EffectWithId<idMatrixPDPCMX>("PDPCMXEffect") {}
+    PDPCMXEffect(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPDPCMX>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -705,7 +671,7 @@ class PDPCMXEffect : public LEDStripEffect
     {
         // Process each logical group
         int numGroups = (MATRIX_HEIGHT + GROUP_HEIGHT - 1) / GROUP_HEIGHT; // Ceiling division
-        
+
         fadeAllChannelsToBlackBy(5);
         EVERY_N_MILLISECONDS(200)
         {
@@ -713,7 +679,7 @@ class PDPCMXEffect : public LEDStripEffect
           {
               int groupStartY = group * GROUP_HEIGHT;
               bool scrollLeft = (group % 2 == 0); // Alternate direction: even groups scroll left, odd scroll right
-              
+
               scrollGroup(groupStartY, scrollLeft);
           }
         }
@@ -725,20 +691,12 @@ class PDPCMXEffect : public LEDStripEffect
 // Hexagon Effects
 ////////////////////////////////////////////////
 
-class OuterHexRingEffect : public LEDStripEffect
+class OuterHexRingEffect : public EffectWithId<idHexagonOuterRing>
 {
   public:
 
-  OuterHexRingEffect() : LEDStripEffect(idHexagonOuterRing, "OuterRingHexEffect")
-    {
-    }
-    static constexpr EffectId kId = idHexagonOuterRing;
-    EffectId effectId() const override { return kId; }
-
-    OuterHexRingEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject)
-    {
-    }
+    OuterHexRingEffect() : EffectWithId<idHexagonOuterRing>("OuterRingHexEffect") {}
+    OuterHexRingEffect(const JsonObjectConst& jsonObject) : EffectWithId<idHexagonOuterRing>(jsonObject) {}
 
     virtual void Draw() override
     {

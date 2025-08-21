@@ -4,19 +4,18 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1570-radialfire
 
-class PatternSMRadialFire : public LEDStripEffect
+class PatternSMRadialFire : public EffectWithId<idMatrixSMRadialFire>
 {
-public:
-    static constexpr EffectId kId = idMatrixSMRadialFire;
-    EffectId effectId() const override { return kId; }
+  public:
 
-    PatternSMRadialFire() : LEDStripEffect(idMatrixSMRadialFire, "RadialFire") {}
-    PatternSMRadialFire(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
+    PatternSMRadialFire() : EffectWithId<idMatrixSMRadialFire>("RadialFire") {}
+    PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialFire>(jsonObject) {}
 
   private:
+
     static auto constexpr C_X = (MATRIX_WIDTH / 2);
     static auto constexpr C_Y = (MATRIX_HEIGHT / 2);
-    
+
     std::unique_ptr<uint8_t[]> XY_angle_buf;
     std::unique_ptr<uint8_t[]> XY_radius_buf;
 
@@ -54,7 +53,7 @@ public:
                 uint8_t radius = XY_radius_buf[idx];
                 int16_t Bri = inoise8(angle * scaleX, (radius * scaleY) - t) - radius * (255 / MATRIX_HEIGHT);
                 uint8_t Col = Bri;
-                
+
                 if (Bri < 0)
                     Bri = 0;
                 if (Bri != 0)
@@ -67,9 +66,9 @@ public:
 
                 // Step 2: Choose base color depending on palette state
                 CRGB baseColor;
-                if (g()->IsPalettePaused()) 
+                if (g()->IsPalettePaused())
                     baseColor = g()->ColorFromCurrentPalette(Col);
-                else 
+                else
                     baseColor = CRGB::Red;
 
                 // Step 3: Get black body heat color

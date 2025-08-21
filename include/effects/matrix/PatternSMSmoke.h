@@ -4,13 +4,10 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1116-smoke
 
-class PatternSMSmoke : public LEDStripEffect
+class PatternSMSmoke : public EffectWithId<idMatrixSMSmoke>
 {
-public:
-  static constexpr EffectId kId = idMatrixSMSmoke;
-  EffectId effectId() const override { return kId; }
-
 private:
+
   static constexpr uint8_t Scale = 50; // 1-100. Setting
 
   static constexpr int WIDTH = MATRIX_WIDTH;
@@ -21,15 +18,12 @@ private:
   uint8_t deltaHue {0}, deltaHue2 {0};
 
 public:
+
   PatternSMSmoke()
-    : LEDStripEffect(idMatrixSMSmoke, "Smoke")
-  {
-  }
+    : EffectWithId<idMatrixSMSmoke>("Smoke") {}
 
   PatternSMSmoke(const JsonObjectConst &jsonObject)
-    : LEDStripEffect(jsonObject)
-  {
-  }
+    : EffectWithId<idMatrixSMSmoke>(jsonObject) {}
 
   virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
   {

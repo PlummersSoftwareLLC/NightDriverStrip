@@ -34,7 +34,7 @@
 
 #include "qrcode.h"
 
-class PatternQR : public LEDStripEffect
+class PatternQR : public EffectWithId<idMatrixQR>
 {
     void construct()
     {
@@ -51,12 +51,12 @@ protected:
 
 public:
 
-    PatternQR() : LEDStripEffect(idMatrixQR, "QR")
+    PatternQR() : EffectWithId<idMatrixQR>("QR")
     {
         construct();
     }
 
-    PatternQR(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
+    PatternQR(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixQR>(jsonObject)
     {
         construct();
     }

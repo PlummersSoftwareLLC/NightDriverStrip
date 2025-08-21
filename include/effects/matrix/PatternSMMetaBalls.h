@@ -6,9 +6,10 @@
 // N Glowing balls in orbit around each other around a rotating plane.
 // BUGBUG: Harvest possible speed fx from https://pastebin.com/VTAg4QAZ
 
-class PatternSMMetaBalls : public LEDStripEffect
+class PatternSMMetaBalls : public EffectWithId<idMatrixSMMetaBalls>
 {
   private:
+
     uint8_t bx[5];
     uint8_t by[5];
 
@@ -25,16 +26,9 @@ class PatternSMMetaBalls : public LEDStripEffect
     }
 
   public:
-    static constexpr EffectId kId = idMatrixSMMetaBalls;
-    EffectId effectId() const override { return kId; }
-    
-    PatternSMMetaBalls() : LEDStripEffect(kId, "MetaBalls")
-    {
-    }
 
-    PatternSMMetaBalls(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternSMMetaBalls() : EffectWithId<idMatrixSMMetaBalls>("MetaBalls") {}
+    PatternSMMetaBalls(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMMetaBalls>(jsonObject) {}
 
     void Start() override
     {

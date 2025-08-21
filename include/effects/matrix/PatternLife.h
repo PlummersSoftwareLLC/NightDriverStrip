@@ -72,13 +72,13 @@ extern "C"
 // Introduction:
 // -------------
 // This file contains the implementation for a life simulation game, inspired by Conway's Game of Life,
-// designed to be rendered on an LED matrix. The game is a zero-player game, meaning its evolution is 
+// designed to be rendered on an LED matrix. The game is a zero-player game, meaning its evolution is
 // determined by its initial state, requiring no further input from human players.
 //
 // Game Mechanics:
 // ---------------
-// 1. The game universe is a two-dimensional orthogonal grid of square cells, each of which is in one of two 
-//    possible states: alive or dead. Every cell interacts with its eight neighbors, which are the cells 
+// 1. The game universe is a two-dimensional orthogonal grid of square cells, each of which is in one of two
+//    possible states: alive or dead. Every cell interacts with its eight neighbors, which are the cells
 //    directly horizontally, vertically, or diagonally adjacent.
 // 2. At each step in time, the following transitions occur:
 //    a. Any live cell with fewer than two live neighbors dies (underpopulation).
@@ -90,17 +90,17 @@ extern "C"
 //
 // Rendering on LED Matrix:
 // ------------------------
-// 1. Each cell of the grid is represented by an LED in the matrix. A live cell is displayed by turning the 
+// 1. Each cell of the grid is represented by an LED in the matrix. A live cell is displayed by turning the
 //    corresponding LED on, while a dead cell is represented by turning the LED off.
 // 2. The LED matrix is controlled via C++ code which sends signals to each LED to manage its state.
-// 3. The rendering loop operates at a set interval, updating the state of each cell based on the rules 
+// 3. The rendering loop operates at a set interval, updating the state of each cell based on the rules
 //    of the game.
 // 4. Optimization techniques such as buffering are used to prevent flickering and to ensure smooth transitions
 //    between generations.
 //
 // Code Structure:
 // ---------------
-// 1. Class `PatternLife`: This class encapsulates the logic for the life simulation game. It includes methods 
+// 1. Class `PatternLife`: This class encapsulates the logic for the life simulation game. It includes methods
 //    for initializing the game, computing the next generation, and rendering the current state to the LED matrix.
 // 2. Method `initialize()`: Sets up the initial state of the grid, potentially randomly or based on predefined patterns.
 // 3. Method `update()`: Applies the rules of the game to compute the next generation.
@@ -108,9 +108,9 @@ extern "C"
 //
 // Performance Considerations:
 // ---------------------------
-// 1. Memory Efficiency: The implementation uses efficient data structures to store the state of each cell, 
+// 1. Memory Efficiency: The implementation uses efficient data structures to store the state of each cell,
 //    minimizing memory usage.
-// 2. Speed Optimization: The update and render methods are optimized for speed to allow for a fluid 
+// 2. Speed Optimization: The update and render methods are optimized for speed to allow for a fluid
 //    visualization on the LED matrix.
 //
 
@@ -128,7 +128,7 @@ public:
 
 constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 
-class PatternLife : public LEDStripEffect
+class PatternLife : public EffectWithId<idMatrixLife>
 {
 private:
     std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
@@ -162,7 +162,7 @@ private:
     //
     // Example:  Seed: 92465, Generations: 1626
 
-    static constexpr std::array<unsigned long, 19> bakedInSeeds = 
+    static constexpr std::array<unsigned long, 19> bakedInSeeds =
     {
         130908,         // 3253
         1576,           // 3125
@@ -235,16 +235,8 @@ private:
 
 public:
 
-    static constexpr EffectId kId = idMatrixLife;
-    EffectId effectId() const override { return kId; }
-    
-    PatternLife() : LEDStripEffect(kId, "Life")
-    {
-    }
-
-    PatternLife(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    PatternLife() : EffectWithId<idMatrixLife>("Life") {}
+    PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixLife>(jsonObject) {}
 
     void Reset()
     {

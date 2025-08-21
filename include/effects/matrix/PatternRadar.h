@@ -54,23 +54,17 @@
 #ifndef PatternRadar_H
 #define PatternRadar_H
 
-class PatternRadar : public LEDStripEffect
+class PatternRadar : public EffectWithId<idMatrixRadar>
 {
 private:
+
   uint8_t theta = 0;
   uint8_t hueoffset = 0;
 
 public:
-  static constexpr EffectId kId = idMatrixRadar;
-  EffectId effectId() const override { return kId; }
-  
-  PatternRadar() : LEDStripEffect(kId, "Radar")
-  {
-  }
 
-  PatternRadar(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject)
-  {
-  }
+  PatternRadar() : EffectWithId<idMatrixRadar>("Radar") {}
+  PatternRadar(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRadar>(jsonObject) {}
 
   void Draw() override
   {
