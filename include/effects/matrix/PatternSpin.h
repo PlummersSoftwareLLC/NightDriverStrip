@@ -57,11 +57,14 @@
 class PatternSpin : public LEDStripEffect
 {
 public:
-    PatternSpin() : LEDStripEffect(EFFECT_MATRIX_SPIN, "Spin")
+    static constexpr EffectId kId = idMatrixSpin;
+    EffectId effectId() const override { return kId; }
+    
+    PatternSpin() : LEDStripEffect(kId, "Spin")
     {
     }
 
-    PatternSpin(const char   * pszFriendlyName) : LEDStripEffect(EFFECT_MATRIX_SPIN, pszFriendlyName)
+    PatternSpin(const char   * pszFriendlyName) : LEDStripEffect(idMatrixSpin, pszFriendlyName)
     {
     }
 

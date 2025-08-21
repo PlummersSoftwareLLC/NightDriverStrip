@@ -35,6 +35,13 @@
 #include <deque>
 
 #include "effects.h"
+// Needed for FillRingPixels, DrawRingPixels, and fan/ring utilities
+#include "faneffects.h"
+
+#if ENABLE_AUDIO
+// Needed for BeatEffectBase and audio-driven particle effects
+#include "musiceffect.h"
+#endif
 
 // Lifespan
 //
@@ -384,7 +391,7 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
 
   public:
 
-    ColorBeatWithFlash(const String & strName) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_WITH_FLASH, strName)
+    ColorBeatWithFlash(const String & strName) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(idStripColorBeatWithFlash, strName)
     {
     }
 
@@ -440,7 +447,7 @@ class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public Pa
   public:
 
     ColorBeatOverRed(const String & strName)
-      : LEDStripEffect(EFFECT_STRIP_COLOR_BEAT_OVER_RED, strName),
+  : LEDStripEffect(idStripColorBeatOverRed, strName),
         BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
@@ -701,7 +708,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
   public:
 
     MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-      : LEDStripEffect(EFFECT_STRIP_MOLTEN_GLASS_ON_VIOLET_BKGND, strName),
+  : LEDStripEffect(idStripMoltenGlassOnVioletBkgnd, strName),
         BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -791,7 +798,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
   public:
 
     NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-      : LEDStripEffect(EFFECT_STRIP_NEW_MOLTEN_GLASS_ON_VIOLET_BKGND, strName),
+  : LEDStripEffect(idStripNewMoltenGlassOnVioletBkgnd, strName),
         BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -880,7 +887,7 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
   public:
 
     SparklySpinningMusicEffect(const String & strName, const CRGBPalette16 & Palette)
-      : LEDStripEffect(EFFECT_STRIP_SPARKLY_SPINNING_MUSIC, strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
+  : LEDStripEffect(idStripSparklySpinningMusic, strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
     {
     }
 
@@ -941,7 +948,7 @@ class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectB
 
   public:
 
-    MusicalHotWhiteInsulatorEffect(const String & strName) : LEDStripEffect(EFFECT_STRIP_MUSICAL_HOT_WHITE_INSULATOR, strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
+  MusicalHotWhiteInsulatorEffect(const String & strName) : LEDStripEffect(idStripMusicalHotWhiteInsulator, strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
     {
     }
 

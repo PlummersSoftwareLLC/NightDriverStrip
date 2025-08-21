@@ -23,7 +23,10 @@ class PatternSMRainbowTunnel : public LEDStripEffect
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
   public:
-    PatternSMRainbowTunnel() : LEDStripEffect(EFFECT_MATRIX_SMRAINBOW_TUNNEL, "Colorspin")
+    static constexpr EffectId kId = idMatrixSMRainbowTunnel;
+    EffectId effectId() const override { return kId; }
+
+    PatternSMRainbowTunnel() : LEDStripEffect(idMatrixSMRainbowTunnel, "Colorspin")
     {
     }
 

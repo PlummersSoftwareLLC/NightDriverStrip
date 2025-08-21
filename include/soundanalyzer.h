@@ -813,7 +813,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         M5.Mic.config(cfg);
         M5.Mic.begin();
 
-#elif ELECROW || USE_I2S_AUDIO
+#elif USE_I2S_AUDIO
 
         const i2s_config_t i2s_config = {.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
                                          .sample_rate = SAMPLING_FREQUENCY,
@@ -933,24 +933,8 @@ class SoundAnalyzer : public ISoundAnalyzer
         _msLastRemoteAudio = millis();
         _Peaks = peaks;
         _vPeaks = _Peaks;
-        float sum = std::accumulate(_vPeaks);
+        float sum = accumulate(_vPeaks);
         UpdateVU(sum / NUM_BANDS);
-    }
-
-    // Expose computed band start indices (inclusive) for diagnostics.
-    // Length is NUM_BANDS; pairs with BandBinEnds().
-
-    inline const int *BandBinStarts() const
-    {
-        return _bandBinStart.data();
-    }
-
-    // Expose computed band end indices (exclusive) for diagnostics.
-    // Length is NUM_BANDS; pairs with BandBinStarts().
-
-    inline const int * BandBinEnds() const
-    {
-        return _bandBinEnd.data();
     }
 
 #if ENABLE_AUDIO_DEBUG
@@ -993,7 +977,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         else
         {
             // Using remote data - just update VU from existing peaks
-            float sum = std::accumulate(_Peaks);
+            float sum = accumulate(_Peaks);
             UpdateVU(sum / NUM_BANDS);
         }
     }

@@ -6,9 +6,12 @@
 // Looks best on a square display, but OK on rectangles.
 // I'll admit this math may as well be magic, but it's pretty.
 
-class PatternSM2DDPR : public LEDStripEffect
-{
-  private:
+class PatternSM2DDPR : public LEDStripEffect {
+    public:
+        static constexpr EffectId kId = idMatrixSM2DDPR;
+        EffectId effectId() const override { return kId; }
+        
+    private:
     uint8_t ZVoffset = 0;
 
     const int Scale = 127;
@@ -21,7 +24,7 @@ class PatternSM2DDPR : public LEDStripEffect
     //   byte effect = 1;
 
   public:
-    PatternSM2DDPR() : LEDStripEffect(EFFECT_MATRIX_SM2DDPR, "Crystallize")
+    PatternSM2DDPR() : LEDStripEffect(idMatrixSM2DDPR, "Crystallize")
     {
     }
 

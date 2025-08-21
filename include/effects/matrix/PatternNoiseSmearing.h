@@ -61,7 +61,7 @@
 class PatternRainbowFlag : public LEDStripEffect
 {
 public:
-  PatternRainbowFlag() : LEDStripEffect(EFFECT_MATRIX_RAINBOW_FLAG, "RainbowFlag")
+  PatternRainbowFlag() : LEDStripEffect(idMatrixRainbowFlag, "RainbowFlag")
   {
   }
 

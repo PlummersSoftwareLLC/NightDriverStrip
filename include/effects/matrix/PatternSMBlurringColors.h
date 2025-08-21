@@ -193,13 +193,12 @@ class PatternSMBlurringColors : public LEDStripEffect
     }
 
   public:
-    PatternSMBlurringColors() : LEDStripEffect(EFFECT_MATRIX_SMBLURRING_COLORS, "Powder")
-    {
-    }
 
-    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject)
-    {
-    }
+    static constexpr EffectId kId = idMatrixSMBlurringColors;
+    EffectId effectId() const override { return kId; }
+    
+    PatternSMBlurringColors() : LEDStripEffect(idMatrixSMBlurringColors, "Powder") {}
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : LEDStripEffect(jsonObject) {}
 
     void Start() override
     {

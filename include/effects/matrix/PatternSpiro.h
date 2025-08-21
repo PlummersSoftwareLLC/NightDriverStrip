@@ -81,7 +81,7 @@ private:
   boolean handledChange = false;
 
 public:
-  PatternSpiro() : LEDStripEffect(EFFECT_MATRIX_SPIRO, "Spiro")
+  PatternSpiro() : LEDStripEffect(idMatrixSpiro, "Spiro")
   {
   }
 

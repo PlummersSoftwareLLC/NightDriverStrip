@@ -74,8 +74,12 @@
 #define SPEEDUP 1.15
 #define MAXSPEED 4.0f
 
-class PatternPongClock : public LEDStripEffect
+class PatternPongClock : public LEDStripEffect 
 {
+  public:
+    static constexpr EffectId kId = idMatrixPongClock;
+    EffectId effectId() const override { return kId; }
+  
   private:
     float ballpos_x, ballpos_y;
     uint8_t erase_x = 10; // holds ball old pos so we can erase it, set to blank area of screen initially.
@@ -95,7 +99,7 @@ class PatternPongClock : public LEDStripEffect
 
   public:
 
-    PatternPongClock() : LEDStripEffect(EFFECT_MATRIX_PONG_CLOCK, "PongClock")
+    PatternPongClock() : LEDStripEffect(idMatrixPongClock, "PongClock")
     {
     }
 

@@ -162,6 +162,10 @@ public:
 
 class MeteorEffect : public LEDStripEffect
 {
+  public:
+    static constexpr EffectId kId = idStripMeteor;
+    EffectId effectId() const override { return kId; }
+  
   private:
     std::vector<MeteorChannel> _Meteors;
 
@@ -174,7 +178,7 @@ class MeteorEffect : public LEDStripEffect
   public:
 
     MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2)
-        : LEDStripEffect(EFFECT_STRIP_METEOR, "Color Meteors"),
+    : LEDStripEffect(idStripMeteor, "Color Meteors"),
           _Meteors(),
           _cMeteors(cMeteors),
           _meteorSize(size),

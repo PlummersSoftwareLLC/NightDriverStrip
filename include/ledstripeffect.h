@@ -129,46 +129,49 @@ class LEDStripEffect : public IJSONSerializable
   protected:
 
     size_t _cLEDs = 0;
-    int    _effectNumber;
     String _friendlyName;
     bool   _enabled = true;
     size_t _maximumEffectTime = 0;
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
 
-    // Macro that assigns a value to a property if two names match
-    #define SET_IF_NAMES_MATCH(firstName, secondName, property, value)  if (firstName == secondName) \
-    { \
-        property = (value); \
-        return true; \
-    } \
-    return false
+    // Function that assigns a value to a property if two names match
+    template <typename TProperty, typename TValue>
+    static bool SetIfNameMatches(const String& firstName, const String& secondName, TProperty& property, const TValue& value)
+    {
+        if (firstName == secondName)
+        {
+            property = value;
+            return true;
+        }
+        return false;
+    }
 
     // Helper functions for known setting types, as defined in SettingSpec::SettingType
 
     static bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toInt());
+        return SetIfNameMatches(settingName, propertyName, property, value.toInt());
     }
 
     static bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, strtoul(value.c_str(), nullptr, 10));
+        return SetIfNameMatches(settingName, propertyName, property, strtoul(value.c_str(), nullptr, 10));
     }
 
     static bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, value.toFloat());
+        return SetIfNameMatches(settingName, propertyName, property, value.toFloat());
     }
 
     static bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, BoolFromText(value));
+        return SetIfNameMatches(settingName, propertyName, property, BoolFromText(value));
     }
 
     static bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, value);
+        return SetIfNameMatches(settingName, propertyName, property, value);
     }
 
     static bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
@@ -194,7 +197,7 @@ class LEDStripEffect : public IJSONSerializable
 
     static bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
     {
-        SET_IF_NAMES_MATCH(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
+        return SetIfNameMatches(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
     }
 
     // Overrides of this method should fill the respective effect's SettingSpec vector and return a pointer to it.
@@ -211,16 +214,27 @@ class LEDStripEffect : public IJSONSerializable
 
   public:
 
-    LEDStripEffect(int effectNumber, const String & strName) :
-        _effectNumber(effectNumber)
+    // Constructor doesn't take an effect number; effect identity is provided by effectId()
+
+    explicit LEDStripEffect(const String & strName)
     {
         if (!strName.isEmpty())
             _friendlyName = strName;
     }
 
+    // Transitional ctor: accept an id but ignore it. This allows existing call sites
+    // to compile while we migrate them to the name-only constructor.
+    explicit LEDStripEffect(EffectId /*ignoredId*/, const String & strName)
+        : LEDStripEffect(strName)
+    {}
+
+    // Some call sites may pass a raw int; accept and ignore it as well.
+    explicit LEDStripEffect(int /*ignoredId*/, const String & strName)
+        : LEDStripEffect(strName)
+    {}
+
     explicit LEDStripEffect(const JsonObjectConst&  jsonObject)
-        : _effectNumber(jsonObject[PTY_EFFECTNR]),
-          _friendlyName(jsonObject["fn"].as<String>())
+        : _friendlyName(jsonObject["fn"].as<String>())
     {
         if (jsonObject["es"].is<int>())
             _enabled = jsonObject["es"].as<int>() == 1;
@@ -237,8 +251,7 @@ class LEDStripEffect : public IJSONSerializable
             _maximumEffectTime = 0;
     }
 
-    virtual ~LEDStripEffect()
-    = default;
+    virtual ~LEDStripEffect() = default;
 
     virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
     {
@@ -287,10 +300,10 @@ class LEDStripEffect : public IJSONSerializable
         return _friendlyName;
     }
 
-    int EffectNumber() const
-    {
-        return _effectNumber;
-    }
+    // Runtime effect id. Subclasses must override to return their EffectId
+
+       
+    virtual EffectId effectId() const = 0;
 
     virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
     {
@@ -530,7 +543,7 @@ class LEDStripEffect : public IJSONSerializable
     {
         auto jsonDoc = CreateJsonDocument();
 
-        jsonDoc[PTY_EFFECTNR]       = _effectNumber;
+        jsonDoc[PTY_EFFECTNR]       = static_cast<int>(effectId());
         jsonDoc["fn"]               = _friendlyName;
         jsonDoc["es"]               = _enabled ? 1 : 0;
 

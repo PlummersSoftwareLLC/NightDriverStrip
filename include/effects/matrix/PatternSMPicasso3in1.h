@@ -4,9 +4,15 @@
 
 // Inspired by https://editor.soulmatelights.com/gallery/1177-picasso-3in1
 
-class PatternSMPicasso3in1 : public LEDStripEffect
+class PatternSMPicasso3in1 : public LEDStripEffect 
 {
+  public:
+  
+    static constexpr EffectId kId = idMatrixSMPicasso3in1;
+    EffectId effectId() const override { return kId; }
+    
   private:
+
     // Suggested values for Mesmerizer w/ 1/2 HUB75 panel: 10, 36, 70
     uint8_t Scale = 2; // 1-100 is image type and count. THis should be a Setting 0-33 = P1,
                        // 34-68 = P2, 68-99 = Picasso3 P1 - Scale is number of independent
@@ -152,13 +158,13 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
   public:
     PatternSMPicasso3in1()
-      : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, "Picasso"),
+      : LEDStripEffect(idMatrixSMPicasso3in1, "Picasso"),
         _scale(-1)
     {
     }
 
     PatternSMPicasso3in1(const String& name, int scale)
-      : LEDStripEffect(EFFECT_MATRIX_SMPICASSO3IN1, name),
+      : LEDStripEffect(idMatrixSMPicasso3in1, name),
         _scale(scale)
     {
     }
@@ -202,7 +208,7 @@ class PatternSMPicasso3in1 : public LEDStripEffect
     void Start() override
     {
         g()->Clear();
-	Scale = _scale;
+	    Scale = _scale;
         RecalibrateDrawnObjects();
     }
 
@@ -220,11 +226,11 @@ class PatternSMPicasso3in1 : public LEDStripEffect
 
 	    Scale = _scale;
 
-        if (Scale < 34U) // если масштаб до 34
-            PicassoRoutine1();
-        else if (Scale > 67U) // если масштаб больше 67
-            PicassoRoutine3();
-        else // для масштабов посередине
-            PicassoRoutine2();
+        if (Scale < 34U) 
+            PicassoRoutine1();  // Scale is less than 34
+        else if (Scale > 67U) 
+            PicassoRoutine3();  // Scale is greater than 67
+        else 
+            PicassoRoutine2();  // Scale is between 34 and 67
     }
 };

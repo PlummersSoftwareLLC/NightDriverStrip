@@ -6,6 +6,10 @@
 
 class PatternSMSmoke : public LEDStripEffect
 {
+public:
+  static constexpr EffectId kId = idMatrixSMSmoke;
+  EffectId effectId() const override { return kId; }
+
 private:
   static constexpr uint8_t Scale = 50; // 1-100. Setting
 
@@ -18,12 +22,12 @@ private:
 
 public:
   PatternSMSmoke()
-      : LEDStripEffect(EFFECT_MATRIX_SMSMOKE, "Smoke")
+    : LEDStripEffect(idMatrixSMSmoke, "Smoke")
   {
   }
 
   PatternSMSmoke(const JsonObjectConst &jsonObject)
-      : LEDStripEffect(jsonObject)
+    : LEDStripEffect(jsonObject)
   {
   }
 

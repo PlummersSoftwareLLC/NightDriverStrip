@@ -235,7 +235,10 @@ private:
 
 public:
 
-    PatternLife() : LEDStripEffect(EFFECT_MATRIX_LIFE, "Life")
+    static constexpr EffectId kId = idMatrixLife;
+    EffectId effectId() const override { return kId; }
+    
+    PatternLife() : LEDStripEffect(kId, "Life")
     {
     }
 

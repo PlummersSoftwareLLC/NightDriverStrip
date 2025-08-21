@@ -51,7 +51,7 @@ protected:
 
 public:
 
-    PatternQR() : LEDStripEffect(EFFECT_MATRIX_QR, "QR")
+    PatternQR() : LEDStripEffect(idMatrixQR, "QR")
     {
         construct();
     }
