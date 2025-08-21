@@ -540,7 +540,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         constexpr float kMaxFPS = 60.0f;
         const     auto  kMinDelay = (g_InfoPage == PAGE_ID_DEBUG) ? 50.0 : 1.0;
         const     auto  targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(max(kMinDelay, targetDelay - (millis() - lastFrame)));
+        delay((unsigned long)max(kMinDelay, targetDelay - (millis() - lastFrame)));
 
         bRedraw = false;
     }
