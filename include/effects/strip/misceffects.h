@@ -659,22 +659,19 @@ class PDPCMXEffect : public LEDStripEffect
             }
         }
 
-    // Add new random LEDs on the appropriate edge
-    // Color by band parity: even bands = red, odd bands = amber
+        // Add new random LEDs on the appropriate edge
+        // Color by band parity: even bands = red, odd bands = amber
+        
         const int groupIndex = groupStartY / GROUP_HEIGHT;
         const bool isEvenGroup = (groupIndex % 2) == 0;
-        const CRGB bandColor = isEvenGroup ? CRGB::Red : CRGB::Orange;
+        const CRGB bandColor = isEvenGroup ? CRGB::Red : CRGB::OrangeRed;
 
         for (int y = groupStartY; y < groupStartY + GROUP_HEIGHT && y < MATRIX_HEIGHT; y++)
-        {
             if (random(100) < (LED_PROBABILITY * 100))
-            {
-              if (scrollLeft)
-                setPixelOnAllChannels(MATRIX_WIDTH - 1, y, bandColor);
-              else
-                setPixelOnAllChannels(0, y, bandColor);
-            }
-        }
+                if (scrollLeft)
+                    setPixelOnAllChannels(MATRIX_WIDTH - 1, y, bandColor);
+                else
+                    setPixelOnAllChannels(0, y, bandColor);
     }
 
   public:
@@ -711,7 +708,7 @@ class PDPCMXEffect : public LEDStripEffect
         // Process each logical group
         int numGroups = (MATRIX_HEIGHT + GROUP_HEIGHT - 1) / GROUP_HEIGHT; // Ceiling division
 
-        fadeAllChannelsToBlackBy(3);
+        fadeAllChannelsToBlackBy(32);
         for (int group = 0; group < numGroups; group++)
         {
             int groupStartY = group * GROUP_HEIGHT;
