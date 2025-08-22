@@ -418,7 +418,7 @@ public:
 #define LCD_RST  -1 
 #define LCD_DC   42  
 
-    class ElecrowScreen : public Screen, lgfx :  : LGFX_Device
+    class ElecrowScreen : public Screen, lgfx::LGFX_Device
     {
         lgfx::Panel_ILI9488 _panel_instance;
         lgfx::Bus_SPI _bus_instance;
