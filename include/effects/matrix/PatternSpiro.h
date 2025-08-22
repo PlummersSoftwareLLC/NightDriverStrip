@@ -63,100 +63,98 @@
 class PatternSpiro : public EffectWithId<PatternSpiro>
 {
 private:
+    uint8_t theta1 = 0;
+    uint8_t theta2 = 0;
+    uint8_t hueoffset = 0;
 
-uint8_t theta1 = 0;
-uint8_t theta2 = 0;
-uint8_t hueoffset = 0;
+    uint8_t radiusx = MATRIX_WIDTH / 4;
+    uint8_t radiusy = MATRIX_HEIGHT / 4;
+    uint8_t minx = MATRIX_CENTER_X - radiusx;
+    uint8_t maxx = MATRIX_CENTER_X + radiusx - 1;
+    uint8_t miny = MATRIX_CENTER_Y - radiusy;
+    uint8_t maxy = MATRIX_CENTER_Y + radiusy - 1;
 
-uint8_t radiusx = MATRIX_WIDTH / 4;
-uint8_t radiusy = MATRIX_HEIGHT / 4;
-uint8_t minx = MATRIX_CENTER_X - radiusx;
-uint8_t maxx = MATRIX_CENTER_X + radiusx - 1;
-uint8_t miny = MATRIX_CENTER_Y - radiusy;
-uint8_t maxy = MATRIX_CENTER_Y + radiusy - 1;
+    uint8_t spirocount = 1;
+    uint8_t spirooffset = 256 / spirocount;
+    boolean spiroincrement = false;
 
-uint8_t spirocount = 1;
-uint8_t spirooffset = 256 / spirocount;
-boolean spiroincrement = false;
-
-boolean handledChange = false;
+    boolean handledChange = false;
 
 public:
+    PatternSpiro() : EffectWithId<PatternSpiro>("Spiro") {}
+    PatternSpiro(const JsonObjectConst &jsonObject) : EffectWithId<PatternSpiro>(jsonObject) {}
 
-PatternSpiro() : EffectWithId<PatternSpiro>("Spiro") {}
-PatternSpiro(const JsonObjectConst& jsonObject) : EffectWithId<PatternSpiro>(jsonObject) {}
-
-virtual size_t DesiredFramesPerSecond() const override
-{
-    return 120;
-}
-void Draw() override
-{
-    auto graphics = g();
-    graphics->DimAll(253);
-
-    // effects.ShowFrame();
-
-    boolean change = false;
-
-    for (int i = 0; i < spirocount; i++)
+    virtual size_t DesiredFramesPerSecond() const override
     {
-    uint8_t x = graphics->mapsin8(theta1 + i * spirooffset, minx, maxx);
-    uint8_t y = graphics->mapcos8(theta1 + i * spirooffset, miny, maxy);
-
-    uint8_t x2 = graphics->mapsin8(theta2 + i * spirooffset, x - radiusx, x + radiusx);
-    uint8_t y2 = graphics->mapcos8(theta2 + i * spirooffset, y - radiusy, y + radiusy);
-
-    CRGB color = graphics->ColorFromCurrentPalette(hueoffset + i * spirooffset, 128);
-    graphics->leds[graphics->xy(x2, y2)] += color;
-
-    if (x2 == MATRIX_CENTER_X && y2 == MATRIX_CENTER_Y)
-        change = true;
+        return 120;
     }
-
-    theta2 += 1;
-
-    EVERY_N_MILLIS(25)
+    void Draw() override
     {
-    theta1 += 1;
-    }
+        auto graphics = g();
+        graphics->DimAll(253);
 
-    EVERY_N_MILLIS(100)
-    {
-    if (change && !handledChange)
-    {
-        handledChange = true;
+        // effects.ShowFrame();
 
-        if (spirocount >= MATRIX_WIDTH || spirocount == 1)
-        spiroincrement = !spiroincrement;
+        boolean change = false;
 
-        if (spiroincrement)
+        for (int i = 0; i < spirocount; i++)
         {
-        if (spirocount >= 4)
-            spirocount *= 2;
-        else
-            spirocount += 1;
-        }
-        else
-        {
-        if (spirocount > 4)
-            spirocount /= 2;
-        else
-            spirocount -= 1;
+            uint8_t x = graphics->mapsin8(theta1 + i * spirooffset, minx, maxx);
+            uint8_t y = graphics->mapcos8(theta1 + i * spirooffset, miny, maxy);
+
+            uint8_t x2 = graphics->mapsin8(theta2 + i * spirooffset, x - radiusx, x + radiusx);
+            uint8_t y2 = graphics->mapcos8(theta2 + i * spirooffset, y - radiusy, y + radiusy);
+
+            CRGB color = graphics->ColorFromCurrentPalette(hueoffset + i * spirooffset, 128);
+            graphics->leds[graphics->xy(x2, y2)] += color;
+
+            if (x2 == MATRIX_CENTER_X && y2 == MATRIX_CENTER_Y)
+                change = true;
         }
 
-        spirooffset = 256 / spirocount;
-    }
+        theta2 += 1;
 
-    if (!change)
-        handledChange = false;
-    }
+        EVERY_N_MILLIS(25)
+        {
+            theta1 += 1;
+        }
 
-    EVERY_N_MILLIS(33)
-    {
-    hueoffset += 1;
+        EVERY_N_MILLIS(100)
+        {
+            if (change && !handledChange)
+            {
+                handledChange = true;
+
+                if (spirocount >= MATRIX_WIDTH || spirocount == 1)
+                    spiroincrement = !spiroincrement;
+
+                if (spiroincrement)
+                {
+                    if (spirocount >= 4)
+                        spirocount *= 2;
+                    else
+                        spirocount += 1;
+                }
+                else
+                {
+                    if (spirocount > 4)
+                        spirocount /= 2;
+                    else
+                        spirocount -= 1;
+                }
+
+                spirooffset = 256 / spirocount;
+            }
+
+            if (!change)
+                handledChange = false;
+        }
+
+        EVERY_N_MILLIS(33)
+        {
+            hueoffset += 1;
+        }
     }
-}
 };
 
 #endif

@@ -51,6 +51,6 @@ public:
             for (uint y = 0; y < MATRIX_HEIGHT; y++)
                 g()->leds[XY(x, y)] = ColorFromPalette(g()->IsPalettePaused()
                                     ? g()->GetCurrentPalette()
-    : RainbowStripeColors_p, t / 2 + rMap[x][y].radius + rMap[x][y].angle, sin8(rMap[x][y].angle + (rMap[x][y].radius * 2) - t));
+                                    : RainbowStripeColors_p, t / 2 + rMap[x][y].radius + rMap[x][y].angle, sin8(rMap[x][y].angle + (rMap[x][y].radius * 2) - t));
     }
 };

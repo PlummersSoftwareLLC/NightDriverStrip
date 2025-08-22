@@ -102,7 +102,8 @@ extern "C"
 // ---------------
 // 1. Class `PatternLife`: This class encapsulates the logic for the life simulation game. It includes methods
 //    for initializing the game, computing the next generation, and rendering the current state to the LED matrix.
-// 2. Method `initialize()`: Sets up the initial state of the grid, potentially randomly or based on predefined patterns.
+// 2. Method `initialize()`: Sets up the initial state of the grid, potentially randomly or based on predefined
+// patterns.
 // 3. Method `update()`: Applies the rules of the game to compute the next generation.
 // 4. Method `render()`: Sends the appropriate signals to the LED matrix to render the current state of the grid.
 //
@@ -117,10 +118,10 @@ extern "C"
 class Cell
 {
 public:
-uint8_t alive : 1;
-uint8_t prev  : 1;
-uint8_t hue;
-uint8_t brightness;
+    uint8_t alive : 1;
+    uint8_t prev : 1;
+    uint8_t hue;
+    uint8_t brightness;
 };
 
 // We check for loops by keeping a number of hashes of previous frames.  A walker that goes up and across
@@ -131,23 +132,22 @@ constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 class PatternLife : public EffectWithId<PatternLife>
 {
 private:
-    std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
-    std::unique_ptr<uint32_t []> checksums;
+    std::unique_ptr<Cell[][MATRIX_HEIGHT]> world;
+    std::unique_ptr<uint32_t[]> checksums;
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
     unsigned int density = 50;
     int cGeneration = 0;
     unsigned long seed;
 
-
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>> &gfx) override
     {
         LEDStripEffect::Init(gfx);
 
         // Note: placing the world in PSRAM may slow this effect down, but it's currently running
         //       fast enough (30+ fps) that we can afford to use it
 
-        world.reset(psram_allocator<Cell [MATRIX_HEIGHT]>().allocate(MATRIX_WIDTH)) ;
+        world.reset(psram_allocator<Cell[MATRIX_HEIGHT]>().allocate(MATRIX_WIDTH));
         checksums.reset(psram_allocator<uint32_t>().allocate(CRC_LENGTH));
 
         return true;
@@ -162,27 +162,26 @@ private:
     //
     // Example:  Seed: 92465, Generations: 1626
 
-    static constexpr std::array<unsigned long, 19> bakedInSeeds =
-    {
-        130908,         // 3253
-        1576,           // 3125
-        275011,         // 3461
-        291864,         // 4006
-        692598154,      // 3876
-        241590764,      // 4808
-        701054810,      // 3081
-        1824315566,     // 3256
-        342432015,      // 3035
-        1670458840,     // 3108
-        1177135100,     // 3243
-        281769225,      // 4354
-        1918045960,     // 3601
-        1548443429,     // 3305
-        1038898468,     // 3538
-        1791133398,     // 3235
-        1550109533,     // 3823
-        1060251497,     // 4336
-        555109764,      // 4470
+    static constexpr std::array<unsigned long, 19> bakedInSeeds = {
+        130908,     // 3253
+        1576,       // 3125
+        275011,     // 3461
+        291864,     // 4006
+        692598154,  // 3876
+        241590764,  // 4808
+        701054810,  // 3081
+        1824315566, // 3256
+        342432015,  // 3035
+        1670458840, // 3108
+        1177135100, // 3243
+        281769225,  // 4354
+        1918045960, // 3601
+        1548443429, // 3305
+        1038898468, // 3538
+        1791133398, // 3235
+        1550109533, // 3823
+        1060251497, // 4336
+        555109764,  // 4470
     };
 
     void randomFillWorld()
@@ -203,13 +202,17 @@ private:
         }
 
         srand(seed);
-        for (int i = 0; i < MATRIX_WIDTH; i++) {
-            for (int j = 0; j < MATRIX_HEIGHT; j++) {
-                if ((rand() % 100) < density) {
+        for (int i = 0; i < MATRIX_WIDTH; i++)
+        {
+            for (int j = 0; j < MATRIX_HEIGHT; j++)
+            {
+                if ((rand() % 100) < density)
+                {
                     world[i][j].alive = 1;
                     world[i][j].brightness = 128;
                 }
-                else {
+                else
+                {
                     world[i][j].alive = 0;
                     world[i][j].brightness = 0;
                 }
@@ -222,21 +225,20 @@ private:
             checksums[i] = 0xFFFFFFF;
     }
 
-    int neighbours(int x, int y) {
-        return (world[(x + 1) % MATRIX_WIDTH][y].prev) +
-            (world[x][(y + 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][y].prev) +
-            (world[x][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev);
+    int neighbours(int x, int y)
+    {
+        return (world[(x + 1) % MATRIX_WIDTH][y].prev) + (world[x][(y + 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][y].prev) +
+               (world[x][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev);
     }
 
 public:
-
     PatternLife() : EffectWithId<PatternLife>("Life") {}
-    PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<PatternLife>(jsonObject) {}
+    PatternLife(const JsonObjectConst &jsonObject) : EffectWithId<PatternLife>(jsonObject) {}
 
     void Reset()
     {
@@ -254,8 +256,10 @@ public:
 
         // Display current generation
 
-        for (int i = 0; i < MATRIX_WIDTH; i++) {
-            for (int j = 0; j < MATRIX_HEIGHT; j++) {
+        for (int i = 0; i < MATRIX_WIDTH; i++)
+        {
+            for (int j = 0; j < MATRIX_HEIGHT; j++)
+            {
                 if (world[i][j].brightness > 0)
                     g()->leds[XY(i, j)] += g()->ColorFromCurrentPalette(world[i][j].hue * 4, world[i][j].brightness);
                 else
@@ -275,9 +279,8 @@ public:
 
         auto crc = uzlib_crc32(alive, sizeof(alive), 0xffffffff);
         for (int i = 0; i < CRC_LENGTH - 1; i++)
-            checksums[i] = checksums[i+1];
+            checksums[i] = checksums[i + 1];
         checksums[CRC_LENGTH - 1] = crc;
-
 
         // Look for any occurrences of the current CRC in the first half of the window, which would mean
         // a loop has occurred.  If
@@ -293,11 +296,11 @@ public:
                 auto whiteColor = CRGB(0x60, 0x00, 0x00);
                 g()->fillRectangle(0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, whiteColor);
             }
-            g()->DimAll(255 - 255*elapsed/resetTime);
+            g()->DimAll(255 - 255 * elapsed / resetTime);
 
             for (int x = 0; x < MATRIX_WIDTH; x++)
                 for (int y = 0; y < MATRIX_HEIGHT; y++)
-                        world[x][y].brightness *= 0.9;
+                    world[x][y].brightness *= 0.9;
             if (elapsed > resetTime)
                 Reset();
         }
@@ -316,19 +319,24 @@ public:
         }
 
         // Birth and death cycle
-        for (int x = 0; x < MATRIX_WIDTH; x++) {
-            for (int y = 0; y < MATRIX_HEIGHT; y++) {
+        for (int x = 0; x < MATRIX_WIDTH; x++)
+        {
+            for (int y = 0; y < MATRIX_HEIGHT; y++)
+            {
                 // Default is for cell to stay the same
                 if (world[x][y].brightness > 0 && world[x][y].prev == 0)
-                world[x][y].brightness *= 0.75;
+                    world[x][y].brightness *= 0.75;
 
                 int count = neighbours(x, y);
-                if (count == 3 && world[x][y].prev == 0) {
+                if (count == 3 && world[x][y].prev == 0)
+                {
                     // A new cell is born
                     world[x][y].alive = 1;
                     world[x][y].hue += 1;
                     world[x][y].brightness = 255;
-                } else if ((count < 2 || count > 3) && world[x][y].prev == 1) {
+                }
+                else if ((count < 2 || count > 3) && world[x][y].prev == 1)
+                {
                     // Cell dies
                     world[x][y].alive = 0;
                     world[x][y].brightness = 0;
@@ -340,8 +348,10 @@ public:
 
         int cCount = 0;
 
-        for (int x = 0; x < MATRIX_WIDTH; x++) {
-            for (int y = 0; y < MATRIX_HEIGHT; y++) {
+        for (int x = 0; x < MATRIX_WIDTH; x++)
+        {
+            for (int y = 0; y < MATRIX_HEIGHT; y++)
+            {
                 if (world[x][y].prev != world[x][y].alive)
                     cCount++;
                 world[x][y].prev = world[x][y].alive;

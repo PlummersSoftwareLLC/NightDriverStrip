@@ -62,39 +62,39 @@ protected:
         //   is a template parameter to FastLED.addLeds()
 
 #if NUM_CHANNELS >= 1
-            ADD_CHANNEL(0);
+        ADD_CHANNEL(0);
 #endif
 
 #if NUM_CHANNELS >= 2
-            ADD_CHANNEL(1);
+        ADD_CHANNEL(1);
 #endif
 
 #if NUM_CHANNELS >= 3
-            ADD_CHANNEL(2);
+        ADD_CHANNEL(2);
 #endif
 
 #if NUM_CHANNELS >= 4
-            ADD_CHANNEL(3);
+        ADD_CHANNEL(3);
 #endif
 
 #if NUM_CHANNELS >= 5
-            ADD_CHANNEL(4);
+        ADD_CHANNEL(4);
 #endif
 
 #if NUM_CHANNELS >= 6
-            ADD_CHANNEL(5);
+        ADD_CHANNEL(5);
 #endif
 
 #if NUM_CHANNELS >= 7
-            ADD_CHANNEL(6);
+        ADD_CHANNEL(6);
 #endif
 
 #if NUM_CHANNELS >= 8
-            ADD_CHANNEL(7);
+        ADD_CHANNEL(7);
 #endif
 
 #ifdef POWER_LIMIT_MW
-            set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
+        set_max_power_in_milliwatts(POWER_LIMIT_MW);                // Set brightness limit
 #endif
     }
 

@@ -194,9 +194,8 @@ using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
 template <class T>
 constexpr EffectId effect_id_of_type() {
-    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,
-                "Type must derive from LEDStripEffect");
-    return remove_cvref_t<T>::ID;   // Provided by EffectWithId<Derived>
+    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>, "Type must derive from LEDStripEffect");
+    return remove_cvref_t<T>::ID;   
 }
 
 // --- Macro-free helpers for concise, type-safe effect registration ---

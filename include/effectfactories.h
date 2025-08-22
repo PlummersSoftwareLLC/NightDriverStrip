@@ -96,7 +96,7 @@ class NumberedFactory
         bool LoadDisabled = false;
 
         NumberedFactory(EffectId effectNumber, const DefaultEffectFactory& factory)
-    : effectNumber(effectNumber),
+         : effectNumber(effectNumber),
             factory(factory)
         {}
 

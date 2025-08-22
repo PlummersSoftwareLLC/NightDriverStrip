@@ -63,8 +63,7 @@ public:
         _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
     }
 
-    ~LEDBuffer()
-    = default;
+    ~LEDBuffer() = default;
 
     uint64_t Seconds()      const  { return _timeStampSeconds;      }
     uint64_t MicroSeconds() const  { return _timeStampMicroseconds; }
@@ -98,13 +97,6 @@ public:
             debugW("Not enough data received to process");
             return false;
         }
-
-#if 0
-            debugV("========");
-            for (int i = 0; i < 24; i++)
-                debugV("%02x ", payloadData[i]);
-            debugV("========");
-#endif
 
         uint16_t command16 = WORDFromMemory(&payloadData[0]);
         uint16_t channel16 = WORDFromMemory(&payloadData[2]);

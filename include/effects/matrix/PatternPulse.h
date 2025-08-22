@@ -61,7 +61,6 @@
 class PatternPulse : public EffectWithId<PatternPulse>
 {
 private:
-
     int hue;
     int centerX = 0;
     int centerY = 0;
@@ -71,9 +70,8 @@ private:
     int diff;
 
 public:
-
     PatternPulse() : EffectWithId<PatternPulse>("Pulse") {}
-    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<PatternPulse>(jsonObject) {}
+    PatternPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternPulse>(jsonObject) {}
 
     void Draw() override
     {
@@ -99,12 +97,16 @@ public:
             if (step < maxSteps)
             {
                 // initial pulse
-                graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                graphics->DrawSafeCircle(
+                    centerX, centerY, step,
+                    graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
 
                 // secondary pulse
                 if (step > 5)
                 {
-                    graphics->DrawSafeCircle(centerX, centerY, step - 3, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                    graphics->DrawSafeCircle(
+                        centerX, centerY, step - 3,
+                        graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
                 }
                 step++;
             }
@@ -116,16 +118,16 @@ public:
         // effects.standardNoiseSmearing();
     }
 };
-class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> {
+class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar>
+{
 private:
     struct PulsePop
     {
     public:
-
         int hue = HUE_RED;
         int centerX = 0;
         int centerY = 0;
-        int maxSteps = random_range(0, 8)+6;
+        int maxSteps = random_range(0, 8) + 6;
         int step = -1;
     };
 
@@ -135,15 +137,10 @@ private:
     int diff;
 
 public:
-    PatternPulsar() :
-        BeatEffectBase(1.5, 0.25 ),
-    EffectWithId<PatternPulsar>("Pulsars")
-    {
-    }
+    PatternPulsar() : BeatEffectBase(1.5, 0.25), EffectWithId<PatternPulsar>("Pulsars") {}
 
-    PatternPulsar(const JsonObjectConst& jsonObject) :
-        BeatEffectBase(1.5, 0.25 ),
-    EffectWithId<PatternPulsar>(jsonObject)
+    PatternPulsar(const JsonObjectConst &jsonObject) :
+        BeatEffectBase(1.5, 0.25), EffectWithId<PatternPulsar>(jsonObject)
     {
     }
 
@@ -156,16 +153,15 @@ public:
     {
         if (span > 1.5)
         {
-            for (int i = 0; i < random(2)+2; i ++)
-                _pops.push_back( PulsePop() );
+            for (int i = 0; i < random(2) + 2; i++)
+                _pops.push_back(PulsePop());
         }
         else
         {
             PulsePop small;
-            small.maxSteps = random(8)+4;
-            _pops.push_back( small );
+            small.maxSteps = random(8) + 4;
+            _pops.push_back(small);
         }
-
     }
 
     void Draw() override
@@ -180,7 +176,6 @@ public:
             if (random(4) < g_Analyzer.VURatio())
                 g()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
 
-
         for (auto pop = _pops.begin(); pop != _pops.end();)
         {
             if (pop->step == -1)
@@ -193,7 +188,8 @@ public:
 
             if (pop->step == 0)
             {
-                g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
+                g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step,
+                                    g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
                 pop->step++;
                 pop++;
             }
@@ -202,11 +198,15 @@ public:
                 if (pop->step < pop->maxSteps)
                 {
                     // initial pulse
-                    g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
+                    g()->DrawSafeCircle(
+                        pop->centerX, pop->centerY, pop->step,
+                        g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
 
                     // secondary pulse
                     if (pop->step > 3)
-                        g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step - 3, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                        g()->DrawSafeCircle(
+                            pop->centerX, pop->centerY, pop->step - 3,
+                            g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
 
                     // This looks like PDP-11 code to me.  double post-inc for the win!
                     pop++->step++;

@@ -74,64 +74,62 @@
 class PatternAlienText : public EffectWithId<PatternAlienText>
 {
 private:
-
-const int charWidth = 6;
-const int charHeight = 6;
-const int leftMargin = 2;
-const int topMargin = 2;
-uint8_t x;
-uint8_t y;
+    const int charWidth = 6;
+    const int charHeight = 6;
+    const int leftMargin = 2;
+    const int topMargin = 2;
+    uint8_t x;
+    uint8_t y;
 
 public:
+    PatternAlienText() : EffectWithId<PatternAlienText>("AlienText") {}
+    PatternAlienText(const JsonObjectConst &jsonObject) : EffectWithId<PatternAlienText>(jsonObject) {}
 
-PatternAlienText() : EffectWithId<PatternAlienText>("AlienText") {}
-PatternAlienText(const JsonObjectConst& jsonObject) : EffectWithId<PatternAlienText>(jsonObject) {}
-
-void Start() override
-{
-    x = leftMargin;
-    y = topMargin;
-    g()->Clear();
-    debugW("Starting AlienText...");
-}
-
-void Draw() override
-{
-    std::shared_ptr<GFXBase> graphics = _GFX[0];
-
-    graphics->DimAll(245);
-
-    CRGB color1 = RandomSaturatedColor();
-
-    for (int i = 0; i < (charWidth / 2 + 1); i++)
+    void Start() override
     {
-    for (int j = 0; j < (charHeight - 1); j++)
-    {
-        CRGB color = CRGB::Black;
-
-        if (random(0, 2) == 1)
-        color = color1;
-
-        graphics->setPixel(x + i, y + j, color);
-
-        if (i < 2)
-        graphics->setPixel(x + ((charWidth / 2 + 1) - i), y + j, color);
-    }
+        x = leftMargin;
+        y = topMargin;
+        g()->Clear();
+        debugW("Starting AlienText...");
     }
 
-    x += charWidth;
-    if (x > MATRIX_WIDTH - charWidth)
+    void Draw() override
     {
-    x = leftMargin;
-    y += charHeight;
-    }
+        std::shared_ptr<GFXBase> graphics = _GFX[0];
 
-    if (y > MATRIX_HEIGHT - charHeight)
-    {
-    x = leftMargin;
-    y = topMargin;
+        graphics->DimAll(245);
+
+        CRGB color1 = RandomSaturatedColor();
+
+        for (int i = 0; i < (charWidth / 2 + 1); i++)
+        {
+            for (int j = 0; j < (charHeight - 1); j++)
+            {
+                CRGB color = CRGB::Black;
+
+                if (random(0, 2) == 1)
+                    color = color1;
+
+                graphics->setPixel(x + i, y + j, color);
+
+                if (i < 2)
+                    graphics->setPixel(x + ((charWidth / 2 + 1) - i), y + j, color);
+            }
+        }
+
+        x += charWidth;
+        if (x > MATRIX_WIDTH - charWidth)
+        {
+            x = leftMargin;
+            y += charHeight;
+        }
+
+        if (y > MATRIX_HEIGHT - charHeight)
+        {
+            x = leftMargin;
+            y = topMargin;
+        }
     }
-}
 };
 
 #endif

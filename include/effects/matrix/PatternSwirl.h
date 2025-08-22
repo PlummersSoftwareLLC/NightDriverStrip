@@ -65,8 +65,8 @@ private:
 
 public:
 
-PatternSwirl() : EffectWithId<PatternSwirl>("Swirl") {}
-PatternSwirl(const JsonObjectConst& jsonObject) : EffectWithId<PatternSwirl>(jsonObject) {}
+    PatternSwirl() : EffectWithId<PatternSwirl>("Swirl") {}
+    PatternSwirl(const JsonObjectConst& jsonObject) : EffectWithId<PatternSwirl>(jsonObject) {}
 
     void drawAt(int i, int j, CRGB color)
     {
