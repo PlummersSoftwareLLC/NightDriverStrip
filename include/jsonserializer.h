@@ -44,7 +44,7 @@ struct IJSONSerializable
 template <class E>
 constexpr auto to_value(E e) noexcept
 {
-	return static_cast<std::underlying_type_t<E>>(e);
+    return static_cast<std::underlying_type_t<E>>(e);
 }
 
 #if USE_PSRAM
@@ -176,7 +176,7 @@ class JSONWriter
     // We allow the main JSON Writer task entry point function to access private members
     friend void IRAM_ATTR JSONWriterTaskEntry(void *);
 
-  private:
+private:
 
     // Writer function and flag combo
     struct WriterEntry
@@ -197,7 +197,7 @@ class JSONWriter
     std::atomic_bool         flushRequested;
     std::atomic_bool         haltWrites;
 
-  public:
+public:
 
     // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
     size_t RegisterWriter(const std::function<void()>& writer);
@@ -208,4 +208,3 @@ class JSONWriter
     // Flush pending writes now
     void FlushWrites(bool halt = false);
 };
-

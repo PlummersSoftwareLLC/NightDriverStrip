@@ -55,7 +55,7 @@
 
 class CWebServer
 {
-  public:
+public:
 
     enum class StatisticsType : uint8_t
     {
@@ -65,7 +65,7 @@ class CWebServer
         All     = Static | Dynamic
     };
 
-  private:
+private:
     // Template for param to value converter function, used by PushPostParamIfPresent()
     template<typename Tv>
     using ParamValueGetter = std::function<Tv(const AsyncWebParameter *param)>;
@@ -99,7 +99,7 @@ class CWebServer
         const char *const encoding;
 
         EmbeddedWebFile(const uint8_t* start, const uint8_t* end, const char* type, const char* encoding = nullptr)
-            : EmbeddedFile(start, end), type(type), encoding(encoding)
+    : EmbeddedFile(start, end), type(type), encoding(encoding)
         {
         }
     };
@@ -208,9 +208,9 @@ class CWebServer
         });
     }
 
-  public:
+public:
     CWebServer()
-        : _server(NetworkPort::Webserver), _staticStats()
+    : _server(NetworkPort::Webserver), _staticStats()
     {}
 
     // begin - register page load handlers and start serving pages

@@ -93,14 +93,14 @@ void RemoteControl::handle()
     }
     else if (IR_OFF == result)
     {
-        #if USE_HUB75
+#if USE_HUB75
             deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
-        #else
+#else
             effectManager.ClearRemoteColor();
             effectManager.SetInterval(0);
             effectManager.StartEffect();
             deviceConfig.SetBrightness(0);
-        #endif
+#endif
         return;
     }
     else if (IR_BPLUS == result)
@@ -153,13 +153,13 @@ void RemoteControl::handle()
             
             debugI("Changing Color via remote: %08X\n", (uint32_t) RemoteColorCode.color);
             effectManager.ApplyGlobalColor(RemoteColorCode.color);
-            #if FULL_COLOR_REMOTE_FILL
+#if FULL_COLOR_REMOTE_FILL
                 auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
                 if (effect->Init(g_ptrSystem->EffectManager().GetBaseGraphics()))
                     g_ptrSystem->EffectManager().SetTempEffect(effect);
                 else
                     debugE("Could not initialize new color fill effect");
-            #endif
+#endif
             return;
         }
     }

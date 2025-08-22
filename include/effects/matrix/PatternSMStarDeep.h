@@ -8,10 +8,10 @@
 
 class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
 {
-  private:
+private:
 
    // Why are these named "bballs"? Probably reused effect innards.
-   static constexpr int bballsMaxNUM = 100U; // the maximum number of tracked
+    static constexpr int bballsMaxNUM = 100U; // the maximum number of tracked
                                   // objects (very affects memory consumption)
     uint8_t bballsCOLOR[bballsMaxNUM]; // star color (reusing the Balls effect array)
     uint8_t bballsX[bballsMaxNUM];     // number of corners in the star (reusing the
@@ -43,7 +43,7 @@ class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
     const int spirocenterX = CENTER_X_MINOR;
     const int spirocenterY = CENTER_Y_MINOR;
 
-  public:
+public:
 
     PatternSMStarDeep() : EffectWithId<PatternSMStarDeep>("Star Deep") {}
     PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMStarDeep>(jsonObject) {}
@@ -56,7 +56,7 @@ class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
         drifty = random8(4, HEIGHT - 4); // set an initial location for the animation center
 
         cangle = (sin8(random(25, 220)) - 128.0) /
-                 128.0; // angle of movement for the center of animation gives a float value between -1 and 1
+                128.0; // angle of movement for the center of animation gives a float value between -1 and 1
         sangle = (sin8(random(25, 220)) - 128.0) / 128.0; // angle of movement for the center of animation in the y
                                                           // direction gives a float value between -1 and 1
         // shifty = random (3, 12);//how often the drifter moves будет
@@ -155,7 +155,7 @@ class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
     }
 
     void Drawstar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle,
-                  uint8_t koler) // random multipoint star
+                uint8_t koler) // random multipoint star
     {
         auto radius2 = 255 / points;
         for (int i = 0; i < points; i++)
@@ -163,15 +163,15 @@ class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
             // две строчки выше - рисуют звезду просто по оттенку, а две строчки ниже
             // - берут цвет из текущей палитры
             DrawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
-                     ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
-                     xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
-                     ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
+                    ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
+                    xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
+                    ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
+                    g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
             DrawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
-                     ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
-                     xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
-                     ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
+                    ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
+                    xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
+                    ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
+                    g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
         }
     }
 
@@ -225,7 +225,7 @@ class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
                     // drawstar(driftx  , drifty, 2 * (counter - ringdelay), (counter -
                     // ringdelay), pointy, blender + h, h * 2 + 85);
                     Drawstar(driftx, drifty, 2 * starSize, starSize, bballsX[num], STAR_BLENDER + bballsCOLOR[num],
-                             bballsCOLOR[num] * 2); //, h * 2 + 85);// что, бл, за 85?!
+                            bballsCOLOR[num] * 2); //, h * 2 + 85);// что, бл, за 85?!
                     bballsCOLOR[num]++;
                 }
                 else

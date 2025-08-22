@@ -73,7 +73,7 @@ using EffectSettingSpecs = std::vector<SettingSpec, psram_allocator<SettingSpec>
 
 class LEDStripEffect : public IJSONSerializable
 {
-  private:
+private:
 
     // This enum is a set of bit flags of known JSON data migrations that either have or have not (yet) been
     // performed for a particular effect. "All" should always be a bitwise OR of all other flags in the enum.
@@ -127,7 +127,7 @@ class LEDStripEffect : public IJSONSerializable
         ).Access = SettingSpec::SettingAccess::WriteOnly;
     }
 
-  protected:
+protected:
 
     size_t _cLEDs = 0;
     String _friendlyName;
@@ -213,7 +213,7 @@ class LEDStripEffect : public IJSONSerializable
         return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
     }
 
-  public:
+public:
 
     // Constructor doesn't take an effect number; effect identity is provided by effectId()
 
@@ -224,7 +224,7 @@ class LEDStripEffect : public IJSONSerializable
     }
 
     explicit LEDStripEffect(const JsonObjectConst&  jsonObject)
-        : _friendlyName(jsonObject["fn"].as<String>())
+    : _friendlyName(jsonObject["fn"].as<String>())
     {
         if (jsonObject["es"].is<int>())
             _enabled = jsonObject["es"].as<int>() == 1;
@@ -266,19 +266,19 @@ class LEDStripEffect : public IJSONSerializable
 
     // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
 
-    #if USE_HUB75
-      std::shared_ptr<LEDMatrixGFX> mg(size_t channel = 0)
-      {
+#if USE_HUB75
+    std::shared_ptr<LEDMatrixGFX> mg(size_t channel = 0)
+    {
         return std::static_pointer_cast<LEDMatrixGFX>(_GFX[channel]);
-      }
-    #endif
+    }
+#endif
 
-    #if HEXAGON
-      std::shared_ptr<HexagonGFX> hg(size_t channel = 0)
-      {
+#if HEXAGON
+    std::shared_ptr<HexagonGFX> hg(size_t channel = 0)
+    {
         return std::static_pointer_cast<HexagonGFX>(_GFX[channel]);
-      }
-    #endif
+    }
+#endif
 
     virtual bool CanDisplayVUMeter() const
     {
@@ -634,6 +634,49 @@ class LEDStripEffect : public IJSONSerializable
 };
 
 // Internal helpers for token-based type IDs
+// ---------------------------------------------------------------------------
+// About _effect_id_detail and token-based Effect IDs
+//
+// Purpose
+// - Provide each effect type (class) with a unique, stable EffectId without
+//   maintaining a central enum or registry.
+//
+// How it works
+// - token_id_for_type<T>() is a constexpr function that computes a 32-bit
+//   FNV-1a hash over a compiler-provided function signature string that embeds
+//   the type T.
+// - On GCC/Clang we use __PRETTY_FUNCTION__ (which contains the full function
+//   signature including the template parameter T). On other compilers we fall
+//   back to __func__.
+// - EffectWithId<Derived>::ID is a constexpr initialized with that hash, so the
+//   ID is computed at compile time with zero runtime cost and no dynamic state.
+//
+// Stability and persistence
+// - For our ESP32 builds (GCC/Clang), the resulting token is stable across
+//   rebuilds and firmware updates as long as:
+//   1) the effect's type name (including template arguments) remains the same;
+//   2) we keep using a compiler that formats __PRETTY_FUNCTION__ equivalently
+//      (GCC/Clang are consistent for our use case).
+// - Renaming a class, changing its template arguments, or switching to a
+//   compiler/toolchain that formats the pretty function differently will yield a
+//   different token. When that happens, previously serialized effect lists will
+//   no longer match and should be regenerated (we guard broad migrations via
+//   EFFECT_SET_VERSION).
+// - IDs are serialized as uintptr_t (see PTY_EFFECTNR). They persist across
+//   reboots/firmware flashes provided the above invariants hold.
+//
+// Collisions and width
+// - We use a 32-bit hash to keep the footprint small on 32-bit targets.
+//   With O(10^2) effect types, the birthday collision risk is negligible for
+//   practical purposes. If we ever needed stronger guarantees, we could switch
+//   to a 64-bit hash (and widen EffectId) with minimal code changes.
+//
+// Portability notes
+// - The __PRETTY_FUNCTION__ path is selected for GCC/Clang (our toolchains).
+//   The fallback to __func__ is provided for other compilers; if that path is
+//   ever used and uniqueness becomes a concern, consider a different token
+//   source (e.g., a user-defined type tag string) or upgrading to a 64-bit hash.
+// ---------------------------------------------------------------------------
 namespace _effect_id_detail {
     // 32-bit FNV-1a hash for compile-time friendly hashing
     constexpr uint32_t fnv1a32(const char* str) {
@@ -649,11 +692,11 @@ namespace _effect_id_detail {
     constexpr EffectId token_id_for_type() {
         // Use compiler-provided pretty function string that includes the type name
         // This yields a stable token as long as the type's name doesn't change.
-        #if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
             return static_cast<EffectId>(fnv1a32(__PRETTY_FUNCTION__));
-        #else
+#else
             return static_cast<EffectId>(fnv1a32(__func__));
-        #endif
+#endif
     }
 }
 
@@ -661,15 +704,15 @@ namespace _effect_id_detail {
 template<typename TDerived>
 class EffectWithId : public LEDStripEffect
 {
-  public:
+public:
     static constexpr EffectId ID = _effect_id_detail::token_id_for_type<TDerived>();
 
     explicit EffectWithId(const String & strName)
-        : LEDStripEffect(strName)
+    : LEDStripEffect(strName)
     {}
 
     explicit EffectWithId(const JsonObjectConst&  jsonObject)
-        : LEDStripEffect(jsonObject)
+    : LEDStripEffect(jsonObject)
     {}
 
     EffectId effectId() const override

@@ -76,7 +76,7 @@
 
 class PatternPongClock : public EffectWithId<PatternPongClock>
 {
-  private:
+private:
     float ballpos_x, ballpos_y;
     uint8_t erase_x = 10; // holds ball old pos so we can erase it, set to blank area of screen initially.
     uint8_t erase_y = 10;
@@ -93,7 +93,7 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
     uint8_t mins;
     uint8_t hours;
 
-  public:
+public:
 
     PatternPongClock() : EffectWithId<PatternPongClock>("PongClock") {}
     PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<PatternPongClock>(jsonObject) {}

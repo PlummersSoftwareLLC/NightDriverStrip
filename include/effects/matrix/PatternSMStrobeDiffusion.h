@@ -18,7 +18,7 @@ class PatternSMStrobeDiffusion : public BeatEffectBase, public EffectWithId<Patt
 class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
 #endif
 {
-  private:
+private:
 
     uint8_t hue, hue2; // gradual hue shift or some other cyclic counter
     uint8_t step { 0 }; // some counter of frames or sequences of operations
@@ -34,10 +34,10 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
     const int top_line_offset = 0;
 #endif
 
-  public:
+public:
   
     PatternSMStrobeDiffusion()
-      :
+    :
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
@@ -46,7 +46,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
     }
 
     PatternSMStrobeDiffusion(const JsonObjectConst &jsonObject)
-      :
+    :
 #if ENABLE_AUDIO
         BeatEffectBase(1.50, 0.05),
 #endif
@@ -56,7 +56,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
 
     void Start() override
     {
-        //  	  FPSdelay = 25U; // LOW_DELAY;
+        //        FPSdelay = 25U; // LOW_DELAY;
         //    hue2 = 1;
         g()->Clear();
     }
@@ -88,7 +88,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
         }
 
         // Scroll the flakes above more often than we add new flakes below.
-        //		  if ((ct & 0x07) != 0) return;
+        //          if ((ct & 0x07) != 0) return;
 
         // This is a fragile way to to it, but we fill the top line of
         // the display with fresh snowflakes to be scrolled down later.

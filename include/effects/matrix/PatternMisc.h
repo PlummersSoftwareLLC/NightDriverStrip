@@ -60,7 +60,7 @@
 
 class PatternSunburst : public EffectWithId<PatternSunburst>
 {
-  public:
+public:
 
     PatternSunburst() : EffectWithId<PatternSunburst>("Sunburst") {}
     PatternSunburst(const JsonObjectConst& jsonObject) : EffectWithId<PatternSunburst>(jsonObject) {}
@@ -96,7 +96,7 @@ class PatternSunburst : public EffectWithId<PatternSunburst>
 
 class PatternRose : public EffectWithId<PatternRose>
 {
-  public:
+public:
 
     PatternRose() : EffectWithId<PatternRose>("Rose") {}
     PatternRose(const JsonObjectConst& jsonObject) : EffectWithId<PatternRose>(jsonObject) {}
@@ -145,7 +145,7 @@ class PatternRose : public EffectWithId<PatternRose>
 
 class PatternPinwheel : public EffectWithId<PatternPinwheel>
 {
-  public:
+public:
 
     PatternPinwheel() : EffectWithId<PatternPinwheel>("Pinwheel") {}
 
@@ -270,7 +270,7 @@ public:
             {
                 g()->leds[XY(x, y)] = (x ^ y ^ flip) < count
                     ? g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)
-                    : CRGB::Black;
+    : CRGB::Black;
             }
         }
 

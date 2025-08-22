@@ -62,35 +62,35 @@ class PatternRainbowFlag : public EffectWithId<PatternRainbowFlag>
 {
 public:
 
-  PatternRainbowFlag() : EffectWithId<PatternRainbowFlag>("RainbowFlag") {}
-  PatternRainbowFlag(const JsonObjectConst& jsonObject) : EffectWithId<PatternRainbowFlag>(jsonObject) {}
+PatternRainbowFlag() : EffectWithId<PatternRainbowFlag>("RainbowFlag") {}
+PatternRainbowFlag(const JsonObjectConst& jsonObject) : EffectWithId<PatternRainbowFlag>(jsonObject) {}
 
-  void Draw() override
-  {
+void Draw() override
+{
     g()->DimAll(10);
 
     CRGB rainbow[7] = {
-      CRGB::Red,
-      CRGB::Orange,
-      CRGB::Yellow,
-      CRGB::Green,
-      CRGB::Blue,
-      CRGB::Violet
+    CRGB::Red,
+    CRGB::Orange,
+    CRGB::Yellow,
+    CRGB::Green,
+    CRGB::Blue,
+    CRGB::Violet
     };
 
     uint8_t y = 2;
 
     for (uint8_t c = 0; c < 6; c++) {
-      for (uint8_t j = 0; j < 5; j++) {
+    for (uint8_t j = 0; j < 5; j++) {
         for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
         {
-          g()->leds[XY(x, y)] += rainbow[c];
+        g()->leds[XY(x, y)] += rainbow[c];
         }
 
         y++;
         if (y >= MATRIX_HEIGHT)
-          break;
-      }
+        break;
+    }
     }
 
     // Noise
@@ -102,6 +102,6 @@ public:
 
     g()->MoveY(3);
     g()->MoveFractionalNoiseX<NoiseApproach::One>(4);
-  }
+}
 };
 #endif

@@ -9,7 +9,7 @@
 
 class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
 {
-  private:
+private:
 
     static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
     static constexpr int CenterY = ((MATRIX_HEIGHT / 2) - 0.5);
@@ -60,7 +60,7 @@ class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
         }
     }
 
-  public:
+public:
 
     PatternSMSpiroPulse() : EffectWithId<PatternSMSpiroPulse>("Spiro") {}
     PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMSpiroPulse>(jsonObject) {}
@@ -98,7 +98,7 @@ class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
         for (uint8_t i = 0; i < AM; i++)
         {
             drawPixelXYF((CenterX + sin(t + (Angle * i)) * radX), (CenterY + cos(t + (Angle * i)) * radY),
-                         ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
+                        ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
         }
     }
 };

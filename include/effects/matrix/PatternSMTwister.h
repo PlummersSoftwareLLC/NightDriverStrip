@@ -8,7 +8,7 @@
 
 class PatternSMTwister : public EffectWithId<PatternSMTwister>
 {
-  private:
+private:
 
     void mydrawLine(uint8_t x, uint8_t x1, uint8_t y, CHSV color, bool dot, bool grad, uint8_t numline, uint8_t side, uint8_t sinOff,
                     uint16_t a)
@@ -32,7 +32,7 @@ class PatternSMTwister : public EffectWithId<PatternSMTwister>
         }
     }
 
-  public:
+public:
 
     PatternSMTwister() : EffectWithId<PatternSMTwister>("Twister") {}
     PatternSMTwister(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMTwister>(jsonObject) {}

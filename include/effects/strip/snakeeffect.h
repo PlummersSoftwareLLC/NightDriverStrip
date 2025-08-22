@@ -36,7 +36,7 @@
 
 class SnakeEffect : public EffectWithId<SnakeEffect>
 {
-  private:
+private:
 
     void construct()
     {
@@ -44,7 +44,7 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
         Reset();
     }
 
-  protected:
+protected:
   
     int     LEDCount;             // Number of LEDs total
     int     SnakeSpeed;           // Max duration between iterations.
@@ -65,20 +65,20 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
     static const int dForward = 1;      // ENUM for direction forward.
     static const int dBackward = -1;
 
-  public:
+public:
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : EffectWithId(strName),
-          LEDCount(ledCount),
-          SnakeSpeed(snakeSpeed)
+    : EffectWithId(strName),
+        LEDCount(ledCount),
+        SnakeSpeed(snakeSpeed)
     {
         construct();
     }
 
     SnakeEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId(jsonObject),
-          LEDCount(jsonObject[PTY_LEDCOUNT]),
-          SnakeSpeed(jsonObject[PTY_SPEED])
+    : EffectWithId(jsonObject),
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        SnakeSpeed(jsonObject[PTY_SPEED])
     {
         construct();
     }

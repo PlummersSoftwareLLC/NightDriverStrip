@@ -41,22 +41,22 @@
 
 enum PixelOrder
 {
-  Sequential = 0,
-  Reverse = 1,
-  BottomUp = 2,
-  TopDown = 4,
-  LeftRight = 8,
-  RightLeft = 16
+Sequential = 0,
+Reverse = 1,
+BottomUp = 2,
+TopDown = 4,
+LeftRight = 8,
+RightLeft = 16
 };
 
 inline void RotateForward(int iStart, int length = FAN_SIZE, int count = 1)
 {
-  std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + count], &FastLED.leds()[iStart + length]);
+std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + count], &FastLED.leds()[iStart + length]);
 }
 
 inline void RotateReverse(int iStart, int length = FAN_SIZE, int count = 1)
 {
-  std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + length - count], &FastLED.leds()[iStart + length]);
+std::rotate(&FastLED.leds()[iStart], &FastLED.leds()[iStart + length - count], &FastLED.leds()[iStart + length]);
 }
 
 // Rotate
@@ -65,9 +65,9 @@ inline void RotateReverse(int iStart, int length = FAN_SIZE, int count = 1)
 
 inline void RotateAll(bool bForward = true, int count = 1)
 {
-  if (bForward)
+if (bForward)
     RotateForward(0, count);
-  else
+else
     RotateReverse(0, count);
 }
 
@@ -77,9 +77,9 @@ inline void RotateAll(bool bForward = true, int count = 1)
 
 inline void RotateFan(int iFan, bool bForward = true, int count = 1)
 {
-  if (bForward)
+if (bForward)
     RotateForward(iFan * FAN_SIZE, FAN_SIZE, count);
-  else
+else
     RotateReverse(iFan * FAN_SIZE, FAN_SIZE, count);
 }
 
@@ -88,16 +88,16 @@ inline void RotateFan(int iFan, bool bForward = true, int count = 1)
 
 inline int16_t GetRingPixelPosition(float fPos, int16_t ringSize)
 {
-  if (fPos < 0)
-  {
+if (fPos < 0)
+{
     debugW("GetRingPixelPosition called with negative value %f", fPos);
     return 0;
-  }
+}
 
-  int pos = fPos;
-  if (pos & 1)
+int pos = fPos;
+if (pos & 1)
     return ringSize - 1 - pos / 2;
-  else
+else
     return pos / 2;
 }
 
@@ -108,44 +108,44 @@ inline int16_t GetRingPixelPosition(float fPos, int16_t ringSize)
 
 inline int GetFanPixelOrder(int iPos, PixelOrder order = Sequential)
 {
-  if (iPos < 0)
+if (iPos < 0)
     debugW("Calling GetFanPixelOrder with negative index: %d", iPos);
 
-  while (iPos < 0)
+while (iPos < 0)
     iPos += FAN_SIZE;
 
-  if (iPos >= NUM_FANS * FAN_SIZE)
-  {
+if (iPos >= NUM_FANS * FAN_SIZE)
+{
     if (order == TopDown)
-      return NUM_LEDS - 1 - (iPos - NUM_FANS * FAN_SIZE);
+    return NUM_LEDS - 1 - (iPos - NUM_FANS * FAN_SIZE);
     else
-      return iPos;
-  }
+    return iPos;
+}
 
-  int fanPos = iPos % FAN_SIZE;
-  int fanBase = iPos - fanPos;
+int fanPos = iPos % FAN_SIZE;
+int fanBase = iPos - fanPos;
 
-  switch (order)
-  {
-  case BottomUp:
+switch (order)
+{
+case BottomUp:
     return fanBase + ((GetRingPixelPosition(fanPos, RING_SIZE_0) + LED_FAN_OFFSET_BU) % FAN_SIZE);
 
-  case TopDown:
+case TopDown:
     return fanBase + ((GetRingPixelPosition(fanPos, RING_SIZE_0) + LED_FAN_OFFSET_TD) % FAN_SIZE);
 
-  case LeftRight:
+case LeftRight:
     return fanBase + ((GetRingPixelPosition(fanPos, RING_SIZE_0) + LED_FAN_OFFSET_LR) % FAN_SIZE);
 
-  case RightLeft:
+case RightLeft:
     return fanBase + ((GetRingPixelPosition(fanPos, RING_SIZE_0) + LED_FAN_OFFSET_RL) % FAN_SIZE);
 
-  case Reverse:
+case Reverse:
     return NUM_LEDS - 1 - fanPos;
 
-  case Sequential:
-  default:
+case Sequential:
+default:
     return fanBase + fanPos;
-  }
+}
 }
 
 // ClearFanPixels
@@ -155,13 +155,13 @@ inline int GetFanPixelOrder(int iPos, PixelOrder order = Sequential)
 
 inline void ClearFanPixels(float fPos, float count, PixelOrder order = Sequential, int iFan = 0)
 {
-  fPos += iFan * FAN_SIZE;
-  while (count > 0)
-  {
+fPos += iFan * FAN_SIZE;
+while (count > 0)
+{
     for (int i = 0; i < NUM_CHANNELS; i++)
-      FastLED[i][GetFanPixelOrder(fPos + (int)count, order)] = CRGB::Black;
+    FastLED[i][GetFanPixelOrder(fPos + (int)count, order)] = CRGB::Black;
     count--;
-  }
+}
 }
 
 // GetRingSize
@@ -170,7 +170,7 @@ inline void ClearFanPixels(float fPos, float count, PixelOrder order = Sequentia
 
 inline int GetRingSize(int iRing)
 {
-  return g_aRingSizeTable[iRing];
+return g_aRingSizeTable[iRing];
 }
 
 // GetFanIndex
@@ -179,7 +179,7 @@ inline int GetRingSize(int iRing)
 
 inline int GetFanIndex(float fPos)
 {
-  return fPos / FAN_SIZE;
+return fPos / FAN_SIZE;
 }
 
 // GetRingIndex
@@ -188,21 +188,21 @@ inline int GetFanIndex(float fPos)
 
 inline int GetRingIndex(float fPos)
 {
-  fPos = fmod(fPos, FAN_SIZE);
-  int iRing = 0;
-  do
-  {
+fPos = fmod(fPos, FAN_SIZE);
+int iRing = 0;
+do
+{
     if (fPos < GetRingSize(iRing))
     {
-      return iRing;
+    return iRing;
     }
     else
     {
-      fPos -= GetRingSize(iRing);
-      iRing++;
+    fPos -= GetRingSize(iRing);
+    iRing++;
     }
-  } while (iRing < NUM_RINGS);
-  return iRing;
+} while (iRing < NUM_RINGS);
+return iRing;
 }
 
 // GetRingPos
@@ -211,14 +211,14 @@ inline int GetRingIndex(float fPos)
 
 inline int GetRingPos(float fPos)
 {
-  fPos = fmod(fPos, FAN_SIZE);
-  for (int iRing = 0; iRing < NUM_RINGS; iRing++)
-  {
+fPos = fmod(fPos, FAN_SIZE);
+for (int iRing = 0; iRing < NUM_RINGS; iRing++)
+{
     if (fPos < GetRingSize(iRing))
-      return fPos;
+    return fPos;
     fPos -= GetRingSize(iRing);
-  }
-  return 0;
+}
+return 0;
 }
 
 // DrawFanPixels
@@ -227,59 +227,59 @@ inline int GetRingPos(float fPos)
 
 inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order = Sequential, int iFan = 0)
 {
-  fPos += iFan * FAN_SIZE;
+fPos += iFan * FAN_SIZE;
 
-  if (fPos + count > NUM_LEDS)
-  {
+if (fPos + count > NUM_LEDS)
+{
     debugE("DrawFanPixels called with fPos=%f, count=%f, but there are only %d LEDs", fPos, count, NUM_LEDS);
     return;
-  }
+}
 
-  if (count < 0)
-  {
+if (count < 0)
+{
     debugE("Negative count in DrawFanPixels");
     return;
-  }
+}
   // Calculate how much the first pixel will hold
 
-  float availFirstPixel = 1.0f - (fPos - (long)(fPos));
-  float amtFirstPixel = min(availFirstPixel, count);
-  float remaining = min(count, FastLED.size() - fPos);
-  int iPos = fPos;
+float availFirstPixel = 1.0f - (fPos - (long)(fPos));
+float amtFirstPixel = min(availFirstPixel, count);
+float remaining = min(count, FastLED.size() - fPos);
+int iPos = fPos;
 
   // Blend (add) in the color of the first partial pixel
 
-  if (remaining > 0.0f && amtFirstPixel > 0.0f && iPos < NUM_LEDS)
-  {
+if (remaining > 0.0f && amtFirstPixel > 0.0f && iPos < NUM_LEDS)
+{
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
-      auto index = GetFanPixelOrder(iPos, order);
-      CRGB newColor = LEDStripEffect::ColorFraction(color, amtFirstPixel);
-      auto l = FastLED[i][index];
-      l += newColor;
-      FastLED[i][index] = l;
+    auto index = GetFanPixelOrder(iPos, order);
+    CRGB newColor = LEDStripEffect::ColorFraction(color, amtFirstPixel);
+    auto l = FastLED[i][index];
+    l += newColor;
+    FastLED[i][index] = l;
     }
     iPos++;
     remaining -= amtFirstPixel;
-  }
+}
 
   // Now draw any full pixels in the middle
 
-  while (remaining > 1.0f && iPos < NUM_LEDS)
-  {
+while (remaining > 1.0f && iPos < NUM_LEDS)
+{
     for (int i = 0; i < NUM_CHANNELS; i++)
-      FastLED[i][GetFanPixelOrder(iPos, order)] += color;
+    FastLED[i][GetFanPixelOrder(iPos, order)] += color;
     iPos++;
     remaining--;
-  }
+}
 
   // Draw tail pixel, up to a single full pixel
 
-  if (remaining > 0.0f)
-  {
+if (remaining > 0.0f)
+{
     for (int i = 0; i < NUM_CHANNELS; i++)
-      FastLED[i][GetFanPixelOrder(iPos, order)] += LEDStripEffect::ColorFraction(color, remaining);
-  }
+    FastLED[i][GetFanPixelOrder(iPos, order)] += LEDStripEffect::ColorFraction(color, remaining);
+}
 }
 
 // DrawRingPixels
@@ -291,155 +291,155 @@ inline void DrawFanPixels(float fPos, float count, CRGB color, PixelOrder order 
 inline void DrawRingPixels(float fPos, float count, CRGB color, int iInsulator, int iRing, bool bMerge = true)
 {
   // bPos will be the start of this ring (relative to NUM_LEDS)
-  int bPos = 0;
-  for (int i = 0; i < iRing; i++)
+int bPos = 0;
+for (int i = 0; i < iRing; i++)
     bPos += g_aRingSizeTable[i];
-  bPos += iInsulator * FAN_SIZE;
+bPos += iInsulator * FAN_SIZE;
 
-  if (bPos + fPos + count > NUM_LEDS + 1) // +1 because we work in the 0..1.0 range when drawing
-  {
+if (bPos + fPos + count > NUM_LEDS + 1) // +1 because we work in the 0..1.0 range when drawing
+{
     debugE("DrawFanPixels called with fPos=%f, count=%f, but there are only %d LEDs", fPos, count, NUM_LEDS);
     return;
-  }
+}
 
-  if (count < 0)
-  {
+if (count < 0)
+{
     debugE("Negative count in DrawFanPixels");
     return;
-  }
+}
   // Calculate how much the first pixel will hold
 
-  float availFirstPixel = 1.0f - (fPos - (long)(fPos));
-  float amtFirstPixel = min(availFirstPixel, count);
-  float remaining = min(count, FastLED.size() - fPos);
-  int iPos = fPos;
+float availFirstPixel = 1.0f - (fPos - (long)(fPos));
+float amtFirstPixel = min(availFirstPixel, count);
+float remaining = min(count, FastLED.size() - fPos);
+int iPos = fPos;
   // Blend (add) in the color of the first partial pixel
 
-  iPos %= GetRingSize(iRing);
-  if (remaining > 0.0f && amtFirstPixel > 0.0f)
-  {
+iPos %= GetRingSize(iRing);
+if (remaining > 0.0f && amtFirstPixel > 0.0f)
+{
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
-      if (!bMerge)
+    if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
-      FastLED[i][bPos + iPos++] += LEDStripEffect::ColorFraction(color, amtFirstPixel);
+    FastLED[i][bPos + iPos++] += LEDStripEffect::ColorFraction(color, amtFirstPixel);
     }
     remaining -= amtFirstPixel;
-  }
+}
 
   // Now draw any full pixels in the middle
 
-  while (remaining > 1.0f)
-  {
+while (remaining > 1.0f)
+{
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
-      iPos %= GetRingSize(iRing);
-      if (!bMerge)
+    iPos %= GetRingSize(iRing);
+    if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
-      FastLED[i][bPos + iPos++] += color;
+    FastLED[i][bPos + iPos++] += color;
     }
     remaining--;
-  }
+}
 
   // Draw tail pixel, up to a single full pixel
 
-  iPos %= GetRingSize(iRing);
-  if (remaining > 0.0f)
-  {
+iPos %= GetRingSize(iRing);
+if (remaining > 0.0f)
+{
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
-      if (!bMerge)
+    if (!bMerge)
         FastLED[i][bPos + iPos] = CRGB::Black;
-      FastLED[i][bPos + iPos++] += LEDStripEffect::ColorFraction(color, remaining);
+    FastLED[i][bPos + iPos++] += LEDStripEffect::ColorFraction(color, remaining);
     }
-  }
+}
 }
 
 inline void FillRingPixels(CRGB color, int iInsulator, int iRing)
 {
-  DrawRingPixels(0, g_aRingSizeTable[iRing], color, iInsulator, iRing);
+DrawRingPixels(0, g_aRingSizeTable[iRing], color, iInsulator, iRing);
 }
 
 class EmptyEffect : public LEDStripEffect
 {
-  using LEDStripEffect::LEDStripEffect;
+using LEDStripEffect::LEDStripEffect;
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawEffect();
     delay(20);
-  }
+}
 
-  void DrawEffect()
-  {
-  }
+void DrawEffect()
+{
+}
 };
 
 class FanBeatEffect : public EffectWithId<FanBeatEffect>
 {
-  public:
+public:
 
-  FanBeatEffect(const String & strName) : EffectWithId(strName) {}
+FanBeatEffect(const String & strName) : EffectWithId(strName) {}
 
-  FanBeatEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
+FanBeatEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
-  void Draw() override
-  {
+void Draw() override
+{
     fadeToBlackBy(FastLED.leds(), NUM_LEDS, 20);
     DrawEffect();
     delay(20);
-  }
+}
 
-  void OnBeat()
-  {
+void OnBeat()
+{
     int passes = (int)g_Analyzer.VURatio();
     for (int iPass = 0; iPass < passes; iPass++)
     {
-      int iFan = random(0, NUM_FANS);
-      int innerPasses = random(1, (int)g_Analyzer.VURatio());
-      CRGB c = CHSV(random(0, 255), 255, 255);
+    int iFan = random(0, NUM_FANS);
+    int innerPasses = random(1, (int)g_Analyzer.VURatio());
+    CRGB c = CHSV(random(0, 255), 255, 255);
 
-      for (int iInnerPass = 0; iInnerPass < innerPasses; iInnerPass++)
-      {
+    for (int iInnerPass = 0; iInnerPass < innerPasses; iInnerPass++)
+    {
         DrawFanPixels(0, FAN_SIZE, c, Sequential, iFan++);
-      }
+    }
     }
 
     CRGB c = CHSV(random(0, 255), 255, 255);
     for (int i = NUM_FANS * FAN_SIZE; i < NUM_LEDS; i++)
-      g()->setPixel(i, c);
-  }
+    g()->setPixel(i, c);
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     static bool latch = false;
     static float minVUSeen = 0.0;
 
     if (latch)
     {
-      if (g_Analyzer.VURatio() < minVUSeen)
+    if (g_Analyzer.VURatio() < minVUSeen)
         minVUSeen = g_Analyzer.VURatio();
     }
 
     if (g_Analyzer.VURatio() < 0.25f) // Crossing center going up
     {
-      latch = true;
-      minVUSeen = g_Analyzer.VURatio();
+    latch = true;
+    minVUSeen = g_Analyzer.VURatio();
     }
 
     if (latch)
     {
-      if (g_Analyzer.VURatio() > 1.5f)
-      {
+    if (g_Analyzer.VURatio() > 1.5f)
+    {
         if (random_range(1.0f, 3.0f) < g_Analyzer.VURatio())
         {
-          latch = false;
-          OnBeat();
+        latch = false;
+        OnBeat();
         }
-      }
     }
-  }
+    }
+}
 };
 
 class CountEffect : public EffectWithId<CountEffect>
@@ -447,213 +447,213 @@ class CountEffect : public EffectWithId<CountEffect>
 
 private:
 
-  const int DRAW_LEN = 16;
-  const int OPEN_LEN = NUM_FANS * FAN_SIZE - DRAW_LEN;
+const int DRAW_LEN = 16;
+const int OPEN_LEN = NUM_FANS * FAN_SIZE - DRAW_LEN;
 
 public:
 
-  void Draw() override
-  {
+void Draw() override
+{
     static float i = 0;
     EVERY_N_MILLISECONDS(30)
     {
-      i += 0.5f;
+    i += 0.5f;
 
-      if (i >= OPEN_LEN)
+    if (i >= OPEN_LEN)
         i -= OPEN_LEN;
 
-      FastLED.clear();
-      float t = i;
-      for (int z = 0; z < NUM_FANS; z += 3)
-      {
+    FastLED.clear();
+    float t = i;
+    for (int z = 0; z < NUM_FANS; z += 3)
+    {
         CRGB c = CHSV(z * 48, 255, 255);
         DrawFanPixels(t, DRAW_LEN, c, BottomUp);
         t += FAN_SIZE * 3;
         if (t >= OPEN_LEN)
-          t -= OPEN_LEN;
-      }
-
-      FastLED.show();
+        t -= OPEN_LEN;
     }
-  }
+
+    FastLED.show();
+    }
+}
 };
 
 class TapeReelEffect : public EffectWithId<TapeReelEffect>
 {
 private:
 
-  float ReelPos[NUM_FANS] = {0};
-  float ReelDir[NUM_FANS] = {0};
+float ReelPos[NUM_FANS] = {0};
+float ReelDir[NUM_FANS] = {0};
 
 public:
 
-  TapeReelEffect(const String & strName) : EffectWithId(strName) {}
-  TapeReelEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
+TapeReelEffect(const String & strName) : EffectWithId(strName) {}
+TapeReelEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
-  void Draw() override
-  {
+void Draw() override
+{
     EVERY_N_MILLISECONDS(250)
     {
-      for (int i = 0; i < NUM_FANS; i++)
-      {
+    for (int i = 0; i < NUM_FANS; i++)
+    {
         if (random(0, 100) < 40) // 40% Chance of attempting to do something
         {
-          int action = random(0, 3); // Generate a random outcome
-          if (action == 0)
-          {
+        int action = random(0, 3); // Generate a random outcome
+        if (action == 0)
+        {
             ReelDir[i] = 0; // 0 -> Stop the Reel
-          }
-          else if (action == 1)
-          {
+        }
+        else if (action == 1)
+        {
             if (ReelDir[i] == 0)
             {
-              ReelDir[i] = -1; // 1 -> Spin Backwards, or accel if already doing so
+            ReelDir[i] = -1; // 1 -> Spin Backwards, or accel if already doing so
             }
             else
             {
-              ReelDir[i] -= .5f;
+            ReelDir[i] -= .5f;
             }
-          }
-          else if (action == 2)
-          {
+        }
+        else if (action == 2)
+        {
             if (ReelDir[i] == 0) // 2 -> Spin Forwards, or accel if already doing so
             {
-              ReelDir[i] = 1;
+            ReelDir[i] = 1;
             }
             else
             {
-              ReelDir[i] += .5f;
+            ReelDir[i] += .5f;
             }
-          }
         }
-      }
+        }
+    }
     }
 
     EVERY_N_MILLISECONDS(20) // Update the reels based on the direction
     {
-      for (int i = 0; i < NUM_FANS; i++)
-      {
+    for (int i = 0; i < NUM_FANS; i++)
+    {
         ReelPos[i] = (ReelPos[i] + ReelDir[i]);
         if (ReelPos[i] < 0)
-          ReelPos[i] += FAN_SIZE;
+        ReelPos[i] += FAN_SIZE;
         if (ReelPos[i] >= FAN_SIZE)
-          ReelPos[i] -= FAN_SIZE;
-      }
+        ReelPos[i] -= FAN_SIZE;
+    }
     }
 
     EVERY_N_MILLISECONDS(20) // Draw the Effect
     {
-      FastLED.clear(false);
-      DrawEffect();
+    FastLED.clear(false);
+    DrawEffect();
     }
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     for (int i = 0; i < NUM_FANS; i++)
     {
-      float pos = ReelPos[i];
-      DrawFanPixels(i * FAN_SIZE + pos, 1, CRGB::White);
-      DrawFanPixels(i * FAN_SIZE + fmod(pos + 1, FAN_SIZE), 1, CRGB::Blue);
-      DrawFanPixels(i * FAN_SIZE + fmod(pos + FAN_SIZE / 2, FAN_SIZE), 1, CRGB::White);
-      DrawFanPixels(i * FAN_SIZE + fmod(pos + FAN_SIZE / 2 + 1, FAN_SIZE), 1, CRGB::Blue);
+    float pos = ReelPos[i];
+    DrawFanPixels(i * FAN_SIZE + pos, 1, CRGB::White);
+    DrawFanPixels(i * FAN_SIZE + fmod(pos + 1, FAN_SIZE), 1, CRGB::Blue);
+    DrawFanPixels(i * FAN_SIZE + fmod(pos + FAN_SIZE / 2, FAN_SIZE), 1, CRGB::White);
+    DrawFanPixels(i * FAN_SIZE + fmod(pos + FAN_SIZE / 2 + 1, FAN_SIZE), 1, CRGB::Blue);
     }
-  }
+}
 };
 
 class PaletteReelEffect : public EffectWithId<PaletteReelEffect>
 {
 private:
-  float ReelPos[NUM_FANS] = {0};
-  float ReelDir[NUM_FANS] = {0};
-  int ColorOffset[NUM_FANS] = {0};
+float ReelPos[NUM_FANS] = {0};
+float ReelDir[NUM_FANS] = {0};
+int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteReelEffect(const String & strName) : EffectWithId(strName) {}
+PaletteReelEffect(const String & strName) : EffectWithId(strName) {}
 
-  PaletteReelEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
+PaletteReelEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
-  void Draw() override
-  {
+void Draw() override
+{
     EVERY_N_MILLISECONDS(250)
     {
-      for (int i = 0; i < NUM_FANS; i++)
-      {
+    for (int i = 0; i < NUM_FANS; i++)
+    {
         if (random(0, 100) < 50 * g_Analyzer.VURatio()) // 40% Chance of attempting to do something
         {
-          int action = random(0, 3); // Generate a random outcome
-          if (action == 0 || action == 3)
-          {
+        int action = random(0, 3); // Generate a random outcome
+        if (action == 0 || action == 3)
+        {
             ReelDir[i] = 0; // 0 -> Stop the Reel
-          }
-          else if (action == 1)
-          {
+        }
+        else if (action == 1)
+        {
             if (g_Analyzer.VURatio() > 0.5f)
             {
-              if (ReelDir[i] == 0)
-              {
+            if (ReelDir[i] == 0)
+            {
                 ColorOffset[i] = random(0, 255);
                 ReelDir[i] = -1; // 1 -> Spin Backwards, or accel if already doing so
-              }
-              else
-              {
-                ReelDir[i] -= .5f;
-              }
             }
-          }
-          else if (action == 2)
-          {
+            else
+            {
+                ReelDir[i] -= .5f;
+            }
+            }
+        }
+        else if (action == 2)
+        {
             if (g_Analyzer.VURatio() > 0.5f)
             {
-              if (ReelDir[i] == 0) // 2 -> Spin Forwards, or accel if already doing so
-              {
+            if (ReelDir[i] == 0) // 2 -> Spin Forwards, or accel if already doing so
+            {
                 ColorOffset[i] = random(0, 255);
                 ReelDir[i] = 1;
-              }
-              else
-              {
-                ReelDir[i] += .5f;
-              }
             }
-          }
+            else
+            {
+                ReelDir[i] += .5f;
+            }
+            }
         }
-      }
+        }
+    }
     }
 
     EVERY_N_MILLISECONDS(20) // Update the reels based on the direction
     {
-      for (int i = 0; i < NUM_FANS; i++)
-      {
+    for (int i = 0; i < NUM_FANS; i++)
+    {
         ReelPos[i] = (ReelPos[i] + ReelDir[i] * (2 + g_Analyzer.VURatio()));
         if (ReelPos[i] < 0)
-          ReelPos[i] += FAN_SIZE;
+        ReelPos[i] += FAN_SIZE;
         if (ReelPos[i] >= FAN_SIZE)
-          ReelPos[i] -= FAN_SIZE;
-      }
+        ReelPos[i] -= FAN_SIZE;
+    }
     }
 
     EVERY_N_MILLISECONDS(20) // Draw the Effect
     {
-      fadeAllChannelsToBlackBy(20);
-      DrawEffect();
+    fadeAllChannelsToBlackBy(20);
+    DrawEffect();
     }
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     for (int i = 0; i < NUM_FANS; i++)
     {
-      if (ReelDir[i] != 0)
-      {
+    if (ReelDir[i] != 0)
+    {
         int pos = ReelPos[i];
         ClearFanPixels(0, 16, Sequential, i);
         for (int x = 0; x < FAN_SIZE; x++)
         {
-          DrawFanPixels(i * FAN_SIZE + ((pos + x) % FAN_SIZE), 1, ColorFromPalette(RainbowColors_p, ColorOffset[i] + x * 4, 255, NOBLEND));
+        DrawFanPixels(i * FAN_SIZE + ((pos + x) % FAN_SIZE), 1, ColorFromPalette(RainbowColors_p, ColorOffset[i] + x * 4, 255, NOBLEND));
         }
-      }
     }
-  }
+    }
+}
 };
 
 class PaletteSpinEffect : public EffectWithId<PaletteSpinEffect>
@@ -666,24 +666,24 @@ private:
     int ColorOffset[NUM_FANS] = {0};
 
 public:
-  PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
+PaletteSpinEffect(const String &strName, const CRGBPalette16 &palette, bool bReplace, float sparkleChance = 0.0)
     : EffectWithId(strName),
         _Palette(palette),
         _bReplaceMagenta(bReplace),
         _sparkleChance(sparkleChance)
-  {
-  }
+{
+}
 
-  PaletteSpinEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId(jsonObject),
+PaletteSpinEffect(const JsonObjectConst& jsonObject)
+    : EffectWithId(jsonObject),
         _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         _bReplaceMagenta(jsonObject["rpm"]),
         _sparkleChance(jsonObject["sch"])
-  {
-  }
+{
+}
 
-  bool SerializeToJSON(JsonObject& jsonObject) override
-  {
+bool SerializeToJSON(JsonObject& jsonObject) override
+{
     auto jsonDoc = CreateJsonDocument();
 
     JsonObject root = jsonDoc.to<JsonObject>();
@@ -694,70 +694,70 @@ public:
     jsonDoc["sch"] = _sparkleChance;
 
     return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-  }
+}
 
-  void Draw() override
-  {
+void Draw() override
+{
     EVERY_N_MILLISECONDS(20) // Update the reels based on the direction
     {
-      for (int i = 0; i < NUM_FANS; i++)
-      {
+    for (int i = 0; i < NUM_FANS; i++)
+    {
         ReelPos[i] = (ReelPos[i] + 0.25f);
         if (ReelPos[i] < 0)
-          ReelPos[i] += FAN_SIZE;
+        ReelPos[i] += FAN_SIZE;
         if (ReelPos[i] >= FAN_SIZE)
-          ReelPos[i] -= FAN_SIZE;
-      }
+        ReelPos[i] -= FAN_SIZE;
+    }
     }
 
     EVERY_N_MILLISECONDS(20) // Draw the Effect
     {
-      fadeAllChannelsToBlackBy(20);
-      DrawEffect();
+    fadeAllChannelsToBlackBy(20);
+    DrawEffect();
     }
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     for (int i = 0; i < NUM_FANS; i++)
     {
-      ClearFanPixels(0, FAN_SIZE, Sequential, i);
-      for (int x = 0; x < FAN_SIZE; x++)
-      {
+    ClearFanPixels(0, FAN_SIZE, Sequential, i);
+    for (int x = 0; x < FAN_SIZE; x++)
+    {
         float q = fmod(ReelPos[i] + x, FAN_SIZE);
         CRGB c = ColorFromPalette(_Palette, 255.0f * q / FAN_SIZE, 255, NOBLEND);
         if (_bReplaceMagenta && c == CRGB(CRGB::Magenta))
-          c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
+        c = CRGB(CHSV(beatsin8(2, 0, 255), 255, 255));
         if (random_range(0.0f, 10.f) < _sparkleChance)
-          c = CRGB::White;
+        c = CRGB::White;
         DrawFanPixels(x, 1, c, Sequential, i);
-      }
     }
-  }
+    }
+}
 };
 class ColorCycleEffect : public EffectWithId<ColorCycleEffect>
 {
 private:
-  PixelOrder _order;
-  int _step;
+PixelOrder _order;
+int _step;
 
 public:
-  ColorCycleEffect(PixelOrder order = Sequential, int step = 8)
+ColorCycleEffect(PixelOrder order = Sequential, int step = 8)
     : EffectWithId("ColorCylceEffect"),
-      _order(order),
-      _step(step)
-  {
-  }
+    _order(order),
+    _step(step)
+{
+}
 
-  ColorCycleEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId(jsonObject),
-      _order((PixelOrder)jsonObject[PTY_ORDER]),
-      _step(jsonObject["stp"])
-  {
-  }
+ColorCycleEffect(const JsonObjectConst& jsonObject)
+    : EffectWithId(jsonObject),
+    _order((PixelOrder)jsonObject[PTY_ORDER]),
+    _step(jsonObject["stp"])
+{
+}
 
-  bool SerializeToJSON(JsonObject& jsonObject) override
-  {
+bool SerializeToJSON(JsonObject& jsonObject) override
+{
     auto jsonDoc = CreateJsonDocument();
 
     JsonObject root = jsonDoc.to<JsonObject>();
@@ -767,205 +767,205 @@ public:
     jsonDoc["stp"] = _step;
 
     return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-  }
+}
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawEffect();
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     static uint8_t basehue = 0;
     uint8_t hue = basehue;
     EVERY_N_MILLISECONDS(20)
     {
-      basehue += 1;
+    basehue += 1;
     }
     for (int i = 0; i < NUM_LEDS; i++)
-      DrawFanPixels(i, 1, CHSV(hue += _step, 255, 255), _order);
-  }
+    DrawFanPixels(i, 1, CHSV(hue += _step, 255, 255), _order);
+}
 };
 
 class ColorCycleEffectBottomUp : public EffectWithId<ColorCycleEffectBottomUp>
 {
 public:
-  using EffectWithId<ColorCycleEffectBottomUp>::EffectWithId;
+using EffectWithId<ColorCycleEffectBottomUp>::EffectWithId;
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawEffect();
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     static uint8_t basehue = 0;
     uint8_t hue = basehue;
     EVERY_N_MILLISECONDS(20)
     {
-      basehue += 2;
+    basehue += 2;
     }
     for (int i = 0; i < NUM_LEDS; i++)
-      DrawFanPixels(i, 1, CHSV(hue += 8, 255, 255), BottomUp);
-  }
+    DrawFanPixels(i, 1, CHSV(hue += 8, 255, 255), BottomUp);
+}
 };
 
 class ColorCycleEffectTopDown : public EffectWithId<ColorCycleEffectTopDown>
 {
 public:
-  using EffectWithId<ColorCycleEffectTopDown>::EffectWithId;
+using EffectWithId<ColorCycleEffectTopDown>::EffectWithId;
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawEffect();
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     static uint8_t basehue = 0;
     uint8_t hue = basehue;
     EVERY_N_MILLISECONDS(30)
     {
-      basehue += 1;
+    basehue += 1;
     }
     for (int i = 0; i < NUM_LEDS; i++)
-      DrawFanPixels(i, 1, CHSV(hue += 4, 255, 255), TopDown);
-  }
+    DrawFanPixels(i, 1, CHSV(hue += 4, 255, 255), TopDown);
+}
 };
 
 class ColorCycleEffectSequential : public EffectWithId<ColorCycleEffectSequential>
 {
 public:
-  using EffectWithId<ColorCycleEffectSequential>::EffectWithId;
+using EffectWithId<ColorCycleEffectSequential>::EffectWithId;
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawEffect();
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     static uint8_t basehue = 0;
     uint8_t hue = basehue;
     EVERY_N_MILLISECONDS(30)
     {
-      basehue += 1;
+    basehue += 1;
     }
     for (int i = 0; i < NUM_LEDS; i++)
-      DrawFanPixels(i, 1, CHSV(hue += 4, 255, 255), Sequential);
-  }
+    DrawFanPixels(i, 1, CHSV(hue += 4, 255, 255), Sequential);
+}
 };
 
 class SpinningPaletteEffect : public PaletteEffect
 {
 private:
 
-  int iRotate = 0;
+int iRotate = 0;
 
 public:
 
-  using PaletteEffect::PaletteEffect;
+using PaletteEffect::PaletteEffect;
 
-  void Draw() override
-  {
+void Draw() override
+{
     PaletteEffect::Draw();
     for (int i = 0; i < NUM_FANS; i++)
     {
-      RotateFan(i, (i / 2) * 2 == i ? true : false, iRotate);
+    RotateFan(i, (i / 2) * 2 == i ? true : false, iRotate);
     }
     delay(10);
 
     EVERY_N_MILLISECONDS(25)
     {
-      iRotate = (iRotate + 1) % FAN_SIZE;
+    iRotate = (iRotate + 1) % FAN_SIZE;
     }
-  }
+}
 };
 
 class ColorCycleEffectRightLeft : public EffectWithId<ColorCycleEffectRightLeft>
 {
 public:
 
-  using EffectWithId<ColorCycleEffectRightLeft>::EffectWithId;
+using EffectWithId<ColorCycleEffectRightLeft>::EffectWithId;
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawEffect();
     delay(20);
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     static uint8_t basehue = 0;
     uint8_t hue = basehue;
     basehue += 8;
     for (int i = 0; i < NUM_LEDS; i++)
-      DrawFanPixels(i, 1, CHSV(hue += 16, 255, 255), RightLeft);
-  }
+    DrawFanPixels(i, 1, CHSV(hue += 16, 255, 255), RightLeft);
+}
 };
 
 class ColorCycleEffectLeftRight : public EffectWithId<ColorCycleEffectLeftRight>
 {
 public:
 
-  using EffectWithId<ColorCycleEffectLeftRight>::EffectWithId;
+using EffectWithId<ColorCycleEffectLeftRight>::EffectWithId;
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawEffect();
     delay(20);
-  }
+}
 
-  void DrawEffect()
-  {
+void DrawEffect()
+{
     static uint8_t basehue = 0;
     uint8_t hue = basehue;
     basehue += 8;
     for (int i = 0; i < NUM_LEDS; i++)
-      DrawFanPixels(i, 1, CHSV(hue += 16, 255, 255), LeftRight);
-  }
+    DrawFanPixels(i, 1, CHSV(hue += 16, 255, 255), LeftRight);
+}
 };
 
 class FireFanEffect : public EffectWithId<FireFanEffect>
 {
 protected:
-  CRGBPalette16 Palette;
-  int LEDCount; // Number of LEDs total
-  int CellsPerLED;
-  float Cooling;     // Rate at which the pixels cool off
-  int Sparks;      // How many sparks will be attempted each frame
-  int SparkHeight; // If created, max height for a spark
-  uint8_t Sparking;    // Probability of a spark each attempt
-  bool bReversed;  // If reversed we draw from 0 outwards
-  bool bMirrored;  // If mirrored we split and duplicate the drawing
-  bool bMulticolor; // If true each channel spoke will be a different color
-  uint8_t MaxSparkTemp; // How hot a spark can be
+CRGBPalette16 Palette;
+int LEDCount; // Number of LEDs total
+int CellsPerLED;
+float Cooling;     // Rate at which the pixels cool off
+int Sparks;      // How many sparks will be attempted each frame
+int SparkHeight; // If created, max height for a spark
+uint8_t Sparking;    // Probability of a spark each attempt
+bool bReversed;  // If reversed we draw from 0 outwards
+bool bMirrored;  // If mirrored we split and duplicate the drawing
+bool bMulticolor; // If true each channel spoke will be a different color
+uint8_t MaxSparkTemp; // How hot a spark can be
 
-  PixelOrder Order;
+PixelOrder Order;
 
-  std::unique_ptr<uint8_t[]> abHeat; // Heat table to map temp to color
+std::unique_ptr<uint8_t[]> abHeat; // Heat table to map temp to color
 
   // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
   // You can tune these coefficients to control how quickly and smoothly the fire spreads
 
-  static const uint8_t BlendSelf = 0;      // 2
-  static const uint8_t BlendNeighbor1 = 1; // 3
-  static const uint8_t BlendNeighbor2 = 1; // 2
-  static const uint8_t BlendNeighbor3 = 0; // 1
+static const uint8_t BlendSelf = 0;      // 2
+static const uint8_t BlendNeighbor1 = 1; // 3
+static const uint8_t BlendNeighbor2 = 1; // 2
+static const uint8_t BlendNeighbor3 = 0; // 1
 
-  static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
+static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
-  int CellCount() const { return LEDCount * CellsPerLED; }
+int CellCount() const { return LEDCount * CellsPerLED; }
 
 public:
 
-  FireFanEffect(CRGBPalette16 palette,
+FireFanEffect(CRGBPalette16 palette,
                 int ledCount,
                 int cellsPerLED = 1,
                 float cooling = 20,
@@ -990,14 +990,14 @@ public:
         Order(order),
         bMulticolor(bmulticolor),
         MaxSparkTemp(maxSparkTemp)
-  {
+{
     if (bMirrored)
-      LEDCount = LEDCount / 2;
+    LEDCount = LEDCount / 2;
     abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
-  }
+}
 
-  FireFanEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId(jsonObject),
+FireFanEffect(const JsonObjectConst& jsonObject)
+    : EffectWithId(jsonObject),
         Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         LEDCount(jsonObject[PTY_LEDCOUNT]),
         CellsPerLED(jsonObject[PTY_CELLSPERLED]),
@@ -1010,12 +1010,12 @@ public:
         Order((PixelOrder)jsonObject[PTY_ORDER]),
         bMulticolor(jsonObject[PTY_MULTICOLOR] == 1),
         MaxSparkTemp(jsonObject[PTY_SPARKTEMP])
-  {
+{
     abHeat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
-  }
+}
 
-  bool SerializeToJSON(JsonObject& jsonObject) override
-  {
+bool SerializeToJSON(JsonObject& jsonObject) override
+{
     auto jsonDoc = CreateJsonDocument();
 
     JsonObject root = jsonDoc.to<JsonObject>();
@@ -1035,60 +1035,60 @@ public:
     jsonDoc[PTY_MULTICOLOR] = bMulticolor ? 1 : 0;
 
     return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-  }
+}
 
-  CRGB GetBlackBodyHeatColorByte(uint8_t temp) const
-  {
+CRGB GetBlackBodyHeatColorByte(uint8_t temp) const
+{
     return ColorFromPalette(Palette, temp, 255);
-  }
+}
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear(false);
     DrawFire(Order);
-  }
+}
 
-  size_t DesiredFramesPerSecond() const override
-  {
+size_t DesiredFramesPerSecond() const override
+{
     return 60;
-  }
+}
 
-  virtual void DrawFire(PixelOrder order = Sequential)
-  {
+virtual void DrawFire(PixelOrder order = Sequential)
+{
     // First cool each cell by a litle bit
 
     EVERY_N_MILLISECONDS(50)
     {
-      for (int i = 0; i < CellCount(); i++)
-      {
+    for (int i = 0; i < CellCount(); i++)
+    {
         float coolingAmount = random_range(0.0f, Cooling);
         abHeat[i] = ::max(0.0, abHeat[i] - (double) coolingAmount);
-      }
+    }
     }
 
     EVERY_N_MILLISECONDS(20)
     {
       // Next drift heat up and diffuse it a little bit
-      for (int i = 0; i < CellCount(); i++)
+    for (int i = 0; i < CellCount(); i++)
         abHeat[i] = min(255, (abHeat[i] * BlendSelf +
-                              abHeat[(i + 1) % CellCount()] * BlendNeighbor1 +
-                              abHeat[(i + 2) % CellCount()] * BlendNeighbor2 +
-                              abHeat[(i + 3) % CellCount()] * BlendNeighbor3) /
-                                 BlendTotal);
+                            abHeat[(i + 1) % CellCount()] * BlendNeighbor1 +
+                            abHeat[(i + 2) % CellCount()] * BlendNeighbor2 +
+                            abHeat[(i + 3) % CellCount()] * BlendNeighbor3) /
+                                BlendTotal);
     }
 
     // Randomly ignite new sparks down in the flame kernel
 
     EVERY_N_MILLISECONDS(20)
     {
-      for (int i = 0; i < Sparks; i++)
-      {
+    for (int i = 0; i < Sparks; i++)
+    {
         if (random(255) < Sparking)
         {
-          int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
-          abHeat[y] = ::min((long)MaxSparkTemp, abHeat[y] + random(0, MaxSparkTemp));
+        int y = CellCount() - 1 - random(SparkHeight * CellsPerLED);
+        abHeat[y] = ::min((long)MaxSparkTemp, abHeat[y] + random(0, MaxSparkTemp));
         }
-      }
+    }
     }
 
     // Finally, convert heat to a color
@@ -1099,15 +1099,15 @@ public:
       // for (int iCell = 0; iCell < CellsPerLED; iCell++)
       //   maxv = max(maxv, heat[i * CellsPerLED + iCell]);
 
-      for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
-      {
+    for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
+    {
         CRGB color = GetBlackBodyHeatColorByte(abHeat[i * CellsPerLED]);
 
         // If multicolor, we shift the hue based on the channel
         if (bMulticolor)
         {
             CHSV hsv = rgb2hsv_approximate(color);
-                 hsv.hue += iChannel * (255/NUM_CHANNELS);
+                hsv.hue += iChannel * (255/NUM_CHANNELS);
             color = hsv;
         }
 
@@ -1124,18 +1124,18 @@ public:
             }
         }
 
-      }
     }
-  }
+    }
+}
 };
 
 class BlueFireFanEffect : public FireFanEffect
 {
 public:
-  using FireFanEffect::FireFanEffect;
+using FireFanEffect::FireFanEffect;
 
-  virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
-  {
+virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
+{
     uint8_t t192 = round((temperature / 255.0) * 191);
     uint8_t heatramp = t192 & 0x3F; // 0..63
     heatramp <<= 2;                 // scale up to 0..252
@@ -1144,15 +1144,15 @@ public:
     CRGB rgb;
     hsv2rgb_rainbow(hsv, rgb);
     return rgb;
-  }
+}
 };
 
 class GreenFireFanEffect : public FireFanEffect
 {
 public:
-  using FireFanEffect::FireFanEffect;
-  virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
-  {
+using FireFanEffect::FireFanEffect;
+virtual CRGB MapHeatToColor(uint8_t temperature, int iChannel = 0)
+{
     uint8_t t192 = round((temperature / 255.0) * 191);
     uint8_t heatramp = t192 & 0x3F; // 0..63
     heatramp <<= 2;                 // scale up to 0..252
@@ -1161,7 +1161,7 @@ public:
     CRGB rgb;
     hsv2rgb_rainbow(hsv, rgb);
     return rgb;
-  }
+}
 };
 
 class RGBRollAround : public EffectWithId<RGBRollAround>
@@ -1170,22 +1170,22 @@ private:
     int iRotate = 0;
 
 public:
-  using EffectWithId<RGBRollAround>::EffectWithId;
+using EffectWithId<RGBRollAround>::EffectWithId;
 
-  virtual void DrawColor(CRGB color, int phase)
-  {
+virtual void DrawColor(CRGB color, int phase)
+{
     const int lineLen = FAN_SIZE;
     int q = beatsin16(24, 0, NUM_LEDS - lineLen, 0, phase);
     DrawFanPixels(q, lineLen, color, BottomUp);
-  }
+}
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear();
     DrawColor(CRGB::Red, 0);
     DrawColor(CRGB::Green, 16383);
     DrawColor(CRGB::Blue, 32767);
-  }
+}
 };
 
 class HueTest : public EffectWithId<HueTest>
@@ -1195,37 +1195,37 @@ private:
     int iRotate = 0;
 
 public:
-  using EffectWithId<HueTest>::EffectWithId;
+using EffectWithId<HueTest>::EffectWithId;
 
-  void Draw() override
-  {
+void Draw() override
+{
     FastLED.clear();
     int iFan = 0;
     for (int sat = 255; sat >= 0 && iFan < NUM_FANS; sat -= 32)
     {
-      DrawFanPixels(0, FAN_SIZE, CRGB(CHSV(HUE_RED, sat, 255)), Sequential, iFan++);
+    DrawFanPixels(0, FAN_SIZE, CRGB(CHSV(HUE_RED, sat, 255)), Sequential, iFan++);
     }
-  }
+}
 };
 
 class RingTestEffect : public EffectWithId<RingTestEffect>
 {
-  public:
+public:
   // ID provided by EffectWithId
 
-  RingTestEffect() : EffectWithId("Ring Test") {}
+RingTestEffect() : EffectWithId("Ring Test") {}
 
-  RingTestEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
+RingTestEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
     void Draw() override
     {
-      for (int i = 0; i < NUM_FANS; i++)
-      {
+    for (int i = 0; i < NUM_FANS; i++)
+    {
         for (int c = 0; c < NUM_RINGS; c++)
         {
-          FillRingPixels(CRGB(CHSV(c * 16, 255, 255)), i, c);
+        FillRingPixels(CRGB(CHSV(c * 16, 255, 255)), i, c);
         }
-      }
+    }
     }
 };
 
@@ -1238,41 +1238,41 @@ class RingTestEffect : public EffectWithId<RingTestEffect>
 
 class LanternParticle
 {
-  const int minPeturbation = 100;
-  const int maxPeterbation = 3500;
-  const int perterbationIncrement = 1;
-  const int maxDeviation = 100;
+const int minPeturbation = 100;
+const int maxPeterbation = 3500;
+const int perterbationIncrement = 1;
+const int maxDeviation = 100;
 
-  int centerX = maxDeviation / 2;
-  int centerY = maxDeviation / 2;
+int centerX = maxDeviation / 2;
+int centerY = maxDeviation / 2;
 
-  int velocityX = 0;
-  int velocityY = 0;
+int velocityX = 0;
+int velocityY = 0;
 
-  int pertub = minPeturbation;
-  int perturbDirection = perterbationIncrement;
+int pertub = minPeturbation;
+int perturbDirection = perterbationIncrement;
 
-  float rotation = 0.0f;
+float rotation = 0.0f;
 
 protected:
 
-  float distance(float x1, float y1, float x2, float y2)
-  {
+float distance(float x1, float y1, float x2, float y2)
+{
     return std::sqrt(std::pow(x1-x2, 2) + std::pow(y1 - y2, 2));
-  }
+}
 
-  CRGB flameColor(int val)
-  {
+CRGB flameColor(int val)
+{
     val = min(val, 255);
     val = max(val, 0);
 
     return CRGB(val, val * .30, val * .05);
-  }
+}
 
   // Generate a vector of how bright each of the surrounding 8 LEDs on the unit circle should be
 
-  std::vector<float> led_brightness(float wandering_x, float wandering_y)
-  {
+std::vector<float> led_brightness(float wandering_x, float wandering_y)
+{
     const float sqrt2 = std::sqrt(2);
 
     const std::vector<std::pair<float, float>> unit_circle_coords = {
@@ -1298,71 +1298,71 @@ protected:
 }
 
 public:
-  void Draw()
-  {
+void Draw()
+{
     // random trigger brightness oscillation, if at least half uncalm
 
-      int movx = 0;
-      int movy = 0;
+    int movx = 0;
+    int movy = 0;
 
-      if (pertub > (maxPeterbation / 2))
+    if (pertub > (maxPeterbation / 2))
         if (random(2000) < 5)
-          pertub = maxPeterbation; // occasional 'bonus' wind
+        pertub = maxPeterbation; // occasional 'bonus' wind
 
       // random poke, intensity determined by uncalm value (0 is perfectly calm)
 
-      movx = random(pertub >> 7) - (pertub >> 9);
-      movy = random(pertub >> 7) - (pertub >> 9);
+    movx = random(pertub >> 7) - (pertub >> 9);
+    movy = random(pertub >> 7) - (pertub >> 9);
 
       // if reach most calm value, start moving towards uncalm
-      if (pertub < minPeturbation)
+    if (pertub < minPeturbation)
         perturbDirection = perterbationIncrement;
 
       // if reach most uncalm value, start going towards calm
-      if (pertub > maxPeterbation)
+    if (pertub > maxPeterbation)
         perturbDirection = -perterbationIncrement;
 
-      pertub += perturbDirection;
+    pertub += perturbDirection;
 
       // Move center of flame around by the current velocity
 
-      centerX += movx + (velocityX / 7);
-      centerY += movy + (velocityY / 7);
+    centerX += movx + (velocityX / 7);
+    centerY += movy + (velocityY / 7);
 
       // Enforce some range limits
-      if (centerX < -maxDeviation)
-      {
+    if (centerX < -maxDeviation)
+    {
         centerX = -maxDeviation;
         velocityX *= -0.5;
-      }
+    }
 
-      if (centerX > maxDeviation)
-      {
+    if (centerX > maxDeviation)
+    {
         centerX = maxDeviation;
         velocityX *= -0.5;
-      }
+    }
 
-      if (centerY < -maxDeviation)
-      {
+    if (centerY < -maxDeviation)
+    {
         centerY = -maxDeviation;
         velocityY *= -0.5;
-      }
+    }
 
-      if (centerY > maxDeviation)
-      {
+    if (centerY > maxDeviation)
+    {
         centerY = maxDeviation;
         velocityY *= -0.5;
-      }
+    }
 
       // Dampen the velocity down a fraction
 
-      velocityX = (velocityX * 999) / 1000;
-      velocityY = (velocityY * 999) / 1000;
+    velocityX = (velocityX * 999) / 1000;
+    velocityY = (velocityY * 999) / 1000;
 
       // Apply Hooke's law of spring motion to accelerate back towards rest/center
 
-      velocityX -= centerX;
-      velocityY -= centerY;
+    velocityX -= centerX;
+    velocityY -= centerY;
 
 
     rotation += 0.0;
@@ -1376,9 +1376,9 @@ public:
     auto brightness = led_brightness(xRatio, yRatio);
     for (int i = 0; i < 8; i++)
     {
-      CRGB pixelColor = flameColor(255 * brightness[i]);
-      pixelColor.fadeToBlackBy(255 * (3.0 - brightness[i]));
-      DrawRingPixels(i, 1, pixelColor, 0, 2, true);
+    CRGB pixelColor = flameColor(255 * brightness[i]);
+    pixelColor.fadeToBlackBy(255 * (3.0 - brightness[i]));
+    DrawRingPixels(i, 1, pixelColor, 0, 2, true);
     }
 
     // Now draw a center pixel which is dimmed proportional to the distance the center is from actual
@@ -1388,29 +1388,29 @@ public:
     DrawRingPixels(0, 1.0, centerColor, 0, 3);
 
     debugV("X,Y = %f, %f\n", xRatio, yRatio);
-  }
+}
 };
 
 class LanternEffect : public EffectWithId<LanternEffect>
 {
 private:
-  static const int _maxParticles = 1;
-  LanternParticle _particles[_maxParticles];
+static const int _maxParticles = 1;
+LanternParticle _particles[_maxParticles];
 
 public:
-  LanternEffect() : EffectWithId("LanternEffect") {}
+LanternEffect() : EffectWithId("LanternEffect") {}
 
-  LanternEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
+LanternEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
 
-  size_t DesiredFramesPerSecond() const override
-  {
+size_t DesiredFramesPerSecond() const override
+{
     return 30;
-  }
+}
 
-  void Draw() override
-  {
+void Draw() override
+{
     fadeAllChannelsToBlackBy(20);
     for (int i = 0; i < _maxParticles; i++)
-      _particles[i].Draw();
-  }
+    _particles[i].Draw();
+}
 };

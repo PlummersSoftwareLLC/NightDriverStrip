@@ -41,13 +41,13 @@
 
 class PatternClock : public EffectWithId<PatternClock>
 {
-  private:
+private:
 
     // Radius is the lesser of the height and width so that the round clock can fit
     // on rectangular display
     float    radius;
 
-  public:
+public:
 
     PatternClock() : EffectWithId("Clock") {}
     PatternClock(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}

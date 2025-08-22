@@ -96,7 +96,7 @@ struct GIFInfo : public EmbeddedFile
     uint16_t        _height;
     uint8_t         _fps;
     GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height, uint8_t fps)
-        : EmbeddedFile(start, end), _width(width), _height(height), _fps(fps)
+    : EmbeddedFile(start, end), _width(width), _height(height), _fps(fps)
     {}
 };
 
@@ -138,7 +138,7 @@ const std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> g_ptrGI
 
 class PatternAnimatedGIF : public EffectWithId<PatternAnimatedGIF>
 {
-  private:
+private:
 
     GIFIdentifier _gifIndex  = GIFIdentifier::INVALID;
     CRGB _bkColor            = BLACK16;
@@ -215,10 +215,10 @@ public:
     }
 
     PatternAnimatedGIF(const JsonObjectConst& jsonObject)
-      : EffectWithId(jsonObject),
-          _preClear(jsonObject[PTY_PRECLEAR]),
-          _gifIndex((GIFIdentifier)jsonObject[PTY_GIFINDEX].as<std::underlying_type_t<GIFIdentifier>>()),
-          _bkColor(jsonObject[PTY_BKCOLOR])
+    : EffectWithId(jsonObject),
+        _preClear(jsonObject[PTY_PRECLEAR]),
+        _gifIndex((GIFIdentifier)jsonObject[PTY_GIFINDEX].as<std::underlying_type_t<GIFIdentifier>>()),
+        _bkColor(jsonObject[PTY_BKCOLOR])
     {
     }
 

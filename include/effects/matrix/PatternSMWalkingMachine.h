@@ -4,9 +4,9 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1990-walking-machine
 
- class PatternSMWalkingMachine : public EffectWithId<PatternSMWalkingMachine>
+class PatternSMWalkingMachine : public EffectWithId<PatternSMWalkingMachine>
 {
-  private:
+private:
     // Walking machine
     // St3p40 aka Stepko
     // 11.04.23
@@ -89,7 +89,7 @@
         float posY;
     } dot[7];
 
-  public:
+public:
 
     PatternSMWalkingMachine() : EffectWithId<PatternSMWalkingMachine>("Machine") {}
     PatternSMWalkingMachine(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMWalkingMachine>(jsonObject) {}
@@ -117,7 +117,7 @@
         {
             drawCircleF(dot[i].posX, dot[i].posY, 4, CHSV(i * 32, 255, 255));
             drawLineF(dot[i].posX, dot[i].posY, dot[(i + 1) % 7].posX, dot[(i + 1) % 7].posY, CHSV(i * 32, 255, 255),
-                      CHSV(((i + 1) % 7) * 32, 255, 255));
+                    CHSV(((i + 1) % 7) * 32, 255, 255));
         }
     }
 };

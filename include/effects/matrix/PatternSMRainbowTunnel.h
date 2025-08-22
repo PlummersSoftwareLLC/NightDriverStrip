@@ -7,7 +7,7 @@
 
 class PatternSMRainbowTunnel : public EffectWithId<PatternSMRainbowTunnel>
 {
-  private:
+private:
     // RadialRainbow
     // Stepko and Sutaburosu
     // 23/12/21
@@ -22,7 +22,7 @@ class PatternSMRainbowTunnel : public EffectWithId<PatternSMRainbowTunnel>
         uint8_t radius;
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
-  public:
+public:
   
     PatternSMRainbowTunnel() : EffectWithId<PatternSMRainbowTunnel>("Colorspin") {}
     PatternSMRainbowTunnel(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRainbowTunnel>(jsonObject) {}

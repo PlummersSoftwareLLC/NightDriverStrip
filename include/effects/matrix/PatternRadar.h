@@ -58,35 +58,35 @@ class PatternRadar : public EffectWithId<PatternRadar>
 {
 private:
 
-  uint8_t theta = 0;
-  uint8_t hueoffset = 0;
+uint8_t theta = 0;
+uint8_t hueoffset = 0;
 
 public:
 
-  PatternRadar() : EffectWithId<PatternRadar>("Radar") {}
-  PatternRadar(const JsonObjectConst& jsonObject) : EffectWithId<PatternRadar>(jsonObject) {}
+PatternRadar() : EffectWithId<PatternRadar>("Radar") {}
+PatternRadar(const JsonObjectConst& jsonObject) : EffectWithId<PatternRadar>(jsonObject) {}
 
-  void Draw() override
-  {
+void Draw() override
+{
     auto graphics = (GFXBase *)_GFX[0].get();
     graphics->DimAll(254);
 
     for (int offset = 0; offset < MATRIX_CENTER_X; offset++)
     {
-      uint8_t hue = 255 - (offset * 16 + hueoffset);
-      CRGB color = graphics->ColorFromCurrentPalette(hue);
-      uint8_t x = graphics->mapcos8(theta, offset, (MATRIX_WIDTH - 1) - offset);
-      uint8_t y = graphics->mapsin8(theta, offset, (MATRIX_HEIGHT - 1) - offset);
-      uint16_t xzy = graphics->xy(x, y);
-      graphics->leds[xzy] = color;
+    uint8_t hue = 255 - (offset * 16 + hueoffset);
+    CRGB color = graphics->ColorFromCurrentPalette(hue);
+    uint8_t x = graphics->mapcos8(theta, offset, (MATRIX_WIDTH - 1) - offset);
+    uint8_t y = graphics->mapsin8(theta, offset, (MATRIX_HEIGHT - 1) - offset);
+    uint16_t xzy = graphics->xy(x, y);
+    graphics->leds[xzy] = color;
 
-      EVERY_N_MILLIS(25)
-      {
+    EVERY_N_MILLIS(25)
+    {
         theta += 2;
         hueoffset += 1;
-      }
     }
-  }
+    }
+}
 };
 
 #endif

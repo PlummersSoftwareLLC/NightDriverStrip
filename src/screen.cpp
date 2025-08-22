@@ -33,7 +33,7 @@
 #include "soundanalyzer.h"
 
 #if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
-  #include "Bounce2.h"                            // For Bounce button class
+#include "Bounce2.h"                            // For Bounce button class
 #endif
 
 #if USE_SCREEN
@@ -80,17 +80,17 @@ void BasicInfoSummary(bool bRedraw)
 
     // Blue Theme
 
-    #if USE_OLED
+#if USE_OLED
         const uint16_t bkgndColor = BLACK16;
-    #elif AMOLED_S3
+#elif AMOLED_S3
         const uint16_t bkgndColor  = Screen::to16bit(CRGB::Black);
         const uint16_t borderColor = Screen::to16bit(CRGB::Red);
         const uint16_t textColor   = Screen::to16bit(CRGB(100, 255, 20));
-    #else
+#else
         const uint16_t bkgndColor  = Screen::to16bit(CRGB::Blue);
         const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
         const uint16_t textColor   = Screen::to16bit(CRGB::White);
-    #endif
+#endif
 
 
 
@@ -116,11 +116,11 @@ void BasicInfoSummary(bool bRedraw)
     else
         display.setTextSize(1);
 
-    #if USE_OLED
+#if USE_OLED
         display.setTextColor(WHITE16, BLACK16);
-    #else
+#else
         display.setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
-    #endif
+#endif
 
     display.setCursor(xMargin, yMargin);
     display.println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, chStatus, ESP.getFreeHeap() / 1024));
@@ -224,15 +224,15 @@ void BasicInfoSummary(bool bRedraw)
             }
         }
 
-        #if USE_OLED
+#if USE_OLED
             display.fillRect(xMargin + 1, top, filled, height, WHITE16);
             display.fillRect(xMargin + filled, top, width - filled, height, BLACK16);
             display.drawRect(xMargin, top, width, height, WHITE16);
-        #else
+#else
             display.fillRect(xMargin + 1, top + 1, filled, height - 2, color);
             display.fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
             display.drawRect(xMargin, top, width, height, WHITE16);
-        #endif
+#endif
     }
 
 #ifndef ARDUINO_HELTEC_WIFI_KIT_32
@@ -261,11 +261,11 @@ void CurrentEffectSummary(bool bRedraw)
     if (bRedraw)
         display.fillScreen(BLACK16);
 
-    #if USE_SSD1306     // Set background color to black for monochrome SSD1306 OLED screen
+#if USE_SSD1306     // Set background color to black for monochrome SSD1306 OLED screen
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 0));
-    #else
+#else
         uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
-    #endif
+#endif
 
     // We only draw after a page flip or if anything has changed about the information that will be
     // shown in the page. This avoids flicker, but at the cost that we have to remember what we displayed
@@ -308,9 +308,9 @@ void CurrentEffectSummary(bool bRedraw)
             //display.setFont();
             display.setTextColor(YELLOW16, backColor);
             String sEffect = String("Effect: ") +
-                             String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
-                             String("/") +
-                             String(g_ptrSystem->EffectManager().EffectCount());
+                            String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
+                            String("/") +
+                            String(g_ptrSystem->EffectManager().EffectCount());
             auto w = display.textWidth(sEffect);
             display.setCursor(display.width() / 2 - w / 2, yh);
             display.print(sEffect.c_str());
@@ -462,7 +462,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
-        #ifdef TOGGLE_BUTTON_1
+#ifdef TOGGLE_BUTTON_1
             static uint effectInterval;
 
             Button1.update();
@@ -490,9 +490,9 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
 
                 bRedraw = true;
             }
-        #endif
+#endif
 
-        #ifdef TOGGLE_BUTTON_2
+#ifdef TOGGLE_BUTTON_2
             Button2.update();
             if (Button2.pressed())
             {
@@ -514,7 +514,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
                     deviceConfig.SetBrightness(brightness);
                 }
             }
-        #endif
+#endif
 
         UpdateScreen(bRedraw);
         if (g_Values.UpdateStarted)
@@ -523,9 +523,9 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
         }
         else
         {
-            #if AMOLED_S3
+#if AMOLED_S3
                 lv_task_handler();
-            #endif
+#endif
         }
 
         // Throttle screen updates to no more than kMaxFPS

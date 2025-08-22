@@ -60,7 +60,7 @@
 
 class PatternWave : public EffectWithId<PatternWave>
 {
-  private:
+private:
 
     uint8_t thetaUpdate = 4;
     uint8_t thetaUpdateFrequency = 0;

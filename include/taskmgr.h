@@ -64,7 +64,7 @@
 
 class IdleTask
 {
-  private:
+private:
 
     float _idleRatio = 0;
     unsigned long _lastMeasurement;
@@ -74,7 +74,7 @@ class IdleTask
 
     unsigned long counter = 0;
 
-  public:
+public:
 
     void ProcessIdleTime()
     {
@@ -226,7 +226,7 @@ private:
         LEDStripEffect* pEffect;
 
         EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
-          : function(std::move(function)),
+         : function(std::move(function)),
             pEffect(pEffect)
         {}
     };
@@ -278,29 +278,29 @@ public:
 
     void StartScreenThread()
     {
-        #if USE_SCREEN
+#if USE_SCREEN
             Serial.print( str_sprintf(">> Launching Screen Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", SCREEN_STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartSerialThread()
     {
-        #if ENABLE_AUDIOSERIAL
+#if ENABLE_AUDIOSERIAL
             Serial.print( str_sprintf(">> Launching Serial Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", DEFAULT_STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskSerial, AUDIOSERIAL_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartColorDataThread()
     {
-        #if COLORDATA_SERVER_ENABLED
+#if COLORDATA_SERVER_ENABLED
             Serial.print( str_sprintf(">> Launching ColorData Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", DEFAULT_STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartDrawThread()
@@ -312,47 +312,47 @@ public:
 
     void StartAudioThread()
     {
-        #if ENABLE_AUDIO
+#if ENABLE_AUDIO
             Serial.print( str_sprintf(">> Launching Audio Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", AUDIO_STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartNetworkThread()
     {
-        #if ENABLE_WIFI
+#if ENABLE_WIFI
             Serial.print( str_sprintf(">> Launching Network Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", NET_STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartDebugThread()
     {
-        #if ENABLE_WIFI
+#if ENABLE_WIFI
             Serial.print( str_sprintf(">> Launching Debug Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", DEBUG_STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartSocketThread()
     {
-        #if INCOMING_WIFI_ENABLED
+#if INCOMING_WIFI_ENABLED
             Serial.print( str_sprintf(">> Launching Socket Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", SOCKET_STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartRemoteThread()
     {
-        #if ENABLE_REMOTE
+#if ENABLE_REMOTE
             Serial.print( str_sprintf(">> Launching Remote Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", REMOTE_STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
             CheckHeap();
-        #endif
+#endif
     }
 
     void StartJSONWriterThread()

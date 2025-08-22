@@ -66,7 +66,7 @@
 
 extern "C"
 {
-    #include "uzlib/src/uzlib.h"
+#include "uzlib/src/uzlib.h"
 }
 
 // Introduction:
@@ -117,10 +117,10 @@ extern "C"
 class Cell
 {
 public:
-  uint8_t alive : 1;
-  uint8_t prev  : 1;
-  uint8_t hue;
-  uint8_t brightness;
+uint8_t alive : 1;
+uint8_t prev  : 1;
+uint8_t hue;
+uint8_t brightness;
 };
 
 // We check for loops by keeping a number of hashes of previous frames.  A walker that goes up and across
@@ -320,7 +320,7 @@ public:
             for (int y = 0; y < MATRIX_HEIGHT; y++) {
                 // Default is for cell to stay the same
                 if (world[x][y].brightness > 0 && world[x][y].prev == 0)
-                  world[x][y].brightness *= 0.75;
+                world[x][y].brightness *= 0.75;
 
                 int count = neighbours(x, y);
                 if (count == 3 && world[x][y].prev == 0) {

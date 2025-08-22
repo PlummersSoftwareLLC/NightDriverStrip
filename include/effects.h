@@ -39,19 +39,19 @@ using EffectId = uintptr_t;
 // Starry Night star variations
 enum StarId
 {
-	idStar                                  = 1,
-	idStarRandomPaletteColor                = 2,
-	idStarLongLifeSparkle                   = 3,
-	idStarColor                             = 4,
-	idStarMusic                             = 5,
-	idStarMusicPulse                        = 6,
-	idStarQuiet                             = 7,
-	idStarBubbly                            = 8,
-	idStarFlash                             = 9,
-	idStarColorCycle                        = 10,
-	idStarMultiColor                        = 11,
-	idStarChristmas                         = 12,
-	idStarHotWhite                          = 13
+    idStar                                  = 1,
+    idStarRandomPaletteColor                = 2,
+    idStarLongLifeSparkle                   = 3,
+    idStarColor                             = 4,
+    idStarMusic                             = 5,
+    idStarMusicPulse                        = 6,
+    idStarQuiet                             = 7,
+    idStarBubbly                            = 8,
+    idStarFlash                             = 9,
+    idStarColorCycle                        = 10,
+    idStarMultiColor                        = 11,
+    idStarChristmas                         = 12,
+    idStarHotWhite                          = 13
 };
 
 // Some common JSON properties to prevent typos. By project convention JSON properties

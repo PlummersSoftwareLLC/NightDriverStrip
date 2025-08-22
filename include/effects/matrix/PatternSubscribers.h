@@ -45,7 +45,7 @@
 
 class PatternSubscribers : public EffectWithId<PatternSubscribers>
 {
-  private:
+private:
 
     // This requires a matching INIT_EFFECT_SETTING_SPECS() in effects.cpp or linker errors will ensue
     DECLARE_EFFECT_SETTING_SPECS(mySettingSpecs);
@@ -69,8 +69,8 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         unsigned long msSinceLastCheck = millis() - msLastCheck;
 
         if (guidUpdated || !msLastCheck
-            || (!succeededBefore && msSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
-            || msSinceLastCheck > SUB_CHECK_INTERVAL)
+    || (!succeededBefore && msSinceLastCheck > SUB_CHECK_ERROR_INTERVAL)
+    || msSinceLastCheck > SUB_CHECK_INTERVAL)
         {
             UpdateSubscribers();
         }
@@ -130,7 +130,7 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         succeededBefore = true;
     }
 
-  protected:
+protected:
 
     // Create our SettingSpec instances if needed, and return (a pointer to) them
     EffectSettingSpecs* FillSettingSpecs() override
@@ -152,15 +152,15 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
                                         "Color for the border around the edge", SettingSpec::SettingType::Color);
             mySettingSpecs
                 .emplace_back(NAME_OF(youtubeChannelName), "YouTube channel name",
-                              "The name of the channel for which the effect should show subscriber information.",
-                              SettingSpec::SettingType::String)
+                            "The name of the channel for which the effect should show subscriber information.",
+                            SettingSpec::SettingType::String)
                 .EmptyAllowed = true;
         }
 
         return &mySettingSpecs;
     }
 
-  public:
+public:
 
     PatternSubscribers() : EffectWithId<PatternSubscribers>("Subs") {}
     PatternSubscribers(const JsonObjectConst& jsonObject) : EffectWithId<PatternSubscribers>(jsonObject)
@@ -234,7 +234,7 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         long z = subscribers;                                  // Use a long in case of Mr Beast
 
         while (z/=10)
-          x-= CHAR_WIDTH / 2;
+        x-= CHAR_WIDTH / 2;
 
         String result = str_sprintf("%ld", subscribers);
         const char * pszText = result.c_str();

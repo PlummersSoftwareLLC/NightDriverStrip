@@ -41,24 +41,24 @@
 
 class LEDBuffer
 {
-  public:
+public:
 
-     std::shared_ptr<GFXBase> _pStrand;
+    std::shared_ptr<GFXBase> _pStrand;
 
-  private:
+private:
 
     std::unique_ptr<CRGB []> _leds;
     uint32_t                 _pixelCount;
     uint64_t                 _timeStampMicroseconds;
     uint64_t                 _timeStampSeconds;
 
-  public:
+public:
 
     explicit LEDBuffer(std::shared_ptr<GFXBase> pStrand) :
-                 _pStrand(std::move(pStrand)),
-                 _pixelCount(0),
-                 _timeStampMicroseconds(0),
-                 _timeStampSeconds(0)
+                _pStrand(std::move(pStrand)),
+                _pixelCount(0),
+                _timeStampMicroseconds(0),
+                _timeStampSeconds(0)
     {
         _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
     }
@@ -99,12 +99,12 @@ class LEDBuffer
             return false;
         }
 
-        #if 0
+#if 0
             debugV("========");
             for (int i = 0; i < 24; i++)
                 debugV("%02x ", payloadData[i]);
             debugV("========");
-        #endif
+#endif
 
         uint16_t command16 = WORDFromMemory(&payloadData[0]);
         uint16_t channel16 = WORDFromMemory(&payloadData[2]);
@@ -163,13 +163,13 @@ class LEDBufferManager
     size_t                                               _iLastBuffer;        // Tail pointer index
     uint32_t                                             _cBuffers;           // Number of buffers
 
-  public:
+public:
 
     LEDBufferManager(uint32_t cBuffers, const std::shared_ptr<GFXBase>& pGFX)
-     : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer>>>()), // Create the circular array of ptrs
-       _iNextBuffer(0),
-       _iLastBuffer(0),
-       _cBuffers(cBuffers)
+    : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer>>>()), // Create the circular array of ptrs
+        _iNextBuffer(0),
+        _iLastBuffer(0),
+        _cBuffers(cBuffers)
     {
         // The initializer creates a uniquely owned table of shared pointers.
         // We exclusively can see the table, but the buffer objects it contains
@@ -298,5 +298,4 @@ class LEDBufferManager
         return (*_ppBuffers)[i];
     }
 };
-
 

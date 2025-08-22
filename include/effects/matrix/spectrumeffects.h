@@ -41,13 +41,13 @@
 
 class InsulatorSpectrumEffect : public EffectWithId<InsulatorSpectrumEffect>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
-  private:
+private:
 
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
-  public:
+public:
 
     InsulatorSpectrumEffect(const String & strName, const CRGBPalette16 & Palette) :
     EffectWithId(strName),
@@ -101,7 +101,7 @@ class InsulatorSpectrumEffect : public EffectWithId<InsulatorSpectrumEffect>, pu
         int iInsulator;
         do
         {
-          iInsulator = random(0, NUM_FANS);
+        iInsulator = random(0, NUM_FANS);
         } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
         _iLastInsulator = iInsulator;
 
@@ -115,7 +115,7 @@ class InsulatorSpectrumEffect : public EffectWithId<InsulatorSpectrumEffect>, pu
 
 class VUMeter
 {
-  protected:
+protected:
 
     // DrawVUPixels
     //
@@ -139,7 +139,7 @@ class VUMeter
     int iPeakVUy = 0;                 // size (in LED pixels) of the VU peak
     unsigned long msPeakVU = 0;       // timestamp in ms when that peak happened so we know how old it is
 
-  public:
+public:
 
     virtual inline void EraseVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int start, int yVU) const
     {
@@ -185,7 +185,7 @@ class VUMeter
 
 class VUMeterVertical : public VUMeter
 {
-  private:
+private:
 
     virtual inline void EraseVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int start, int yVU) const
     {
@@ -204,7 +204,7 @@ class VUMeterVertical : public VUMeter
             device->setPixel(i, yVU, ColorFromPalette(pPalette ? *pPalette : vu_gpGreen,  i*256/GFX[0]->width()).fadeToBlackBy(fadeBy));
     }
 
-  public:
+public:
 
     void DrawVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int yVU = 0, const CRGBPalette16 * pPalette = nullptr)
     {
@@ -282,7 +282,7 @@ public:
 
 class SpectrumAnalyzerEffect : public EffectWithId<SpectrumAnalyzerEffect>, virtual public VUMeter
 {
-  protected:
+protected:
 
     uint8_t   _numBars;
     uint8_t   _colorOffset;
@@ -401,62 +401,62 @@ class SpectrumAnalyzerEffect : public EffectWithId<SpectrumAnalyzerEffect>, virt
         }
     }
 
-  public:
+public:
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName,
-                           int                    cNumBars = 12,
-                           const CRGBPalette16  & palette = spectrumBasicColors,
-                           bool         ignoreGlobalColor = false,
-                           uint16_t           scrollSpeed = 0,
-                           uint8_t               fadeRate = 0,
-                           float           peak1DecayRate = 1.0,
-                           float           peak2DecayRate = 1.0,
-                           bool              bScrollBars  = false)
-      : EffectWithId(pszFriendlyName),
-          _numBars(cNumBars),
-          _colorOffset(0),
-          _colorScrollSpeed(scrollSpeed),
-          _fadeRate(fadeRate),
-          _palette(palette),
-          _ignoreGlobalColor(ignoreGlobalColor),
-          _peak1DecayRate(peak1DecayRate),
-          _peak2DecayRate(peak2DecayRate),
-          _bScrollBars(bScrollBars)
+                            int                    cNumBars = 12,
+                            const CRGBPalette16  & palette = spectrumBasicColors,
+                            bool         ignoreGlobalColor = false,
+                            uint16_t           scrollSpeed = 0,
+                            uint8_t               fadeRate = 0,
+                            float           peak1DecayRate = 1.0,
+                            float           peak2DecayRate = 1.0,
+                            bool              bScrollBars  = false)
+    : EffectWithId(pszFriendlyName),
+        _numBars(cNumBars),
+        _colorOffset(0),
+        _colorScrollSpeed(scrollSpeed),
+        _fadeRate(fadeRate),
+        _palette(palette),
+        _ignoreGlobalColor(ignoreGlobalColor),
+        _peak1DecayRate(peak1DecayRate),
+        _peak2DecayRate(peak2DecayRate),
+        _bScrollBars(bScrollBars)
     {
     }
 
     SpectrumAnalyzerEffect(const char   * pszFriendlyName,
-                           int                    cNumBars = 12,
-                           const CRGB &          baseColor = CRGB::Red,
-                           uint8_t                fadeRate = 0,
-                           float            peak1DecayRate = 1.0,
-                           float            peak2DecayRate = 1.0,
-                           bool                bScrollBars = false)
-      : EffectWithId(pszFriendlyName),
-          _numBars(cNumBars),
-          _colorOffset(0),
-          _colorScrollSpeed(0),
-          _fadeRate(fadeRate),
-          _palette(baseColor),
-          _ignoreGlobalColor(true),
-          _peak1DecayRate(peak1DecayRate),
-          _peak2DecayRate(peak2DecayRate),
-          _bScrollBars(bScrollBars)
+                            int                    cNumBars = 12,
+                            const CRGB &          baseColor = CRGB::Red,
+                            uint8_t                fadeRate = 0,
+                            float            peak1DecayRate = 1.0,
+                            float            peak2DecayRate = 1.0,
+                            bool                bScrollBars = false)
+    : EffectWithId(pszFriendlyName),
+        _numBars(cNumBars),
+        _colorOffset(0),
+        _colorScrollSpeed(0),
+        _fadeRate(fadeRate),
+        _palette(baseColor),
+        _ignoreGlobalColor(true),
+        _peak1DecayRate(peak1DecayRate),
+        _peak2DecayRate(peak2DecayRate),
+        _bScrollBars(bScrollBars)
 
     {
     }
 
     SpectrumAnalyzerEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId(jsonObject),
-          _numBars(jsonObject["nmb"]),
-          _colorOffset(0),
-          _colorScrollSpeed(jsonObject[PTY_SPEED]),
-          _fadeRate(jsonObject["frt"]),
-          _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
-          _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR]),
-          _peak1DecayRate(jsonObject["pd1"]),
-          _peak2DecayRate(jsonObject["pd2"]),
-          _bScrollBars(jsonObject["scb"])
+    : EffectWithId(jsonObject),
+        _numBars(jsonObject["nmb"]),
+        _colorOffset(0),
+        _colorScrollSpeed(jsonObject[PTY_SPEED]),
+        _fadeRate(jsonObject["frt"]),
+        _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
+        _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR]),
+        _peak1DecayRate(jsonObject["pd1"]),
+        _peak2DecayRate(jsonObject["pd2"]),
+        _bScrollBars(jsonObject["scb"])
     {
     }
 
@@ -555,14 +555,14 @@ class WaveformEffect : public EffectWithId<WaveformEffect>
     public:
 
         WaveformEffect(const String & pszFriendlyName, uint8_t increment = 0)
-              : EffectWithId(pszFriendlyName),
-              _increment(increment)
+    : EffectWithId(pszFriendlyName),
+            _increment(increment)
         {
         }
 
         WaveformEffect(const JsonObjectConst& jsonObject)
-              : EffectWithId(jsonObject),
-              _increment(jsonObject["inc"])
+    : EffectWithId(jsonObject),
+            _increment(jsonObject["inc"])
         {
         }
 
@@ -628,27 +628,27 @@ class WaveformEffect : public EffectWithId<WaveformEffect>
 
 class GhostWave : public WaveformEffect
 {
-  private:
+private:
 
     uint8_t                   _blur     = 0;
     bool                      _erase    = true;
     int                       _fade     = 0;
 
-  public:
+public:
 
     GhostWave(const String & pszFriendlyName, uint8_t increment = 0, uint8_t blur = 0, bool erase = true, int fade = 0)
-        : WaveformEffect(pszFriendlyName, increment),
-          _blur(blur),
-          _erase(erase),
-          _fade(fade)
+    : WaveformEffect(pszFriendlyName, increment),
+        _blur(blur),
+        _erase(erase),
+        _fade(fade)
     {
     }
 
     GhostWave(const JsonObjectConst& jsonObject)
-        : WaveformEffect(jsonObject),
-          _blur(jsonObject[PTY_BLUR]),
-          _erase(jsonObject[PTY_ERASE]),
-          _fade(jsonObject[PTY_FADE])
+    : WaveformEffect(jsonObject),
+        _blur(jsonObject[PTY_BLUR]),
+        _erase(jsonObject[PTY_ERASE]),
+        _fade(jsonObject[PTY_FADE])
     {
     }
 
@@ -712,16 +712,16 @@ class GhostWave : public WaveformEffect
 
 class SpectrumBarEffect : public EffectWithId<SpectrumBarEffect>, public BeatEffectBase
 {
-  private:
+private:
 
     uint8_t _hueIncrement = 0;
     uint8_t _scrollIncrement = 0;
     uint8_t _hueStep = 0;
 
-  public:
+public:
 
     SpectrumBarEffect(const char   * pszFriendlyName, uint8_t hueStep = 16, uint8_t hueIncrement = 4, uint8_t scrollIncrement = 0)
-      : EffectWithId(pszFriendlyName),
+    : EffectWithId(pszFriendlyName),
         _hueIncrement(hueIncrement),
         _scrollIncrement(scrollIncrement),
         _hueStep(hueStep)
@@ -729,10 +729,10 @@ class SpectrumBarEffect : public EffectWithId<SpectrumBarEffect>, public BeatEff
     }
 
     SpectrumBarEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId(jsonObject),
-          _hueIncrement(jsonObject[PTY_DELTAHUE]),
-          _scrollIncrement(jsonObject[PTY_SPEED]),
-          _hueStep(jsonObject[PTY_HUESTEP])
+    : EffectWithId(jsonObject),
+        _hueIncrement(jsonObject[PTY_DELTAHUE]),
+        _scrollIncrement(jsonObject[PTY_SPEED]),
+        _hueStep(jsonObject[PTY_HUESTEP])
     {
     }
 
@@ -804,7 +804,7 @@ class SpectrumBarEffect : public EffectWithId<SpectrumBarEffect>, public BeatEff
             g()->drawLine(x2, top, x2, bottom, color);
         }
         g()->drawLine(0, halfHeight, MATRIX_WIDTH - 1, halfHeight, CRGB::Grey);
-     }
+    }
 
     virtual void Start() override
     {
@@ -835,7 +835,7 @@ class SpectrumBarEffect : public EffectWithId<SpectrumBarEffect>, public BeatEff
 
 class AudioSpikeEffect : public EffectWithId<AudioSpikeEffect>
 {
-  public:
+public:
 
     AudioSpikeEffect(const String & pszFriendlyName) : EffectWithId(pszFriendlyName) {}
     AudioSpikeEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}

@@ -50,7 +50,7 @@
 
 class BeatEffectBase
 {
-  protected:
+protected:
 
     const int _maxSamples = 60;
     std::deque<float> _samples;
@@ -58,12 +58,12 @@ class BeatEffectBase
     float _minRange = 0;
     float _minElapsed = 0;
 
-  public:
+public:
 
     BeatEffectBase(float minRange = 0.75, float minElapsed = 0.20 )
-     :
-       _minRange(minRange),
-       _minElapsed(minElapsed)
+    :
+        _minRange(minRange),
+        _minElapsed(minElapsed)
     {
     }
 
@@ -74,7 +74,7 @@ class BeatEffectBase
 
     double SecondsSinceLastBeat()
     {
-      return g_Values.AppTime.CurrentTime() - _lastBeat;
+    return g_Values.AppTime.CurrentTime() - _lastBeat;
     }
 
 
@@ -100,7 +100,7 @@ class BeatEffectBase
         //Serial.printf("Samples: %d, max: %0.2f, min: %0.2f, span: %0.2f\n", _samples.size(), maximum, minimum, maximum-minimum);
 
         if (_samples.size() >= _maxSamples)
-          _samples.pop_front();
+        _samples.pop_front();
 
         if (maximum - minimum > _minRange)
         {
@@ -108,7 +108,7 @@ class BeatEffectBase
             {
                 //Serial.printf("False Beat: elapsed: %0.2f, range: %0.2f, time: %0.2lf\n", elapsed, maximum - minimum, g_AppTime.CurrentTime());
                 // False beat too early, clear data but don't reset lastBeat
-                 _samples.clear();
+                _samples.clear();
             }
             else
             {
@@ -129,7 +129,7 @@ class BeatEffectBase
 
 class SimpleColorBeat : public BeatEffectBase, public EffectWithId<SimpleColorBeat>
 {
-  protected:
+protected:
 
     int _iLastInsulator = -1;
 
@@ -151,49 +151,49 @@ class SimpleColorBeat : public BeatEffectBase, public EffectWithId<SimpleColorBe
 
         if (elapsed < 0.10)
         {
-          c = CHSV(beatsin8(2), 255, 255);
+        c = CHSV(beatsin8(2), 255, 255);
         }
         else if (elapsed < 0.25)
         {
-          c = CHSV(beatsin8(3), 255, 255);
+        c = CHSV(beatsin8(3), 255, 255);
         }
         else
         {
-          c = CRGB::Cyan;
+        c = CRGB::Cyan;
 
-          if (elapsed > 0.5)                                // Medium beats fill blue and proceed with insulator2
-          {
+        if (elapsed > 0.5)                                // Medium beats fill blue and proceed with insulator2
+        {
             c = CHSV(beatsin8(4), 255, 255);
             cInsulators = random(1, NUM_FANS);
-          }
-          else if (elapsed > 1.0)                           // Long beats fill purple and return
-          {
+        }
+        else if (elapsed > 1.0)                           // Long beats fill purple and return
+        {
             c = CRGB::Purple;
             setAllOnAllChannels(c.r, c.g, c.b);
             return;
-          }
+        }
         }
 
         int i;
         for (int iPass = 0; iPass < cInsulators; iPass++)
         {
-          do {                                              // Pick a different insulator than was used last time by:
+        do {                                              // Pick a different insulator than was used last time by:
             i = random(0, NUM_FANS);                        //  - Starting with a random number
-          } while (i == _iLastInsulator);                   //  - Repeating until it doesn't match the last pass
-          _iLastInsulator = i;                              // Our current choice forms the new "last" choice for next pass
+        } while (i == _iLastInsulator);                   //  - Repeating until it doesn't match the last pass
+        _iLastInsulator = i;                              // Our current choice forms the new "last" choice for next pass
 
-          DrawFanPixels(0, FAN_SIZE, c, Sequential, i);     // Draw twice to float-saturate our color
-          DrawFanPixels(0, FAN_SIZE, c, Sequential, i);
+        DrawFanPixels(0, FAN_SIZE, c, Sequential, i);     // Draw twice to float-saturate our color
+        DrawFanPixels(0, FAN_SIZE, c, Sequential, i);
         }
     }
 
-  public:
+public:
 
     SimpleColorBeat(const String & strName)
-  : BeatEffectBase(0.5, 0.25), EffectWithId(strName) {}
+    : BeatEffectBase(0.5, 0.25), EffectWithId(strName) {}
 
     SimpleColorBeat(const JsonObjectConst& jsonObject)
-  : BeatEffectBase(0.5, 0.25), EffectWithId(jsonObject) {}
+    : BeatEffectBase(0.5, 0.25), EffectWithId(jsonObject) {}
 };
 
 #endif // ENABLE_AUDIO

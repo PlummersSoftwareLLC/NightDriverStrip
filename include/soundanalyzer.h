@@ -145,11 +145,11 @@ inline constexpr AudioInputParams kParamsI2SExternal{
 // a consistent interface returning PeakData.
 
 #ifndef MIN_VU
-  #define MIN_VU 0.05f
+#define MIN_VU 0.05f
 #endif
 
 #ifndef VUDAMPEN
-  #define VUDAMPEN 0
+#define VUDAMPEN 0
 #endif
 
 #define VUDAMPENMIN 1
@@ -165,7 +165,7 @@ using PeakData = std::array<float, NUM_BANDS>;
 // Interface for SoundAnalyzer (audio and non-audio variants)
 class ISoundAnalyzer
 {
-  public:
+public:
     virtual ~ISoundAnalyzer() = default;
     virtual float VURatio() const = 0;
     virtual float VURatioFade() const = 0;
@@ -191,7 +191,7 @@ class ISoundAnalyzer
 class SoundAnalyzer : public ISoundAnalyzer // Non-audio case stub
 {
     PeakData _emptyPeaks; // zero-initialized
-  public:
+public:
     float VURatio() const override
     {
         return 0.0f;
@@ -302,7 +302,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Calculate a logarithmic scale for the bands like you would find on a graphic equalizer display
     //
 
-  private:
+private:
     static constexpr int kBandOffset = 2; // number of lowest source bands to skip in layout (skip bins 0,1,2)
     std::array<float, MAX_SAMPLES> _vReal{};
     std::array<float, MAX_SAMPLES> _vImaginary{};
@@ -334,7 +334,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     void SampleAudio()
     {
         size_t bytesRead = 0;
-        #if USE_M5
+#if USE_M5
             // M5 path unchanged; fills ptrSampleBuffer with int16 samples
             constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
             if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
@@ -344,7 +344,7 @@ class SoundAnalyzer : public ISoundAnalyzer
                 debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
                 return;
             }
-        #elif ELECROW || USE_I2S_AUDIO
+#elif ELECROW || USE_I2S_AUDIO
                 // External I2S microphones like INMP441 produce 24-bit samples in 32-bit words.
                 // Read stereo frames (RIGHT_LEFT) and auto-select whichever channel carries the mic.
                 {
@@ -385,7 +385,7 @@ class SoundAnalyzer : public ISoundAnalyzer
                         ptrSampleBuffer[i] = (int16_t)std::clamp(scaled, (int32_t)INT16_MIN, (int32_t)INT16_MAX);
                     }
                 }
-        #else
+#else
             // ADC or generic 16-bit I2S sources
             {
                 constexpr auto bytesExpected16 = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
@@ -398,7 +398,7 @@ class SoundAnalyzer : public ISoundAnalyzer
                 }
             }
         
-        #endif
+#endif
         
         // Compute stats and copy into FFT input buffer
         for (int i = 0; i < MAX_SAMPLES; i++)
@@ -471,14 +471,14 @@ class SoundAnalyzer : public ISoundAnalyzer
     PeakData ProcessPeaksEnergy()
     {
         // Band offset handled in ComputeBandLayout so index 0 is the lowest VISIBLE band
-         float frameMax = 0.0f;
-         float frameSumRaw = 0.0f;
-         float noiseSum = 0.0f;
-         float noiseMaxAll = 0.0f; // Tracks max noise floor across bands
+        float frameMax = 0.0f;
+        float frameSumRaw = 0.0f;
+        float noiseSum = 0.0f;
+        float noiseMaxAll = 0.0f; // Tracks max noise floor across bands
          // Display gain and band floor constants
-         const float kDisplayGain = _params.postScale;  // Use postScale from AudioInputParams instead of hardcoded value
-         constexpr float kBandFloorMin = 0.01f;
-         constexpr float kBandFloorScale = 0.05f;
+        const float kDisplayGain = _params.postScale;  // Use postScale from AudioInputParams instead of hardcoded value
+        constexpr float kBandFloorMin = 0.01f;
+        constexpr float kBandFloorScale = 0.05f;
 
         // Attack rate from mic params (frame-rate independent)
         const float kLiveAttackPerSec = _params.liveAttackPerSec;
@@ -543,7 +543,7 @@ class SoundAnalyzer : public ISoundAnalyzer
             if (signal < 0.0f)
                 signal = 0.0f;
             
-            #if ENABLE_AUDIO_SMOOTHING
+#if ENABLE_AUDIO_SMOOTHING
                 // Weighted average: 0.25 * (2 * current + left + right)
                 float left = (b > 0) ? _rawPrev[b - 1] : signal;
                 float right = (b < NUM_BANDS - 1) ? _rawPrev[b + 1] : signal;
@@ -552,11 +552,11 @@ class SoundAnalyzer : public ISoundAnalyzer
                 _vPeaks[b] = smoothed;
                 if (smoothed > frameMax)
                     frameMax = smoothed;
-            #else
+#else
                 _vPeaks[b] = signal;
                 if (signal > frameMax)
                     frameMax = signal;
-            #endif
+#endif
         }
 
         // Manually clamp back the bass bands, as they are vastly over-represented
@@ -628,7 +628,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         return _Peaks;
     }
 
-  public:
+public:
     // Current beat/level ratio value used by visual effects.
     // Typically maintained by higher-level audio logic.
     // Range ~[0..something], consumer-specific.
@@ -816,16 +816,16 @@ class SoundAnalyzer : public ISoundAnalyzer
 #elif USE_I2S_AUDIO
 
         const i2s_config_t i2s_config = {.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
-                                         .sample_rate = SAMPLING_FREQUENCY,
-                                         .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
-                                         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-                                         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-                                         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-                                         .dma_buf_count = 4,  // Increased from 2 for better buffering
-                                         .dma_buf_len = (int)MAX_SAMPLES,
-                                         .use_apll = false,
-                                         .tx_desc_auto_clear = false,
-                                         .fixed_mclk = 0};
+                                        .sample_rate = SAMPLING_FREQUENCY,
+                                        .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
+                                        .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+                                        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+                                        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+                                        .dma_buf_count = 4,  // Increased from 2 for better buffering
+                                        .dma_buf_len = (int)MAX_SAMPLES,
+                                        .use_apll = false,
+                                        .tx_desc_auto_clear = false,
+                                        .fixed_mclk = 0};
 
         // i2s pin configuration - explicitly set pin modes
         pinMode(I2S_BCLK_PIN, OUTPUT);  // Bit clock is output from ESP32
@@ -833,9 +833,9 @@ class SoundAnalyzer : public ISoundAnalyzer
         pinMode(INPUT_PIN, INPUT);      // Data input from microphone
         
         const i2s_pin_config_t pin_config = {.bck_io_num = I2S_BCLK_PIN,
-                                             .ws_io_num = I2S_WS_PIN,
-                                             .data_out_num = I2S_PIN_NO_CHANGE, // not used
-                                             .data_in_num = INPUT_PIN};
+                                            .ws_io_num = I2S_WS_PIN,
+                                            .data_out_num = I2S_PIN_NO_CHANGE, // not used
+                                            .data_in_num = INPUT_PIN};
 
         ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
         ESP_ERROR_CHECK(i2s_set_pin(I2S_NUM_0, &pin_config));
@@ -987,13 +987,13 @@ class SoundAnalyzer : public ISoundAnalyzer
 // Project-specific SoundAnalyzer type selection using AudioInputParams directly
 #if ENABLE_AUDIO
     #if M5STICKCPLUS2
-    using ProjectSoundAnalyzer = SoundAnalyzer<kParamsM5Plus2>;
+        using ProjectSoundAnalyzer = SoundAnalyzer<kParamsM5Plus2>;
     #elif USE_M5
-    using ProjectSoundAnalyzer = SoundAnalyzer<kParamsM5>;
+        using ProjectSoundAnalyzer = SoundAnalyzer<kParamsM5>;
     #elif USE_I2S_AUDIO
-    using ProjectSoundAnalyzer = SoundAnalyzer<kParamsI2SExternal>;
+        using ProjectSoundAnalyzer = SoundAnalyzer<kParamsI2SExternal>;
     #else
-    using ProjectSoundAnalyzer = SoundAnalyzer<kParamsMesmerizer>;
+        using ProjectSoundAnalyzer = SoundAnalyzer<kParamsMesmerizer>;
     #endif
 #else
     using ProjectSoundAnalyzer = SoundAnalyzer;

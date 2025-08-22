@@ -39,7 +39,7 @@
 #include <WString.h>
 
 #ifndef MICROS_PER_SECOND
-    #define MICROS_PER_SECOND 1000000
+#define MICROS_PER_SECOND 1000000
 #endif
 
 // AppTime
@@ -48,12 +48,12 @@
 
 class CAppTime
 {
-  protected:
+protected:
 
     double _lastFrame = CurrentTime();
     double _deltaTime = 1.0;
 
-  public:
+public:
 
     // NewFrame
     //
@@ -310,7 +310,7 @@ public:
     template< class U, class... Args >
     void construct( U* p, Args&&... args )
     {
-        ::new((void *) p ) U(std::forward<Args>(args)...);
+    ::new((void *) p ) U(std::forward<Args>(args)...);
     }
 
     void destroy(pointer p)
@@ -378,4 +378,3 @@ std::shared_ptr<T> make_shared_psram_array(size_t size)
     psram_allocator<T> allocator;
     return std::allocate_shared<T>(allocator, size);
 }
-

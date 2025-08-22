@@ -11,7 +11,7 @@
 class PatternSMHolidayLights : public EffectWithId<PatternSMHolidayLights>
 {
 
-  private:
+private:
 
     static constexpr int speed = (200 / (MATRIX_HEIGHT - 4));
     uint8_t hue {0};
@@ -44,7 +44,7 @@ class PatternSMHolidayLights : public EffectWithId<PatternSMHolidayLights>
 
     void drawPixelXYF_X(float x, uint16_t y, const CRGB &color)
     {
-	if (!g()->isValidPixel((int)x, y))
+    if (!g()->isValidPixel((int)x, y))
             return;
 
         // extract the fractional parts and derive their inverses
@@ -102,8 +102,8 @@ void spruce()
         {
             // Draw a pixel with certain conditions if 'effId' is 2.
             drawPixelXYF_X(x / 4 + height_adj, i,
-                           random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255)
-                                            : CHSV(100, 255, ::map(speed, 1, 255, 128, 100)));
+                            random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255)
+    : CHSV(100, 255, ::map(speed, 1, 255, 128, 100)));
         }
         else
         {
@@ -129,7 +129,7 @@ void spruce()
 }
 
 
-  public:
+public:
 
     PatternSMHolidayLights() : EffectWithId<PatternSMHolidayLights>("Tannenbaum") {}
     PatternSMHolidayLights(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMHolidayLights>(jsonObject) {}

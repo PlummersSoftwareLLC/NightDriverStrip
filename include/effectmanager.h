@@ -167,7 +167,7 @@ public:
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
     EffectManager(const std::shared_ptr<LEDStripEffect>& effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
-        : _gfx(gfx)
+    : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
 
@@ -178,7 +178,7 @@ public:
     }
 
     explicit EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
-        : _gfx(gfx)
+    : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
 
@@ -186,7 +186,7 @@ public:
     }
 
     EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXBase>>& gfx)
-        : _gfx(gfx)
+    : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
 
@@ -373,10 +373,10 @@ public:
 
         std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
-        #if USE_HUB75
+#if USE_HUB75
             auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
-        #endif
+#endif
 
         effect->Start();
         _effectStartTime = millis();
@@ -618,7 +618,7 @@ public:
         auto& currentEffect = GetCurrentEffect();
         // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
         return min((IsIntervalEternal() ? std::numeric_limits<uint>::max() : _effectInterval),
-                   (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
+                    (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
     }
 
     uint GetInterval() const

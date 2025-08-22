@@ -56,7 +56,7 @@
 
 class PatternSpin : public EffectWithId<PatternSpin>
 {
-  private:
+private:
 
     float degrees = 0;
     float radius = 16;
@@ -70,7 +70,7 @@ class PatternSpin : public EffectWithId<PatternSpin>
     float velocity = velocityStart;
 
 
-  public:
+public:
 
     PatternSpin() : EffectWithId<PatternSpin>("Spin") {}
     PatternSpin(String friendlyName) : EffectWithId<PatternSpin>(friendlyName) {}

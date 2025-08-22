@@ -67,12 +67,12 @@ class Message
 {
 public:
     constexpr Message(ESPNowCommand cmd, uint32_t argument) 
-        : cbSize(sizeof(Message)), command(cmd), arg1(argument) 
+    : cbSize(sizeof(Message)), command(cmd), arg1(argument) 
     {
     }
 
     constexpr Message() 
-        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0) 
+    : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0) 
     {
     }
 
@@ -157,13 +157,13 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
             debugA("BUFR:%02zu/%02zu [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
             debugA("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
-            #if ENABLE_AUDIO
+#if ENABLE_AUDIO
                 debugA("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
-            #endif
+#endif
 
-            #if INCOMING_WIFI_ENABLED
+#if INCOMING_WIFI_ENABLED
                 debugA("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
-            #endif
+#endif
         }
         else if (str.equalsIgnoreCase("clearsettings"))
         {
@@ -173,7 +173,7 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
         }
         else if (str.equalsIgnoreCase("uptime"))
         {
-             NTPTimeClient::ShowUptime();
+            NTPTimeClient::ShowUptime();
         }
         else
         {
@@ -212,9 +212,9 @@ void SetupOTA(const String & strHostname)
                 type = "filesystem";
 
             debugI("Stopping IR remote");
-            #if ENABLE_REMOTE
+#if ENABLE_REMOTE
             g_ptrSystem->RemoteControl().end();
-            #endif
+#endif
 
             debugI("Start updating from OTA ");
             debugI("%s", type.c_str());
@@ -233,10 +233,10 @@ void SetupOTA(const String & strHostname)
                 auto p = (progress / (total / 100));
                 debugI("OTA Progress: %u%%\r", p);
 
-                #if USE_HUB75
+#if USE_HUB75
                     auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
-                #endif
+#endif
             }
             else
             {
@@ -300,11 +300,11 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 #if ENABLE_WIFI
 
-    #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
-    #define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
-    #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
+#define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
+#define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
+#define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
 
-    #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
+#define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
 
     // ConnectToWiFi
     //
@@ -372,7 +372,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 debugV("Wifi.mode");
                 WiFi.mode(WIFI_STA);
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                       WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+                        WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
                 WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
@@ -397,7 +397,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         bPreviousConnection = true;
 
-        #if INCOMING_WIFI_ENABLED
+#if INCOMING_WIFI_ENABLED
             auto& socketServer = g_ptrSystem->SocketServer();
 
             // Start listening for incoming data
@@ -407,28 +407,28 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 throw std::runtime_error("Could not start socket server!");
 
             debugI("Socket server started.");
-        #endif
+#endif
 
-        #if ENABLE_OTA
+#if ENABLE_OTA
             debugI("Publishing OTA...");
             SetupOTA(String(WiFi.getHostname()));
-        #endif
+#endif
 
-        #if ENABLE_NTP
+#if ENABLE_NTP
             debugI("Setting Clock...");
             NTPTimeClient::UpdateClockFromWeb(&l_Udp);
-        #endif
+#endif
 
-        #if ENABLE_WEBSERVER
+#if ENABLE_WEBSERVER
             debugI("Starting Web Server...");
             g_ptrSystem->WebServer().begin();
             debugI("Web Server begin called!");
-        #endif
+#endif
 
         return WiFiConnectResult::Connected;
     }
 
-    #if ENABLE_NTP
+#if ENABLE_NTP
         void UpdateNTPTime()
         {
             static unsigned long lastUpdate = 0;
@@ -444,7 +444,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 }
             }
         }
-    #endif
+#endif
 #endif // ENABLE_WIFI
 
 // ProcessIncomingData
@@ -455,9 +455,9 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
 {
-    #if !INCOMING_WIFI_ENABLED
+#if !INCOMING_WIFI_ENABLED
         return false;
-    #else
+#else
 
     uint16_t command16 = payloadData[1] << 8 | payloadData[0];
 
@@ -469,7 +469,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
         case WIFI_COMMAND_PEAKDATA:
         {
-            #if ENABLE_AUDIO
+#if ENABLE_AUDIO
                 uint16_t numbands  = WORDFromMemory(&payloadData[2]);
                 uint32_t length32  = DWORDFromMemory(&payloadData[4]);
                 uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
@@ -485,7 +485,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                 PeakData peaks{};
                 std::copy_n(pFloats, NUM_BANDS, peaks.begin());
                 g_Analyzer.SetPeakDataFromRemote(peaks);
-            #endif
+#endif
             return true;
         }
 
@@ -499,10 +499,10 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
             uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
             debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
-                   channel16,
-                   length32,
-                   seconds,
-                   micros);
+                    channel16,
+                    length32,
+                    seconds,
+                    micros);
 
             // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
             // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
@@ -554,7 +554,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
             return false;
         }
     }
-    #endif
+#endif
 }
 
 // Non-volatile Storage for WiFi Credentials
@@ -727,9 +727,9 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
         BaseFrameEventListener frameEventListener;
 
         auto& effectManager = g_ptrSystem->EffectManager();
-        #if COLORDATA_WEB_SOCKET_ENABLED
+#if COLORDATA_WEB_SOCKET_ENABLED
             auto& webSocketServer = g_ptrSystem->WebSocketServer();
-        #endif
+#endif
 
         effectManager.AddFrameEventListener(frameEventListener);
 
@@ -779,14 +779,14 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                     }
                 }
 
-                #if COLORDATA_WEB_SOCKET_ENABLED
+#if COLORDATA_WEB_SOCKET_ENABLED
                     webSocketServer.SendColorData(leds, NUM_LEDS);
-                #endif
+#endif
             }
 
-            #if COLORDATA_WEB_SOCKET_ENABLED
+#if COLORDATA_WEB_SOCKET_ENABLED
                 wsListenersPresent = webSocketServer.HaveColorDataClients();
-            #endif
+#endif
 
             if (socket >= 0 || wsListenersPresent)
                 delay(10);
@@ -831,15 +831,15 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                 {
                     millisAtLastConnected = millis();
 
-                    #if WEB_SOCKETS_ANY_ENABLED
+#if WEB_SOCKETS_ANY_ENABLED
                         // It's recommended to clean up any stale web socket clients every second or so
                         g_ptrSystem->WebSocketServer().CleanupClients();
-                    #endif
+#endif
                 }
                 else
                 {
                     debugV("Still waiting for WiFi to connect.");
-                    #if WAIT_FOR_WIFI
+#if WAIT_FOR_WIFI
                         // Reboot if we've been waiting for a connection for more than the maximum delay between
                         // connection retries and we _do_ have credentials
                         if (connectResult != WiFiConnectResult::NoCredentials && millis() - millisAtLastConnected > WIFI_WAIT_MAX)
@@ -848,7 +848,7 @@ bool WriteWiFiConfig(const String& WiFi_ssid, const String& WiFi_password)
                             delay(5000);
                             throw new std::runtime_error("Rebooting due to no Wifi available.");
                         }
-                    #endif
+#endif
                 }
             }
 

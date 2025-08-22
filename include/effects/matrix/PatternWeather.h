@@ -123,7 +123,7 @@ static std::map<const String, EmbeddedFile, std::less<const String>, psram_alloc
  */
 class PatternWeather : public EffectWithId<PatternWeather>
 {
-  private:
+private:
 
     String strLocationName    = "";
     String strLocation        = "";

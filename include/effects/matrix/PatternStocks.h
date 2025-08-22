@@ -70,7 +70,7 @@ using namespace std::chrono_literals;
 
 class AnimatedText
 {
-  private:
+private:
 
     int startX;
     int startY;
@@ -85,7 +85,7 @@ class AnimatedText
     const GFXfont * pfont;
 
 
-  public:
+public:
   
     AnimatedText(String text, CRGB color, const GFXfont * pfont, float animationTime, int startX, int startY, int endX, int endY)
     {
@@ -166,14 +166,14 @@ public:
     String to_string() const
     {
         return "Symbol: " + symbol +
-               " Timestamp: " + timestamp.time_since_epoch().count() +
-               " Previous close: " + previousClose +
-               " Open: " + open +
-               " High: " + high +
-               " Low: " + low +
-               " Close: " + close +
-               " Volume: " + volume +
-               " History: " + points.size() + " points";
+                " Timestamp: " + timestamp.time_since_epoch().count() +
+                " Previous close: " + previousClose +
+                " Open: " + open +
+                " High: " + high +
+                " Low: " + low +
+                " Close: " + close +
+                " Volume: " + volume +
+                " History: " + points.size() + " points";
     }
 };
 
@@ -332,7 +332,7 @@ private:
         return false;
     }
 
-  protected:
+protected:
 
     // Create our SettingSpec instances if needed, and return (a pointer to) them
     EffectSettingSpecs* FillSettingSpecs() override

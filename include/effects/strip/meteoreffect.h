@@ -35,7 +35,7 @@
 
 class MeteorChannel
 {
-  private:
+private:
 
     std::vector<float> hue;
     std::vector<float> iPos;
@@ -43,7 +43,7 @@ class MeteorChannel
     std::vector<float> speed;
     std::vector<float> lastBeat;
 
-  public:
+public:
 
     size_t        meteorCount;
     uint8_t       meteorSize;
@@ -119,10 +119,10 @@ class MeteorChannel
         {
             float spd = speed[i];
 
-            #if ENABLE_AUDIO
+#if ENABLE_AUDIO
                 if (g_Analyzer.VURatio() > 1.0f)
                     spd *= g_Analyzer.VURatio();
-            #endif
+#endif
 
             iPos[i] = (bLeft[i]) ? iPos[i] - spd : iPos[i] + spd;
             if (iPos[i] < meteorSize)
@@ -161,7 +161,7 @@ class MeteorChannel
 
 class MeteorEffect : public EffectWithId<MeteorEffect>
 {
-  private:
+private:
 
     std::vector<MeteorChannel> _Meteors;
 
@@ -171,27 +171,27 @@ class MeteorEffect : public EffectWithId<MeteorEffect>
     float                      _meteorSpeedMin;
     float                      _meteorSpeedMax;
 
-  public:
+public:
 
     MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2)
-          : EffectWithId("Color Meteors"),
-          _Meteors(),
-          _cMeteors(cMeteors),
-          _meteorSize(size),
-          _meteorTrailDecay(decay),
-          _meteorSpeedMin(minSpeed),
-          _meteorSpeedMax(maxSpeed)
+    : EffectWithId("Color Meteors"),
+        _Meteors(),
+        _cMeteors(cMeteors),
+        _meteorSize(size),
+        _meteorTrailDecay(decay),
+        _meteorSpeedMin(minSpeed),
+        _meteorSpeedMax(maxSpeed)
     {
     }
 
     MeteorEffect(const JsonObjectConst& jsonObject)
-          : EffectWithId(jsonObject),
-          _Meteors(),
-          _cMeteors(jsonObject["mto"]),
-          _meteorSize(jsonObject[PTY_SIZE]),
-          _meteorTrailDecay(jsonObject["dcy"]),
-          _meteorSpeedMin(jsonObject[PTY_MINSPEED]),
-          _meteorSpeedMax(jsonObject[PTY_MAXSPEED])
+    : EffectWithId(jsonObject),
+        _Meteors(),
+        _cMeteors(jsonObject["mto"]),
+        _meteorSize(jsonObject[PTY_SIZE]),
+        _meteorTrailDecay(jsonObject["dcy"]),
+        _meteorSpeedMin(jsonObject[PTY_MINSPEED]),
+        _meteorSpeedMax(jsonObject[PTY_MAXSPEED])
     {
     }
 

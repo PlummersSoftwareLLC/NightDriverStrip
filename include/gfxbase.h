@@ -74,7 +74,7 @@
 #include <memory>
 
 #if USE_HUB75
-    #define USE_NOISE 1
+#define USE_NOISE 1
 #endif
 
 #if USE_NOISE
@@ -144,9 +144,9 @@ protected:
     CRGBPalette16 _targetPalette;
     String _currentPaletteName;
 
-    #if USE_NOISE
+#if USE_NOISE
         std::unique_ptr<Noise> _ptrNoise;
-    #endif
+#endif
 
     static constexpr int _heatColorsPaletteIndex = 6;
     static constexpr int _randomPaletteIndex = 9;
@@ -164,12 +164,12 @@ public:
     {
     }
 
-    #if USE_NOISE
+#if USE_NOISE
     Noise &GetNoise() const
     {
         return *_ptrNoise;
     }
-    #endif
+#endif
 
     const CRGBPalette16 &GetCurrentPalette() const
     {
@@ -291,13 +291,13 @@ public:
     // it's a very simple layout.  Others may need to override this function.  Using a #define here allows
     // us to avoid an extra virtual function call in the inner loop of the effects.
 
-    #if USE_HUB75
-        #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
-    #elif HELMET
-        #define XY(x, y) xy(x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
-    #else
-        #define XY(x, y) xy(x, y)
-    #endif
+#if USE_HUB75
+#define XY(x, y) ((y) * MATRIX_WIDTH + (x))
+#elif HELMET
+#define XY(x, y) xy(x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
+#else
+#define XY(x, y) xy(x, y)
+#endif
 
     __attribute__((always_inline)) virtual CRGB getPixel(int16_t x, int16_t y) const
     {
@@ -1220,7 +1220,7 @@ public:
         return rgb;
     }
 
-    #if USE_NOISE
+#if USE_NOISE
         void NoiseVariablesSetup()
         {
             _ptrNoise->noisesmoothing = 200;
@@ -1267,7 +1267,7 @@ public:
         template<NoiseApproach = _defaultNoiseApproach>
         void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
 
-    #endif
+#endif
 
     virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {

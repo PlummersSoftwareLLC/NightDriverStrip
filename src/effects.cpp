@@ -45,12 +45,12 @@
 #include "effects/matrix/PatternClock.h"        // No matrix dependencies
 
 #if ENABLE_AUDIO
-    #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
-    #include "effects/strip/musiceffect.h"      // Music based effects
+#include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
+#include "effects/strip/musiceffect.h"      // Music based effects
 #endif
 
 #if FAN_SIZE
-    #include "effects/strip/faneffects.h"       // Fan-based effects
+#include "effects/strip/faneffects.h"       // Fan-based effects
 #endif
 
 //
@@ -58,60 +58,60 @@
 //
 
 #if USE_HUB75
-    #include "ledmatrixgfx.h"
+#include "ledmatrixgfx.h"
 
-    #include "effects/matrix/PatternSMStrobeDiffusion.h"
-    #include "effects/matrix/PatternSM2DDPR.h"
+#include "effects/matrix/PatternSMStrobeDiffusion.h"
+#include "effects/matrix/PatternSM2DDPR.h"
 
-    #include "effects/matrix/PatternSMStarDeep.h"
-    #include "effects/matrix/PatternSMAmberRain.h"
-    #include "effects/matrix/PatternSMBlurringColors.h"
-    #include "effects/matrix/PatternSMFire2021.h"
-    #include "effects/matrix/PatternSMNoise.h"
-    #include "effects/matrix/PatternSMPicasso3in1.h"
-    #include "effects/matrix/PatternSMSpiroPulse.h"
-    #include "effects/matrix/PatternSMTwister.h"
-    #include "effects/matrix/PatternSMMetaBalls.h"
-    #include "effects/matrix/PatternSMHolidayLights.h"
-    #include "effects/matrix/PatternSMGamma.h"
-    #include "effects/matrix/PatternSMFlowFields.h"
-    #include "effects/matrix/PatternSMSupernova.h"
-    #include "effects/matrix/PatternSMWalkingMachine.h"
-    #include "effects/matrix/PatternSMHypnosis.h"
-    #include "effects/matrix/PatternSMRainbowTunnel.h"
-    #include "effects/matrix/PatternSMRadialWave.h"
-    #include "effects/matrix/PatternSMRadialFire.h"
-    #include "effects/matrix/PatternSMSmoke.h"
-    #include "effects/matrix/PatternSerendipity.h"
-    #include "effects/matrix/PatternSwirl.h"
-    #include "effects/matrix/PatternPulse.h"
-    #include "effects/matrix/PatternWave.h"
-    #include "effects/matrix/PatternMaze.h"
-    #include "effects/matrix/PatternLife.h"
-    #include "effects/matrix/PatternSpiro.h"
-    #include "effects/matrix/PatternCube.h"
-    #include "effects/matrix/PatternCircuit.h"
-    #include "effects/matrix/PatternAlienText.h"
-    #include "effects/matrix/PatternRadar.h"
-    #include "effects/matrix/PatternPongClock.h"
-    #include "effects/matrix/PatternBounce.h"
-    #include "effects/matrix/PatternMandala.h"
-    #include "effects/matrix/PatternSpin.h"
-    #include "effects/matrix/PatternMisc.h"
-    #include "effects/matrix/PatternNoiseSmearing.h"
-    #include "effects/matrix/PatternQR.h"
-    #include "effects/matrix/PatternAnimatedGIF.h"
+#include "effects/matrix/PatternSMStarDeep.h"
+#include "effects/matrix/PatternSMAmberRain.h"
+#include "effects/matrix/PatternSMBlurringColors.h"
+#include "effects/matrix/PatternSMFire2021.h"
+#include "effects/matrix/PatternSMNoise.h"
+#include "effects/matrix/PatternSMPicasso3in1.h"
+#include "effects/matrix/PatternSMSpiroPulse.h"
+#include "effects/matrix/PatternSMTwister.h"
+#include "effects/matrix/PatternSMMetaBalls.h"
+#include "effects/matrix/PatternSMHolidayLights.h"
+#include "effects/matrix/PatternSMGamma.h"
+#include "effects/matrix/PatternSMFlowFields.h"
+#include "effects/matrix/PatternSMSupernova.h"
+#include "effects/matrix/PatternSMWalkingMachine.h"
+#include "effects/matrix/PatternSMHypnosis.h"
+#include "effects/matrix/PatternSMRainbowTunnel.h"
+#include "effects/matrix/PatternSMRadialWave.h"
+#include "effects/matrix/PatternSMRadialFire.h"
+#include "effects/matrix/PatternSMSmoke.h"
+#include "effects/matrix/PatternSerendipity.h"
+#include "effects/matrix/PatternSwirl.h"
+#include "effects/matrix/PatternPulse.h"
+#include "effects/matrix/PatternWave.h"
+#include "effects/matrix/PatternMaze.h"
+#include "effects/matrix/PatternLife.h"
+#include "effects/matrix/PatternSpiro.h"
+#include "effects/matrix/PatternCube.h"
+#include "effects/matrix/PatternCircuit.h"
+#include "effects/matrix/PatternAlienText.h"
+#include "effects/matrix/PatternRadar.h"
+#include "effects/matrix/PatternPongClock.h"
+#include "effects/matrix/PatternBounce.h"
+#include "effects/matrix/PatternMandala.h"
+#include "effects/matrix/PatternSpin.h"
+#include "effects/matrix/PatternMisc.h"
+#include "effects/matrix/PatternNoiseSmearing.h"
+#include "effects/matrix/PatternQR.h"
+#include "effects/matrix/PatternAnimatedGIF.h"
 
-  #if ENABLE_WIFI
-    #include "effects/matrix/PatternSubscribers.h"
-    #include "effects/matrix/PatternWeather.h"
-    #include "effects/matrix/PatternStocks.h"
-  #endif
+#if ENABLE_WIFI
+#include "effects/matrix/PatternSubscribers.h"
+#include "effects/matrix/PatternWeather.h"
+#include "effects/matrix/PatternStocks.h"
+#endif
 
 #endif  // USE_HUB75
 
 #ifdef USE_WS281X
-    #include "ledstripgfx.h"
+#include "ledstripgfx.h"
 #endif
 
 // Global effect set version
@@ -183,24 +183,24 @@ void LoadEffectFactories()
     // Include custom effects header if available - it overrides whatever the effect set flags
     // would otherwise include.
 
-    #if __has_include ("custom_effects.h")
-      #include "custom_effects.h"
-    #endif
+#if __has_include ("custom_effects.h")
+#include "custom_effects.h"
+#endif
 
     // Fill effect factories using new effect set flags
 
     // === EFFECT SETS ===
     // These sections are shared by multiple projects
 
-    #if defined(EFFECTS_MINIMAL)
+#if defined(EFFECTS_MINIMAL)
         // Minimal effect set for projects with limited memory/space
         RegisterAll(*g_ptrEffectFactories,
             Effect<StatusEffect>(CRGB::White),
             Effect<RainbowFillEffect>(6, 2)
         );
-    #endif
+#endif
     
-    #if defined(EFFECTS_SIMPLE)
+#if defined(EFFECTS_SIMPLE)
         // Simple effect set for basic LED strip projects
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true),
@@ -209,17 +209,17 @@ void LoadEffectFactories()
             Starry<QuietStar>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 2.0, 0.0, kStarryNightMusicFactor),
             Effect<PaletteEffect>(RainbowColors_p)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_PDPWOPR)
+#if defined(EFFECTS_PDPWOPR)
         // PDPWOPR project effects
         RegisterAll(*g_ptrEffectFactories,
             Effect<PDPCMXEffect>(),
             Effect<PDPGridEffect>()
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_DEMO)
+#if defined(EFFECTS_DEMO)
         // Demo effect set for M5 demos and similar
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true),
@@ -236,15 +236,15 @@ void LoadEffectFactories()
             Effect<PaletteEffect>(RainbowColors_p)
         );
 
-        #if ENABLE_AUDIO
+#if ENABLE_AUDIO
         RegisterAll(*g_ptrEffectFactories,
             Starry<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.2, 1, NOBLEND, 5.0, 0.1, 2.0),
             Starry<MusicStar>("Rainbow Twinkle Stars", RainbowColors_p, kStarryNightProbability, 1, LINEARBLEND, 0.0, 0.0, kStarryNightMusicFactor)
         );
-        #endif
-    #endif
+#endif
+#endif
 
-    #if defined(EFFECTS_FAN)
+#if defined(EFFECTS_FAN)
         // Fan-specific effects for fan projects
         RegisterAll(*g_ptrEffectFactories,
             Effect<RainbowFillEffect>(24, 0),
@@ -274,40 +274,40 @@ void LoadEffectFactories()
             Effect<FireFanEffect>(HeatColors_p,      NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
             Effect<FireFanEffect>(HeatColors_p,      NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_LASERLINE)
+#if defined(EFFECTS_LASERLINE)
         // Laser line effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<LaserLineEffect>(500, 20)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_CHIEFTAIN)
+#if defined(EFFECTS_CHIEFTAIN)
         // Chieftain lantern effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<LanternEffect>(),
             Effect<PaletteEffect>(RainbowColors_p, 2.0f, 0.1, 0.0, 1.0, 0.0, LINEARBLEND, true, 1.0),
             Effect<RainbowFillEffect>(10, 32)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_PDPGRID)
+#if defined(EFFECTS_PDPGRID)
         // PDP grid matrix effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<PDPCMXEffect>(),
             Effect<PDPGridEffect>()
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_LANTERN)
+#if defined(EFFECTS_LANTERN)
         // Lantern effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_FULLMATRIX)
+#if defined(EFFECTS_FULLMATRIX)
         // Full matrix effect set for advanced displays (Mesmerizer, etc.)
         RegisterAll(*g_ptrEffectFactories,
             Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
@@ -339,13 +339,13 @@ void LoadEffectFactories()
             Starry<MusicStar>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0)
         );
 
-        #if ENABLE_WIFI
+#if ENABLE_WIFI
         RegisterAll(*g_ptrEffectFactories,
             Effect<PatternStocks>(),
             Effect<PatternSubscribers>(),
             Effect<PatternWeather>()
         );
-        #endif
+#endif
 
         RegisterAll(*g_ptrEffectFactories,
             Effect<PatternSMSmoke>(),
@@ -380,9 +380,9 @@ void LoadEffectFactories()
             Effect<PatternMunch>(),
             Effect<PatternMaze>()
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_UMBRELLA)
+#if defined(EFFECTS_UMBRELLA)
         // Umbrella-specific effects
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false),
@@ -415,9 +415,9 @@ void LoadEffectFactories()
             Effect<PaletteEffect>(RainbowColors_p, 1.0, 1.0),
             Effect<PaletteEffect>(RainbowColors_p, .25)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_SPECTRUM)
+#if defined(EFFECTS_SPECTRUM)
         // Spectrum analyzer effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<SpectrumAnalyzerEffect>("Spectrum Standard", NUM_BANDS, spectrumAltColors, false, 0, 0, 0.5, 1.5),
@@ -433,31 +433,31 @@ void LoadEffectFactories()
             Effect<SpectrumAnalyzerEffect>("Spectrum Standard", 24, RainbowColors_p, false),
             Effect<GhostWave>("GhostWave One", 4)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_HELMET)
+#if defined(EFFECTS_HELMET)
         // Helmet display effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<SilonEffect>(),
             Effect<SpectrumAnalyzerEffect>("Spectrum Standard", NUM_BANDS, spectrumAltColors, false, 0, 0, 0.5, 1.5)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_TTGO)
+#if defined(EFFECTS_TTGO)
         // TTGO display effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<SpectrumAnalyzerEffect>("Spectrum Fade", 12, spectrumBasicColors, false, 50, 70, -1.0, 3.0)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_WROVERKIT)
+#if defined(EFFECTS_WROVERKIT)
         // Wrover Kit effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<PaletteEffect>(rainbowPalette, 256 / 16, .2, 0)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_XMASTREES)
+#if defined(EFFECTS_XMASTREES)
         // Christmas trees effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<ColorBeatOverRed>("ColorBeatOverRed"),
@@ -471,9 +471,9 @@ void LoadEffectFactories()
             Starry<LongLifeSparkleStar>("Blue Sparkle Stars",  GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Blue),
             Effect<PaletteEffect>(rainbowPalette, 256 / 16, .2, 0)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_INSULATORS)
+#if defined(EFFECTS_INSULATORS)
         // Insulators effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<InsulatorSpectrumEffect>("Spectrum Effect", RainbowColors_p),
@@ -484,9 +484,9 @@ void LoadEffectFactories()
             Effect<ColorBeatOverRed>("ColorBeatOverRed"),
             Effect<TapeReelEffect>("TapeReelEffect")
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_CUBE)
+#if defined(EFFECTS_CUBE)
         // Cube display effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<PaletteEffect>(rainbowPalette, 256 / 16, .2, 0),
@@ -495,16 +495,16 @@ void LoadEffectFactories()
             Effect<SimpleInsulatorBeatEffect2>("SimpleInsulatorColorBeat"),
             Starry<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_MAGICMIRROR)
+#if defined(EFFECTS_MAGICMIRROR)
         // Magic mirror effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<MoltenGlassOnVioletBkgnd>("MoltenGlass", RainbowColors_p)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_ATOMLIGHT)
+#if defined(EFFECTS_ATOMLIGHT)
         // Atom light effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<ColorFillEffect>(CRGB::White, 1),
@@ -524,9 +524,9 @@ void LoadEffectFactories()
             Effect<MeteorEffect>(1, 1, 5, .15, .25),
             Effect<MeteorEffect>()
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_PLATECOVER)
+#if defined(EFFECTS_PLATECOVER)
         // Plate cover effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<ColorFillEffect>("Solid White", CRGB::White, 1),
@@ -537,9 +537,9 @@ void LoadEffectFactories()
             Effect<MeteorEffect>(2, 1, 15, .75, .75),
             Effect<ColorFillEffect>("Off", CRGB::Black, 1)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_SPIRALLAMP)
+#if defined(EFFECTS_SPIRALLAMP)
         // Spiral lamp effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<VUMeterVerticalEffect>(),
@@ -565,16 +565,16 @@ void LoadEffectFactories()
             Effect<PaletteEffect>(RainbowColors_p, .25, 1, 0, 1.0, 0.0, LINEARBLEND, true, 1.0),
             Effect<PaletteEffect>(RainbowColors_p)
         );
-    #endif
+#endif
 
-    #if defined(EFFECTS_HEXAGON)
+#if defined(EFFECTS_HEXAGON)
 
         // Hexagon effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<OuterHexRingEffect>()
         );
 
-    #endif
+#endif
 
     // Default fallback if no set contributed any effect
     if (g_ptrEffectFactories->IsEmpty())

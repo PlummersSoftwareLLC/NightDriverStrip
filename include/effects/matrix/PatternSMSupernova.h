@@ -49,7 +49,7 @@ private:
     // Nothing special here; just a default-zero initialized struct.
     class DebrisItem
     {
-      public:
+    public:
         DebrisItem()
         {
         }
@@ -101,8 +101,8 @@ private:
         const int y = debris_item._position_y += debris_item._speed_y;
 
         if (debris_item._state == 0
-            || x < 0 || x >= MATRIX_WIDTH
-            || y < 0 || y >= MATRIX_HEIGHT)
+    || x < 0 || x >= MATRIX_WIDTH
+    || y < 0 || y >= MATRIX_HEIGHT)
         {
             debris_item._is_shift = false;
         }

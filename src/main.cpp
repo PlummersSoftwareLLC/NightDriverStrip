@@ -168,7 +168,7 @@
 #include <esp_now.h>
 
 #if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
-  #include "Bounce2.h"                            // For Bounce button class
+#include "Bounce2.h"                            // For Bounce button class
 #endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
@@ -215,9 +215,9 @@ void PrintOutputHeader()
     debugI("------------------------------------------------------------------------------------------------------------");
     debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d, USE_AUDIO: %d, ENABLE_REMOTE: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD, ENABLE_AUDIO, ENABLE_REMOTE);
 
-    #if USE_PSRAM
+#if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
-    #endif
+#endif
 
     debugI("Version %u: Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u",
             FLASH_VERSION, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
@@ -292,9 +292,9 @@ void setup()
     // problems with the S3 rebooting when WiFi connected, so for now, I've limited the default
     // allocator to be PSRAM only on the MESMERIZER project where it's well tested.
 
-    #if MESMERIZER
+#if MESMERIZER
         heap_caps_malloc_extmem_enable(96);
-    #endif
+#endif
 
     // Initialize LZ library for decompressing compressed wifi packets
     uzlib_init();
@@ -327,7 +327,7 @@ void setup()
 
     ESP_ERROR_CHECK(err);
 
-    #if ENABLE_ESPNOW
+#if ENABLE_ESPNOW
         WiFi.mode(WIFI_STA);  // or WIFI_AP if applicable
 
         if (esp_now_init() != ESP_OK) 
@@ -335,9 +335,9 @@ void setup()
         // Register receive callback function
         esp_now_register_recv_cb(onReceiveESPNOW);
         debugI("ESP-NOW initialized with MAC address: %s", WiFi.macAddress().c_str());
-    #endif
+#endif
 
-    #if ENABLE_WIFI
+#if ENABLE_WIFI
         String WiFi_ssid;
         String WiFi_password;
 
@@ -359,101 +359,101 @@ void setup()
 
         // This chip alone is special-cased by Improv, so we pull it
         // from build flags. CONFIG_IDF_TARGET will be "esp32s3".
-        #if CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S3
             String family = "ESP32-S3";
-        #else
+#else
             String family = "ESP32";
-        #endif
+#endif
 
         debugW("Starting ImprovSerial for %s", family.c_str());
         String name = "NDESP32" + get_mac_address().substring(6);
         g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
         g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
 
-    #endif
+#endif
 
     // Setup config objects
     g_ptrSystem->SetupConfig();
 
-    #if ENABLE_WIFI
+#if ENABLE_WIFI
         // We create the network reader here, so classes can register their readers from this point onwards.
         //   Note that the thread that executes the readers is started further down, along with other networking
         //   threads.
         auto & networkReader = g_ptrSystem->SetupNetworkReader();
 
-        #if ENABLE_NTP
+#if ENABLE_NTP
             // Register a network reader to update the device clock at regular intervals
             networkReader.RegisterReader(UpdateNTPTime, (NTP_DELAY_ERROR_SECONDS) * 1000UL);
-        #endif
-    #endif
+#endif
+#endif
 
-    #if INCOMING_WIFI_ENABLED
+#if INCOMING_WIFI_ENABLED
         g_ptrSystem->SetupSocketServer(NetworkPort::IncomingWiFi, NUM_LEDS);  // $C000 is free RAM on the C64, fwiw!
-    #endif
+#endif
 
-    #if ENABLE_WIFI && ENABLE_WEBSERVER
+#if ENABLE_WIFI && ENABLE_WEBSERVER
         g_ptrSystem->SetupWebServer();
 
-        #if WEB_SOCKETS_ANY_ENABLED
+#if WEB_SOCKETS_ANY_ENABLED
             g_ptrSystem->SetupWebSocketServer(g_ptrSystem->WebServer());
-        #endif
-    #endif
+#endif
+#endif
 
     // If we have a remote control enabled, set the direction on its input pin accordingly
 
-    #if ENABLE_REMOTE
+#if ENABLE_REMOTE
         pinMode(IR_REMOTE_PIN, INPUT);
         g_ptrSystem->SetupRemoteControl();
-    #endif
+#endif
 
-    #if ENABLE_AUDIO
-        #if INPUT_PIN
+#if ENABLE_AUDIO
+#if INPUT_PIN
             pinMode(INPUT_PIN, INPUT);
-        #endif
-        #if TTGO
+#endif
+#if TTGO
             pinMode(37, OUTPUT);            // This pin layout allows for mounting a MAX4466 to the backside
             digitalWrite(37, LOW);          //   of a TTGO with the OUT pin on 36, GND on 37, and Vcc on 38
             pinMode(38, OUTPUT);
             digitalWrite(38, HIGH);
-        #endif
-    #endif
+#endif
+#endif
 
-    #ifdef TOGGLE_BUTTON_1
+#ifdef TOGGLE_BUTTON_1
         Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
         Button1.interval(1);
         Button1.setPressedState(LOW);
-    #endif
+#endif
 
-    #ifdef TOGGLE_BUTTON_2
+#ifdef TOGGLE_BUTTON_2
         Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
         Button2.interval(1);
         Button2.setPressedState(LOW);
-    #endif
+#endif
 
-    #ifdef TOGGLE_BUTTON_3
+#ifdef TOGGLE_BUTTON_3
         Button3.attach(TOGGLE_BUTTON_3, INPUT_PULLUP);
         Button3.interval(1);
         Button3.setPressedState(LOW);
-    #endif
+#endif
 
-    #if AMOLED_S3
-        #include "amoled/LilyGo_AMOLED.h"
+#if AMOLED_S3
+#include "amoled/LilyGo_AMOLED.h"
         debugW("Creating AMOLED Screen");
         g_ptrSystem->SetupDisplay<AMOLEDScreen>(TFT_HEIGHT, TFT_WIDTH);
-    #endif
+#endif
 
-    #if USE_TFTSPI
+#if USE_TFTSPI
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
         debugW("Creating TFT Screen");
         g_ptrSystem->SetupDisplay<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
 
-    #elif USE_LCD
+#elif USE_LCD
 
         debugW("Creating LCD Screen");
         g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
 
-    #elif USE_M5
+#elif USE_M5
 
         M5.begin();
         M5.Display.startWrite();
@@ -463,22 +463,22 @@ void setup()
 
         g_ptrSystem->SetupDisplay<M5Screen>(M5.Lcd.width(), M5.Lcd.height());
 
-    #elif ELECROW
+#elif ELECROW
 
             debugW("Creating Elecrow Screen");
             g_ptrSystem->SetupDisplay<ElecrowScreen>(TFT_HEIGHT, TFT_WIDTH);
 
-    #elif USE_OLED
+#elif USE_OLED
 
-        #if USE_SSD1306
+#if USE_SSD1306
             debugW("Creating SSD1306 Screen");
             g_ptrSystem->SetupDisplay<SSD1306Screen>(128, 64);
-        #else
+#else
         debugW("Creating OLED Screen");
             g_ptrSystem->SetupDisplay<OLEDScreen>(128, 64);
-        #endif
+#endif
 
-    #endif
+#endif
 
     // Create the vector with devices (channels)
     g_ptrSystem->SetupDevices();
@@ -486,30 +486,30 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #if USE_HUB75
+#if USE_HUB75
         // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
         LEDMatrixGFX::InitializeHardware(devices);
-    #elif HEXAGON
+#elif HEXAGON
         // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
         HexagonGFX::InitializeHardware(devices);
-    #elif USE_WS281X
+#elif USE_WS281X
         // LEDStripGFX is used for simple strips or for matrices woven from strips
         LEDStripGFX::InitializeHardware(devices);
-    #endif
+#endif
 
     // Initialize all the built-in effects
 
     // Due to the nature of how FastLED compiles, the LED_PINx must be passed as a literal, not a variable (template stuff)
     // Onboard PWM LED
 
-    #if ONBOARD_LED_R
+#if ONBOARD_LED_R
         ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
         ledcAttachPin(ONBOARD_LED_G,  2);
         ledcAttachPin(ONBOARD_LED_B,  3);
         ledcSetup(1, 12000, 8);             // 12 kHz PWM, 8-bit resolution
         ledcSetup(2, 12000, 8);
         ledcSetup(3, 12000, 8);
-    #endif
+#endif
 
     g_ptrSystem->SetupBufferManagers();
 
@@ -522,10 +522,10 @@ void setup()
     });
 
     // Show splash effect on matrix
-    #if USE_HUB75
+#if USE_HUB75
         debugI("Initializing splash effect manager...");
         InitSplashEffectManager();
-    #endif
+#endif
 
     InitEffectsManager();
 
@@ -536,11 +536,11 @@ void setup()
     taskManager.StartAudioThread();
     taskManager.StartRemoteThread();
 
-    #if ENABLE_WIFI
+#if ENABLE_WIFI
         debugI("Making initial attempt to connect to WiFi.");
         ConnectToWiFi(WiFi_ssid, WiFi_password);
         Debug.setSerialEnabled(true);
-    #endif
+#endif
 
     // Start the network-dependent services.  These will be NOPs on a non-wifi build.
 
@@ -562,14 +562,14 @@ void loop()
 {
     while(true)
     {
-        #if ENABLE_WIFI
+#if ENABLE_WIFI
             EVERY_N_MILLIS(20)
             {
                 g_pImprovSerial->loop();
             }
-        #endif
+#endif
 
-        #if ENABLE_OTA
+#if ENABLE_OTA
             try
             {
                 if (WiFi.isConnected())
@@ -579,39 +579,39 @@ void loop()
             {
                 debugW("Exception in OTA code caught");
             }
-        #endif
+#endif
 
         EVERY_N_SECONDS(5)
         {
             String strOutput;
 
-            #if ENABLE_WIFI
+#if ENABLE_WIFI
                 strOutput += str_sprintf("WiFi: %s, MAC: %s, IP: %s ", WLtoString(WiFi.status()), WiFi.macAddress().c_str(), WiFi.localIP().toString().c_str());
-            #endif
+#endif
 
             strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
 
-            #if USE_WS281X
-                strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
-            #endif
+#if USE_WS281X
+            strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
+#endif
 
-            #if USE_HUB75
-                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
-            #endif
+#if USE_HUB75
+            strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
+#endif
 
-            #if ENABLE_AUDIO
-                strOutput += str_sprintf("Audio FPS: %d, MinVU: %6.1f, PeakVU: %6.1f, VURatio: %3.1f ", g_Analyzer.AudioFPS(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
-            #endif
+#if ENABLE_AUDIO
+            strOutput += str_sprintf("Audio FPS: %d, MinVU: %6.1f, PeakVU: %6.1f, VURatio: %3.1f ", g_Analyzer.AudioFPS(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
+#endif
 
-            #if ENABLE_AUDIOSERIAL
-                strOutput += str_sprintf("Serial FPS: %d, ", g_Analyzer.SerialFPS());
-            #endif
+#if ENABLE_AUDIOSERIAL
+            strOutput += str_sprintf("Serial FPS: %d, ", g_Analyzer.SerialFPS());
+#endif
 
-            #if INCOMING_WIFI_ENABLED
-                auto& bufferManager = g_ptrSystem->BufferManagers()[0];
-                strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
-            #endif
+#if INCOMING_WIFI_ENABLED
+            auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+            strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
+#endif
 
             const auto& taskManager = g_ptrSystem->TaskManager();
             strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);

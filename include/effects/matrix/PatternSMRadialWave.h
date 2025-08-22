@@ -7,7 +7,7 @@
 
 class PatternSMRadialWave : public EffectWithId<PatternSMRadialWave>
 {
-  private:
+private:
     // RadialWave
     // Stepko and Sutaburosu
     // 22/05/22
@@ -23,7 +23,7 @@ class PatternSMRadialWave : public EffectWithId<PatternSMRadialWave>
         uint8_t radius;
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
-  public:
+public:
   
     PatternSMRadialWave() : EffectWithId<PatternSMRadialWave>("RadialWave") {}
     PatternSMRadialWave(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRadialWave>(jsonObject) {}

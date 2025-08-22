@@ -60,7 +60,7 @@
 
 class PatternSerendipity : public EffectWithId<PatternSerendipity>
 {
-  private:
+private:
 
     // Timer stuff (Oszillators)
     struct timer
@@ -94,7 +94,7 @@ class PatternSerendipity : public EffectWithId<PatternSerendipity>
         }
     }
 
-  public:
+public:
 
     PatternSerendipity() : EffectWithId<PatternSerendipity>("Serendipity") {}
     PatternSerendipity(const JsonObjectConst& jsonObject) : EffectWithId<PatternSerendipity>(jsonObject) {}

@@ -108,9 +108,9 @@ void InitEffectsManager()
     // We won't need the default factories anymore, so swipe them from memory
     g_ptrEffectFactories->ClearDefaultFactories();
 
-    #if EFFECTS_WEB_SOCKET_ENABLED
+#if EFFECTS_WEB_SOCKET_ENABLED
         g_ptrSystem->EffectManager().AddEffectEventListener(g_ptrSystem->WebSocketServer());
-    #endif
+#endif
 }
 
 //
@@ -290,7 +290,7 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 
     return entry != g_JsonStarryNightEffectFactories.end()
         ? entry->second(jsonObject)
-        : nullptr;
+    : nullptr;
 }
 
 //
@@ -364,9 +364,9 @@ void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
     if (!retainRemoteEffect)
         _tempEffect = nullptr;
 
-    #if (USE_HUB75)
+#if (USE_HUB75)
         g()->PausePalette(false);
-    #endif
+#endif
 
     g_ptrSystem->DeviceConfig().ClearApplyGlobalColors();
 }
@@ -383,7 +383,7 @@ void EffectManager::ApplyGlobalColor(CRGB color) const
 
 void EffectManager::ApplyGlobalPaletteColors() const
 {
-    #if (USE_HUB75)
+#if (USE_HUB75)
         auto  pMatrix = g();
         auto& deviceConfig = g_ptrSystem->DeviceConfig();
         auto& globalColor = deviceConfig.GlobalColor();
@@ -403,5 +403,5 @@ void EffectManager::ApplyGlobalPaletteColors() const
         }
 
         pMatrix->PausePalette(true);
-    #endif
+#endif
 }

@@ -101,13 +101,13 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
             // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
 
-            #if USE_PSRAM
+#if USE_PSRAM
                 std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIMUM_PACKET_SIZE+1);    // Plus one for uzlib buffer overreach bug
                 memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIMUM_PACKET_SIZE);
                 auto pSourceBuffer = &_abTempBuffer[COMPRESSED_HEADER_SIZE];
-            #else
+#else
                 auto pSourceBuffer = &_pBuffer[COMPRESSED_HEADER_SIZE];
-            #endif
+#endif
 
             if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
             {
@@ -131,7 +131,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
             if (command16 == WIFI_COMMAND_PEAKDATA)
             {
-                #if ENABLE_AUDIO
+#if ENABLE_AUDIO
 
                     uint16_t numbands  = WORDFromMemory(&_pBuffer.get()[2]);
                     uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
@@ -166,7 +166,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                     // Consume the data by resetting the buffer
                     debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %zu down 0.", _cbReceived);
 
-                #endif
+#endif
                 ResetReadBuffer();
 
             }

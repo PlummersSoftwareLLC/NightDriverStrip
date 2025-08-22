@@ -117,7 +117,7 @@ public:
     //
     // Display code for the M5 based TFT displays on the M5 Stick, Stick C Plus, and Stack
 
-    #include <M5UnitLCD.h>
+#include <M5UnitLCD.h>
 
     // M5Screen
     //
@@ -125,7 +125,7 @@ public:
 
     class M5Screen : public Screen
     {
-      public:
+    public:
 
         M5Screen(int w, int h) : Screen(w, h)
         {
@@ -150,11 +150,11 @@ public:
 #endif
 
 #if USE_TFTSPI
-    #if TTGO
-        #include <User_Setups/Setup25_TTGO_T_Display.h>
-    #endif
-    #include <TFT_eSPI.h>
-    #include <SPI.h>
+#if TTGO
+#include <User_Setups/Setup25_TTGO_T_Display.h>
+#endif
+#include <TFT_eSPI.h>
+#include <SPI.h>
     
 
     // TFTScreen
@@ -170,10 +170,10 @@ public:
         {
             tft.begin();
 
-            #ifdef TFT_BL
+#ifdef TFT_BL
                 pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
                 digitalWrite(TFT_BL, 128);
-            #endif
+#endif
 
             tft.setRotation(3);
             tft.fillScreen(TFT_GREEN);
@@ -199,9 +199,9 @@ public:
 
 #if AMOLED_S3
 
-    #include "amoled/LilyGo_AMOLED.h"
-    #include "amoled/lv_conf.h"
-    #include "amoled/LV_Helper.h"
+#include "amoled/LilyGo_AMOLED.h"
+#include "amoled/lv_conf.h"
+#include "amoled/LV_Helper.h"
 
     // AMOLEDScreen
     //
@@ -309,20 +309,20 @@ public:
     //
     // Display code for the blue OLED display on the Heltect Wifi Kit 32 Original
 
-    #include <U8g2lib.h>                // Library for monochrome displays
-    #include <gfxfont.h>                // Adafruit GFX font structs
-    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
+#include <U8g2lib.h>                // Library for monochrome displays
+#include <gfxfont.h>                // Adafruit GFX font structs
+#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
 
     class OLEDScreen : public Screen
     {
         U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled;
 
     public:
-        #if ARDUINO_HELTEC_WIFI_LORA_32_V3
+#if ARDUINO_HELTEC_WIFI_LORA_32_V3
             OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 21, /*clk*/ 18, /*data*/ 17)
-        #else
+#else
             OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
-        #endif
+#endif
         {
             oled.begin();
             oled.clear();
@@ -356,10 +356,10 @@ public:
     //
     // Display code for the SSD1306 display on supported Heltec ESP32 boards
 
-    #include <U8g2lib.h>                // Library for monochrome displays
-    #include <gfxfont.h>                // Adafruit GFX font structs
-    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
-    #include <heltec.h>                // Display
+#include <U8g2lib.h>                // Library for monochrome displays
+#include <gfxfont.h>                // Adafruit GFX font structs
+#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
+#include <heltec.h>                // Display
 
     class SSD1306Screen : public Screen
     {
@@ -368,9 +368,9 @@ public:
         SSD1306Screen(int w, int h) : Screen(w, h)
         {
             Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, false /*Serial Enable*/);
-            #if ROTATE_SCREEN
+#if ROTATE_SCREEN
                 Heltec.display->screenRotate(ANGLE_180_DEGREE);
-            #endif
+#endif
         }
 
         virtual void StartFrame() override
@@ -402,23 +402,23 @@ public:
     //
     // Display code for the Elecrow display on their 3.5" 
 
-    #define LGFX_USE_V1
+#define LGFX_USE_V1
 
-    #include <U8g2lib.h>                // Library for monochrome displays
-    #include <gfxfont.h>                // Adafruit GFX font structs
-    #include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
-    #include <LovyanGFX.hpp>            // For the Elecrow display
+#include <U8g2lib.h>                // Library for monochrome displays
+#include <gfxfont.h>                // Adafruit GFX font structs
+#include <Adafruit_GFX.h>           // GFX wrapper so we can draw on screen
+#include <LovyanGFX.hpp>            // For the Elecrow display
 
     // TFT Pinout
     
-    #define LCD_MOSI 13
-    #define LCD_MISO 14 
-    #define LCD_SCK  12
-    #define LCD_CS    3
-    #define LCD_RST  -1 
-    #define LCD_DC   42  
+#define LCD_MOSI 13
+#define LCD_MISO 14 
+#define LCD_SCK  12
+#define LCD_CS    3
+#define LCD_RST  -1 
+#define LCD_DC   42  
 
-    class ElecrowScreen : public Screen, lgfx::LGFX_Device
+    class ElecrowScreen : public Screen, lgfx :  : LGFX_Device
     {
         lgfx::Panel_ILI9488 _panel_instance;
         lgfx::Bus_SPI _bus_instance;
@@ -429,7 +429,7 @@ public:
         {
              // I'm not a fan of these local clauses but it keeps it the same as the original sample code
             
-             {
+            {
                 auto cfg = _bus_instance.config();
                 cfg.spi_host = SPI3_HOST;
                 cfg.spi_mode = 0;
@@ -548,7 +548,7 @@ public:
 
 #if USE_LCD
 
-    #include <Adafruit_ILI9341.h>
+#include <Adafruit_ILI9341.h>
 
     // LCDScreen
     //
@@ -565,9 +565,9 @@ public:
         {
             hspi.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
 
-            #ifdef TFT_BL
+#ifdef TFT_BL
             pinMode(TFT_BL, OUTPUT); //initialize BL
-            #endif
+#endif
             
             pLCD = std::make_unique<Adafruit_ILI9341>(&hspi, TFT_DC, TFT_CS, TFT_RST);
             pLCD->begin();

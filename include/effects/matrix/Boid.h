@@ -89,7 +89,7 @@
 
 class Boid 
 {
-  public:
+public:
 
     PVector location;
     PVector velocity;
@@ -108,22 +108,22 @@ class Boid
     Boid() {}
 
     Boid(float x, float y) {
-      acceleration = PVector(0, 0);
-      velocity = PVector(randomf(), randomf());
-      location = PVector(x, y);
-      maxspeed = 1.5;
-      maxforce = 0.05;
-      mass = random(1.0,1.4);
-      hue = random(40,255);
+    acceleration = PVector(0, 0);
+    velocity = PVector(randomf(), randomf());
+    location = PVector(x, y);
+    maxspeed = 1.5;
+    maxforce = 0.05;
+    mass = random(1.0,1.4);
+    hue = random(40,255);
     }
 
     static float randomf() {
-      return map((float)random(0, 255), 0.0f, 255.0f, -.5f, .5f);
+    return map((float)random(0, 255), 0.0f, 255.0f, -.5f, .5f);
     }
 
     void run(Boid boids [], uint8_t boidCount) {
-      flock(boids, boidCount);
-      update();
+    flock(boids, boidCount);
+    update();
       // wrapAroundBorders();
       // render();
     }
@@ -131,245 +131,245 @@ class Boid
     // Method to update location
     void update() {
       // Update velocity
-      velocity += acceleration;
+    velocity += acceleration;
       // Limit speed
-      velocity.limit(maxspeed);
-      location += velocity;
+    velocity.limit(maxspeed);
+    location += velocity;
       // Reset acceleration to 0 each cycle
-      acceleration *= 0;
+    acceleration *= 0;
     }
 
     // Method to update location
     void update(Boid boids [], uint8_t boidCount) {
       // Update velocity
-      flock(boids, boidCount);
-      velocity += acceleration;
+    flock(boids, boidCount);
+    velocity += acceleration;
       // Limit speed
-      velocity.limit(maxspeed);
+    velocity.limit(maxspeed);
 
-      location += velocity;
+    location += velocity;
       // Reset acceleration to 0 each cycle
-      acceleration *= 0;
+    acceleration *= 0;
     }
 
     void applyForce(PVector force) {
       // We could add mass here if we want A = F / M
-      acceleration += force;
+    acceleration += force;
     }
 
     void repelForce(PVector obstacle, float radius) {
       //Force that drives boid away from obstacle.
 
-      PVector futPos = location + velocity; //Calculate future position for more effective behavior.
-      PVector dist = obstacle - futPos;
-      float d = dist.mag();
+    PVector futPos = location + velocity; //Calculate future position for more effective behavior.
+    PVector dist = obstacle - futPos;
+    float d = dist.mag();
 
-      if (d <= radius) {
+    if (d <= radius) {
         PVector repelVec = location - obstacle;
         repelVec.normalize();
         if (d != 0) { //Don't divide by zero.
           // float scale = 1.0 / d; //The closer to the obstacle, the stronger the force.
-          repelVec.normalize();
-          repelVec *= (maxforce * 7);
-          if (repelVec.mag() < 0) { //Don't let the boids turn around to avoid the obstacle.
+        repelVec.normalize();
+        repelVec *= (maxforce * 7);
+        if (repelVec.mag() < 0) { //Don't let the boids turn around to avoid the obstacle.
             repelVec.y = 0;
-          }
+        }
         }
         applyForce(repelVec);
-      }
+    }
     }
 
     // We accumulate a new acceleration each time based on three rules
     void flock(Boid boids [], uint8_t boidCount) {
-      PVector sep = separate(boids, boidCount);   // Separation
-      PVector ali = align(boids, boidCount);      // Alignment
-      PVector coh = cohesion(boids, boidCount);   // Cohesion
+    PVector sep = separate(boids, boidCount);   // Separation
+    PVector ali = align(boids, boidCount);      // Alignment
+    PVector coh = cohesion(boids, boidCount);   // Cohesion
       // Arbitrarily weight these forces
-      sep *= 1.5;
-      ali *= 1.0;
-      coh *= 1.0;
+    sep *= 1.5;
+    ali *= 1.0;
+    coh *= 1.0;
       // Add the force vectors to acceleration
-      applyForce(sep);
-      applyForce(ali);
-      applyForce(coh);
+    applyForce(sep);
+    applyForce(ali);
+    applyForce(coh);
     }
 
     // Separation
     // Method checks for nearby boids and steers away
     PVector separate(Boid boids [], uint8_t boidCount) {
-      PVector steer = PVector(0, 0);
-      int count = 0;
+    PVector steer = PVector(0, 0);
+    int count = 0;
       // For every boid in the system, check if it's too close
-      for (int i = 0; i < boidCount; i++) {
+    for (int i = 0; i < boidCount; i++) {
         Boid other = boids[i];
         if (!other.enabled)
-          continue;
+        continue;
         float d = location.dist(other.location);
         // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
         if ((d > 0) && (d < desiredseparation)) {
           // Calculate vector pointing away from neighbor
-          PVector diff = location - other.location;
-          diff.normalize();
-          diff /= d;        // Weight by distance
-          steer += diff;
-          count++;            // Keep track of how many
+        PVector diff = location - other.location;
+        diff.normalize();
+        diff /= d;        // Weight by distance
+        steer += diff;
+        count++;            // Keep track of how many
         }
-      }
+    }
       // Average -- divide by how many
-      if (count > 0) {
+    if (count > 0) {
         steer /= (float) count;
-      }
+    }
 
       // As long as the vector is greater than 0
-      if (steer.mag() > 0) {
+    if (steer.mag() > 0) {
         // Implement Reynolds: Steering = Desired - Velocity
         steer.normalize();
         steer *= maxspeed;
         steer -= velocity;
         steer.limit(maxforce);
-      }
-      return steer;
+    }
+    return steer;
     }
 
     // Alignment
     // For every nearby boid in the system, calculate the average velocity
     PVector align(Boid boids [], uint8_t boidCount) {
-      PVector sum = PVector(0, 0);
-      int count = 0;
-      for (int i = 0; i < boidCount; i++) {
+    PVector sum = PVector(0, 0);
+    int count = 0;
+    for (int i = 0; i < boidCount; i++) {
         Boid other = boids[i];
         if (!other.enabled)
-          continue;
+        continue;
         float d = location.dist(other.location);
         if ((d > 0) && (d < neighbordist)) {
-          sum += other.velocity;
-          count++;
+        sum += other.velocity;
+        count++;
         }
-      }
-      if (count > 0) {
+    }
+    if (count > 0) {
         sum /= (float) count;
         sum.normalize();
         sum *= maxspeed;
         PVector steer = sum - velocity;
         steer.limit(maxforce);
         return steer;
-      }
-      else {
+    }
+    else {
         return PVector(0, 0);
-      }
+    }
     }
 
     // Cohesion
     // For the average location (i.e. center) of all nearby boids, calculate steering vector towards that location
     PVector cohesion(Boid boids [], uint8_t boidCount) {
-      PVector sum = PVector(0, 0);   // Start with empty vector to accumulate all locations
-      int count = 0;
-      for (int i = 0; i < boidCount; i++) {
+    PVector sum = PVector(0, 0);   // Start with empty vector to accumulate all locations
+    int count = 0;
+    for (int i = 0; i < boidCount; i++) {
         Boid other = boids[i];
         if (!other.enabled)
-          continue;
+        continue;
         float d = location.dist(other.location);
         if ((d > 0) && (d < neighbordist)) {
-          sum += other.location; // Add location
-          count++;
+        sum += other.location; // Add location
+        count++;
         }
-      }
-      if (count > 0) {
+    }
+    if (count > 0) {
         sum /= count;
         return seek(sum);  // Steer towards the location
-      }
-      else {
+    }
+    else {
         return PVector(0, 0);
-      }
+    }
     }
 
     // A method that calculates and applies a steering force towards a target
     // STEER = DESIRED MINUS VELOCITY
     PVector seek(PVector target) {
-      PVector desired = target - location;  // A vector pointing from the location to the target
+    PVector desired = target - location;  // A vector pointing from the location to the target
       // Normalize desired and scale to maximum speed
-      desired.normalize();
-      desired *= maxspeed;
+    desired.normalize();
+    desired *= maxspeed;
       // Steering = Desired minus Velocity
-      PVector steer = desired - velocity;
-      steer.limit(maxforce);  // Limit to maximum steering force
-      return steer;
+    PVector steer = desired - velocity;
+    steer.limit(maxforce);  // Limit to maximum steering force
+    return steer;
     }
 
     // A method that calculates a steering force towards a target
     // STEER = DESIRED MINUS VELOCITY
     void arrive(PVector target) {
-      PVector desired = target - location;  // A vector pointing from the location to the target
-      float d = desired.mag();
+    PVector desired = target - location;  // A vector pointing from the location to the target
+    float d = desired.mag();
       // Normalize desired and scale with arbitrary damping within 100 pixels
-      desired.normalize();
-      if (d < 4) {
+    desired.normalize();
+    if (d < 4) {
         float m = ::map(d, 0, 100, 0, maxspeed);
         desired *= m;
-      }
-      else {
+    }
+    else {
         desired *= maxspeed;
-      }
+    }
 
       // Steering = Desired minus Velocity
-      PVector steer = desired - velocity;
-      steer.limit(maxforce);  // Limit to maximum steering force
-      applyForce(steer);
+    PVector steer = desired - velocity;
+    steer.limit(maxforce);  // Limit to maximum steering force
+    applyForce(steer);
       //Serial.println(d);
     }
 
     void wrapAroundBorders() {
-      if (location.x < 0) location.x = MATRIX_WIDTH - 1;
-      if (location.y < 0) location.y = MATRIX_HEIGHT - 1;
-      if (location.x >= MATRIX_WIDTH) location.x = 0;
-      if (location.y >= MATRIX_HEIGHT) location.y = 0;
+    if (location.x < 0) location.x = MATRIX_WIDTH - 1;
+    if (location.y < 0) location.y = MATRIX_HEIGHT - 1;
+    if (location.x >= MATRIX_WIDTH) location.x = 0;
+    if (location.y >= MATRIX_HEIGHT) location.y = 0;
     }
 
     void avoidBorders() {
-      PVector desired = velocity;
+    PVector desired = velocity;
 
-      if (location.x < 8) desired = PVector(maxspeed, velocity.y);
-      if (location.x >= MATRIX_WIDTH - 8) desired = PVector(-maxspeed, velocity.y);
-      if (location.y < 8) desired = PVector(velocity.x, maxspeed);
-      if (location.y >= MATRIX_HEIGHT - 8) desired = PVector(velocity.x, -maxspeed);
+    if (location.x < 8) desired = PVector(maxspeed, velocity.y);
+    if (location.x >= MATRIX_WIDTH - 8) desired = PVector(-maxspeed, velocity.y);
+    if (location.y < 8) desired = PVector(velocity.x, maxspeed);
+    if (location.y >= MATRIX_HEIGHT - 8) desired = PVector(velocity.x, -maxspeed);
 
-      if (desired != velocity) {
+    if (desired != velocity) {
         PVector steer = desired - velocity;
         steer.limit(maxforce);
         applyForce(steer);
-      }
+    }
 
-      if (location.x < 0) location.x = 0;
-      if (location.y < 0) location.y = 0;
-      if (location.x >= MATRIX_WIDTH) location.x = MATRIX_WIDTH - 1;
-      if (location.y >= MATRIX_HEIGHT) location.y = MATRIX_HEIGHT - 1;
+    if (location.x < 0) location.x = 0;
+    if (location.y < 0) location.y = 0;
+    if (location.x >= MATRIX_WIDTH) location.x = MATRIX_WIDTH - 1;
+    if (location.y >= MATRIX_HEIGHT) location.y = MATRIX_HEIGHT - 1;
     }
 
     bool bounceOffBorders(float bounce) {
-      bool bounced = false;
+    bool bounced = false;
 
-      if (location.x >= MATRIX_WIDTH) {
+    if (location.x >= MATRIX_WIDTH) {
         location.x = MATRIX_WIDTH - 1;
         velocity.x *= -bounce;
         bounced = true;
-      }
-      else if (location.x < 0) {
+    }
+    else if (location.x < 0) {
         location.x = 0;
         velocity.x *= -bounce;
         bounced = true;
-      }
+    }
 
-      if (location.y >= MATRIX_HEIGHT) {
+    if (location.y >= MATRIX_HEIGHT) {
         location.y = MATRIX_HEIGHT - 1;
         velocity.y *= -bounce;
         bounced = true;
-      }
-      else if (location.y < 0) {
+    }
+    else if (location.y < 0) {
         location.y = 0;
         velocity.y *= -bounce;
         bounced = true;
-      }
+    }
 
-      return bounced;
+    return bounced;
     }
 };

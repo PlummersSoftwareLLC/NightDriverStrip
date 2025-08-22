@@ -134,7 +134,7 @@ private:
 
 public:
     VICESocketServer(int port) : _port(port),
-                                 _server_fd(0)
+                                _server_fd(0)
     {
         _abOutputBuffer = std::make_unique<uint8_t[]>(BUFFER_SIZE);
         memset(&_address, 0, sizeof(_address));

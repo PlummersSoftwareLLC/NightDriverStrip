@@ -8,7 +8,7 @@
 
 class PatternSMMetaBalls : public EffectWithId<PatternSMMetaBalls>
 {
-  private:
+private:
 
     uint8_t bx[5];
     uint8_t by[5];
@@ -25,7 +25,7 @@ class PatternSMMetaBalls : public EffectWithId<PatternSMMetaBalls>
         return dist;
     }
 
-  public:
+public:
 
     PatternSMMetaBalls() : EffectWithId<PatternSMMetaBalls>("MetaBalls") {}
     PatternSMMetaBalls(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMMetaBalls>(jsonObject) {}

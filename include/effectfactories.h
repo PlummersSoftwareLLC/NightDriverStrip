@@ -85,22 +85,22 @@ using JSONEffectFactory = std::function<std::shared_ptr<LEDStripEffect>(const Js
 
 class EffectFactories
 {
-  public:
+public:
 
-  class NumberedFactory
+class NumberedFactory
     {
-    EffectId effectNumber;
+        EffectId effectNumber;
         DefaultEffectFactory factory;
 
-      public:
+    public:
         bool LoadDisabled = false;
 
-  NumberedFactory(EffectId effectNumber, const DefaultEffectFactory& factory)
-          : effectNumber(effectNumber),
+        NumberedFactory(EffectId effectNumber, const DefaultEffectFactory& factory)
+    : effectNumber(effectNumber),
             factory(factory)
         {}
 
-  EffectId EffectNumber() const
+        EffectId EffectNumber() const
         {
             return effectNumber;
         }
@@ -117,24 +117,24 @@ class EffectFactories
         }
     };
 
-  private:
+private:
 
-  std::vector<NumberedFactory, psram_allocator<NumberedFactory>> defaultFactories;
-  std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>> jsonFactories;
+std::vector<NumberedFactory, psram_allocator<NumberedFactory>> defaultFactories;
+std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>> jsonFactories;
 
-  public:
+public:
 
     const std::vector<NumberedFactory, psram_allocator<NumberedFactory>>& GetDefaultFactories()
     {
         return defaultFactories;
     }
 
-  const std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>& GetJSONFactories()
+    const std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>& GetJSONFactories()
     {
         return jsonFactories;
     }
 
-  NumberedFactory& AddEffect(EffectId effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
+    NumberedFactory& AddEffect(EffectId effectNumber, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory)
     {
         auto& numberedFactory = defaultFactories.emplace_back(effectNumber, defaultFactory);
         jsonFactories.try_emplace(effectNumber, jsonFactory);

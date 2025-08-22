@@ -7,12 +7,12 @@
 
 class PatternSMGamma : public EffectWithId<PatternSMGamma>
 {
-  public:
+public:
   
     PatternSMGamma() : EffectWithId<PatternSMGamma>("Gamma") {}
     PatternSMGamma(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMGamma>(jsonObject) {}
 
-  private:
+private:
 
     void Start() override
     {

@@ -7,7 +7,7 @@
 // I'll admit this math may as well be magic, but it's pretty.
 
 class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR> {
-  private:
+private:
 
     uint8_t ZVoffset = 0;
 
@@ -20,7 +20,7 @@ class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR> {
     const float radius = HALF_WIDTH;
     //   byte effect = 1;
 
-  public:
+public:
 
     PatternSM2DDPR() : EffectWithId<PatternSM2DDPR>("Crystallize") {}
     PatternSM2DDPR(const JsonObjectConst &jsonObject) : EffectWithId<PatternSM2DDPR>(jsonObject) {}

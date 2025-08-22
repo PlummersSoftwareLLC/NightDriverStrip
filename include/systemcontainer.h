@@ -71,12 +71,12 @@
 
 // Declares the member variable for a property with indicated type and name
 #define SC_DECLARE(name, ...) \
-  private: \
+private: \
     std::unique_ptr<::__VA_ARGS__> SC_MEMBER(name) = nullptr;
 
 // Creates a Setup method for a property (with indicated type and name) that invokes a parameterless constructor
 #define SC_SIMPLE_SETUP_FOR(name, ...) \
-  public: \
+public: \
     ::__VA_ARGS__& Setup ## name() \
     { \
         if (!SC_MEMBER(name)) \
@@ -86,7 +86,7 @@
 
 // Creates a Setup method for a property (with indicated type and name) that forwards any arguments to the constructor
 #define SC_FORWARDING_SETUP_FOR(name, ...) \
-  public: \
+public: \
     template<typename... Args> \
     ::__VA_ARGS__& Setup ## name(Args&&... args) \
     { \
@@ -97,7 +97,7 @@
 
 // Creates the Has and getter methods for a property with indicated type and name
 #define SC_GETTERS_FOR(name, ...) \
-  public: \
+public: \
     bool Has ## name() const \
     { \
         return !!SC_MEMBER(name); \
@@ -123,7 +123,7 @@
 
 class SystemContainer
 {
-  private:
+private:
     // Helper method that checks if a pointer is initialized. Throws a runtime error if not.
     template<typename Tp>
     inline void CheckPointer(const std::unique_ptr<Tp>& pointer, const String& name) const
@@ -158,11 +158,11 @@ class SystemContainer
             throw std::runtime_error("Attempt to setup BufferManagers without Devices");
         }
 
-        #if USE_PSRAM
+#if USE_PSRAM
             uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
-        #else
+#else
             uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
-        #endif
+#endif
 
         uint32_t memtoalloc = (SC_MEMBER(Devices)->size() * (sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB)));
         uint32_t cBuffers = memtouse / memtoalloc;
@@ -248,48 +248,48 @@ class SystemContainer
     // -------------------------------------------------------------
     // NetworkReader
 
-    #if ENABLE_WIFI
+#if ENABLE_WIFI
         SC_SIMPLE_PROPERTY(NetworkReader, NetworkReader)
-    #endif
+#endif
 
     // -------------------------------------------------------------
     // WebServer
 
-    #if ENABLE_WIFI && ENABLE_WEBSERVER
+#if ENABLE_WIFI && ENABLE_WEBSERVER
         SC_SIMPLE_PROPERTY(WebServer, CWebServer)
-    #endif
+#endif
 
     // -------------------------------------------------------------
     // SocketServer
 
-    #if INCOMING_WIFI_ENABLED
+#if INCOMING_WIFI_ENABLED
         SC_FORWARDING_PROPERTY(SocketServer, SocketServer)
-    #endif
+#endif
 
     // -------------------------------------------------------------
     // WebSocketServer
 
-    #if WEB_SOCKETS_ANY_ENABLED
+#if WEB_SOCKETS_ANY_ENABLED
         SC_FORWARDING_PROPERTY(WebSocketServer, WebSocketServer)
-    #endif
+#endif
 
 
     // -------------------------------------------------------------
     // RemoteControl
 
-    #if ENABLE_REMOTE
+#if ENABLE_REMOTE
         SC_SIMPLE_PROPERTY(RemoteControl, RemoteControl)
-    #endif
+#endif
 
     // -------------------------------------------------------------
     // Display
 
-    #if USE_SCREEN
+#if USE_SCREEN
         SC_DECLARE(Display, Screen)
 
         // Creates and returns the display. The exact screen type is a template argument.
         public: template<typename Ts, typename... Args>
-        ::Screen& SetupDisplay(Args&&... args)
+    ::Screen& SetupDisplay(Args&&... args)
         {
             SC_MEMBER(Display) = make_unique_psram<Ts>(std::forward<Args>(args)...);
 
@@ -297,7 +297,7 @@ class SystemContainer
         }
 
         SC_GETTERS_FOR(Display, Screen)
-    #endif
+#endif
 };
 
 extern DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;

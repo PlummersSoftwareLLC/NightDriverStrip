@@ -7,7 +7,7 @@
 
 class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
 {
-  private:
+private:
 
     const uint8_t C_X = MATRIX_WIDTH / 2;
     const uint8_t C_Y = MATRIX_HEIGHT / 2;
@@ -18,7 +18,7 @@ class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
         uint8_t radius;
     } rMap[MATRIX_WIDTH][MATRIX_HEIGHT];
 
-  public:
+public:
 
     PatternSMHypnosis() : EffectWithId<PatternSMHypnosis>("Hypnosis") {}
     PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMHypnosis>(jsonObject) {}
@@ -50,7 +50,7 @@ class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
         for (uint x = 0; x < MATRIX_WIDTH; x++)
             for (uint y = 0; y < MATRIX_HEIGHT; y++)
                 g()->leds[XY(x, y)] = ColorFromPalette(g()->IsPalettePaused()
-                                      ? g()->GetCurrentPalette()
-                                      : RainbowStripeColors_p, t / 2 + rMap[x][y].radius + rMap[x][y].angle, sin8(rMap[x][y].angle + (rMap[x][y].radius * 2) - t));
+                                    ? g()->GetCurrentPalette()
+    : RainbowStripeColors_p, t / 2 + rMap[x][y].radius + rMap[x][y].angle, sin8(rMap[x][y].angle + (rMap[x][y].radius * 2) - t));
     }
 };

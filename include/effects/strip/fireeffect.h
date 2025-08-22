@@ -39,14 +39,14 @@
 
 class FireEffect : public EffectWithId<FireEffect>
 {
-  private:
+private:
 
     void construct()
     {
         heat.reset( psram_allocator<uint8_t>().allocate(CellCount()) );
     }
 
-  protected:
+protected:
     int     LEDCount;           // Number of LEDs total
     int     CellsPerLED;
     int     Cooling;            // Rate at which the pixels cool off
@@ -70,18 +70,18 @@ class FireEffect : public EffectWithId<FireEffect>
 
     int CellCount() const { return LEDCount * CellsPerLED; }
 
-  public:
+public:
 
     FireEffect(const String & strName, int ledCount = NUM_LEDS, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4,  bool breversed = false, bool bmirrored = false)
-      : EffectWithId(strName),
-          LEDCount(ledCount),
-          CellsPerLED(cellsPerLED),
-          Cooling(cooling),
-          Sparks(sparks),
-          SparkHeight(sparkHeight),
-          Sparking(sparking),
-          bReversed(breversed),
-          bMirrored(bmirrored)
+    : EffectWithId(strName),
+        LEDCount(ledCount),
+        CellsPerLED(cellsPerLED),
+        Cooling(cooling),
+        Sparks(sparks),
+        SparkHeight(sparkHeight),
+        Sparking(sparking),
+        bReversed(breversed),
+        bMirrored(bmirrored)
     {
         if (bMirrored)
             LEDCount = LEDCount / 2;
@@ -90,15 +90,15 @@ class FireEffect : public EffectWithId<FireEffect>
     }
 
     FireEffect(const JsonObjectConst& jsonObject)
-          : EffectWithId(jsonObject),
-          LEDCount(jsonObject[PTY_LEDCOUNT]),
-          CellsPerLED(jsonObject[PTY_CELLSPERLED]),
-          Cooling(jsonObject[PTY_COOLING]),
-          Sparks(jsonObject[PTY_SPARKS]),
-          SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
-          Sparking(jsonObject[PTY_SPARKING]),
-          bReversed(jsonObject[PTY_REVERSED]),
-          bMirrored(jsonObject[PTY_MIRORRED])
+    : EffectWithId(jsonObject),
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        CellsPerLED(jsonObject[PTY_CELLSPERLED]),
+        Cooling(jsonObject[PTY_COOLING]),
+        Sparks(jsonObject[PTY_SPARKS]),
+        SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+        Sparking(jsonObject[PTY_SPARKING]),
+        bReversed(jsonObject[PTY_REVERSED]),
+        bMirrored(jsonObject[PTY_MIRORRED])
     {
         construct();
     }
@@ -155,22 +155,22 @@ class FireEffect : public EffectWithId<FireEffect>
 
         EVERY_N_MILLISECONDS(50)
         {
-          for (int i = 0; i < CellCount(); i++)
-          {
+        for (int i = 0; i < CellCount(); i++)
+        {
             int coolingAmount = random(0, Cooling);
             heat[i] = ::max(0, heat[i] - coolingAmount);
-          }
+        }
         }
 
         EVERY_N_MILLISECONDS(20)
         {
           // Next drift heat up and diffuse it a little bit
-          for (int i = 0; i < CellCount(); i++)
-              heat[i] = std::min(255, (heat[i] * BlendSelf +
-                        heat[(i + 1) % CellCount()] * BlendNeighbor1 +
-                        heat[(i + 2) % CellCount()] * BlendNeighbor2 +
-                        heat[(i + 3) % CellCount()] * BlendNeighbor3)
-                        / BlendTotal);
+            for (int i = 0; i < CellCount(); i++)
+                heat[i] = std::min(255, (heat[i] * BlendSelf +
+                heat[(i + 1) % CellCount()] * BlendNeighbor1 +
+                heat[(i + 2) % CellCount()] * BlendNeighbor2 +
+                heat[(i + 3) % CellCount()] * BlendNeighbor3)
+                / BlendTotal);
         }
 
         // Randomly ignite new sparks down in the flame kernel
@@ -189,11 +189,11 @@ class FireEffect : public EffectWithId<FireEffect>
             int sum = std::accumulate(begin, end, 0);
             auto avg = sum / CellsPerLED;
 
-            #if LANTERN
+#if LANTERN
                 CRGB color = CRGB(avg, avg * .45, avg * .08);
-            #else
+#else
                 CRGB color = GetBlackBodyHeatColor(avg/(float)std::numeric_limits<uint8_t>::max());
-            #endif
+#endif
 
             // If we're reversed, we work from the end back.  We don't reverse the bonus pixels
 
@@ -207,30 +207,30 @@ class FireEffect : public EffectWithId<FireEffect>
 
 class PaletteFlameEffect : public FireEffect
 {
-  private:
+private:
     CRGBPalette16 _palette;
     bool _ignoreGlobalColor;
 
-  public:
+public:
     PaletteFlameEffect(const String & strName,
-                       const CRGBPalette16 &palette,
-                       bool ignoreGlobalColor = false,
-                       int ledCount = NUM_LEDS,
-                       int cellsPerLED = 1,
-                       int cooling = 20,         // Was 1.8 for NightDriverStrip
-                       int sparking = 100,
-                       int sparks = 3,
-                       int sparkHeight = 3,
-                       bool reversed = false,
-                       bool mirrored = false)
-        : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          _palette(palette),
-          _ignoreGlobalColor(ignoreGlobalColor)
+                        const CRGBPalette16 &palette,
+                        bool ignoreGlobalColor = false,
+                        int ledCount = NUM_LEDS,
+                        int cellsPerLED = 1,
+                        int cooling = 20,         // Was 1.8 for NightDriverStrip
+                        int sparking = 100,
+                        int sparks = 3,
+                        int sparkHeight = 3,
+                        bool reversed = false,
+                        bool mirrored = false)
+    : FireEffect(strName, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+        _palette(palette),
+        _ignoreGlobalColor(ignoreGlobalColor)
     {
     }
 
     PaletteFlameEffect(const JsonObjectConst& jsonObject)
-      : FireEffect(jsonObject),
+    : FireEffect(jsonObject),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
     {
@@ -270,31 +270,31 @@ class PaletteFlameEffect : public FireEffect
 #if ENABLE_AUDIO
 class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 {
-  public:
+public:
 
     MusicalPaletteFire(const String & strName,
-                       const CRGBPalette16 &palette,
-                       bool ignoreGlobalColor = false,
-                       int ledCount = NUM_LEDS,
-                       int cellsPerLED = 1,
-                       int cooling = 20,         // Was 1.8 for NightDriverStrip
-                       int sparking = 100,
-                       int sparks = 3,
-                       int sparkHeight = 3,
-                       bool reversed = false,
-                       bool mirrored = false)
-        : PaletteFlameEffect(strName, palette, ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
-          BeatEffectBase(1.00, 0.01)
+                        const CRGBPalette16 &palette,
+                        bool ignoreGlobalColor = false,
+                        int ledCount = NUM_LEDS,
+                        int cellsPerLED = 1,
+                        int cooling = 20,         // Was 1.8 for NightDriverStrip
+                        int sparking = 100,
+                        int sparks = 3,
+                        int sparkHeight = 3,
+                        bool reversed = false,
+                        bool mirrored = false)
+    : PaletteFlameEffect(strName, palette, ignoreGlobalColor, ledCount, cellsPerLED, cooling, sparking, sparks, sparkHeight, reversed, mirrored),
+        BeatEffectBase(1.00, 0.01)
     {
     }
 
     MusicalPaletteFire(const JsonObjectConst& jsonObject)
-        : PaletteFlameEffect(jsonObject),
-          BeatEffectBase(1.00, 0.01)
+    : PaletteFlameEffect(jsonObject),
+        BeatEffectBase(1.00, 0.01)
     {
     }
 
-  protected:
+protected:
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
@@ -314,27 +314,27 @@ class MusicalPaletteFire : public PaletteFlameEffect, protected BeatEffectBase
 
 class ClassicFireEffect : public EffectWithId<ClassicFireEffect>
 {
-  private:
+private:
 
     bool _Mirrored;
     bool _Reversed;
     int  _Cooling;
 
-  public:
+public:
 
     ClassicFireEffect(bool mirrored = false, bool reversed = false, int cooling = 5)
-          : EffectWithId("Classic Fire"),
-          _Mirrored(mirrored),
-          _Reversed(reversed),
-          _Cooling(cooling)
+    : EffectWithId("Classic Fire"),
+        _Mirrored(mirrored),
+        _Reversed(reversed),
+        _Cooling(cooling)
     {
     }
 
     ClassicFireEffect(const JsonObjectConst& jsonObject)
-          : EffectWithId(jsonObject),
-          _Mirrored(jsonObject[PTY_MIRORRED]),
-          _Reversed(jsonObject[PTY_REVERSED]),
-          _Cooling(jsonObject[PTY_COOLING])
+    : EffectWithId(jsonObject),
+        _Mirrored(jsonObject[PTY_MIRORRED]),
+        _Reversed(jsonObject[PTY_REVERSED]),
+        _Cooling(jsonObject[PTY_COOLING])
     {
     }
 
@@ -448,7 +448,7 @@ class ClassicFireEffect : public EffectWithId<ClassicFireEffect>
 
 class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
 {
-  private:
+private:
 
     bool _Reversed;
     float _Cooling;
@@ -461,43 +461,43 @@ class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
 
     float * _Temperatures = nullptr;
 
-  public:
+public:
     // Parameter:   Cooling   Sparks    driftPasses  drift sparkHeight   Turbo
     // Calm Fire:     0.75f        2         1         64       8          F
     // Full Red:      0.75f        8         1        128      16          F
     // Good Video:    1.20f       64         1        128      12          F
 
     SmoothFireEffect(bool reversed = true,
-                     float cooling = 1.2f,
-                     int sparks = 16,
-                     int driftPasses = 1,
-                     float drift = 48,
-                     int sparkHeight = 12,
-                     bool turbo = false,
-                     bool mirrored = false)
+                    float cooling = 1.2f,
+                    int sparks = 16,
+                    int driftPasses = 1,
+                    float drift = 48,
+                    int sparkHeight = 12,
+                    bool turbo = false,
+                    bool mirrored = false)
 
-      : EffectWithId("Fire Sound Effect v2"),
-          _Reversed(reversed),
-          _Cooling(cooling),
-          _Sparks(sparks),
-          _Drift(drift),
-          _DriftPasses(driftPasses),
-          _SparkHeight(sparkHeight),
-          _Turbo(turbo),
-          _Mirrored(mirrored)
+    : EffectWithId("Fire Sound Effect v2"),
+        _Reversed(reversed),
+        _Cooling(cooling),
+        _Sparks(sparks),
+        _Drift(drift),
+        _DriftPasses(driftPasses),
+        _SparkHeight(sparkHeight),
+        _Turbo(turbo),
+        _Mirrored(mirrored)
     {
     }
 
     SmoothFireEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId(jsonObject),
-          _Reversed(jsonObject[PTY_REVERSED]),
-          _Cooling(jsonObject[PTY_COOLING]),
-          _Sparks(jsonObject[PTY_SPARKS]),
-          _Drift(jsonObject["dft"]),
-          _DriftPasses(jsonObject["dtp"]),
-          _SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
-          _Turbo(jsonObject["trb"]),
-          _Mirrored(jsonObject[PTY_MIRORRED])
+    : EffectWithId(jsonObject),
+        _Reversed(jsonObject[PTY_REVERSED]),
+        _Cooling(jsonObject[PTY_COOLING]),
+        _Sparks(jsonObject[PTY_SPARKS]),
+        _Drift(jsonObject["dft"]),
+        _DriftPasses(jsonObject["dtp"]),
+        _SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+        _Turbo(jsonObject["trb"]),
+        _Mirrored(jsonObject[PTY_MIRORRED])
     {
     }
 
@@ -563,9 +563,9 @@ class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
                 float c3 = c1;
 
                 _Temperatures[k] = _Temperatures[k] * c0 +
-                                   _Temperatures[k - 1] * c1 +
-                                   _Temperatures[k - 2] * c2 +
-                                   _Temperatures[k - 3] * c3;
+                                    _Temperatures[k - 1] * c1 +
+                                    _Temperatures[k - 2] * c2 +
+                                    _Temperatures[k - 3] * c3;
             }
         }
 
@@ -607,14 +607,14 @@ class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
 
 class BaseFireEffect : public EffectWithId<BaseFireEffect>
 {
-  private:
+private:
 
     void construct()
     {
         heat = std::make_unique<uint8_t []>(CellCount);
     }
 
-  protected:
+protected:
   
     int     Cooling;            // Rate at which the pixels cool off
     int     Sparks;             // How many sparks will be attempted each frame
@@ -638,16 +638,16 @@ class BaseFireEffect : public EffectWithId<BaseFireEffect>
 
     static const uint8_t BlendTotal = (BlendSelf + BlendNeighbor1 + BlendNeighbor2 + BlendNeighbor3);
 
-  public:
+public:
 
     BaseFireEffect(int ledCount, int cellsPerLED = 1, int cooling = 20, int sparking = 100, int sparks = 3, int sparkHeight = 4, bool breversed = false, bool bmirrored = false)
-          : EffectWithId("BaseFireEffect"),
-          Cooling(cooling),
-          Sparks(sparks),
-          SparkHeight(sparkHeight),
-          Sparking(sparking),
-          bReversed(breversed),
-          bMirrored(bmirrored)
+    : EffectWithId("BaseFireEffect"),
+        Cooling(cooling),
+        Sparks(sparks),
+        SparkHeight(sparkHeight),
+        Sparking(sparking),
+        bReversed(breversed),
+        bMirrored(bmirrored)
     {
         LEDCount = bMirrored ? ledCount / 2 : ledCount;
         CellCount = LEDCount * cellsPerLED;
@@ -656,15 +656,15 @@ class BaseFireEffect : public EffectWithId<BaseFireEffect>
     }
 
     BaseFireEffect(const JsonObjectConst& jsonObject)
-          : EffectWithId(jsonObject),
-          Cooling(jsonObject[PTY_COOLING]),
-          Sparks(jsonObject[PTY_SPARKS]),
-          SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
-          Sparking(jsonObject[PTY_SPARKING]),
-          bReversed(jsonObject[PTY_REVERSED]),
-          bMirrored(jsonObject[PTY_MIRORRED]),
-          LEDCount(jsonObject[PTY_LEDCOUNT]),
-          CellCount(jsonObject["clc"])
+    : EffectWithId(jsonObject),
+        Cooling(jsonObject[PTY_COOLING]),
+        Sparks(jsonObject[PTY_SPARKS]),
+        SparkHeight(jsonObject[PTY_SPARKHEIGHT]),
+        Sparking(jsonObject[PTY_SPARKING]),
+        bReversed(jsonObject[PTY_REVERSED]),
+        bMirrored(jsonObject[PTY_MIRORRED]),
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        CellCount(jsonObject["clc"])
     {
         construct();
     }
@@ -728,10 +728,10 @@ class BaseFireEffect : public EffectWithId<BaseFireEffect>
         // Next drift heat up and diffuse it a little bit
         for (int i = 0; i < CellCount; i++)
             heat[i] = min(255, (heat[i] * BlendSelf +
-                       heat[(i + 1) % CellCount] * BlendNeighbor1 +
-                       heat[(i + 2) % CellCount] * BlendNeighbor2 +
-                       heat[(i + 3) % CellCount] * BlendNeighbor3)
-                      / BlendTotal);
+                        heat[(i + 1) % CellCount] * BlendNeighbor1 +
+                        heat[(i + 2) % CellCount] * BlendNeighbor2 +
+                        heat[(i + 3) % CellCount] * BlendNeighbor3)
+                    / BlendTotal);
 
         // Randomly ignite new sparks down in the flame kernel
 

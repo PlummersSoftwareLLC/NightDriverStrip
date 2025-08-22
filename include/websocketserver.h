@@ -53,13 +53,13 @@ public:
         _colorDataSocket("/ws/frames"),
         _effectChangeSocket("/ws/effects")
     {
-        #if COLORDATA_WEB_SOCKET_ENABLED
+#if COLORDATA_WEB_SOCKET_ENABLED
         webServer.AddWebSocket(_colorDataSocket);
-        #endif
+#endif
 
-        #if EFFECTS_WEB_SOCKET_ENABLED
+#if EFFECTS_WEB_SOCKET_ENABLED
         webServer.AddWebSocket(_effectChangeSocket);
-        #endif
+#endif
     }
 
     void CleanupClients()

@@ -61,10 +61,10 @@ void LEDStripGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixel
     FastLED.show(g_Values.Fader); //Shows the pixels
 
     g_Values.FPS = FastLED.getFPS();
-    #ifdef POWER_LIMIT_MW
-        g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(g_ptrSystem->DeviceConfig().GetBrightness(), POWER_LIMIT_MW) / 255;
-    #else
-        g_Values.Brite = 100.0 * g_ptrSystem->DeviceConfig().GetBrightness() / 255;
-    #endif
+#ifdef POWER_LIMIT_MW
+    g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(g_ptrSystem->DeviceConfig().GetBrightness(), POWER_LIMIT_MW) / 255;
+#else
+    g_Values.Brite = 100.0 * g_ptrSystem->DeviceConfig().GetBrightness() / 255;
+#endif
     g_Values.Watts = calculate_unscaled_power_mW(effectManager.g()->leds, pixelsDrawn) / 1000; // 1000 for mw->W
 }

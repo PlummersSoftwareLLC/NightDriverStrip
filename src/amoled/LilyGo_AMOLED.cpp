@@ -549,7 +549,7 @@ bool LilyGo_AMOLED::beginAMOLED_147()
                 SAMPLING_X1_4
         */
         SensorCM32181::setSampling(SensorCM32181::SAMPLING_X2),
-                      powerOn();
+                    powerOn();
     }
 
     // Temperature detect

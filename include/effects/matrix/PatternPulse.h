@@ -60,7 +60,7 @@
 
 class PatternPulse : public EffectWithId<PatternPulse>
 {
-  private:
+private:
 
     int hue;
     int centerX = 0;
@@ -70,7 +70,7 @@ class PatternPulse : public EffectWithId<PatternPulse>
     float fadeRate = 0.90;
     int diff;
 
-  public:
+public:
 
     PatternPulse() : EffectWithId<PatternPulse>("Pulse") {}
     PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<PatternPulse>(jsonObject) {}
@@ -117,10 +117,10 @@ class PatternPulse : public EffectWithId<PatternPulse>
     }
 };
 class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> {
-  private:
+private:
     struct PulsePop
     {
-      public:
+    public:
 
         int hue = HUE_RED;
         int centerX = 0;
@@ -134,7 +134,7 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
     float fadeRate = 0.9;
     int diff;
 
-  public:
+public:
     PatternPulsar() :
         BeatEffectBase(1.5, 0.25 ),
     EffectWithId<PatternPulsar>("Pulsars")

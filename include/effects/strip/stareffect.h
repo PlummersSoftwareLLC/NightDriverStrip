@@ -42,7 +42,7 @@ const int starWidth = 1;
 
 class Star : public MovingFadingPaletteObject, public ObjectSize
 {
-  public:
+public:
 
     static int GetStarTypeNumber()
     {
@@ -55,15 +55,15 @@ class Star : public MovingFadingPaletteObject, public ObjectSize
     }
 
     Star(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
-        : MovingFadingPaletteObject(palette, blendType, maxSpeed),
-          ObjectSize(starSize)
+    : MovingFadingPaletteObject(palette, blendType, maxSpeed),
+        ObjectSize(starSize)
     {
     }
 };
 
 class RandomPaletteColorStar : public MovingFadingPaletteObject, public ObjectSize
 {
-  public:
+public:
 
     static int GetStarTypeNumber()
     {
@@ -76,15 +76,15 @@ class RandomPaletteColorStar : public MovingFadingPaletteObject, public ObjectSi
     }
 
     RandomPaletteColorStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
-        : MovingFadingPaletteObject(palette, blendType, maxSpeed, random(16)*16),
-          ObjectSize(starSize)
+    : MovingFadingPaletteObject(palette, blendType, maxSpeed, random(16)*16),
+        ObjectSize(starSize)
     {
     }
 };
 
 class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
 {
-  public:
+public:
 
     static int GetStarTypeNumber()
     {
@@ -97,8 +97,8 @@ class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
     }
 
     LongLifeSparkleStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
-        : MovingFadingPaletteObject(palette, blendType, maxSpeed),
-          ObjectSize(starSize)
+    : MovingFadingPaletteObject(palette, blendType, maxSpeed),
+        ObjectSize(starSize)
     {
     }
 
@@ -110,7 +110,7 @@ class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
 
 class ColorStar : public MovingFadingColoredObject, public ObjectSize
 {
-  public:
+public:
 
     static int GetStarTypeNumber()
     {
@@ -123,15 +123,15 @@ class ColorStar : public MovingFadingColoredObject, public ObjectSize
     }
 
     ColorStar(CRGB color, float maxSpeed = 1.0, float starSize = 1.0)
-        : MovingFadingColoredObject(color, maxSpeed),
-          ObjectSize(starSize)
+    : MovingFadingColoredObject(color, maxSpeed),
+        ObjectSize(starSize)
     {
     }
 };
 
 class QuietStar : public RandomPaletteColorStar
 {
-  public:
+public:
 
     static int GetStarTypeNumber()
     {
@@ -139,7 +139,7 @@ class QuietStar : public RandomPaletteColorStar
     }
 
     QuietStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 10.0, float starSize = 1)
-      : RandomPaletteColorStar(palette, blendType, maxSpeed, starSize)
+    : RandomPaletteColorStar(palette, blendType, maxSpeed, starSize)
     {}
 
     float PreignitionTime() const override { return 1.0f; }
@@ -152,10 +152,10 @@ class QuietStar : public RandomPaletteColorStar
 #if ENABLE_AUDIO
 class MusicStar : public Star
 {
-  public:
+public:
 
     MusicStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 2.0, float starSize = 1)
-      : Star(palette, blendType, maxSpeed, starSize)
+    : Star(palette, blendType, maxSpeed, starSize)
     {
     }
 
@@ -173,10 +173,10 @@ class MusicStar : public Star
 
 class MusicPulseStar : public Star
 {
-  public:
+public:
 
     MusicPulseStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 0.0, float size = 0.0)
-      : Star(palette, blendType, maxSpeed, size)
+    : Star(palette, blendType, maxSpeed, size)
     {
 
     }
@@ -199,14 +199,14 @@ class MusicPulseStar : public Star
 
 class BubblyStar : public Star
 {
-  protected:
+protected:
 
     int         _hue;
 
-  public:
+public:
 
     BubblyStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, float starSize = 12)
-      : Star(palette, blendType, maxSpeed, starSize)
+    : Star(palette, blendType, maxSpeed, starSize)
     {
         static float lastHue = 0;
         _hue        = lastHue;
@@ -238,7 +238,7 @@ class BubblyStar : public Star
 
 class FlashStar : public Star
 {
-  public:
+public:
 
     static int GetStarTypeNumber()
     {
@@ -253,14 +253,14 @@ class FlashStar : public Star
 
 class ColorCycleStar : public Star
 {
-  protected:
+protected:
 
     int         _brightness;
 
-  public:
+public:
 
     ColorCycleStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
-      : Star(palette, blendType, maxSpeed)
+    : Star(palette, blendType, maxSpeed)
     {
         _brightness = random_range(128,255);
     }
@@ -289,15 +289,15 @@ class ColorCycleStar : public Star
 
 class MultiColorStar : public Star
 {
-  protected:
+protected:
 
     uint8_t         _brightness;
     uint8_t         _hue;
 
-  public:
+public:
 
     MultiColorStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 2.0, int speedDivisor = 1)
-      : Star(palette, blendType, maxSpeed)
+    : Star(palette, blendType, maxSpeed)
     {
         _brightness = random_range(128,255);
         _hue        = random_range(0, 255);
@@ -327,10 +327,10 @@ class MultiColorStar : public Star
 
 class ChristmasLightStar : public Star
 {
-  public:
+public:
 
     ChristmasLightStar(const CRGBPalette16 & palette, TBlendType blendType, float maxSpeed = 0.0)
-      : Star(palette, blendType, maxSpeed, 1.0)
+    : Star(palette, blendType, maxSpeed, 1.0)
 
     {
         int iColor = random_range(0,255);
@@ -356,10 +356,10 @@ class ChristmasLightStar : public Star
 
 class HotWhiteStar : public Star
 {
-  public:
+public:
 
     HotWhiteStar(const CRGBPalette16 & palette, TBlendType blendType = LINEARBLEND, float maxSpeed = 0.0, float size = 0.0)
-      : Star(palette, blendType, maxSpeed, size)
+    : Star(palette, blendType, maxSpeed, size)
     {
     }
 
@@ -421,7 +421,7 @@ template <typename ObjectType> class BeatStarterEffect : public BeatEffectBase
 
 template <typename StarType> class StarryNightEffect : public EffectWithId<StarryNightEffect<StarType>>
 {
-  protected:
+protected:
 
     std::deque<StarType>         _allParticles;
     const CRGBPalette16         _palette;
@@ -433,7 +433,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<Starr
     float                       _musicFactor;
     CRGB                         _skyColor;
 
-  public:
+public:
 
     StarryNightEffect<StarType>(const String & strName,
                                 const CRGBPalette16& palette,
@@ -444,7 +444,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<Starr
                                 float blurFactor = 0.0,
                                 float musicFactor = 1.0,
                                 CRGB skyColor = CRGB::Black)
-      : EffectWithId<StarryNightEffect<StarType>>(strName),
+    : EffectWithId<StarryNightEffect<StarType>>(strName),
         _palette(palette),
         _newStarProbability(probability),
         _starSize(starSize),
@@ -457,7 +457,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<Starr
     }
 
     StarryNightEffect<StarType>(const JsonObjectConst& jsonObject)
-      : EffectWithId<StarryNightEffect<StarType>>(jsonObject),
+    : EffectWithId<StarryNightEffect<StarType>>(jsonObject),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         _newStarProbability(jsonObject["spb"]),
         _starSize(jsonObject[PTY_SIZE]),
@@ -502,7 +502,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<Starr
 
     virtual void CreateStars()
     {
-    #if ENABLE_AUDIO
+#if ENABLE_AUDIO
 
         for (int i = 0; i < cMaxNewStarsPerFrame; i++)
         {
@@ -523,7 +523,7 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<Starr
                 }
             }
         }
-    #endif
+#endif
     }
 
     virtual void Update()
@@ -564,15 +564,15 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<Starr
 
 template <typename StarType> class BlurStarEffect : public StarryNightEffect<StarType>
 {
-  public:
+public:
 
     BlurStarEffect<StarType>(const CRGBPalette16 & palette, float probability = 0.2, size_t starSize = 1, TBlendType blendType = LINEARBLEND, float maxSpeed = 20.0)
-        : StarryNightEffect<StarType>(palette, probability, starSize, blendType, maxSpeed)
+    : StarryNightEffect<StarType>(palette, probability, starSize, blendType, maxSpeed)
     {
     }
 
     BlurStarEffect<StarType>(const JsonObjectConst& jsonObject)
-        : StarryNightEffect<StarType>(jsonObject)
+    : StarryNightEffect<StarType>(jsonObject)
     {
     }
 
@@ -588,12 +588,12 @@ template <typename StarType> class BlurStarEffect : public StarryNightEffect<Sta
 
 class TwinkleStarEffect : public EffectWithId<TwinkleStarEffect>
 {
-  private:
+private:
 
-    #define NUM_TWINKLES 100
+#define NUM_TWINKLES 100
     int buffer[NUM_TWINKLES];
 
-  public:
+public:
 
     TwinkleStarEffect() : EffectWithId("Twinkle Star") {}
     TwinkleStarEffect(const JsonObjectConst& jsonObject) : EffectWithId(jsonObject) {}
