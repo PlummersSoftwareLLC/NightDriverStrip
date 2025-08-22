@@ -511,15 +511,20 @@ private:
             
             // Two-stage suppression: moderate suppression on first few bands, then quick recovery
             float suppression;
-            if (bandRatio < 0.1f) {  // First 10% of bands get moderate suppression
+            if (bandRatio < 0.1f) 
+            {  // First 10% of bands get moderate suppression
                 // Quadratic suppression for the very first bands (band 0 gets maximum suppression)
                 float localRatio = bandRatio / 0.1f;  // 0.0 to 1.0 over first 10% of spectrum
                 suppression = 0.005f + (0.05f - 0.005f) * (localRatio * localRatio);  // 0.005 to 0.05 (99.5% to 95% attenuation)
-            } else if (bandRatio < 0.4f) {  // Next 30% get moderate suppression with quick recovery
+            } 
+            else if (bandRatio < 0.4f) 
+            {  // Next 30% get moderate suppression with quick recovery
                 // Exponential recovery from 0.05 to bandCompHigh over bands 10-40%
                 float localRatio = (bandRatio - 0.1f) / 0.3f;  // 0.0 to 1.0 over 10-40% of spectrum
                 suppression = 0.05f * expf(localRatio * logf(_params.bandCompHigh / 0.05f));
-            } else {
+            } 
+            else 
+            {
                 // Full gain for upper 60% of spectrum
                 suppression = _params.bandCompHigh;
             }
@@ -605,11 +610,14 @@ private:
         {
             float vTarget = _vPeaks[b] * invEnv;
             vTarget = powf(std::max(0.0f, vTarget), _params.compressGamma);
-            if (vTarget > 1.0f) vTarget = 1.0f;
+            if (vTarget > 1.0f) 
+                vTarget = 1.0f;
             vTarget *= kDisplayGain;
-            if (vTarget > 1.0f) vTarget = 1.0f;
+            if (vTarget > 1.0f) 
+                vTarget = 1.0f;
             const float bandFloor = std::max(kBandFloorMin, kBandFloorScale);
-            if (vTarget < bandFloor) { vTarget = 0.0f; }
+            if (vTarget < bandFloor)
+                vTarget = 0.0f;
             float vCurr = _livePeaks[b];
             float vNew = vTarget;
             if (vTarget > vCurr)
@@ -617,8 +625,10 @@ private:
                 const float maxRise = kLiveAttackPerSec * dt;
                 vNew = vCurr + std::min(vTarget - vCurr, maxRise);
             }
-            if (vNew > 1.0f) vNew = 1.0f;
-            if (vNew < 0.0f) vNew = 0.0f;
+            if (vNew > 1.0f) 
+                vNew = 1.0f;
+            if (vNew < 0.0f) 
+                vNew = 0.0f;
             _livePeaks[b] = vNew;
             _vPeaks[b] = vNew;
             _Peaks[b] = vNew;
@@ -847,7 +857,8 @@ public:
 #else
 
         // This block is for TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other projects that
-        // use an analog mic connected to the input pin.
+        // use an analog mic connected to the input pin.  It does the actual audio sampling using
+        // the ADC of the ESP32 itself, rather than being in I2S format as with the digital mics.
         
         static_assert(SOC_I2S_SUPPORTS_ADC, "This ESP32 model does not support ADC built-in mode");
 
@@ -888,7 +899,8 @@ public:
     {
         // Use reciprocal of AudioFPS for frame-rate independent decay timing
         float audioFrameTime = (_AudioFPS > 0) ? (1.0f / (float)_AudioFPS) : 0.016f;
-        if (audioFrameTime <= 0.0f || audioFrameTime > 0.1f) audioFrameTime = 0.016f;
+        if (audioFrameTime <= 0.0f || audioFrameTime > 0.1f) 
+            audioFrameTime = 0.016f;
         
         float decayAmount1 = std::max(0.0f, audioFrameTime * _peak1DecayRate);
         float decayAmount2 = std::max(0.0f, audioFrameTime * _peak2DecayRate);
@@ -911,15 +923,13 @@ public:
         {
             if (_Peaks[i] > _peak1Decay[i])
             {
-                const float maxIncrease =
-                    std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate * VU_REACTIVITY_RATIO);
+                const float maxIncrease = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate * VU_REACTIVITY_RATIO);
                 _peak1Decay[i] = std::min(_Peaks[i], _peak1Decay[i] + maxIncrease);
                 _lastPeak1Time[i] = millis();
             }
             if (_Peaks[i] > _peak2Decay[i])
             {
-                const float maxIncrease =
-                    std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak2DecayRate * VU_REACTIVITY_RATIO);
+                const float maxIncrease = std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak2DecayRate * VU_REACTIVITY_RATIO);
                 _peak2Decay[i] = std::min(_Peaks[i], _peak2Decay[i] + maxIncrease);
             }
         }
@@ -937,24 +947,6 @@ public:
         UpdateVU(sum / NUM_BANDS);
     }
 
-#if ENABLE_AUDIO_DEBUG
-    // Print per-band [start-end] bin ranges over Serial for debugging.
-    // Useful to verify spacing and coverage with current config.
-
-    void DumpBandLayout() const
-    {
-        Serial.println("Band layout (start-end):");
-        for (int b = 0; b < NUM_BANDS; b++)
-        {
-            Serial.print(b);
-            Serial.print(": ");
-            Serial.print(_bandBinStart[b]);
-            Serial.print('-');
-            Serial.println(_bandBinEnd[b]);
-        }
-    }
-#endif
-
     //
     // RunSamplerPass
     //
@@ -964,11 +956,12 @@ public:
 
     // Perform one audio acquisition/processing step.
     // Simplified - no runtime microphone switching needed
+    
     inline void RunSamplerPass()
     {
         if (millis() - _msLastRemoteAudio > AUDIO_PEAK_REMOTE_TIMEOUT)
         {
-            // Use local microphone - type determined at compile time
+            // Use local microphone data
             Reset();
             SampleAudio();
             FFT();

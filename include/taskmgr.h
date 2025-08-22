@@ -385,7 +385,11 @@ public:
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show
     
-    TaskHandle_t StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority = NET_PRIORITY, BaseType_t core = NET_CORE)
+    TaskHandle_t StartEffectThread(EffectTaskFunction function, 
+                                   LEDStripEffect* pEffect, 
+                                   const char* name, 
+                                   UBaseType_t priority = NET_PRIORITY, 
+                                   BaseType_t core = NET_CORE)
     {
         // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method
         //   deletes the object as soon as it can.

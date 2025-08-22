@@ -673,23 +673,58 @@ public:
 //
 // Portability notes
 // - The __PRETTY_FUNCTION__ path is selected for GCC/Clang (our toolchains).
-//   The fallback to __func__ is provided for other compilers; if that path is
-//   ever used and uniqueness becomes a concern, consider a different token
-//   source (e.g., a user-defined type tag string) or upgrading to a 64-bit hash.
+//   The fallback to __func__ is provided for other compilers
 // ---------------------------------------------------------------------------
+
+#ifndef EFFECT_ID_DEBUG
+#define EFFECT_ID_DEBUG 0
+#endif
+
 namespace _effect_id_detail {
-    // 32-bit FNV-1a hash for compile-time friendly hashing
-    constexpr uint32_t fnv1a32(const char* str) {
+    
+    constexpr uint32_t fnv1a32(const char* str)                 // 32-bit FNV-1a hash for compile-time friendly hashing
+    {
         uint32_t hash = 2166136261u;
-        while (*str) {
+        while (*str) 
+        {
             hash ^= static_cast<uint8_t>(*str++);
             hash *= 16777619u;
         }
         return hash;
     }
 
+    template <typename T>                                       // Return the compiler-provided token string used for hashing
+    inline const char* type_token_cstr() {
+#if defined(__GNUC__) || defined(__clang__)
+        return __PRETTY_FUNCTION__;
+#else
+        return __func__;
+#endif
+    }
+    
+    template <typename T>                                       // Compute the hash at runtime (for debugging/printing)
+    inline uint32_t runtime_token_hash() {
+        return fnv1a32(type_token_cstr<T>());
+    }
+
+    template <typename T>                                       // Optional one-time debug print of the token string and hash
+    inline void debug_log_type_token_once() {
+#if EFFECT_ID_DEBUG
+        static bool logged = false;
+        if (!logged) {
+            logged = true;
+            const char* token = type_token_cstr<T>();
+            const uint32_t h = runtime_token_hash<T>();
+            // Print both the raw token string and the resulting hash used as the EffectId
+            debugI("Effect ID token string: %s", token);
+            debugI("Effect ID hash: 0x%08lx", static_cast<unsigned long>(h));
+        }
+#endif
+    }
+
     template <typename T>
-    constexpr EffectId token_id_for_type() {
+    constexpr EffectId token_id_for_type() 
+    {
         // Use compiler-provided pretty function string that includes the type name
         // This yields a stable token as long as the type's name doesn't change.
 #if defined(__GNUC__) || defined(__clang__)
@@ -701,6 +736,7 @@ namespace _effect_id_detail {
 }
 
 // CRTP helper: derive as EffectWithId<Derived> to auto-provide a unique, stable ID per type
+
 template<typename TDerived>
 class EffectWithId : public LEDStripEffect
 {
@@ -717,6 +753,10 @@ public:
 
     EffectId effectId() const override
     {
+#if EFFECT_ID_DEBUG
+    // Log the token string and hash once per type at first use
+    _effect_id_detail::debug_log_type_token_once<TDerived>();
+#endif
         return ID;
     }
 };

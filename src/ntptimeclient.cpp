@@ -184,7 +184,7 @@ void NTPTimeClient::ShowUptime()
         case ESP_RST_DEEPSLEEP: reason_text = "Reset in deep sleep"; break;
         case ESP_RST_BROWNOUT: reason_text = "Brownout"; break;
         case ESP_RST_SDIO: reason_text = "Reset over SDIO"; break;
-    // Documented,  but not defined in ESP-IDF esp_system.h (v5.1.0) yet.
+        // Documented,  but not defined in ESP-IDF esp_system.h (v5.1.0) yet.
         // case ESP_RST_USB: reason_text = "Reset by USB peripheral"; break;
     default: reason_text = "Unknown"; break;
     }
