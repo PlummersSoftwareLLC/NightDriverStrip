@@ -889,7 +889,7 @@ class SparklySpinningMusicEffect : public EffectWithId<SparklySpinningMusicEffec
 private:
   
     int  _iLastInsulator = 0;
-CRGBPalette16 _Palette;
+    const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
 
 public:
