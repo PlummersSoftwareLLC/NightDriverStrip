@@ -371,6 +371,18 @@ make_unique_psram(size_t size)
     return std::unique_ptr<T>(ptr);
 }
 
+// Overload for 2D arrays
+template<typename T>
+std::enable_if_t<std::rank<T>::value == 2, std::unique_ptr<T>>
+make_unique_psram()
+{
+    using U = typename std::remove_all_extents<T>::type;
+    size_t size = std::extent<T, 0>::value * std::extent<T, 1>::value;
+    psram_allocator<U> allocator;
+    U* ptr = allocator.allocate(size);
+    return std::unique_ptr<T>(reinterpret_cast<T*>(ptr));
+}
+
 // make_shared_psram
 //
 // Same as std::make_shared except allocates preferentially from the PSRAM pool
