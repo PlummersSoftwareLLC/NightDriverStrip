@@ -77,12 +77,12 @@ void LEDMatrixGFX::PrepareFrame()
     EVERY_N_MILLIS(MILLIS_PER_FRAME)
     {
 
-        #if SHOW_FPS_ON_MATRIX
-            backgroundLayer.setFont(gohufont11);
-            // 3 is half char width at curret font size, 5 is half the height.
-            string output = "FPS: " + std::to_string(g_Values.FPS);
-            backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
-        #endif
+#if SHOW_FPS_ON_MATRIX
+        backgroundLayer.setFont(gohufont11);
+        // 3 is half char width at curret font size, 5 is half the height.
+        string output = "FPS: " + std::to_string(g_Values.FPS);
+        backgroundLayer.drawString(MATRIX_WIDTH / 2 - (3 * output.length()), MATRIX_HEIGHT / 2 - 5, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
+#endif
 
         auto graphics = g_ptrSystem->EffectManager().g();
 

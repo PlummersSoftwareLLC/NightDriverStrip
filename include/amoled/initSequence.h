@@ -61,4 +61,3 @@ extern const lcd_cmd_t jd9613_cmd[JD9613_INIT_SEQUENCE_LENGHT];
 
 
 
-

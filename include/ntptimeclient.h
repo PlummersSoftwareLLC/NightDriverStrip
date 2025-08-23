@@ -48,7 +48,7 @@ class NTPTimeClient
     static bool        _bClockSet;
     static std::mutex  _clockMutex;
 
-  public:
+public:
 
     NTPTimeClient()
     = default;
@@ -62,7 +62,6 @@ class NTPTimeClient
 
     static void ShowUptime();
 };
-
 
 
 

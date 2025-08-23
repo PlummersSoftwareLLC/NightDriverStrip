@@ -194,9 +194,8 @@ using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
 template <class T>
 constexpr EffectId effect_id_of_type() {
-    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,
-                  "Type must derive from EffectWithId<Id>");
-    return remove_cvref_t<T>::ID;   // compile-time constant
+    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>, "Type must derive from LEDStripEffect");
+    return remove_cvref_t<T>::ID;   
 }
 
 // --- Macro-free helpers for concise, type-safe effect registration ---
@@ -221,7 +220,7 @@ template<typename TStar, typename... Args>
 inline EffectFactories::NumberedFactory& AddStarryNightEffect(EffectFactories& factories, Args&&... args)
 {
     return factories.AddEffect(
-        idStripStarryNight,
+    effect_id_of_type<StarryNightEffect<TStar>>(),
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<TStar>>(args...); },
         [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); }
     );

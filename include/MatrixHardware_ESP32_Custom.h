@@ -55,9 +55,9 @@
     // #pragma message "MatrixHardware: Custom Wrover Kit wiring"
 
     // ADDX is output directly using GPIO
-    #define CLKS_DURING_LATCH   0 
-    #define MATRIX_I2S_MODE I2S_PARALLEL_BITS_16
-    #define MATRIX_DATA_STORAGE_TYPE uint16_t
+#define CLKS_DURING_LATCH   0 
+#define MATRIX_I2S_MODE I2S_PARALLEL_BITS_16
+#define MATRIX_DATA_STORAGE_TYPE uint16_t
 
     /*
     HUB 75
@@ -114,25 +114,25 @@
     #define CLK_PIN GPIO_NUM_2
     */
 
-    #define R1_PIN  GPIO_NUM_2                  
-    #define G1_PIN  GPIO_NUM_0                  
-    #define B1_PIN  GPIO_NUM_32                 
-    #define R2_PIN  GPIO_NUM_25                 
-    #define G2_PIN  GPIO_NUM_33                 
-    #define B2_PIN  GPIO_NUM_27                 
-    #define A_PIN   GPIO_NUM_5                  
-    #define B_PIN   GPIO_NUM_4                  
-    #define C_PIN   GPIO_NUM_19                 
-    #define D_PIN   GPIO_NUM_18                 
-    #define E_PIN   GPIO_NUM_26                 
-    #define LAT_PIN GPIO_NUM_21                 
-    #define OE_PIN  GPIO_NUM_23                 
-    #define CLK_PIN GPIO_NUM_22                 
+#define R1_PIN  GPIO_NUM_2                  
+#define G1_PIN  GPIO_NUM_0                  
+#define B1_PIN  GPIO_NUM_32                 
+#define R2_PIN  GPIO_NUM_25                 
+#define G2_PIN  GPIO_NUM_33                 
+#define B2_PIN  GPIO_NUM_27                 
+#define A_PIN   GPIO_NUM_5                  
+#define B_PIN   GPIO_NUM_4                  
+#define C_PIN   GPIO_NUM_19                 
+#define D_PIN   GPIO_NUM_18                 
+#define E_PIN   GPIO_NUM_26                 
+#define LAT_PIN GPIO_NUM_21                 
+#define OE_PIN  GPIO_NUM_23                 
+#define CLK_PIN GPIO_NUM_22                 
 
 //#define DEBUG_PINS_ENABLED
 //#define DEBUG_1_GPIO    GPIO_NUM_13
 //#define DEBUG_2_GPIO    GPIO_NUM_12
 
 #else
-    #pragma GCC error "Multiple MatrixHardware*.h files included"
+#pragma GCC error "Multiple MatrixHardware*.h files included"
 #endif

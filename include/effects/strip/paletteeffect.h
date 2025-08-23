@@ -32,9 +32,9 @@
 
 #include "effects.h"
 
-class PaletteEffect : public EffectWithId<idStripPalette>
+class PaletteEffect : public EffectWithId<PaletteEffect>
 {
-  private:
+private:
 
     float _startIndex;
     float _paletteIndex;
@@ -48,18 +48,18 @@ class PaletteEffect : public EffectWithId<idStripPalette>
     const bool  _bErase;
     const float _brightness;
 
-  public:
+public:
 
     PaletteEffect(const CRGBPalette16 & palette,
-                  float density = 1.0,
-                  float paletteSpeed = 1,
-                  float ledsPerSecond = 0,
-                  float lightSize = 1,
-                  float gapSize = 1,
-                  TBlendType blend = LINEARBLEND,
-                  bool  bErase = true,
-                  float brightness = 1.0)
-      : EffectWithId<idStripPalette>("Palette Effect"),
+                float density = 1.0,
+                float paletteSpeed = 1,
+                float ledsPerSecond = 0,
+                float lightSize = 1,
+                float gapSize = 1,
+                TBlendType blend = LINEARBLEND,
+                bool  bErase = true,
+                float brightness = 1.0)
+    : EffectWithId("Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),
@@ -75,7 +75,7 @@ class PaletteEffect : public EffectWithId<idStripPalette>
     }
 
     PaletteEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripPalette>(jsonObject),
+    : EffectWithId(jsonObject),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
@@ -113,7 +113,7 @@ class PaletteEffect : public EffectWithId<idStripPalette>
     void Draw() override
     {
         if (_bErase)
-          setAllOnAllChannels(0,0,0);
+        setAllOnAllChannels(0,0,0);
 
         float deltaTime = g_Values.AppTime.LastFrameTime();
         float increment = (deltaTime * _LEDSPerSecond);
@@ -129,30 +129,30 @@ class PaletteEffect : public EffectWithId<idStripPalette>
 
         if (_gapSize == 0)
         {
-          for (int i = 0; i < _cLEDs; i+=_lightSize)
-          {
+        for (int i = 0; i < _cLEDs; i+=_lightSize)
+        {
             iColor = fmodf(iColor + _density, 256);
             setPixelsOnAllChannels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 * _brightness, _blend), false);
-          }
+        }
         }
         else
         {
           // Start far enough "back" to have one off-strip light and gap, and then we need to draw at least as far as the last light.
           // This prevents sticks of light from "appearing" or "disappearing" at the ends
 
-          for (float i = 0-totalSize; i < _cLEDs+_lightSize; i++)
-          {
+        for (float i = 0-totalSize; i < _cLEDs+_lightSize; i++)
+        {
               // We look for each pixel where we cross an even multiple of the light+gap size, which means it's time to start the drawing
               // of the light here
 
-              iColor = fmodf(iColor + _density, 256);
-              int index = fmodf(i, totalSize);
-              if (index == 0)
-              {
-                  CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness, _blend);
-                  setPixelsOnAllChannels(i+_startIndex, _lightSize, c,false);
-              }
-          }
+            iColor = fmodf(iColor + _density, 256);
+            int index = fmodf(i, totalSize);
+            if (index == 0)
+            {
+                CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness, _blend);
+                setPixelsOnAllChannels(i+_startIndex, _lightSize, c,false);
+            }
+        }
         }
     }
 };

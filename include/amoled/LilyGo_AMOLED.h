@@ -261,7 +261,7 @@ enum AmoledBoardID {
     LILYGO_AMOLED_UNKOWN,
 };
 
-class LilyGo_AMOLED:
+class LilyGo_AMOLED : 
     public LilyGo_Display,
     public XPowersAXP2101,
     public TouchDrvCHSC5816,
@@ -353,4 +353,3 @@ private:
 #ifndef LilyGo_Class
 #define LilyGo_Class LilyGo_AMOLED
 #endif
-

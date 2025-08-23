@@ -112,16 +112,16 @@
 #define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
 #ifndef USE_HUB75                   // We support strips by default unless specifically defined out
-    #ifndef USE_WS281X
-        #define USE_WS281X 1
-    #endif
+#ifndef USE_WS281X
+#define USE_WS281X 1
+#endif
 #endif
 
 #define XSTR(x) STR(x)              // The defs will generate the stringized version of it
 #if FLASH_VERSION > 99
-    #define STR(x) "v"#x
+#define STR(x) "v"#x
 #else
-    #define STR(x) "v0"#x
+#define STR(x) "v0"#x
 #endif
 #define FLASH_VERSION_NAME_X(x) "v"#x
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
@@ -147,7 +147,7 @@
 // with one (but it doesn't have to be used!).
 
 #if M5STICKC || M5STICKCPLUS || M5STACKCORE2 || M5STICKCPLUS2
-    #define USE_M5 1
+#define USE_M5 1
 #endif
 
 
@@ -221,58 +221,58 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     // This can be done once you know how `platformio.ini` and `globals.h` interact with one another
     // to create different environments and projects.
 
-    #include "custom_globals.h"
+#include "custom_globals.h"
 
 #endif
 // This is a simple demo configuration used when no other project is defined; it's only purpose is
 // to serve as a build to be run for [all-deps]
 
 #ifndef MATRIX_WIDTH
-    #define MATRIX_WIDTH            144
+#define MATRIX_WIDTH            144
 #endif
 #ifndef MATRIX_HEIGHT
-    #define MATRIX_HEIGHT           8
+#define MATRIX_HEIGHT           8
 #endif
 #ifndef NUM_LEDS
-    #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
+#define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
 #endif
 #ifndef NUM_CHANNELS
-    #define NUM_CHANNELS            1
+#define NUM_CHANNELS            1
 #endif
 #ifndef NUM_RINGS
-    #define NUM_RINGS               1
+#define NUM_RINGS               1
 #endif
 #ifndef RING_SIZE_0
-    #define RING_SIZE_0             MATRIX_WIDTH
+#define RING_SIZE_0             MATRIX_WIDTH
 #endif
 
 // Once you have a working project, selectively enable various additional features by setting
 // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
 #ifndef ENABLE_AUDIO
-    #define ENABLE_AUDIO            0
+#define ENABLE_AUDIO            0
 #endif
 #ifndef ENABLE_WIFI
-    #define ENABLE_WIFI             1   // Connect to WiFi
+#define ENABLE_WIFI             1   // Connect to WiFi
 #endif
 #ifndef INCOMING_WIFI_ENABLED
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+#define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
 #endif
 #ifndef TIME_BEFORE_LOCAL
-    #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
+#define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
 #endif
 #ifndef ENABLE_NTP
-    #define ENABLE_NTP              1   // Set the clock from the web
+#define ENABLE_NTP              1   // Set the clock from the web
 #endif
 #ifndef ENABLE_OTA
-    #define ENABLE_OTA              1
+#define ENABLE_OTA              1
 #endif
 #ifndef ENABLE_WEBSERVER
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+#define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 #endif
 
 #ifndef LED_PIN0
-    #define LED_PIN0         5
+#define LED_PIN0         5
 #endif
 
 #ifndef PROJECT_NAME
@@ -287,8 +287,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #if ENABLE_AUDIOSERIAL
 #ifndef SERIAL_PINRX
-    #define SERIAL_PINRX    33
-    #define SERIAL_PINTX    32
+#define SERIAL_PINRX    33
+#define SERIAL_PINTX    32
 #endif
 #endif
 
@@ -306,11 +306,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef MAX_BUFFERS
-    #if USE_PSRAM
-        #define MAX_BUFFERS             500
-    #else
-        #define MAX_BUFFERS             24
-    #endif
+#if USE_PSRAM
+#define MAX_BUFFERS             500
+#else
+#define MAX_BUFFERS             24
+#endif
 #endif
 
 #ifndef ENABLE_WEBSERVER
@@ -318,9 +318,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #if ENABLE_WEBSERVER
-    #ifndef ENABLE_WEB_UI
-    #define ENABLE_WEB_UI           1   // Enable HTTP pathnames for the web UI
-    #endif
+#ifndef ENABLE_WEB_UI
+#define ENABLE_WEB_UI           1   // Enable HTTP pathnames for the web UI
+#endif
 #endif
 
 #ifndef ENABLE_OTA
@@ -345,24 +345,24 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #if ENABLE_AUDIO
-    #ifndef NUM_BANDS              // How many bands in the spectrum analyzer
-        #define NUM_BANDS 16
-    #endif
-    #ifndef AUDIO_PEAK_REMOTE_TIMEOUT
-        #define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
-    #endif
-    #ifndef ENABLE_AUDIO_SMOOTHING
-        #define ENABLE_AUDIO_SMOOTHING 1
-    #endif
-    #ifndef BARBEAT_ENHANCE
-        #define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
-    #endif
-    #ifndef SPECTRUMBARBEAT_ENHANCE
-        #define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
-    #endif
-    #ifndef VU_REACTIVITY_RATIO
-        #define VU_REACTIVITY_RATIO 10.0                // How much the VU meter reacts to the music going up vs down
-    #endif
+#ifndef NUM_BANDS              // How many bands in the spectrum analyzer
+#define NUM_BANDS 16
+#endif
+#ifndef AUDIO_PEAK_REMOTE_TIMEOUT
+#define AUDIO_PEAK_REMOTE_TIMEOUT 1000.0f       // How long after remote PeakData before local microphone is used again
+#endif
+#ifndef ENABLE_AUDIO_SMOOTHING
+#define ENABLE_AUDIO_SMOOTHING 1
+#endif
+#ifndef BARBEAT_ENHANCE
+#define BARBEAT_ENHANCE 0.3                     // How much the SpectrumAnalyzer "pulses" with the music
+#endif
+#ifndef SPECTRUMBARBEAT_ENHANCE
+#define SPECTRUMBARBEAT_ENHANCE 0.75            // How much the SpectrumBar effect "pulses" with the music
+#endif
+#ifndef VU_REACTIVITY_RATIO
+#define VU_REACTIVITY_RATIO 10.0                // How much the VU meter reacts to the music going up vs down
+#endif
 #endif
 
 #ifndef NUM_RINGS               // How many rings in each tree/insulator/etc
@@ -424,11 +424,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef RESERVE_MEMORY
-  #ifdef USE_PSRAM
-    #define RESERVE_MEMORY 1000000
-  #else
-    #define RESERVE_MEMORY 150000
-  #endif
+#ifdef USE_PSRAM
+#define RESERVE_MEMORY 1000000
+#else
+#define RESERVE_MEMORY 150000
+#endif
 #endif
 
 #ifndef TIME_BEFORE_LOCAL
@@ -471,60 +471,60 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #if USE_SCREEN
 
-    #if ARDUINO_HELTEC_WIFI_KIT_32
+#if ARDUINO_HELTEC_WIFI_KIT_32
                         // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
-        #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
-        #if !(USE_SSD1306)
-            #define NUM_INFO_PAGES 1        // Only display "BasicInfoSummary" if not SSD1306
-        #endif
+#define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
+#if !(USE_SSD1306)
+#define NUM_INFO_PAGES 1        // Only display "BasicInfoSummary" if not SSD1306
+#endif
 
-    #elif USE_M5                                        // screen definitions for m5stick-c-plus
+#elif USE_M5                                        // screen definitions for m5stick-c-plus
 
-        #define USE_M5DISPLAY 1                               // enable the M5's LCD screen
+#define USE_M5DISPLAY 1                               // enable the M5's LCD screen
 
-    #elif USE_TFTSPI || ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
+#elif USE_TFTSPI || ESP32FEATHERTFT || PANLEE || LILYGOTDISPLAYS3
 
-        #define USE_TFTSPI 1                                  // Use TFT_eSPI
+#define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif WROVERKIT || SPECTRUM_WROVER_KIT
+#elif WROVERKIT || SPECTRUM_WROVER_KIT
 
-        #define USE_LCD 1                                      // Use the ILI9341 onboard
+#define USE_LCD 1                                      // Use the ILI9341 onboard
 
-    #elif TTGO
+#elif TTGO
 
-        #define USE_TFTSPI 1                                  // Use TFT_eSPI
+#define USE_TFTSPI 1                                  // Use TFT_eSPI
 
-    #elif ELECROW
+#elif ELECROW
 
         // Implies ElecrowScreen
 
-    #elif AMOLED_S3
+#elif AMOLED_S3
 
         // Implicitly uses LilyGoScreen3
 
-    #else                                                     // unsupported board defined in platformio
-        #error Unknown Display! Check platformio.ini board definition.
-    #endif
+#else                                                     // unsupported board defined in platformio
+#error Unknown Display! Check platformio.ini board definition.
+#endif
 
 #endif // end USE_SCREEN
 
 #if USE_LCD
     // These pins are based on the Espressif WROVER-KIT, which uses an ILI9314 chipset for its display
     // connected as follows:
-    #define TFT_CS      22
-    #define TFT_DC      21
-    #define TFT_MOSI    23
-    #define TFT_SCK     19
-    #define TFT_RST     18
-    #define TFT_MISO    25
-    #define TFT_WIDTH   240
-    #define TFT_HEIGHT  320
+#define TFT_CS      22
+#define TFT_DC      21
+#define TFT_MOSI    23
+#define TFT_SCK     19
+#define TFT_RST     18
+#define TFT_MISO    25
+#define TFT_WIDTH   240
+#define TFT_HEIGHT  320
 #endif
 
 #if AMOLED_S3
-    #define TFT_WIDTH   240
-    #define TFT_HEIGHT  536
+#define TFT_WIDTH   240
+#define TFT_HEIGHT  536
 #endif
 
 
@@ -582,22 +582,22 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 //   pio run --target upload -e lilygo-tdisplay-s3-demo
 
 #if USE_ALL_NETWORKING
-    #undef ENABLE_WIFI
-    #define ENABLE_WIFI             1   // Connect to WiFi
+#undef ENABLE_WIFI
+#define ENABLE_WIFI             1   // Connect to WiFi
 
-    #undef INCOMING_WIFI_ENABLED
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
-    #undef ENABLE_NTP
-    #define ENABLE_NTP              1   // Set the clock from the web
+#undef INCOMING_WIFI_ENABLED
+#define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+#undef ENABLE_NTP
+#define ENABLE_NTP              1   // Set the clock from the web
 
-    #undef ENABLE_OTA
-    #define ENABLE_OTA              1
+#undef ENABLE_OTA
+#define ENABLE_OTA              1
 
-    #undef ENABLE_WEBSERVER
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+#undef ENABLE_WEBSERVER
+#define ENABLE_WEBSERVER        1   // Turn on the internal webserver
 
-    #undef ENABLE_WEB_UI
-    #define ENABLE_WEB_UI           1   // Enable HTTP pathnames for the web UI
+#undef ENABLE_WEB_UI
+#define ENABLE_WEB_UI           1   // Enable HTTP pathnames for the web UI
 #endif
 
 // Common globals
@@ -610,7 +610,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 extern DRAM_ATTR const int g_aRingSizeTable[];
 
 #ifndef MICROS_PER_SECOND
-    #define MICROS_PER_SECOND 1000000
+#define MICROS_PER_SECOND 1000000
 #endif
 
 #define MILLIS_PER_SECOND   1000
@@ -633,27 +633,27 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #endif
 
 #ifndef COLORDATA_SERVER_ENABLED
-  #if ENABLE_WIFI
-    #define COLORDATA_SERVER_ENABLED 1
-  #else
-    #define COLORDATA_SERVER_ENABLED 0
-  #endif
+#if ENABLE_WIFI
+#define COLORDATA_SERVER_ENABLED 1
+#else
+#define COLORDATA_SERVER_ENABLED 0
+#endif
 #endif
 
 #ifndef COLORDATA_WEB_SOCKET_ENABLED
-  #if ENABLE_WIFI && ENABLE_WEBSERVER && COLORDATA_SERVER_ENABLED
-    #define COLORDATA_WEB_SOCKET_ENABLED 1
-  #else
-    #define COLORDATA_WEB_SOCKET_ENABLED 0
-  #endif
+#if ENABLE_WIFI && ENABLE_WEBSERVER && COLORDATA_SERVER_ENABLED
+#define COLORDATA_WEB_SOCKET_ENABLED 1
+#else
+#define COLORDATA_WEB_SOCKET_ENABLED 0
+#endif
 #endif
 
 #ifndef EFFECTS_WEB_SOCKET_ENABLED
-  #if ENABLE_WIFI && ENABLE_WEBSERVER
-    #define EFFECTS_WEB_SOCKET_ENABLED 1
-  #else
-    #define EFFECTS_WEB_SOCKET_ENABLED 0
-  #endif
+#if ENABLE_WIFI && ENABLE_WEBSERVER
+#define EFFECTS_WEB_SOCKET_ENABLED 1
+#else
+#define EFFECTS_WEB_SOCKET_ENABLED 0
+#endif
 #endif
 
 // Microphone
@@ -661,20 +661,20 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 // The M5 mic is on Pin34, but when I wire up my own microphone module I usually put it on pin 36.
 
 #if ENABLE_AUDIO
-    #ifndef INPUT_PIN
-        #if TTGO
-            #define INPUT_PIN (36)
-        #elif ELECROW
-            #define INPUT_PIN (41)
-        #elif USE_M5
-            #define INPUT_PIN (34)
-            #define IO_PIN (0)
-        #else
-            #define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
-        #endif
-    #endif
+#ifndef INPUT_PIN
+#if TTGO
+#define INPUT_PIN (36)
+#elif ELECROW
+#define INPUT_PIN (41)
+#elif USE_M5
+#define INPUT_PIN (34)
+#define IO_PIN (0)
 #else
-    #define INPUT_PIN 0
+#define INPUT_PIN (36)    // Audio line input, ADC #1, input line 0 (GPIO pin 36)
+#endif
+#endif
+#else
+#define INPUT_PIN 0
 #endif
 
 #ifndef IR_REMOTE_PIN
@@ -684,18 +684,18 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 // Set and use for I2S input.
 #if USE_I2S_AUDIO_PINS || ELECROW
   // Bit clock
-  #ifndef I2S_BCLK_PIN
-    #define I2S_BCLK_PIN   39
-  #endif
+#ifndef I2S_BCLK_PIN
+#define I2S_BCLK_PIN   39
+#endif
 
   // Word select clock.
-  #ifndef I2S_WS_PIN
-    #define I2S_WS_PIN     38
-  #endif
+#ifndef I2S_WS_PIN
+#define I2S_WS_PIN     38
+#endif
 
-  #ifndef I2S_DATA_PIN
-    #define I2S_DATA_PIN     INPUT_PIN
-  #endif
+#ifndef I2S_DATA_PIN
+#define I2S_DATA_PIN     INPUT_PIN
+#endif
 #endif
 
 
@@ -844,12 +844,12 @@ inline uint16_t WORDFromMemory(const uint8_t * payloadData)
 
 inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 {
-   if (fd < 0) return false;
+    if (fd < 0) return false;
 
-   int flags = fcntl(fd, F_GETFL, 0);
-   if (flags == -1) return false;
-   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) return false;
+    flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+    return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
 }
 
 // formatSize
@@ -929,13 +929,13 @@ inline auto accumulate(const Range& r)
 #include "colordata.h"                          // color palettes
 
 #if USE_TFTSPI
-    #define DISABLE_ALL_LIBRARY_WARNINGS 1
+#define DISABLE_ALL_LIBRARY_WARNINGS 1
     // If the project provides its own TFT_eSPI setup via USER_SETUP_LOADED
     // and build_flags, do not include the TTGO default user setup to avoid
     // macro redefinition warnings.
-    #if TTGO && !defined(USER_SETUP_LOADED)
-        #include <User_Setups/Setup25_TTGO_T_Display.h>
-    #endif
-    #include <TFT_eSPI.h>
-    #include <SPI.h>
+#if TTGO && !defined(USER_SETUP_LOADED)
+#include <User_Setups/Setup25_TTGO_T_Display.h>
+#endif
+#include <TFT_eSPI.h>
+#include <SPI.h>
 #endif

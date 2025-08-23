@@ -79,7 +79,7 @@
 //   coordinates and scaling, controlling the movement and zoom level of the noise pattern.
 // - `NUM_LAYERS`: A macro defining the number of noise layers used in the pattern.
 
-class PatternMandala : public EffectWithId<idMatrixMandala>
+class PatternMandala : public EffectWithId<PatternMandala>
 {
 private:
     // The coordinates for 16-bit noise spaces.
@@ -94,8 +94,8 @@ private:
 
 public:
 
-    PatternMandala() : EffectWithId<idMatrixMandala>("MRI") {}
-    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMandala>(jsonObject) {}
+    PatternMandala() : EffectWithId<PatternMandala>("MRI") {}
+    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<PatternMandala>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {

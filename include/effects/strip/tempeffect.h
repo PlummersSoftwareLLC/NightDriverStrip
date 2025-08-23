@@ -35,9 +35,9 @@
 
 #include <deque>
 
-class SimpleInsulatorBeatEffect : public EffectWithId<idStripSimpleInsulatorBeat>, public BeatEffectBase
+class SimpleInsulatorBeatEffect : public EffectWithId<SimpleInsulatorBeatEffect>, public BeatEffectBase
 {
-  protected:
+protected:
 
     std::deque<int> _lit;
 
@@ -62,20 +62,20 @@ class SimpleInsulatorBeatEffect : public EffectWithId<idStripSimpleInsulatorBeat
         FillRingPixels(RandomSaturatedColor(), i, 0);
     }
 
-  public:
+public:
 
     using BeatEffectBase::BeatEffectBase;
 
     SimpleInsulatorBeatEffect(const String & strName)
-      : EffectWithId<idStripSimpleInsulatorBeat>(strName), BeatEffectBase(0.5, 0.01) {}
+    : EffectWithId(strName), BeatEffectBase(0.5, 0.01) {}
 
     SimpleInsulatorBeatEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripSimpleInsulatorBeat>(jsonObject), BeatEffectBase(0.5, 0.01) {}
+    : EffectWithId(jsonObject), BeatEffectBase(0.5, 0.01) {}
 };
 
-class SimpleInsulatorBeatEffect2 : public EffectWithId<idStripSimpleInsulatorBeat2>, public BeatEffectBase
+class SimpleInsulatorBeatEffect2 : public EffectWithId<SimpleInsulatorBeatEffect2>, public BeatEffectBase
 {
-  protected:
+protected:
 
     std::deque<int> _lit;
 
@@ -97,67 +97,67 @@ class SimpleInsulatorBeatEffect2 : public EffectWithId<idStripSimpleInsulatorBea
         } while (_lit.end() != std::find(_lit.begin(), _lit.end(), i));
         _lit.push_back(i);
 
-      FillRingPixels(CRGB::Red, i, 0);
+    FillRingPixels(CRGB::Red, i, 0);
     }
 
-  public:
+public:
 
     SimpleInsulatorBeatEffect2(const String & strName)
-      : EffectWithId<idStripSimpleInsulatorBeat2>(strName), BeatEffectBase() {}
+    : EffectWithId(strName), BeatEffectBase() {}
 
     SimpleInsulatorBeatEffect2(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripSimpleInsulatorBeat2>(jsonObject), BeatEffectBase() {}
+    : EffectWithId(jsonObject), BeatEffectBase() {}
 };
 
-class VUInsulatorsEffect : public EffectWithId<idStripVUInsulators>
+class VUInsulatorsEffect : public EffectWithId<VUInsulatorsEffect>
 {
-  private:
+private:
 
     int _last = 1;
 
-  public:
+public:
 
-    using EffectWithId<idStripVUInsulators>::EffectWithId;
+using EffectWithId::EffectWithId;
 
     void DrawVUPixels(int i, int fadeBy, const CRGBPalette16 & palette)
     {
-      CRGB c = ColorFromPalette(palette, ::map(i, 0, _cLEDs, 0, 255)).fadeToBlackBy(fadeBy);
-      setPixelOnAllChannels(i, c);
+    CRGB c = ColorFromPalette(palette, ::map(i, 0, _cLEDs, 0, 255)).fadeToBlackBy(fadeBy);
+    setPixelOnAllChannels(i, c);
     }
 
     virtual void Draw() override
     {
-      static int iPeakVUy = 0;              // Where the peak occurred
-      static unsigned long msPeakVU = 0;    // Timestamp of when the last big peak was
+    static int iPeakVUy = 0;              // Where the peak occurred
+    static unsigned long msPeakVU = 0;    // Timestamp of when the last big peak was
 
-      setAllOnAllChannels(0, 0 , 0);
+    setAllOnAllChannels(0, 0 , 0);
 
-      const int MAX_FADE = 255;
+    const int MAX_FADE = 255;
 
-      if (iPeakVUy > 0)
-      {
+    if (iPeakVUy > 0)
+    {
         int fade = MAX_FADE * ((millis() - msPeakVU) / (float) MILLIS_PER_SECOND);
         fade = min(fade, MAX_FADE);
         DrawVUPixels(iPeakVUy, fade, vu_gpGreen);
-      }
+    }
 
-      int bars = ::map(g_Analyzer.VU(), g_Analyzer.MinVU(), 150.0, 1, _cLEDs - 1);
-      if (bars >= iPeakVUy)
-      {
+    int bars = ::map(g_Analyzer.VU(), g_Analyzer.MinVU(), 150.0, 1, _cLEDs - 1);
+    if (bars >= iPeakVUy)
+    {
         msPeakVU = millis();
         iPeakVUy = bars;
-      }
-      else if (millis() - msPeakVU > MILLIS_PER_SECOND * 1)
-      {
+    }
+    else if (millis() - msPeakVU > MILLIS_PER_SECOND * 1)
+    {
         iPeakVUy = 0;
-      }
+    }
 
-      constexpr int weight = 10;
-      bars = (_last * weight + bars)  / (_last * (weight + 1));
-      bars = max(bars, 1);
-      _last = bars;
+    constexpr int weight = 10;
+    bars = (_last * weight + bars)  / (_last * (weight + 1));
+    bars = max(bars, 1);
+    _last = bars;
 
-      for (int i = 0; i < bars; i++)
+    for (int i = 0; i < bars; i++)
         DrawVUPixels(i, 0, vuPaletteGreen);
     }
 };

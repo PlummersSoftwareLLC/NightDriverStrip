@@ -38,4 +38,3 @@ extern const TProgmemRGBGradientPalette_byte vu_gpGreen[];
 extern const TProgmemRGBPalette16 BlueHeatColors_p;
 extern const TProgmemRGBPalette16 HeatColors2_p;
 extern const TProgmemRGBPalette16 GreenHeatColors_p;
-

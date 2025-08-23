@@ -57,16 +57,16 @@
 
 #ifndef PatternSwirl_H
 
-class PatternSwirl : public EffectWithId<idMatrixSwirl>
+class PatternSwirl : public EffectWithId<PatternSwirl>
 {
-  private:
+private:
 
     const uint8_t borderWidth = 2;
 
-  public:
+public:
 
-    PatternSwirl() : EffectWithId<idMatrixSwirl>("Swirl") {}
-    PatternSwirl(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSwirl>(jsonObject) {}
+    PatternSwirl() : EffectWithId<PatternSwirl>("Swirl") {}
+    PatternSwirl(const JsonObjectConst& jsonObject) : EffectWithId<PatternSwirl>(jsonObject) {}
 
     void drawAt(int i, int j, CRGB color)
     {

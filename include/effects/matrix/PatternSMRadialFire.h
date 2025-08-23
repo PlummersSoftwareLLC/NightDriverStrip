@@ -4,12 +4,11 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1570-radialfire
 
-class PatternSMRadialFire : public EffectWithId<idMatrixSMRadialFire>
+class PatternSMRadialFire : public EffectWithId<PatternSMRadialFire>
 {
-  public:
-
-    PatternSMRadialFire() : EffectWithId<idMatrixSMRadialFire>("RadialFire") {}
-    PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialFire>(jsonObject) {}
+public:
+    PatternSMRadialFire() : EffectWithId<PatternSMRadialFire>("RadialFire") {}
+    PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRadialFire>(jsonObject) {}
 
     void Start() override
     {

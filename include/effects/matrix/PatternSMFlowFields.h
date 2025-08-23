@@ -7,9 +7,9 @@
 // Derived from https://editor.soulmatelights.com/gallery/2132-flowfields
 // This makes a very cool green vine that grows up the display.
 
-class PatternSMFlowFields : public EffectWithId<idMatrixSMFlowFields>
+class PatternSMFlowFields : public EffectWithId<PatternSMFlowFields>
 {
-  private:
+private:
 
     const int WIDTH = MATRIX_WIDTH;
     const int HEIGHT = MATRIX_HEIGHT;
@@ -78,10 +78,10 @@ class PatternSMFlowFields : public EffectWithId<idMatrixSMFlowFields>
     uint16_t speed = 10;
     uint16_t scale = 30;
 
-  public:
+public:
 
-    PatternSMFlowFields() : EffectWithId<idMatrixSMFlowFields>("Liquidflow") {}
-    PatternSMFlowFields(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMFlowFields>(jsonObject) {}
+    PatternSMFlowFields() : EffectWithId<PatternSMFlowFields>("Liquidflow") {}
+    PatternSMFlowFields(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMFlowFields>(jsonObject) {}
 
     void Start() override
     {

@@ -74,9 +74,9 @@
 #define SPEEDUP 1.15
 #define MAXSPEED 4.0f
 
-class PatternPongClock : public EffectWithId<idMatrixPongClock>
+class PatternPongClock : public EffectWithId<PatternPongClock>
 {
-  private:
+private:
     float ballpos_x, ballpos_y;
     uint8_t erase_x = 10; // holds ball old pos so we can erase it, set to blank area of screen initially.
     uint8_t erase_y = 10;
@@ -93,10 +93,10 @@ class PatternPongClock : public EffectWithId<idMatrixPongClock>
     uint8_t mins;
     uint8_t hours;
 
-  public:
+public:
 
-    PatternPongClock() : EffectWithId<idMatrixPongClock>("PongClock") {}
-    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPongClock>(jsonObject) {}
+    PatternPongClock() : EffectWithId<PatternPongClock>("PongClock") {}
+    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<PatternPongClock>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {

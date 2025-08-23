@@ -118,11 +118,11 @@ uint16_t LocalDraw()
             {
                 effectManager.Update(); // Draw the current built in effect
 
-                #if SHOW_VU_METER
+#if SHOW_VU_METER
                     static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
                     if (effectManager.IsVUVisible())
                         spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.IsRemoteAudioActive() ? &vuPaletteBlue : &vuPaletteGreen);
-                #endif
+#endif
 
                 debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
                 return NUM_LEDS;
@@ -200,19 +200,19 @@ void ShowOnboardRGBLED()
     // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
-    #if ONBOARD_LED_R
-        #if ENABLE_AUDIO
+#if ONBOARD_LED_R
+#if ENABLE_AUDIO
             CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer.VURatioFade() / 2.0 * 255);
             ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
             ledcWrite(2, 255 - c.g);
             ledcWrite(3, 255 - c.b);
-        #else
+#else
             int iLed = NUM_LEDS / 2;
             ledcWrite(1, 255 - graphics->leds[iLed].r); // write red component to channel 1, etc.
             ledcWrite(2, 255 - graphics->leds[iLed].g);
             ledcWrite(3, 255 - graphics->leds[iLed].b);
-        #endif
-    #endif
+#endif
+#endif
 }
 
 // PrepareOnboardPixel
@@ -221,11 +221,11 @@ void ShowOnboardRGBLED()
 
 void PrepareOnboardPixel()
 {
-    #ifdef ONBOARD_PIXEL_POWER
+#ifdef ONBOARD_PIXEL_POWER
         FastLED.addLeds<WS2812B, ONBOARD_PIXEL_DATA, ONBOARD_PIXEL_ORDER>(&l_SinglePixel, 1);
         pinMode(ONBOARD_PIXEL_POWER, OUTPUT);
         digitalWrite(ONBOARD_PIXEL_POWER, HIGH);
-    #endif
+#endif
 }
 
 void ShowOnboardPixel()
@@ -233,9 +233,9 @@ void ShowOnboardPixel()
     // Some boards have onboard PWM RGB LEDs, so if defined, we color them here.  If we're doing audio,
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
-    #ifdef ONBOARD_PIXEL_POWER
+#ifdef ONBOARD_PIXEL_POWER
         l_SinglePixel = FastLED[0].leds()[0];
-    #endif
+#endif
 }
 
 // DrawLoopTaskEntry

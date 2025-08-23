@@ -1,1 +1,25 @@
 BasedOnStyle: Microsoft
+# Enforce 4-space indentation everywhere
+UseTab: Never
+IndentWidth: 4
+TabWidth: 4
+ContinuationIndentWidth: 4
+
+# Keep access modifiers at column 0 like typical MS style
+AccessModifierOffset: -4
+
+# Constructor initializer list indentation and breaks
+ConstructorInitializerIndentWidth: 4
+# Place ':' at end of the constructor signature, break after it, and indent items by 4
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+
+# Inheritance list formatting (for long base lists)
+# Place ':' at end of class name line; if wrapped, indent by ContinuationIndentWidth
+BreakInheritanceList: AfterColon
+
+# Misc maintains project feel, avoids surprising reflows
+AlignAfterOpenBracket: Align
+IndentCaseLabels: true
+NamespaceIndentation: None
+AllowShortFunctionsOnASingleLine: Empty

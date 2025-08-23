@@ -48,9 +48,9 @@ static constexpr auto ballColors = to_array(
     CRGB::Indigo,
 });
 
-class BouncingBallEffect : public EffectWithId<idStripBouncingBall>
+class BouncingBallEffect : public EffectWithId<BouncingBallEffect>
 {
-  private:
+private:
 
     size_t  _iOffset;
     size_t  _cLength;
@@ -72,23 +72,23 @@ class BouncingBallEffect : public EffectWithId<idStripBouncingBall>
     std::vector<float>  Dampening;
     std::vector<CRGB>   Colors;
 
-  public:
+public:
 
     BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
-        : EffectWithId<idStripBouncingBall>("Bouncing Balls"),
-          _cBalls(ballCount),
-          _cBallSize(ballSize),
-          _bMirrored(bMirrored),
-          _bErase(bErase)
+    : EffectWithId("Bouncing Balls"),
+        _cBalls(ballCount),
+        _cBallSize(ballSize),
+        _bMirrored(bMirrored),
+        _bErase(bErase)
     {
     }
 
     BouncingBallEffect(const JsonObjectConst&  jsonObject)
-        : EffectWithId<idStripBouncingBall>(jsonObject),
-          _cBalls(jsonObject["blc"]),
-          _cBallSize(jsonObject["bls"]),
-          _bMirrored(jsonObject[PTY_MIRORRED]),
-          _bErase(jsonObject[PTY_ERASE])
+    : EffectWithId(jsonObject),
+        _cBalls(jsonObject["blc"]),
+        _cBallSize(jsonObject["bls"]),
+        _bMirrored(jsonObject[PTY_MIRORRED]),
+        _bErase(jsonObject[PTY_ERASE])
     {
     }
 

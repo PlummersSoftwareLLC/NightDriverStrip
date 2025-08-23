@@ -252,7 +252,7 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
                         _height(h),
                         _ledcount(w*h)
 {
-    #if USE_NOISE
+#if USE_NOISE
         debugV("Allocating boids and noise");
         _boids.reset(psram_allocator<Boid>().allocate(_width));
         _ptrNoise = std::make_unique<Noise>();          // Avoid specific PSRAM allocation since highly random access
@@ -261,7 +261,7 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
         NoiseVariablesSetup();
         debugV("Filling noise");
         FillGetNoise();
-    #endif
+#endif
 
     debugV("Setting up palette");
     loadPalette(0);

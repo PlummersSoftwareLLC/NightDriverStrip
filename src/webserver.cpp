@@ -138,9 +138,9 @@ void CWebServer::begin()
     // SPIFFS file requests
 
     _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE,   "text/json"); });
-    #if ENABLE_IMPROV_LOGGING
+#if ENABLE_IMPROV_LOGGING
         _server.on(IMPROV_LOG_FILE,      HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, IMPROV_LOG_FILE,       "text/plain"); });
-    #endif
+#endif
 
     // Instance handler requests
 
@@ -182,14 +182,14 @@ void CWebServer::begin()
 
     ServeEmbeddedFile("/timezones.json", timezones_file);
 
-    #if ENABLE_WEB_UI
+#if ENABLE_WEB_UI
         debugI("Web UI URL pathnames enabled");
 
         ServeEmbeddedFile("/", html_file);
         ServeEmbeddedFile("/index.html", html_file);
         ServeEmbeddedFile("/index.js", js_file);
         ServeEmbeddedFile("/favicon.ico", ico_file);
-    #endif
+#endif
 
     // Not found handler
 
@@ -526,9 +526,9 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
 
-    #if SHOW_VU_METER
+#if SHOW_VU_METER
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::ShowVUMeterTag, SET_VALUE(effectManager.ShowVU(value)));
-    #endif
+#endif
 
     std::optional<CRGB> globalColor = {};
     std::optional<CRGB> secondColor = {};
@@ -616,7 +616,7 @@ bool CWebServer::ApplyEffectSettings(AsyncWebServerRequest * pRequest, std::shar
     {
         const String& settingName = settingSpecWrapper.get().Name;
         settingChanged = PushPostParamIfPresent<String>(pRequest, settingName, [&](auto value) { return effect->SetSetting(settingName, value); })
-            || settingChanged;
+    || settingChanged;
     }
 
     return settingChanged;

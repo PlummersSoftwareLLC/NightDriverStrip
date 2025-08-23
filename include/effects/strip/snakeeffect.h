@@ -34,9 +34,9 @@
 #include "effects.h"
 #include "globals.h"
 
-class SnakeEffect : public EffectWithId<idStripSnake>
+class SnakeEffect : public EffectWithId<SnakeEffect>
 {
-  private:
+private:
 
     void construct()
     {
@@ -44,7 +44,7 @@ class SnakeEffect : public EffectWithId<idStripSnake>
         Reset();
     }
 
-  protected:
+protected:
   
     int     LEDCount;             // Number of LEDs total
     int     SnakeSpeed;           // Max duration between iterations.
@@ -65,20 +65,20 @@ class SnakeEffect : public EffectWithId<idStripSnake>
     static const int dForward = 1;      // ENUM for direction forward.
     static const int dBackward = -1;
 
-  public:
+public:
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : EffectWithId<idStripSnake>(strName),
-          LEDCount(ledCount),
-          SnakeSpeed(snakeSpeed)
+    : EffectWithId(strName),
+        LEDCount(ledCount),
+        SnakeSpeed(snakeSpeed)
     {
         construct();
     }
 
     SnakeEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<idStripSnake>(jsonObject),
-          LEDCount(jsonObject[PTY_LEDCOUNT]),
-          SnakeSpeed(jsonObject[PTY_SPEED])
+    : EffectWithId(jsonObject),
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        SnakeSpeed(jsonObject[PTY_SPEED])
     {
         construct();
     }

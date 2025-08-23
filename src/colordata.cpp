@@ -33,8 +33,8 @@
 
 DEFINE_GRADIENT_PALETTE( vu_gpGreen ) 
 {
-      0,     0,   4,   0,   // near black green
-     64,     0, 255,   0,   // green
+    0,     0,   4,   0,   // near black green
+    64,     0, 255,   0,   // green
     128,   255, 255,   0,   // yellow
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red
@@ -43,8 +43,8 @@ const CRGBPalette16 vuPaletteGreen = vu_gpGreen;
 
 DEFINE_GRADIENT_PALETTE( vu_gpBlue ) 
 {
-      0,     0,   0,   4,   // near black green
-     64,     0,   0, 255,   // blue
+    0,     0,   0,   4,   // near black green
+    64,     0,   0, 255,   // blue
     128,     0, 255,   0,   // green
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red

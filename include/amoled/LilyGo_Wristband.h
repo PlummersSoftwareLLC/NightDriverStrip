@@ -47,7 +47,7 @@
 
 
 
-class LilyGo_Wristband :
+class LilyGo_Wristband : 
     public LilyGo_Display,
     public SensorPCF85063,
     public SensorBHI260AP,

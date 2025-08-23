@@ -7,16 +7,16 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/2128-bluringcolors
 
-class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
+class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
 {
-  private:
+private:
     // A more cache-friendly version of the 7 independent arrays that were
     // used. This allows better locality per member, especially since we
     // access them sequentially.
     // Nothing special here; just a default-zero initialized struct.
     class PowderItem
     {
-      public:
+    public:
 
         PowderItem() {}
 
@@ -191,10 +191,10 @@ class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
         powder_item._is_shift = true; // particle->isAlive
     }
 
-  public:
+public:
 
-    PatternSMBlurringColors() : EffectWithId<idMatrixSMBlurringColors>("Powder") {}
-    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMBlurringColors>(jsonObject) {}
+    PatternSMBlurringColors() : EffectWithId<PatternSMBlurringColors>("Powder") {}
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMBlurringColors>(jsonObject) {}
 
     void Start() override
     {

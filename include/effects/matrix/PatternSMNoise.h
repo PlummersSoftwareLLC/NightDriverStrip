@@ -352,11 +352,11 @@ DEFINE_GRADIENT_PALETTE(shikon_23_gp){
     2,   32,  205, 2,   2,   2,   216, 2,   2,   2,   217, 217, 47,  0,   228, 217, 47,  0,   228, 2,   2,
     2,   242, 2,   2,   2,   243, 26,  0,   219, 250, 26,  0,   219, 255, 2,   2,   2};
 
-class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
+class PatternSMNoise : public EffectWithId<PatternSMNoise>
 {
-  public:
-
-    enum EffectType {
+public:
+    enum EffectType
+    {
         Unknown,
         LavaLampRainbow_t,
         LavaLampRainbowStripe_t,
@@ -364,25 +364,16 @@ class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
         ColorCube_t
     };
 
-    PatternSMNoise(const String& name, EffectType effect)
-      : EffectWithId<idMatrixSMNoise>(name),
-        _effect(effect)
+    PatternSMNoise(const String &name, EffectType effect) : EffectWithId<PatternSMNoise>(name), _effect(effect) {}
+
+    PatternSMNoise() : EffectWithId<PatternSMNoise>("Lava Lamp"), _effect(EffectType::Unknown) {}
+
+    PatternSMNoise(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternSMNoise>(jsonObject), _effect(static_cast<EffectType>(jsonObject[PTY_EFFECT]))
     {
     }
 
-    PatternSMNoise()
-      : EffectWithId<idMatrixSMNoise>("Lava Lamp"),
-        _effect(EffectType::Unknown)
-    {
-    }
-
-    PatternSMNoise(const JsonObjectConst &jsonObject)
-      : EffectWithId<idMatrixSMNoise>(jsonObject),
-        _effect(static_cast<EffectType>(jsonObject[PTY_EFFECT]))
-    {
-    }
-
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
+    virtual bool SerializeToJSON(JsonObject &jsonObject) override
     {
         auto jsonDoc = CreateJsonDocument();
 
@@ -416,30 +407,30 @@ class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
                 mode = LavaLampRainbow_t;
         }
 
-        if (prevmode != mode) {
+        if (prevmode != mode)
+        {
             prevmode = mode;
         }
 
         switch (mode)
         {
-        case LavaLampRainbow_t:
+            case LavaLampRainbow_t:
             default: // Play _something_
-            LavaLampRainbow();
-            break;
-        case LavaLampRainbowStripe_t:
-            LavaLampRainbowStripe();
-            break;
-        case Shikon_t:
-            Shikon();
-            break;
+                LavaLampRainbow();
+                break;
+            case LavaLampRainbowStripe_t:
+                LavaLampRainbowStripe();
+                break;
+            case Shikon_t:
+                Shikon();
+                break;
             case ColorCube_t:
-            ColorCube();
-            break;
+                ColorCube();
+                break;
         }
     }
 
-  private:
-  
+private:
     int mode{EffectType::Unknown}; // Which of the 17 effects(!) are we showing?
     EffectType _effect;
 

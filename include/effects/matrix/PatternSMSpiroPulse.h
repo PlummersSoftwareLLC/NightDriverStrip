@@ -7,9 +7,9 @@
 //
 // This is one of relatively few that would look better at a higher refresh.
 
-class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
+class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
 {
-  private:
+private:
 
     static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
     static constexpr int CenterY = ((MATRIX_HEIGHT / 2) - 0.5);
@@ -43,7 +43,7 @@ class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
         //  как-нибудь учитывались тут // зато с этой строчкой пропадает нижний ряд
         // extract the fractional parts and derive their inverses
         uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
-// calculate the intensities for each affected pixel
+        // calculate the intensities for each affected pixel
 #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
         uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
 #undef WU_WEIGHT
@@ -60,10 +60,10 @@ class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
         }
     }
 
-  public:
+public:
 
-    PatternSMSpiroPulse() : EffectWithId<idMatrixSMSpiroPulse>("Spiro") {}
-    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMSpiroPulse>(jsonObject) {}
+    PatternSMSpiroPulse() : EffectWithId<PatternSMSpiroPulse>("Spiro") {}
+    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMSpiroPulse>(jsonObject) {}
 
     void Start() override
     {
@@ -98,7 +98,7 @@ class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
         for (uint8_t i = 0; i < AM; i++)
         {
             drawPixelXYF((CenterX + sin(t + (Angle * i)) * radX), (CenterY + cos(t + (Angle * i)) * radY),
-                         ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
+                        ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
         }
     }
 };

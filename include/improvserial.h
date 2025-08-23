@@ -46,7 +46,7 @@
 // Note that any log file that has been written to SPIFFS will be deleted as soon
 // as the board is booted with ENABLE_IMPROV_LOGGING set to 0!
 #ifndef ENABLE_IMPROV_LOGGING
-    #define ENABLE_IMPROV_LOGGING   0
+#define ENABLE_IMPROV_LOGGING   0
 #endif
 
 enum ImprovSerialType : uint8_t
@@ -62,17 +62,17 @@ static const uint8_t IMPROV_SERIAL_VERSION = 1;
 template <typename SERIALTYPE>
 class ImprovSerial
 {
-    #if !(ENABLE_IMPROV_LOGGING)
-        #define log_write(...) do {} while(0)
-    #endif
+#if !(ENABLE_IMPROV_LOGGING)
+#define log_write(...) do {} while(0)
+#endif
 
 public:
 
     void setup(const String &firmware,
-                             const String &version,
-                             const String &variant,
-                             const String &name,
-                             SERIALTYPE *serial)
+                            const String &version,
+                            const String &variant,
+                            const String &name,
+                            SERIALTYPE *serial)
     {
         this->hw_serial_ = serial;
         this->firmware_name_ = firmware;
@@ -80,9 +80,9 @@ public:
         this->hardware_variant_ = variant;
         this->device_name_ = name;
 
-        #if !(ENABLE_IMPROV_LOGGING)
+#if !(ENABLE_IMPROV_LOGGING)
             SPIFFS.remove(IMPROV_LOG_FILE);
-        #endif
+#endif
 
         log_write("Finished Improv setup");
     }
@@ -151,7 +151,7 @@ public:
 
 protected:
 
-    #if ENABLE_IMPROV_LOGGING
+#if ENABLE_IMPROV_LOGGING
 
         // Tell the compiler the arguments to this overload should be checked like printf's
         __attribute__((format(printf, 2, 3)))
@@ -182,7 +182,7 @@ protected:
             file.close();
         }
 
-    #endif // ENABLE_IMPROV_LOGGING
+#endif // ENABLE_IMPROV_LOGGING
 
     bool parse_improv_serial_byte_(uint8_t byte)
     {
@@ -270,14 +270,14 @@ protected:
                 String WiFi_password = command.password.c_str();
 
                 // These lines actually require WiFi to be enabled in the project
-                #if ENABLE_WIFI
+#if ENABLE_WIFI
                     if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
                         debugI("Failed writing WiFi config to NVS");
 
                     log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
                     ConnectToWiFi(WiFi_ssid, WiFi_password);
-                #endif
+#endif
 
                 this->set_state_(improv::STATE_PROVISIONING);
 
@@ -469,9 +469,9 @@ protected:
     String hardware_variant_;
     String device_name_;
 
-    #if !(ENABLE_IMPROV_LOGGING)
-        #undef log_write
-    #endif
+#if !(ENABLE_IMPROV_LOGGING)
+#undef log_write
+#endif
 };
 
 extern std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;

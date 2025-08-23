@@ -149,10 +149,10 @@ RemoteColorCodes[] =
 
 class RemoteControl
 {
-  private:
+private:
     IRrecv _IR_Receive;
 
-  public:
+public:
 
     RemoteControl() : _IR_Receive(IR_REMOTE_PIN)
     {

@@ -58,9 +58,9 @@
 #ifndef PatternWave_H
 #define PatternWave_H
 
-class PatternWave : public EffectWithId<idMatrixWave>
+class PatternWave : public EffectWithId<PatternWave>
 {
-  private:
+private:
 
     uint8_t thetaUpdate = 4;
     uint8_t thetaUpdateFrequency = 0;
@@ -87,12 +87,12 @@ class PatternWave : public EffectWithId<idMatrixWave>
 
 public:
 
-    PatternWave() : EffectWithId<idMatrixWave>("Wave")
+    PatternWave() : EffectWithId<PatternWave>("Wave")
     {
         construct();
     }
 
-    PatternWave(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixWave>(jsonObject)
+    PatternWave(const JsonObjectConst& jsonObject) : EffectWithId<PatternWave>(jsonObject)
     {
         construct();
     }

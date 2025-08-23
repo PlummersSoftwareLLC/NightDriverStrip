@@ -24,11 +24,11 @@
 
 /* calling convention */
 #ifndef TINFCC
- #ifdef __WATCOMC__
-  #define TINFCC __cdecl
- #else
-  #define TINFCC
- #endif
+#ifdef __WATCOMC__
+#define TINFCC __cdecl
+#else
+#define TINFCC
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -54,8 +54,8 @@ extern "C" {
 /* data structures */
 
 typedef struct {
-   unsigned short table[16];  /* table of code length counts */
-   unsigned short trans[288]; /* code -> symbol translation table */
+    unsigned short table[16];  /* table of code length counts */
+    unsigned short trans[288]; /* code -> symbol translation table */
 } TINF_TREE;
 
 struct uzlib_uncomp {
