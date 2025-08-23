@@ -435,16 +435,16 @@ protected:
 
 public:
 
-    StarryNightEffect<StarType>(const String & strName,
-                                const CRGBPalette16& palette,
-                                float probability = 1.0,
-                                float starSize = 1.0,
-                                TBlendType blendType = LINEARBLEND,
-                                float maxSpeed = 100.0,
-                                float blurFactor = 0.0,
-                                float musicFactor = 1.0,
-                                CRGB skyColor = CRGB::Black)
-    : EffectWithId<StarryNightEffect<StarType>>(strName),
+    StarryNightEffect(const String & strName,
+                      const CRGBPalette16& palette,
+                      float probability = 1.0,
+                      float starSize = 1.0,
+                      TBlendType blendType = LINEARBLEND,
+                      float maxSpeed = 100.0,
+                      float blurFactor = 0.0,
+                      float musicFactor = 1.0,
+                      CRGB skyColor = CRGB::Black) :
+        EffectWithId<StarryNightEffect<StarType>>(strName),
         _palette(palette),
         _newStarProbability(probability),
         _starSize(starSize),
@@ -456,8 +456,8 @@ public:
     {
     }
 
-    StarryNightEffect<StarType>(const JsonObjectConst& jsonObject)
-    : EffectWithId<StarryNightEffect<StarType>>(jsonObject),
+    StarryNightEffect<StarType>(const JsonObjectConst& jsonObject) :
+        EffectWithId<StarryNightEffect<StarType>>(jsonObject),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
         _newStarProbability(jsonObject["spb"]),
         _starSize(jsonObject[PTY_SIZE]),
@@ -566,19 +566,16 @@ template <typename StarType> class BlurStarEffect : public StarryNightEffect<Sta
 {
 public:
 
-    BlurStarEffect<StarType>(const CRGBPalette16 & palette, float probability = 0.2, size_t starSize = 1, TBlendType blendType = LINEARBLEND, float maxSpeed = 20.0)
-    : StarryNightEffect<StarType>(palette, probability, starSize, blendType, maxSpeed)
+    BlurStarEffect(const CRGBPalette16 & palette, float probability = 0.2, size_t starSize = 1, TBlendType blendType = LINEARBLEND, float maxSpeed = 20.0) :
+        StarryNightEffect<StarType>(palette, probability, starSize, blendType, maxSpeed)
     {
     }
 
-    BlurStarEffect<StarType>(const JsonObjectConst& jsonObject)
-    : StarryNightEffect<StarType>(jsonObject)
-    {
-    }
+    BlurStarEffect(const JsonObjectConst& jsonObject) : StarryNightEffect<StarType>(jsonObject) {}
 
     virtual void Clear()
     {
-        StarryNightEffect<StarType>::setAll(32,0,0);
+        StarryNightEffect<StarType>::setAllOnAllChannels(32,0,0);
     }
 };
 
