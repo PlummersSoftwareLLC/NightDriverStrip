@@ -152,7 +152,7 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
     }
 
   public:
-  
+
     PatternSMPicasso3in1()
       : EffectWithId<idMatrixSMPicasso3in1>("Picasso"),
         _scale(-1)

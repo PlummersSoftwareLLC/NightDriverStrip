@@ -240,7 +240,7 @@ public:
         else
             fill_solid(leds, _width * _height, color);
     }
-    
+
     __attribute__((always_inline))
     virtual bool isValidPixel(uint x, uint y) const noexcept
     {

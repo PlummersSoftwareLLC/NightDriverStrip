@@ -8,7 +8,7 @@
 class PatternSMRadialWave : public EffectWithId<idMatrixSMRadialWave>
 {
   public:
-  
+
     PatternSMRadialWave() : EffectWithId<idMatrixSMRadialWave>("RadialWave") {}
     PatternSMRadialWave(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialWave>(jsonObject) {}
 

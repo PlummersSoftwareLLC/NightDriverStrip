@@ -147,8 +147,8 @@ private:
         // Note: placing the world in PSRAM may slow this effect down, but it's currently running
         //       fast enough (30+ fps) that we can afford to use it
 
-        world.reset(psram_allocator<Cell [MATRIX_HEIGHT]>().allocate(MATRIX_WIDTH)) ;
-        checksums.reset(psram_allocator<uint32_t>().allocate(CRC_LENGTH));
+        world = make_unique_psram<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
+        checksums = make_unique_psram<uint32_t[]>(CRC_LENGTH);
 
         return true;
     }

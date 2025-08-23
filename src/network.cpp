@@ -50,9 +50,9 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
 #if ENABLE_ESPNOW
 
 // ESPNOW Support
-// 
+//
 // We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
-enum class ESPNowCommand : uint8_t 
+enum class ESPNowCommand : uint8_t
 {
     ESPNOW_NEXTEFFECT = 1,
     ESPNOW_PREVEFFECT,
@@ -63,25 +63,25 @@ enum class ESPNowCommand : uint8_t
 // Message class
 //
 // Encapsulates an ESPNOW message, which is a command and an optional argument
-class Message 
+class Message
 {
 public:
-    constexpr Message(ESPNowCommand cmd, uint32_t argument) 
-        : cbSize(sizeof(Message)), command(cmd), arg1(argument) 
+    constexpr Message(ESPNowCommand cmd, uint32_t argument)
+        : cbSize(sizeof(Message)), command(cmd), arg1(argument)
     {
     }
 
-    constexpr Message() 
-        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0) 
+    constexpr Message()
+        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0)
     {
     }
 
-    const uint8_t* data() const 
+    const uint8_t* data() const
     {
         return reinterpret_cast<const uint8_t*>(this);
     }
 
-    constexpr size_t byte_size() const 
+    constexpr size_t byte_size() const
     {
         return sizeof(Message);
     }
@@ -92,16 +92,16 @@ public:
 } __attribute__((packed));
 
 // onReceiveESPNOW
-// 
+//
 // Callback function for ESPNOW that is called when a data packet is received
 
-void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen) 
+void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 {
     Message message;
 
     memcpy(&message, data, sizeof(message));
     debugI("ESPNOW Message received.");
-    
+
     if (message.cbSize != sizeof(message))
     {
         debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));

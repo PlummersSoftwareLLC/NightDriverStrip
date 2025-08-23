@@ -45,7 +45,7 @@ class SnakeEffect : public EffectWithId<idStripSnake>
     }
 
   protected:
-  
+
     int     LEDCount;             // Number of LEDs total
     int     SnakeSpeed;           // Max duration between iterations.
 

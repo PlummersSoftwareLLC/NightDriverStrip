@@ -53,6 +53,12 @@ DRAM_ATTR std::mutex Screen::_screenMutex;              // The storage for the m
 #define NUM_INFO_PAGES 2
 #endif
 
+enum ScreenPageId
+{
+    PAGE_ID_DEBUG = 0,
+    PAGE_ID_INFO  = 1
+};
+
 constexpr uint8_t g_InfoPageCount = NUM_INFO_PAGES;
 
 // What page of screen we are showing
@@ -192,7 +198,7 @@ void BasicInfoSummary(bool bRedraw)
         display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
         display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
     }
-        
+
 
     // Bar graph - across the bottom of the display showing buffer fill in a color, green/yellow/red
     //             that conveys the overall status
@@ -250,7 +256,7 @@ void CurrentEffectSummary(bool bRedraw)
     display.StartFrame();
 
     // Force a full redraw if we've changed to a new display page
-    
+
     static auto lastPage = g_InfoPage;
     if (lastPage != g_InfoPage)
     {
@@ -477,7 +483,7 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
                 auto& effectManager = g_ptrSystem->EffectManager();
 
                 // We stop rotating the effects when we are on the debug info page, and resume when we are not
-                if (g_InfoPage == 0)
+                if (g_InfoPage == PAGE_ID_DEBUG)
                 {
                     effectInterval = effectManager.GetInterval();
                     effectManager.SetInterval(0, true);
@@ -496,16 +502,16 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             Button2.update();
             if (Button2.pressed())
             {
-                if (g_InfoPage == 1)
+                if (g_InfoPage == PAGE_ID_INFO)
                 {
                     // If we're on the effect summary page, the button advances the effect
                     debugI("Button 2 pressed on pin %d so advancing to next effect", TOGGLE_BUTTON_2);
                     g_ptrSystem->EffectManager().NextEffect();
                     bRedraw = true;
                 }
-                else if (g_InfoPage == 0)
+                else if (g_InfoPage == PAGE_ID_DEBUG)
                 {
-                    // If we're on the debug page the button will reduce the brightness                    
+                    // If we're on the debug page the button will reduce the brightness
                     static int brightness = 255;
                     brightness /= 2;
                     if (brightness < 4)
@@ -528,11 +534,13 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
             #endif
         }
 
-        // Throttle screen updates to no more than kMaxFPS
-        
+        // Throttle screen updates to no more than kMaxFPS, ensuring we wait as least kMinDelay ms for idle when on the debug page
+        // Debug page ensures it yields CPU at least 50ms per frame
+
         constexpr float kMaxFPS = 60.0f;
-        const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay((unsigned long)max(1.0, targetDelay - (millis() - lastFrame)));
+        const     auto  kMinDelay = (g_InfoPage == PAGE_ID_DEBUG) ? 50.0 : 1.0;
+        const     auto  targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
+        delay((unsigned long)max(kMinDelay, targetDelay - (millis() - lastFrame)));
 
         bRedraw = false;
     }

@@ -215,7 +215,7 @@ class PatternCube : public EffectWithId<idMatrixCube>
     }
 
   public:
-  
+
     PatternCube() : EffectWithId<idMatrixCube>("Cubes")
     {
       construct();

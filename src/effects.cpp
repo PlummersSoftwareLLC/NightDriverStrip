@@ -199,7 +199,7 @@ void LoadEffectFactories()
             Effect<RainbowFillEffect>(6, 2)
         );
     #endif
-    
+
     #if defined(EFFECTS_SIMPLE)
         // Simple effect set for basic LED strip projects
         RegisterAll(*g_ptrEffectFactories,
@@ -289,14 +289,6 @@ void LoadEffectFactories()
             Effect<LanternEffect>(),
             Effect<PaletteEffect>(RainbowColors_p, 2.0f, 0.1, 0.0, 1.0, 0.0, LINEARBLEND, true, 1.0),
             Effect<RainbowFillEffect>(10, 32)
-        );
-    #endif
-
-    #if defined(EFFECTS_PDPGRID)
-        // PDP grid matrix effect set
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<PDPCMXEffect>(),
-            Effect<PDPGridEffect>()
         );
     #endif
 

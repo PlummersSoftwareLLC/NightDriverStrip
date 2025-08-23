@@ -66,7 +66,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 struct SocketResponse
 {
     uint32_t    size;              // 4
-    uint64_t    sequence;          // 8 
+    uint64_t    sequence;          // 8
     uint32_t    flashVersion;      // 4
     double      currentClock;      // 8
     double      oldestPacket;      // 8
@@ -114,7 +114,7 @@ public:
         _server_fd(-1),
         _cbReceived(0)
     {
-        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug        
+        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug
         memset(&_address, 0, sizeof(_address));
     }
 

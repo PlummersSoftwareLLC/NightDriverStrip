@@ -838,7 +838,7 @@ void LilyGo_AMOLED::setRotation(uint8_t rotation)
     _rotation = rotation;
     if (boards == &BOARD_AMOLED_191) {
         switch (_rotation) {
-        case 1:  
+        case 1:
             data = RM67162_MADCTL_RGB;
             _height = boards->display.height;
             _width = boards->display.width;
@@ -868,7 +868,7 @@ void LilyGo_AMOLED::setRotation(uint8_t rotation)
                 TouchDrvCSTXXX::setMirrorXY(false, true);
             }
             break;
-        default: 
+        default:
             data = RM67162_MADCTL_MX | RM67162_MADCTL_MV | RM67162_MADCTL_RGB;
             _height = boards->display.width;
             _width = boards->display.height;
@@ -882,7 +882,7 @@ void LilyGo_AMOLED::setRotation(uint8_t rotation)
         writeCommand(0x3600, &data, 1);
     } else if (boards == &BOARD_AMOLED_241) {
         switch (_rotation) {
-        case 1: 
+        case 1:
             data = RM690B0_MADCTL_RGB;
             _height = boards->display.width;
             _width = boards->display.height;
@@ -912,7 +912,7 @@ void LilyGo_AMOLED::setRotation(uint8_t rotation)
                 TouchDrvCSTXXX::setMirrorXY(true, true);
             }
             break;
-        default: 
+        default:
             data = RM690B0_MADCTL_MX | RM690B0_MADCTL_MV | RM690B0_MADCTL_RGB;
             _height = boards->display.height;
             _width = boards->display.width;

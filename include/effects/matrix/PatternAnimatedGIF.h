@@ -206,11 +206,11 @@ class PatternAnimatedGIF : public EffectWithId<idMatrixAnimatedGIF>
 
 public:
 
-    PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black) :
-    EffectWithId<idMatrixAnimatedGIF>(friendlyName),
-        _preClear(preClear),
-        _gifIndex(gifIndex),
-        _bkColor(bkColor)
+    PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black)
+        : EffectWithId<idMatrixAnimatedGIF>(friendlyName),
+          _preClear(preClear),
+          _gifIndex(gifIndex),
+          _bkColor(bkColor)
     {
     }
 

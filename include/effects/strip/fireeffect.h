@@ -615,7 +615,7 @@ class BaseFireEffect : public EffectWithId<idStripBaseFire>
     }
 
   protected:
-  
+
     int     Cooling;            // Rate at which the pixels cool off
     int     Sparks;             // How many sparks will be attempted each frame
     int     SparkHeight;        // If created, max height for a spark
