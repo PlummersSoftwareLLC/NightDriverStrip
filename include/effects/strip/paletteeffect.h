@@ -114,7 +114,7 @@ class PaletteEffectBase : public EffectWithId<TEffect>
     void Draw() override
     {
         if (_bErase)
-          setAllOnAllChannels(0,0,0);
+          LEDStripEffect::setAllOnAllChannels(0,0,0);
 
         float deltaTime = g_Values.AppTime.LastFrameTime();
         float increment = (deltaTime * _LEDSPerSecond);
@@ -130,10 +130,10 @@ class PaletteEffectBase : public EffectWithId<TEffect>
 
         if (_gapSize == 0)
         {
-          for (int i = 0; i < _cLEDs; i+=_lightSize)
+          for (int i = 0; i < LEDStripEffect::_cLEDs; i+=_lightSize)
           {
             iColor = fmodf(iColor + _density, 256);
-            setPixelsOnAllChannels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 * _brightness, _blend), false);
+            LEDStripEffect::setPixelsOnAllChannels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 * _brightness, _blend), false);
           }
         }
         else
@@ -141,7 +141,7 @@ class PaletteEffectBase : public EffectWithId<TEffect>
           // Start far enough "back" to have one off-strip light and gap, and then we need to draw at least as far as the last light.
           // This prevents sticks of light from "appearing" or "disappearing" at the ends
 
-          for (float i = 0-totalSize; i < _cLEDs+_lightSize; i++)
+          for (float i = 0-totalSize; i < LEDStripEffect::_cLEDs + _lightSize; i++)
           {
               // We look for each pixel where we cross an even multiple of the light+gap size, which means it's time to start the drawing
               // of the light here
@@ -151,7 +151,7 @@ class PaletteEffectBase : public EffectWithId<TEffect>
               if (index == 0)
               {
                   CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness, _blend);
-                  setPixelsOnAllChannels(i+_startIndex, _lightSize, c,false);
+                  LEDStripEffect::setPixelsOnAllChannels(i+_startIndex, _lightSize, c,false);
               }
           }
         }

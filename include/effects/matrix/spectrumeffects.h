@@ -602,10 +602,10 @@ class WaveformEffectBase : public EffectWithId<TEffect>
                 if (y < 2 || y > (MATRIX_HEIGHT - 2))
                     color  = CRGB::Red;
                 else
-                    color = g()->ColorFromCurrentPalette(255-index + ms / 11, 255, LINEARBLEND);
+                    color = LEDStripEffect::g()->ColorFromCurrentPalette(255 - index + ms / 11, 255, LINEARBLEND);
             }
 
-            bErase ? g()->setPixel(x, y, color) : g()->drawPixel(x, y, color);
+            bErase ? LEDStripEffect::g()->setPixel(x, y, color) : LEDStripEffect::g()->drawPixel(x, y, color);
 
         }
         _iColorOffset = (_iColorOffset + _increment) % 255;
@@ -621,7 +621,7 @@ class WaveformEffectBase : public EffectWithId<TEffect>
     virtual void Draw() override
     {
         int top = g_ptrSystem->EffectManager().IsVUVisible() ? 1 : 0;
-        g()->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
+        LEDStripEffect::g()->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         DrawSpike(MATRIX_WIDTH-1, g_Analyzer.VURatio()/2.0);
         DrawSpike(0, g_Analyzer.VURatio()/2.0);
     }

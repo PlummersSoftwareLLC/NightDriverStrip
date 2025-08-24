@@ -116,7 +116,7 @@ class PatternPulse : public EffectWithId<PatternPulse>
         // effects.standardNoiseSmearing();
     }
 };
-class PatternPulsar : public BeatEffectBase, public EffectWithId<idMatrixPulsar> {
+class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> {
   private:
     struct PulsePop
     {
@@ -137,13 +137,13 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<idMatrixPulsar>
   public:
     PatternPulsar() :
         BeatEffectBase(1.5, 0.25 ),
-        EffectWithId<idMatrixPulsar>("Pulsars")
+        EffectWithId<PatternPulsar>("Pulsars")
     {
     }
 
     PatternPulsar(const JsonObjectConst& jsonObject) :
         BeatEffectBase(1.5, 0.25 ),
-        EffectWithId<idMatrixPulsar>(jsonObject)
+        EffectWithId<PatternPulsar>(jsonObject)
     {
     }
 

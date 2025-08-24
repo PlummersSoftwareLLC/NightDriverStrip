@@ -450,7 +450,7 @@ class StarEffectBase : public EffectWithId<StarEffectBase<StarType, TEffect>>
                 {
                     StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
                     // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                    newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
+                    newstar._iPos = (int) random_range(0U, LEDStripEffect::_cLEDs - 1 - starWidth);
                     _allParticles.push_back(newstar);
                 }
             }
@@ -480,8 +480,8 @@ class StarEffectBase : public EffectWithId<StarEffectBase<StarType, TEffect>>
         }
         else
         {
-            g()->blurRows(g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blurFactor * 255);
-            fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer.VURatioFade()));
+            LEDStripEffect::g()->blurRows(LEDStripEffect::g()->leds, MATRIX_WIDTH, MATRIX_HEIGHT, 0, _blurFactor * 255);
+            LEDStripEffect::fadeAllChannelsToBlackBy(55 * (2.0 - g_Analyzer.VURatioFade()));
         }
 
         for(auto i = _allParticles.begin(); i != _allParticles.end(); i++)
@@ -489,7 +489,7 @@ class StarEffectBase : public EffectWithId<StarEffectBase<StarType, TEffect>>
             i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            setPixelsFOnAllChannels(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
+            LEDStripEffect::setPixelsFOnAllChannels(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
         }
     }
 };
