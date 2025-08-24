@@ -35,7 +35,6 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
 #endif
 
   public:
-  
     PatternSMStrobeDiffusion()
       :
 #if ENABLE_AUDIO
@@ -98,13 +97,6 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
             // randomly fill in the top row
             noise3d[x][top_line_offset] = (posX == x) && (step % 3 == 0);
         }
-    }
-
-    // функция получения цвета пикселя в матрице по его координатам
-    [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
-    {
-        // Just don't think about what this does to prefetch and prediction...
-        return g()->leds[XY(x, y)];
     }
 
     void Draw() override
@@ -192,11 +184,11 @@ class PatternSMStrobeDiffusion : public EffectWithId<idMatrixSMStrobeDiffusion>
             {
                 if (dir)
                 { // <==
-                    g()->drawPixel(x, y * 3 + DELTA, getPixColorXY(x, y * 3 + DELTA));
+                    g()->drawPixel(x, y * 3 + DELTA, g()->getPixel(x, y * 3 + DELTA));
                 }
                 else
                 { // ==>
-                    g()->drawPixel(MATRIX_WIDTH - x, y * 3 + DELTA, getPixColorXY(MATRIX_WIDTH - x, y * 3 + DELTA));
+                    g()->drawPixel(MATRIX_WIDTH - x, y * 3 + DELTA, g()->getPixel(MATRIX_WIDTH - x, y * 3 + DELTA));
                 }
             }
             dir = !dir;

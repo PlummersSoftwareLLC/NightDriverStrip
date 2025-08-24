@@ -439,7 +439,6 @@ class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
     }
 
   private:
-  
     int mode{EffectType::Unknown}; // Which of the 17 effects(!) are we showing?
     EffectType _effect;
 
