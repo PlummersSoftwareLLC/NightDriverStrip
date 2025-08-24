@@ -24,23 +24,21 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
     uint8_t nStars;            // number of stars
 
     float driftx, drifty;
-    float cangle, sangle;
+    float driftAngleX, driftAngleY;
     unsigned int counter { 0 };
     const TProgmemRGBPalette16 *curPalette = &PartyColors_p;
 
-    const int STAR_BLENDER = 128U; // Unknown what this is.
-    const int CENTER_DRIFT_SPEED = 6U; // speed of movement of the floating star emergence center
-    const int WIDTH = MATRIX_WIDTH;
-    const int HEIGHT = MATRIX_HEIGHT;
+    static constexpr int STAR_BLENDER = 128U; // Adjust the brightness or blending of the stars.
+    static constexpr int CENTER_DRIFT_SPEED = 6U; // speed of movement of the floating star emergence center
 
     // Matrix size constants are calculated only here and do not change in effects.
-    const uint8_t CENTER_X_MINOR = (WIDTH / 2) - ((WIDTH - 1) & 0x01); // The center of the matrix along the X-axis, shifted to the smaller
+    static constexpr uint8_t CENTER_X_MINOR = (MATRIX_WIDTH / 2) - ((MATRIX_WIDTH - 1) & 0x01); // The center of the matrix along the X-axis, shifted to the smaller
                                                                        // side if the width is even.
-    const uint8_t CENTER_Y_MINOR = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01); // The center of the matrix along the Y-axis, shifted to the smaller
+    static constexpr uint8_t CENTER_Y_MINOR = (MATRIX_HEIGHT / 2) - ((MATRIX_HEIGHT - 1) & 0x01); // The center of the matrix along the Y-axis, shifted to the smaller
                                                                          // side if the height is even.
-    const uint8_t CENTER_X_MAJOR = WIDTH / 2 + (WIDTH % 2); // The center of the matrix along the X-axis, shifted to the larger
+    static constexpr uint8_t CENTER_X_MAJOR = MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2); // The center of the matrix along the X-axis, shifted to the larger
                                                             // side if the width is even.
-    const uint8_t CENTER_Y_MAJOR = HEIGHT / 2 + (HEIGHT % 2); // The center of the matrix along the Y-axis, shifted to the
+    static constexpr uint8_t CENTER_Y_MAJOR = MATRIX_HEIGHT / 2 + (MATRIX_HEIGHT % 2); // The center of the matrix along the Y-axis, shifted to the
                                                               // larger side if the height is even.
 
   public:
@@ -50,7 +48,7 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 
     // This code draws into unsafe places, but DrawLine() protects us.
     void Drawstar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle,
-                  uint8_t koler) // random multipoint star
+                  uint8_t color) // random multipoint star
     {
         auto radius2 = 255 / points;
         for (int i = 0; i < points; i++)
@@ -59,12 +57,12 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
                          ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
                          xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
                          ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                         g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
+                         g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(color) : ColorFromPalette(*curPalette, color));
             DrawStarLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
                          ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
                          xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
                          ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                         g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
+                         g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(color) :ColorFromPalette(*curPalette, color));
         }
     }
     // This code looks like g()->DrawLine(), but isn't. It does funky
@@ -122,9 +120,9 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         for (x = x1; x <= x2; x++)
         {
             if (swapxy == 0)
-                g()->drawPixel(x, HEIGHT - 1 - y, color);
+                g()->drawPixel(x, MATRIX_HEIGHT - 1 - y, color);
             else
-                g()->drawPixel(y, HEIGHT - 1 - x, color);
+                g()->drawPixel(y, MATRIX_HEIGHT - 1 - x, color);
             err -= (uint8_t)dy;
             if (err < 0)
             {
@@ -138,19 +136,17 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
     {
         g()->Clear();
 
-        driftx = random8(4, WIDTH - 4);  // set an initial location for the animation center
-        drifty = random8(4, HEIGHT - 4); // set an initial location for the animation center
+        driftx = random8(4, MATRIX_WIDTH - 4);  // set an initial location for the animation center
+        drifty = random8(4, MATRIX_HEIGHT - 4); // set an initial location for the animation center
 
-        cangle = (sin8(random(25, 220)) - 128.0) /
+        driftAngleX = (sin8(random(25, 220)) - 128.0) /
                  128.0; // angle of movement for the center of animation gives a float value between -1 and 1
-        sangle = (sin8(random(25, 220)) - 128.0) / 128.0; // angle of movement for the center of animation in the y
+        driftAngleY = (sin8(random(25, 220)) - 128.0) / 128.0; // angle of movement for the center of animation in the y
                                                           // direction gives a float value between -1 and 1
-        // shifty = random (3, 12);//how often the drifter moves будет
-        // CENTER_DRIFT_SPEED = 6
 
-        // Now each star has its own number of corners.
-        nStars = (WIDTH + 6U) / 2U; //(modes[currentMode].Scale - 1U) / 99.0 *
-                                       //(kMaxStars - 1U) + 1U;
+        // Each star has its own number of corners.
+        nStars = (MATRIX_WIDTH + 6U) / 2U;
+
         if (nStars > kMaxStars)
             nStars = kMaxStars;
 
@@ -172,22 +168,22 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         // This block of 6 'if's could probably be replaced by a std::clamp...if I
         // could read this junk. This keeps the absolute unit of our drift (xy) and
         // the angle of our drift (sin, cos) in check.
-        if (driftx > (WIDTH - CENTER_X_MINOR; / 2U)) {
-            cangle = -fabs(cangle); // Force movement left
-        } else if (driftx < CENTER_X_MINOR; / 2U) {
-            cangle = fabs(cangle); // Force movement right
+        if (driftx > (MATRIX_WIDTH - CENTER_X_MINOR / 2U)) {
+            driftAngleX = -fabs(driftAngleX); // Force movement left
+        } else if (driftx < CENTER_X_MINOR / 2U) {
+            driftAngleX = fabs(driftAngleX); // Force movement right
         }
         if (counter % CENTER_DRIFT_SPEED == 0) {
-            driftx = driftx + cangle; // Move the x center every so often
+            driftx = driftx + driftAngleX; // Move the x center every so often
         }
 
-        if (drifty > (HEIGHT - CENTER_Y_MINOR; / 2U)) {
-            sangle = -fabs(sangle); // Force movement up
-        } else if (drifty < CENTER_Y_MINOR; / 2U) {
-            sangle = fabs(sangle); // Force movement down
+        if (drifty > (MATRIX_HEIGHT - CENTER_Y_MINOR / 2U)) {
+            driftAngleY = -fabs(driftAngleY); // Force movement up
+        } else if (drifty < CENTER_Y_MINOR / 2U) {
+            driftAngleY = fabs(driftAngleY); // Force movement down
         }
         if ((counter + CENTER_DRIFT_SPEED / 2U) % CENTER_DRIFT_SPEED == 0) {
-            drifty = drifty + sangle; // Move the y center every so often
+            drifty = drifty + driftAngleY; // Move the y center every so often
         }
 
         for (uint8_t num = 0; num < nStars; num++)
@@ -197,10 +193,10 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
                 float expansionFactor = 1.0f; // Add this member variable to your class
                 int starSize = (counter - stars[num].position) * expansionFactor;
 
-                if (starSize <= WIDTH + 5U)
+                if (starSize <= MATRIX_WIDTH + 5U)
                 {
-                    Drawstar(driftx, drifty, 2 * starSize, starSize, stars[num].corners, STAR_BLENDER + stars[num].color,
-                             stars[num].color * 2); // What the hell is 85?!
+                    Drawstar(driftx, drifty, 2 * starSize, starSize, stars[num].corners,
+                             STAR_BLENDER + stars[num].color, stars[num].color * 2);
                     stars[num].color++;
                 }
                 else
