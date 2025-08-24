@@ -43,9 +43,6 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
     const uint8_t CENTER_Y_MAJOR = HEIGHT / 2 + (HEIGHT % 2); // The center of the matrix along the Y-axis, shifted to the
                                                               // larger side if the height is even.
 
-    const int spirocenterX = CENTER_X_MINOR;
-    const int spirocenterY = CENTER_Y_MINOR;
-
   public:
 
     PatternSMStarDeep() : EffectWithId<idMatrixSMStarDeep>("Star Deep") {}
@@ -175,21 +172,23 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         // This block of 6 'if's could probably be replaced by a std::clamp...if I
         // could read this junk. This keeps the absolute unit of our drift (xy) and
         // the angle of our drift (sin, cos) in check.
-        if (driftx > (WIDTH - spirocenterX / 2U)) // change direction of drift if you get
-                                                  // near the right 1/4 of the screen
-            cangle = 0 - fabs(cangle);
-        if (driftx < spirocenterX / 2U) // change direction of drift if you get near
-                                        // the right 1/4 of the screen
-            cangle = fabs(cangle);
-        if (counter % CENTER_DRIFT_SPEED == 0)
-            driftx = driftx + cangle; // move the x center every so often
+        if (driftx > (WIDTH - CENTER_X_MINOR; / 2U)) {
+            cangle = -fabs(cangle); // Force movement left
+        } else if (driftx < CENTER_X_MINOR; / 2U) {
+            cangle = fabs(cangle); // Force movement right
+        }
+        if (counter % CENTER_DRIFT_SPEED == 0) {
+            driftx = driftx + cangle; // Move the x center every so often
+        }
 
-        if (drifty > (HEIGHT - spirocenterY / 2U)) // if y gets too big, reverse
-            sangle = 0 - fabs(sangle);
-        if (drifty < spirocenterY / 2U) // if y gets too small reverse
-            sangle = fabs(sangle);
-        if ((counter + CENTER_DRIFT_SPEED / 2U) % CENTER_DRIFT_SPEED == 0)
-            drifty = drifty + sangle; // move the y center every so often
+        if (drifty > (HEIGHT - CENTER_Y_MINOR; / 2U)) {
+            sangle = -fabs(sangle); // Force movement up
+        } else if (drifty < CENTER_Y_MINOR; / 2U) {
+            sangle = fabs(sangle); // Force movement down
+        }
+        if ((counter + CENTER_DRIFT_SPEED / 2U) % CENTER_DRIFT_SPEED == 0) {
+            drifty = drifty + sangle; // Move the y center every so often
+        }
 
         for (uint8_t num = 0; num < nStars; num++)
         {
