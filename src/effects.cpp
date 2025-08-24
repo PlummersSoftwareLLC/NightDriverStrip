@@ -578,7 +578,7 @@ void LoadEffectFactories()
 
     assert(!g_ptrEffectFactories->IsEmpty());
 
-    auto factoriesHashString = EffectFactoryIdSupport::HashString(g_ptrEffectFactories->FactoryIDs());
+    auto factoriesHashString = IdSupport::HashString(g_ptrEffectFactories->FactoryIDs());
     g_ptrEffectFactories->HashString(factoriesHashString);
 }
 
