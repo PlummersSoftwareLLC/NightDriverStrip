@@ -10,7 +10,6 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 {
   private:
 
-   // Why are these named "bballs"? Probably reused effect innards.
    static constexpr int bballsMaxNUM = 100U; // the maximum number of tracked
                                   // objects (very affects memory consumption)
     uint8_t bballsCOLOR[bballsMaxNUM]; // star color (reusing the Balls effect array)
@@ -25,20 +24,20 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
     unsigned int counter { 0 };
     const TProgmemRGBPalette16 *curPalette = &PartyColors_p;
 
-    const int STAR_BLENDER = 128U; // хз что это
+    const int STAR_BLENDER = 128U; // Unknown what this is.
     const int CENTER_DRIFT_SPEED = 6U; // speed of movement of the floating star emergence center
     const int WIDTH = MATRIX_WIDTH;
     const int HEIGHT = MATRIX_HEIGHT;
 
-    // константы размера матрицы вычисляется только здесь и не меняется в эффектах
-    const uint8_t CENTER_X_MINOR = (WIDTH / 2) - ((WIDTH - 1) & 0x01); // центр матрицы по ИКСУ, сдвинутый в меньшую
-                                                                       // сторону, если ширина чётная
-    const uint8_t CENTER_Y_MINOR = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01); // центр матрицы по ИГРЕКУ, сдвинутый в меньшую
-                                                                         // сторону, если высота чётная
-    const uint8_t CENTER_X_MAJOR = WIDTH / 2 + (WIDTH % 2); // центр матрицы по ИКСУ, сдвинутый в большую
-                                                            // сторону, если ширина чётная
-    const uint8_t CENTER_Y_MAJOR = HEIGHT / 2 + (HEIGHT % 2); // центр матрицы по ИГРЕКУ, сдвинутый в
-                                                              // большую сторону, если высота чётная
+    // Matrix size constants are calculated only here and do not change in effects.
+    const uint8_t CENTER_X_MINOR = (WIDTH / 2) - ((WIDTH - 1) & 0x01); // The center of the matrix along the X-axis, shifted to the smaller
+                                                                       // side if the width is even.
+    const uint8_t CENTER_Y_MINOR = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01); // The center of the matrix along the Y-axis, shifted to the smaller
+                                                                         // side if the height is even.
+    const uint8_t CENTER_X_MAJOR = WIDTH / 2 + (WIDTH % 2); // The center of the matrix along the X-axis, shifted to the larger
+                                                            // side if the width is even.
+    const uint8_t CENTER_Y_MAJOR = HEIGHT / 2 + (HEIGHT % 2); // The center of the matrix along the Y-axis, shifted to the
+                                                              // larger side if the height is even.
 
     const int spirocenterX = CENTER_X_MINOR;
     const int spirocenterY = CENTER_Y_MINOR;
@@ -62,16 +61,16 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         // shifty = random (3, 12);//how often the drifter moves будет
         // CENTER_DRIFT_SPEED = 6
 
-        // pointy = 7; теперь количество углов у каждой звезды своё
+        // Now each star has its own number of corners.
         bballsNUM = (WIDTH + 6U) / 2U; //(modes[currentMode].Scale - 1U) / 99.0 *
                                        //(bballsMaxNUM - 1U) + 1U;
         if (bballsNUM > bballsMaxNUM)
             bballsNUM = bballsMaxNUM;
         for (uint8_t num = 0; num < bballsNUM; num++)
         {
-            bballsX[num] = random8(3, 9); // pointy = random8(3, 9); // количество углов в звезде
+            bballsX[num] = random8(3, 9); // pointy = random8(3, 9); // number of corners in the star
             bballsPos[num] = counter + (num << 3) + 1U; // random8(50);//modes[currentMode].Scale;//random8(50,
-                                                        // 99); // задержка следующего пуска звезды
+                                                        // 99); // delay the next star launch
             bballsCOLOR[num] = random8();
         }
     }
@@ -166,17 +165,16 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
     {
         g()->DimAll(175U);
 
-        // hue++;//increment the color basis был общий оттенок на весь эффект.
-        // теперь у каждой звезды свой h = hue;  //set h to the color basis
+        // Now each star has its own hue.
         counter++;
 
         // This block of 6 'if's could probably be replaced by a std::clamp...if I
         // could read this junk. This keeps the absolute unit of our drift (xy) and
         // the angle of our drift (sin, cos) in check.
-        if (driftx > (WIDTH - spirocenterX / 2U)) // change directin of drift if you get
+        if (driftx > (WIDTH - spirocenterX / 2U)) // change direction of drift if you get
                                                   // near the right 1/4 of the screen
             cangle = 0 - fabs(cangle);
-        if (driftx < spirocenterX / 2U) // change directin of drift if you get near
+        if (driftx < spirocenterX / 2U) // change direction of drift if you get near
                                         // the right 1/4 of the screen
             cangle = fabs(cangle);
         if (counter % CENTER_DRIFT_SPEED == 0)
@@ -189,17 +187,6 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         if ((counter + CENTER_DRIFT_SPEED / 2U) % CENTER_DRIFT_SPEED == 0)
             drifty = drifty + sangle; // move the y center every so often
 
-        // The follow comment is encrypted. I think it says "don't let the center
-        // drift off the screen". I'm not sure why this is necessary, but I'm
-        // leaving it in (davepl).
-
-        // по идее, не нужно равнять диапазоны плавающего центра. за них и так вылет
-        // невозможен driftx = constrain(driftx, spirocenterX - spirocenterX / 3,
-        // spirocenterX + spirocenterX / 3);//constrain the center, probably never
-        // gets evoked any more but was useful at one time to keep the graphics on
-        // the screen.... drifty = constrain(drifty, spirocenterY - spirocenterY /
-        // 3, spirocenterY + spirocenterY / 3);
-
         for (uint8_t num = 0; num < bballsNUM; num++)
         {
             if (counter >= bballsPos[num]) //(counter >= ringdelay)
@@ -208,21 +195,15 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
                 int starSize = (counter - bballsPos[num]) * expansionFactor;
 
                 if (starSize <= WIDTH + 5U)
-                { //(counter - ringdelay <= WIDTH + 5) {
-                    // drawstar(driftx  , drifty, 2 * (counter - ringdelay), (counter -
-                    // ringdelay), pointy, blender + h, h * 2 + 85);
+                {
                     Drawstar(driftx, drifty, 2 * starSize, starSize, bballsX[num], STAR_BLENDER + bballsCOLOR[num],
-                             bballsCOLOR[num] * 2); //, h * 2 + 85);// что, бл, за 85?!
+                             bballsCOLOR[num] * 2); // What the hell is 85?!
                     bballsCOLOR[num]++;
                 }
                 else
                 {
-                    // bballsX[num] = random8(3, 9);//pointy = random8(3, 9); //
-                    // количество углов в звезде
-                    bballsPos[num] =
-                        counter + (bballsNUM << 2) + 1U; // random8(50, 99);//modes[currentMode].Scale;//random8(50,
-                                                         // 99); // задержка следующего пуска звезды  // Means: "Set
-                                                         // the next star launch delay"
+                    // Number of corners in the star.
+                    bballsPos[num] = counter + (bballsNUM << 2) + 1U;
                 }
             }
         }
