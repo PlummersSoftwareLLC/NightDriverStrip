@@ -10,14 +10,18 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 {
   private:
 
-   static constexpr int bballsMaxNUM = 100U; // the maximum number of tracked
+   static constexpr int kMaxStars = 100U; // the maximum number of tracked
                                   // objects (very affects memory consumption)
-    uint8_t bballsCOLOR[bballsMaxNUM]; // star color (reusing the Balls effect array)
-    uint8_t bballsX[bballsMaxNUM];     // number of corners in the star (reusing the
-                                       // Balls effect array
-    int bballsPos[bballsMaxNUM];       // delay the start of the star relative to the
-                                       // counter (reuse the Balls effect array)
-    uint8_t bballsNUM;                 // number of stars (reuse Balls effect variable)
+
+    // Define a struct to hold star data
+    struct StarData {
+        uint8_t color;   // star color
+        uint8_t corners; // number of corners in the star
+        int position;    // delay the start of the star relative to the counter
+    };
+
+    StarData stars[kMaxStars];
+    uint8_t nStars;            // number of stars
 
     float driftx, drifty;
     float cangle, sangle;
@@ -46,34 +50,6 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 
     PatternSMStarDeep() : EffectWithId<idMatrixSMStarDeep>("Star Deep") {}
     PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMStarDeep>(jsonObject) {}
-
-    void Start() override
-    {
-        g()->Clear();
-
-        driftx = random8(4, WIDTH - 4);  // set an initial location for the animation center
-        drifty = random8(4, HEIGHT - 4); // set an initial location for the animation center
-
-        cangle = (sin8(random(25, 220)) - 128.0) /
-                 128.0; // angle of movement for the center of animation gives a float value between -1 and 1
-        sangle = (sin8(random(25, 220)) - 128.0) / 128.0; // angle of movement for the center of animation in the y
-                                                          // direction gives a float value between -1 and 1
-        // shifty = random (3, 12);//how often the drifter moves будет
-        // CENTER_DRIFT_SPEED = 6
-
-        // Now each star has its own number of corners.
-        bballsNUM = (WIDTH + 6U) / 2U; //(modes[currentMode].Scale - 1U) / 99.0 *
-                                       //(bballsMaxNUM - 1U) + 1U;
-        if (bballsNUM > bballsMaxNUM)
-            bballsNUM = bballsMaxNUM;
-        for (uint8_t num = 0; num < bballsNUM; num++)
-        {
-            bballsX[num] = random8(3, 9); // pointy = random8(3, 9); // number of corners in the star
-            bballsPos[num] = counter + (num << 3) + 1U; // random8(50);//modes[currentMode].Scale;//random8(50,
-                                                        // 99); // delay the next star launch
-            bballsCOLOR[num] = random8();
-        }
-    }
 
     // This code draws into unsafe places, but DrawLine() protects us.
     void Drawstar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle,
@@ -161,6 +137,34 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         }
     }
 
+    void Start() override
+    {
+        g()->Clear();
+
+        driftx = random8(4, WIDTH - 4);  // set an initial location for the animation center
+        drifty = random8(4, HEIGHT - 4); // set an initial location for the animation center
+
+        cangle = (sin8(random(25, 220)) - 128.0) /
+                 128.0; // angle of movement for the center of animation gives a float value between -1 and 1
+        sangle = (sin8(random(25, 220)) - 128.0) / 128.0; // angle of movement for the center of animation in the y
+                                                          // direction gives a float value between -1 and 1
+        // shifty = random (3, 12);//how often the drifter moves будет
+        // CENTER_DRIFT_SPEED = 6
+
+        // Now each star has its own number of corners.
+        nStars = (WIDTH + 6U) / 2U; //(modes[currentMode].Scale - 1U) / 99.0 *
+                                       //(kMaxStars - 1U) + 1U;
+        if (nStars > kMaxStars)
+            nStars = kMaxStars;
+
+        for (uint8_t num = 0; num < nStars; num++)
+        {
+            stars[num].corners = random8(3, 9); // number of corners in the star
+            stars[num].position = counter + (num << 3) + 1U; // delay the next star launch
+            stars[num].color = random8();
+        }
+    }
+
     void Draw() override
     {
         g()->DimAll(175U);
@@ -187,23 +191,23 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         if ((counter + CENTER_DRIFT_SPEED / 2U) % CENTER_DRIFT_SPEED == 0)
             drifty = drifty + sangle; // move the y center every so often
 
-        for (uint8_t num = 0; num < bballsNUM; num++)
+        for (uint8_t num = 0; num < nStars; num++)
         {
-            if (counter >= bballsPos[num]) //(counter >= ringdelay)
+            if (counter >= stars[num].position) //(counter >= ringdelay)
             {
                 float expansionFactor = 1.0f; // Add this member variable to your class
-                int starSize = (counter - bballsPos[num]) * expansionFactor;
+                int starSize = (counter - stars[num].position) * expansionFactor;
 
                 if (starSize <= WIDTH + 5U)
                 {
-                    Drawstar(driftx, drifty, 2 * starSize, starSize, bballsX[num], STAR_BLENDER + bballsCOLOR[num],
-                             bballsCOLOR[num] * 2); // What the hell is 85?!
-                    bballsCOLOR[num]++;
+                    Drawstar(driftx, drifty, 2 * starSize, starSize, stars[num].corners, STAR_BLENDER + stars[num].color,
+                             stars[num].color * 2); // What the hell is 85?!
+                    stars[num].color++;
                 }
                 else
                 {
                     // Number of corners in the star.
-                    bballsPos[num] = counter + (bballsNUM << 2) + 1U;
+                    stars[num].position = counter + (nStars << 2) + 1U;
                 }
             }
         }
