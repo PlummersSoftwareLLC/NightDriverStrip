@@ -76,22 +76,30 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         }
     }
 
-    // Don't use the system g()->DrawLine because this code draws into unsafe
-    // places, which clobbers memory and brings down the app. Use our clamped
-    // versions instead.
-
-    // функция отрисовки точки по координатам X Y
-    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
+    // This code draws into unsafe places, but DrawLine() protects us.
+    void Drawstar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle,
+                  uint8_t koler) // random multipoint star
     {
-        if (!g()->isValidPixel(x, HEIGHT - 1 - y))
-            return;
-        // Mesmerizer flips the Y axis here.
-        uint32_t thisPixel = XY(x, HEIGHT - 1 - y);
-        g()->leds[thisPixel] = color;
+        auto radius2 = 255 / points;
+        for (int i = 0; i < points; i++)
+        {
+            DrawStarLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
+                         ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
+                         xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
+                         ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
+                         g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
+            DrawStarLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
+                         ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
+                         xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
+                         ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
+                         g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
+        }
     }
-
-    // Дополнительная функция построения линий
-    void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
+    // This code looks like g()->DrawLine(), but isn't. It does funky
+    // things to swap x and y internally to let the corners wrap. Replacing
+    // it is visually ugly and teaching the system version about this
+    // isn't a net win. For this reason, it has a unique name.
+    void DrawStarLine(int x1, int y1, int x2, int y2, CRGB color)
     {
         int tmp;
         int x, y;
@@ -142,36 +150,15 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
         for (x = x1; x <= x2; x++)
         {
             if (swapxy == 0)
-                drawPixelXY(x, y, color);
+                g()->drawPixel(x, HEIGHT - 1 - y, color);
             else
-                drawPixelXY(y, x, color);
+                g()->drawPixel(y, HEIGHT - 1 - x, color);
             err -= (uint8_t)dy;
             if (err < 0)
             {
                 y += ystep;
                 err += dx;
             }
-        }
-    }
-
-    void Drawstar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle,
-                  uint8_t koler) // random multipoint star
-    {
-        auto radius2 = 255 / points;
-        for (int i = 0; i < points; i++)
-        {
-            // две строчки выше - рисуют звезду просто по оттенку, а две строчки ниже
-            // - берут цвет из текущей палитры
-            DrawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
-                     ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128),
-                     xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
-                     ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) : ColorFromPalette(*curPalette, koler));
-            DrawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
-                     ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128),
-                     xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128),
-                     ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128),
-                     g()->IsPalettePaused() ? g()->ColorFromCurrentPalette(koler) :ColorFromPalette(*curPalette, koler));
         }
     }
 
