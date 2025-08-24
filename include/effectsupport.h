@@ -41,6 +41,7 @@
 #include <utility>
 // Needed for StarryNightEffect used by helpers below
 #include "effects/strip/stareffect.h"
+#include <type_traits>
 
 // Palettes used by a number of effects
 
@@ -381,6 +382,16 @@ class EffectFactoryIdSupport
     }
 };
 
+template<class T>
+using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
+template <class T>
+constexpr EffectId effect_id_of_type() {
+    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,
+                  "Type must derive from EffectWithId<Id>");
+    return remove_cvref_t<T>::ID;   // compile-time constant
+}
+
 // --- Macro-free helpers for concise, type-safe effect registration ---
 
 // Adds a default and JSON effect factory for a specific effect number and type.
@@ -388,24 +399,13 @@ class EffectFactoryIdSupport
 template<typename TEffect, typename... Args>
 inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, Args&&... args)
 {
-    static_assert(std::is_enum_v<decltype(TEffect::kId)>, "TEffect must have static constexpr kId");
-    // Build a stable ID from effect type and ctor args
-    const uint64_t id = EffectFactoryIdSupport::MakeFactoryId<TEffect>(args...);
+    const uint64_t factoryId = EffectFactoryIdSupport::MakeFactoryId<TEffect>(args...);
     return factories.AddEffect(
-        TEffect::kId,
+        effect_id_of_type<TEffect>(),
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
         [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); },
-        id
+        factoryId
     );
-}
-
-// Adds a default and JSON effect factory, but the default effect will be disabled upon creation.
-template<typename TEffect, typename... Args>
-inline EffectFactories::NumberedFactory& AddEffectDisabled(EffectFactories& factories, Args&&... args)
-{
-    auto& nf = AddEffect<TEffect>(factories, std::forward<Args>(args)...);
-    nf.LoadDisabled = true;
-    return nf;
 }
 
 // Used by Starry Night helper
@@ -415,22 +415,13 @@ std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObject
 template<typename TStar, typename... Args>
 inline EffectFactories::NumberedFactory& AddStarryNightEffect(EffectFactories& factories, Args&&... args)
 {
-    const uint64_t id = EffectFactoryIdSupport::MakeStarryFactoryId<TStar>(idStripStarryNight, args...);
+    const uint64_t factoryId = EffectFactoryIdSupport::MakeStarryFactoryId<TStar>(idStripStarryNight, args...);
     return factories.AddEffect(
         idStripStarryNight,
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<TStar>>(args...); },
         [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); },
-        id
+        factoryId
     );
-}
-
-// Disabled-on-load variant for Starry Night
-template<typename TStar, typename... Args>
-inline EffectFactories::NumberedFactory& AddStarryNightEffectDisabled(EffectFactories& factories, Args&&... args)
-{
-    auto& nf = AddStarryNightEffect<TStar>(factories, std::forward<Args>(args)...);
-    nf.LoadDisabled = true;
-    return nf;
 }
 
 // Fold-expression helper to register many at once with brief syntax:

@@ -51,6 +51,7 @@
 class BeatEffectBase
 {
   protected:
+
     const int _maxSamples = 60;
     std::deque<float> _samples;
     double _lastBeat = 0;
@@ -111,11 +112,11 @@ class BeatEffectBase
             }
             else
             {
-              debugV("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
+                debugV("Beat: elapsed: %0.2lf, range: %0.2lf\n", elapsed, maximum - minimum);
 
-              HandleBeat(false, elapsed, maximum - minimum);
-              _lastBeat = g_Values.AppTime.CurrentTime();
-              _samples.clear();
+                HandleBeat(false, elapsed, maximum - minimum);
+                _lastBeat = g_Values.AppTime.CurrentTime();
+                _samples.clear();
             }
         }
     }
@@ -126,12 +127,8 @@ class BeatEffectBase
 // Uses a very sensitive beat detection.  Fills all pixels blue based on VU, and on beats, fills a random insulator
 // with a random color.  Longer beats get more insulators.  Very long beats get everything filled with purple.
 
-class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
+class SimpleColorBeat : public BeatEffectBase, public EffectWithId<idStripSimpleColorBeat>
 {
-  public:
-    static constexpr EffectId kId = idStripSimpleColorBeat;
-    EffectId effectId() const override { return kId; }
-
   protected:
 
     int _iLastInsulator = -1;
@@ -193,14 +190,10 @@ class SimpleColorBeat : public BeatEffectBase, public LEDStripEffect
   public:
 
     SimpleColorBeat(const String & strName)
-  : BeatEffectBase(0.5, 0.25), LEDStripEffect(strName)
-    {
-    }
+      : BeatEffectBase(0.5, 0.25), EffectWithId<idStripSimpleColorBeat>(strName) {}
 
     SimpleColorBeat(const JsonObjectConst& jsonObject)
-      : BeatEffectBase(0.5, 0.25), LEDStripEffect(jsonObject)
-    {
-    }
+      : BeatEffectBase(0.5, 0.25), EffectWithId<idStripSimpleColorBeat>(jsonObject) {}
 };
 
 #endif // ENABLE_AUDIO

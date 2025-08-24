@@ -92,7 +92,7 @@ public:
     {
         return Vector2(x + v.x, y + v.y);
     }
-    
+
     Vector2 operator-(const Vector2 &v) const
     {
         return Vector2(x - v.x, y - v.y);
@@ -210,16 +210,16 @@ public:
         return Vector2(y, -x);
     }
 
-    static float dot(Vector2 v1, Vector2 v2) 
+    static float dot(Vector2 v1, Vector2 v2)
     {
         return v1.x * v2.x + v1.y * v2.y;
     }
-    static float cross(Vector2 v1, Vector2 v2) 
+    static float cross(Vector2 v1, Vector2 v2)
     {
         return (v1.x * v2.y) - (v1.y * v2.x);
     }
 
-    void limit(float max) 
+    void limit(float max)
     {
         if (magSq() > max * max)
         {

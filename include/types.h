@@ -236,9 +236,15 @@ struct SettingSpec
 //
 // Will return PSRAM if it's available, regular ram otherwise
 
+// Cache PSRAM availability and prefer it when allocating large buffers.
 inline void * PreferPSRAMAlloc(size_t s)
 {
-    if (psramInit())
+    // Compute PSRAM availability once in a thread-safe way (I believe C++11+ guarantees thread-safe initialization of function-local statics).
+    static const int s_psramAvailable = []() noexcept -> int {
+        return psramInit() ? 1 : 0;
+    }();
+
+    if (s_psramAvailable)
     {
         debugV("PSRAM Array Request for %u bytes\n", s);
         auto p = ps_malloc(s);
@@ -292,17 +298,18 @@ public:
     template <class U> struct rebind { typedef psram_allocator<U> other; };
     template <class U> explicit psram_allocator(const psram_allocator<U>&){}
 
-    pointer address(reference x) const {return &x;}
-    const_pointer address(const_reference x) const {return &x;}
-    size_type max_size() const throw() {return size_t(-1) / sizeof(value_type);}
+    size_type max_size() const noexcept { return size_t(-1) / sizeof(value_type); }
 
     pointer allocate(size_type n, const void * hint = 0)
     {
-        void * pmem = PreferPSRAMAlloc(n*sizeof(T));
+        (void)hint;
+        if (n > max_size())
+            throw std::bad_array_new_length();
+        void * pmem = PreferPSRAMAlloc(n * sizeof(T));
         return static_cast<pointer>(pmem) ;
     }
 
-    void deallocate(pointer p, size_type n)
+    void deallocate(pointer p, size_type /*n*/)
     {
         free(p);
     }
@@ -358,7 +365,22 @@ make_unique_psram(size_t size)
     using U = typename std::remove_extent<T>::type; // element type
     psram_allocator<U> allocator;
     U* ptr = allocator.allocate(size);
+    // NOTE: This returns a std::unique_ptr with the default deleter which will call delete[].
+    // On our toolchain, delete[] ultimately routes to free() and is compatible with ps_malloc().
+    // If that ever changes, consider introducing a custom deleter and updating call sites to use it.
     return std::unique_ptr<T>(ptr);
+}
+
+// Overload for 2D arrays
+template<typename T>
+std::enable_if_t<std::rank<T>::value == 2, std::unique_ptr<T>>
+make_unique_psram()
+{
+    using U = typename std::remove_all_extents<T>::type;
+    size_t size = std::extent<T, 0>::value * std::extent<T, 1>::value;
+    psram_allocator<U> allocator;
+    U* ptr = allocator.allocate(size);
+    return std::unique_ptr<T>(reinterpret_cast<T*>(ptr));
 }
 
 // make_shared_psram
@@ -372,10 +394,4 @@ std::shared_ptr<T> make_shared_psram(Args&&... args)
     return std::allocate_shared<T>(allocator, std::forward<Args>(args)...);
 }
 
-template<typename T>
-std::shared_ptr<T> make_shared_psram_array(size_t size)
-{
-    psram_allocator<T> allocator;
-    return std::allocate_shared<T>(allocator, size);
-}
 

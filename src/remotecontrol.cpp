@@ -147,10 +147,10 @@ void RemoteControl::handle()
     {
         if (RemoteColorCode.code == result)
         {
-            // To set a solid color fill based on the remote buttons, we take the color from the table, 
+            // To set a solid color fill based on the remote buttons, we take the color from the table,
             // crate a ColorFillEffect, and apply it as a temporary effect.  This will override the current
             // effect until the next effect change or remote command.
-            
+
             debugI("Changing Color via remote: %08X\n", (uint32_t) RemoteColorCode.color);
             effectManager.ApplyGlobalColor(RemoteColorCode.color);
             #if FULL_COLOR_REMOTE_FILL

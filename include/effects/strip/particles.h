@@ -154,10 +154,7 @@ class FadingCountDownObject : public FadingObject
 
   public:
 
-    FadingCountDownObject(unsigned long maxvalue)
-      : _maxValue(maxvalue)
-    {
-    }
+    FadingCountDownObject(unsigned long maxvalue) : _maxValue(maxvalue) {}
 
     virtual unsigned long CurrentCountdown()
     {
@@ -177,10 +174,7 @@ class FadingColoredObject : public FadingObject
 
   public:
 
-    FadingColoredObject(CRGB baseColor)
-      : _baseColor(baseColor)
-    {
-    }
+    FadingColoredObject(CRGB baseColor) : _baseColor(baseColor) {}
 
     virtual CRGB ObjectColor() const
     {
@@ -312,9 +306,7 @@ template <typename Type = DrawableParticle> class ParticleSystem
 
   public:
 
-    ParticleSystem<Type>()
-    {
-    }
+    ParticleSystem() {}
 
     virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _gfx)
     {
@@ -384,18 +376,26 @@ class RingParticle : public FadingColoredObject
 
 
 #if ENABLE_AUDIO
-class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingParticle>, LEDStripEffect
+class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingParticle>, public EffectWithId<idStripColorBeatWithFlash>
 {
+  private:
+
     int _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
-    ColorBeatWithFlash(const String & strName) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(idStripColorBeatWithFlash, strName)
+    ColorBeatWithFlash(const String & strName)
+      : BeatEffectBase(),
+        ParticleSystem<RingParticle>(),
+        EffectWithId<idStripColorBeatWithFlash>(strName)
     {
     }
 
-    ColorBeatWithFlash(const JsonObjectConst& jsonObject) : BeatEffectBase(), ParticleSystem<RingParticle>(), LEDStripEffect(jsonObject)
+    ColorBeatWithFlash(const JsonObjectConst& jsonObject)
+      : BeatEffectBase(),
+        ParticleSystem<RingParticle>(),
+        EffectWithId<idStripColorBeatWithFlash>(jsonObject)
     {
     }
 
@@ -439,22 +439,24 @@ class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingPart
     }
 };
 
-class ColorBeatOverRed : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<RingParticle>
+class ColorBeatOverRed : public EffectWithId<idStripColorBeatOverRed>, public BeatEffectBase, public ParticleSystem<RingParticle>
 {
+  private:
+
     int  _iLastInsulator = 0;
     CRGB _baseColor = CRGB::Black;
 
   public:
 
     ColorBeatOverRed(const String & strName)
-  : LEDStripEffect(idStripColorBeatOverRed, strName),
+      : EffectWithId<idStripColorBeatOverRed>(strName),
         BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
     }
 
     ColorBeatOverRed(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripColorBeatOverRed>(jsonObject),
         BeatEffectBase(1.75, 0.2),
         ParticleSystem<RingParticle>()
     {
@@ -699,8 +701,10 @@ class HotWhiteRingParticle : public FadingObject
 #if ENABLE_AUDIO
 
 
-class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
+class MoltenGlassOnVioletBkgnd : public EffectWithId<idStripMoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
+  private:
+
     int                    _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
@@ -708,7 +712,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
   public:
 
     MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-  : LEDStripEffect(idStripMoltenGlassOnVioletBkgnd, strName),
+      : EffectWithId<idStripMoltenGlassOnVioletBkgnd>(strName),
         BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -716,7 +720,7 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
     }
 
     MoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripMoltenGlassOnVioletBkgnd>(jsonObject),
         BeatEffectBase(1.50, 0.05),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
@@ -789,8 +793,10 @@ class MoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, p
     }
 };
 
-class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
+class NewMoltenGlassOnVioletBkgnd : public EffectWithId<idStripNewMoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
+  private:
+
     int  _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
@@ -798,7 +804,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
   public:
 
     NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-  : LEDStripEffect(idStripNewMoltenGlassOnVioletBkgnd, strName),
+      : EffectWithId<idStripNewMoltenGlassOnVioletBkgnd>(strName),
         BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(Palette)
@@ -806,7 +812,7 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
     }
 
     NewMoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripNewMoltenGlassOnVioletBkgnd>(jsonObject),
         BeatEffectBase(1.0, 0.25 ),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
@@ -878,8 +884,10 @@ class NewMoltenGlassOnVioletBkgnd : public LEDStripEffect, public BeatEffectBase
     }
 };
 
-class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
+class SparklySpinningMusicEffect : public EffectWithId<idStripSparklySpinningMusic>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
 {
+  private:
+
     int  _iLastInsulator = 0;
     const CRGBPalette16 & _Palette;
     CRGB _baseColor = CRGB::Black;
@@ -887,12 +895,12 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
   public:
 
     SparklySpinningMusicEffect(const String & strName, const CRGBPalette16 & Palette)
-  : LEDStripEffect(idStripSparklySpinningMusic, strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
+      : EffectWithId<idStripSparklySpinningMusic>(strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
     {
     }
 
     SparklySpinningMusicEffect(const JsonObjectConst& jsonObject)
-      : LEDStripEffect(jsonObject),
+      : EffectWithId<idStripSparklySpinningMusic>(jsonObject),
         BeatEffectBase(),
         ParticleSystem<SpinningPaletteRingParticle>(),
         _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
@@ -941,20 +949,18 @@ class SparklySpinningMusicEffect : public LEDStripEffect, public BeatEffectBase,
     }
 };
 
-class MusicalHotWhiteInsulatorEffect : public LEDStripEffect, public BeatEffectBase, public ParticleSystem<HotWhiteRingParticle>
+class MusicalHotWhiteInsulatorEffect : public EffectWithId<idStripMusicalHotWhiteInsulator>, public BeatEffectBase, public ParticleSystem<HotWhiteRingParticle>
 {
+  private:
+
     int  _iLastInsulator = 0;
     CRGB _baseColor      = CRGB::Black;
 
   public:
 
-  MusicalHotWhiteInsulatorEffect(const String & strName) : LEDStripEffect(idStripMusicalHotWhiteInsulator, strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
-    {
-    }
+    MusicalHotWhiteInsulatorEffect(const String & strName) : EffectWithId<idStripMusicalHotWhiteInsulator>(strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>() {}
 
-    MusicalHotWhiteInsulatorEffect(const JsonObjectConst& jsonObject) : LEDStripEffect(jsonObject), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>()
-    {
-    }
+    MusicalHotWhiteInsulatorEffect(const JsonObjectConst& jsonObject) : EffectWithId<idStripMusicalHotWhiteInsulator>(jsonObject), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>() {}
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
