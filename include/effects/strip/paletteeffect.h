@@ -32,7 +32,8 @@
 
 #include "effects.h"
 
-class PaletteEffect : public EffectWithId<idStripPalette>
+template <typename TEffect>
+class PaletteEffectBase : public EffectWithId<TEffect>
 {
   private:
 
@@ -50,16 +51,16 @@ class PaletteEffect : public EffectWithId<idStripPalette>
 
   public:
 
-    PaletteEffect(const CRGBPalette16 & palette,
-                  float density = 1.0,
-                  float paletteSpeed = 1,
-                  float ledsPerSecond = 0,
-                  float lightSize = 1,
-                  float gapSize = 1,
+    PaletteEffectBase(const CRGBPalette16 & palette,
+                  float density = 1.0f,
+                  float paletteSpeed = 1.0f,
+                  float ledsPerSecond = 0.0f,
+                  float lightSize = 1.0f,
+                  float gapSize = 1.0f,
                   TBlendType blend = LINEARBLEND,
                   bool  bErase = true,
                   float brightness = 1.0)
-      : EffectWithId<idStripPalette>("Palette Effect"),
+      : EffectWithId<TEffect>("Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),
@@ -74,8 +75,8 @@ class PaletteEffect : public EffectWithId<idStripPalette>
     {
     }
 
-    PaletteEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<idStripPalette>(jsonObject),
+    PaletteEffectBase(const JsonObjectConst& jsonObject)
+      : EffectWithId<TEffect>(jsonObject),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
@@ -155,4 +156,10 @@ class PaletteEffect : public EffectWithId<idStripPalette>
           }
         }
     }
+};
+
+class PaletteEffect : public PaletteEffectBase<PaletteEffect>
+{
+public:
+    using PaletteEffectBase<PaletteEffect>::PaletteEffectBase;
 };

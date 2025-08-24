@@ -5,12 +5,12 @@
 // Inspired by https://editor.soulmatelights.com/gallery/2272-hypnosis
 // Spiraling swirls of rotating colors.
 
-class PatternSMHypnosis : public EffectWithId<idMatrixSMHypnosis>
+class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
 {
   public:
 
-    PatternSMHypnosis() : EffectWithId<idMatrixSMHypnosis>("Hypnosis") {}
-    PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMHypnosis>(jsonObject) {}
+    PatternSMHypnosis() : EffectWithId<PatternSMHypnosis>("Hypnosis") {}
+    PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMHypnosis>(jsonObject) {}
 
     size_t DesiredFramesPerSecond() const override
     {

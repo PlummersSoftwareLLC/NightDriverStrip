@@ -200,95 +200,26 @@ extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 // Support for building stable factory IDs and combining them
 // ------------------------------------------------------------
 
-namespace
-{
-    // Map star template parameter to a stable integer id used for hashing
-    template<typename TStar>
-    struct StarTypeId;
 
-    template<>
-    struct StarTypeId<Star> { static constexpr int value = idStar; };
-
-    template<>
-    struct StarTypeId<BubblyStar> { static constexpr int value = idStarBubbly; };
-
-    template<>
-    struct StarTypeId<HotWhiteStar> { static constexpr int value = idStarHotWhite; };
-
-    template<>
-    struct StarTypeId<LongLifeSparkleStar> { static constexpr int value = idStarLongLifeSparkle; };
-
-    #if ENABLE_AUDIO
-    template<>
-    struct StarTypeId<MusicStar> { static constexpr int value = idStarMusic; };
-    #endif
-
-    template<>
-    struct StarTypeId<QuietStar> { static constexpr int value = idStarQuiet; };
-}
-
-template<class T>
+template<typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-template <class T>
+template<typename T>
 constexpr EffectId effect_id_of_type() {
     static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,
                   "Type must derive from EffectWithId<Id>");
     return remove_cvref_t<T>::ID;   // compile-time constant
 }
 
-using namespace hashing;
-
-// Actual hash support class
-class IdSupport
+// Build a stable 64-bit ID for a factory based on effect type and ctor args
+template<typename TEffect, typename... Args>
+constexpr uint64_t factory_id_of_instance(const Args&... args)
 {
-public:
-    // Build a stable 64-bit ID for a factory based on effect type and ctor args
-    template<typename TEffect, typename... Args>
-    static inline uint64_t MakeFactoryId(const Args&... args)
-    {
-        static_assert(std::is_enum_v<decltype(TEffect::kId)>, "TEffect must have static constexpr kId enum");
-        uint64_t h = FNV_OFFSET;
-        hash_append(h, std::string_view{"effect"});
-        hash_append(h, effect_id_of_type<TEffect>());
-        hash_pack(h, args...);
-        return h;
-    }
-
-    // Build a stable 64-bit ID for StarryNight factories (includes star type)
-    template<typename TStar, typename... Args>
-    static inline uint64_t MakeStarryFactoryId(int starryEffectNumber, const Args&... args)
-    {
-        uint64_t h = FNV_OFFSET;
-        hash_append(h, std::string_view{"starry"});
-        hash_append(h, starryEffectNumber); // e.g., idStripStarryNight
-        hash_append(h, static_cast<int>(StarTypeId<TStar>::value));
-        hash_pack(h, args...);
-        return h;
-    }
-
-    // Order-sensitive hash of a list of 64-bit ids
-    static inline uint64_t Hash(std::vector<uint64_t>&& ids)
-    {
-        auto bytes = reinterpret_cast<const unsigned char*>(ids.data());
-        const size_t len = ids.size() * sizeof(uint64_t);
-        return fnv1a64_bytes(bytes, len, FNV_OFFSET);
-    }
-
-    static inline auto HashToString(uint64_t hash)
-    {
-        return String(hash, 16);
-    }
-
-    static inline auto HashString(std::vector<uint64_t>&& ids)
-    {
-        return HashToString(Hash(std::move(ids)));
-    }
-
-  private:
-};
-
-// --- Macro-free helpers for concise, type-safe effect registration ---
+    uint64_t h = fnv1a::hash<uint64_t>("effect");
+    h = fnv1a::hash(effect_id_of_type<TEffect>(), h);
+    h = fnv1a::hash_pack(h, args...);
+    return h;
+}
 
 // Adds a default and JSON effect factory for a specific effect number and type.
 // All parameters beyond effectNumber and effect type are forwarded to the default constructor.
@@ -299,29 +230,14 @@ inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, A
         effect_id_of_type<TEffect>(),
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
         [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); },
-        IdSupport::MakeFactoryId<TEffect>(args...)
+        factory_id_of_instance<TEffect>(args...)
     );
 }
 
-// Used by Starry Night helper
-std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject);
-
-// Adds a default and JSON effect factory for a StarryNightEffect with a specific star type.
-template<typename TStar, typename... Args>
-inline EffectFactories::NumberedFactory& AddStarryNightEffect(EffectFactories& factories, Args&&... args)
-{
-    return factories.AddEffect(
-        idStripStarryNight,
-        [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<TStar>>(args...); },
-        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); },
-        IdSupport::MakeStarryFactoryId<TStar>(idStripStarryNight, args...)
-    );
-}
 
 // Fold-expression helper to register many at once with brief syntax:
 //   RegisterAll(*g_ptrEffectFactories,
 //       Effect<idStripPalette, MyEffect>(args...),
-//       Starry<MyStar>(args...),
 //       Disabled(Effect<idStripColorFill, OtherEffect>(args...)));
 template<typename... Adders>
 inline void RegisterAll(EffectFactories& factories, Adders&&... adders)
@@ -336,16 +252,6 @@ inline auto Effect(Args&&... args)
     return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
     {
         return AddEffect<TEffect>(factories, args...);
-    };
-}
-
-// Builder for a Starry Night entry used with RegisterAll
-template<typename TStar, typename... Args>
-inline auto Starry(Args&&... args)
-{
-    return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
-    {
-        return AddStarryNightEffect<TStar>(factories, args...);
     };
 }
 

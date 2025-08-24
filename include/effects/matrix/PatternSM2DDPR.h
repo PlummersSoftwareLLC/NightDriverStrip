@@ -6,7 +6,7 @@
 // Looks best on a square display, but OK on rectangles.
 // I'll admit this math may as well be magic, but it's pretty.
 
-class PatternSM2DDPR : public EffectWithId<idMatrixSM2DDPR> {
+class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR> {
   private:
 
     uint8_t ZVoffset = 0;
@@ -22,8 +22,8 @@ class PatternSM2DDPR : public EffectWithId<idMatrixSM2DDPR> {
 
   public:
 
-    PatternSM2DDPR() : EffectWithId<idMatrixSM2DDPR>("Crystallize") {}
-    PatternSM2DDPR(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSM2DDPR>(jsonObject) {}
+    PatternSM2DDPR() : EffectWithId<PatternSM2DDPR>("Crystallize") {}
+    PatternSM2DDPR(const JsonObjectConst &jsonObject) : EffectWithId<PatternSM2DDPR>(jsonObject) {}
 
     void Start() override {}
 

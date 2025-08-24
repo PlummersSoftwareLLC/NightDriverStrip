@@ -2,118 +2,181 @@
 
 #include <type_traits>
 #include <string>
+#include <string_view>
+#include <cstdint>
+#include <cstddef>
+#include <utility>
+#include <vector>
 #define FASTLED_ESP32_FLASH_LOCK 1
 #define FASTLED_INTERNAL 1               // Suppresses build banners
 #include <FastLED.h>
 
 
-namespace hashing
+namespace fnv1a
 {
-    // FNV-1a 64-bit constants
-    static constexpr uint64_t FNV_OFFSET = 1469598103934665603ull;
-    static constexpr uint64_t FNV_PRIME  = 1099511628211ull;
+    // Helper for dependent-false static_assert in templates
+    template<class>
+    struct dependent_false : std::false_type {};
 
-    // Computes a 64-bit FNV-1a hash over a raw byte sequence.
-    //
-    // FNV-1a iterates over the input one byte at a time. For each byte, it:
-    // 1) XORs the current hash with the byte, then
-    // 2) Multiplies the result by the FNV prime, with 64-bit wraparound (mod 2^64).
-    // Starting from an offset basis (seed), this yields a fast, well-distributed,
-    // non-cryptographic hash suitable for hash tables and identifiers.
-    //
-    // Note: Requires FNV_OFFSET (offset basis) and FNV_PRIME (prime multiplier)
-    // to be defined as the standard 64-bit FNV-1a constants. The algorithm
-    // is byte-oriented and endianness-agnostic. This is not suitable for
-    // cryptographic purposes.
-    static inline uint64_t fnv1a64_bytes(const void* data, size_t len, uint64_t seed = FNV_OFFSET)
+    // Traits for FNV parameters per hash width
+    template<typename H>
+    struct traits;
+
+    template<>
+    struct traits<uint32_t>
     {
-        uint64_t h = seed;
-        const auto* p = static_cast<const unsigned char*>(data);
+        static constexpr uint32_t offset = 2166136261u;
+        static constexpr uint32_t prime  = 16777619u;
+    };
 
+    template<>
+    struct traits<uint64_t>
+    {
+        static constexpr uint64_t offset = 1469598103934665603ull;
+        static constexpr uint64_t prime  = 1099511628211ull;
+    };
+
+    // Generic FNV-1a over raw bytes for any supported hash type H (uint32_t/uint64_t)
+    template<typename H>
+    constexpr H hash_bytes(const void* data, size_t len, H seed = traits<H>::offset)
+    {
+        H h = seed;
+        const auto* p = static_cast<const unsigned char*>(data);
         for (size_t i = 0; i < len; ++i)
         {
-            h ^= p[i];
-            h *= FNV_PRIME;
+            h ^= static_cast<unsigned char>(p[i]);
+            h *= traits<H>::prime;
         }
-
         return h;
     }
 
-    // Append a string_view's bytes to the running FNV-1a hash 'h'.
-    static inline void hash_append(uint64_t& h, std::string_view sv)
+    // Compile-time friendly FNV-1a for C-strings, generic over H
+    template<typename H>
+    constexpr H hash_cstr(const char* str, H seed = traits<H>::offset)
     {
-        h = fnv1a64_bytes(sv.data(), sv.size(), h);
+        H h = seed;
+        while (*str)
+        {
+            h ^= static_cast<unsigned char>(*str++);
+            h *= traits<H>::prime;
+        }
+        return h;
     }
 
-    template<typename T>
-    // Append any arithmetic value (integers/floats/bool) by value bytes.
-    static inline std::enable_if_t<std::is_arithmetic_v<T>, void>
-    hash_append(uint64_t& h, T v)
+    // -------------------------------------------------------------
+    // Generic "hash" helpers that take the current hash value and
+    // return the updated hash. Marked constexpr where feasible.
+    // -------------------------------------------------------------
+
+    // Unified hash for most types using if constexpr dispatch
+    template<typename H, typename T>
+    constexpr H hash(const T& v, H h = traits<H>::offset)
     {
-        h = fnv1a64_bytes(&v, sizeof(v), h);
+        if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<T>>, std::string_view>)
+        {
+            return hash_bytes<H>(v.data(), v.size(), h);
+        }
+        else if constexpr (std::is_enum_v<T>)
+        {
+            using U = std::underlying_type_t<T>;
+            const U u = static_cast<U>(v);
+            return hash_bytes<H>(&u, sizeof(u), h);
+        }
+        else if constexpr (std::is_arithmetic_v<T>)
+        {
+            return hash_bytes<H>(&v, sizeof(v), h);
+        }
+        else if constexpr (std::is_pointer_v<T> && std::is_same_v<std::remove_cv_t<std::remove_pointer_t<T>>, char>)
+        {
+            // const char* (C-string); treat null as no-op
+            return v ? hash_cstr<H>(v, h) : h;
+        }
+        else if constexpr (std::is_array_v<T> && std::is_same_v<std::remove_cv_t<std::remove_extent_t<T>>, char>)
+        {
+            // char[N] -> treat as C-string
+            return hash(static_cast<const char*>(v), h);
+        }
+        else if constexpr (std::is_trivially_copyable_v<T> && !std::is_pointer_v<T>)
+        {
+            // Generic trivially-copyable blob
+            return hash_bytes<H>(&v, sizeof(v), h);
+        }
+        else
+        {
+            static_assert(dependent_false<T>::value, "Unsupported argument type for hashing");
+        }
     }
 
-    template<typename T>
-    // Append an enum by hashing its underlying integral value.
-    static inline std::enable_if_t<std::is_enum_v<T>, void>
-    hash_append(uint64_t& h, T v)
+    // Arduino String (cannot be constexpr due to API)
+    template<typename H>
+    inline H hash(const String& s, H h = traits<H>::offset)
     {
-        using U = std::underlying_type_t<T>;
-        U u = static_cast<U>(v);
-
-        h = fnv1a64_bytes(&u, sizeof(u), h);
+        return hash(s.c_str(), h);
     }
 
-    // Append a C-string; null is treated as an empty string.
-    static inline void hash_append(uint64_t& h, const char* s)
+    // CRGB by hashing its r,g,b components (constexpr-friendly)
+    template<typename H>
+    constexpr H hash(const CRGB& c, H h = traits<H>::offset)
     {
-        if (s)
-            hash_append(h, std::string_view{s});
+        h = hash(c.r, h);
+        h = hash(c.g, h);
+        h = hash(c.b, h);
+        return h;
     }
 
-    template<size_t N>
-    // Append a fixed-size char array, excluding the trailing NUL.
-    static inline void hash_append(uint64_t& h, const char (&s)[N])
-    {
-        // Exclude trailing NUL
-        hash_append(h, std::string_view{s, N ? (N - 1) : 0});
-    }
-
-    // Arduino String
-    static inline void hash_append(uint64_t& h, const String& s)
-    {
-        hash_append(h, std::string_view{s.c_str()});
-    }
-
-    // CRGB and CRGBPalette16 content
-    // Append a CRGB color by hashing its raw bytes.
-    static inline void hash_append(uint64_t& h, const CRGB& c)
-    {
-        h = fnv1a64_bytes(&c, sizeof(c), h);
-    }
-
-    // Append a CRGBPalette16 by hashing each CRGB entry in order.
-    static inline void hash_append(uint64_t& h, const CRGBPalette16& p)
+    // CRGBPalette16 by hashing each entry (explicit overload to iterate)
+    template<typename H>
+    constexpr H hash(const CRGBPalette16& p, H h = traits<H>::offset)
     {
         for (int i = 0; i < 16; ++i)
-            hash_append(h, p[i]);
+            h = hash(p[i], h);
+        return h;
     }
 
-    template<typename T>
-    // Append a trivially-copyable non-pointer, non-arithmetic, non-enum type by raw bytes.
-    static inline std::enable_if_t<!std::is_pointer_v<T> && !std::is_arithmetic_v<T> && !std::is_enum_v<T>, void>
-    hash_append(uint64_t& h, const T& v)
+    // std::vector<T> — iterate elements in order (not constexpr due to std::vector)
+    template<typename H, typename T>
+    inline H hash(const std::vector<T>& v, H h = traits<H>::offset)
     {
-        if constexpr (std::is_trivially_copyable_v<T>)
-            h = fnv1a64_bytes(&v, sizeof(v), h);
-        else
-            static_assert(sizeof(T) == 0, "Unsupported argument type for factory-id hashing");
+        // Mix the size to reduce potential ambiguities between sequences
+        h = hash(v.size(), h);
+        for (const auto& e : v)
+            h = hash(e, h);
+        return h;
     }
 
-    template<typename... As>
-    // Append a pack of values to the running hash 'h' in order.
-    static inline void hash_pack(uint64_t& h, As&&... as)
+    // Append helpers (templated by hash type H) — single forwarding overload
+    template<typename H, typename T>
+    inline void hash_append(H& h, T&& v)
     {
-        (hash_append(h, std::forward<As>(as)), ...);
+        h = hash<H>(std::forward<T>(v), h);
+    }
+
+    // Value-returning pack hash (constexpr-friendly): applies in order and returns updated hash
+    template<typename H, typename... As>
+    constexpr H hash_pack(H h, As&&... as)
+    {
+        ((h = hash<H>(std::forward<As>(as), h)), ...);
+        return h;
+    }
+
+    // Value-returning pack hash (constexpr-friendly): applies in order and returns updated hash
+    template<typename H, typename... As>
+    inline H hash_pack_rt(H h, As&&... as)
+    {
+        ((h = hash<H>(std::forward<As>(as), h)), ...);
+        return h;
+    }
+
+    // By-ref convenience overload delegates to the constexpr value version
+    template<typename H, typename... As>
+    inline void hash_append_pack(H& h, As&&... as)
+    {
+        h = hash_pack<H>(h, std::forward<As>(as)...);
+    }
+
+    template<typename H>
+    inline auto to_string(H h)
+    {
+        return String(h, 16);
     }
 }

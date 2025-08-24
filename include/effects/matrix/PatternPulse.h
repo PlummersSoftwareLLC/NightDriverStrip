@@ -58,7 +58,7 @@
 #ifndef PatternPulse_H
 #define PatternPulse_H
 
-class PatternPulse : public EffectWithId<idMatrixPulse>
+class PatternPulse : public EffectWithId<PatternPulse>
 {
   private:
 
@@ -72,8 +72,8 @@ class PatternPulse : public EffectWithId<idMatrixPulse>
 
   public:
 
-    PatternPulse() : EffectWithId<idMatrixPulse>("Pulse") {}
-    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPulse>(jsonObject) {}
+    PatternPulse() : EffectWithId<PatternPulse>("Pulse") {}
+    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<PatternPulse>(jsonObject) {}
 
     void Draw() override
     {
