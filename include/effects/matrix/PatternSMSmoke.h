@@ -45,6 +45,7 @@ public:
       hue2 = 0U;
       hue = random8();
     }
+
     if (deltaHue & 0x01) //((deltaHue >> 2U) == 0U) // (orig) I'd like to connect some kind of multiplier to the color change delay, but I don't know what...
 
       hue2++;

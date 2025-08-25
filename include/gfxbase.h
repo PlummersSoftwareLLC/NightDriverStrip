@@ -73,6 +73,13 @@
 #include "globals.h"
 #include <memory>
 
+// Calculates a weight for anti-aliasing in Wu's algorithm.
+constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
+{
+    return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
+}
+
+
 #if USE_HUB75
     #define USE_NOISE 1
 #endif
@@ -299,6 +306,7 @@ public:
         #define XY(x, y) xy(x, y)
     #endif
 
+    // Retrieves the color of a pixel at the specified X and Y coordinates.
     __attribute__((always_inline)) virtual CRGB getPixel(int16_t x, int16_t y) const
     {
         if (isValidPixel(x, y))
@@ -307,6 +315,7 @@ public:
             throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
     }
 
+    // Retrieves the color of a pixel at the specified linear index.
     __attribute__((always_inline)) virtual CRGB getPixel(int16_t i) const
     {
         if (isValidPixel(i))
@@ -331,6 +340,75 @@ public:
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
+    }
+
+    // Blends a color with the existing pixel color.
+    void drawPixelXY_Blend(uint8_t x, uint8_t y, CRGB color, uint8_t blend_amount)
+    {
+        if (isValidPixel(x, y)) {
+            nblend(leds[XY(x,y)], color, blend_amount);
+        }
+    }
+
+    // Draws an anti-aliased pixel using Wu's algorithm, blending with the background.
+    void drawPixelXYF_Wu(float x, float y, CRGB color)
+    {
+        // Extracts the fractional parts and derives their inverses.
+        uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
+        // Calculates the intensities for each affected pixel.
+        uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+        // Applies calculated intensities to color components and saturating-adds them to pixel components.
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
+            if (isValidPixel(xn, yn)) {
+                CRGB clr = leds[XY(xn, yn)];
+                clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+                clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+                clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+                leds[XY(xn, yn)] = clr;
+            }
+        }
+    }
+
+    // Draws a gradient line using floating point coordinates (DDA algorithm).
+    void drawLineF(float x1, float y1, float x2, float y2, const CRGB &col1, const CRGB &col2 = CRGB::Black)
+    {
+        CRGB c2 = (col2 == CRGB::Black) ? col1 : col2;
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float steps = fmax(fabs(dx), fabs(dy));
+        if (steps == 0) {
+            drawPixelXYF_Wu(x1, y1, col1);
+            return;
+        }
+        float xinc = dx / steps;
+        float yinc = dy / steps;
+        float x = x1;
+        float y = y1;
+        for (int i = 0; i <= steps; i++) {
+            uint8_t blend_amount = (uint8_t)((i / steps) * 255);
+            CRGB color = blend(col1, c2, blend_amount);
+            drawPixelXYF_Wu(x, y, color);
+            x += xinc;
+            y += yinc;
+        }
+    }
+
+    // Draws a solid circle using floating point coordinates.
+    // Iterate through a square bounding box,
+    // using x*x + y*y <= radius*radius
+    // to determine if a pixel is within the circle, then draw it.
+    void drawSafeFilledCircleF(float cx, float cy, float radius, CRGB col)
+    {
+        for (int8_t y = -radius; y <= radius; y++)
+        {
+            for (int8_t x = -radius; x <= radius; x++)
+            {
+                if (x * x + y * y <= radius * radius)
+                    drawPixelXYF_Wu(cx + x, cy + y, col);
+            }
+        }
     }
 
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
