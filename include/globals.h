@@ -131,6 +131,15 @@
 #define NTP_DELAY_ERROR_SECONDS 30      // delay count for NTP updates if no time was set, in seconds
 #define NTP_PACKET_LENGTH       48      // ntp packet length
 
+// Button macro compatibility: prefer zero-based TOGGLE_BUTTON_0/1.
+// If legacy macros are defined (TOGGLE_BUTTON_1/2), map them to new names unless already set.
+#if defined(TOGGLE_BUTTON_1) && !defined(TOGGLE_BUTTON_0)
+#define TOGGLE_BUTTON_0 TOGGLE_BUTTON_1
+#endif
+#if defined(TOGGLE_BUTTON_2) && !defined(TOGGLE_BUTTON_1)
+#define TOGGLE_BUTTON_1 TOGGLE_BUTTON_2
+#endif
+
 // C Helpers and Macros
 
 #define NAME_OF(x)          #x

@@ -148,6 +148,23 @@ inline constexpr AudioInputParams kParamsI2SExternal{
   #define MIN_VU 0.05f
 #endif
 
+void IRAM_ATTR AudioSamplerTaskEntry(void *);
+void IRAM_ATTR AudioSerialTaskEntry(void *);
+
+// PeakData class
+//
+// Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
+// results are simplified down to this small class of band peaks.
+
+#ifndef MIN_VU
+#define MIN_VU 2                // Minimum VU value to use for the span when computing VURatio.  Contributes to
+#endif                          // how dynamic the music is (smaller values == more dynamic)
+
+
+#ifndef GAINDAMPEN
+    #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
+#endif
+
 #ifndef VUDAMPEN
   #define VUDAMPEN 0
 #endif
@@ -256,6 +273,10 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 template<const AudioInputParams& Params>
 class SoundAnalyzer : public ISoundAnalyzer
 {
+  public:
+    // Indicates audio processing capability at runtime
+    constexpr bool Enabled() const { return true; }
+
     // Give internal audio task functions access to private members
     friend void IRAM_ATTR AudioSamplerTaskEntry(void *);
     friend void IRAM_ATTR AudioSerialTaskEntry(void *);

@@ -93,7 +93,11 @@ class BasicInfoSummaryPage final : public Page
             const int yMargin = 5;
         #endif
 
+        // Theme colors come from Screen implementation
         const uint16_t bkgndColor = display.GetBkgndColor();
+        const uint16_t borderColor = display.GetBorderColor();
+        const uint16_t textColor = display.GetTextColor();
+
         if (bRedraw)
             display.fillScreen(bkgndColor);
 
@@ -213,28 +217,47 @@ class TitlePage : public Page
     int ContentTop(Screen &display) const { return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4); }
 
   public:
-    std::string Name() const override { return "Title"; }
+    std::string Name() const override
+    {
+        return "CurrentEffectSummary";
+    }
+    void OnButtonPress(uint8_t buttonIndex) override
+    {
+        if (buttonIndex == 1)
+        {
+            // On this page, use Button 1 to advance to the next effect
+            debugI("Button 1 pressed so advancing to next effect");
+            g_ptrSystem->EffectManager().NextEffect();
+        }
+        else
+        {
+            Page::OnButtonPress(buttonIndex);
+        }
+    }
 
     void Draw(Screen &display, bool bRedraw) override
     {
         if (bRedraw)
             display.fillScreen(BLACK16);
 
-        const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
-        static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
-        static String sip = WiFi.localIP().toString();
-        static String lastFooter;
-        static uint32_t lastFullDraw = 0;
-        static uint32_t lastScreen = millis();
+        uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
 
-    // Pick text size based on width (header size)
-    display.setTextSize(display.width() > 160 ? 2 : 1);
-    // Compute and cache content top using the header text size so it stays stable
-    const int topMargin = display.fontHeight() * 3 + 4;
-    _contentTop = topMargin;
+        static auto lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+        static auto sip = WiFi.localIP().toString();
+        static auto lastFPS = g_Values.FPS;
+        static auto lastFullDraw = 0;
+        static auto lastAudio = 0;
+        static auto lastSerial = 0;
+        static auto lastScreen = millis();
+        static String lastFooter = "";
+        float screenFPS = 0;
+        auto yh = 2; // Start at top of screen
+
+        display.setTextSize(display.width() > 160 ? 2 : 1);
+        const int topMargin = display.fontHeight() * 3 + 4;
 
         // Screen FPS (for display updates)
-        float screenFPS = (millis() - lastScreen) / 1000.0f;
+        screenFPS = (millis() - lastScreen) / 1000.0f;
         if (screenFPS != 0)
             screenFPS = 1.0f / screenFPS;
         lastScreen = millis();
@@ -253,13 +276,13 @@ class TitlePage : public Page
                 display.fillRect(0, topMargin - 1, display.width(), 1, BLUE16);
                 display.fillRect(0, display.height() - display.BottomMargin + 1, display.width(), 1, BLUE16);
 
-                lasteffect = currentEffect;
-                sip = currentIP;
+                lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+                sip = WiFi.localIP().toString();
+                lastFPS = g_Values.FPS;
 
-                // Title lines
-                int yh = 2;
                 display.setTextColor(display.GetBorderColor(), backColor);
-                String sEffect = String("Effect: ") + String(currentEffect + 1) + String("/") + String(g_ptrSystem->EffectManager().EffectCount());
+                String sEffect = String("Effect: ") + String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
+                                 String("/") + String(g_ptrSystem->EffectManager().EffectCount());
                 auto w = display.textWidth(sEffect);
                 display.setCursor(display.width() / 2 - w / 2, yh);
                 display.print(sEffect.c_str());
