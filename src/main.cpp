@@ -58,7 +58,7 @@
 //    gives effects access to the audio data, and there are a number
 //    of sound-reactive and beat-driven effects built in.
 //
-//    In addition to simple trips, the app handles matrixes as well.
+//    In addition to simple strips, the app handles matrixes as well.
 //    It also handles groups of rings.  In one incarnation, 10 RGB
 //    LED PC fans are connected in a LianLi case plus the 32 or so
 //    on the front of the case.  The fans are grouped into NUM_FANS
@@ -167,7 +167,7 @@
 #include <TJpg_Decoder.h>
 #include <esp_now.h>
 
-#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
@@ -214,7 +214,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("------------------------------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d, USE_AUDIO: %d, ENABLE_REMOTE: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD, ENABLE_AUDIO, ENABLE_REMOTE);
+    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_TFTSPI: %d, USE_LCD: %d, AUDIO_ENABLED: %d, ENABLE_REMOTE: %d", M5STICKC, USE_M5DISPLAY, USE_TFTSPI, USE_LCD, (int)g_Analyzer.Enabled(), ENABLE_REMOTE);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -397,7 +397,8 @@ void setup()
         g_ptrSystem->SetupRemoteControl();
     #endif
 
-    #if ENABLE_AUDIO
+    if (g_Analyzer.Enabled())
+    {
         #if INPUT_PIN
             pinMode(INPUT_PIN, INPUT);
         #endif
@@ -407,9 +408,9 @@ void setup()
             pinMode(38, OUTPUT);
             digitalWrite(38, HIGH);
         #endif
-    #endif
+    }
 
-    // TOGGLE_BUTTON_1/2 are configured inside Screen's update loop
+    // TOGGLE_BUTTON_0/1 are configured inside Screen's update loop
 
     #if AMOLED_S3
         #include "amoled/LilyGo_AMOLED.h"
@@ -575,9 +576,10 @@ void loop()
                 strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
             #endif
 
-            #if ENABLE_AUDIO
+            if (g_Analyzer.Enabled())
+            {
                 strOutput += str_sprintf("Audio FPS: %d, MinVU: %6.1f, PeakVU: %6.1f, VURatio: %3.1f ", g_Analyzer._AudioFPS, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
-            #endif
+            }
 
             #if ENABLE_AUDIOSERIAL
                 strOutput += str_sprintf("Serial FPS: %d, ", g_Analyzer._serialFPS);

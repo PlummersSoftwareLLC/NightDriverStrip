@@ -119,9 +119,12 @@ uint16_t LocalDraw()
                 effectManager.Update(); // Draw the current built in effect
 
                 #if SHOW_VU_METER
-                    static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
-                    if (effectManager.IsVUVisible())
-                        spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
+                    if (g_Analyzer.Enabled())
+                    {
+                        static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
+                        if (effectManager.IsVUVisible())
+                            spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.MicMode() == PeakData::PCREMOTE ? & vuPaletteBlue : &vuPaletteGreen);
+                    }
                 #endif
 
                 debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
@@ -201,17 +204,20 @@ void ShowOnboardRGBLED()
     // the color maps to the sound level.  If no audio, it shows the middle LED color from the strip.
 
     #if ONBOARD_LED_R
-        #if ENABLE_AUDIO
+        if (g_Analyzer.Enabled())
+        {
             CRGB c = ColorFromPalette(HeatColors_p, g_Analyzer._VURatioFade / 2.0 * 255);
             ledcWrite(1, 255 - c.r); // write red component to channel 1, etc.
             ledcWrite(2, 255 - c.g);
             ledcWrite(3, 255 - c.b);
-        #else
+        }
+        else
+        {
             int iLed = NUM_LEDS / 2;
             ledcWrite(1, 255 - graphics->leds[iLed].r); // write red component to channel 1, etc.
             ledcWrite(2, 255 - graphics->leds[iLed].g);
             ledcWrite(3, 255 - graphics->leds[iLed].b);
-        #endif
+        }
     #endif
 }
 

@@ -35,7 +35,7 @@
 #include <algorithm>
 #include "screen.h"
 
-#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
 #include "Bounce2.h" // For Bounce button class
 #endif
 
@@ -53,28 +53,48 @@ DRAM_ATTR std::mutex Screen::_screenMutex; // The storage for the mutex of the s
 // What page of screen we are showing
 DRAM_ATTR uint8_t g_iCurrentPage = 0; // Will initialize to last active page on first draw
 
+// Default implementation for Page button handler (zero-based):
+// Button 0 = NextEffect, Button 1 = Flip page
+void Page::OnButtonPress(uint8_t buttonIndex)
+{
+    if (buttonIndex == 0)
+    {
+        // Default: advance to the next effect
+        g_ptrSystem->EffectManager().NextEffect();
+    }
+    else if (buttonIndex == 1)
+    {
+        // Default: flip to the next page
+        Screen::FlipToNextPage();
+    }
+}
+
 // Page implementations and registry
 
 class BasicInfoSummaryPage final : public Page
 {
   public:
-    const char *Name() const override
+    std::string Name() const override
     {
         return "BasicInfoSummary";
     }
-    bool PausesEffectRotation() const override
+    void OnButtonPress(uint8_t buttonIndex) override
     {
-        return true;
-    }
-    void OnButton2Press() override
-    {
-        // Reduce brightness while on this page
-        static int brightness = 255;
-        brightness /= 2;
-        if (brightness < 4)
-            brightness = 255;
-        auto &deviceConfig = g_ptrSystem->DeviceConfig();
-        deviceConfig.SetBrightness(brightness);
+        if (buttonIndex == 1)
+        {
+            // Reduce brightness while on this page (Button 1)
+            static int brightness = 255;
+            brightness /= 2;
+            if (brightness < 4)
+                brightness = 255;
+            auto &deviceConfig = g_ptrSystem->DeviceConfig();
+            deviceConfig.SetBrightness(brightness);
+        }
+        else
+        {
+            // Defer to default behavior for other buttons
+            Page::OnButtonPress(buttonIndex);
+        }
     }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -88,19 +108,10 @@ class BasicInfoSummaryPage final : public Page
             const int yMargin = 5;
         #endif
 
-        // Blue Theme
-
-        #if USE_OLED
-            const uint16_t bkgndColor = BLACK16;
-        #elif AMOLED_S3
-            const uint16_t bkgndColor = Screen::to16bit(CRGB::Black);
-            const uint16_t borderColor = Screen::to16bit(CRGB::Red);
-            const uint16_t textColor = Screen::to16bit(CRGB(100, 255, 20));
-        #else
-            const uint16_t bkgndColor = Screen::to16bit(CRGB::Blue);
-            const uint16_t borderColor = Screen::to16bit(CRGB::Yellow);
-            const uint16_t textColor = Screen::to16bit(CRGB::White);
-        #endif
+        // Theme colors come from Screen implementation
+        const uint16_t bkgndColor = display.GetBkgndColor();
+        const uint16_t borderColor = display.GetBorderColor();
+        const uint16_t textColor = display.GetTextColor();
 
         if (bRedraw)
             display.fillScreen(bkgndColor);
@@ -120,11 +131,8 @@ class BasicInfoSummaryPage final : public Page
         else
             display.setTextSize(1);
 
-        #if USE_OLED
-            display.setTextColor(WHITE16, BLACK16);
-        #else
-            display.setTextColor(textColor, bkgndColor); // Second color is background color, giving us text overwrite
-        #endif
+        // Second param is background for clean overwrite
+        display.setTextColor(display.GetTextColor(), display.GetBkgndColor());
 
         display.setCursor(xMargin, yMargin);
         display.println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS,
@@ -216,15 +224,18 @@ class BasicInfoSummaryPage final : public Page
                 }
             }
 
-            #if USE_OLED
-                display.fillRect(xMargin + 1, top, filled, height, WHITE16);
-                display.fillRect(xMargin + filled, top, width - filled, height, BLACK16);
-                display.drawRect(xMargin, top, width, height, WHITE16);
-            #else
+            if (display.IsMonochrome())
+            {
+                display.fillRect(xMargin + 1, top, filled, height, display.GetTextColor());
+                display.fillRect(xMargin + filled, top, width - filled, height, display.GetBkgndColor());
+                display.drawRect(xMargin, top, width, height, display.GetBorderColor());
+            }
+            else
+            {
                 display.fillRect(xMargin + 1, top + 1, filled, height - 2, color);
                 display.fillRect(xMargin + filled, top + 1, width - filled, height - 2, bkgndColor);
-                display.drawRect(xMargin, top, width, height, WHITE16);
-            #endif
+                display.drawRect(xMargin, top, width, height, display.GetBorderColor());
+            }
         }
     }
 };
@@ -232,15 +243,22 @@ class BasicInfoSummaryPage final : public Page
 class CurrentEffectSummaryPage final : public Page
 {
   public:
-    const char *Name() const override
+    std::string Name() const override
     {
         return "CurrentEffectSummary";
     }
-    void OnButton2Press() override
+    void OnButtonPress(uint8_t buttonIndex) override
     {
-        // Advance to the next effect when on this page
-        debugI("Button 2 pressed so advancing to next effect");
-        g_ptrSystem->EffectManager().NextEffect();
+        if (buttonIndex == 1)
+        {
+            // On this page, use Button 1 to advance to the next effect
+            debugI("Button 1 pressed so advancing to next effect");
+            g_ptrSystem->EffectManager().NextEffect();
+        }
+        else
+        {
+            Page::OnButtonPress(buttonIndex);
+        }
     }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -248,11 +266,7 @@ class CurrentEffectSummaryPage final : public Page
         if (bRedraw)
             display.fillScreen(BLACK16);
 
-        #if USE_SSD1306
-            uint16_t backColor = Screen::to16bit(CRGB(0, 0, 0));
-        #else
-            uint16_t backColor = Screen::to16bit(CRGB(0, 0, 64));
-        #endif
+        uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
 
         static auto lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
         static auto sip = WiFi.localIP().toString();
@@ -288,7 +302,7 @@ class CurrentEffectSummaryPage final : public Page
                 sip = WiFi.localIP().toString();
                 lastFPS = g_Values.FPS;
 
-                display.setTextColor(YELLOW16, backColor);
+                display.setTextColor(display.GetBorderColor(), backColor);
                 String sEffect = String("Effect: ") + String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
                                  String("/") + String(g_ptrSystem->EffectManager().EffectCount());
                 auto w = display.textWidth(sEffect);
@@ -296,42 +310,44 @@ class CurrentEffectSummaryPage final : public Page
                 display.print(sEffect.c_str());
                 yh += display.fontHeight();
 
-                display.setTextColor(WHITE16, backColor);
+                display.setTextColor(display.GetTextColor(), backColor);
                 w = display.textWidth(g_ptrSystem->EffectManager().GetCurrentEffectName());
                 display.setCursor(display.width() / 2 - w / 2, yh);
                 display.print(g_ptrSystem->EffectManager().GetCurrentEffectName());
                 yh += display.fontHeight();
 
                 String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
-                display.setTextColor(YELLOW16, backColor);
+                display.setTextColor(display.GetBorderColor(), backColor);
                 w = display.textWidth(sIP);
                 display.setCursor(display.width() / 2 - w / 2, yh);
                 yh += display.fontHeight();
                 display.print(sIP);
             }
 
-            #if ENABLE_AUDIO
-                if (SHOW_FPS && ((lastFPS != g_Values.FPS) || (lastAudio != g_Analyzer._AudioFPS) ||
-                                (lastSerial != g_Analyzer._serialFPS)))
+                if (g_Analyzer.Enabled())
                 {
-                    lastFPS = g_Values.FPS;
-                    lastSerial = g_Analyzer._serialFPS;
-                    lastAudio = g_Analyzer._AudioFPS;
-                    display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
-                    display.setTextColor(YELLOW16, backColor);
-                    display.setTextSize(1);
-                    yh = display.height() - display.fontHeight();
-                    String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS,
-                                                g_Analyzer._serialFPS, (int)screenFPS);
-                    auto w = display.textWidth(strOut);
-                    display.setCursor(display.width() / 2 - w / 2, yh);
-                    display.print(strOut);
-                    yh += display.fontHeight();
+                    if (SHOW_FPS && ((lastFPS != g_Values.FPS) || (lastAudio != g_Analyzer._AudioFPS) ||
+                                     (lastSerial != g_Analyzer._serialFPS)))
+                    {
+                        lastFPS = g_Values.FPS;
+                        lastSerial = g_Analyzer._serialFPS;
+                        lastAudio = g_Analyzer._AudioFPS;
+                        display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
+                        display.setTextColor(display.GetBorderColor(), backColor);
+                        display.setTextSize(1);
+                        yh = display.height() - display.fontHeight();
+                        String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS,
+                                                     g_Analyzer._serialFPS, (int)screenFPS);
+                        auto w = display.textWidth(strOut);
+                        display.setCursor(display.width() / 2 - w / 2, yh);
+                        display.print(strOut);
+                        yh += display.fontHeight();
+                    }
                 }
-            #endif
         }
 
-        #if ENABLE_AUDIO
+            if (g_Analyzer.Enabled())
+            {
             // Draw VU and Spectrum each frame
             const int xHalf = display.width() / 2 - 1;
             const float ySizeVU = display.height() / 16; // height of each block
@@ -364,7 +380,7 @@ class CurrentEffectSummaryPage final : public Page
                 display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection,
                                 color16);
             }
-        #endif
+            }
     }
 };
 
@@ -372,7 +388,7 @@ class CurrentEffectSummaryPage final : public Page
 class CurrentEffectPage final : public Page
 {
   public:
-    const char *Name() const override
+    std::string Name() const override
     {
         return "CurrentEffect";
     }
@@ -381,7 +397,7 @@ class CurrentEffectPage final : public Page
         if (bRedraw)
             display.fillScreen(BLACK16);
         display.setTextSize(display.width() > 160 ? 2 : 1);
-        display.setTextColor(WHITE16, BLACK16);
+        display.setTextColor(display.GetTextColor(), display.GetBkgndColor());
         const String title = "Current Effect";
         auto w = display.textWidth(title);
         display.setCursor(display.width() / 2 - w / 2, 2);
@@ -410,6 +426,16 @@ int Screen::ActivePageCount()
     return limit;
 }
 // End of page implementations and helpers
+
+// FlipToNextPage
+void Screen::FlipToNextPage()
+{
+    std::lock_guard<std::mutex> guard(_screenMutex);
+
+    // Advance to the next page
+    const int activeCount = ActivePageCount();
+    g_iCurrentPage = (g_iCurrentPage + 1) % std::max(1, activeCount);
+}
 
 // Old free functions replaced by Screen methods below
 
@@ -455,15 +481,15 @@ void IRAM_ATTR Screen::RunUpdateLoop()
     static bool s_buttonsInited = false;
     if (!s_buttonsInited)
     {
+        #ifdef TOGGLE_BUTTON_0
+            _button0.attach(TOGGLE_BUTTON_0, INPUT_PULLUP);
+            _button0.interval(1);
+            _button0.setPressedState(LOW);
+        #endif
         #ifdef TOGGLE_BUTTON_1
             _button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
             _button1.interval(1);
             _button1.setPressedState(LOW);
-        #endif
-        #ifdef TOGGLE_BUTTON_2
-            _button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
-            _button2.interval(1);
-            _button2.setPressedState(LOW);
         #endif
         s_buttonsInited = true;
     }
@@ -472,41 +498,22 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
-        #ifdef TOGGLE_BUTTON_1
-                static uint effectInterval;
-
-                _button1.update();
-                if (_button1.pressed())
-                {
-                    std::lock_guard<std::mutex> guard(_screenMutex);
-
-                    // Advance to the next page
-                    const int activeCount = ActivePageCount();
-                    g_iCurrentPage = (g_iCurrentPage + 1) % std::max(1, activeCount);
-
-                    // Pause/resume effect rotation depending on page policy
-                    auto &effectManager = g_ptrSystem->EffectManager();
-                    auto &pages = Pages();
-                    if (pages[g_iCurrentPage]->PausesEffectRotation())
-                    {
-                        effectInterval = effectManager.GetInterval();
-                        effectManager.SetInterval(0, true);
-                    }
-                    else if (effectManager.GetInterval() == 0)
-                    {
-                        effectManager.SetInterval(effectInterval, true);
-                    }
-
-                    bRedraw = true;
-                }
-        #endif
-
-        #ifdef TOGGLE_BUTTON_2
-            _button2.update();
-            if (_button2.pressed())
+        #ifdef TOGGLE_BUTTON_0
+            _button0.update();
+            if (_button0.pressed())
             {
                 auto &pages = Pages();
-                pages[g_iCurrentPage]->OnButton2Press();
+                pages[g_iCurrentPage]->OnButtonPress(0);
+                bRedraw = true;
+            }
+        #endif
+
+        #ifdef TOGGLE_BUTTON_1
+            _button1.update();
+            if (_button1.pressed())
+            {
+                auto &pages = Pages();
+                pages[g_iCurrentPage]->OnButtonPress(1);
                 bRedraw = true;
             }
         #endif

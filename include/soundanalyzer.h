@@ -63,6 +63,9 @@ struct AudioVariables
 #if !ENABLE_AUDIO
 class SoundAnalyzer : public AudioVariables // Non-audio case.  Inherits only the AudioVariables so that any project can
 {                                           //   reference them in g_Analyzer
+    public:
+        // Indicates audio processing capability at runtime
+        constexpr bool Enabled() const { return false; }
 };
 
 #else // Audio case
@@ -192,6 +195,10 @@ public:
 
 class SoundAnalyzer : public AudioVariables
 {
+  public:
+    // Indicates audio processing capability at runtime
+    constexpr bool Enabled() const { return true; }
+
     static constexpr size_t MAX_SAMPLES = 256;
     std::unique_ptr<int16_t[]> ptrSampleBuffer;
 

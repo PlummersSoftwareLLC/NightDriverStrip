@@ -38,7 +38,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
     #include "Bounce2.h"
 #endif
 
@@ -57,17 +57,13 @@ public:
     virtual ~Page() = default;
 
     // Human-readable name (for diagnostics)
-    virtual const char* Name() const { return "Page"; }
+    virtual std::string Name() const { return std::string("Page"); }
 
     // Render this page. bRedraw indicates a full redraw is requested.
     virtual void Draw(Screen& display, bool bRedraw) = 0;
 
-    // Whether effect rotation should be paused while this page is active.
-    virtual bool PausesEffectRotation() const { return false; }
-
-    // Optional button hooks; default no-ops.
-    virtual void OnButton1Press() {}
-    virtual void OnButton2Press() {}
+    // Optional button hook. Default behavior is provided in screen.cpp.
+    virtual void OnButtonPress(uint8_t buttonIndex);
 };
 
 class Screen : public GFXBase
@@ -89,16 +85,23 @@ public:
     {
     }
 
+    // Display capabilities and theme colors
+    // Default: color display with a blue theme and white/yellow accents.
+    virtual bool IsMonochrome() const { return false; }
+    virtual uint16_t GetTextColor() const { return WHITE16; }
+    virtual uint16_t GetBkgndColor() const { return BLUE16; }
+    virtual uint16_t GetBorderColor() const { return YELLOW16; }
+
     // Define the drawable area for the spectrum to render into the status area
 
     const int BottomMargin = 12;
 
     virtual void ScreenStatus(const String &strStatus)
     {
-        fillScreen(BLACK16);
+        fillScreen(GetBkgndColor());
         //setFont();
         setTextSize(1);
-        setTextColor(0xFBE0, BLACK16);
+        setTextColor(GetTextColor(), GetBkgndColor());
         auto xh = 10;
         auto yh = 0;
         setCursor(xh, yh);
@@ -147,16 +150,20 @@ public:
     // Run the screen update loop (button handling + periodic redraw)
     void RunUpdateLoop();
 
-private:
+    // Flip to the next page and handle effect-rotation pause/resume semantics.
+    // Safe to call from button handlers.
+    static void FlipToNextPage();
+
+  private:
     // Page registry and page count helpers
     static std::vector<std::unique_ptr<class Page>>& Pages();
     static int ActivePageCount();
 
+    #if defined(TOGGLE_BUTTON_0)
+        Bounce2::Button _button0;
+    #endif
     #if defined(TOGGLE_BUTTON_1)
         Bounce2::Button _button1;
-    #endif
-    #if defined(TOGGLE_BUTTON_2)
-        Bounce2::Button _button2;
     #endif
 };
 
@@ -348,6 +355,12 @@ private:
             lv_canvas_fill_bg(canvas, lv_color, LV_OPA_COVER);
         }
 
+    // AMOLED is a full color panel but we want a different default theme
+    virtual bool IsMonochrome() const override { return false; }
+    virtual uint16_t GetTextColor() const override { return Screen::to16bit(CRGB(100, 255, 20)); }
+    virtual uint16_t GetBkgndColor() const override { return Screen::to16bit(CRGB::Black); }
+    virtual uint16_t GetBorderColor() const override { return Screen::to16bit(CRGB::Red); }
+
     };
 #endif
 
@@ -395,6 +408,12 @@ private:
         {
             oled.clearDisplay();
         }
+
+    // Monochrome OLED defaults
+    virtual bool IsMonochrome() const override { return true; }
+    virtual uint16_t GetTextColor() const override { return WHITE16; }
+    virtual uint16_t GetBkgndColor() const override { return BLACK16; }
+    virtual uint16_t GetBorderColor() const override { return WHITE16; }
     };
 #endif
 
@@ -442,6 +461,12 @@ private:
         {
             Heltec.display->clear();
         }
+
+    // Monochrome OLED defaults
+    virtual bool IsMonochrome() const override { return true; }
+    virtual uint16_t GetTextColor() const override { return WHITE16; }
+    virtual uint16_t GetBkgndColor() const override { return BLACK16; }
+    virtual uint16_t GetBorderColor() const override { return WHITE16; }
     };
 #endif
 

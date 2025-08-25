@@ -156,9 +156,10 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
             debugA("BUFR:%02zu/%02zu [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
             debugA("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
-            #if ENABLE_AUDIO
+            if (g_Analyzer.Enabled())
+            {
                 debugA("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
-            #endif
+            }
 
             #if INCOMING_WIFI_ENABLED
                 debugA("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
@@ -468,7 +469,8 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
         case WIFI_COMMAND_PEAKDATA:
         {
-            #if ENABLE_AUDIO
+            if (g_Analyzer.Enabled())
+            {
                 uint16_t numbands  = WORDFromMemory(&payloadData[2]);
                 uint32_t length32  = DWORDFromMemory(&payloadData[4]);
                 uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
@@ -483,7 +485,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                 PeakData peaks((double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
                 peaks.ApplyScalars(PeakData::PCREMOTE);
                 g_Analyzer.SetPeakData(peaks);
-            #endif
+            }
             return true;
         }
 
