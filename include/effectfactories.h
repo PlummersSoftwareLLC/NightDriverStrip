@@ -178,7 +178,7 @@ class EffectFactories
         return ids;
     }
 
-    String HashString() const
+    const String& HashString() const
     {
         if (hashString.isEmpty())
             throw std::runtime_error("Attempt to retrieve unset hash string");
@@ -186,7 +186,7 @@ class EffectFactories
         return hashString;
     }
 
-    String HashString(const String& str)
+    const String& HashString(const String& str)
     {
         // Accept value if length is appropriate for FactoryId or empty
         if (str.length() == fnv1a::hash_string_length<FactoryId>() || str.isEmpty())
