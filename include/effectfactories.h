@@ -102,10 +102,10 @@ class EffectFactories
       public:
         bool LoadDisabled = false;
 
-        NumberedFactory(EffectId effectId, const DefaultEffectFactory& factory, FactoryId id)
+        NumberedFactory(EffectId effectId, const DefaultEffectFactory& factory, FactoryId factoryId)
           : effectId(effectId),
             factory(factory),
-            factoryId(id)
+            factoryId(factoryId)
         {}
 
         EffectId EffectID() const
