@@ -65,11 +65,11 @@
 #pragma once
 
 #include <stdexcept>
+#include "globals.h"            // Defines FASTLED, MATRIX_* macros used by subsequent includes
 #include "Adafruit_GFX.h"
-#include "pixeltypes.h"
-#include "effects/matrix/Boid.h"
+#include "pixeltypes.h"         // Depends on FastLED namespace/macros from globals.h
+#include "effects/matrix/Boid.h" // Depends on MATRIX_WIDTH/HEIGHT from globals.h
 #include "effects/matrix/Vector.h"
-#include "globals.h"
 #include <memory>
 
 #if USE_HUB75

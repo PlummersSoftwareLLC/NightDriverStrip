@@ -35,6 +35,40 @@
 
 #include <mutex>
 #include "gfxbase.h"
+#include <string>
+#include <vector>
+#include <memory>
+#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+    #include "Bounce2.h"
+#endif
+
+class Screen; // forward declaration for Page interface
+
+// Page
+//
+// Abstract base for renderable pages on the small status screen.
+// Implement Draw to render the page into the provided Screen. Optional
+// hooks handle button presses and whether the page should pause effect
+// rotation while visible.
+
+class Page
+{
+public:
+    virtual ~Page() = default;
+
+    // Human-readable name (for diagnostics)
+    virtual const char* Name() const { return "Page"; }
+
+    // Render this page. bRedraw indicates a full redraw is requested.
+    virtual void Draw(Screen& display, bool bRedraw) = 0;
+
+    // Whether effect rotation should be paused while this page is active.
+    virtual bool PausesEffectRotation() const { return false; }
+
+    // Optional button hooks; default no-ops.
+    virtual void OnButton1Press() {}
+    virtual void OnButton2Press() {}
+};
 
 class Screen : public GFXBase
 {
@@ -106,6 +140,24 @@ public:
         getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
         return w;
     }
+
+    // Render the current page into this screen.
+    void Update(bool bRedraw);
+
+    // Run the screen update loop (button handling + periodic redraw)
+    void RunUpdateLoop();
+
+private:
+    // Page registry and page count helpers
+    static std::vector<std::unique_ptr<class Page>>& Pages();
+    static int ActivePageCount();
+
+    #if defined(TOGGLE_BUTTON_1)
+        Bounce2::Button _button1;
+    #endif
+    #if defined(TOGGLE_BUTTON_2)
+        Bounce2::Button _button2;
+    #endif
 };
 
 // Class specializations of the Screen class for various display types can implement hardware-specific versions of functions
