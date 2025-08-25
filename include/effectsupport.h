@@ -194,16 +194,18 @@ const CRGBPalette16 USAColors_p =
 
 const CRGBPalette16 rainbowPalette(RainbowColors_p);
 
+// A pointer to the global effect factories.
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
 // ------------------------------------------------------------
 // Support for building stable factory IDs and combining them
 // ------------------------------------------------------------
 
-
+// A type alias for removing const, volatile, and reference from a type.
 template<typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
+// Gets the effect ID of a given effect type.
 template<typename T>
 constexpr EffectId effect_id_of_type() {
     static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,

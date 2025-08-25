@@ -1,3 +1,34 @@
+//+--------------------------------------------------------------------------
+//
+// File:        hashing.h
+//
+// NightDriverStrip - (c) 2025 Plummer's Software LLC.  All Rights Reserved.
+//
+// This file is part of the NightDriver software project.
+//
+//    NightDriver is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    NightDriver is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Nightdriver.  It is normally found in copying.txt
+//    If not, see <https://www.gnu.org/licenses/>.
+//
+//
+// Description:
+//
+//    Hashing utilities for NightDriverStrip effects.
+//
+// History:     Sep-26-2023         Rbergen     Created for NightDriverStrip
+//
+//---------------------------------------------------------------------------
+
 #pragma once
 
 #include <type_traits>
@@ -11,7 +42,6 @@
 #define FASTLED_INTERNAL 1               // Suppresses build banners
 #include <FastLED.h>
 
-
 namespace fnv1a
 {
     // Helper for dependent-false static_assert in templates
@@ -22,6 +52,7 @@ namespace fnv1a
     template<typename H>
     struct traits;
 
+    // FNV-1a 32-bit hash parameters
     template<>
     struct traits<uint32_t>
     {
@@ -29,6 +60,7 @@ namespace fnv1a
         static constexpr uint32_t prime  = 16777619u;
     };
 
+    // FNV-1a 64-bit hash parameters
     template<>
     struct traits<uint64_t>
     {
@@ -68,7 +100,8 @@ namespace fnv1a
     // return the updated hash. Marked constexpr where feasible.
     // -------------------------------------------------------------
 
-    // Unified hash for most types using if constexpr dispatch
+    // Unified hash for most types using if constexpr dispatch.
+    // Supports arithmetic types, enums, string_view, C-strings, and trivially-copyable types.
     template<typename H, typename T>
     constexpr H hash(const T& v, H h = traits<H>::offset)
     {
@@ -107,14 +140,14 @@ namespace fnv1a
         }
     }
 
-    // Arduino String (cannot be constexpr due to API)
+    // Hashes an Arduino String by hashing its underlying C-string.
     template<typename H>
     inline H hash(const String& s, H h = traits<H>::offset)
     {
         return hash(s.c_str(), h);
     }
 
-    // CRGB by hashing its r,g,b components (constexpr-friendly)
+    // Hashes a CRGB struct by hashing its r, g, and b components.
     template<typename H>
     constexpr H hash(const CRGB& c, H h = traits<H>::offset)
     {
@@ -124,7 +157,7 @@ namespace fnv1a
         return h;
     }
 
-    // CRGBPalette16 by hashing each entry (explicit overload to iterate)
+    // Hashes a CRGBPalette16 by hashing each of its 16 CRGB entries.
     template<typename H>
     constexpr H hash(const CRGBPalette16& p, H h = traits<H>::offset)
     {
@@ -133,7 +166,7 @@ namespace fnv1a
         return h;
     }
 
-    // std::vector<T> — iterate elements in order (not constexpr due to std::vector)
+    // Hashes a std::vector by hashing its size and then each element in order.
     template<typename H, typename T>
     inline H hash(const std::vector<T>& v, H h = traits<H>::offset)
     {
@@ -144,14 +177,14 @@ namespace fnv1a
         return h;
     }
 
-    // Append helpers (templated by hash type H) — single forwarding overload
+    // Appends a value to an existing hash, updating the hash in place.
     template<typename H, typename T>
     inline void hash_append(H& h, T&& v)
     {
         h = hash<H>(std::forward<T>(v), h);
     }
 
-    // Value-returning pack hash (constexpr-friendly): applies in order and returns updated hash
+    // Hashes a pack of arguments in order, starting with an initial hash value.
     template<typename H, typename... As>
     constexpr H hash_pack(H h, As&&... as)
     {
@@ -159,7 +192,7 @@ namespace fnv1a
         return h;
     }
 
-    // Value-returning pack hash (constexpr-friendly): applies in order and returns updated hash
+    // Runtime version of hash_pack. Hashes a pack of arguments in order.
     template<typename H, typename... As>
     inline H hash_pack_rt(H h, As&&... as)
     {
@@ -167,13 +200,14 @@ namespace fnv1a
         return h;
     }
 
-    // By-ref convenience overload delegates to the constexpr value version
+    // Appends a pack of arguments to an existing hash, updating the hash in place.
     template<typename H, typename... As>
     inline void hash_append_pack(H& h, As&&... as)
     {
         h = hash_pack<H>(h, std::forward<As>(as)...);
     }
 
+    // Converts a hash value to a hexadecimal Arduino String.
     template<typename H>
     inline auto to_string(H h)
     {

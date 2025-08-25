@@ -632,53 +632,38 @@ class LEDStripEffect : public IJSONSerializable
     }
 };
 
-// Internal helpers for token-based type IDs
-// ---------------------------------------------------------------------------
-// About _effect_id_detail and token-based Effect IDs
-//
-// Purpose
-// - Provide each effect type (class) with a unique, stable EffectId without
-//   maintaining a central enum or registry.
-//
-// How it works
-// - token_id_for_type<T>() is a constexpr function that computes a 32-bit
-//   FNV-1a hash over a compiler-provided function signature string that embeds
-//   the type T.
-// - On GCC/Clang we use __PRETTY_FUNCTION__ (which contains the full function
-//   signature including the template parameter T). On other compilers we fall
-//   back to __func__.
-// - EffectWithId<Derived>::ID is a constexpr initialized with that hash, so the
-//   ID is computed at compile time with zero runtime cost and no dynamic state.
-//
-// Stability and persistence
-// - For our ESP32 builds (GCC/Clang), the resulting token is stable across
-//   rebuilds and firmware updates as long as:
-//   1) the effect's type name (including template arguments) remains the same;
-//   2) we keep using a compiler that formats __PRETTY_FUNCTION__ equivalently
-//      (GCC/Clang are consistent for our use case).
-// - Renaming a class, changing its template arguments, or switching to a
-//   compiler/toolchain that formats the pretty function differently will yield a
-//   different token. When that happens, previously serialized effect lists will
-//   no longer match and should be regenerated (we guard broad migrations via
-//   EFFECT_SET_VERSION).
-// - IDs are serialized as uintptr_t (see PTY_EFFECTNR). They persist across
-//   reboots/firmware flashes provided the above invariants hold.
-//
-// Collisions and width
-// - We use a 32-bit hash to keep the footprint small on 32-bit targets.
-//   With O(10^2) effect types, the birthday collision risk is negligible for
-//   practical purposes. If we ever needed stronger guarantees, we could switch
-//   to a 64-bit hash (and widen EffectId) with minimal code changes.
-//
-// Portability notes
-// - The __PRETTY_FUNCTION__ path is selected for GCC/Clang (our toolchains).
-//   The fallback to __func__ is provided for other compilers
-// ---------------------------------------------------------------------------
-
 #ifndef EFFECT_ID_DEBUG
 #define EFFECT_ID_DEBUG 0
 #endif
 
+// Internal helpers for deriving a per-type EffectId and (optionally) logging what was used to compute it.
+// The approach is: obtain a compiler-provided, human-readable token string that uniquely identifies T,
+// then hash that string with FNV-1a to produce a compact 32-bit EffectId.
+//
+// type_token<T>:
+// - Returns the compiler's decorated function signature string (__PRETTY_FUNCTION__) for this template instantiation.
+// - This string contains the fully qualified type T (including template parameters), making it suitable as a stable token
+//   within the same compiler family/version.
+// - Only supported on GCC/Clang. Other compilers will hit a hard #error.
+//
+// token_id_for_type<T>:
+// - Computes EffectId by hashing the token string with a constexpr FNV-1a 32-bit hash.
+// - When the hash implementation is constexpr, the resulting EffectId can be a compile-time constant.
+// - EffectId is derived from a 32-bit hash; collisions are possible (though unlikely). Do not rely on cryptographic strength.
+//
+// debug_log_type_token_once<T> (enabled when EFFECT_ID_DEBUG is true):
+// - Prints the raw token string and the computed EffectId once per T per translation unit.
+// - Uses a function-local static boolean to ensure "log once" behavior for each instantiation.
+// - Note: because this is a header-only template with a function-local static, if the same T is instantiated
+//   in multiple translation units, each TU may log once.
+//
+// Stability and portability notes:
+// - The exact __PRETTY_FUNCTION__ format is not standardized and can vary by compiler and version.
+//   Consequently, EffectId values may change when switching compilers, versions, or certain build flags.
+//
+// Intended usage:
+// - Use token_id_for_type<MyType>() wherever a deterministic, type-based EffectId is needed, as EffectWithId does.
+// - Enable EFFECT_ID_DEBUG to inspect the underlying token string and the derived hash during development.
 namespace _effect_id_detail {
 
     template <typename T>                                       // Return the compiler-provided token string used for hashing
