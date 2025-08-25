@@ -39,8 +39,6 @@
 #include <algorithm>
 #include <vector>
 #include <utility>
-// Needed for StarryNightEffect used by helpers below
-#include "effects/strip/stareffect.h"
 #include "hashing.h"
 #include <type_traits>
 
