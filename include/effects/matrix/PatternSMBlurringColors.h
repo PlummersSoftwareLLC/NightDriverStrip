@@ -7,7 +7,7 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/2128-bluringcolors
 
-class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
+class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
 {
   private:
     // A more cache-friendly version of the 7 independent arrays that were
@@ -193,8 +193,8 @@ class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
 
   public:
 
-    PatternSMBlurringColors() : EffectWithId<idMatrixSMBlurringColors>("Powder") {}
-    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMBlurringColors>(jsonObject) {}
+    PatternSMBlurringColors() : EffectWithId<PatternSMBlurringColors>("Powder") {}
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMBlurringColors>(jsonObject) {}
 
     void Start() override
     {

@@ -8,7 +8,7 @@
 //@stepko
 // Merry Christmas and Happy New Year
 
-class PatternSMHolidayLights : public EffectWithId<idMatrixSMHolidayLights>
+class PatternSMHolidayLights : public EffectWithId<PatternSMHolidayLights>
 {
 
   private:
@@ -131,8 +131,8 @@ void spruce()
 
   public:
 
-    PatternSMHolidayLights() : EffectWithId<idMatrixSMHolidayLights>("Tannenbaum") {}
-    PatternSMHolidayLights(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMHolidayLights>(jsonObject) {}
+    PatternSMHolidayLights() : EffectWithId<PatternSMHolidayLights>("Tannenbaum") {}
+    PatternSMHolidayLights(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMHolidayLights>(jsonObject) {}
 
     void Start() override
     {

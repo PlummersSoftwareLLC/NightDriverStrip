@@ -39,7 +39,7 @@
 // hands, along with tick marks for each hour. The clock's appearance and
 // behavior are customizable through various methods.
 
-class PatternClock : public EffectWithId<idMatrixClock>
+class PatternClock : public EffectWithId<PatternClock>
 {
   private:
 
@@ -49,8 +49,8 @@ class PatternClock : public EffectWithId<idMatrixClock>
 
   public:
 
-    PatternClock() : EffectWithId<idMatrixClock>("Clock") {}
-    PatternClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixClock>(jsonObject) {}
+    PatternClock() : EffectWithId<PatternClock>("Clock") {}
+    PatternClock(const JsonObjectConst& jsonObject) : EffectWithId<PatternClock>(jsonObject) {}
 
     bool RequiresDoubleBuffering() const override
     {

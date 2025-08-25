@@ -6,7 +6,7 @@
 // N Glowing balls in orbit around each other around a rotating plane.
 // BUGBUG: Harvest possible speed fx from https://pastebin.com/VTAg4QAZ
 
-class PatternSMMetaBalls : public EffectWithId<idMatrixSMMetaBalls>
+class PatternSMMetaBalls : public EffectWithId<PatternSMMetaBalls>
 {
   private:
 
@@ -27,8 +27,8 @@ class PatternSMMetaBalls : public EffectWithId<idMatrixSMMetaBalls>
 
   public:
 
-    PatternSMMetaBalls() : EffectWithId<idMatrixSMMetaBalls>("MetaBalls") {}
-    PatternSMMetaBalls(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMMetaBalls>(jsonObject) {}
+    PatternSMMetaBalls() : EffectWithId<PatternSMMetaBalls>("MetaBalls") {}
+    PatternSMMetaBalls(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMMetaBalls>(jsonObject) {}
 
     void Start() override
     {

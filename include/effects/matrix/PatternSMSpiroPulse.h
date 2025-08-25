@@ -7,7 +7,7 @@
 //
 // This is one of relatively few that would look better at a higher refresh.
 
-class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
+class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
 {
   private:
 
@@ -62,8 +62,8 @@ class PatternSMSpiroPulse : public EffectWithId<idMatrixSMSpiroPulse>
 
   public:
 
-    PatternSMSpiroPulse() : EffectWithId<idMatrixSMSpiroPulse>("Spiro") {}
-    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMSpiroPulse>(jsonObject) {}
+    PatternSMSpiroPulse() : EffectWithId<PatternSMSpiroPulse>("Spiro") {}
+    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMSpiroPulse>(jsonObject) {}
 
     void Start() override
     {

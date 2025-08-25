@@ -60,7 +60,7 @@
 #ifndef PatternSpiro_H
 #define PatternSpiro_H
 
-class PatternSpiro : public EffectWithId<idMatrixSpiro>
+class PatternSpiro : public EffectWithId<PatternSpiro>
 {
 private:
 
@@ -83,8 +83,8 @@ private:
 
 public:
 
-  PatternSpiro() : EffectWithId<idMatrixSpiro>("Spiro") {}
-  PatternSpiro(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSpiro>(jsonObject) {}
+  PatternSpiro() : EffectWithId<PatternSpiro>("Spiro") {}
+  PatternSpiro(const JsonObjectConst& jsonObject) : EffectWithId<PatternSpiro>(jsonObject) {}
 
   virtual size_t DesiredFramesPerSecond() const override
   {

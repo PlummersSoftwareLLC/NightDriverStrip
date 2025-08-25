@@ -67,7 +67,7 @@ class LaserShot
     }
 };
 
-class LaserLineEffect : public BeatEffectBase, public EffectWithId<idStripLaserLine>
+class LaserLineEffect : public BeatEffectBase, public EffectWithId<LaserLineEffect>
 {
   private:
 
@@ -80,7 +80,7 @@ class LaserLineEffect : public BeatEffectBase, public EffectWithId<idStripLaserL
 
     LaserLineEffect(float speed, float size)
         : BeatEffectBase(1.50, 0.00),
-          EffectWithId<idStripLaserLine>("LaserLine"),
+          EffectWithId<LaserLineEffect>("LaserLine"),
           _defaultSize(size),
           _defaultSpeed(speed)
     {
@@ -88,7 +88,7 @@ class LaserLineEffect : public BeatEffectBase, public EffectWithId<idStripLaserL
 
     LaserLineEffect(const JsonObjectConst& jsonObject)
         : BeatEffectBase(1.50, 0.00),
-          EffectWithId<idStripLaserLine>(jsonObject),
+          EffectWithId<LaserLineEffect>(jsonObject),
           _defaultSize(jsonObject[PTY_SIZE]),
           _defaultSpeed(jsonObject[PTY_SPEED])
     {

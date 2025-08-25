@@ -181,7 +181,7 @@ public:
 //
 // Retrieves stock quotes from private server and displays them
 
-class PatternStocks : public EffectWithId<idMatrixStocks>
+class PatternStocks : public EffectWithId<PatternStocks>
 {
     AnimatedText textSymbol = AnimatedText("STOCK",  CRGB::White, &Apple5x7,  1.0f, MATRIX_WIDTH, 0,  0, 0);
     AnimatedText textPrice  = AnimatedText("PRICE",  CRGB::Grey,  &Apple5x7,  1.0f, MATRIX_WIDTH, 8,  0, 8);
@@ -353,9 +353,9 @@ private:
 
 public:
 
-    PatternStocks() : EffectWithId<idMatrixStocks>("Stocks") {}
+    PatternStocks() : EffectWithId<PatternStocks>("Stocks") {}
 
-    PatternStocks(const JsonObjectConst&  jsonObject) : EffectWithId<idMatrixStocks>(jsonObject)
+    PatternStocks(const JsonObjectConst&  jsonObject) : EffectWithId<PatternStocks>(jsonObject)
     {
         if (jsonObject["sds"].is<String>())
             stockServer = jsonObject["sds"].as<String>();
