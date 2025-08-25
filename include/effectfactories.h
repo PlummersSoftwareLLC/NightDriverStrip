@@ -57,9 +57,9 @@ using JSONEffectFactory = std::function<std::shared_ptr<LEDStripEffect>(const Js
 // Sub-Structure:
 //
 // NumberedFactory: This class represents a default factory coupled with its unique
-//                  effect  number. It also includes a flag that indicates whether the
-//                  effect that is created using the factory function should be set to
-//                  "disabled" immediately after creation.
+//                  effect number and an optional factory ID. It also includes a flag
+//                  that indicates whether the effect that is created using the factory
+//                  function should be set to "disabled" immediately after creation.
 //                  Besides these member variables, the class includes a function to
 //                  create the effect in accordance with an instance's member variables'
 //                  values.
@@ -67,21 +67,26 @@ using JSONEffectFactory = std::function<std::shared_ptr<LEDStripEffect>(const Js
 // Member Variables:
 //
 // defaultFactories: A vector of NumberedFactory instances. Each NumberedFactory holds an
-//                   effect number and a DefaultEffectFactory instance.
+//                   effect number, a DefaultEffectFactory instance, and an optional factory ID.
 // jsonFactories: A map linking each effect number to its corresponding JSONEffectFactory.
+// hashString: A string that can store a hash of the factory configuration.
 //
 // Member Functions:
 //
 // GetDefaultFactories: Returns a const reference to the vector of default factories.
 // GetJSONFactories: Returns a const reference to the map of JSON factories.
-// AddEffect: Adds a new effect factory into the collection. It takes three parameters:
+// AddEffect: Adds a new effect factory into the collection. It takes four parameters:
 //            - An effect number which is an integer.
 //            - A DefaultEffectFactory reference.
 //            - A JSONEffectFactory reference.
+//            - An optional factory ID.
 //            It returns a reference to the NumberedFactory that was created around the
 //            DefaultEffectFactory.
 // IsEmpty: Returns a boolean indicating whether both defaultFactories and jsonFactories are empty.
-// ClearDefaultFactories: Clears the vector of default factories.
+// ClearDefaultFactories: Clears the vector of default factories and the hash string.
+// FactoryIDs: Returns a vector of the factory IDs from the default factories.
+// HashString (getter): Returns the stored hash string. Throws an error if it hasn't been set.
+// HashString (setter): Sets the hash string.
 //
 // -----------------------------------------------------------------------------
 
