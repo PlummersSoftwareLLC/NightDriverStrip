@@ -102,7 +102,6 @@ class EffectFactories
       public:
         bool LoadDisabled = false;
 
-
         NumberedFactory(EffectId effectId, const DefaultEffectFactory& factory, FactoryId id)
           : effectId(effectId),
             factory(factory),
@@ -139,12 +138,12 @@ class EffectFactories
 
   public:
 
-    const std::vector<NumberedFactory, psram_allocator<NumberedFactory>>& GetDefaultFactories()
+    const std::vector<NumberedFactory, psram_allocator<NumberedFactory>>& GetDefaultFactories() const
     {
         return defaultFactories;
     }
 
-    const std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>& GetJSONFactories()
+    const std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>& GetJSONFactories() const
     {
         return jsonFactories;
     }
@@ -157,7 +156,7 @@ class EffectFactories
         return numberedFactory;
     }
 
-    bool IsEmpty()
+    bool IsEmpty() const
     {
         return defaultFactories.empty() && jsonFactories.empty();
     }
@@ -189,7 +188,7 @@ class EffectFactories
 
     String HashString(const String& str)
     {
-        // Accept value if length is 16 or empty
+        // Accept value if length is appropriate for FactoryId or empty
         if (str.length() == fnv1a::hash_string_length<FactoryId>() || str.isEmpty())
             hashString = str;
 
