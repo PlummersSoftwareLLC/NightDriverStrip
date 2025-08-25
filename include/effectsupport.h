@@ -212,6 +212,9 @@ constexpr EffectId effect_id_of_type() {
 }
 
 // Build a stable 64-bit ID for a factory based on effect type and ctor args
+// Note that this is declared as a constexpr function, which means all ctor
+// args need to be static types. The fact this code compiles confirms that
+// is indeed the case.
 template<typename TEffect, typename... Args>
 constexpr FactoryId factory_id_of_instance(const Args&... args)
 {
