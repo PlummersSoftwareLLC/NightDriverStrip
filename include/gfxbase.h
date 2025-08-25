@@ -65,12 +65,12 @@
 #pragma once
 
 #include <stdexcept>
+#include "globals.h"            // Defines FASTLED, MATRIX_* macros used by subsequent includes
 #include <algorithm>
 #include "Adafruit_GFX.h"
-#include "pixeltypes.h"
-#include "effects/matrix/Boid.h"
+#include "pixeltypes.h"         // Depends on FastLED namespace/macros from globals.h
+#include "effects/matrix/Boid.h" // Depends on MATRIX_WIDTH/HEIGHT from globals.h
 #include "effects/matrix/Vector.h"
-#include "globals.h"
 #include <memory>
 
 #if USE_HUB75
@@ -155,7 +155,9 @@ public:
     // Many of the Aurora effects need direct access to these from external classes
 
     CRGB *leds = nullptr;
-    std::unique_ptr<Boid[]> _boids;
+    #if MATRIX_HEIGHT > 1
+        std::unique_ptr<Boid[]> _boids;
+    #endif
 
     // Definition moved to GFXBase.cpp because it uses the FillGetNoise() function template
     GFXBase(int w, int h);
@@ -296,7 +298,7 @@ public:
     #elif HELMET
         #define XY(x, y) xy(x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
     #else
-        #define XY(x, y) xy(x, y)
+        #define XY(x, y) (((x) & 0x01) ? (((x) * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - (y))) : (((x) * MATRIX_HEIGHT) + (y)))
     #endif
 
     __attribute__((always_inline)) virtual CRGB getPixel(int16_t x, int16_t y) const

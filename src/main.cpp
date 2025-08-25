@@ -246,17 +246,7 @@ void TerminateHandler()
     Serial.flush();
 }
 
-#ifdef TOGGLE_BUTTON_1
-Bounce2::Button Button1;
-#endif
-
-#ifdef TOGGLE_BUTTON_2
-Bounce2::Button Button2;
-#endif
-
-#ifdef TOGGLE_BUTTON_3
-Bounce2::Button Button3;
-#endif
+// Buttons are now owned/managed by Screen
 
 // setup
 //
@@ -418,23 +408,7 @@ void setup()
         #endif
     #endif
 
-    #ifdef TOGGLE_BUTTON_1
-        Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
-        Button1.interval(1);
-        Button1.setPressedState(LOW);
-    #endif
-
-    #ifdef TOGGLE_BUTTON_2
-        Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
-        Button2.interval(1);
-        Button2.setPressedState(LOW);
-    #endif
-
-    #ifdef TOGGLE_BUTTON_3
-        Button3.attach(TOGGLE_BUTTON_3, INPUT_PULLUP);
-        Button3.interval(1);
-        Button3.setPressedState(LOW);
-    #endif
+    // TOGGLE_BUTTON_1/2 are configured inside Screen's update loop
 
     #if AMOLED_S3
         #include "amoled/LilyGo_AMOLED.h"

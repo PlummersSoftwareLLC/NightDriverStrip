@@ -252,11 +252,17 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
                         _height(h),
                         _ledcount(w*h)
 {
+    // Allocate boids for matrix effects (like PatternBounce) when we have matrix dimensions
+    #if MATRIX_HEIGHT > 1
+        debugV("Allocating boids for matrix effects");
+        _boids.reset(psram_allocator<Boid>().allocate(MATRIX_WIDTH));
+        assert(_boids);
+    #endif
+
     #if USE_NOISE
-        debugV("Allocating boids and noise");
-        _boids.reset(psram_allocator<Boid>().allocate(_width));
+        debugV("Allocating noise");
         _ptrNoise = std::make_unique<Noise>();          // Avoid specific PSRAM allocation since highly random access
-        assert(_ptrNoise && _boids);
+        assert(_ptrNoise);
         debugV("Setting up noise");
         NoiseVariablesSetup();
         debugV("Filling noise");
