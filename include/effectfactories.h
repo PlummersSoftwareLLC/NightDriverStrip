@@ -97,19 +97,19 @@ class EffectFactories
     {
         EffectId effectId;
         DefaultEffectFactory factory;
-        uint64_t factoryId { 0 };
+        FactoryId factoryId { 0 };
 
       public:
         bool LoadDisabled = false;
 
 
-        NumberedFactory(EffectId effectId, const DefaultEffectFactory& factory, uint64_t id)
+        NumberedFactory(EffectId effectId, const DefaultEffectFactory& factory, FactoryId id)
           : effectId(effectId),
             factory(factory),
             factoryId(id)
         {}
 
-        EffectId GetEffectId() const
+        EffectId EffectID() const
         {
             return effectId;
         }
@@ -125,7 +125,7 @@ class EffectFactories
             return pEffect;
         }
 
-        uint64_t Id() const
+        FactoryId FactoryID() const
         {
             return factoryId;
         }
@@ -149,7 +149,7 @@ class EffectFactories
         return jsonFactories;
     }
 
-    NumberedFactory& AddEffect(EffectId effectId, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory, uint64_t factoryId = 0)
+    NumberedFactory& AddEffect(EffectId effectId, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory, FactoryId factoryId = 0)
     {
         auto& numberedFactory = defaultFactories.emplace_back(effectId, defaultFactory, factoryId);
         jsonFactories.try_emplace(effectId, jsonFactory);
@@ -169,12 +169,12 @@ class EffectFactories
     }
 
     // Return the list of stored factory IDs (callers can hash/order as needed)
-    std::vector<uint64_t> FactoryIDs() const
+    std::vector<FactoryId> FactoryIDs() const
     {
-        std::vector<uint64_t> ids;
+        std::vector<FactoryId> ids;
         ids.reserve(defaultFactories.size());
         for (const auto& nf : defaultFactories)
-            ids.push_back(nf.Id());
+            ids.push_back(nf.FactoryID());
 
         return ids;
     }
@@ -190,7 +190,7 @@ class EffectFactories
     String HashString(const String& str)
     {
         // Accept value if length is 16 or empty
-        if (str.length() == 16 || str.isEmpty())
+        if (str.length() == fnv1a::hash_string_length<FactoryId>() || str.isEmpty())
             hashString = str;
 
         return hashString;

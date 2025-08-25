@@ -32,6 +32,7 @@
 #pragma once
 
 using EffectId = uint32_t;
+using FactoryId = uint64_t;
 
 // Some common JSON properties to prevent typos. By project convention JSON properties
 // at the LEDStripEffect level have a length of 2 characters, and JSON properties

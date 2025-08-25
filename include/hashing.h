@@ -213,4 +213,10 @@ namespace fnv1a
     {
         return String(h, 16);
     }
+
+    template<typename H>
+    constexpr size_t hash_string_length()
+    {
+        return sizeof(H) * 2;
+    }
 }

@@ -213,9 +213,9 @@ constexpr EffectId effect_id_of_type() {
 
 // Build a stable 64-bit ID for a factory based on effect type and ctor args
 template<typename TEffect, typename... Args>
-constexpr uint64_t factory_id_of_instance(const Args&... args)
+constexpr FactoryId factory_id_of_instance(const Args&... args)
 {
-    uint64_t h = fnv1a::hash<uint64_t>("effect");
+    FactoryId h = fnv1a::hash<FactoryId>("effect");
     h = fnv1a::hash(effect_id_of_type<TEffect>(), h);
     h = fnv1a::hash_pack(h, args...);
     return h;

@@ -678,7 +678,7 @@ namespace _effect_id_detail {
     template <typename T>
     constexpr EffectId token_id_for_type()
     {
-        return static_cast<EffectId>(fnv1a::hash_cstr<uint32_t>(type_token<T>()));
+        return fnv1a::hash_cstr<EffectId>(type_token<T>());
     }
 
     template <typename T>                                       // Optional one-time debug print of the token string and hash
