@@ -207,16 +207,35 @@ namespace fnv1a
         h = hash_pack<H>(h, std::forward<As>(as)...);
     }
 
-    // Converts a hash value to a hexadecimal Arduino String.
-    template<typename H>
-    inline auto to_string(H h)
-    {
-        return String(h, 16);
-    }
-
+    // Returns the length of the hash string for a given hash type H
     template<typename H>
     constexpr size_t hash_string_length()
     {
         return sizeof(H) * 2;
+    }
+
+    // Converts a hash value to a hexadecimal Arduino String of fixed length.
+    template<typename H>
+    inline String hash_to_string(H h)
+    {
+        constexpr size_t len = hash_string_length<H>();
+        char buf[len + 1];
+        buf[len] = '\0';
+
+        int i = len - 1;
+
+        // Process non-zero part of the hash
+        while (h)
+        {
+            uint8_t nibble = h & 0x0F;
+            buf[i--] = (nibble < 10) ? ('0' + nibble) : ('a' + nibble - 10);
+            h >>= 4;
+        }
+
+        // Fill remaining leading characters with '0'
+        while (i >= 0)
+            buf[i--] = '0';
+
+        return buf;
     }
 }

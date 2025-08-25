@@ -557,7 +557,7 @@ void LoadEffectFactories()
 
     assert(!g_ptrEffectFactories->IsEmpty());
 
-    auto factoriesHashString = fnv1a::to_string(fnv1a::hash<uint64_t>(g_ptrEffectFactories->FactoryIDs()));
+    auto factoriesHashString = fnv1a::hash_to_string(fnv1a::hash<uint64_t>(g_ptrEffectFactories->FactoryIDs()));
     g_ptrEffectFactories->HashString(factoriesHashString);
 }
 
