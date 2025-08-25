@@ -30,6 +30,8 @@
 //---------------------------------------------------------------------------
 
 #include <mutex>
+#include <algorithm>
+#include <cmath>
 #include <ArduinoOTA.h> // Over-the-air helper object so we can be flashed via WiFi
 #include "globals.h"
 #include "colordata.h"
@@ -156,10 +158,13 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
 
     if (localPixelsDrawn > 0)
     {
-        const double minimumFrameTime = 1.0 / g_ptrSystem->EffectManager().GetCurrentEffect().DesiredFramesPerSecond();
-        double elapsed = g_Values.AppTime.CurrentTime() - frameStartTime;
-        if (elapsed < minimumFrameTime)
-            g_Values.FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
+        const double fpsRaw = static_cast<double>(g_ptrSystem->EffectManager().GetCurrentEffect().DesiredFramesPerSecond());
+        // If FPS is invalid (<= 0 or non-finite), treat as unlimited (0s minimum frame time).
+        const double minimumFrameTime = (!std::isfinite(fpsRaw) || fpsRaw <= 0.0) ? 0.0 : (1.0 / fpsRaw);
+        // Use a monotonic-like elapsed (never negative) in case wall clock adjustments go backward.
+        const double elapsed = std::max(0.0, g_Values.AppTime.CurrentTime() - frameStartTime);
+        // Always recompute FreeDrawTime so it cannot "stick" to a prior large value.
+        g_Values.FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
     }
     else if (wifiPixelsDrawn > 0)
     {
@@ -174,10 +179,13 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
             auto pOldest = bufferManager.PeekOldestBuffer();
             if (pOldest)
             {
-                t = std::min(t, pOldest->TimeTillDue());
+                // TimeTillDue() should be non-negative for future-due frames; if negative (stale), treat as now.
+                // Note I'm not using clamp since clamp can return nan if TimeTillDue does, whereas this guards against that.
+                t = std::min(t, std::max(0.0, pOldest->TimeTillDue()));
                 bFoundFrame = true;
             }
         }
+        // Bound the delay to at most 1 second to avoid pathological multi-second sleeps.
         g_Values.FreeDrawTime = bFoundFrame ? std::clamp(t, 0.0, 1.0) : kMinDelay;
     }
     else
