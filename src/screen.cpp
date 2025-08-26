@@ -56,6 +56,7 @@ DRAM_ATTR uint8_t g_iCurrentPage = 0; // Will initialize to last active page on 
 // Default implementation for Page button handler (zero-based):
 // Button 0 = NextEffect, Button 1 = Flip page
 
+
 void Page::OnButtonPress(uint8_t buttonIndex)
 {
     if (buttonIndex == 0)
@@ -77,9 +78,24 @@ class BasicInfoSummaryPage final : public Page
   public:
     std::string Name() const override { return "BasicInfoSummary"; }
 
+    std::string Name() const override { return "BasicInfoSummary"; }
+
     void OnButtonPress(uint8_t buttonIndex) override
     {
-        Page::OnButtonPress(buttonIndex);
+        if (buttonIndex == 1)
+        {
+            // Reduce brightness while on this page (Button 1)
+            static int brightness = 255;
+            brightness /= 2;
+            if (brightness < 4)
+                brightness = 255;
+            auto &deviceConfig = g_ptrSystem->DeviceConfig();
+            deviceConfig.SetBrightness(brightness);
+        }
+        else
+        {
+            Page::OnButtonPress(buttonIndex);
+        }
     }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -93,17 +109,14 @@ class BasicInfoSummaryPage final : public Page
             const int yMargin = 5;
         #endif
 
-        // Theme colors come from Screen implementation
         const uint16_t bkgndColor = display.GetBkgndColor();
-        const uint16_t borderColor = display.GetBorderColor();
-        const uint16_t textColor = display.GetTextColor();
-
         if (bRedraw)
             display.fillScreen(bkgndColor);
 
         // Status line 1
         static const String szStatus("|/-\\");
         static int cStatus = 0;
+        char chStatus = szStatus[cStatus % szStatus.length()];
         char chStatus = szStatus[cStatus % szStatus.length()];
         cStatus++;
 
@@ -124,10 +137,12 @@ class BasicInfoSummaryPage final : public Page
         auto lineHeight = display.fontHeight();
         display.setCursor(xMargin + 0, yMargin + lineHeight);
         if (!WiFi.isConnected())
+        if (!WiFi.isConnected())
             display.println("No Wifi");
         else
         {
             const IPAddress address = WiFi.localIP();
+            display.println(str_sprintf("%ddB:%d.%d.%d.%d", (int)labs(WiFi.RSSI()), address[0], address[1], address[2], address[3]));
             display.println(str_sprintf("%ddB:%d.%d.%d.%d", (int)labs(WiFi.RSSI()), address[0], address[1], address[2], address[3]));
         }
 
@@ -163,6 +178,7 @@ class BasicInfoSummaryPage final : public Page
         {
             auto &taskManager = g_ptrSystem->TaskManager();
             display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
+            display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
             display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
         }
 
@@ -210,58 +226,47 @@ class BasicInfoSummaryPage final : public Page
 
 // Shared header/footer for effect pages
 class TitlePage : public Page
+// Shared header/footer for effect pages
+class TitlePage : public Page
 {
   protected:
     // Cached content top calculated using the header text size to avoid shifting
     int _contentTop = 0;
     int ContentTop(Screen &display) const { return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4); }
 
+  protected:
+    // Cached content top calculated using the header text size to avoid shifting
+    int _contentTop = 0;
+    int ContentTop(Screen &display) const { return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4); }
+
   public:
-    std::string Name() const override
-    {
-        return "CurrentEffectSummary";
-    }
-    void OnButtonPress(uint8_t buttonIndex) override
-    {
-        if (buttonIndex == 1)
-        {
-            // On this page, use Button 1 to advance to the next effect
-            debugI("Button 1 pressed so advancing to next effect");
-            g_ptrSystem->EffectManager().NextEffect();
-        }
-        else
-        {
-            Page::OnButtonPress(buttonIndex);
-        }
-    }
+    std::string Name() const override { return "Title"; }
 
     void Draw(Screen &display, bool bRedraw) override
     {
         if (bRedraw)
             display.fillScreen(BLACK16);
 
-        uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
+        const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
+        static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+        static String sip = WiFi.localIP().toString();
+        static String lastFooter;
+        static uint32_t lastFullDraw = 0;
+        static uint32_t lastScreen = millis();
 
-        static auto lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
-        static auto sip = WiFi.localIP().toString();
-        static auto lastFPS = g_Values.FPS;
-        static auto lastFullDraw = 0;
-        static auto lastAudio = 0;
-        static auto lastSerial = 0;
-        static auto lastScreen = millis();
-        static String lastFooter = "";
-        float screenFPS = 0;
-        auto yh = 2; // Start at top of screen
-
-        display.setTextSize(display.width() > 160 ? 2 : 1);
-        const int topMargin = display.fontHeight() * 3 + 4;
+    // Pick text size based on width (header size)
+    display.setTextSize(display.width() > 160 ? 2 : 1);
+    // Compute and cache content top using the header text size so it stays stable
+    const int topMargin = display.fontHeight() * 3 + 4;
+    _contentTop = topMargin;
 
         // Screen FPS (for display updates)
-        screenFPS = (millis() - lastScreen) / 1000.0f;
+        float screenFPS = (millis() - lastScreen) / 1000.0f;
         if (screenFPS != 0)
             screenFPS = 1.0f / screenFPS;
         lastScreen = millis();
 
+        // Redraw header when needed
         // Redraw header when needed
         if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
         {
@@ -270,19 +275,24 @@ class TitlePage : public Page
             const String currentIP = WiFi.localIP().toString();
 
             if (bRedraw || lasteffect != currentEffect || sip != currentIP)
+            const int currentEffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+            const String currentIP = WiFi.localIP().toString();
+
+            if (bRedraw || lasteffect != currentEffect || sip != currentIP)
             {
                 display.fillRect(0, 0, display.width(), topMargin, backColor);
+                display.fillRect(0, display.height() - display.BottomMargin, display.width(), display.BottomMargin, backColor);
                 display.fillRect(0, display.height() - display.BottomMargin, display.width(), display.BottomMargin, backColor);
                 display.fillRect(0, topMargin - 1, display.width(), 1, BLUE16);
                 display.fillRect(0, display.height() - display.BottomMargin + 1, display.width(), 1, BLUE16);
 
-                lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
-                sip = WiFi.localIP().toString();
-                lastFPS = g_Values.FPS;
+                lasteffect = currentEffect;
+                sip = currentIP;
 
+                // Title lines
+                int yh = 2;
                 display.setTextColor(display.GetBorderColor(), backColor);
-                String sEffect = String("Effect: ") + String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
-                                 String("/") + String(g_ptrSystem->EffectManager().EffectCount());
+                String sEffect = String("Effect: ") + String(currentEffect + 1) + String("/") + String(g_ptrSystem->EffectManager().EffectCount());
                 auto w = display.textWidth(sEffect);
                 display.setCursor(display.width() / 2 - w / 2, yh);
                 display.print(sEffect.c_str());
@@ -295,6 +305,7 @@ class TitlePage : public Page
                 yh += display.fontHeight();
 
                 String sIP = WiFi.isConnected() ? currentIP.c_str() : "No Wifi";
+                String sIP = WiFi.isConnected() ? currentIP.c_str() : "No Wifi";
                 display.setTextColor(display.GetBorderColor(), backColor);
                 w = display.textWidth(sIP);
                 display.setCursor(display.width() / 2 - w / 2, yh);
@@ -303,10 +314,9 @@ class TitlePage : public Page
 
             // Footer line
             String footer = str_sprintf(" LED: %2d  Scr: %02d", g_Values.FPS, (int)screenFPS);
-            #if ENABLE_AUDIO
-                footer = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer.AudioFPS(), g_Analyzer.SerialFPS(), (int)screenFPS);
-            #endif
-            
+            if (g_Analyzer.Enabled())
+                footer = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS, (int)screenFPS);
+
             if (footer != lastFooter)
             {
                 lastFooter = footer;
@@ -329,7 +339,7 @@ class CurrentEffectSummaryPage final : public TitlePage
 
     void OnButtonPress(uint8_t buttonIndex) override
     {
-        if (buttonIndex == 0)
+        if (buttonIndex == 1)
         {
             debugI("Button 1 pressed so advancing to next effect");
             g_ptrSystem->EffectManager().NextEffect();
@@ -346,7 +356,7 @@ class CurrentEffectSummaryPage final : public TitlePage
         TitlePage::Draw(display, bRedraw);
 
         // Add spectrum analyzer content
-        #if ENABLE_AUDIO
+        if (g_Analyzer.Enabled())
         {
             const int topMargin = ContentTop(display);
 
@@ -355,19 +365,22 @@ class CurrentEffectSummaryPage final : public TitlePage
             const float ySizeVU = display.height() / 16; // height of each block
             const int cPixels = 16;
             const float xSize = xHalf / (float)cPixels + 1;
-            const int litBlocks = (g_Analyzer.VURatioFade() / 2.0f) * cPixels;
+            const int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels;
             for (int iPixel = 0; iPixel < cPixels; iPixel++)
             {
+                uint16_t color16 = iPixel > litBlocks ? BLACK16 : display.to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
                 uint16_t color16 = iPixel > litBlocks ? BLACK16 : display.to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
                 display.fillRect(xHalf - iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
                 display.fillRect(xHalf + iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
             }
 
             // Spectrum bands
+            // Spectrum bands
             const int spectrumTop = topMargin + ySizeVU + 1;
             const int bandHeight = display.height() - spectrumTop - display.BottomMargin;
             for (int iBand = 0; iBand < NUM_BANDS; iBand++)
             {
+                CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255)) % 256);
                 CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255)) % 256);
                 int bandWidth = display.width() / NUM_BANDS;
                 auto color16 = display.to16bit(bandColor);
@@ -377,15 +390,17 @@ class CurrentEffectSummaryPage final : public TitlePage
                 auto val = min(1.0f, g_Analyzer.Peak2Decay(iBand));
                 assert(bandHeight * val <= bandHeight);
                 display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
+                display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
             }
         }
-        #endif // ENABLE_AUDIO
     }
 };
 
-class EffectSimulatorPage final : public TitlePage
+class CurrentEffectPage final : public TitlePage
 {
   public:
+    std::string Name() const override { return "CurrentEffect"; }
+
     std::string Name() const override { return "CurrentEffect"; }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -393,58 +408,11 @@ class EffectSimulatorPage final : public TitlePage
         // Draw shared header/footer first
         TitlePage::Draw(display, bRedraw);
 
-        // Determine content area between header and footer
-        const int headerTop = ContentTop(display);
-        const int contentTop = headerTop;
-        const int contentHeight = display.height() - display.BottomMargin - contentTop;
-        const int contentWidth = display.width();
-
-        // Matrix dimensions
-        const int mw = MATRIX_WIDTH;
-        const int mh = MATRIX_HEIGHT;
-        if (mw <= 0 || mh <= 0 || contentWidth <= 0 || contentHeight <= 0)
-            return;
-
-        // Max integer scale that fits both dimensions
-        int sx = contentWidth / mw;
-        int sy = contentHeight / mh;
-        int scale = std::min(sx, sy);
-        if (scale <= 0)
-            scale = 1; // No fractional downscale; ensure at least 1px per LED
-
-        // Center the image in the content area
-        const int drawWidth = mw * scale;
-        const int drawHeight = mh * scale;
-        const int xOffset = (contentWidth - drawWidth) / 2;
-        const int yOffset = contentTop + (contentHeight - drawHeight) / 2;
-
-        // Optional: clear content area on full redraw to avoid ghosting around edges
-        if (bRedraw)
-            display.fillRect(0, contentTop, contentWidth, contentHeight, BLACK16);
-
-        // Fetch current graphics buffer
-        auto &effectManager = g_ptrSystem->EffectManager();
-        auto gfx = effectManager.g();
-        if (!gfx || gfx->leds == nullptr)
-            return;
-
-        // Blit: draw each LED as a scale x scale rectangle
-        for (int y = 0; y < mh; ++y)
-        {
-            for (int x = 0; x < mw; ++x)
-            {
-                // Use getPixel to respect XY mapping
-                CRGB c = gfx->getPixel(x, y);
-                uint16_t c16 = display.to16bit(c);
-                int px = xOffset + x * scale;
-                int py = yOffset + y * scale;
-                // Draw filled rect; subtract 1 to create a fine 1px grid line when scale > 1
-                if (scale > 1)
-                    display.fillRect(px, py, scale - 1, scale - 1, c16);
-                else
-                    display.drawPixel(px, py, c16);
-            }
-        }
+    // Placeholder for actual LED content: draw a simple rectangle in the content area
+    const int top = ContentTop(display) + 2;
+        const int height = display.height() - display.BottomMargin - top - 2;
+        if (height > 4)
+            display.drawRect(2, top, display.width() - 4, height, display.GetBorderColor());
     }
 };
 

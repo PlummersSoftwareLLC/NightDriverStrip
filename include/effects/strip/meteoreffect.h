@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "soundanalyzer.h"
+
 #include "ledstripeffect.h"
 
 class MeteorChannel

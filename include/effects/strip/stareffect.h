@@ -502,15 +502,15 @@ template <typename StarType> class StarryNightEffect : public EffectWithId<idStr
 
     virtual void CreateStars()
     {
-    #if ENABLE_AUDIO
-
-        for (int i = 0; i < cMaxNewStarsPerFrame; i++)
+        if (g_Analyzer.Enabled())
         {
-            double prob = _newStarProbability;
+            for (int i = 0; i < cMaxNewStarsPerFrame; i++)
+            {
+                double prob = _newStarProbability;
 
             prob = (prob / 100) + (g_Analyzer.VURatio() - 1.0) * _musicFactor;
 
-            constexpr auto kProbabilitySpan = 1.0;
+                constexpr auto kProbabilitySpan = 1.0;
 
             if (g_Analyzer.VU() > 0)
             {
