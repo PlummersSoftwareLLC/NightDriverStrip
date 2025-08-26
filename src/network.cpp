@@ -667,7 +667,7 @@ bool WriteWiFiConfig(WifiCredSource source, const String& WiFi_ssid, const Strin
     nvs_commit(nvsRWHandle);
     nvs_close(nvsRWHandle);
 
-    return true;
+    return success;
 }
 
 // ClearWiFiConfig
@@ -693,14 +693,14 @@ bool ClearWiFiConfig(WifiCredSource source)
     bool success = true;
 
     err = nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_ssid)).c_str());
-    if (ESP_OK != err)
+    if (ESP_OK != err && err != ESP_ERR_NVS_NOT_FOUND)
     {
         debugW("Error (%s) erasing ssid for source %d!\n", esp_err_to_name(err), source);
         success = false;
     }
 
     err = nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_password)).c_str());
-    if (ESP_OK != err)
+    if (ESP_OK != err && err != ESP_ERR_NVS_NOT_FOUND)
     {
         debugW("Error (%s) erasing password for source %d!\n", esp_err_to_name(err), source);
         success = false;
@@ -712,7 +712,7 @@ bool ClearWiFiConfig(WifiCredSource source)
     nvs_commit(nvsRWHandle);
     nvs_close(nvsRWHandle);
 
-    return true;
+    return success;
 }
 
 #if ENABLE_WIFI
