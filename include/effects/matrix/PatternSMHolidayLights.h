@@ -84,7 +84,7 @@ void spruce()
 
     // Fade all LED channels to black based on the 'speed' value.
     // The 'map' function scales the 'speed' value from one range to another.
-    fadeAllChannelsToBlackBy(map(speed, 1, 255, 1, 100));
+    fadeAllChannelsToBlackBy(::map(speed, 1, 255, 1, 100));
 
     uint8_t z;
     if (effId == 3)
@@ -95,14 +95,14 @@ void spruce()
     for (uint8_t i = 0; i < minDim; i++)
     {
         // Calculate 'x' based on various factors.
-        unsigned x = beatsin16(i * (map(speed, 1, 255, 3, 20)), i * 2, (minDim * 4 - 2) - (i * 2 + 2));
+        unsigned x = beatsin16(i * (::map(speed, 1, 255, 3, 20)), i * 2, (minDim * 4 - 2) - (i * 2 + 2));
 
         if (effId == 2)
         {
             // Draw a pixel with certain conditions if 'effId' is 2.
             drawPixelXYF_X(x / 4 + height_adj, i,
                            random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255)
-                                            : CHSV(100, 255, map(speed, 1, 255, 128, 100)));
+                                            : CHSV(100, 255, ::map(speed, 1, 255, 128, 100)));
         }
         else
         {

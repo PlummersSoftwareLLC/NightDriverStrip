@@ -34,12 +34,12 @@ class PatternSMFire2021 : public LEDStripEffect
         deltaValue = Scale * 0.0899; // /100.0F * ((sizeof(palette_arr)
                                      // /sizeof(TProgmemRGBPalette16 *))-0.01F));
         deltaValue = (((Scale - 1U) % 11U + 1U));
-        step = map(Speed * Speed, 1U, 65025U, (deltaValue - 1U) / 2U + 1U,
+        step = ::map(Speed * Speed, 1U, 65025U, (deltaValue - 1U) / 2U + 1U,
                    deltaValue * 18U + 44); // корректируем скорость эффекта в наш диапазон допустимых
         // deltaValue = (((Scale - 1U) % 11U + 2U) << 4U); // ширина языков пламени
         // (масштаб шума Перлина)
         deltaValue = 0.7 * deltaValue * deltaValue + 31.3; // ширина языков пламени (масштаб шума Перлина)
-        pcnt = map(step, 1U, 255U, 20U, 128U); // nblend 3th param
+        pcnt = ::map(step, 1U, 255U, 20U, 128U); // nblend 3th param
     }
 
     void Draw() override

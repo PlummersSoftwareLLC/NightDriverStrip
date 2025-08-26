@@ -469,7 +469,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
         case WIFI_COMMAND_PEAKDATA:
         {
-            if (g_Analyzer.Enabled())
+            #if ENABLE_AUDIO          
             {
                 uint16_t numbands  = WORDFromMemory(&payloadData[2]);
                 uint32_t length32  = DWORDFromMemory(&payloadData[4]);
@@ -486,6 +486,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                 peaks.ApplyScalars(PeakData::PCREMOTE);
                 g_Analyzer.SetPeakData(peaks);
             }
+            #endif
             return true;
         }
 
