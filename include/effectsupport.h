@@ -269,7 +269,7 @@ inline auto Disabled(F adder)
     };
 }
 
-// Defines used by some StarryNightEffect instances
+// Defines used by some StarEffect instances
 
-constexpr float kStarryNightProbability = 1.0f;
-constexpr float kStarryNightMusicFactor = 1.0f;
+constexpr float kStarEffectProbability = 1.0f;
+constexpr float kStarEffectMusicFactor = 1.0f;

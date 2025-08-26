@@ -255,17 +255,6 @@ void WriteCurrentEffectIndexFile()
     }
 }
 
-// Helper function to create a StarryNightEffect from JSON.
-//   It picks the actual effect factory from g_JsonStarryNightEffectFactories based on the star type number in the JSON blob.
-std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject)
-{
-    auto entry = g_JsonStarryNightEffectFactories.find(jsonObject[PTY_STARTYPENR]);
-
-    return entry != g_JsonStarryNightEffectFactories.end()
-        ? entry->second(jsonObject)
-        : nullptr;
-}
-
 //
 // Other helper functions
 //

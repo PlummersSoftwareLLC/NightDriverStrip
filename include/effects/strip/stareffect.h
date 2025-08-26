@@ -495,10 +495,10 @@ class StarEffectBase : public EffectWithId<StarEffectBase<StarType, TEffect>>
 };
 
 template <typename StarType>
-class StarryNightEffect : public StarEffectBase<StarType, StarryNightEffect<StarType>>
+class StarEffect : public StarEffectBase<StarType, StarEffect<StarType>>
 {
   public:
-    using StarEffectBase<StarType, StarryNightEffect<StarType>>::StarEffectBase;
+    using StarEffectBase<StarType, StarEffect<StarType>>::StarEffectBase;
 };
 
 template <typename StarType> class BlurStarEffect : public StarEffectBase<StarType, BlurStarEffect<StarType>>
@@ -517,7 +517,7 @@ template <typename StarType> class BlurStarEffect : public StarEffectBase<StarTy
 
     virtual void Clear()
     {
-        StarryNightEffect<StarType>::setAll(32,0,0);
+        StarEffect<StarType>::setAll(32,0,0);
     }
 };
 
