@@ -73,6 +73,9 @@
 #include "effects/matrix/Vector.h"
 #include <memory>
 
+// Forward declaration of the global XY helper used in non-HUB75 builds
+uint16_t XY(uint8_t x, uint8_t y);
+
 #if USE_HUB75
     #define USE_NOISE 1
 #endif

@@ -82,20 +82,7 @@ class BasicInfoSummaryPage final : public Page
 
     void OnButtonPress(uint8_t buttonIndex) override
     {
-        if (buttonIndex == 1)
-        {
-            // Reduce brightness while on this page (Button 1)
-            static int brightness = 255;
-            brightness /= 2;
-            if (brightness < 4)
-                brightness = 255;
-            auto &deviceConfig = g_ptrSystem->DeviceConfig();
-            deviceConfig.SetBrightness(brightness);
-        }
-        else
-        {
-            Page::OnButtonPress(buttonIndex);
-        }
+        Page::OnButtonPress(buttonIndex);
     }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -339,7 +326,7 @@ class CurrentEffectSummaryPage final : public TitlePage
 
     void OnButtonPress(uint8_t buttonIndex) override
     {
-        if (buttonIndex == 1)
+        if (buttonIndex == 0)
         {
             debugI("Button 1 pressed so advancing to next effect");
             g_ptrSystem->EffectManager().NextEffect();
@@ -396,7 +383,7 @@ class CurrentEffectSummaryPage final : public TitlePage
     }
 };
 
-class CurrentEffectPage final : public TitlePage
+class EffectSimulatorPage final : public TitlePage
 {
   public:
     std::string Name() const override { return "CurrentEffect"; }
@@ -408,11 +395,58 @@ class CurrentEffectPage final : public TitlePage
         // Draw shared header/footer first
         TitlePage::Draw(display, bRedraw);
 
-    // Placeholder for actual LED content: draw a simple rectangle in the content area
-    const int top = ContentTop(display) + 2;
-        const int height = display.height() - display.BottomMargin - top - 2;
-        if (height > 4)
-            display.drawRect(2, top, display.width() - 4, height, display.GetBorderColor());
+        // Determine content area between header and footer
+        const int headerTop = ContentTop(display);
+        const int contentTop = headerTop;
+        const int contentHeight = display.height() - display.BottomMargin - contentTop;
+        const int contentWidth = display.width();
+
+        // Matrix dimensions
+        const int mw = MATRIX_WIDTH;
+        const int mh = MATRIX_HEIGHT;
+        if (mw <= 0 || mh <= 0 || contentWidth <= 0 || contentHeight <= 0)
+            return;
+
+        // Max integer scale that fits both dimensions
+        int sx = contentWidth / mw;
+        int sy = contentHeight / mh;
+        int scale = std::min(sx, sy);
+        if (scale <= 0)
+            scale = 1; // No fractional downscale; ensure at least 1px per LED
+
+        // Center the image in the content area
+        const int drawWidth = mw * scale;
+        const int drawHeight = mh * scale;
+        const int xOffset = (contentWidth - drawWidth) / 2;
+        const int yOffset = contentTop + (contentHeight - drawHeight) / 2;
+
+        // Optional: clear content area on full redraw to avoid ghosting around edges
+        if (bRedraw)
+            display.fillRect(0, contentTop, contentWidth, contentHeight, BLACK16);
+
+        // Fetch current graphics buffer
+        auto &effectManager = g_ptrSystem->EffectManager();
+        auto gfx = effectManager.g();
+        if (!gfx || gfx->leds == nullptr)
+            return;
+
+        // Blit: draw each LED as a scale x scale rectangle
+        for (int y = 0; y < mh; ++y)
+        {
+            for (int x = 0; x < mw; ++x)
+            {
+                // Use getPixel to respect XY mapping
+                CRGB c = gfx->getPixel(x, y);
+                uint16_t c16 = display.to16bit(c);
+                int px = xOffset + x * scale;
+                int py = yOffset + y * scale;
+                // Draw filled rect; subtract 1 to create a fine 1px grid line when scale > 1
+                if (scale > 1)
+                    display.fillRect(px, py, scale - 1, scale - 1, c16);
+                else
+                    display.drawPixel(px, py, c16);
+            }
+        }
     }
 };
 

@@ -47,7 +47,7 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
 // EffectManager initialization functions
 //
 
-#if USE_HUB75
+#if USE_HUB75 
 
     void InitSplashEffectManager()
     {
@@ -363,7 +363,7 @@ void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
     if (!retainRemoteEffect)
         _tempEffect = nullptr;
 
-    #if (USE_HUB75)
+    #if USE_HUB75
         g()->PausePalette(false);
     #endif
 
@@ -382,7 +382,7 @@ void EffectManager::ApplyGlobalColor(CRGB color) const
 
 void EffectManager::ApplyGlobalPaletteColors() const
 {
-    #if (USE_HUB75)
+    #if USE_HUB75
         auto  pMatrix = g();
         auto& deviceConfig = g_ptrSystem->DeviceConfig();
         auto& globalColor = deviceConfig.GlobalColor();

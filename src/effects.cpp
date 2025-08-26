@@ -59,15 +59,9 @@
 
 #if USE_HUB75
     #include "ledmatrixgfx.h"
-    #include "effects/matrix/PatternAnimatedGIF.h"
-    #include "effects/matrix/PatternSMHypnosis.h"
-    #include "effects/matrix/PatternSMRainbowTunnel.h"
-    #include "effects/matrix/PatternSMRadialWave.h"
-    #include "effects/matrix/PatternSMRadialFire.h"
-    #include "effects/matrix/PatternSMSmoke.h"
-    #include "effects/matrix/PatternNoiseSmearing.h"
     #include "effects/matrix/PatternPongClock.h"
-
+    #include "effects/matrix/PatternAnimatedGIF.h"
+    #include "effects/matrix/PatternMandala.h"
 
     #if ENABLE_WIFI
         #include "effects/matrix/PatternSubscribers.h"
@@ -76,7 +70,8 @@
     #endif
 #endif
 
-#if USE_MATRIX
+#if USE_HUB75 || USE_MATRIX
+
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSM2DDPR.h"
     #include "effects/matrix/PatternSMStarDeep.h"
@@ -93,7 +88,10 @@
     #include "effects/matrix/PatternSMFlowFields.h"
     #include "effects/matrix/PatternSMSupernova.h"
     #include "effects/matrix/PatternSMWalkingMachine.h"
-
+    #include "effects/matrix/PatternSMHypnosis.h"
+    #include "effects/matrix/PatternSMRainbowTunnel.h"
+    #include "effects/matrix/PatternSMRadialWave.h"
+    #include "effects/matrix/PatternSMRadialFire.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -106,16 +104,20 @@
     #include "effects/matrix/PatternAlienText.h"
     #include "effects/matrix/PatternRadar.h"
     #include "effects/matrix/PatternBounce.h"
-    #include "effects/matrix/PatternMandala.h"
     #include "effects/matrix/PatternSpin.h"
     #include "effects/matrix/PatternMisc.h"
     #include "effects/matrix/PatternQR.h"
 
+    #if USE_NOISE
+        #include "effects/matrix/PatternNoiseSmearing.h"
+        #include "effects/matrix/PatternSMSmoke.h"
+    #endif
 
-#endif  // USE_HUB75
+#endif  // USE_HUB75 || USE_MATRIX
 
 #ifdef USE_WS281X
     #include "ledstripgfx.h"
+    #include "effects/matrix/PatternBounce.h"
 #endif
 
 // Global effect set version
@@ -248,99 +250,256 @@ void LoadEffectFactories()
         #endif
     #endif
 
-    #if defined(EFFECTS_FAN)
-        // Fan-specific effects for fan projects
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<RainbowFillEffect>(24, 0),
-            Effect<ColorCycleEffect>(BottomUp),
-            Effect<ColorCycleEffect>(TopDown),
-            Effect<ColorCycleEffect>(LeftRight),
-            Effect<ColorCycleEffect>(RightLeft),
-            Effect<PaletteReelEffect>("PaletteReelEffect"),
-            Effect<MeteorEffect>(),
-            Effect<TapeReelEffect>("TapeReelEffect"),
-            Starry<MusicStar>("RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0),
-            Starry<MusicStar>("Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0),
-            Effect<FanBeatEffect>("FanBeat"),
-            Starry<BubblyStar>("Little Blooming Rainbow Stars", BlueColors_p, 8.0, 4, LINEARBLEND, 2.0, 0.0, 1.0),
-            Starry<BubblyStar>("Big Blooming Rainbow Stars", RainbowColors_p, 2, 12, LINEARBLEND, 1.0),
-            Starry<BubblyStar>("Neon Bars", RainbowColors_p, 0.5, 64, NOBLEND, 0),
-            Effect<FireFanEffect>(GreenHeatColors_p, NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(GreenHeatColors_p, NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(GreenHeatColors_p, NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(GreenHeatColors_p, NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(BlueHeatColors_p,  NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(BlueHeatColors_p,  NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(BlueHeatColors_p,  NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(BlueHeatColors_p,  NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(HeatColors_p,      NUM_LEDS, 3, 7, 400, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(HeatColors_p,      NUM_LEDS, 3, 8, 600, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(HeatColors_p,      NUM_LEDS, 2, 10, 800, 2, NUM_LEDS / 2, Sequential, false, true),
-            Effect<FireFanEffect>(HeatColors_p,      NUM_LEDS, 1, 12, 1000, 2, NUM_LEDS / 2, Sequential, false, true)
-        );
-    #endif
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUMBAR,       SpectrumBarEffect,      "Audiograph",  16, 4, 0);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6,  1.6);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",   MATRIX_WIDTH,  CRGB(0,0,40), 0, 1.25, 1.25, true);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Fire Log",    GIFIdentifier::Firelog);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Pacman",      GIFIdentifier::Pacman);
+        ADD_EFFECT(EFFECT_MATRIX_PONG_CLOCK,        PatternPongClock);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Colorball",   GIFIdentifier::ColorSphere);
+        ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021,        PatternSMFire2021);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave,              "GhostWave",   0, 30, false,  10);
+        ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Rings",       GIFIdentifier::ThreeRings);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Atomic",      GIFIdentifier::Atomic);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Bananaman",   GIFIdentifier::Banana, true, CRGB::DarkBlue);
+        ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
+        ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
+        ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Tesseract",   GIFIdentifier::Tesseract);
+        ADD_EFFECT(EFFECT_MATRIX_ANIMATEDGIF,       PatternAnimatedGIF,     "Nyancat",     GIFIdentifier::Nyancat);
+        ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
+        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",         NUM_BANDS,     USAColors_p,         true,  0, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2",  32,            spectrumBasicColors, false, 100, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum++",  NUM_BANDS,     spectrumBasicColors, false, 0, 40, -1.0, 2.0);
+        ADD_EFFECT(EFFECT_MATRIX_WAVEFORM,          WaveformEffect, "WaveIn", 8);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "WaveOut", 0, 0, true, 0);
 
-    #if defined(EFFECTS_LASERLINE)
-        // Laser line effect set
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<LaserLineEffect>(500, 20)
-        );
-    #endif
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
 
-    #if defined(EFFECTS_CHIEFTAIN)
-        // Chieftain lantern effect set
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<LanternEffect>(),
-            Effect<PaletteEffect>(RainbowColors_p, 2.0f, 0.1, 0.0, 1.0, 0.0, LINEARBLEND, true, 1.0),
-            Effect<RainbowFillEffect>(10, 32)
-        );
-    #endif
 
-    #if defined(EFFECTS_LANTERN)
-        // Lantern effect set
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<FireEffect>("Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true)
-        );
-    #endif
+            #if ENABLE_WIFI
+                ADD_EFFECT(EFFECT_MATRIX_STOCKS,            PatternStocks);
+                ADD_EFFECT(EFFECT_MATRIX_SUBSCRIBERS,       PatternSubscribers);
+                ADD_EFFECT(EFFECT_MATRIX_WEATHER,           PatternWeather);
+            #endif
 
-    #if defined(EFFECTS_FULLMATRIX)
-        // Full matrix effect set for advanced displays (Mesmerizer, etc.)
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
-            Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
-            Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
-            Effect<PatternSMRadialWave>(),
-            Effect<PatternAnimatedGIF>("Fire Log", GIFIdentifier::Firelog),
-            Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
-            Effect<PatternPongClock>(),
-            Effect<PatternAnimatedGIF>("Colorball", GIFIdentifier::ColorSphere),
-            Effect<PatternSMFire2021>(),
-            Effect<GhostWave>("GhostWave", 0, 30, false, 10),
-            Effect<PatternSMGamma>(),
-            Effect<PatternAnimatedGIF>("Rings", GIFIdentifier::ThreeRings),
-            Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),
-            Effect<PatternAnimatedGIF>("Bananaman", GIFIdentifier::Banana, true, CRGB::DarkBlue),
-            Effect<PatternSMMetaBalls>(),
-            Effect<PatternSMSupernova>(),
-            Effect<PatternCube>(),
-            Effect<PatternAnimatedGIF>("Tesseract", GIFIdentifier::Tesseract),
-            Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
-            Effect<PatternLife>(),
-            Effect<PatternCircuit>(),
-            Effect<SpectrumAnalyzerEffect>("USA", NUM_BANDS, USAColors_p, true, 0, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum 2", 32, spectrumBasicColors, false, 100, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum++", NUM_BANDS, spectrumBasicColors, false, 0, 40, -1.0, 2.0),
-            Effect<WaveformEffect>("WaveIn", 8),
-            Effect<GhostWave>("WaveOut", 0, 0, true, 0),
-            Starry<MusicStar>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0)
-        );
+        ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire);
+        ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS,     PatternSMFlowFields);
+        ADD_EFFECT(EFFECT_MATRIX_SMBLURRING_COLORS, PatternSMBlurringColors);
+        ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);
+        ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS,        PatternSMHypnosis);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP,        PatternSMStarDeep);
+        ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Lines", 38);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Circles", 73);
+        ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
+        ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);
+        ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);
+        ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);
 
-        #if ENABLE_WIFI
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<PatternStocks>(),
-            Effect<PatternSubscribers>(),
-            Effect<PatternWeather>()
-        );
+        ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS,  PatternSMHolidayLights);
+
+        ADD_EFFECT(EFFECT_MATRIX_ROSE,              PatternRose);
+        ADD_EFFECT(EFFECT_MATRIX_PINWHEEL,          PatternPinwheel);
+        ADD_EFFECT(EFFECT_MATRIX_SUNBURST,          PatternSunburst);
+        ADD_EFFECT(EFFECT_MATRIX_CLOCK,             PatternClock);
+        ADD_EFFECT(EFFECT_MATRIX_ALIEN_TEXT,        PatternAlienText);
+
+        ADD_EFFECT(EFFECT_MATRIX_PULSAR,            PatternPulsar);
+        ADD_EFFECT(EFFECT_MATRIX_BOUNCE,            PatternBounce);
+        ADD_EFFECT(EFFECT_MATRIX_WAVE,              PatternWave);
+        ADD_EFFECT(EFFECT_MATRIX_SWIRL,             PatternSwirl);
+        ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
+        ADD_EFFECT(EFFECT_MATRIX_MANDALA,           PatternMandala);
+        ADD_EFFECT(EFFECT_MATRIX_MUNCH,             PatternMunch);
+        ADD_EFFECT(EFFECT_MATRIX_MAZE,              PatternMaze);
+
+    #elif UMBRELLA
+
+        ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false);
+        ADD_EFFECT(EFFECT_STRIP_FIRE, FireEffect, "Medium Fire", NUM_LEDS, 1, 5, 100, 3, 4, true, false);
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Musical Red Fire", HeatColors_p, NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false);
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false);
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Musical Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 2, 3, 150, 3, 10, true, false);
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 7, 150, 3, 10, true, false);
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Musical Blue Fire", CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::Blue, CRGB::LightSkyBlue), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 2, 3, 150, 3, 10, true, false);
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 7, 150, 3, 10, true, false);
+        ADD_EFFECT(EFFECT_STRIP_MUSICAL_PALETTE_FIRE, MusicalPaletteFire, "Musical Green Fire", CRGBPalette16(CRGB::Black, CRGB::DarkGreen, CRGB::Green, CRGB::LimeGreen), NUM_LEDS, 1, 8, 50, 1, 24, true, false);
+
+        ADD_EFFECT(EFFECT_STRIP_BOUNCING_BALL, BouncingBallEffect);
+        ADD_EFFECT(EFFECT_STRIP_DOUBLE_PALETTE, DoublePaletteEffect);
+
+        ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 4, 4, 10, 2.0, 2.0);
+        ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 10, 1, 20, 1.5, 1.5);
+        ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 25, 1, 40, 1.0, 1.0);
+        ADD_EFFECT(EFFECT_STRIP_METEOR, MeteorEffect, 50, 1, 50, 0.5, 0.5);
+
+        ADD_STARRY_NIGHT_EFFECT(QuietStar, "Rainbow Twinkle Stars", RainbowColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);       // Rainbow Twinkle
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0);                                                     // RGB Music Blur - Can You Hear Me Knockin'
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0);                                                // Rainbow Music Star
+        ADD_STARRY_NIGHT_EFFECT(BubblyStar,"Little Blooming Rainbow Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 4, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR); // Blooming Little Rainbow Stars
+        ADD_STARRY_NIGHT_EFFECT(QuietStar, "Green Twinkle Stars", GreenColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);           // Green Twinkle
+        ADD_STARRY_NIGHT_EFFECT(Star, "Blue Sparkle Stars", BlueColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);                  // Blue Sparkle
+        ADD_STARRY_NIGHT_EFFECT(QuietStar, "Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0);                                                                 // Red Twinkle
+        ADD_STARRY_NIGHT_EFFECT(Star, "Lava Stars", LavaColors_p, STARRYNIGHT_PROBABILITY, 1, LINEARBLEND, 2.0, 0.0, STARRYNIGHT_MUSICFACTOR);                          // Lava Stars
+
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p);
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, 1.0, 1.0);
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, RainbowColors_p, .25);
+
+    #elif TTGO
+
+        // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Fade", 12, spectrumBasicColors, false, 50, 70, -1.0, 3.0);
+
+    #elif WROVERKIT
+
+        // Animate a simple rainbow palette by using the palette effect on the built-in rainbow palette
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, rainbowPalette, 256 / 16, .2, 0);
+
+    #elif XMASTREES
+
+        ADD_EFFECT(EFFECT_STRIP_COLOR_BEAT_OVER_RED, ColorBeatOverRed, "ColorBeatOverRed");
+
+        ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, BottomUp, 6);
+        ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, BottomUp, 2);
+
+        ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, RainbowFillEffect, 48, 0);
+
+        ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, BottomUp, 3);
+        ADD_EFFECT(EFFECT_STRIP_COLOR_CYCLE, ColorCycleEffect, BottomUp, 1);
+
+        ADD_STARRY_NIGHT_EFFECT(LongLifeSparkleStar, "Green Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB(0, 128, 0)); // Blue Sparkle
+        ADD_STARRY_NIGHT_EFFECT(LongLifeSparkleStar, "Red Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Red);         // Blue Sparkle
+        ADD_STARRY_NIGHT_EFFECT(LongLifeSparkleStar, "Blue Sparkle Stars", GreenColors_p, 2.0, 1, LINEARBLEND, 2.0, 0.0, 0.0, CRGB::Blue);       // Blue Sparkle
+
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, rainbowPalette, 256 / 16, .2, 0);
+
+    #elif INSULATORS
+
+        ADD_EFFECT(EFFECT_STRIP_RAINBOW_FILL, InsulatorSpectrumEffect, "Spectrum Effect", RainbowColors_p);
+        ADD_EFFECT(EFFECT_STRIP_NEW_MOLTEN_GLASS_ON_VIOLET_BKGND, NewMoltenGlassOnVioletBkgnd, "Molten Glass", RainbowColors_p);
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "RGB Music Blend Stars", RGBColors_p, 0.8, 1, NOBLEND, 15.0, 0.1, 10.0);      // RGB Music Blur - Can You Hear Me Knockin'
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0); // Rainbow Music Star
+        ADD_EFFECT(EFFECT_STRIP_PALETTE_REEL, PaletteReelEffect, "PaletteReelEffect");
+        ADD_EFFECT(EFFECT_STRIP_COLOR_BEAT_OVER_RED, ColorBeatOverRed, "ColorBeatOverRed");
+        ADD_EFFECT(EFFECT_STRIP_TAPE_REEL, TapeReelEffect, "TapeReelEffect");
+
+    #elif CUBE
+
+        // Simple rainbow pallette
+        ADD_EFFECT(EFFECT_STRIP_PALETTE, PaletteEffect, rainbowPalette, 256 / 16, .2, 0);
+
+        ADD_EFFECT(EFFECT_STRIP_SPARKLY_SPINNING_MUSIC, SparklySpinningMusicEffect, "SparklySpinningMusical", RainbowColors_p);
+        ADD_EFFECT(EFFECT_STRIP_COLOR_BEAT_OVER_RED, ColorBeatOverRed, "ColorBeatOnRedBkgnd");
+        ADD_EFFECT(EFFECT_STRIP_SIMPLE_INSULATOR_BEAT2, SimpleInsulatorBeatEffect2, "SimpleInsulatorColorBeat");
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Rainbow Music Stars", RainbowColors_p, 2.0, 2, LINEARBLEND, 5.0, 0.0, 10.0); // Rainbow Music Star
+
+    #elif BELT
+
+        // Yes, I made a sparkly LED belt and wore it to a party.  Batteries too!
+        ADD_EFFECT(EFFECT_TWINKLE, TwinkleEffect, NUM_LEDS / 4, 10);
+
+    #elif MAGICMIRROR
+
+        ADD_EFFECT(EFFECT_STRIP_MOLTEN_GLASS_ON_VIOLET_BKGND, MoltenGlassOnVioletBkgnd, "MoltenGlass", RainbowColors_p);
+
+    #elif HELMET
+
+        ADD_EFFECT(EFFECT_MATRIX_SILON, SilonEffect);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", NUM_BANDS, spectrumAltColors, false, 0, 0, 0.5,  1.5);
+
+    #elif STACKDEMO
+
+        ADD_EFFECT(EFFECT_MATRIX_BOUNCE,            PatternBounce);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_WAVE,     PatternSMRadialWave);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6,  1.6);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "AudioWave",   MATRIX_WIDTH,  CRGB(0,0,40), 0, 1.25, 1.25, true);
+        ADD_EFFECT(EFFECT_MATRIX_SMFIRE2021,        PatternSMFire2021);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave,              "GhostWave",   0, 30, false,  10);
+        ADD_EFFECT(EFFECT_MATRIX_SMGAMMA,           PatternSMGamma);
+        ADD_EFFECT(EFFECT_MATRIX_SMMETA_BALLS,      PatternSMMetaBalls);
+        ADD_EFFECT(EFFECT_MATRIX_SMSUPERNOVA,       PatternSMSupernova);
+        ADD_EFFECT(EFFECT_MATRIX_CUBE,              PatternCube);
+        ADD_EFFECT(EFFECT_MATRIX_LIFE,              PatternLife);
+        ADD_EFFECT(EFFECT_MATRIX_CIRCUIT,           PatternCircuit);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "USA",         NUM_BANDS,     USAColors_p,         true,  0, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum 2",  32,            spectrumBasicColors, false, 100, 0, 0.75, 0.75);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum++",  NUM_BANDS,     spectrumBasicColors, false, 0, 40, -1.0, 2.0);
+        ADD_EFFECT(EFFECT_MATRIX_WAVEFORM,          WaveformEffect, "WaveIn", 8);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "WaveOut", 0, 0, true, 0);
+        ADD_STARRY_NIGHT_EFFECT(MusicStar, "Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0); // Rainbow Music Star
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE,        GhostWave, "PlasmaWave", 0, 255,  false);
+        ADD_EFFECT(EFFECT_MATRIX_SMNOISE,           PatternSMNoise, "Shikon", PatternSMNoise::EffectType::Shikon_t);
+        ADD_EFFECT(EFFECT_MATRIX_SMRADIAL_FIRE,     PatternSMRadialFire);
+        ADD_EFFECT(EFFECT_MATRIX_SMFLOW_FIELDS,     PatternSMFlowFields);
+        ADD_EFFECT(EFFECT_MATRIX_SMBLURRING_COLORS, PatternSMBlurringColors);
+        ADD_EFFECT(EFFECT_MATRIX_SMWALKING_MACHINE, PatternSMWalkingMachine);
+        ADD_EFFECT(EFFECT_MATRIX_SMHYPNOSIS,        PatternSMHypnosis);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTARDEEP,        PatternSMStarDeep);
+        ADD_EFFECT(EFFECT_MATRIX_SM2DDPR,           PatternSM2DDPR);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Lines", 38);
+        ADD_EFFECT(EFFECT_MATRIX_SMPICASSO3IN1,     PatternSMPicasso3in1, "Circles", 73);
+        ADD_EFFECT(EFFECT_MATRIX_SMAMBERRAIN,       PatternSMAmberRain);
+        ADD_EFFECT(EFFECT_MATRIX_SMSTROBE_DIFFUSION,PatternSMStrobeDiffusion);
+        ADD_EFFECT(EFFECT_MATRIX_SMRAINBOW_TUNNEL,  PatternSMRainbowTunnel);
+        ADD_EFFECT(EFFECT_MATRIX_SMSPIRO_PULSE,     PatternSMSpiroPulse);
+        ADD_EFFECT(EFFECT_MATRIX_SMTWISTER,         PatternSMTwister);
+        ADD_EFFECT(EFFECT_MATRIX_SMHOLIDAY_LIGHTS,  PatternSMHolidayLights);
+        ADD_EFFECT(EFFECT_MATRIX_ROSE,              PatternRose);
+        ADD_EFFECT(EFFECT_MATRIX_PINWHEEL,          PatternPinwheel);
+        ADD_EFFECT(EFFECT_MATRIX_SUNBURST,          PatternSunburst);
+        ADD_EFFECT(EFFECT_MATRIX_CLOCK,             PatternClock);
+        ADD_EFFECT(EFFECT_MATRIX_ALIEN_TEXT,        PatternAlienText);
+        ADD_EFFECT(EFFECT_MATRIX_PULSAR,            PatternPulsar);
+        ADD_EFFECT(EFFECT_MATRIX_WAVE,              PatternWave);
+        ADD_EFFECT(EFFECT_MATRIX_SWIRL,             PatternSwirl);
+        ADD_EFFECT(EFFECT_MATRIX_SERENDIPITY,       PatternSerendipity);
+        ADD_EFFECT(EFFECT_MATRIX_MUNCH,             PatternMunch);
+        ADD_EFFECT(EFFECT_MATRIX_MAZE,              PatternMaze);
+        /*
+        ADD_EFFECT(EFFECT_MATRIX_SMSMOKE,           PatternSMSmoke);
+        */
+
+    #elif SPECTRUM
+
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", NUM_BANDS, spectrumAltColors, false, 0, 0, 0.5,  1.5);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24,        spectrumAltColors, false, 0, 0, 1.25, 1.25);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24,        spectrumAltColors, false, 0, 0, 0.25, 1.25);
+
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 16,        spectrumAltColors, false, 0, 0, 1.0, 1.0);
+
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 48,        CRGB(0,0,4),              0, 1.25, 1.25);
+
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave", 0, 16, false, 15);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum USA",      16,        USAColors_p,       true,  0);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave Rainbow", 8);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Fade",     24,        RainbowColors_p,   false, 50, 70, -1.0, 2.0);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave Blue", 0);
+        ADD_EFFECT(EFFECT_MATRIX_SPECTRUM_ANALYZER, SpectrumAnalyzerEffect, "Spectrum Standard", 24,        RainbowColors_p,   false);
+        ADD_EFFECT(EFFECT_MATRIX_GHOST_WAVE, GhostWave, "GhostWave One", 4);
+
+
+        //make_shared_psram<GhostWave>("GhostWave Rainbow", &rainbowPalette),
+
+    
+    #elif ATOMLIGHT
+
+        #ifndef EFFECT_SET_VERSION
+            #define EFFECT_SET_VERSION  2   // Bump version if default set changes in a meaningful way
         #endif
 
         RegisterAll(*g_ptrEffectFactories,

@@ -32,6 +32,8 @@
 #ifndef PatternSub_H
 #define PatternSub_H
 
+#if USE_HUB75
+
 #include <UrlEncode.h>
 #include "systemcontainer.h"
 
@@ -275,4 +277,5 @@ class PatternSubscribers : public EffectWithId<idMatrixSubscribers>
     }
 };
 
+#endif
 #endif

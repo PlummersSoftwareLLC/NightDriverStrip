@@ -66,6 +66,8 @@
 #ifndef PatternPongClock_H
 #define PatternPongClock_H
 
+#if USE_HUB75
+
 #include "systemcontainer.h"
 
 #define BAT1_X 2 // Pong left bat x pos (this is where the ball collision occurs, the bat is drawn 1 behind these coords)
@@ -498,4 +500,5 @@ class PatternPongClock : public EffectWithId<idMatrixPongClock>
     }
 };
 
+#endif
 #endif

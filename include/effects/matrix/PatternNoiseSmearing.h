@@ -84,7 +84,7 @@ public:
       for (uint8_t j = 0; j < 5; j++) {
         for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
         {
-          g()->leds[XY(x, y)] += rainbow[c];
+          g()->leds[g()->xy(x, y)] += rainbow[c];
         }
 
         y++;
