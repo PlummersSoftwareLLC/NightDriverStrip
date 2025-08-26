@@ -327,8 +327,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
         #endif
     #endif
 
+    #define TOGGLE_BUTTON_0 39
     #define TOGGLE_BUTTON_1 37
-    #define TOGGLE_BUTTON_2 39
 
 #elif LANTERN
 
@@ -1036,11 +1036,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     //#define NOISE_FLOOR                 30
     //#define NOISE_CUTOFF                5
 
-    #if !(ELECROW)
-        #define TOGGLE_BUTTON_1         37
-        #define TOGGLE_BUTTON_2         39
-    #endif
-
 #elif HELMET
 
     #ifndef PROJECT_NAME
@@ -1578,7 +1573,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef NUM_INFO_PAGES
-#define NUM_INFO_PAGES 2
+#define NUM_INFO_PAGES 3
 #endif
 
 // When you press a color button on the remote, the color is used to create a temporary fill effect, but

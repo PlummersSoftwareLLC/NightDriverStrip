@@ -79,20 +79,7 @@ class BasicInfoSummaryPage final : public Page
 
     void OnButtonPress(uint8_t buttonIndex) override
     {
-        if (buttonIndex == 1)
-        {
-            // Reduce brightness while on this page (Button 1)
-            static int brightness = 255;
-            brightness /= 2;
-            if (brightness < 4)
-                brightness = 255;
-            auto &deviceConfig = g_ptrSystem->DeviceConfig();
-            deviceConfig.SetBrightness(brightness);
-        }
-        else
-        {
-            Page::OnButtonPress(buttonIndex);
-        }
+        Page::OnButtonPress(buttonIndex);
     }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -116,9 +103,9 @@ class BasicInfoSummaryPage final : public Page
         char chStatus = szStatus[cStatus % szStatus.length()];
         cStatus++;
 
-        if (display.width() > 240)
+        if (display.width() > 480)
             display.setTextSize(3);
-        else if (display.width() >= 160)
+        else if (display.width() > 160)
             display.setTextSize(2);
         else
             display.setTextSize(1);
@@ -318,7 +305,7 @@ class CurrentEffectSummaryPage final : public TitlePage
 
     void OnButtonPress(uint8_t buttonIndex) override
     {
-        if (buttonIndex == 1)
+        if (buttonIndex == 0)
         {
             debugI("Button 1 pressed so advancing to next effect");
             g_ptrSystem->EffectManager().NextEffect();
@@ -371,7 +358,7 @@ class CurrentEffectSummaryPage final : public TitlePage
     }
 };
 
-class CurrentEffectPage final : public TitlePage
+class EffectSimulatorPage final : public TitlePage
 {
   public:
     std::string Name() const override { return "CurrentEffect"; }
@@ -381,11 +368,58 @@ class CurrentEffectPage final : public TitlePage
         // Draw shared header/footer first
         TitlePage::Draw(display, bRedraw);
 
-    // Placeholder for actual LED content: draw a simple rectangle in the content area
-    const int top = ContentTop(display) + 2;
-        const int height = display.height() - display.BottomMargin - top - 2;
-        if (height > 4)
-            display.drawRect(2, top, display.width() - 4, height, display.GetBorderColor());
+        // Determine content area between header and footer
+        const int headerTop = ContentTop(display);
+        const int contentTop = headerTop;
+        const int contentHeight = display.height() - display.BottomMargin - contentTop;
+        const int contentWidth = display.width();
+
+        // Matrix dimensions
+        const int mw = MATRIX_WIDTH;
+        const int mh = MATRIX_HEIGHT;
+        if (mw <= 0 || mh <= 0 || contentWidth <= 0 || contentHeight <= 0)
+            return;
+
+        // Max integer scale that fits both dimensions
+        int sx = contentWidth / mw;
+        int sy = contentHeight / mh;
+        int scale = std::min(sx, sy);
+        if (scale <= 0)
+            scale = 1; // No fractional downscale; ensure at least 1px per LED
+
+        // Center the image in the content area
+        const int drawWidth = mw * scale;
+        const int drawHeight = mh * scale;
+        const int xOffset = (contentWidth - drawWidth) / 2;
+        const int yOffset = contentTop + (contentHeight - drawHeight) / 2;
+
+        // Optional: clear content area on full redraw to avoid ghosting around edges
+        if (bRedraw)
+            display.fillRect(0, contentTop, contentWidth, contentHeight, BLACK16);
+
+        // Fetch current graphics buffer
+        auto &effectManager = g_ptrSystem->EffectManager();
+        auto gfx = effectManager.g();
+        if (!gfx || gfx->leds == nullptr)
+            return;
+
+        // Blit: draw each LED as a scale x scale rectangle
+        for (int y = 0; y < mh; ++y)
+        {
+            for (int x = 0; x < mw; ++x)
+            {
+                // Use getPixel to respect XY mapping
+                CRGB c = gfx->getPixel(x, y);
+                uint16_t c16 = display.to16bit(c);
+                int px = xOffset + x * scale;
+                int py = yOffset + y * scale;
+                // Draw filled rect; subtract 1 to create a fine 1px grid line when scale > 1
+                if (scale > 1)
+                    display.fillRect(px, py, scale - 1, scale - 1, c16);
+                else
+                    display.drawPixel(px, py, c16);
+            }
+        }
     }
 };
 
@@ -397,7 +431,7 @@ std::vector<std::unique_ptr<Page>> &Screen::Pages()
     {
         pages.emplace_back(std::make_unique<BasicInfoSummaryPage>());
         pages.emplace_back(std::make_unique<CurrentEffectSummaryPage>());
-        pages.emplace_back(std::make_unique<CurrentEffectPage>());
+        pages.emplace_back(std::make_unique<EffectSimulatorPage>());
     }
     return pages;
 }
@@ -482,7 +516,24 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
-        #ifdef TOGGLE_BUTTON_0
+        #if USE_M5
+            // Use M5Unified button abstraction when available
+            M5.update();
+            if (M5.BtnA.wasPressed())
+            {
+                auto &pages = Pages();
+                pages[g_iCurrentPage]->OnButtonPress(0); // BtnA -> button 0 (flip page by default)
+                bRedraw = true;
+            }
+            if (M5.BtnB.wasPressed())
+            {
+                auto &pages = Pages();
+                pages[g_iCurrentPage]->OnButtonPress(1); // BtnB -> button 1 (next effect by default)
+                bRedraw = true;
+            }
+        #endif
+
+    #ifdef TOGGLE_BUTTON_0
             _button0.update();
             if (_button0.pressed())
             {
@@ -492,7 +543,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
             }
         #endif
 
-        #ifdef TOGGLE_BUTTON_1
+    #ifdef TOGGLE_BUTTON_1
             _button1.update();
             if (_button1.pressed())
             {

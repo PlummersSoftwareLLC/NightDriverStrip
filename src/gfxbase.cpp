@@ -253,11 +253,15 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
                         _width(w),
                         _height(h)
 {
+    // Always allocate boids with proper construction
+    debugV("Allocating boids");
+    _boids = make_unique_psram_array<Boid>(_width);
+    assert(_boids);
+
     #if USE_NOISE
-        debugV("Allocating boids and noise");
-        _boids.reset(psram_allocator<Boid>().allocate(_width));
+        debugV("Allocating noise");
         _ptrNoise = std::make_unique<Noise>();          // Avoid specific PSRAM allocation since highly random access
-        assert(_ptrNoise && _boids);
+        assert(_ptrNoise);
         debugV("Setting up noise");
         NoiseVariablesSetup();
         debugV("Filling noise");

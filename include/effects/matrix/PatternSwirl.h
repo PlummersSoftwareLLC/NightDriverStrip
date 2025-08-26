@@ -80,7 +80,7 @@ public:
         graphics->leds[graphics->xy(i - 1, j)] += color;
         graphics->leds[graphics->xy(i + 1, j)] += color;
         color.maximizeBrightness();
-        graphics->leds[XY(i, j)] += color;
+        graphics->leds[g()->xy(i, j)] += color;
     }
 
     void Draw() override
