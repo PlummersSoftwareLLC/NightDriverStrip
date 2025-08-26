@@ -40,7 +40,6 @@
 #include <vector>
 #include <utility>
 #include "hashing.h"
-#include <type_traits>
 
 // Palettes used by a number of effects
 
