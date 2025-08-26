@@ -25,7 +25,7 @@
         "vite": "^6.3.5",
         "vite-plugin-compression": "^0.5.1",
         "vite-plugin-external": "^4.0.1",
-        "vite-plugin-static-copy": "^2.3.0"
+        "vite-plugin-static-copy": "^2.3.2"
     },
     "browserslist": "> 0.5% and not dead"
 }
