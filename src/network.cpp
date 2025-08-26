@@ -469,6 +469,8 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
         case WIFI_COMMAND_PEAKDATA:
         {
+            #if ENABLE_AUDIO          
+            {
             #if ENABLE_AUDIO
                 uint16_t numbands  = WORDFromMemory(&payloadData[2]);
                 uint32_t length32  = DWORDFromMemory(&payloadData[4]);
@@ -481,6 +483,11 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                     seconds,
                     micros);
 
+                PeakData peaks((double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
+                peaks.ApplyScalars(PeakData::PCREMOTE);
+                g_Analyzer.SetPeakData(peaks);
+            }
+            #endif
                 const float* pFloats = reinterpret_cast<const float*>(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
                 PeakData peaks{};
                 std::copy_n(pFloats, NUM_BANDS, peaks.begin());

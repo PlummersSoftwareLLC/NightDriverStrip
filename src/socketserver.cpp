@@ -132,7 +132,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
             if (command16 == WIFI_COMMAND_PEAKDATA)
             {
-                if (g_Analyzer.Enabled())
+                #if ENABLE_AUDIO
                 {
                     uint16_t numbands  = WORDFromMemory(&_pBuffer.get()[2]);
                     uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
@@ -167,6 +167,17 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                     // Consume the data by resetting the buffer
                     debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %zu down 0.", _cbReceived);
                 }
+                #else
+                    // Audio disabled: consume any declared payload to keep stream in sync, then ignore it
+                    uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
+                    size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
+                    if (!ReadUntilNBytesReceived(new_socket, totalExpected))
+                    {
+                        debugW("Audio disabled, failed to skip PEAKDATA payload of %zu bytes", totalExpected);
+                        break;
+                    }
+                    debugV("Audio disabled; skipped PEAKDATA payload (%zu bytes)", totalExpected);
+                #endif
                 ResetReadBuffer();
 
             }

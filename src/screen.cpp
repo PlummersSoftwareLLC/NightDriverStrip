@@ -343,7 +343,7 @@ class CurrentEffectSummaryPage final : public TitlePage
         TitlePage::Draw(display, bRedraw);
 
         // Add spectrum analyzer content
-        if (g_Analyzer.Enabled())
+        #if ENABLE_AUDIO
         {
             const int topMargin = ContentTop(display);
 
@@ -380,6 +380,7 @@ class CurrentEffectSummaryPage final : public TitlePage
                 display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
             }
         }
+        #endif // ENABLE_AUDIO
     }
 };
 
