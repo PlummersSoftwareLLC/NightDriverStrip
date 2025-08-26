@@ -1,5 +1,6 @@
 #include "globals.h"
 #include "systemcontainer.h"
+#include "soundanalyzer.h"
 
 #if INCOMING_WIFI_ENABLED
 
@@ -131,8 +132,8 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
             if (command16 == WIFI_COMMAND_PEAKDATA)
             {
-                #if ENABLE_AUDIO
-
+                if (g_Analyzer.Enabled())
+                {
                     uint16_t numbands  = WORDFromMemory(&_pBuffer.get()[2]);
                     uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
                     uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
@@ -165,8 +166,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
                     // Consume the data by resetting the buffer
                     debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %zu down 0.", _cbReceived);
-
-                #endif
+                }
                 ResetReadBuffer();
 
             }

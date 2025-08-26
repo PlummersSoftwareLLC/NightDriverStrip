@@ -55,6 +55,7 @@ DRAM_ATTR uint8_t g_iCurrentPage = 0; // Will initialize to last active page on 
 
 // Default implementation for Page button handler (zero-based):
 // Button 0 = NextEffect, Button 1 = Flip page
+
 void Page::OnButtonPress(uint8_t buttonIndex)
 {
     if (buttonIndex == 0)
@@ -74,10 +75,8 @@ void Page::OnButtonPress(uint8_t buttonIndex)
 class BasicInfoSummaryPage final : public Page
 {
   public:
-    std::string Name() const override
-    {
-        return "BasicInfoSummary";
-    }
+    std::string Name() const override { return "BasicInfoSummary"; }
+
     void OnButtonPress(uint8_t buttonIndex) override
     {
         if (buttonIndex == 1)
@@ -92,7 +91,6 @@ class BasicInfoSummaryPage final : public Page
         }
         else
         {
-            // Defer to default behavior for other buttons
             Page::OnButtonPress(buttonIndex);
         }
     }
@@ -108,20 +106,14 @@ class BasicInfoSummaryPage final : public Page
             const int yMargin = 5;
         #endif
 
-        // Theme colors come from Screen implementation
         const uint16_t bkgndColor = display.GetBkgndColor();
-        const uint16_t borderColor = display.GetBorderColor();
-        const uint16_t textColor = display.GetTextColor();
-
         if (bRedraw)
             display.fillScreen(bkgndColor);
 
         // Status line 1
-
         static const String szStatus("|/-\\");
         static int cStatus = 0;
-        int c2 = cStatus % szStatus.length();
-        char chStatus = szStatus[c2];
+        char chStatus = szStatus[cStatus % szStatus.length()];
         cStatus++;
 
         if (display.width() > 240)
@@ -133,55 +125,42 @@ class BasicInfoSummaryPage final : public Page
 
         // Second param is background for clean overwrite
         display.setTextColor(display.GetTextColor(), display.GetBkgndColor());
-
         display.setCursor(xMargin, yMargin);
         display.println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS,
                                     chStatus, ESP.getFreeHeap() / 1024));
 
         // WiFi info line 2
-
         auto lineHeight = display.fontHeight();
         display.setCursor(xMargin + 0, yMargin + lineHeight);
-
-        if (WiFi.isConnected() == false)
-        {
+        if (!WiFi.isConnected())
             display.println("No Wifi");
-        }
         else
         {
             const IPAddress address = WiFi.localIP();
-            display.println(str_sprintf("%ddB:%d.%d.%d.%d",
-                                        (int)labs(WiFi.RSSI()), // skip sign in first character
-                                        address[0], address[1], address[2], address[3]));
+            display.println(str_sprintf("%ddB:%d.%d.%d.%d", (int)labs(WiFi.RSSI()), address[0], address[1], address[2], address[3]));
         }
 
         // Buffer Status Line 3
-
         auto &bufferManager = g_ptrSystem->BufferManagers()[0];
-
         display.setCursor(xMargin + 0, yMargin + lineHeight * 4);
         display.println(str_sprintf("BUFR:%02d/%02d %dfps ", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS));
 
         // Data Status Line 4
-
         display.setCursor(xMargin + 0, yMargin + lineHeight * 2);
         display.println(str_sprintf("DATA:%+06.2lf-%+06.2lf", std::min(99.99, bufferManager.AgeOfOldestBuffer()),
                                     std::min(99.99, bufferManager.AgeOfNewestBuffer())));
 
         // Clock info Line 5
-
         time_t t;
         time(&t);
         struct tm *tmp = localtime(&t);
         char szTime[16];
         strftime(szTime, std::size(szTime), "%H:%M:%S", tmp);
-
         display.setCursor(xMargin + 0, yMargin + lineHeight * 3);
         display.println(str_sprintf("CLCK:%s %04.3lf", g_Values.AppTime.CurrentTime() > 100000 ? szTime : "Unset",
                                     g_Values.FreeDrawTime));
 
         // LED Power Info Line 6 - only if display tall enough
-
         if (display.height() >= lineHeight * 5 + lineHeight)
         {
             display.setCursor(xMargin + 0, yMargin + lineHeight * 5);
@@ -189,13 +168,11 @@ class BasicInfoSummaryPage final : public Page
         }
 
         // PSRAM/CPU Info Line 7 - only if display tall enough
-
         if (display.height() >= lineHeight * 7)
         {
             auto &taskManager = g_ptrSystem->TaskManager();
             display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
-            display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0),
-                                        taskManager.GetCPUUsagePercent(1)));
+            display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
         }
 
         // Bar graph at bottom
@@ -240,71 +217,62 @@ class BasicInfoSummaryPage final : public Page
     }
 };
 
-class CurrentEffectSummaryPage final : public Page
+// Shared header/footer for effect pages
+class TitlePage : public Page
 {
+  protected:
+    // Cached content top calculated using the header text size to avoid shifting
+    int _contentTop = 0;
+    int ContentTop(Screen &display) const { return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4); }
+
   public:
-    std::string Name() const override
-    {
-        return "CurrentEffectSummary";
-    }
-    void OnButtonPress(uint8_t buttonIndex) override
-    {
-        if (buttonIndex == 1)
-        {
-            // On this page, use Button 1 to advance to the next effect
-            debugI("Button 1 pressed so advancing to next effect");
-            g_ptrSystem->EffectManager().NextEffect();
-        }
-        else
-        {
-            Page::OnButtonPress(buttonIndex);
-        }
-    }
+    std::string Name() const override { return "Title"; }
 
     void Draw(Screen &display, bool bRedraw) override
     {
         if (bRedraw)
             display.fillScreen(BLACK16);
 
-        uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
+        const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
+        static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+        static String sip = WiFi.localIP().toString();
+        static String lastFooter;
+        static uint32_t lastFullDraw = 0;
+        static uint32_t lastScreen = millis();
 
-        static auto lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
-        static auto sip = WiFi.localIP().toString();
-        static auto lastFPS = g_Values.FPS;
-        static auto lastFullDraw = 0;
-        static auto lastAudio = 0;
-        static auto lastSerial = 0;
-        static auto lastScreen = millis();
-        float screenFPS = 0;
-        auto yh = 2; // Start at top of screen
+    // Pick text size based on width (header size)
+    display.setTextSize(display.width() > 160 ? 2 : 1);
+    // Compute and cache content top using the header text size so it stays stable
+    const int topMargin = display.fontHeight() * 3 + 4;
+    _contentTop = topMargin;
 
-        display.setTextSize(display.width() > 160 ? 2 : 1);
-        const int topMargin = display.fontHeight() * 3 + 4;
-
-        screenFPS = (millis() - lastScreen) / 1000.0f;
+        // Screen FPS (for display updates)
+        float screenFPS = (millis() - lastScreen) / 1000.0f;
         if (screenFPS != 0)
             screenFPS = 1.0f / screenFPS;
         lastScreen = millis();
 
+        // Redraw header when needed
         if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
         {
             lastFullDraw = millis();
-            if (bRedraw != false || lasteffect != g_ptrSystem->EffectManager().GetCurrentEffectIndex() ||
-                sip != WiFi.localIP().toString())
+            const int currentEffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+            const String currentIP = WiFi.localIP().toString();
+
+            if (bRedraw || lasteffect != currentEffect || sip != currentIP)
             {
                 display.fillRect(0, 0, display.width(), topMargin, backColor);
-                display.fillRect(0, display.height() - display.BottomMargin, display.width(), display.BottomMargin,
-                                 backColor);
+                display.fillRect(0, display.height() - display.BottomMargin, display.width(), display.BottomMargin, backColor);
                 display.fillRect(0, topMargin - 1, display.width(), 1, BLUE16);
                 display.fillRect(0, display.height() - display.BottomMargin + 1, display.width(), 1, BLUE16);
 
-                lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
-                sip = WiFi.localIP().toString();
-                lastFPS = g_Values.FPS;
+                lasteffect = currentEffect;
+                sip = currentIP;
 
+                // Title lines
+                int yh = 2;
                 display.setTextColor(display.GetBorderColor(), backColor);
-                String sEffect = String("Effect: ") + String(g_ptrSystem->EffectManager().GetCurrentEffectIndex() + 1) +
-                                 String("/") + String(g_ptrSystem->EffectManager().EffectCount());
+                String sEffect = String("Effect: ") + String(currentEffect + 1) + String("/") + String(g_ptrSystem->EffectManager().EffectCount());
                 auto w = display.textWidth(sEffect);
                 display.setCursor(display.width() / 2 - w / 2, yh);
                 display.print(sEffect.c_str());
@@ -316,60 +284,80 @@ class CurrentEffectSummaryPage final : public Page
                 display.print(g_ptrSystem->EffectManager().GetCurrentEffectName());
                 yh += display.fontHeight();
 
-                String sIP = WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "No Wifi";
+                String sIP = WiFi.isConnected() ? currentIP.c_str() : "No Wifi";
                 display.setTextColor(display.GetBorderColor(), backColor);
                 w = display.textWidth(sIP);
                 display.setCursor(display.width() / 2 - w / 2, yh);
-                yh += display.fontHeight();
                 display.print(sIP);
             }
 
-                if (g_Analyzer.Enabled())
-                {
-                    if (SHOW_FPS && ((lastFPS != g_Values.FPS) || (lastAudio != g_Analyzer._AudioFPS) ||
-                                     (lastSerial != g_Analyzer._serialFPS)))
-                    {
-                        lastFPS = g_Values.FPS;
-                        lastSerial = g_Analyzer._serialFPS;
-                        lastAudio = g_Analyzer._AudioFPS;
-                        display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
-                        display.setTextColor(display.GetBorderColor(), backColor);
-                        display.setTextSize(1);
-                        yh = display.height() - display.fontHeight();
-                        String strOut = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS,
-                                                     g_Analyzer._serialFPS, (int)screenFPS);
-                        auto w = display.textWidth(strOut);
-                        display.setCursor(display.width() / 2 - w / 2, yh);
-                        display.print(strOut);
-                        yh += display.fontHeight();
-                    }
-                }
-        }
-
+            // Footer line
+            String footer = str_sprintf(" LED: %2d  Scr: %02d", g_Values.FPS, (int)screenFPS);
             if (g_Analyzer.Enabled())
+                footer = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer._AudioFPS, g_Analyzer._serialFPS, (int)screenFPS);
+
+            if (footer != lastFooter)
             {
-            // Draw VU and Spectrum each frame
+                lastFooter = footer;
+                display.fillRect(0, display.height() - display.BottomMargin, display.width(), 1, BLUE16);
+                display.setTextColor(display.GetBorderColor(), backColor);
+                display.setTextSize(1);
+                int yh = display.height() - display.fontHeight();
+                auto w = display.textWidth(footer);
+                display.setCursor(display.width() / 2 - w / 2, yh);
+                display.print(footer);
+            }
+        }
+    }
+};
+
+class CurrentEffectSummaryPage final : public TitlePage
+{
+  public:
+    std::string Name() const override { return "CurrentEffectSummary"; }
+
+    void OnButtonPress(uint8_t buttonIndex) override
+    {
+        if (buttonIndex == 1)
+        {
+            debugI("Button 1 pressed so advancing to next effect");
+            g_ptrSystem->EffectManager().NextEffect();
+        }
+        else
+        {
+            Page::OnButtonPress(buttonIndex);
+        }
+    }
+
+    void Draw(Screen &display, bool bRedraw) override
+    {
+        // Draw shared header/footer
+        TitlePage::Draw(display, bRedraw);
+
+        // Add spectrum analyzer content
+        if (g_Analyzer.Enabled())
+        {
+            const int topMargin = ContentTop(display);
+
+            // Draw VU
             const int xHalf = display.width() / 2 - 1;
             const float ySizeVU = display.height() / 16; // height of each block
             const int cPixels = 16;
             const float xSize = xHalf / (float)cPixels + 1;
             const int litBlocks = (g_Analyzer._VURatioFade / 2.0f) * cPixels;
-
             for (int iPixel = 0; iPixel < cPixels; iPixel++)
             {
-                uint16_t color16 = iPixel > litBlocks
-                                    ? BLACK16
-                                    : display.to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
+                uint16_t color16 = iPixel > litBlocks ? BLACK16 : display.to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
                 display.fillRect(xHalf - iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
                 display.fillRect(xHalf + iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
             }
 
+            // Spectrum bands
             const int spectrumTop = topMargin + ySizeVU + 1;
             const int bandHeight = display.height() - spectrumTop - display.BottomMargin;
-
             for (int iBand = 0; iBand < NUM_BANDS; iBand++)
             {
-                CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255) + 0) % 256);
+                CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255)) % 256);
                 int bandWidth = display.width() / NUM_BANDS;
                 auto color16 = display.to16bit(bandColor);
                 auto topSection = bandHeight - bandHeight * g_Analyzer._peak2Decay[iBand];
@@ -377,31 +365,27 @@ class CurrentEffectSummaryPage final : public Page
                     display.fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
                 auto val = min(1.0f, g_Analyzer._peak2Decay[iBand]);
                 assert(bandHeight * val <= bandHeight);
-                display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection,
-                                color16);
+                display.fillRect(iBand * bandWidth, spectrumTop + topSection, bandWidth - 1, bandHeight - topSection, color16);
             }
-            }
+        }
     }
 };
 
-// Placeholder page for future detailed current effect content
-class CurrentEffectPage final : public Page
+class CurrentEffectPage final : public TitlePage
 {
   public:
-    std::string Name() const override
-    {
-        return "CurrentEffect";
-    }
+    std::string Name() const override { return "CurrentEffect"; }
+
     void Draw(Screen &display, bool bRedraw) override
     {
-        if (bRedraw)
-            display.fillScreen(BLACK16);
-        display.setTextSize(display.width() > 160 ? 2 : 1);
-        display.setTextColor(display.GetTextColor(), display.GetBkgndColor());
-        const String title = "Current Effect";
-        auto w = display.textWidth(title);
-        display.setCursor(display.width() / 2 - w / 2, 2);
-        display.print(title);
+        // Draw shared header/footer first
+        TitlePage::Draw(display, bRedraw);
+
+    // Placeholder for actual LED content: draw a simple rectangle in the content area
+    const int top = ContentTop(display) + 2;
+        const int height = display.height() - display.BottomMargin - top - 2;
+        if (height > 4)
+            display.drawRect(2, top, display.width() - 4, height, display.GetBorderColor());
     }
 };
 

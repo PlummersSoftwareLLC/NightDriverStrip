@@ -500,28 +500,28 @@ template <typename StarType> class StarryNightEffect : public LEDStripEffect
 
     virtual void CreateStars()
     {
-    #if ENABLE_AUDIO
-
-        for (int i = 0; i < cMaxNewStarsPerFrame; i++)
+        if (g_Analyzer.Enabled())
         {
-            double prob = _newStarProbability;
-
-            prob = (prob / 100) + (g_Analyzer._VURatio - 1.0) * _musicFactor;
-
-            constexpr auto kProbabilitySpan = 1.0;
-
-            if (g_Analyzer._VU > 0)
+            for (int i = 0; i < cMaxNewStarsPerFrame; i++)
             {
-                if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
+                double prob = _newStarProbability;
+
+                prob = (prob / 100) + (g_Analyzer._VURatio - 1.0) * _musicFactor;
+
+                constexpr auto kProbabilitySpan = 1.0;
+
+                if (g_Analyzer._VU > 0)
                 {
-                    StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
-                    // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                    newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
-                    _allParticles.push_back(newstar);
+                    if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
+                    {
+                        StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
+                        // This always starts stars on even pixel boundaries so they look like the desired width if not moving
+                        newstar._iPos = (int) random_range(0U, _cLEDs-1-starWidth);
+                        _allParticles.push_back(newstar);
+                    }
                 }
             }
         }
-    #endif
     }
 
     virtual void Update()

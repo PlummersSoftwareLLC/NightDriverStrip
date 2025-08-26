@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "soundanalyzer.h"
+
 class MeteorChannel
 {
     std::vector<float> hue;
@@ -117,11 +119,8 @@ public:
         for (int i = 0; i < meteorCount; i++)
         {
             float spd = speed[i];
-
-            #if ENABLE_AUDIO
-                if (g_Analyzer._VURatio > 1.0)
-                    spd *= g_Analyzer._VURatio;
-            #endif
+            if (g_Analyzer.Enabled() && g_Analyzer._VURatio > 1.0f)
+                spd *= g_Analyzer._VURatio;
 
             iPos[i] = (bLeft[i]) ? iPos[i]-spd : iPos[i]+spd;
             if (iPos[i]< meteorSize)
