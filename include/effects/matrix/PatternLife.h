@@ -128,7 +128,7 @@ public:
 
 constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 
-class PatternLife : public EffectWithId<idMatrixLife>
+class PatternLife : public EffectWithId<PatternLife>
 {
 private:
     std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
@@ -235,8 +235,8 @@ private:
 
 public:
 
-    PatternLife() : EffectWithId<idMatrixLife>("Life") {}
-    PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixLife>(jsonObject) {}
+    PatternLife() : EffectWithId<PatternLife>("Life") {}
+    PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<PatternLife>(jsonObject) {}
 
     void Reset()
     {

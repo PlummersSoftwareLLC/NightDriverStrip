@@ -58,12 +58,12 @@
 
 #include "Geometry.h"
 
-class PatternSunburst : public EffectWithId<idMatrixSunburst>
+class PatternSunburst : public EffectWithId<PatternSunburst>
 {
   public:
 
-    PatternSunburst() : EffectWithId<idMatrixSunburst>("Sunburst") {}
-    PatternSunburst(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixSunburst>(jsonObject) {}
+    PatternSunburst() : EffectWithId<PatternSunburst>("Sunburst") {}
+    PatternSunburst(const JsonObjectConst& jsonObject) : EffectWithId<PatternSunburst>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -94,12 +94,12 @@ class PatternSunburst : public EffectWithId<idMatrixSunburst>
     }
 };
 
-class PatternRose : public EffectWithId<idMatrixRose>
+class PatternRose : public EffectWithId<PatternRose>
 {
   public:
 
-    PatternRose() : EffectWithId<idMatrixRose>("Rose") {}
-    PatternRose(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixRose>(jsonObject) {}
+    PatternRose() : EffectWithId<PatternRose>("Rose") {}
+    PatternRose(const JsonObjectConst& jsonObject) : EffectWithId<PatternRose>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -143,13 +143,13 @@ class PatternRose : public EffectWithId<idMatrixRose>
     }
 };
 
-class PatternPinwheel : public EffectWithId<idMatrixPinwheel>
+class PatternPinwheel : public EffectWithId<PatternPinwheel>
 {
   public:
 
-    PatternPinwheel() : EffectWithId<idMatrixPinwheel>("Pinwheel") {}
+    PatternPinwheel() : EffectWithId<PatternPinwheel>("Pinwheel") {}
 
-    PatternPinwheel(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPinwheel>(jsonObject) {}
+    PatternPinwheel(const JsonObjectConst& jsonObject) : EffectWithId<PatternPinwheel>(jsonObject) {}
 
     void Start() override
     {
@@ -183,12 +183,12 @@ class PatternPinwheel : public EffectWithId<idMatrixPinwheel>
     }
 };
 
-class PatternInfinity : public EffectWithId<idMatrixInfinity>
+class PatternInfinity : public EffectWithId<PatternInfinity>
 {
 public:
 
-    PatternInfinity() : EffectWithId<idMatrixInfinity>("Infinity") {}
-    PatternInfinity(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixInfinity>(jsonObject) {}
+    PatternInfinity() : EffectWithId<PatternInfinity>("Infinity") {}
+    PatternInfinity(const JsonObjectConst& jsonObject) : EffectWithId<PatternInfinity>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -238,7 +238,7 @@ public:
 };
 
 
-class PatternMunch : public EffectWithId<idMatrixMunch>
+class PatternMunch : public EffectWithId<PatternMunch>
 {
 private:
 
@@ -249,8 +249,8 @@ private:
 
 public:
 
-    PatternMunch() : EffectWithId<idMatrixMunch>("Munch") {}
-    PatternMunch(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMunch>(jsonObject) {}
+    PatternMunch() : EffectWithId<PatternMunch>("Munch") {}
+    PatternMunch(const JsonObjectConst& jsonObject) : EffectWithId<PatternMunch>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {

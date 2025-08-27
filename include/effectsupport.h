@@ -33,9 +33,13 @@
 #pragma once
 
 #include "globals.h"
-// Needed for StarryNightEffect used by helpers below
-#include "effects/strip/stareffect.h"
 #include <type_traits>
+#include <string_view>
+#include <cstdint>
+#include <algorithm>
+#include <vector>
+#include <utility>
+#include "hashing.h"
 
 // Palettes used by a number of effects
 
@@ -187,19 +191,37 @@ const CRGBPalette16 USAColors_p =
 
 const CRGBPalette16 rainbowPalette(RainbowColors_p);
 
+// A pointer to the global effect factories.
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
-template<class T>
+// ------------------------------------------------------------
+// Support for building stable factory IDs and combining them
+// ------------------------------------------------------------
+
+// A type alias for removing const, volatile, and reference from a type.
+template<typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-template <class T>
+// Gets the effect ID of a given effect type.
+template<typename T>
 constexpr EffectId effect_id_of_type() {
     static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,
                   "Type must derive from EffectWithId<Id>");
     return remove_cvref_t<T>::ID;   // compile-time constant
 }
 
-// --- Macro-free helpers for concise, type-safe effect registration ---
+// Build a stable 64-bit ID for a factory based on effect type and ctor args
+// Note that this is declared as a constexpr function, which means all ctor
+// args need to be static types. The fact this code compiles confirms that
+// is indeed the case.
+template<typename TEffect, typename... Args>
+constexpr FactoryId factory_id_of_instance(const Args&... args)
+{
+    FactoryId h = fnv1a::hash<FactoryId>("effect");
+    h = fnv1a::hash(effect_id_of_type<TEffect>(), h);
+    h = fnv1a::hash_pack(h, args...);
+    return h;
+}
 
 // Adds a default and JSON effect factory for a specific effect number and type.
 // All parameters beyond effectNumber and effect type are forwarded to the default constructor.
@@ -209,28 +231,15 @@ inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, A
     return factories.AddEffect(
         effect_id_of_type<TEffect>(),
         [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
-        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); }
+        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); },
+        factory_id_of_instance<TEffect>(args...)
     );
 }
 
-// Used by Starry Night helper
-std::shared_ptr<LEDStripEffect> CreateStarryNightEffectFromJSON(const JsonObjectConst& jsonObject);
-
-// Adds a default and JSON effect factory for a StarryNightEffect with a specific star type.
-template<typename TStar, typename... Args>
-inline EffectFactories::NumberedFactory& AddStarryNightEffect(EffectFactories& factories, Args&&... args)
-{
-    return factories.AddEffect(
-        idStripStarryNight,
-        [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<StarryNightEffect<TStar>>(args...); },
-        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return CreateStarryNightEffectFromJSON(jsonObject); }
-    );
-}
 
 // Fold-expression helper to register many at once with brief syntax:
 //   RegisterAll(*g_ptrEffectFactories,
 //       Effect<idStripPalette, MyEffect>(args...),
-//       Starry<MyStar>(args...),
 //       Disabled(Effect<idStripColorFill, OtherEffect>(args...)));
 template<typename... Adders>
 inline void RegisterAll(EffectFactories& factories, Adders&&... adders)
@@ -248,16 +257,6 @@ inline auto Effect(Args&&... args)
     };
 }
 
-// Builder for a Starry Night entry used with RegisterAll
-template<typename TStar, typename... Args>
-inline auto Starry(Args&&... args)
-{
-    return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
-    {
-        return AddStarryNightEffect<TStar>(factories, args...);
-    };
-}
-
 // Decorator to mark an entry disabled-on-load when using RegisterAll
 template<typename F>
 inline auto Disabled(F adder)
@@ -270,7 +269,7 @@ inline auto Disabled(F adder)
     };
 }
 
-// Defines used by some StarryNightEffect instances
+// Defines used by some StarEffect instances
 
-constexpr float kStarryNightProbability = 1.0f;
-constexpr float kStarryNightMusicFactor = 1.0f;
+constexpr float kStarEffectProbability = 1.0f;
+constexpr float kStarEffectMusicFactor = 1.0f;

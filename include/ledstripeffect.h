@@ -35,6 +35,7 @@
 #include "jsonserializer.h"
 #include "ledmatrixgfx.h"
 #include "types.h"
+#include "hashing.h"
 
 #include <memory>
 #include <list>
@@ -631,24 +632,88 @@ class LEDStripEffect : public IJSONSerializable
     }
 };
 
-template<EffectId EId>
+#ifndef EFFECT_ID_DEBUG
+#define EFFECT_ID_DEBUG 0
+#endif
+
+// Internal helpers for deriving a per-type EffectId and (optionally) logging what was used to compute it.
+// The approach is: obtain a compiler-provided, human-readable token string that uniquely identifies T,
+// then hash that string with FNV-1a to produce a compact 32-bit EffectId.
+//
+// type_token<T>:
+// - Returns the compiler's decorated function signature string (__PRETTY_FUNCTION__) for this template instantiation.
+// - This string contains the fully qualified type T (including template parameters), making it suitable as a stable token
+//   within the same compiler family/version.
+// - Only supported on GCC/Clang. Other compilers will hit a hard #error.
+//
+// token_id_for_type<T>:
+// - Computes EffectId by hashing the token string with a constexpr FNV-1a 32-bit hash.
+// - When the hash implementation is constexpr, the resulting EffectId can be a compile-time constant.
+// - EffectId is derived from a 32-bit hash; collisions are possible (though unlikely). Do not rely on cryptographic strength.
+//
+// debug_log_type_token_once<T> (enabled when EFFECT_ID_DEBUG is true):
+// - Prints the raw token string and the computed EffectId once per T per translation unit.
+// - Uses a function-local static boolean to ensure "log once" behavior for each instantiation.
+// - Note: because this is a header-only template with a function-local static, if the same T is instantiated
+//   in multiple translation units, each TU may log once.
+//
+// Stability and portability notes:
+// - The exact __PRETTY_FUNCTION__ format is not standardized and can vary by compiler and version.
+//   Consequently, EffectId values may change when switching compilers, versions, or certain build flags.
+//
+// Intended usage:
+// - Use token_id_for_type<MyType>() wherever a deterministic, type-based EffectId is needed, as EffectWithId does.
+// - Enable EFFECT_ID_DEBUG to inspect the underlying token string and the derived hash during development.
+namespace _effect_id_detail {
+
+    template <typename T>                                       // Return the compiler-provided token string used for hashing
+    constexpr const char* type_token() {
+#if defined(__GNUC__) || defined(__clang__)
+        return __PRETTY_FUNCTION__;
+#else
+        #error "EffectWithId requires a compiler that supports __PRETTY_FUNCTION__"
+#endif
+    }
+
+    template <typename T>
+    constexpr EffectId token_id_for_type()
+    {
+        return fnv1a::hash_cstr<EffectId>(type_token<T>());
+    }
+
+    template <typename T>                                       // Optional one-time debug print of the token string and hash
+    inline void debug_log_type_token_once() {
+#if EFFECT_ID_DEBUG
+        static bool logged = false;
+        if (!logged) {
+            logged = true;
+            const char* token = type_token<T>();
+            const EffectId id = token_id_for_type<T>();
+            // Print both the raw token string and the resulting hash used as the EffectId
+            debugI("Effect ID token string: %s", token);
+            debugI("Effect ID hash: 0x%08lx", static_cast<unsigned long>(id));
+        }
+#endif
+    }
+}
+
+// CRTP helper: derive as EffectWithId<Derived> to auto-provide a unique, stable ID per type
+
+template<typename TDerived>
 class EffectWithId : public LEDStripEffect
 {
-  public:
+public:
+    static constexpr EffectId ID = _effect_id_detail::token_id_for_type<TDerived>();
 
-    static constexpr EffectId ID = EId;
+    explicit EffectWithId(const String & strName) : LEDStripEffect(strName) {}
+    explicit EffectWithId(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject) {}
 
-    explicit EffectWithId(const String & strName)
-        : LEDStripEffect(strName)
-    {}
-
-    explicit EffectWithId(const JsonObjectConst&  jsonObject)
-        : LEDStripEffect(jsonObject)
-    {}
-
-    // Override to return the effect id for this effect
     EffectId effectId() const override
     {
-        return EId;
+#if EFFECT_ID_DEBUG
+    // Log the token string and hash once per type at first use
+    _effect_id_detail::debug_log_type_token_once<TDerived>();
+#endif
+        return ID;
     }
 };

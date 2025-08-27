@@ -10,7 +10,7 @@
 // The original has a bunch of Palette management stuff we just didn't
 // implement.
 
-class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
+class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
 {
   private:
     // Maximum number of stars to track. Affects memory consumption.
@@ -45,12 +45,8 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 
   public:
 
-    PatternSMStarDeep() : EffectWithId<idMatrixSMStarDeep>("Star Deep") {
-        stars = make_unique_psram<StarData[]>(kMaxStars);
-    }
-    PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMStarDeep>(jsonObject) {
-        stars = make_unique_psram<StarData[]>(kMaxStars);
-    }
+    PatternSMStarDeep() : EffectWithId<PatternSMStarDeep>("Star Deep"), stars(make_unique_psram<StarData[]>(kMaxStars)) {}
+    PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMStarDeep>(jsonObject), stars(make_unique_psram<StarData[]>(kMaxStars)) {}
 
     // Draws a multi-point star.
     // This code can draw outside of the matrix boundaries, but DrawStarLine() is expected to handle clipping.

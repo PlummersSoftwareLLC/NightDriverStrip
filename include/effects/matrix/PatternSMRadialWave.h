@@ -5,12 +5,12 @@
 // Derived from https://editor.soulmatelights.com/gallery/1090-radialwave
 // A three-veined swirl rotates and changes direction, looking like an exhaust.
 
-class PatternSMRadialWave : public EffectWithId<idMatrixSMRadialWave>
+class PatternSMRadialWave : public EffectWithId<PatternSMRadialWave>
 {
   public:
 
-    PatternSMRadialWave() : EffectWithId<idMatrixSMRadialWave>("RadialWave") {}
-    PatternSMRadialWave(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMRadialWave>(jsonObject) {}
+    PatternSMRadialWave() : EffectWithId<PatternSMRadialWave>("RadialWave") {}
+    PatternSMRadialWave(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRadialWave>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
     {

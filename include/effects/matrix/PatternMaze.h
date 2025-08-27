@@ -85,7 +85,7 @@
 //   grid, and managing cell progression.
 
 
-class PatternMaze : public EffectWithId<idMatrixMaze> {
+class PatternMaze : public EffectWithId<PatternMaze> {
 private:
     enum Directions {
         None = 0,
@@ -275,8 +275,8 @@ private:
 
 public:
 
-    PatternMaze() : EffectWithId<idMatrixMaze>("Maze") {}
-    PatternMaze(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixMaze>(jsonObject) {}
+    PatternMaze() : EffectWithId<PatternMaze>("Maze") {}
+    PatternMaze(const JsonObjectConst& jsonObject) : EffectWithId<PatternMaze>(jsonObject) {}
 
     void Draw() override
     {
