@@ -80,20 +80,19 @@
 class PatternCube : public EffectWithId<idMatrixCube>
 {
   private:
-
-  float focal = 30; // Base focal of the camera (for 32px tile). We'll scale this dynamically to fit the display.
+    float focal = 30;   // Base focal of the camera (for 32px tile). We'll scale this dynamically to fit the display.
     int cubeWidth = 28; // Cube size
     float Angx = 20.0, AngxSpeed = 0.05; // rotation (angle+speed) around X-axis
     float Angy = 10.0, AngySpeed = 0.05; // rotation (angle+speed) around Y-axis
-    float Ox = 15.5, Oy = 15.5; // position (x,y) of the frame center
-    int zCamera = 110; // distance from cube to the eye of the camera
+    float Ox = 15.5, Oy = 15.5;          // position (x,y) of the frame center
+    int zCamera = 110;                   // distance from cube to the eye of the camera
 
     // Local vertices
-    Vertex  local[8];
+    Vertex local[8];
     // Camera aligned vertices
-    Vertex  aligned[8];
+    Vertex aligned[8];
     // On-screen projected vertices
-    Point   screen[8];
+    Point screen[8];
     // Faces
     squareFace face[6];
     // Edges
@@ -105,95 +104,95 @@ class PatternCube : public EffectWithId<idMatrixCube>
     // constructs the cube
     void make(int w)
     {
-      nbEdges = 0;
+        nbEdges = 0;
 
-      local[0].set(-w, w, w);
-      local[1].set(w, w, w);
-      local[2].set(w, -w, w);
-      local[3].set(-w, -w, w);
-      local[4].set(-w, w, -w);
-      local[5].set(w, w, -w);
-      local[6].set(w, -w, -w);
-      local[7].set(-w, -w, -w);
+        local[0].set(-w, w, w);
+        local[1].set(w, w, w);
+        local[2].set(w, -w, w);
+        local[3].set(-w, -w, w);
+        local[4].set(-w, w, -w);
+        local[5].set(w, w, -w);
+        local[6].set(w, -w, -w);
+        local[7].set(-w, -w, -w);
 
-      face[0].set(1, 0, 3, 2);
-      face[1].set(0, 4, 7, 3);
-      face[2].set(4, 0, 1, 5);
-      face[3].set(4, 5, 6, 7);
-      face[4].set(1, 2, 6, 5);
-      face[5].set(2, 3, 7, 6);
+        face[0].set(1, 0, 3, 2);
+        face[1].set(0, 4, 7, 3);
+        face[2].set(4, 0, 1, 5);
+        face[3].set(4, 5, 6, 7);
+        face[4].set(1, 2, 6, 5);
+        face[5].set(2, 3, 7, 6);
 
-      int f, i;
-      for (f = 0; f < 6; f++)
-      {
-        for (i = 0; i < face[f].length; i++)
+        int f, i;
+        for (f = 0; f < 6; f++)
         {
-          face[f].ed[i] = this->findEdge(face[f].sommets[i], face[f].sommets[i ? i - 1 : face[f].length - 1]);
+            for (i = 0; i < face[f].length; i++)
+            {
+                face[f].ed[i] = this->findEdge(face[f].sommets[i], face[f].sommets[i ? i - 1 : face[f].length - 1]);
+            }
         }
-      }
     }
 
     // finds edges from faces
     int findEdge(int a, int b)
     {
-      int i;
-      for (i = 0; i < nbEdges; i++)
-        if ((edge[i].x == a && edge[i].y == b) || (edge[i].x == b && edge[i].y == a))
-          return i;
-      edge[nbEdges++].set(a, b);
-      return i;
+        int i;
+        for (i = 0; i < nbEdges; i++)
+            if ((edge[i].x == a && edge[i].y == b) || (edge[i].x == b && edge[i].y == a))
+                return i;
+        edge[nbEdges++].set(a, b);
+        return i;
     }
 
     // rotates according to angle x&y
-  // Rotate and project with effective center and focal length (allows dynamic scaling to tile size)
-  void rotate(float angx, float angy, float OxEff, float OyEff, float focalEff)
+    // Rotate and project with effective center and focal length (allows dynamic scaling to tile size)
+    void rotate(float angx, float angy, float OxEff, float OyEff, float focalEff)
     {
-      int i;
-      float cx = cos(angx);
-      float sx = sin(angx);
-      float cy = cos(angy);
-      float sy = sin(angy);
+        int i;
+        float cx = cos(angx);
+        float sx = sin(angx);
+        float cy = cos(angy);
+        float sy = sin(angy);
 
-      m00 = cy;
-      m01 = 0;
-      m02 = -sy;
-      m10 = sx * sy;
-      m11 = cx;
-      m12 = sx * cy;
-      m20 = cx * sy;
-      m21 = -sx;
-      m22 = cx * cy;
+        m00 = cy;
+        m01 = 0;
+        m02 = -sy;
+        m10 = sx * sy;
+        m11 = cx;
+        m12 = sx * cy;
+        m20 = cx * sy;
+        m21 = -sx;
+        m22 = cx * cy;
 
-      for (i = 0; i < 8; i++)
-      {
-        aligned[i].x = m00 * local[i].x + m01 * local[i].y + m02 * local[i].z;
-        aligned[i].y = m10 * local[i].x + m11 * local[i].y + m12 * local[i].z;
-        aligned[i].z = m20 * local[i].x + m21 * local[i].y + m22 * local[i].z + zCamera;
-
-        screen[i].x = floor((OxEff + focalEff * aligned[i].x / aligned[i].z));
-        screen[i].y = floor((OyEff - focalEff * aligned[i].y / aligned[i].z));
-      }
-
-      for (i = 0; i < 12; i++)
-        edge[i].visible = false;
-
-      Point *pa, *pb, *pc;
-      for (i = 0; i < 6; i++)
-      {
-        pa = screen + face[i].sommets[0];
-        pb = screen + face[i].sommets[1];
-        pc = screen + face[i].sommets[2];
-
-        boolean back = ((pb->x - pa->x) * (pc->y - pa->y) - (pb->y - pa->y) * (pc->x - pa->x)) < 0;
-        if (!back)
+        for (i = 0; i < 8; i++)
         {
-          int j;
-          for (j = 0; j < 4; j++)
-          {
-            edge[face[i].ed[j]].visible = true;
-          }
+            aligned[i].x = m00 * local[i].x + m01 * local[i].y + m02 * local[i].z;
+            aligned[i].y = m10 * local[i].x + m11 * local[i].y + m12 * local[i].z;
+            aligned[i].z = m20 * local[i].x + m21 * local[i].y + m22 * local[i].z + zCamera;
+
+            screen[i].x = floor((OxEff + focalEff * aligned[i].x / aligned[i].z));
+            screen[i].y = floor((OyEff - focalEff * aligned[i].y / aligned[i].z));
         }
-      }
+
+        for (i = 0; i < 12; i++)
+            edge[i].visible = false;
+
+        Point *pa, *pb, *pc;
+        for (i = 0; i < 6; i++)
+        {
+            pa = screen + face[i].sommets[0];
+            pb = screen + face[i].sommets[1];
+            pc = screen + face[i].sommets[2];
+
+            boolean back = ((pb->x - pa->x) * (pc->y - pa->y) - (pb->y - pa->y) * (pc->x - pa->x)) < 0;
+            if (!back)
+            {
+                int j;
+                for (j = 0; j < 4; j++)
+                {
+                    edge[face[i].ed[j]].visible = true;
+                }
+            }
+        }
     }
 
     uint8_t hue = 0;
@@ -209,82 +208,83 @@ class PatternCube : public EffectWithId<idMatrixCube>
         return false;
     }
 
-
     void construct()
     {
-      make(cubeWidth);
+        make(cubeWidth);
     }
 
   public:
-
     PatternCube() : EffectWithId<idMatrixCube>("Cubes")
     {
-      construct();
+        construct();
     }
 
-    PatternCube(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixCube>(jsonObject)
+    PatternCube(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixCube>(jsonObject)
     {
-      construct();
+        construct();
     }
 
     void Draw() override
     {
-      g()->Clear();
-      zCamera = beatsin8(2, 100, 140);
-      AngxSpeed = beatsin8(3, 3, 10) / 100.0f;
-      AngySpeed = g()->beatcos8(5, 3, 10) / 100.0f;
+        g()->Clear();
+        zCamera = beatsin8(2, 100, 140);
+        AngxSpeed = beatsin8(3, 3, 10) / 100.0f;
+        AngySpeed = g()->beatcos8(5, 3, 10) / 100.0f;
 
-      // Update values
-      Angx += AngxSpeed;
-      Angy += AngySpeed;
-      if (Angx >= TWO_PI)
-        Angx -= TWO_PI;
-      if (Angy >= TWO_PI)
-        Angy -= TWO_PI;
+        // Update values
+        Angx += AngxSpeed;
+        Angy += AngySpeed;
+        if (Angx >= TWO_PI)
+            Angx -= TWO_PI;
+        if (Angy >= TWO_PI)
+            Angy -= TWO_PI;
 
-      // Determine tile size (the smaller of matrix width and height)
-      const int tileSize = (MATRIX_WIDTH < MATRIX_HEIGHT ? MATRIX_WIDTH : MATRIX_HEIGHT);
-      const float scale   = (tileSize <= 0) ? 1.0f : (float)tileSize / 32.0f; // 32 was the original design tile
+        // Determine tile size (the smaller of matrix width and height)
+        const int tileSize = (MATRIX_WIDTH < MATRIX_HEIGHT ? MATRIX_WIDTH : MATRIX_HEIGHT);
+        const float scale = (tileSize <= 0) ? 1.0f : (float)tileSize / 32.0f; // 32 was the original design tile
 
-      // Scale the projection center and focal to the current tile size
-      const float OxEff = ((Ox + 0.5f) * scale) - 0.5f; // keep subpixel bias consistent with original 15.5@32px
-      const float OyEff = ((Oy + 0.5f) * scale) - 0.5f;
-      const float focalEff = focal * scale;
+        // Scale the projection center and focal to the current tile size
+        const float OxEff = ((Ox + 0.5f) * scale) - 0.5f; // keep subpixel bias consistent with original 15.5@32px
+        const float OyEff = ((Oy + 0.5f) * scale) - 0.5f;
+        const float focalEff = focal * scale;
 
-      rotate(Angx, Angy, OxEff, OyEff, focalEff);
+        rotate(Angx, Angy, OxEff, OyEff, focalEff);
 
-      // Draw cube
-      int i;
+        // Draw cube
+        int i;
 
-      // Draw as many cubes as will fit horizontally, stepping by the smaller dimension
-      for (int xOffset = 0; xOffset < MATRIX_WIDTH; xOffset += tileSize)
-      {
-        CRGB color = g()->ColorFromCurrentPalette(hue + 64 + xOffset);
-        // Backface
-        EdgePoint *e;
-        for (i = 0; i < 12; i++)
+        // Draw as many cubes as will fit horizontally, stepping by the smaller dimension
+        for (int xOffset = 0; xOffset < MATRIX_WIDTH; xOffset += tileSize)
         {
-          e = edge + i;
-          if (!e->visible)
-              g()->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
-        }
+            CRGB color = g()->ColorFromCurrentPalette(hue + 64 + xOffset);
+            // Backface
+            EdgePoint *e;
+            for (i = 0; i < 12; i++)
+            {
+                e = edge + i;
+                if (!e->visible)
+                    g()->BresenhamLine(screen[e->x].x + xOffset, screen[e->x].y, screen[e->y].x + xOffset,
+                                       screen[e->y].y, color);
+            }
 
-        color = g()->ColorFromCurrentPalette(hue + 128 + xOffset);
+            color = g()->ColorFromCurrentPalette(hue + 128 + xOffset);
 
-        // Frontface
-        for (i = 0; i < 12; i++)
-        {
-          e = edge + i;
-          if (e->visible)
-              g()->BresenhamLine(screen[e->x].x+xOffset, screen[e->x].y, screen[e->y].x+xOffset, screen[e->y].y, color);
-        }
+            // Frontface
+            for (i = 0; i < 12; i++)
+            {
+                e = edge + i;
+                if (e->visible)
+                    g()->BresenhamLine(screen[e->x].x + xOffset, screen[e->x].y, screen[e->y].x + xOffset,
+                                       screen[e->y].y, color);
+            }
 
-        step++;
-        if (step == 8) {
-          step = 0;
-          hue++;
+            step++;
+            if (step == 8)
+            {
+                step = 0;
+                hue++;
+            }
         }
-      }
     }
 };
 
