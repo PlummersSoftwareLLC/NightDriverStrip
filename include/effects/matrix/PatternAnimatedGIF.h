@@ -171,12 +171,7 @@ class PatternAnimatedGIF : public EffectWithId<PatternAnimatedGIF>
     static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue)
     {
         auto& g = *(g_ptrSystem->EffectManager().g(0));
-        if (false == g.isValidPixel(x  + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY))
-        {
-            debugW("drawPixelCallbackInvalid pixel: %d, %d", x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY);
-            return;
-        }
-        g.leds[XY(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY)] = CRGB(red, green, blue);
+        g.drawPixel(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY, CRGB(red, green, blue));
     }
 
     // drawLineCallback
