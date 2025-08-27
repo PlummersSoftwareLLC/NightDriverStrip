@@ -6,7 +6,7 @@
 // The original has a bunch of Palette management stuff we just didn't
 // implement.
 
-class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
+class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
 {
   private:
 
@@ -45,8 +45,8 @@ class PatternSMStarDeep : public EffectWithId<idMatrixSMStarDeep>
 
   public:
 
-    PatternSMStarDeep() : EffectWithId<idMatrixSMStarDeep>("Star Deep") {}
-    PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMStarDeep>(jsonObject) {}
+    PatternSMStarDeep() : EffectWithId<PatternSMStarDeep>("Star Deep") {}
+    PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMStarDeep>(jsonObject) {}
 
     void Start() override
     {
