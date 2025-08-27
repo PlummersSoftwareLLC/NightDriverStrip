@@ -36,10 +36,10 @@
 #include "effects/strip/paletteeffect.h"        // palette effects
 #include "effects/strip/doublepaletteeffect.h"  // double palette effect
 #include "effects/strip/meteoreffect.h"         // meteor blend effect
-#include "effects/strip/stareffect.h"           // star effects
+// #include "effects/strip/stareffect.h"           // star effects - COMMENTED OUT: causes template scope pollution
 #include "effects/strip/bouncingballeffect.h"   // bouncing ball effects
 #include "effects/strip/tempeffect.h"
-#include "effects/strip/stareffect.h"
+// #include "effects/strip/stareffect.h"           // DUPLICATE - REMOVED
 #include "effects/strip/laserline.h"
 #include "effects/strip/misceffects.h"
 #include "effects/matrix/PatternClock.h"        // No matrix dependencies
@@ -60,7 +60,7 @@
 #if USE_HUB75
     #include "ledmatrixgfx.h"
     #include "effects/matrix/PatternPongClock.h"
-    //#include "effects/matrix/PatternAnimatedGIF.h"  // Commented out - missing GifDecoder.h dependency
+    #include "effects/matrix/PatternAnimatedGIF.h"  
     #include "effects/matrix/PatternMandala.h"
     
     // These effects require LEDMatrixGFX::getPolarMap()
@@ -68,19 +68,6 @@
     #include "effects/matrix/PatternSMRainbowTunnel.h"
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMRadialFire.h"
-
-    #if ENABLE_WIFI
-        #include "effects/matrix/PatternSubscribers.h"
-        #include "effects/matrix/PatternWeather.h"
-        #include "effects/matrix/PatternStocks.h"
-    #endif
-#endif
-
-#if USE_HUB75 || USE_MATRIX
-
-    #include "effects/matrix/PatternSMStrobeDiffusion.h"
-    #include "effects/matrix/PatternSM2DDPR.h"
-
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSMBlurringColors.h"
@@ -95,7 +82,26 @@
     #include "effects/matrix/PatternSMFlowFields.h"
     #include "effects/matrix/PatternSMSupernova.h"
     #include "effects/matrix/PatternSMWalkingMachine.h"
-    #include "effects/matrix/PatternSMSmoke.h"
+    #include "effects/matrix/PatternPongClock.h"
+    #include "effects/matrix/PatternMandala.h"
+    #include "effects/matrix/PatternQR.h"
+    #include "effects/matrix/PatternSM2DDPR.h"
+
+    #if USE_NOISE
+        #include "effects/matrix/PatternNoiseSmearing.h"
+        #include "effects/matrix/PatternSMSmoke.h"
+    #endif
+
+    #if ENABLE_WIFI
+        #include "effects/matrix/PatternSubscribers.h"
+        #include "effects/matrix/PatternWeather.h"
+        #include "effects/matrix/PatternStocks.h"
+    #endif
+#endif
+
+#if USE_HUB75 
+
+    #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -107,25 +113,15 @@
     #include "effects/matrix/PatternCircuit.h"
     #include "effects/matrix/PatternAlienText.h"
     #include "effects/matrix/PatternRadar.h"
-    #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternBounce.h"
-    #include "effects/matrix/PatternMandala.h"
     #include "effects/matrix/PatternSpin.h"
     #include "effects/matrix/PatternMisc.h"
-    #include "effects/matrix/PatternNoiseSmearing.h"
-    #include "effects/matrix/PatternQR.h"
-    //#include "effects/matrix/PatternAnimatedGIF.h"  // Commented out - missing GifDecoder.h dependency
 
-    #if USE_NOISE
-        #include "effects/matrix/PatternNoiseSmearing.h"
-        #include "effects/matrix/PatternSMSmoke.h"
-  #endif
 
 #endif  // USE_HUB75
 
 #ifdef USE_WS281X
     #include "ledstripgfx.h"
-    #include "effects/matrix/PatternBounce.h"
 #endif
 
 // Global effect set version
@@ -313,6 +309,13 @@ void LoadEffectFactories()
         );
     #endif
 
+    #if defined(EFFECTS_STACKDEMO)
+        RegisterAll(*g_ptrEffectFactories,
+            Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
+            Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
+            Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true));
+    #endif
+
     #if defined(EFFECTS_FULLMATRIX)
         // Full matrix effect set for advanced displays (Mesmerizer, etc.)
         RegisterAll(*g_ptrEffectFactories,
@@ -353,6 +356,7 @@ void LoadEffectFactories()
         );
         #endif
 
+        #if !defined(EFFECTS_STACKDEMO)
         RegisterAll(*g_ptrEffectFactories,
             Effect<PatternSMSmoke>(),
             Effect<GhostWave>("PlasmaWave", 0, 255, false),
@@ -386,6 +390,7 @@ void LoadEffectFactories()
             Effect<PatternMunch>(),
             Effect<PatternMaze>()
         );
+        #endif
     #endif
 
     #if defined(EFFECTS_UMBRELLA)
