@@ -151,16 +151,6 @@ inline constexpr AudioInputParams kParamsI2SExternal{
 void IRAM_ATTR AudioSamplerTaskEntry(void *);
 void IRAM_ATTR AudioSerialTaskEntry(void *);
 
-// PeakData class
-//
-// Simple data class that holds the music peaks for up to 32 bands.  When the sound analyzer finishes a pass, its
-// results are simplified down to this small class of band peaks.
-
-#ifndef MIN_VU
-#define MIN_VU 2                // Minimum VU value to use for the span when computing VURatio.  Contributes to
-#endif                          // how dynamic the music is (smaller values == more dynamic)
-
-
 #ifndef GAINDAMPEN
     #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
 #endif

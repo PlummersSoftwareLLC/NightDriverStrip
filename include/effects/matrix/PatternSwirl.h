@@ -70,14 +70,12 @@ class PatternSwirl : public EffectWithId<idMatrixSwirl>
 
     void drawAt(int i, int j, CRGB color)
     {
-        auto graphics = g();
-
-        graphics->leds[graphics->xy(i, j - 1)] += color;
-        graphics->leds[graphics->xy(i, j + 1)] += color;
-        graphics->leds[graphics->xy(i - 1, j)] += color;
-        graphics->leds[graphics->xy(i + 1, j)] += color;
+        g()->leds[XY(i, j - 1)] += color;
+        g()->leds[XY(i, j + 1)] += color;
+        g()->leds[XY(i - 1, j)] += color;
+        g()->leds[XY(i + 1, j)] += color;
         color.maximizeBrightness();
-        graphics->leds[g()->xy(i, j)] += color;
+        g()->leds[XY(i, j)] += color;
     }
 
     void Draw() override
