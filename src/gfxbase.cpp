@@ -1,4 +1,4 @@
-//+--------------------------------------------------------------------------
+//+--------------------------------------------------------    template<>
 //
 // File:        gfxbase.cpp
 //
@@ -60,15 +60,15 @@
     template<>
     void GFXBase::FillGetNoise<NoiseApproach::Two>()
     {
-        for (uint8_t i = 0; i < WIDTH; i++)
+        for (uint8_t i = 0; i < MATRIX_WIDTH; i++)
         {
             int32_t ioffset = _ptrNoise->noise_scale_x * (i - CENTER_X_MINOR);
-            for (uint8_t j = 0; j < HEIGHT; j++)
+            for (uint8_t j = 0; j < MATRIX_HEIGHT; j++)
             {
                 int32_t joffset = _ptrNoise->noise_scale_y * (j - CENTER_Y_MINOR);
                 int8_t  data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
                 int8_t  olddata = _ptrNoise->noise[i][j];
-                int8_t  newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 255 - _ptrNoise->noisesmoothing);
+                int8_t  newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
                 data = newdata;
                 _ptrNoise->noise[i][j] = data;
             }
@@ -129,12 +129,12 @@
     template<>
     void GFXBase::MoveFractionalNoiseX<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
     {
-        for (uint8_t y = 0; y < HEIGHT; y++)
+        for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
         {
             int16_t amount =((int16_t)_ptrNoise->noise[0][y] - 128) * 2 * amt + shift * 256;
             int8_t delta = abs(amount) >> 8;
             int8_t fraction = abs(amount) & 255;
-            for (uint8_t x = 0; x < WIDTH; x++)
+            for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
             {
                 int8_t zD;
                 int8_t zF;
@@ -150,9 +150,9 @@
                     zF = zD + 1;
                 }
                 CRGB PixelA = CRGB::Black;
-                if ((zD >= 0) && (zD < WIDTH)) PixelA = leds[XY(zD, y)];
+                if ((zD >= 0) && (zD < MATRIX_WIDTH)) PixelA = leds[XY(zD, y)];
                     CRGB PixelB = CRGB::Black;
-                if ((zF >= 0) && (zF < WIDTH)) PixelB = leds[XY(zF, y)];
+                if ((zF >= 0) && (zF < MATRIX_WIDTH)) PixelB = leds[XY(zF, y)];
                     leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
             }
         }
@@ -213,12 +213,12 @@
     template<>
     void GFXBase::MoveFractionalNoiseY<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
     {
-        for (uint8_t x = 0; x < WIDTH; x++)
+        for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {
             int16_t amount = ((int16_t)_ptrNoise->noise[x][0] - 128) * 2 * amt + shift * 256;
             int8_t delta = abs(amount) >> 8;
             int8_t fraction = abs(amount) & 255;
-            for (uint8_t y = 0; y < HEIGHT; y++)
+            for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
             {
                 int8_t zD;
                 int8_t zF;
@@ -234,10 +234,10 @@
                     zF = zD + 1;
                 }
                 CRGB PixelA = CRGB::Black;
-                if ((zD >= 0) && (zD < HEIGHT))
+                if ((zD >= 0) && (zD < MATRIX_HEIGHT))
                     PixelA = leds[XY(x, zD)];
                 CRGB PixelB = CRGB::Black;
-                if ((zF >= 0) && (zF < HEIGHT))
+                if ((zF >= 0) && (zF < MATRIX_HEIGHT))
                     PixelB = leds[XY(x, zF)];
                 leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
             }

@@ -73,7 +73,7 @@
 #include "effects/matrix/Vector.h"
 #include <memory>
 
-#if USE_HUB75 || (USE_MATRIX && !defined(EFFECTS_STACKDEMO))
+#if USE_HUB75 || USE_MATRIX
     #define USE_NOISE 1
 #endif
 
