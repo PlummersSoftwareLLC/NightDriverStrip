@@ -81,7 +81,7 @@ class PatternCube : public EffectWithId<idMatrixCube>
 {
   private:
 
-    float focal = 30; // Focal of the camera
+  float focal = 30; // Base focal of the camera (for 32px tile). We'll scale this dynamically to fit the display.
     int cubeWidth = 28; // Cube size
     float Angx = 20.0, AngxSpeed = 0.05; // rotation (angle+speed) around X-axis
     float Angy = 10.0, AngySpeed = 0.05; // rotation (angle+speed) around Y-axis
@@ -145,7 +145,8 @@ class PatternCube : public EffectWithId<idMatrixCube>
     }
 
     // rotates according to angle x&y
-    void rotate(float angx, float angy)
+  // Rotate and project with effective center and focal length (allows dynamic scaling to tile size)
+  void rotate(float angx, float angy, float OxEff, float OyEff, float focalEff)
     {
       int i;
       float cx = cos(angx);
@@ -169,8 +170,8 @@ class PatternCube : public EffectWithId<idMatrixCube>
         aligned[i].y = m10 * local[i].x + m11 * local[i].y + m12 * local[i].z;
         aligned[i].z = m20 * local[i].x + m21 * local[i].y + m22 * local[i].z + zCamera;
 
-        screen[i].x = floor((Ox + focal * aligned[i].x / aligned[i].z));
-        screen[i].y = floor((Oy - focal * aligned[i].y / aligned[i].z));
+        screen[i].x = floor((OxEff + focalEff * aligned[i].x / aligned[i].z));
+        screen[i].y = floor((OyEff - focalEff * aligned[i].y / aligned[i].z));
       }
 
       for (i = 0; i < 12; i++)
@@ -241,12 +242,22 @@ class PatternCube : public EffectWithId<idMatrixCube>
       if (Angy >= TWO_PI)
         Angy -= TWO_PI;
 
-      rotate(Angx, Angy);
+      // Determine tile size (the smaller of matrix width and height)
+      const int tileSize = (MATRIX_WIDTH < MATRIX_HEIGHT ? MATRIX_WIDTH : MATRIX_HEIGHT);
+      const float scale   = (tileSize <= 0) ? 1.0f : (float)tileSize / 32.0f; // 32 was the original design tile
+
+      // Scale the projection center and focal to the current tile size
+      const float OxEff = ((Ox + 0.5f) * scale) - 0.5f; // keep subpixel bias consistent with original 15.5@32px
+      const float OyEff = ((Oy + 0.5f) * scale) - 0.5f;
+      const float focalEff = focal * scale;
+
+      rotate(Angx, Angy, OxEff, OyEff, focalEff);
 
       // Draw cube
       int i;
 
-      for (int xOffset = 0; xOffset < MATRIX_WIDTH; xOffset +=32)
+      // Draw as many cubes as will fit horizontally, stepping by the smaller dimension
+      for (int xOffset = 0; xOffset < MATRIX_WIDTH; xOffset += tileSize)
       {
         CRGB color = g()->ColorFromCurrentPalette(hue + 64 + xOffset);
         // Backface
