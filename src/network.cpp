@@ -483,9 +483,12 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                     seconds,
                     micros);
 
-                PeakData peaks((double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE));
-                peaks.ApplyScalars(PeakData::PCREMOTE);
-                g_Analyzer.SetPeakData(peaks);
+                PeakData peaks;
+                const double* remoteData = (double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
+                for (int i = 0; i < NUM_BANDS; i++) {
+                    peaks[i] = (float)remoteData[i];
+                }
+                g_Analyzer.SetPeakDataFromRemote(peaks);
             }
             #endif
                 const float* pFloats = reinterpret_cast<const float*>(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
