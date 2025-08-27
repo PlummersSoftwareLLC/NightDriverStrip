@@ -53,7 +53,7 @@ class Screen; // forward declaration for Page interface
 
 class Page
 {
-public:
+  public:
     virtual ~Page() = default;
 
     // Human-readable name (for diagnostics)
@@ -68,7 +68,7 @@ public:
 
 class Screen : public GFXBase
 {
-public:
+  public:
     static DRAM_ATTR std::mutex _screenMutex;
 
     Screen(int w, int h) : GFXBase(w, h)
@@ -99,7 +99,6 @@ public:
     virtual void ScreenStatus(const String &strStatus)
     {
         fillScreen(GetBkgndColor());
-        //setFont();
         setTextSize(1);
         setTextColor(GetTextColor(), GetBkgndColor());
         auto xh = 10;

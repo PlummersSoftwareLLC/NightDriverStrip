@@ -264,9 +264,6 @@ template<const AudioInputParams& Params>
 class SoundAnalyzer : public ISoundAnalyzer
 {
   public:
-    // Indicates audio processing capability at runtime
-    constexpr bool Enabled() const { return true; }
-
     // Give internal audio task functions access to private members
     friend void IRAM_ATTR AudioSamplerTaskEntry(void *);
     friend void IRAM_ATTR AudioSerialTaskEntry(void *);
