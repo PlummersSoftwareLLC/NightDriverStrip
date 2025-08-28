@@ -271,8 +271,8 @@ protected:
 
                 // These lines actually require WiFi to be enabled in the project
                 #if ENABLE_WIFI
-                    if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
-                        debugI("Failed writing WiFi config to NVS");
+                    if (!WriteWiFiConfig(WifiCredSource::ImprovCreds, WiFi_ssid, WiFi_password))
+                        debugI("Failed writing Improv WiFi config to NVS");
 
                     log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
 
