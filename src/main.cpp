@@ -330,31 +330,48 @@ void setup()
     #if ENABLE_WIFI
         String WiFi_ssid;
         String WiFi_password;
+        bool ct_creds_selected = false;
 
-        // Read the WiFi crendentials from NVS.  If it fails, writes the defaults based on secrets.h
-
-        if (!ReadWiFiConfig(WiFi_ssid, WiFi_password))
+        // if we have valid compile-time creds and they differ from what was persisted as
+        // compile-time creds, adopt them as the new WiFi creds reality.
+        if (cszSSID && strlen(cszSSID) > 0 && cszPassword)
         {
-            debugW("Could not read WiFI Credentials");
-            WiFi_ssid     = cszSSID;
-            WiFi_password = cszPassword;
-            if (!WriteWiFiConfig(WiFi_ssid, WiFi_password))
-                debugW("Could not even write defaults to WiFi Credentials");
-        }
-        else
-	{
-	    // Either we found a config record, but it was empty
-	    // (e.g. firmware reset) OR user credentials do not match
-	    // what was retrieved, indicating user has reconfigured
-	    // network SSID or credential.
-	    // String equality seems legal between cszstring and String.
-	    if (WiFi_ssid.length() == 0 ||
-                (WiFi_ssid != cszSSID || WiFi_password != cszPassword) )
+            String ct_ssid;
+            String ct_password;
+            if (!ReadWiFiConfig(WifiCredSource::CompileTimeCreds, ct_ssid, ct_password)
+                || ct_ssid != cszSSID || ct_password != cszPassword)
             {
-                WiFi_ssid     = cszSSID;
-                WiFi_password = cszPassword;
+                debugI("Compile-time WiFi credentials differ from stored credentials, adopting new credentials");
+                ct_creds_selected = true;
+
+                // Clear any Improv creds as they are now stale
+                if (!ClearWiFiConfig(WifiCredSource::ImprovCreds))
+                    debugW("Failed clearing Improv WiFi config from NVS");
             }
-	}
+        }
+
+        // If we didn't decide to use current compile-time credentials, then try to fetch Improv creds
+        if (!ct_creds_selected && !ReadWiFiConfig(WifiCredSource::ImprovCreds, WiFi_ssid, WiFi_password))
+        {
+            debugW("Could not read Improv WiFI credentials, falling back to persisted compile-time credentials");
+
+            // We don't have Improv creds, so read presisted compile-time creds instead.
+            if (!ReadWiFiConfig(WifiCredSource::CompileTimeCreds, WiFi_ssid, WiFi_password))
+            {
+                // No persisted compile-time credentials either, so we just go with what we have
+                debugW("Could not read persisted compile-time WiFI credentials either, falling back to what's compiled in");
+                ct_creds_selected = true;
+            }
+        }
+
+        // If we decided to use current compile-time credentials, then make them the current config and write them to NVS
+        if (ct_creds_selected)
+        {
+            WiFi_ssid = cszSSID;
+            WiFi_password = cszPassword;
+            if (!WriteWiFiConfig(WifiCredSource::CompileTimeCreds, WiFi_ssid, WiFi_password))
+                debugW("Failed writing compile-time WiFi config to NVS");
+        }
 
         // This chip alone is special-cased by Improv, so we pull it
         // from build flags. CONFIG_IDF_TARGET will be "esp32s3".
