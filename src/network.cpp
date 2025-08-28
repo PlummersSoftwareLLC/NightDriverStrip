@@ -469,8 +469,6 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
 
         case WIFI_COMMAND_PEAKDATA:
         {
-            #if ENABLE_AUDIO          
-            {
             #if ENABLE_AUDIO
                 uint16_t numbands  = WORDFromMemory(&payloadData[2]);
                 uint32_t length32  = DWORDFromMemory(&payloadData[4]);
@@ -478,22 +476,24 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t paylo
                 uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
                 debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
-                    numbands,
-                    length32,
-                    seconds,
-                    micros);
+                       numbands,
+                       length32,
+                       seconds,
+                       micros);
 
-                PeakData peaks;
-                const double* remoteData = (double *)(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
-                for (int i = 0; i < NUM_BANDS; i++) {
-                    peaks[i] = (float)remoteData[i];
+                // Data is transmitted as NUM_BANDS floats following the standard header
+                const uint8_t* dataStart = payloadData.get() + STANDARD_DATA_HEADER_SIZE;
+                const size_t availableFloats = (payloadLength > STANDARD_DATA_HEADER_SIZE)
+                                                ? (payloadLength - STANDARD_DATA_HEADER_SIZE) / sizeof(float)
+                                                : 0;
+                const size_t copyCount = std::min<size_t>(NUM_BANDS, std::min<size_t>(numbands, availableFloats));
+
+                PeakData peaks{}; // zero-initialized for any bands not provided
+                if (copyCount > 0)
+                {
+                    const float* pFloats = reinterpret_cast<const float*>(dataStart);
+                    std::copy_n(pFloats, copyCount, peaks.begin());
                 }
-                g_Analyzer.SetPeakDataFromRemote(peaks);
-            }
-            #endif
-                const float* pFloats = reinterpret_cast<const float*>(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
-                PeakData peaks{};
-                std::copy_n(pFloats, NUM_BANDS, peaks.begin());
                 g_Analyzer.SetPeakDataFromRemote(peaks);
             #endif
             return true;
