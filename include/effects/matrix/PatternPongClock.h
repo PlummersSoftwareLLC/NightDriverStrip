@@ -77,7 +77,7 @@
 #define SPEEDUP 1.15
 #define MAXSPEED 4.0f
 
-class PatternPongClock : public EffectWithId<idMatrixPongClock>
+class PatternPongClock : public EffectWithId<PatternPongClock>
 {
   private:
     float ballpos_x, ballpos_y;
@@ -98,8 +98,8 @@ class PatternPongClock : public EffectWithId<idMatrixPongClock>
 
   public:
 
-    PatternPongClock() : EffectWithId<idMatrixPongClock>("PongClock") {}
-    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixPongClock>(jsonObject) {}
+    PatternPongClock() : EffectWithId<PatternPongClock>("PongClock") {}
+    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<PatternPongClock>(jsonObject) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {
