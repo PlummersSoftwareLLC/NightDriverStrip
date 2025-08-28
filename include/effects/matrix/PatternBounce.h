@@ -75,7 +75,7 @@
 //              creating a bouncing effect. The method also handles dimming and blurring of the
 //              LEDs to enhance the visual effect.
 
-class PatternBounce : public EffectWithId<idMatrixBounce>
+class PatternBounce : public EffectWithId<PatternBounce>
 {
 private:
 
@@ -84,8 +84,8 @@ private:
 
 public:
 
-    PatternBounce() : EffectWithId<idMatrixBounce>("Bounce") {}
-    PatternBounce(const JsonObjectConst& jsonObject) : EffectWithId<idMatrixBounce>(jsonObject) {}
+    PatternBounce() : EffectWithId<PatternBounce>("Bounce") {}
+    PatternBounce(const JsonObjectConst& jsonObject) : EffectWithId<PatternBounce>(jsonObject) {}
 
     bool RequiresDoubleBuffering() const override
     {

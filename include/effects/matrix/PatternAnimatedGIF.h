@@ -136,7 +136,7 @@ const std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> g_ptrGI
 //
 // Draws a cycling animated GIF on the LED matrix.  Use GifDecoder to do the heavy lifting behind the scenes.
 
-class PatternAnimatedGIF : public EffectWithId<idMatrixAnimatedGIF>
+class PatternAnimatedGIF : public EffectWithId<PatternAnimatedGIF>
 {
   private:
 
@@ -171,12 +171,7 @@ class PatternAnimatedGIF : public EffectWithId<idMatrixAnimatedGIF>
     static void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue)
     {
         auto& g = *(g_ptrSystem->EffectManager().g(0));
-        if (false == g.isValidPixel(x  + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY))
-        {
-            debugW("drawPixelCallbackInvalid pixel: %d, %d", x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY);
-            return;
-        }
-        g.leds[XY(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY)] = CRGB(red, green, blue);
+        g.drawPixel(x + g_gifDecoderState._offsetX, y + g_gifDecoderState._offsetY, CRGB(red, green, blue));
     }
 
     // drawLineCallback
@@ -207,7 +202,7 @@ class PatternAnimatedGIF : public EffectWithId<idMatrixAnimatedGIF>
 public:
 
     PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black)
-        : EffectWithId<idMatrixAnimatedGIF>(friendlyName),
+        : EffectWithId<PatternAnimatedGIF>(friendlyName),
           _preClear(preClear),
           _gifIndex(gifIndex),
           _bkColor(bkColor)
@@ -215,7 +210,7 @@ public:
     }
 
     PatternAnimatedGIF(const JsonObjectConst& jsonObject)
-        : EffectWithId<idMatrixAnimatedGIF>(jsonObject),
+        : EffectWithId<PatternAnimatedGIF>(jsonObject),
           _preClear(jsonObject[PTY_PRECLEAR]),
           _gifIndex((GIFIdentifier)jsonObject[PTY_GIFINDEX].as<std::underlying_type_t<GIFIdentifier>>()),
           _bkColor(jsonObject[PTY_BKCOLOR])

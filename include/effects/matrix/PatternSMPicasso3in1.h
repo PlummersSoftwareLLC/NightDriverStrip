@@ -4,7 +4,18 @@
 
 // Inspired by https://editor.soulmatelights.com/gallery/1177-picasso-3in1
 
-class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
+struct TrackingObject {
+    float posX;
+    float posY;
+    float speedX;
+    float speedY;
+    float shift;
+    uint8_t hue;
+    uint8_t state;
+    bool isShift;
+};
+
+class PatternSMPicasso3in1 : public EffectWithId<PatternSMPicasso3in1>
 {
   private:
 
@@ -18,14 +29,7 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
                        // up? SLOW
     static constexpr int trackingOBJECT_MAX_COUNT = 100U;
     // maximum number of tracked objects (greatly affects memory consumption)
-    float trackingObjectPosX[trackingOBJECT_MAX_COUNT] {0};
-    float trackingObjectPosY[trackingOBJECT_MAX_COUNT] {0};
-    float trackingObjectSpeedX[trackingOBJECT_MAX_COUNT] {0};
-    float trackingObjectSpeedY[trackingOBJECT_MAX_COUNT] {0};
-    float trackingObjectShift[trackingOBJECT_MAX_COUNT] {0};
-    uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT] {0};
-    uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT] {0};
-    bool trackingObjectIsShift[trackingOBJECT_MAX_COUNT] {0};
+    TrackingObject trackingObjects[trackingOBJECT_MAX_COUNT];
     static constexpr int enlargedOBJECT_MAX_COUNT = (MATRIX_WIDTH * 2);
     // maximum number of complex tracked objects
     // (less than trackingOBJECT_MAX_COUNT)
@@ -48,31 +52,31 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
 
             for (uint8_t i = 0; i < enlargedObjectNUM; i++)
             {
-                trackingObjectPosX[i] = random8(MATRIX_WIDTH);
-                trackingObjectPosY[i] = random8(MATRIX_HEIGHT);
+                trackingObjects[i].posX = random8(MATRIX_WIDTH);
+                trackingObjects[i].posY = random8(MATRIX_HEIGHT);
 
                 // curr->color = CHSV(random(1U, 255U), 255U, 255U);
-                trackingObjectHue[i] = random8();
+                trackingObjects[i].hue = random8();
 
-                trackingObjectSpeedY[i] = +((-maxSpeed / 3) + (maxSpeed * (float)random8(1, 100) / 100));
-                trackingObjectSpeedY[i] += trackingObjectSpeedY[i] > 0 ? minSpeed : -minSpeed;
+                trackingObjects[i].speedY = +((-maxSpeed / 3) + (maxSpeed * (float)random8(1, 100) / 100));
+                trackingObjects[i].speedY += trackingObjects[i].speedY > 0 ? minSpeed : -minSpeed;
 
-                trackingObjectShift[i] = +((-maxSpeed / 2) + (maxSpeed * (float)random8(1, 100) / 100));
-                trackingObjectShift[i] += trackingObjectShift[i] > 0 ? minSpeed : -minSpeed;
+                trackingObjects[i].shift = +((-maxSpeed / 2) + (maxSpeed * (float)random8(1, 100) / 100));
+                trackingObjects[i].shift += trackingObjects[i].shift > 0 ? minSpeed : -minSpeed;
 
-                trackingObjectState[i] = trackingObjectHue[i];
+                trackingObjects[i].state = trackingObjects[i].hue;
             }
         }
         for (uint8_t i = 0; i < enlargedObjectNUM; i++)
         {
             if (reset)
             {
-                trackingObjectState[i] = random8();
-                trackingObjectSpeedX[i] = (trackingObjectState[i] - trackingObjectHue[i]) / 25;
+                trackingObjects[i].state = random8();
+                trackingObjects[i].speedX = (trackingObjects[i].state - trackingObjects[i].hue) / 25;
             }
-            if (trackingObjectState[i] != trackingObjectHue[i] && trackingObjectSpeedX[i])
+            if (trackingObjects[i].state != trackingObjects[i].hue && trackingObjects[i].speedX)
             {
-                trackingObjectHue[i] += trackingObjectSpeedX[i];
+                trackingObjects[i].hue += trackingObjects[i].speedX;
             }
         }
     }
@@ -81,20 +85,20 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
     {
         for (uint8_t i = 0; i < enlargedObjectNUM; i++)
         {
-            if (trackingObjectPosX[i] + trackingObjectSpeedY[i] > MATRIX_WIDTH ||
-                trackingObjectPosX[i] + trackingObjectSpeedY[i] < 0)
+            if (trackingObjects[i].posX + trackingObjects[i].speedY > MATRIX_WIDTH ||
+                trackingObjects[i].posX + trackingObjects[i].speedY < 0)
             {
-                trackingObjectSpeedY[i] = -trackingObjectSpeedY[i];
+                trackingObjects[i].speedY = -trackingObjects[i].speedY;
             }
 
-            if (trackingObjectPosY[i] + trackingObjectShift[i] > MATRIX_HEIGHT ||
-                trackingObjectPosY[i] + trackingObjectShift[i] < 0)
+            if (trackingObjects[i].posY + trackingObjects[i].shift > MATRIX_HEIGHT ||
+                trackingObjects[i].posY + trackingObjects[i].shift < 0)
             {
-                trackingObjectShift[i] = -trackingObjectShift[i];
+                trackingObjects[i].shift = -trackingObjects[i].shift;
             }
 
-            trackingObjectPosX[i] += trackingObjectSpeedY[i];
-            trackingObjectPosY[i] += trackingObjectShift[i];
+            trackingObjects[i].posX += trackingObjects[i].speedY;
+            trackingObjects[i].posY += trackingObjects[i].shift;
         };
     }
 
@@ -105,8 +109,8 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 2U; i += 2)
         {
-            g()->drawLine(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i + 1U],
-                     trackingObjectPosY[i + 1U], CHSV(trackingObjectHue[i], 255U, 255U));
+            g()->drawLine(trackingObjects[i].posX, trackingObjects[i].posY, trackingObjects[i + 1U].posX,
+                     trackingObjects[i + 1U].posY, CHSV(trackingObjects[i].hue, 255U, 255U));
             // DrawLine(trackingObjectPosX[i], trackingObjectPosY[i],
             // trackingObjectPosX[i+1U], trackingObjectPosY[i+1U],
             // ColorFromPalette(*curPalette, trackingObjectHue[i]));
@@ -123,8 +127,8 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
         g()->DimAll(180);
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 1U; i++)
-            g()->drawLine(trackingObjectPosX[i], trackingObjectPosY[i], trackingObjectPosX[i + 1U],
-                      trackingObjectPosY[i + 1U], CHSV(trackingObjectHue[i], 255U, 255U));
+            g()->drawLine(trackingObjects[i].posX, trackingObjects[i].posY, trackingObjects[i + 1U].posX,
+                      trackingObjects[i + 1U].posY, CHSV(trackingObjects[i].hue, 255U, 255U));
 
         EVERY_N_MILLIS(20000)
         {
@@ -140,9 +144,9 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
         g()->DimAll(180);
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 2U; i += 2)
-            g()->DrawSafeCircle(fabs(trackingObjectPosX[i] - trackingObjectPosX[i + 1U]),
-                       fabs(trackingObjectPosY[i] - trackingObjectPosX[i + 1U]),
-                       fabs(trackingObjectPosX[i] - trackingObjectPosY[i]), CHSV(trackingObjectHue[i], 255U, 255U));
+            g()->DrawSafeCircle(fabs(trackingObjects[i].posX - trackingObjects[i + 1U].posX),
+                       fabs(trackingObjects[i].posY - trackingObjects[i + 1U].posX),
+                       fabs(trackingObjects[i].posX - trackingObjects[i].posY), CHSV(trackingObjects[i].hue, 255U, 255U));
 
         EVERY_N_MILLIS(20000)
         {
@@ -154,20 +158,20 @@ class PatternSMPicasso3in1 : public EffectWithId<idMatrixSMPicasso3in1>
   public:
 
     PatternSMPicasso3in1()
-      : EffectWithId<idMatrixSMPicasso3in1>("Picasso"),
+      : EffectWithId<PatternSMPicasso3in1>("Picasso"),
         _scale(-1)
     {
     }
 
     PatternSMPicasso3in1(const String& name, int scale)
-      : EffectWithId<idMatrixSMPicasso3in1>(name),
+      : EffectWithId<PatternSMPicasso3in1>(name),
         _scale(scale)
     {
     }
 
 
     PatternSMPicasso3in1(const JsonObjectConst &jsonObject)
-      : EffectWithId<idMatrixSMPicasso3in1>(jsonObject),
+      : EffectWithId<PatternSMPicasso3in1>(jsonObject),
       _scale(jsonObject[PTY_SCALE])
     {
     }
