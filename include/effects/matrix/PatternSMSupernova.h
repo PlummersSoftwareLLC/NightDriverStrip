@@ -5,12 +5,12 @@
 // Inspired by https://editor.soulmatelights.com/gallery/1923-supernova
 
 
-class PatternSMSupernova : public EffectWithId<idMatrixSMSupernova>
+class PatternSMSupernova : public EffectWithId<PatternSMSupernova>
 {
 public:
 
-    PatternSMSupernova() : EffectWithId<idMatrixSMSupernova>("Supernova"), hue(0), hue2(0), step(0) {}
-    PatternSMSupernova(const JsonObjectConst &jsonDebrisItem) : EffectWithId<idMatrixSMSupernova>(jsonDebrisItem) {}
+    PatternSMSupernova() : EffectWithId<PatternSMSupernova>("Supernova"), hue(0), hue2(0), step(0) {}
+    PatternSMSupernova(const JsonObjectConst &jsonDebrisItem) : EffectWithId<PatternSMSupernova>(jsonDebrisItem) {}
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -19,7 +19,8 @@ public:
 
     void Start() override
     {
-        std::for_each(_debris_items.begin(), _debris_items.end(), [](DebrisItem& debris_item) { debris_item.Clear(); });
+        std::for_each(_debris_items.begin(), _debris_items.end(),
+		              [](DebrisItem& debris_item) { debris_item.Clear(); });
         g()->Clear();
     }
 
@@ -37,7 +38,7 @@ public:
             if (debris_item._is_shift && ParticlesUpdate(debris_item)) {
                 CRGB baseRGB = ColorFromPalette(g()->IsPalettePaused() ? g()->GetCurrentPalette() : HeatColors_p, debris_item._hue, 255, LINEARBLEND);
                 baseRGB.nscale8(debris_item._state);
-                drawPixelXYF(debris_item._position_x, debris_item._position_y, baseRGB);
+                g()->drawPixelXYF_Wu(debris_item._position_x, debris_item._position_y, baseRGB);
             }
         }
     }
@@ -125,31 +126,5 @@ private:
         debris_item._state = random8(1, 250);
         debris_item._hue = hue2;
         debris_item._is_shift = true;
-    }
-
-    static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
-    {
-        return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
-    }
-
-    void drawPixelXYF(float x, float y, CRGB color)
-    {
-        const uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
-        const uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-        for (uint8_t i = 0; i < 4; i++)
-        {
-            const int xn = x + (i & 1);
-            const int yn = y + ((i >> 1) & 1);
-
-            // Make sure we're on the panel and leave the VU meter pixels alone, if we're showing it
-            if (!g()->isValidPixel(xn, yn) || (g_ptrSystem->EffectManager().IsVUVisible() && yn == (MATRIX_HEIGHT - 1)))
-                continue;
-
-            CRGB clr = g()->leds[XY(xn, MATRIX_HEIGHT - 1 - yn)];
-            clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-            clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-            clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-            g()->leds[XY(xn, yn)] = clr;
-        }
     }
 };

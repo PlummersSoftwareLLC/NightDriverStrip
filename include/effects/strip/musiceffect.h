@@ -127,7 +127,7 @@ class BeatEffectBase
 // Uses a very sensitive beat detection.  Fills all pixels blue based on VU, and on beats, fills a random insulator
 // with a random color.  Longer beats get more insulators.  Very long beats get everything filled with purple.
 
-class SimpleColorBeat : public BeatEffectBase, public EffectWithId<idStripSimpleColorBeat>
+class SimpleColorBeat : public BeatEffectBase, public EffectWithId<SimpleColorBeat>
 {
   protected:
 
@@ -190,10 +190,10 @@ class SimpleColorBeat : public BeatEffectBase, public EffectWithId<idStripSimple
   public:
 
     SimpleColorBeat(const String & strName)
-      : BeatEffectBase(0.5, 0.25), EffectWithId<idStripSimpleColorBeat>(strName) {}
+      : BeatEffectBase(0.5, 0.25), EffectWithId<SimpleColorBeat>(strName) {}
 
     SimpleColorBeat(const JsonObjectConst& jsonObject)
-      : BeatEffectBase(0.5, 0.25), EffectWithId<idStripSimpleColorBeat>(jsonObject) {}
+      : BeatEffectBase(0.5, 0.25), EffectWithId<SimpleColorBeat>(jsonObject) {}
 };
 
 #endif // ENABLE_AUDIO

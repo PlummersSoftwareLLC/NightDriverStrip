@@ -1,3 +1,4 @@
+
 //+--------------------------------------------------------------------------
 //
 // File:        PatternPongClock.h
@@ -499,6 +500,5 @@ class PatternPongClock : public EffectWithId<idMatrixPongClock>
         return newY;
     }
 };
-
 #endif
 #endif

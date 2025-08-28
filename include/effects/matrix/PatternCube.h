@@ -77,7 +77,7 @@
 //
 // On displays that are 2X as wide as tall, two cubes will be drawn
 
-class PatternCube : public EffectWithId<idMatrixCube>
+class PatternCube : public EffectWithId<PatternCube>
 {
   private:
     float focal = 30;   // Base focal of the camera (for 32px tile). We'll scale this dynamically to fit the display.
@@ -219,7 +219,7 @@ class PatternCube : public EffectWithId<idMatrixCube>
         construct();
     }
 
-    PatternCube(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixCube>(jsonObject)
+    PatternCube(const JsonObjectConst& jsonObject) : EffectWithId<PatternCube>(jsonObject)
     {
         construct();
     }

@@ -7,7 +7,7 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/2128-bluringcolors
 
-class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
+class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
 {
   private:
     // A more cache-friendly version of the 7 independent arrays that were
@@ -67,44 +67,6 @@ class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
     uint8_t hue, hue2;  // gradual shift in hue or some other cyclic counter
     uint8_t deltaValue; // just a reusable variable
     uint8_t step;       // some kind of frame or sequence counter
-
-    [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
-    {
-        return g()->leds[XY(x, MATRIX_HEIGHT - 1 - y)];
-    }
-
-    void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
-    {
-        y = MATRIX_HEIGHT - 1 - y;
-        if (g()->isValidPixel(x, y))
-            g()->leds[XY(x, y)] = color;
-    }
-
-    static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
-    {
-        return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
-    }
-
-    void drawPixelXYF(float x, float y, CRGB color)
-    {
-        // Extract the fractional parts and derive their inverses.
-        uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
-        // Calculate the intensities for each affected pixel.
-        uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-        // Multiply the intensities by the colour, and saturating-add them
-        // to the pixels.
-        for (uint8_t i = 0; i < 4; i++)
-        {
-            int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-            if (g()->isValidPixel(xn, yn) == false)
-                continue;
-            CRGB clr = getPixColorXY(xn, yn);
-            clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-            clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-            clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-            drawPixelXY(xn, yn, clr);
-        }
-    }
 
     static const uint8_t AVAILABLE_BOID_COUNT = 7U;
     Boid boids[AVAILABLE_BOID_COUNT];
@@ -193,8 +155,8 @@ class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
 
   public:
 
-    PatternSMBlurringColors() : EffectWithId<idMatrixSMBlurringColors>("Powder") {}
-    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<idMatrixSMBlurringColors>(jsonObject) {}
+    PatternSMBlurringColors() : EffectWithId<PatternSMBlurringColors>("Powder") {}
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMBlurringColors>(jsonObject) {}
 
     void Start() override
     {
@@ -243,7 +205,7 @@ class PatternSMBlurringColors : public EffectWithId<idMatrixSMBlurringColors>
                 CRGB baseRGB = CHSV(powder_item._hue, 255, 255);
 
                 baseRGB.nscale8(powder_item._state); // equivalent
-                drawPixelXYF(powder_item._position_x, powder_item._position_y, baseRGB);
+                g()->drawPixelXYF_Wu(powder_item._position_x, MATRIX_HEIGHT - 1 - powder_item._position_y, baseRGB);
             }
         }
     }

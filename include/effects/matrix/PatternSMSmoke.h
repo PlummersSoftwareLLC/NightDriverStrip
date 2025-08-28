@@ -4,7 +4,7 @@
 
 // Derived from https://editor.soulmatelights.com/gallery/1116-smoke
 
-class PatternSMSmoke : public EffectWithId<idMatrixSMSmoke>
+class PatternSMSmoke : public EffectWithId<PatternSMSmoke>
 {
 private:
 
@@ -20,10 +20,10 @@ private:
 public:
 
   PatternSMSmoke()
-    : EffectWithId<idMatrixSMSmoke>("Smoke") {}
+    : EffectWithId<PatternSMSmoke>("Smoke") {}
 
   PatternSMSmoke(const JsonObjectConst &jsonObject)
-    : EffectWithId<idMatrixSMSmoke>(jsonObject) {}
+    : EffectWithId<PatternSMSmoke>(jsonObject) {}
 
   virtual size_t DesiredFramesPerSecond() const           // Desired framerate of the LED drawing
   {
@@ -45,6 +45,7 @@ public:
       hue2 = 0U;
       hue = random8();
     }
+
     if (deltaHue & 0x01) //((deltaHue >> 2U) == 0U) // (orig) I'd like to connect some kind of multiplier to the color change delay, but I don't know what...
 
       hue2++;

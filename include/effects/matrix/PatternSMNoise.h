@@ -352,7 +352,7 @@ DEFINE_GRADIENT_PALETTE(shikon_23_gp){
     2,   32,  205, 2,   2,   2,   216, 2,   2,   2,   217, 217, 47,  0,   228, 217, 47,  0,   228, 2,   2,
     2,   242, 2,   2,   2,   243, 26,  0,   219, 250, 26,  0,   219, 255, 2,   2,   2};
 
-class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
+class PatternSMNoise : public EffectWithId<PatternSMNoise>
 {
   public:
 
@@ -365,19 +365,19 @@ class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
     };
 
     PatternSMNoise(const String& name, EffectType effect)
-      : EffectWithId<idMatrixSMNoise>(name),
+      : EffectWithId<PatternSMNoise>(name),
         _effect(effect)
     {
     }
 
     PatternSMNoise()
-      : EffectWithId<idMatrixSMNoise>("Lava Lamp"),
+      : EffectWithId<PatternSMNoise>("Lava Lamp"),
         _effect(EffectType::Unknown)
     {
     }
 
     PatternSMNoise(const JsonObjectConst &jsonObject)
-      : EffectWithId<idMatrixSMNoise>(jsonObject),
+      : EffectWithId<PatternSMNoise>(jsonObject),
         _effect(static_cast<EffectType>(jsonObject[PTY_EFFECT]))
     {
     }
@@ -439,7 +439,7 @@ class PatternSMNoise : public EffectWithId<idMatrixSMNoise>
     }
 
   private:
-  
+
     int mode{EffectType::Unknown}; // Which of the 17 effects(!) are we showing?
     EffectType _effect;
 
