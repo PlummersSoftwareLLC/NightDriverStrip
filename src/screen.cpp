@@ -31,7 +31,6 @@
 #include "globals.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
-// std::clamp
 #include <algorithm>
 #include "screen.h"
 
@@ -227,11 +226,11 @@ class TitlePage : public Page
         static uint32_t lastFullDraw = 0;
         static uint32_t lastScreen = millis();
 
-    // Pick text size based on width (header size)
-    display.setTextSize(display.width() > 160 ? 2 : 1);
-    // Compute and cache content top using the header text size so it stays stable
-    const int topMargin = display.fontHeight() * 3 + 4;
-    _contentTop = topMargin;
+        // Pick text size based on width (header size)
+        display.setTextSize(display.width() > 160 ? 2 : 1);
+        // Compute and cache content top using the header text size so it stays stable
+        const int topMargin = display.fontHeight() * 3 + 4;
+        _contentTop = topMargin;
 
         // Screen FPS (for display updates)
         float screenFPS = (millis() - lastScreen) / 1000.0f;
@@ -463,28 +462,26 @@ void Screen::FlipToNextPage()
 // Draws the OLED/LCD screen with the current stats on connection, buffer, drawing, etc.
 void IRAM_ATTR Screen::Update(bool bRedraw)
 {
-    #if USE_SCREEN
-        std::lock_guard<std::mutex> guard(_screenMutex);
+    std::lock_guard<std::mutex> guard(_screenMutex);
 
-        // Initialize default page to last active page on first draw
-        static bool s_initialized = false;
-        const int activeCount = ActivePageCount();
-        if (!s_initialized)
-        {
-            g_iCurrentPage = activeCount > 0 ? activeCount - 1 : 0;
-            s_initialized = true;
-            bRedraw = true;
-        }
+    // Initialize default page to last active page on first draw
+    static bool s_initialized = false;
+    const int activeCount = ActivePageCount();
+    if (!s_initialized)
+    {
+        g_iCurrentPage = activeCount > 0 ? activeCount - 1 : 0;
+        s_initialized = true;
+        bRedraw = true;
+    }
 
-        // Ensure index in range
-        if (g_iCurrentPage >= activeCount)
-            g_iCurrentPage = std::max(0, activeCount - 1);
+    // Ensure index in range
+    if (g_iCurrentPage >= activeCount)
+        g_iCurrentPage = std::max(0, activeCount - 1);
 
-        StartFrame();
-        auto &pages = Pages();
-        pages[g_iCurrentPage]->Draw(*this, bRedraw);
-        EndFrame();
-    #endif
+    StartFrame();
+    auto &pages = Pages();
+    pages[g_iCurrentPage]->Draw(*this, bRedraw);
+    EndFrame();
 }
 
 // Screen::RunUpdateLoop
@@ -513,6 +510,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         #endif
         s_buttonsInited = true;
     }
+
     for (;;)
     {
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
@@ -535,7 +533,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
             }
         #endif
 
-    #ifdef TOGGLE_BUTTON_0
+        #ifdef TOGGLE_BUTTON_0
             _button0.update();
             if (_button0.pressed())
             {
@@ -545,7 +543,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
             }
         #endif
 
-    #ifdef TOGGLE_BUTTON_1
+        #ifdef TOGGLE_BUTTON_1
             _button1.update();
             if (_button1.pressed())
             {
