@@ -431,7 +431,9 @@ std::vector<std::unique_ptr<Page>> &Screen::Pages()
     if (pages.empty())
     {
         pages.emplace_back(std::make_unique<BasicInfoSummaryPage>());
-        pages.emplace_back(std::make_unique<CurrentEffectSummaryPage>());
+        #if ENABLE_AUDIO
+           pages.emplace_back(std::make_unique<CurrentEffectSummaryPage>());
+        #endif
         pages.emplace_back(std::make_unique<EffectSimulatorPage>());
     }
     return pages;
@@ -464,12 +466,18 @@ void IRAM_ATTR Screen::Update(bool bRedraw)
 {
     std::lock_guard<std::mutex> guard(_screenMutex);
 
-    // Initialize default page to last active page on first draw
+    // Initialize default page on first draw
     static bool s_initialized = false;
     const int activeCount = ActivePageCount();
     if (!s_initialized)
     {
-        g_iCurrentPage = activeCount > 0 ? activeCount - 1 : 0;
+        #ifdef DEFAULT_INFO_PAGE
+            // Use the configured default page, but ensure it's within valid range
+            g_iCurrentPage = std::clamp(DEFAULT_INFO_PAGE, 0, activeCount - 1);
+        #else
+            // Default to last active page if no default is configured
+            g_iCurrentPage = activeCount > 0 ? activeCount - 1 : 0;
+        #endif
         s_initialized = true;
         bRedraw = true;
     }
@@ -511,8 +519,16 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         s_buttonsInited = true;
     }
 
+    // Frame rate timing variables
+    constexpr uint32_t kTargetFPS = 30;
+    constexpr uint32_t kTargetFrameTimeMs = 1000 / kTargetFPS; // 33.33ms for 30fps
+    constexpr uint32_t kMinDelayMs = 1;
+    uint32_t lastFrameTime = millis();
+
     for (;;)
     {
+        uint32_t frameStartTime = millis();
+        
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
@@ -566,6 +582,24 @@ void IRAM_ATTR Screen::RunUpdateLoop()
             delay(1);
         }
         bRedraw = false;
+
+        // Calculate frame rate-based delay for 30fps
+        uint32_t frameProcessingTime = millis() - frameStartTime;
+        uint32_t delayTime = kMinDelayMs; // Start with minimum delay
+        
+        if (frameProcessingTime < kTargetFrameTimeMs)
+        {
+            delayTime = kTargetFrameTimeMs - frameProcessingTime;
+        }
+        
+        // Ensure minimum delay of 1ms
+        if (delayTime < kMinDelayMs)
+        {
+            delayTime = kMinDelayMs;
+        }
+        
+        delay(delayTime);
+        lastFrameTime = millis();
     }
 }
 

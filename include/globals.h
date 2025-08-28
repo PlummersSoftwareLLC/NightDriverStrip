@@ -567,6 +567,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define NUM_INFO_PAGES 3
 #endif
 
+#ifndef DEFAULT_INFO_PAGE
+#define DEFAULT_INFO_PAGE 0
+#endif
+
 // When you press a color button on the remote, the color is used to create a temporary fill effect, but
 // only when this is set to 1.  Otherwise, just the global colors are set, and it's up to the active effect
 // to actually use them.
