@@ -214,16 +214,16 @@ class PatternCube : public EffectWithId<PatternCube>
     }
 
   public:
-    PatternCube() : EffectWithId<idMatrixCube>("Cubes")
+    PatternCube() : EffectWithId<PatternCube>("Cubes")
     {
-        construct();
+      construct();
     }
 
     PatternCube(const JsonObjectConst& jsonObject) : EffectWithId<PatternCube>(jsonObject)
     {
-        construct();
+      construct();
     }
-
+    
     void Draw() override
     {
         g()->Clear();

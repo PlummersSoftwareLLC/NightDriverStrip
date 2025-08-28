@@ -73,6 +73,11 @@
 #include "effects/matrix/Vector.h"
 #include <memory>
 
+// Calculates a weight for anti-aliasing in Wu's algorithm.
+constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
+{
+    return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
+}
 
 #if USE_HUB75 || USE_MATRIX
     #define USE_NOISE 1
