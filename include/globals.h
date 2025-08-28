@@ -228,10 +228,10 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // to serve as a build to be run for [all-deps]
 
 #ifndef MATRIX_WIDTH
-    #define MATRIX_WIDTH            144
+    #define MATRIX_WIDTH            (512)
 #endif
 #ifndef MATRIX_HEIGHT
-    #define MATRIX_HEIGHT           8
+    #define MATRIX_HEIGHT           1
 #endif
 #ifndef NUM_LEDS
     #define NUM_LEDS                (MATRIX_WIDTH*MATRIX_HEIGHT)
@@ -565,10 +565,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 
 #ifndef NUM_INFO_PAGES
 #define NUM_INFO_PAGES 3
-#endif
-
-#ifndef DEFAULT_INFO_PAGE
-#define DEFAULT_INFO_PAGE 0
 #endif
 
 // When you press a color button on the remote, the color is used to create a temporary fill effect, but

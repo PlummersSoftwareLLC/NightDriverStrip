@@ -75,7 +75,7 @@ class Screen : public GFXBase
     {
     }
 
-    // Some devices, like the OLE, require that you send the whole buffer at once, but others do not.  The default implenetation is to do nothing.
+    // Some devices, like the OLED, require that you send the whole buffer at once, but others do not.  The default impl is to do nothing.
 
     virtual void StartFrame()
     {
